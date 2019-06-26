@@ -167,7 +167,11 @@
 - `is_at_traffic_light()`
 - `get_traffic_light()`
 
-## `carla.TrafficLight(carla.Actor)`
+## `carla.TrafficSign(carla.Actor)`
+
+- `trigger_volume -> carla.BoundingBox`
+
+## `carla.TrafficLight(carla.TrafficSign)`
 
 - `state`
 - `set_state(traffic_light_state)`
