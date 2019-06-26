@@ -78,6 +78,12 @@ public:
     TimeFactor = NewTimeFactor;
   }
 
+  // set ignore hero
+  void SetIgnoreHero(bool MyIgnoreHero)
+  {
+    IgnoreHero = MyIgnoreHero;
+  }
+
   // check if after a map is loaded, we need to replay
   void CheckPlayAfterMapLoaded(void);
 
@@ -108,6 +114,9 @@ private:
   uint32_t FollowId;
   // speed (time factor)
   double TimeFactor { 1.0 };
+  // ignore hero vehicles
+  bool IgnoreHero { false };
+  std::unordered_map<uint32_t, bool> IsHero;
 
   // utils
   bool ReadHeader();
