@@ -11,6 +11,7 @@
 from __future__ import print_function
 
 from contextlib import contextmanager
+import errno
 import fnmatch
 import json
 import ntpath
@@ -39,7 +40,7 @@ def get_packages_json_list(folder):
     """
     json_files = []
 
-    for root, dirnames, filenames in os.walk(folder):
+    for root, _, filenames in os.walk(folder):
         for filename in fnmatch.filter(filenames, "*.json"):
             json_files.append([root, filename])
 
@@ -56,6 +57,7 @@ def invoke_commandlet(name, arguments):
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
     uproject_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
+    print("\nRunning command:\n$ " + full_command + '\n')
     subprocess.check_call([full_command], shell=True)
 
 
@@ -153,11 +155,11 @@ def generate_package_file(package_name, props, maps):
         try:
             os.makedirs(package_config_path)
         except OSError as exc:
-            if exc.errno != errno.EEXISTS:
+            if exc.errno != errno.EEXIST:
                 raise
 
     with open(os.path.join(package_config_path, package_name + ".Package.json"), "w+") as fh:
-        json.dump(output_json, fh)
+        json.dump(output_json, fh, indent=4)
 
 
 def import_assets(package_name, json_dirname, props, maps):
@@ -170,27 +172,45 @@ def import_assets(package_name, json_dirname, props, maps):
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
-    # Create package file
-    generate_package_file(package_name, props, maps)
+    # Get Carla's root folder
+    current_script_folder = os.path.dirname(os.path.realpath(__file__))
+    carla_root_path = ""
+    with pushd(current_script_folder):
+        os.chdir("..")
+        carla_root_path = os.getcwd()
 
     # Move maps XODR files if any
     for umap in maps:
         # Make sure XODR info is full and the file exists
-        if "xodr" in umap and umap["xodr"] and os.path.isfile(umap["xodr"]):
-            # Make sure the xodr file have the same name than the umap
-            xodr_path = umap["xodr"]
-            umap_name = os.path.basename(umap["source"]).split('.')[:-1]
-            xodr_name = '.'.join([umap_name, 'xodr'])
+        if "xodr" in umap and umap["xodr"] and os.path.isfile(os.path.join(json_dirname, umap["xodr"])):
+            # Make sure the `.xodr` file have the same name than the `.umap`
+            xodr_path = os.path.abspath(os.path.join(json_dirname, umap["xodr"]))
+            umap_name = umap["name"]
+            xodr_name = '.'.join([umap_name, "xodr"])
 
-            # Get Carla's root folder
-            current_script_folder = os.path.dirname(os.path.realpath(__file__))
-            carla_root_path = ""
-            with pushd(current_script_folder):
-                os.chdir("..")
-                carla_root_path = os.getcwd()
+            xodr_folder_destin = os.path.join(
+                carla_root_path,
+                "Unreal",
+                "CarlaUE4",
+                "Content",
+                package_name,
+                "Maps",
+                umap_name,
+                "OpenDrive")
 
-            xodr_path_destin = os.path.join(carla_root_path, "Unreal", "CarlaUE4", "Content", xodr_name)
+            if not os.path.exists(xodr_folder_destin):
+                os.makedirs(xodr_folder_destin)
+
+            xodr_path_destin = os.path.join(
+                xodr_folder_destin,
+                xodr_name)
+
+            print('Copying "' + xodr_path + '" to "' + xodr_path_destin + '"')
             shutil.copy2(xodr_path, xodr_path_destin)
+
+    # Create package file
+    generate_package_file(package_name, props, maps)
+
 
 
 def import_assets_from_json_list(json_list):
