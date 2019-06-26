@@ -112,8 +112,11 @@ public:
   std::string ShowFileInfo(std::string Name, bool bShowAll = false);
   std::string ShowFileCollisions(std::string Name, char Type1, char Type2);
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
+
+  // replayer
   std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
   void SetReplayerTimeFactor(double TimeFactor);
+  void SetReplayerIgnoreHero(bool IgnoreHero);
 
   void Tick(float DeltaSeconds) final;
 

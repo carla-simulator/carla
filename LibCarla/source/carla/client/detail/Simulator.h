@@ -372,6 +372,10 @@ namespace detail {
       _client.SetReplayerTimeFactor(time_factor);
     }
 
+    void SetReplayerIgnoreHero(bool ignore_hero) {
+      _client.SetReplayerIgnoreHero(ignore_hero);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with sensors
