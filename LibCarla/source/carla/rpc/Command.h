@@ -85,12 +85,13 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, transform);
     };
 
-    struct ApplyTransform2D : CommandBase<ApplyTransform2D> {
-      ApplyTransform2D() = default;
-      ApplyTransform2D(ActorId id, const geom::Transform &value) : actor(id), transform(value) {}
+    struct ApplyWalkerState : CommandBase<ApplyWalkerState> {
+      ApplyWalkerState() = default;
+      ApplyWalkerState(ActorId id, const geom::Transform &value, const float speed) : actor(id), transform(value), speed(speed) {}
       ActorId actor;
       geom::Transform transform;
-      MSGPACK_DEFINE_ARRAY(actor, transform);
+      float speed;
+      MSGPACK_DEFINE_ARRAY(actor, transform, speed);
     };
 
     struct ApplyVelocity : CommandBase<ApplyVelocity> {
@@ -149,7 +150,7 @@ namespace rpc {
         ApplyVehicleControl,
         ApplyWalkerControl,
         ApplyTransform,
-        ApplyTransform2D,
+        ApplyWalkerState,
         ApplyVelocity,
         ApplyAngularVelocity,
         ApplyImpulse,

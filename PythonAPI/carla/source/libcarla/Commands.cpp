@@ -113,11 +113,12 @@ void export_commands() {
     .def_readwrite("transform", &cr::Command::ApplyTransform::transform)
   ;
 
-  class_<cr::Command::ApplyTransform2D>("ApplyTransform2D")
-    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Transform>, (arg("actor"), arg("transform")))
-    .def(init<cr::ActorId, cg::Transform>((arg("actor_id"), arg("transform"))))
-    .def_readwrite("actor_id", &cr::Command::ApplyTransform2D::actor)
-    .def_readwrite("transform", &cr::Command::ApplyTransform2D::transform)
+  class_<cr::Command::ApplyWalkerState>("ApplyWalkerState")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Transform, float>, (arg("actor"), arg("transform"), arg("speed")))
+    .def(init<cr::ActorId, cg::Transform, float>((arg("actor_id"), arg("transform"), arg("speed"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyWalkerState::actor)
+    .def_readwrite("transform", &cr::Command::ApplyWalkerState::transform)
+    .def_readwrite("speed", &cr::Command::ApplyWalkerState::speed)
   ;
 
   class_<cr::Command::ApplyVelocity>("ApplyVelocity")
@@ -160,7 +161,7 @@ void export_commands() {
   implicitly_convertible<cr::Command::ApplyVehicleControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyTransform, cr::Command>();
-  implicitly_convertible<cr::Command::ApplyTransform2D, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyWalkerState, cr::Command>();
   implicitly_convertible<cr::Command::ApplyVelocity, cr::Command>();
   implicitly_convertible<cr::Command::ApplyAngularVelocity, cr::Command>();
   implicitly_convertible<cr::Command::ApplyImpulse, cr::Command>();
