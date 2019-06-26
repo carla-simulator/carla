@@ -51,6 +51,7 @@ namespace nav {
   static const int MAX_POLYS = 256;
   static const int MAX_AGENTS = 500;
   static const int MAX_QUERY_SEARCH_NODES = 2048;
+  static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_RADIUS = 0.3f;
 
   // return a random float
@@ -61,7 +62,6 @@ namespace nav {
   Navigation::~Navigation() {
     _ready = false;
     _mappedId.clear();
-    _baseHeight.clear();
     _yaw_walkers.clear();
     _binaryMesh.clear();
     dtFreeCrowd(_crowd);
@@ -324,7 +324,7 @@ namespace nav {
   }
 
   // create a new walker in crowd
-  bool Navigation::AddWalker(ActorId id, carla::geom::Location from, float base_offset) {
+  bool Navigation::AddWalker(ActorId id, carla::geom::Location from) {
     dtCrowdAgentParams params;
 
     // check if all is ready
@@ -337,7 +337,7 @@ namespace nav {
     // set parameters
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
-    params.height = base_offset * 2.0f;
+    params.height = AGENT_HEIGHT;
     params.maxAcceleration = 8.0f;
     params.maxSpeed = 1.47f;
     params.collisionQueryRange = params.radius * 12.0f;
@@ -366,9 +366,6 @@ namespace nav {
 
     // save the id
     _mappedId[id] = index;
-
-    // save the base offset of this walker
-    _baseHeight[id] = base_offset;
 
     _yaw_walkers[id] = 0.0f;
 
@@ -550,18 +547,10 @@ namespace nav {
       return false;
     }
 
-    float baseOffset = 0.0f;
-    auto it2 = _baseHeight.find(id);
-    if (it2 != _baseHeight.end()) {
-      baseOffset = it2->second;
-    } else {
-      logging::log("Nav: base offset of walker ", id, " not found");
-    }
-
     // set its position in Unreal coordinates
     trans.location.x = agent->npos[0];
     trans.location.y = agent->npos[2];
-    trans.location.z = agent->npos[1] + baseOffset;
+    trans.location.z = agent->npos[1];
 
     // set its rotation
     float yaw =  atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
