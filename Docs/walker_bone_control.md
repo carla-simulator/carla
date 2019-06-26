@@ -7,7 +7,7 @@ all classes and methods available can be found at
 
 !!! note
     **This document assumes the user is familiar with the python api**. <br>
-    The user should read the python api tutorial before reading this document.
+    The user should read the Python API tutorial before reading this document.
     [Python API reference](python_api_tutorial.md).
 
 
@@ -40,19 +40,11 @@ client.set_timeout(2.0)
 ```
 
 #### Spawning a walker
-
-Get the blueprint of a random walker and set it to be the hero to make it
-the controllable actor when spawned
-
-```py
-blueprint = random.choice(self.world.get_blueprint_library().filter('walker.*'))
-blueprint.set_attribute('role_name', 'hero')
-```
-
-Spawn the walker at a random spawn point on the map
+Spawn a random walker at one of the map's spawn points
 
 ```py
 world = client.get_world()
+blueprint = random.choice(self.world.get_blueprint_library().filter('walker.*'))
 spawn_points = world.get_map().get_spawn_points()
 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
 world.try_spawn_actor(blueprint, spawn_point)
