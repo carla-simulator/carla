@@ -21,6 +21,7 @@ import subprocess
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
+SCRIPT_NAME = os.path.basename(__file__)
 
 
 @contextmanager
@@ -57,7 +58,7 @@ def invoke_commandlet(name, arguments):
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
     uproject_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
-    print("\nRunning command:\n$ " + full_command + '\n')
+    print("\n[" + str(SCRIPT_NAME) + "] Running command:\n$ " + full_command + '\n')
     subprocess.check_call([full_command], shell=True)
 
 
