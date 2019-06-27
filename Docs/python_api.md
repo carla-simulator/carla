@@ -35,6 +35,7 @@
 - `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
+- `get_snapshot() -> carla.WorldSnapshot`
 - `get_actor(actor_id) -> carla.Actor`
 - `get_actors(actor_ids=None) -> carla.ActorList`
 - `spawn_actor(blueprint, transform, attach_to=None)`
@@ -166,7 +167,11 @@
 - `is_at_traffic_light()`
 - `get_traffic_light()`
 
-## `carla.TrafficLight(carla.Actor)`
+## `carla.TrafficSign(carla.Actor)`
+
+- `trigger_volume -> carla.BoundingBox`
+
+## `carla.TrafficLight(carla.TrafficSign)`
 
 - `state`
 - `set_state(traffic_light_state)`
