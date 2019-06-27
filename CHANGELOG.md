@@ -1,5 +1,6 @@
 ## Latest
 
+  * Add access to vehicle transmission details
   * Add access to vehicle physics brake values
   * Enabled texture streaming for scene captures
     - Enabled texture streaming in the Unreal project settings
