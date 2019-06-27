@@ -1,5 +1,8 @@
 ## Latest
 
+  * Enabled texture streaming for scene captures
+    - Enabled texture streaming in the Unreal project settings
+    - Changed the scene capture to register its camera with Unreal's texture streamer every tick to enable texture streaming
   * Bugfix about recorder query system
   * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
     - When a recorded session finish replaying, all vehicles will continue in autopilot, and all pedestrians will stop.
