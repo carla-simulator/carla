@@ -356,8 +356,8 @@ namespace nav {
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
 
-    // from Unreal coordinates
-    float PointFrom[3] = { from.x, from.z, from.y };
+    // from Unreal coordinates (subtract half height to move pivot from center (unreal) to bottom (recast))
+    float PointFrom[3] = { from.x, from.z - (AGENT_HEIGHT / 2.0f), from.y };
     // add walker
     int index = _crowd->addAgent(PointFrom, &params);
     if (index == -1) {
