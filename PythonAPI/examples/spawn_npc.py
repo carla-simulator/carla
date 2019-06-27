@@ -172,11 +172,10 @@ def main():
         for i in range(0, len(all_id), 2):
             # index in the walkers_list
             index = int(i / 2)
-            # set start position of walker
-            all_actors[i].start(walkers_list[index]["trans"].location)
+            # start walker
+            all_actors[i].start()
             # set walk to random point
-            target = world.get_random_location_from_navigation()
-            all_actors[i].go_to_location(target)
+            all_actors[i].go_to_location(world.get_random_location_from_navigation())
             # random max speed
             all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2 (default is 1.4 m/s)
 
