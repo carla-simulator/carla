@@ -6,9 +6,9 @@ all classes and methods available can be found at
 [Python API reference](python_api.md).
 
 !!! note
-    **This document assumes the user is familiar with the python api**. <br>
+    **This document assumes the user is familiar with the Python API**. <br>
     The user should read the Python API tutorial before reading this document.
-    [Python API reference](python_api_tutorial.md).
+    [Python API tutorial](python_api_tutorial.md).
 
 
 ### Walker skeleton structure
