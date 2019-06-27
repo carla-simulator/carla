@@ -77,8 +77,11 @@ matrix:
 
     - env: TEST="MkDocs"
       install:
+        - pip install -q --user -r PythonAPI/docs/requirements.txt
         - pip install -q --user mkdocs
       script:
+        - ./PythonAPI/docs/doc_gen.py
+        - git diff --quiet HEAD --; if [ ! $? -eq 0 ]; then echo "Python API reference changed, forgot to run doc_gen.py?"; exit 1; fi
         - mkdocs build --verbose --clean --strict --site-dir _site
 
 notifications:
