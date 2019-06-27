@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
+// Copyright (c) 2019 Intel Corporation
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -47,6 +48,13 @@ namespace rpc {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const GearPhysicsControl &control) {
+    out << "GearPhysicsControl(ratio=" << std::to_string(control.ratio)
+        << ", down_ratio=" << std::to_string(control.down_ratio)
+        << ", up_ratio=" << std::to_string(control.up_ratio) << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
     out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
         << ", damping_rate=" << std::to_string(control.damping_rate)
@@ -68,6 +76,8 @@ namespace rpc {
     << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << std::to_string(control.gear_switch_time)
     << ", clutch_strength=" << std::to_string(control.clutch_strength)
+    << ", final_ratio=" << std::to_string(control.final_ratio)
+    << ", forward_gears=" << control.forward_gears
     << ", mass=" << std::to_string(control.mass)
     << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
     << ", center_of_mass=" << control.center_of_mass
@@ -131,6 +141,22 @@ static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::pyth
   self.wheels = wheels;
 }
 
+static auto GetForwardGears(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &gears = self.GetForwardGears();
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::GearPhysicsControl>>();
+  boost::python::object iter = get_iter(gears);
+  return boost::python::list(iter);
+}
+
+static void SetForwardGears(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+  std::vector<carla::rpc::GearPhysicsControl> gears;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    gears.push_back(boost::python::extract<carla::rpc::GearPhysicsControl &>(list[i]));
+  }
+  self.SetForwardGears(gears);
+}
+
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
   const std::vector<carla::geom::Vector2D> &torque_curve = self.GetTorqueCurve();
   boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
@@ -167,6 +193,8 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "use_gear_autobox",
     "gear_switch_time",
     "clutch_strength",
+    "final_ratio",
+    "forward_gears",
 
     "mass",
     "drag_coefficient",
@@ -279,6 +307,24 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cr::GearPhysicsControl>>("vector_of_gears")
+      .def(boost::python::vector_indexing_suite<std::vector<cr::GearPhysicsControl>>())
+      .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::GearPhysicsControl>("GearPhysicsControl")
+    .def(init<float, float, float>(
+        (arg("ratio")=1.0f,
+         arg("down_ratio")=0.5f,
+         arg("up_ratio")=0.65f)))
+    .def_readwrite("ratio", &cr::GearPhysicsControl::ratio)
+    .def_readwrite("down_ratio", &cr::GearPhysicsControl::down_ratio)
+    .def_readwrite("up_ratio", &cr::GearPhysicsControl::up_ratio)
+    .def("__eq__", &cr::GearPhysicsControl::operator==)
+    .def("__ne__", &cr::GearPhysicsControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
     .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
     .def(self_ns::str(self_ns::self))
@@ -320,6 +366,8 @@ void export_control() {
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
     .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
+    .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio)
+    .add_property("forward_gears", &GetForwardGears, &SetForwardGears)
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
