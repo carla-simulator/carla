@@ -1,5 +1,6 @@
 ## Latest
 
+  * Add access to vehicle transmission details
   * Bugfix about recorder query system
   * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
