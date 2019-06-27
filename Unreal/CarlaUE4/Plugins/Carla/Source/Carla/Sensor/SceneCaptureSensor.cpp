@@ -14,6 +14,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
+#include "ContentStreaming.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -172,6 +173,13 @@ void ASceneCaptureSensor::BeginPlay()
       bEnablePostProcessingEffects);
 
   Super::BeginPlay();
+}
+
+void ASceneCaptureSensor::Tick(float DeltaTime)
+{
+  Super::Tick(DeltaTime);
+  // Add the view information every tick. Its only used for one tick and then removed by the streamer.
+  IStreamingManager::Get().AddViewInformation( CaptureComponent2D->GetComponentLocation(), ImageWidth, ImageWidth / FMath::Tan( CaptureComponent2D->FOVAngle ) );
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)

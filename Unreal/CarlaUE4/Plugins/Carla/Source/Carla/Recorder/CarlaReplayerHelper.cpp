@@ -111,7 +111,7 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
 }
 
 // enable / disable physics for an actor
-bool CarlaReplayerHelper::SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled)
+bool CarlaReplayerHelper::SetActorSimulatePhysics(const FActorView &ActorView, bool bEnabled)
 {
   if (!ActorView.IsValid())
   {
@@ -128,7 +128,7 @@ bool CarlaReplayerHelper::SetActorSimulatePhysics(FActorView &ActorView, bool bE
 }
 
 // enable / disable autopilot for an actor
-bool CarlaReplayerHelper::SetActorAutopilot(FActorView &ActorView, bool bEnabled, bool bKeepState)
+bool CarlaReplayerHelper::SetActorAutopilot(const FActorView &ActorView, bool bEnabled, bool bKeepState)
 {
   if (!ActorView.IsValid())
   {
@@ -320,8 +320,61 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
 // set the animation for walkers
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
+  SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
+}
+
+// replay finish
+bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
+{
+  // set autopilot and physics to all AI vehicles
+  auto registry = Episode->GetActorRegistry();
+  for (const FActorView &ActorView : registry)
+  {
+    // enable physics only on vehicles
+    switch (ActorView.GetActorType())
+    {
+
+      // vehicles
+      case FActorView::ActorType::Vehicle:
+        SetActorSimulatePhysics(ActorView, true);
+        // autopilot
+        if (bApplyAutopilot)
+          SetActorAutopilot(ActorView, true);
+        break;
+
+      // walkers
+      case FActorView::ActorType::Walker:
+        // stop walker
+        SetActorVelocity(ActorView, FVector(0, 0, 0));
+        SetWalkerSpeed(ActorView.GetActorId(), 0.0f);
+        break;
+    }
+  }
+  return true;
+}
+
+void CarlaReplayerHelper::SetActorVelocity(const FActorView &ActorView, FVector Velocity)
+{
+  if (!ActorView.IsValid())
+  {
+    return;
+  }
+  auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+  if (RootComponent == nullptr)
+  {
+    return;
+  }
+  RootComponent->SetPhysicsLinearVelocity(
+      Velocity,
+      false,
+      "None");
+}
+
+// set the animation speed for walkers
+void CarlaReplayerHelper::SetWalkerSpeed(uint32_t ActorId, float Speed)
+{
   check(Episode != nullptr);
-  AActor *Actor = Episode->GetActorRegistry().Find(Walker.DatabaseId).GetActor();
+  AActor *Actor = Episode->GetActorRegistry().Find(ActorId).GetActor();
   if (Actor && !Actor->IsPendingKill())
   {
     auto Wal = Cast<APawn>(Actor);
@@ -331,30 +384,9 @@ void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walk
       if (Controller != nullptr)
       {
         FWalkerControl Control;
-        Control.Speed = Walker.Speed;
+        Control.Speed = Speed;
         Controller->ApplyWalkerControl(Control);
      }
     }
   }
 }
-
-// replay finish
-bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot)
-{
-  // set autopilot and physics to all AI vehicles
-  auto registry = Episode->GetActorRegistry();
-  for (auto ActorView : registry)
-  {
-    // enable physics only on vehicles
-    if (ActorView.GetActorType() == FActorView::ActorType::Vehicle)
-    {
-      SetActorSimulatePhysics(ActorView, true);
-      // autopilot
-      if (bApplyAutopilot)
-        SetActorAutopilot(ActorView, true, true);
-    }
-  }
-  return true;
-}
-
-

@@ -1,10 +1,14 @@
 ## Latest
 
-  * Bugfix about recorder query system, showing unknown packets warning (correct but annoying).
-  * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
+  * Bugfix about recorder query system, showing warning about unknown packets
   * Added pedestrian support:
     - We can spawn pedestrians that will walk over sidewalks at random points continually.
     - The script 'spawn_npc.py' now can spawn pedestrians with the flag '-w' and the number of pedestrians.
+  * Enabled texture streaming for scene captures
+    - Enabled texture streaming in the Unreal project settings
+    - Changed the scene capture to register its camera with Unreal's texture streamer every tick to enable texture streaming
+  * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
+    - When a recorded session finish replaying, all vehicles will continue in autopilot, and all pedestrians will stop.
   * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
   * Add ability to set motion blur settings for rgb camera in sensor python blueprint
   * Improved visual quality of the screen capture for the rgb sensor

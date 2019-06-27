@@ -52,6 +52,12 @@ public:
   // set the camera position to follow an actor
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
 
+  // set the velocity of the actor
+  void SetActorVelocity(const FActorView &ActorView, FVector Velocity);
+
+  // set the animation speed for walkers
+  void SetWalkerSpeed(uint32_t ActorId, float Speed);
+
 private:
 
   UCarlaEpisode *Episode {nullptr};
@@ -65,7 +71,7 @@ private:
   AActor *FindTrafficLightAt(FVector Location);
 
   // enable / disable physics for an actor
-  bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
+  bool SetActorSimulatePhysics(const FActorView &ActorView, bool bEnabled);
   // enable / disable autopilot for an actor
-  bool SetActorAutopilot(FActorView &ActorView, bool bEnabled, bool bKeepState = false);
+  bool SetActorAutopilot(const FActorView &ActorView, bool bEnabled, bool bKeepState = false);
 };

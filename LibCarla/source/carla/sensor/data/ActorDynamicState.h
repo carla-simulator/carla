@@ -128,9 +128,12 @@ namespace detail {
 
 #pragma pack(pop)
 
-  static_assert(
-      sizeof(ActorDynamicState) == 16u * sizeof(uint32_t) + sizeof(detail::VehicleData),
-      "Invalid ActorDynamicState size!");
+static_assert(
+    sizeof(ActorDynamicState) == 93u,
+    "Invalid ActorDynamicState size! "
+    "If you modified this class please update the size here, else you may "
+    "comment this assert, but your platform may have compatibility issues "
+    "connecting to other platforms.");
 
 } // namespace data
 } // namespace sensor
