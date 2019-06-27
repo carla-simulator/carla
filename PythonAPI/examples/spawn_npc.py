@@ -170,8 +170,6 @@ def main():
         all_actors = world.get_actors(all_id)
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         for i in range(0, len(all_id), 2):
-            # index in the walkers_list
-            index = int(i / 2)
             # start walker
             all_actors[i].start()
             # set walk to random point
