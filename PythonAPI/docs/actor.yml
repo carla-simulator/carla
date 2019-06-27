@@ -1,144 +1,268 @@
 ---
 - module_name: carla
-  doc: >
   # - CLASSES ------------------------------
   classes:
   - class_name: Actor
     # - DESCRIPTION ------------------------
     doc: >
+      Base class for all actors.
+
+      Actor is anything that plays a role in the simulation and can be moved
+      around, examples of actors are vehicles, pedestrians, and sensors.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: uint32_t
       doc: >
+        Unique id identifying this actor. Note ids are only unique during a
+        given episode.
     - var_name: type_id
+      type: str
       doc: >
+        Id of the blueprint that created this actor, e.g.
+        "vehicle.ford.mustang".
     - var_name: parent
+      type: carla.Actor
       doc: >
+        Parent actor of this instance, None if this instance is not attached to
+        another actor.
     - var_name: semantic_tags
+      type: list(uint8_t)
       doc: >
+        List of semantic tags of all components of this actor, see semantic
+        segmentation sensor for the list of available tags. E.g., a traffic
+        light actor could contain "pole" and "traffic light" tags.
     - var_name: is_alive
+      type: bool
+      deprecated: >
+        This method is not reliable to check if an actor is still alive. Use
+        `world.get_actors([actor.id])` to check if the actor is still present in
+        the simulation.
       doc: >
+        Return whether this object was destroyed using this actor handle.
     - var_name: attributes
+      type: dict
       doc: >
+        Dictionary of attributes of the blueprint that created this actor.
     # - METHODS ----------------------------
     methods:
-    - def_name: get_world
-      params:
+    - def_name: destroy
+      return_type: bool
       doc: >
+        Tell the simulator to destroy this Actor, and return whether the actor
+        was successfully destroyed. It has no effect if the Actor was already
+        successfully destroyed.
+      warning: >
+        This function blocks until the destruction operation is completed by the
+        simulator.
+    # --------------------------------------
+    - def_name: get_world
+      return_type: carla.World
+      doc: >
+        Return the world this actor belongs to.
     # --------------------------------------
     - def_name: get_location
-      params:
+      return_type: carla.Location
       doc: >
+        Return the current location of the actor.
+      note: >
+        This function does not call the simulator, it returns the location
+        received in the last tick.
     # --------------------------------------
-    - def_name: get_transform
-      params:
+      return_type: carla.Transform
       doc: >
+        Return the current transform of the actor.
+      note: >
+        This function does not call the simulator, it returns the transform
+        received in the last tick.
     # --------------------------------------
     - def_name: get_velocity
-      params:
+      return_type: carla.Vector3D
       doc: >
+        Return the current 3D velocity of the actor.
+      note: >
+        This function does not call the simulator, it returns the velocity
+        received in the last tick.
     # --------------------------------------
     - def_name: get_angular_velocity
-      params:
+      return_type: carla.Vector3D
       doc: >
+        Return the current 3D angular velocity of the actor.
+      note: >
+        This function does not call the simulator, it returns the angular
+        velocity received in the last tick.
     # --------------------------------------
     - def_name: get_acceleration
-      params:
+      return_type: carla.Vector3D
       doc: >
+        Return the current 3D acceleration of the actor.
+      note: >
+        This function does not call the simulator, it returns the acceleration
+        received in the last tick.
     # --------------------------------------
     - def_name: set_location
       params:
+      - param_name: location
+        type: carla.Location
       doc: >
+        Teleport the actor to a given location.
     # --------------------------------------
     - def_name: set_transform
       params:
+      - param_name: transform
+        type: carla.Transform
       doc: >
+        Teleport the actor to a given transform.
     # --------------------------------------
     - def_name: set_velocity
       params:
+      - param_name: velocity
+        type: carla.Vector3D
       doc: >
+        Set the actor's velocity.
     # --------------------------------------
     - def_name: set_angular_velocity
       params:
+      - param_name: angular_velocity
+        type: carla.Vector3D
       doc: >
+        Set the actor's angular velocity.
     # --------------------------------------
     - def_name: add_impulse
       params:
+      - param_name: impulse
+        type: carla.Vector3D
       doc: >
+        Add impulse to the actor.
     # --------------------------------------
     - def_name: set_simulate_physics
       params:
+      - param_name: enabled
+        type: bool
+        default: True
       doc: >
+        Enable or disable physics simulation on this actor.
     # --------------------------------------
-    - def_name: destroy
-      params:
-      doc: >
+    - def_name: __str__
+      return_type: str
     # --------------------------------------
 
   - class_name: Vehicle
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
+      A vehicle actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
+      type: carla.BoundingBox
       doc: >
+        Bounding box of the vehicle.
     # - METHODS ----------------------------
-    methods:
     - def_name: apply_control
       params:
+      - param_name: control
+        type: carla.VehicleControl
       doc: >
+        Apply control to this vehicle. The control will take effect on next
+        tick.
     # --------------------------------------
     - def_name: get_control
-      params:
+      return_type: carla.VehicleControl
       doc: >
+        Return the control last applied to this vehicle.
+      note: >
+        This function does not call the simulator, it returns the data received
+        in the last tick.
     # --------------------------------------
     - def_name: apply_physics_control
       params:
+      - param_name: physics_control
+        type: carla.VehiclePhysicsControl
       doc: >
+        Apply physics control to this vehicle. The control will take effect on
+        next tick.
     # --------------------------------------
     - def_name: get_physics_control
-      params:
+      return_type: carla.VehiclePhysicsControl
       doc: >
+        Return the physics control last applied to this vehicle.
+      warning: This function does call the simulator to retrieve the value.
     # --------------------------------------
     - def_name: set_autopilot
       params:
+      - param_name: enabled
+        type: bool
+        default: True
       doc: >
+        Switch on/off this vehicle's server-side autopilot.
     # --------------------------------------
     - def_name: get_speed_limit
-      params:
+      return_type: float
       doc: >
+        Return the speed limit currently affecting this vehicle. Note that the
+        speed limit is only updated when passing by a speed limit signal, right
+        after spawning a vehicle it might not reflect the actual speed limit of
+        the current road.
+      note: >
+        This function does not call the simulator, it returns the data received
+        in the last tick.
     # --------------------------------------
     - def_name: get_traffic_light_state
-      params:
+      return_type: carla.TrafficLightState
       doc: >
+        Return the state of the traffic light currently affecting this vehicle.
+        If no traffic light is currently affecting the vehicle, return Green.
+      note: >
+        This function does not call the simulator, it returns the data received
+        in the last tick.
     # --------------------------------------
     - def_name: is_at_traffic_light
-      params:
+      return_type: bool
       doc: >
+        Return whether a traffic light is affecting this vehicle.
+      note: >
+        This function does not call the simulator, it returns the data received
+        in the last tick.
     # --------------------------------------
     - def_name: get_traffic_light
-      params:
+      return_type: carla.TrafficLight
       doc: >
+        Retrieve the traffic light actor currently affecting this vehicle.
+    # --------------------------------------
+    - def_name: __str__
+      return_type: str
     # --------------------------------------
 
   - class_name: Walker
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
+      A walking actor, pedestrian.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
+      type: carla.BoundingBox
       doc: >
+        Bounding box of the walker.
     # - METHODS ----------------------------
-    methods:
     - def_name: apply_control
       params:
+      - param_name: control
+        type: carla.WalkerControl
       doc: >
+        Apply control to this walker. The control will take effect on next tick.
     # --------------------------------------
     - def_name: get_control
-      params:
+      return_type: carla.WalkerControl
       doc: >
+        Return the control last applied to this walker.
+      note: >
+        This function does not call the simulator, it returns the data received
+        in the last tick.
+    # --------------------------------------
+    - def_name: __str__
+      return_type: str
     # --------------------------------------
 
   - class_name: TrafficSign
