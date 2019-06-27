@@ -198,7 +198,7 @@ Also, physics control properties can be tuned for vehicles and its wheels
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object.
+These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object and the gearbox details via `GearPhysicsControl`.
 
 ```py
 carla.VehiclePhysicsControl(
@@ -211,6 +211,7 @@ carla.VehiclePhysicsControl(
     use_gear_autobox,
     gear_switch_time,
     clutch_strength,
+
     mass,
     drag_coefficient,
     center_of_mass,
@@ -228,6 +229,9 @@ Where:
 - *use_gear_autobox*: If true, the vehicle will have automatic transmission
 - *gear_switch_time*: Switching time between gears
 - *clutch_strength*: The clutch strength of the vehicle. Measured in Kgm^2/s
+
+- *final_ratio*: The fixed ratio from transmission to wheels.
+- *forward_gears*: List of `GearPhysicsControl` objects.
 
 - *mass*: The mass of the vehicle measured in Kg
 - *drag_coefficient*: Drag coefficient of the vehicle's chassis
@@ -248,6 +252,16 @@ Where:
 - *steer_angle*: The maximum angle in degrees that the wheel can steer.
 - *disable_steering*: If true, the wheel will not steer.
 
+```py
+carla.GearPhysicsControl(
+    ratio,
+    down_ratio,
+    up_ratio)
+```
+Where:
+- *ratio*: The transmission ratio of this gear.
+- *down_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.
+- *up_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.
 
 Our vehicles also come with a handy autopilot
 

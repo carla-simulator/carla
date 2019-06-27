@@ -231,6 +231,22 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   PhysicsControl.bUseGearAutoBox = Vehicle4W->TransmissionSetup.bUseGearAutoBox;
   PhysicsControl.GearSwitchTime = Vehicle4W->TransmissionSetup.GearSwitchTime;
   PhysicsControl.ClutchStrength = Vehicle4W->TransmissionSetup.ClutchStrength;
+  PhysicsControl.FinalRatio = Vehicle4W->TransmissionSetup.FinalRatio;
+
+  TArray<FGearPhysicsControl> ForwardGears;
+
+  for (auto const &Gear : Vehicle4W->TransmissionSetup.ForwardGears)
+  {
+    FGearPhysicsControl GearPhysicsControl;
+
+    GearPhysicsControl.Ratio = Gear.Ratio;
+    GearPhysicsControl.UpRatio = Gear.UpRatio;
+    GearPhysicsControl.DownRatio = Gear.DownRatio;
+
+    ForwardGears.Add(GearPhysicsControl);
+  }
+
+  PhysicsControl.ForwardGears = ForwardGears;
 
   // Vehicle Setup
   PhysicsControl.Mass = Vehicle4W->Mass;
@@ -291,6 +307,24 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   Vehicle4W->TransmissionSetup.bUseGearAutoBox = PhysicsControl.bUseGearAutoBox;
   Vehicle4W->TransmissionSetup.GearSwitchTime = PhysicsControl.GearSwitchTime;
   Vehicle4W->TransmissionSetup.ClutchStrength = PhysicsControl.ClutchStrength;
+  Vehicle4W->TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
+
+  TArray<FVehicleGearData> ForwardGears;
+
+  for (auto const &Gear : PhysicsControl.ForwardGears)
+  {
+    FVehicleGearData GearData;
+
+    GearData.Ratio = Gear.Ratio;
+    GearData.UpRatio = Gear.UpRatio;
+    GearData.DownRatio = Gear.DownRatio;
+
+    ForwardGears.Add(GearData);
+  }
+
+  Vehicle4W->TransmissionSetup.ForwardGears = ForwardGears;
+
+
 
   // Vehicle Setup
   Vehicle4W->Mass = PhysicsControl.Mass;

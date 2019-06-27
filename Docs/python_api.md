@@ -273,6 +273,14 @@
 - `__eq__(other)`
 - `__ne__(other)`
 
+## `carla.GearPhysicsControl`
+
+- `ratio`
+- `down_ratio`
+- `up_ratio`
+- `__eq__(other)`
+- `__ne__(other)`
+
 ## `carla.VehiclePhysicsControl`
 
 - `torque_curve`
@@ -284,6 +292,8 @@
 - `use_gear_autobox`
 - `gear_switch_time`
 - `clutch_strength`
+- `final_ratio`
+- `forward_gears`
 - `mass`
 - `drag_coefficient`
 - `center_of_mass`
