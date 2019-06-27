@@ -290,6 +290,19 @@
 - `__eq__(other)`
 - `__ne__(other)`
 
+## `carla.WalkerControl`
+
+- `direction`
+- `speed`
+- `jump`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.WalkerBoneControl`
+
+- `bone_transforms`
+
+
 ## `carla.Map`
 
 - `__init__(name, xodr_content)`

@@ -296,6 +296,10 @@ namespace detail {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
+    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
+      _client.ApplyBoneControlToWalker(walker.GetId(), control);
+    }
+
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
