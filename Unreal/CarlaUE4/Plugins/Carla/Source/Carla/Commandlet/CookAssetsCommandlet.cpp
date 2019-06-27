@@ -146,12 +146,17 @@ bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
   World->MarkPackageDirty();
   World->GetOuter()->MarkPackageDirty();
 
-  // Filling the map stuff (Code only applied for maps)
-  AOpenDriveActor *OpenWorldActor =
-      CastChecked<AOpenDriveActor>(World->SpawnActor(AOpenDriveActor::StaticClass(),
-      new FVector(), NULL));
-  OpenWorldActor->BuildRoutes(WorldName);
-  OpenWorldActor->AddSpawners();
+  // @TODO: find a better solution
+  // Hardcoded so it will ignore the PropMaps umap that doesn't contains OpenDrive info
+  if (World->GetName() != "PropsMap")
+  {
+    // Filling the map stuff (Code only applied for maps)
+    AOpenDriveActor *OpenWorldActor =
+        CastChecked<AOpenDriveActor>(World->SpawnActor(AOpenDriveActor::StaticClass(),
+        new FVector(), NULL));
+    OpenWorldActor->BuildRoutes(WorldName);
+    OpenWorldActor->AddSpawners();
+  }
 
   // Saving the package
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName,
@@ -267,11 +272,9 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
   }
 
   // Save Map Path File for further use
-  FString SaveDirectory = FString("/Game/") + PackageParams.Name + TEXT("/Config");
+  FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
   FString FileName = FString("MapPaths.txt");
-
-  // TODO: This throws a weird error when saving, we need to fix it
-  // SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+  SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
 
   // Add props in a single Base Map
   AddMeshesToWorld(AssetsPaths.PropsPaths, false);
