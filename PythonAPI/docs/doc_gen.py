@@ -147,16 +147,38 @@ class YamlFile:
                         exit(0)
                     if 'instance_variables' in cl and cl['instance_variables']:
                         for iv in cl['instance_variables']:
+                            if 'var_name' not in iv:
+                                print('\n[ERROR] File: ' + self._path)
+                                print("'var_name' not found inside 'instance_variables' of class: " + cl['class_name'])
+                                exit(0)
                             if 'var_name' in iv and iv['var_name'] is None:
                                 print('\n[ERROR] File: ' + self._path)
                                 print("'var_name' is empty in:")
                                 exit(0)
                     if 'methods' in cl and cl['methods']:
                         for met in cl['methods']:
+                            if 'def_name' not in met:
+                                print('\n[ERROR] File: ' + self._path)
+                                print("'def_name' not found inside 'methods' of class: " + cl['class_name'])
+                                exit(0)
                             if 'def_name' in met and met['def_name'] is None:
                                 print('\n[ERROR] File: ' + self._path)
                                 print("'def_name' is empty in:")
                                 exit(0)
+                            if 'params' in met and met['params']:
+                                for param in met['params']:
+                                    if 'param_name' not in param:                            
+                                        print('\n[ERROR] File: ' + self._path)
+                                        print("'param_name' not found inside 'params' of class: " + cl['class_name'])
+                                        exit(0)
+                                    if 'param_name' in param and param['param_name'] is None:                            
+                                        print('\n[ERROR] File: ' + self._path)
+                                        print("'param_name' is empty in:")
+                                        exit(0)
+                                    if 'type' in param and param['type'] is None:                            
+                                        print('\n[ERROR] File: ' + self._path)
+                                        print("'type' is empty in:")
+                                        exit(0)
 
     def get_modules(self):
         return [module for module in self.data]
