@@ -165,13 +165,13 @@
         - [**load_world**(**self**, **map_name**)](#carla.Client.load_world) <sub>_Method_</sub>
         - [**start_recorder**(**self**, **filename**)](#carla.Client.start_recorder) <sub>_Method_</sub>
         - [**stop_recorder**(**self**)](#carla.Client.stop_recorder) <sub>_Method_</sub>
-        - [**show_recorder_file_info**(**self**, **filename**, **show_all**=False)](#carla.Client.show_recorder_file_info) <sub>_Method_</sub>
-        - [**show_recorder_collisions**(**self**, **filename**, **category1**='a', **category2**='a')](#carla.Client.show_recorder_collisions) <sub>_Method_</sub>
-        - [**show_recorder_actors_blocked**(**self**, **filename**, **min_time**=60.0, **min_distance**=100.0)](#carla.Client.show_recorder_actors_blocked) <sub>_Method_</sub>
-        - [**replay_file**(**self**, **filename**, **start**=0.0, **duration**=0.0, **camera**=0)](#carla.Client.replay_file) <sub>_Method_</sub>
+        - [**show_recorder_file_info**(**self**, **filename**, **show_all**)](#carla.Client.show_recorder_file_info) <sub>_Method_</sub>
+        - [**show_recorder_collisions**(**self**, **filename**, **category1**, **category2**)](#carla.Client.show_recorder_collisions) <sub>_Method_</sub>
+        - [**show_recorder_actors_blocked**(**self**, **filename**, **min_time**, **min_distance**)](#carla.Client.show_recorder_actors_blocked) <sub>_Method_</sub>
+        - [**replay_file**(**self**, **start**, **duration**)](#carla.Client.replay_file) <sub>_Method_</sub>
         - [**set_replayer_time_factor**(**self**, **time_factor**)](#carla.Client.set_replayer_time_factor) <sub>_Method_</sub>
-        - [**apply_batch**(**self**)](#carla.Client.apply_batch) <sub>_Method_</sub>
-        - [**apply_batch_sync**(**self**)](#carla.Client.apply_batch_sync) <sub>_Method_</sub>
+        - [**apply_batch**(**self**, **commands**)](#carla.Client.apply_batch) <sub>_Method_</sub>
+        - [**apply_batch_sync**(**self**, **commands**)](#carla.Client.apply_batch_sync) <sub>_Method_</sub>
     - [**CollisionEvent**](#carla.CollisionEvent) <sub>_Class_</sub>  
         - [**actor**](#carla.CollisionEvent.actor) <sub>_Instance variable_</sub>
         - [**other_actor**](#carla.CollisionEvent.other_actor) <sub>_Instance variable_</sub>
@@ -375,7 +375,7 @@
         - [**\__ne__**(**self**, **other**)](#carla.Location.__ne__) <sub>_Method_</sub>
     - [**Sensor**](#carla.Sensor) <sub>_Class_</sub>  
         - [**is_listening**](#carla.Sensor.is_listening) <sub>_Instance variable_</sub>
-        - [**listen**(**self**)](#carla.Sensor.listen) <sub>_Method_</sub>
+        - [**listen**(**self**, **callback**)](#carla.Sensor.listen) <sub>_Method_</sub>
         - [**stop**(**self**)](#carla.Sensor.stop) <sub>_Method_</sub>
     - [**TrafficLight**](#carla.TrafficLight) <sub>_Class_</sub>  
         - [**state**](#carla.TrafficLight.state) <sub>_Instance variable_</sub>
@@ -778,59 +778,81 @@ Get the client version as a string.
 Get the server version as a string.  
     - **Return:** _str_  
 - <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
-Get the server version as a string.  
+Get the world object from where we can get other information about the map.  
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
+Get a list of strings of the maps available on server. The result can be something like:  
+  '/Game/Carla/Maps/Town01'  
+  '/Game/Carla/Maps/Town02'  
+  '/Game/Carla/Maps/Town03'  
+  '/Game/Carla/Maps/Town04'  
+  '/Game/Carla/Maps/Town05'  
+  '/Game/Carla/Maps/Town06'  
+  '/Game/Carla/Maps/Town07'.  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
+Start again current world.  
     - **Raises:** RuntimeError  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
+Load one of the available worlds on server.  
     - **Parameters:**
-        - `map_name` (_str_) – Name of the map to load.  
+        - `map_name` (_str_) – Name of the map to load, like '/Game/Carla/Maps/Town01'.  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'. If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.  
     - **Parameters:**
-        - `filename` (_str_) – Name of the file to create.  
+        - `filename` (_str_) – Name of the file to write the recorded data.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
 Stops the recording in curse.  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**=False</font>)  
-Will show info about the recorded file. We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
+Will show info about the recorded file (frames, times, events, state, positions...) We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.  
     - **Parameters:**
         - `filename` (_str_) – Name of the recorded file to load.  
         - `show_all` (_bool_) – Show all detailed info, or just a summary.  
-- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**='a'</font>, <font color="#00a6ed">**category2**='a'</font>)  
+- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  
 This will show which collisions were recorded in the file. We can use a filter for the collisions we want, using two categories. The categories can be:  
-  \- `h` = Hero  
-  \- `v` = Vehicle  
-  \- `w` = Walker  
-  \- `t` = Traffic light  
-  \- `o` = Other  
-  \- `a` = Any  
-So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'. Or if you want all the collisions (filter off) you can use 'a' as categories.  
+  'h' = Hero  
+  'v' = Vehicle  
+  'w' = Walker  
+  't' = Traffic light  
+  'o' = Other  
+  'a' = Any  
+So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'. Or if you want all the collisions (filter off) you can use 'a' as both categories.  
     - **Parameters:**
         - `filename` (_str_) – Name of the recorded file to load.  
         - `category1` (_single char_) – Character specifying the category of the first actor.  
         - `category2` (_single char_) – Character specifying the category of the second actor.  
-- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#7fb800">show_recorder_actors_blocked</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**min_time**=60.0</font>, <font color="#00a6ed">**min_distance**=100.0</font>)  
+- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#7fb800">show_recorder_actors_blocked</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**min_time**</font>, <font color="#00a6ed">**min_distance**</font>)  
 Shows which actors seems blocked by some reason. The idea is to calculate which actors are not moving as much as 'min_distance' for a period of 'min_time'. By default min_time = 60 seconds (1 min) and min_distance = 100 centimeters (1 m).  
     - **Parameters:**
         - `filename` (_str_) – Name of the recorded file to load.  
         - `min_time` (_float_) – How many seconds has to be stoped an actor to be considered as blocked.  
-        - `min_distance` (_float_) – How many centimeters needs to displace an actor in order to not be considered as blocked.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**start**=0.0</font>, <font color="#00a6ed">**duration**=0.0</font>, <font color="#00a6ed">**camera**=0</font>)  
+        - `min_distance` (_float_) – How many centimeters needs to move the actor in order to be considered as moving, and not blocked.  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>)  
 Playback a file.  
     - **Parameters:**
-        - `filename` (_str_) – Name of the recorded file to play.  
         - `start` (_float_) – Time in seconds where to start the playback. If it is negative, then it starts from the end.  
-        - `duration` (_float_) – Time of playback, after that time the playback stops and all the actors are left driving in autopilot. A value of 0 means playback until the end.  
-        - `camera` (_int_) – Id of the actor to follow. If this is 0 then camera is disabled.  
+        - `duration` (_int_) – Id of the actor to follow. If this is 0 then camera is disabled.  
 - <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**</font>)  
 Apply a different playback speed to current playback. Can be used several times while a playback is in curse.  
     - **Parameters:**
-        - `time_factor` (_float_) – These values means:  
-  \- A value of 1.0 means normal time factor.  
-  \- A value < 1.0 means slow motion (for example 0.5 is half speed)  
-  \- A value > 1.0 means fast motion (for example 2.0 is double speed).  
-- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>)  
+        - `time_factor` (_float_) – A value of 1.0 means normal time factor. A value < 1.0 means slow motion (for example 0.5 is half speed) A value > 1.0 means fast motion (for example 2.0 is double speed).  
+- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
+This function executes some commands altogether as fast as it can. For example, to set autopilot on on some actors, we could use:   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)   We don't have control about the response of each command. If we need that, we can use apply_batch_sync().  
+    - **Parameters:**
+        - `commands` (_list_) – A list of commands to execute in batch. Each command have a different number of parameters. Currently we can use these [commands](#commands.ApplyAngularVelocity):  
+  SpawnActor  
+  DestroyActor  
+  ApplyVehicleControl  
+  ApplyWalkerControl  
+  ApplyTransform  
+  ApplyVelocity  
+  AplyAngularVelocity  
+  ApplyImpulse  
+  SetSimulatePhysics  
+  SetAutopilot.  
+- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
+This function executes some commands altogether as fast as it can one after the other, and returns another list with all the responses from each command.   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116).  
+    - **Parameters:**
+        - `commands` (_list_) – A list of commands to execute in batch. For a list of commands available see function above apply_batch().  
+    - **Return:** _list_  
 
 ---
 
@@ -1041,24 +1063,32 @@ Vector 3D helper class.
 VehicleControl is used for controlling the basic movement of a vehicle.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>** (_float_)  
+- <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>**  
 Scalar value to control the vehicle throttle.  
-- <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>** (_float_)  
+- <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>**  
 Scalar value to control the vehicle steering.  
-- <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>** (_float_)  
+- <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>**  
 Scalar value to control the vehicle brake.  
-- <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>** (_bool_)  
+- <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>**  
 If true, hand brake will be used.  
-- <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>** (_bool_)  
+- <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>**  
 If true, vehicle will move reverse.  
-- <a name="carla.VehicleControl.manual_gear_shift"></a>**<font color="#f8805a">manual_gear_shift</font>** (_bool_)  
+- <a name="carla.VehicleControl.manual_gear_shift"></a>**<font color="#f8805a">manual_gear_shift</font>**  
 If true, the vehicle will be controlled by changing gears manually.  
-- <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>** (_int_)  
+- <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>**  
 Controls the gear value of the vehicle.  
 
 <h3>Methods</h3>
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=True</font>, <font color="#00a6ed">**reverse**=True</font>, <font color="#00a6ed">**manual_gear_shift**=True</font>, <font color="#00a6ed">**gear**=0</font>)  
 VehicleControl constructor.  
+    - **Parameters:**
+        - `throttle` (_float_)  
+        - `steer` (_float_)  
+        - `brake` (_float_)  
+        - `hand_brake` (_bool_)  
+        - `reverse` (_bool_)  
+        - `manual_gear_shift` (_bool_)  
+        - `gear` (_int_)  
 - <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 - <a name="carla.VehicleControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 
@@ -1193,8 +1223,19 @@ Altitude angle of the sun in degrees. Values range from -90 to 90.
 <h3>Methods</h3>
 - <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudyness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>)  
 WeatherParameters constructor.  
+    - **Parameters:**
+        - `cloudyness` (_float_)  
+        - `precipitation` (_float_)  
+        - `precipitation_deposits` (_float_)  
+        - `wind_intensity` (_float_)  
+        - `sun_azimuth_angle` (_float_)  
+        - `sun_altitude_angle` (_float_)  
 - <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns True if `self` and `other` are equal.  
+    - **Return:** _bool_  
 - <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns True if `self` and `other` are not equal.  
+    - **Return:** _bool_  
 
 ---
 
@@ -1314,11 +1355,15 @@ Computes the Euclidean distance between the current location to another one.
 ## carla.Sensor<a name="carla.Sensor"></a><sub><sup>([carla.Actor](#carla.Actor))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>**  
+- <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  
+Is true if the sensor is listening for data.  
 
 <h3>Methods</h3>
-- <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+    - **Parameters:**
+        - `callback` (_function_) – Function that will be called each time the sensor sends data. As a parameter the function receives a buffer with the data.  
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
+Stops listening for data.  
 
 ---
 

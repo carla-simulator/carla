@@ -43,7 +43,6 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: self
       - param_name: cloudyness
         type: float
         default: 0.0
@@ -67,7 +66,6 @@
     # --------------------------------------
     - def_name: __eq__
       params:
-      - param_name: self
       - param_name: other
       return: bool
       doc: >
@@ -75,7 +73,6 @@
     # --------------------------------------
     - def_name: __ne__
       params:
-      - param_name: self
       - param_name: other
       return: bool
       doc: >
