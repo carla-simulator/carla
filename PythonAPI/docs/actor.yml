@@ -159,6 +159,7 @@
       doc: >
         Bounding box of the vehicle.
     # - METHODS ----------------------------
+    methods:
     - def_name: apply_control
       params:
       - param_name: control
@@ -246,6 +247,7 @@
       doc: >
         Bounding box of the walker.
     # - METHODS ----------------------------
+    methods:
     - def_name: apply_control
       params:
       - param_name: control
