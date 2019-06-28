@@ -35,8 +35,6 @@ namespace client {
 namespace detail {
 
   /// Connects and controls a CARLA Simulator.
-  ///
-  /// @todo Make sure this class is really thread-safe.
   class Simulator
     : public std::enable_shared_from_this<Simulator>,
       private profiler::LifetimeProfiled,
@@ -298,6 +296,10 @@ namespace detail {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
+    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
+      _client.ApplyBoneControlToWalker(walker.GetId(), control);
+    }
+
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
@@ -409,7 +411,7 @@ namespace detail {
 
     std::shared_ptr<Episode> _episode;
 
-    GarbageCollectionPolicy _gc_policy;
+    const GarbageCollectionPolicy _gc_policy;
   };
 
 } // namespace detail

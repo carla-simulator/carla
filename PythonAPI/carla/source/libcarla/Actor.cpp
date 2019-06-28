@@ -43,6 +43,11 @@ static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
   return result;
 }
 
+template <typename ControlT>
+static void ApplyControl(carla::client::Walker &self, const ControlT &control) {
+  self.ApplyControl(control);
+}
+
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -54,87 +59,89 @@ void export_actor() {
   ;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
-    // work-around, force return copy to resolve Actor instead of ActorState.
-    .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
-    .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
-    .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
-    .add_property("semantic_tags", &GetSemanticTags)
-    .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
-    .add_property("attributes", +[] (const cc::Actor &self) {
-      boost::python::dict atttribute_dict;
-      for (auto &&attribute_value : self.GetAttributes()) {
-        atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
-      }
-      return atttribute_dict;
-    })
-    .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
-    .def("get_location", &cc::Actor::GetLocation)
-    .def("get_transform", &cc::Actor::GetTransform)
-    .def("get_velocity", &cc::Actor::GetVelocity)
-    .def("get_angular_velocity", &cc::Actor::GetAngularVelocity)
-    .def("get_acceleration", &cc::Actor::GetAcceleration)
-    .def("set_location", &cc::Actor::SetLocation, (arg("location")))
-    .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
-    .def("set_velocity", &cc::Actor::SetVelocity, (arg("vector")))
-    .def("set_angular_velocity", &cc::Actor::SetAngularVelocity, (arg("vector")))
-    .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
-    .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
-    .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
-    .def(self_ns::str(self_ns::self))
+  // work-around, force return copy to resolve Actor instead of ActorState.
+      .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
+      .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
+      .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
+      .add_property("semantic_tags", &GetSemanticTags)
+      .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+      .add_property("attributes", +[] (const cc::Actor &self) {
+    boost::python::dict atttribute_dict;
+    for (auto &&attribute_value : self.GetAttributes()) {
+      atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
+    }
+    return atttribute_dict;
+  })
+      .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
+      .def("get_location", &cc::Actor::GetLocation)
+      .def("get_transform", &cc::Actor::GetTransform)
+      .def("get_velocity", &cc::Actor::GetVelocity)
+      .def("get_angular_velocity", &cc::Actor::GetAngularVelocity)
+      .def("get_acceleration", &cc::Actor::GetAcceleration)
+      .def("set_location", &cc::Actor::SetLocation, (arg("location")))
+      .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
+      .def("set_velocity", &cc::Actor::SetVelocity, (arg("vector")))
+      .def("set_angular_velocity", &cc::Actor::SetAngularVelocity, (arg("vector")))
+      .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
+      .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
+      .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
+      .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle", no_init)
-    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
-    .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
-    .def("get_control", &cc::Vehicle::GetControl)
-    .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
-    .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
-    .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled") = true))
-    .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
-    .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
-    .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
-    .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
-    .def(self_ns::str(self_ns::self))
+  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
+      no_init)
+      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
+      .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
+      .def("get_control", &cc::Vehicle::GetControl)
+      .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
+      .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
+      .def("set_autopilot", &cc::Vehicle::SetAutopilot, (arg("enabled") = true))
+      .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
+      .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
+      .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
+      .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
+      .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
-    .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
-    .def("apply_control", &cc::Walker::ApplyControl, (arg("control")))
-    .def("get_control", &cc::Walker::GetWalkerControl)
-    .def(self_ns::str(self_ns::self))
+      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
+      .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
+      .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
+      .def("get_control", &cc::Walker::GetWalkerControl)
+      .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::TrafficSign, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficSign>>(
       "TrafficSign",
       no_init)
-    .add_property("trigger_volume", CALL_RETURNING_COPY(cc::TrafficSign, GetTriggerVolume))
+      .add_property("trigger_volume", CALL_RETURNING_COPY(cc::TrafficSign, GetTriggerVolume))
   ;
 
   enum_<cr::TrafficLightState>("TrafficLightState")
-    .value("Red", cr::TrafficLightState::Red)
-    .value("Yellow", cr::TrafficLightState::Yellow)
-    .value("Green", cr::TrafficLightState::Green)
-    .value("Off", cr::TrafficLightState::Off)
-    .value("Unknown", cr::TrafficLightState::Unknown)
+      .value("Red", cr::TrafficLightState::Red)
+      .value("Yellow", cr::TrafficLightState::Yellow)
+      .value("Green", cr::TrafficLightState::Green)
+      .value("Off", cr::TrafficLightState::Off)
+      .value("Unknown", cr::TrafficLightState::Unknown)
   ;
 
   class_<cc::TrafficLight, bases<cc::TrafficSign>, boost::noncopyable, boost::shared_ptr<cc::TrafficLight>>(
       "TrafficLight",
       no_init)
-    .add_property("state", &cc::TrafficLight::GetState)
-    .def("set_state", &cc::TrafficLight::SetState, (arg("state")))
-    .def("get_state", &cc::TrafficLight::GetState)
-    .def("set_green_time", &cc::TrafficLight::SetGreenTime, (arg("green_time")))
-    .def("get_green_time", &cc::TrafficLight::GetGreenTime)
-    .def("set_yellow_time", &cc::TrafficLight::SetYellowTime, (arg("yellow_time")))
-    .def("get_yellow_time", &cc::TrafficLight::GetYellowTime)
-    .def("set_red_time", &cc::TrafficLight::SetRedTime, (arg("red_time")))
-    .def("get_red_time", &cc::TrafficLight::GetRedTime)
-    .def("get_elapsed_time", &cc::TrafficLight::GetElapsedTime)
-    .def("freeze", &cc::TrafficLight::Freeze, (arg("freeze")))
-    .def("is_frozen", &cc::TrafficLight::IsFrozen)
-    .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
-    .def("get_group_traffic_lights", &GetGroupTrafficLights)
-    .def(self_ns::str(self_ns::self))
+      .add_property("state", &cc::TrafficLight::GetState)
+      .def("set_state", &cc::TrafficLight::SetState, (arg("state")))
+      .def("get_state", &cc::TrafficLight::GetState)
+      .def("set_green_time", &cc::TrafficLight::SetGreenTime, (arg("green_time")))
+      .def("get_green_time", &cc::TrafficLight::GetGreenTime)
+      .def("set_yellow_time", &cc::TrafficLight::SetYellowTime, (arg("yellow_time")))
+      .def("get_yellow_time", &cc::TrafficLight::GetYellowTime)
+      .def("set_red_time", &cc::TrafficLight::SetRedTime, (arg("red_time")))
+      .def("get_red_time", &cc::TrafficLight::GetRedTime)
+      .def("get_elapsed_time", &cc::TrafficLight::GetElapsedTime)
+      .def("freeze", &cc::TrafficLight::Freeze, (arg("freeze")))
+      .def("is_frozen", &cc::TrafficLight::IsFrozen)
+      .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
+      .def("get_group_traffic_lights", &GetGroupTrafficLights)
+      .def(self_ns::str(self_ns::self))
   ;
 }
