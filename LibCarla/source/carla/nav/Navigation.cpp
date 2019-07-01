@@ -88,7 +88,7 @@ namespace nav {
   }
 
   // load navigation data from memory
-  bool Navigation::Load( std::vector<uint8_t> content) {
+  bool Navigation::Load(std::vector<uint8_t> content) {
     const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; // 'MSET';
     const int NAVMESHSET_VERSION = 1;
 #pragma pack(push, 1)
@@ -357,7 +357,8 @@ namespace nav {
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
 
-    // from Unreal coordinates (subtract half height to move pivot from center (unreal) to bottom (recast))
+    // from Unreal coordinates (subtract half height to move pivot from center
+    // (unreal) to bottom (recast))
     float PointFrom[3] = { from.x, from.z - (AGENT_HEIGHT / 2.0f), from.y };
     // add walker
     int index = _crowd->addAgent(PointFrom, &params);
