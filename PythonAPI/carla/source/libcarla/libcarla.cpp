@@ -96,6 +96,12 @@
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
 
+#define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      auto optional = self.fn(); \
+      return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
+    }
+
 template <typename T>
 static void PrintListItem_(std::ostream &out, const T &item) {
   out << item;
