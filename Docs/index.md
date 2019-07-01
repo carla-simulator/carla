@@ -32,6 +32,7 @@
   * [How to control vehicle physics](how_to_control_vehicle_physics.md)
   * [How to record and replay](recorder_and_playback.md)
   * [Recorder binary file format](recorder_binary_file_format.md)
+  * [How to control walker skeletons](walker_bone_control.md)
 
 <h3>Contributing</h3>
 
