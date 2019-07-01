@@ -90,7 +90,7 @@ public:
    * @param DestPath - Path in which the asset will be saved.
    * @param WorldName - Name for the saved world.
    */
-  bool SaveWorld(FAssetData &AssetData, FString &DestPath, FString &WorldName);
+  bool SaveWorld(FAssetData &AssetData, FString &PackageName, FString &DestPath, FString &WorldName);
 
   void DestroyWorldSpawnedActors(TArray<AStaticMeshActor *> &SpawnedActors);
 
