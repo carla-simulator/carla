@@ -71,8 +71,23 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
   TArray<AStaticMeshActor *> SpawnedMeshes;
 
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
+
+  // Remove the meshes names from the original path, so LoadAssetDataFromPaths can be used
+  TArray<FString> AssetsPathsDirectories;
+  for (auto AssetPath : AssetsPaths)
+  {
+    FString Dir;
+    AssetPath.Split(
+      TEXT("/"),
+      &Dir,
+      nullptr,
+      ESearchCase::Type::IgnoreCase,
+      ESearchDir::Type::FromEnd);
+    AssetsPathsDirectories.Add(Dir);
+  }
+
   AssetsObjectLibrary->AddToRoot();
-  AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPaths);
+  AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPathsDirectories);
   AssetsObjectLibrary->LoadAssetsFromAssetData();
 
   const FTransform zeroTransform = FTransform();
@@ -99,20 +114,16 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
       MapAsset.AssetName.ToString(AssetName);
       if (AssetName.Contains("MarkingNode"))
       {
-        MeshActor->GetStaticMeshComponent()->SetMaterial(0,
-            MarkingNodeMaterial);
-        MeshActor->GetStaticMeshComponent()->SetMaterial(1,
-            MarkingNodeMaterialAux);
+        MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
+        MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
       }
       else if (AssetName.Contains("RoadNode"))
       {
-        MeshActor->GetStaticMeshComponent()->SetMaterial(0,
-            RoadNodeMaterial);
+        MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
       }
       else if (AssetName.Contains("Terrain"))
       {
-        MeshActor->GetStaticMeshComponent()->SetMaterial(0,
-            TerrainNodeMaterial);
+        MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
       }
     }
   }
@@ -252,7 +263,6 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
   FString MapPathData;
   for (auto Map : AssetsPaths.MapsPaths)
   {
-
     FString RoadsPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/RoadNode/") + Map.Name;
     FString MarkingLinePath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/MarkingNode/") + Map.Name;
     FString TerrainPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/TerrainNode/") + Map.Name;
@@ -268,8 +278,14 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
     // Remove spawned actors from world to keep equal as BaseMap
     DestroyWorldSpawnedActors(SpawnedActors);
 
-    MapPathData.Append(Map.Path + TEXT("\n"));
+    MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
   }
+
+  FString MapName("PropsMap");
+  FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
+      TEXT("/Maps/") + MapName;
+
+  MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
 
   // Save Map Path File for further use
   FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
@@ -279,9 +295,6 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
   // Add props in a single Base Map
   AddMeshesToWorld(AssetsPaths.PropsPaths, false);
 
-  FString MapName("PropsMap");
-  FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
-      TEXT("/Maps/") + MapName;
   SaveWorld(AssetData, WorldDestPath, MapName);
 
   return 0;
