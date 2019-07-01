@@ -139,7 +139,7 @@ camera.listen(image_queue.put)
 
 while True:
     world.tick()
-    timestamp = world.wait_for_tick()
+    world_snapshot = world.wait_for_tick()
 
     image = image_queue.get()
 ```
