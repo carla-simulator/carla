@@ -10,30 +10,37 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: throttle
+      type: float
       doc: >
         Scalar value to control the vehicle throttle.
     # --------------------------------------
     - var_name: steer
+      type: float
       doc: >
         Scalar value to control the vehicle steering.
     # --------------------------------------
     - var_name: brake
+      type: float    
       doc: >
         Scalar value to control the vehicle brake.
     # --------------------------------------
     - var_name: hand_brake
+      type: bool
       doc: >
         If true, hand brake will be used.
     # --------------------------------------
     - var_name: reverse
+      type: bool
       doc: >
         If true, vehicle will move reverse.
     # --------------------------------------
     - var_name: manual_gear_shift
+      type: bool
       doc: >
         If true, the vehicle will be controlled by changing gears manually.
     # --------------------------------------
     - var_name: gear
+      type: int
       doc: >
         Controls the gear value of the vehicle.
 
@@ -68,9 +75,12 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.VehicleControl
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.VehicleControl
+      doc: >
     # --------------------------------------
 
   - class_name: WalkerControl
@@ -110,10 +120,34 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.WalkerControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.WalkerControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WalkerBoneControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bone_transforms
+      type: list([name,transform])
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: '(name,transform)'
+        type: tuple
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 
   - class_name: VehiclePhysicsControl
@@ -230,16 +264,20 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.VehiclePhysicsControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 
   - class_name: WheelPhysicsControl
     doc: >
       WheelPhysicsControl is used for controlling the physics parameters of a vehicle's wheel.
-
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: tire_friction
@@ -263,7 +301,7 @@
         The radius of the wheel in centimeters.
     # --------------------------------------
     - var_name: position
-      type: carla.Location
+      type: carla.Vector3D
       doc: >
         World position of the wheel. Note that it is a read-only parameter.
     # - METHODS ----------------------------
@@ -278,15 +316,22 @@
         default: 70.0
       - param_name: radius
         default: 30.0
+      - param_name: position
+        default: (0.0,0.0,0.0)
       doc: >
         WheelPhysicsControl constructor
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.WheelPhysicsControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.WheelPhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 ...

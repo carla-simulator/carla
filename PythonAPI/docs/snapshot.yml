@@ -1,0 +1,83 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: WorldSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    - var_name: frame
+      doc: >
+    - var_name: timestamp
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_actor
+      params:
+        - param_name: actor_id
+          type: int
+      doc: >
+        Check if an actor is present in this snapshot.
+    # --------------------------------------
+    - def_name: find
+      return_type: 
+      params: 
+        - param_name: actor_id
+          type: int
+      doc: > 
+        Find an ActorSnapshot by id.
+    # --------------------------------------
+    - def_name: __len__
+      doc: >
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
+    # --------------------------------------
+  - class_name: ActorSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_transform
+      return_type: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: get_velocity
+      return_type: carla.Vector3D
+      doc: > 
+    # --------------------------------------
+    - def_name: get_angular_velocity
+      return_type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+    - def_name: get_acceleration
+      return_type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
+    # --------------------------------------
+...

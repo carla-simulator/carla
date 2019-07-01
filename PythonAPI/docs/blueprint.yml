@@ -34,6 +34,27 @@
       doc: >
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: r
+        type: int
+        default: 0
+        doc: >
+      - param_name: g
+        type: int
+        default: 0
+        doc: >
+      - param_name: b
+        type: int
+        default: 0
+        doc: >
+      - param_name: a
+        type: int
+        default: 255
+        doc: >
+      doc: >
+        Client constructor
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
@@ -44,6 +65,9 @@
       - param_name: other
       doc: >
     # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
 
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
@@ -51,12 +75,16 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: str
       doc: >
     - var_name: type
+      type: carla.ActorAttributeType
       doc: >
     - var_name: recommended_values
+      type: list(str)
       doc: >
     - var_name: is_modifiable
+      type: bool
       doc: >
     # - METHODS ----------------------------
     methods:
@@ -76,39 +104,75 @@
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: bool
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: int
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: float
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: str
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: bool
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: int
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: float
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: str
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __nonzero__
@@ -126,6 +190,9 @@
     - def_name: __str__
       doc: >
     # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
 
   - class_name: ActorBlueprint
     # - DESCRIPTION ------------------------
@@ -133,30 +200,63 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: str
       doc: >
     - var_name: tags
+      type: list(str)
       doc: >
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
+      return_type: bool
+      params:
+      - param_name: tag
+        type: str
       doc: >
     # --------------------------------------
     - def_name: match_tags
+      return_type: bool
+      params:
+      - param_name: wildcard_pattern
+        type: str
       doc: >
+        Test if any of the flags matches wildcard_pattern.
+      note: > 
+        Wildcard_pattern follows Unix shell-style wildcards.
     # --------------------------------------
     - def_name: has_attribute
+      return_type: bool
+      params:
+      - param_name: id
+        type: str
       doc: >
     # --------------------------------------
     - def_name: get_attribute
+      return_type: carla.ActorAttribute 
+      params:
+      - param_name: id
+        type: str
       doc: >
+      Return: carla.ActorAttribute
     # --------------------------------------
     - def_name: set_attribute
+      params: 
+      - param_name: id
+        type: str
+        doc: >
+    # --------------------------------------
+      - param_name: value
+        type: str
+        doc: >
       doc: >
     # --------------------------------------
     - def_name: __len__
       doc: >
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -169,7 +269,11 @@
       doc: >
     # --------------------------------------
     - def_name: filter
+      params:
+      - param_name: wildcard_pattern
+        type: str
       doc: >
+        Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
     # --------------------------------------
     - def_name: __getitem__
       doc: >
@@ -178,6 +282,9 @@
       doc: >
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 ...

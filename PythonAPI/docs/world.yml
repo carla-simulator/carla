@@ -8,20 +8,50 @@
     doc: >
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: frame_count
+    - var_name: frame
+      type: size_t
       doc: >
+        Number of frames elapsed since the simulator was launched.
     - var_name: elapsed_seconds
+      type: float
       doc: >
+        Simulated seconds elapsed since the beginning of the current episode.
     - var_name: delta_seconds
+      type: float
       doc: >
+        Simulated seconds elapsed since previous frame.
     - var_name: platform_timestamp
+      type: float
       doc: >
+        Time-stamp of the frame at which this measurement was taken, in seconds
+        as given by the OS.
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: frame
+        type: size_t
+      - param_name: elapsed_seconds
+        type: float
+      - param_name: delta_seconds
+        type: float
+      - param_name: platform_timestamp
+        type: float
+      doc: >
+    # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Timestamp
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Timestamp
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -31,18 +61,29 @@
     # - METHODS ----------------------------
     methods:
     - def_name: find
+      params:
+      - param_name: actor_id
+        type: int
       doc: >
     # --------------------------------------
     - def_name: filter
+      params:
+      - param_name: wildcard_pattern
+        type: str
       doc: >
     # --------------------------------------
     - def_name: __getitem__
+      params:
+      - param_name: pos
       doc: >
     # --------------------------------------
     - def_name: __len__
       doc: >
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -57,10 +98,41 @@
       doc: >
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: synchronous_mode
+        type: bool
+        default: false
+        doc: >
+      - param_name: no_rendering_mode
+        type: bool
+        default: false
+        doc: >
+      doc: >
+    # --------------------------------------
     - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Timestamp
       doc: >
     # --------------------------------------
     - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Timestamp
+      doc: >
+    # --------------------------------------
+
+  - class_name: AttachmentType
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Rigid
+      type: int
+      doc: >
+    - var_name: SpringArm
+      type: int
       doc: >
     # --------------------------------------
 
@@ -71,50 +143,142 @@
     instance_variables:
     - var_name: id
       doc: >
+        The id of the episode associated with this world.
     - var_name: debug
       doc: >
     # - METHODS ----------------------------
     methods:
     - def_name: get_blueprint_library
+      return_type: carla.BlueprintLibrary
       doc: >
+        Return the list of blueprints available in this world. This blueprints
+        can be used to spawning actor into the world.
     # --------------------------------------
     - def_name: get_map
+      return_type: carla.Map
       doc: >
+        Return the map that describes this world.
     # --------------------------------------
     - def_name: get_spectator
+      return_type: carla.Actor
       doc: >
+        Return the spectator actor. The spectator controls the view in the
+        simulator window.
     # --------------------------------------
     - def_name: get_settings
+      return_type: carla.WorldSettings
       doc: >
     # --------------------------------------
     - def_name: apply_settings
+      params:
+      - param_name: world_settings
+        type: carla.WorldSettings
       doc: >
     # --------------------------------------
     - def_name: get_weather
+      return_type: carla.WeatherParameters
       doc: >
+        Retrieve the weather parameters currently active in the world.
     # --------------------------------------
     - def_name: set_weather
+      params: 
+      - param_name: weather
+        type: carla.WeatherParameters
       doc: >
+        Change the weather in the simulation.
+    # --------------------------------------
+    - def_name: get_snapshot
+      return_type: carla.WorldSnapshot
+      doc: >
+        Return a snapshot of the world at this moment.
+    # --------------------------------------
+    - def_name: get_actor
+      return_type: carla.Actor
+      params:
+      - param_name: actor_id
+        type: int
+      doc: >
+        Find actor by id, return nullptr if not found.
     # --------------------------------------
     - def_name: get_actors
+      return_type: carla.ActorList
       doc: >
+        Return a list with all the actors currently present in the world.
     # --------------------------------------
     - def_name: get_actors
+      return_type: carla.ActorList
+      params: 
+      - param_name: actor_ids
+        type: list(int)
       doc: >
+        Return a list with the actors requested by ActorId.
     # --------------------------------------
     - def_name: spawn_actor
+      return_type: carla.Actor
+      params:
+      - param_name: blueprint
+        type: carla.BlueprintLibrary
+        doc: >
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          If attached to parent, transform acts like a relative_transform to the parent actor.
+      - param_name: attach_to 
+        type: carla.Actor
+        default: None
+        doc: > 
+      - param_name: attachment 
+        type: carla.AttachmentType
+        default: Rigid
+        doc: > 
       doc: >
+        Spawn an actor into the world based on the blueprint provided at
+        transform. If a parent is provided, the actor is attached to
+        parent.
     # --------------------------------------
     - def_name: try_spawn_actor
+      return_type: carla.Actor
+      params:
+      - param_name: blueprint
+        type: carla.BlueprintLibrary
+        doc: >
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          If attached to parent, transform acts like a relative_transform to the parent actor.
+      - param_name: attach_to 
+        type: carla.Actor
+        default: None
+        doc: > 
+      - param_name: attachment 
+        type: carla.AttachmentType
+        default: Rigid
+        doc: >
       doc: >
+        Same as SpawnActor but return nullptr on failure instead of throwing an
+        exception.
     # --------------------------------------
     - def_name: wait_for_tick
+      return_type: carla.WorldSnapshot
+      params:
+      - param_name: seconds
+        type: float
+        default: 10.0
       doc: >
+        Block calling thread until a world tick is received.
     # --------------------------------------
     - def_name: on_tick
+      params:
+      - param_name: callback
       doc: >
+        Register a callback to be called every time a world tick is received.
     # --------------------------------------
     - def_name: tick
+      doc: >
+        Signal the simulator to continue to next tick (only has effect on
+        synchronous mode).
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -124,18 +288,103 @@
     # - METHODS ----------------------------
     methods:
     - def_name: draw_point
+      params: 
+      - param_name: location
+        type: carla.Location
+      - param_name: size
+        type: float
+        default: 0.1f
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+      - param_name: life_time
+        type: float
+        default: -1.0f
+      - param_name: persistent_lines
+        type: bool
+        default: True
       doc: >
     # --------------------------------------
     - def_name: draw_line
+      params:
+      - param_name: begin
+        type: carla.Location
+      - param_name: end
+        type: carla.Location
+      - param_name: thickness
+        type: float
+        default: 0.1f
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+      - param_name: life_time
+        type: float
+        default: -1.0f
+      - param_name: persistent_lines
+        type: bool
+        default: True
       doc: >
     # --------------------------------------
     - def_name: draw_arrow
+      params:
+      - param_name: begin
+        type: carla.Location
+      - param_name: end
+        type: carla.Location
+      - param_name: thickness
+        type: float
+        default: 0.1f
+      - param_name: arrow_size
+        type: float
+        default: 0.1f
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+      - param_name: life_time
+        type: float
+        default: -1.0f
+      - param_name: persistent_lines
+        type: bool
+        default: True
       doc: >
     # --------------------------------------
     - def_name: draw_box
+      params:
+      - param_name: box
+        type: carla.BoundingBox
+      - param_name: rotation
+        type: carla.Rotation
+      - param_name: thickness
+        type: float
+        default: 0.1f
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+      - param_name: life_time
+        type: float
+        default: -1.0f
+      - param_name: persistent_lines
+        type: bool
+        default: True
       doc: >
     # --------------------------------------
     - def_name: draw_string
-      doc: >
+      params: 
+        - param_name: location
+          type: carla.Location
+        - param_name: text
+          type: str
+        - param_name: draw_shadow
+          type: bool
+          default: False
+        - param_name: color
+          type: carla.Color
+          default: (255,0,0)
+        - param_name: life_time 
+          type: float
+          default: -1.0f
+        - param_name: persistent_lines
+          type: bool
+          default: true
     # --------------------------------------
 ...
