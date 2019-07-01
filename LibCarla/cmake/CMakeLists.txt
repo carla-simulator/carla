@@ -10,8 +10,10 @@ message(STATUS "Build release: ${LIBCARLA_BUILD_RELEASE}")
 message(STATUS "Build test:    ${LIBCARLA_BUILD_TEST}")
 
 set(libcarla_source_path "${PROJECT_SOURCE_DIR}/../source")
+set(libcarla_source_thirdparty_path "${libcarla_source_path}/third-party")
 
 include_directories(${libcarla_source_path})
+include_directories(${libcarla_source_thirdparty_path})
 
 if (CARLA_VERSION)
   configure_file(${libcarla_source_path}/carla/Version.h.in ${libcarla_source_path}/carla/Version.h)
