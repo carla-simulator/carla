@@ -181,24 +181,35 @@ fi
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
-  BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
+  log "Preparing environment for cooking '${PACKAGE_NAME}'."
 
+  BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
   DESTINATION=${BUILD_FOLDER}.tar.gz
+  PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
+
+  if [ ! -d "${PACKAGE_PATH}" ] ; then
+
+    ERROR_MSG="Package \"${PACKAGE_NAME}\" not found! Make sure you have "
+    ERROR_MSG+="imported the package already and the package name is correct."
+    fatal_error "${ERROR_MSG}"
+
+  fi
 
   mkdir -p ${BUILD_FOLDER}
 
-  log "Preparing environment for cooking '${PACKAGE_NAME}'."
+  PACKAGE_FILE=${PACKAGE_PATH}/Config/${PACKAGE_NAME}.Package.json
+  MAP_LIST_FILE=${PACKAGE_PATH}/Config/MapPaths.txt
 
-  fatal_error "TODO: Call command-let here."
+  MAPS_TO_COOK=$(<${MAP_LIST_FILE})
+
+  log "Cooking package '${PACKAGE_NAME}'..."
 
   pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
 
-  log "Cooking '${PACKAGE_NAME}'."
-
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" \
-      -run=cook -cooksinglepackage -targetplatform="LinuxNoEditor" \
-      -OutputDir="${BUILD_FOLDER}" \
-      -Map=${MAP_TO_COOK}
+  # Cook maps
+  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+      -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+      -OutputDir="${BUILD_FOLDER}"
 
   popd >/dev/null
 
@@ -206,13 +217,14 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     pushd "${BUILD_FOLDER}" > /dev/null
 
-    log "Packaging '${PACKAGE_NAME}'."
+    log "\nPackaging '${PACKAGE_NAME}'..."
 
     rm -Rf ./CarlaUE4/Metadata
     rm -Rf ./CarlaUE4/Plugins
-    rm ./CarlaUE4/AssetRegistry.bin
+    rm -f ./CarlaUE4/AssetRegistry.bin
 
-    fatal_error "TODO: Remove intermediate maps here."
+    mkdir -p "${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Config/" && \
+        cp "${PACKAGE_FILE}" "$_"
 
     tar -czvf ${DESTINATION} *
 
@@ -221,8 +233,11 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   fi
 
   if ${DO_CLEAN_INTERMEDIATE} ; then
+
     log "Removing intermediate build."
+
     rm -Rf ${BUILD_FOLDER}
+
   fi
 
 fi ; done

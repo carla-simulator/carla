@@ -19,10 +19,6 @@ import os
 import shutil
 import subprocess
 
-# Global variables
-IMPORT_SETTING_FILENAME = "importsetting.json"
-SCRIPT_NAME = os.path.basename(__file__)
-
 
 @contextmanager
 def pushd(directory):
@@ -33,6 +29,19 @@ def pushd(directory):
         yield
     finally:
         os.chdir(cwd)
+
+
+# Global variables
+IMPORT_SETTING_FILENAME = "importsetting.json"
+SCRIPT_NAME = os.path.basename(__file__)
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+CARLA_ROOT_PATH = ""
+# Temporary get into current script folder to find Carla root path
+with pushd(SCRIPT_DIR):
+    # Go two directories above the current one
+    os.chdir(os.path.pardir)
+    os.chdir(os.path.pardir)
+    CARLA_ROOT_PATH = os.getcwd()
 
 
 def get_packages_json_list(folder):
@@ -56,7 +65,7 @@ def invoke_commandlet(name, arguments):
         sys_name = "Linux"
     ue4_path = os.environ["UE4_ROOT"]
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
-    uproject_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
     full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
     print("\n[" + str(SCRIPT_NAME) + "] Running command:\n$ " + full_command + '\n')
     subprocess.check_call([full_command], shell=True)
@@ -106,7 +115,6 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
 
         for map in maps:
             maps_dest = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
-            print (maps_dest)
 
             file_names = [os.path.join(json_dirname, map["source"])]
             import_groups.append({
@@ -130,9 +138,14 @@ def generate_package_file(package_name, props, maps):
     for prop in props:
         name = prop["name"]
         size = prop["size"]
+        source_name = os.path.basename(prop["source"]).split('.')
+        if len(source_name) < 2:
+            print("[Warning] File name '" + prop["source"] + "' contains multiple dots ('.')")
+
+        source_name = '.'.join([source_name[0], source_name[0]])
 
         # fbx_name = ntpath.basename(prop["source"]).replace(".fbx", "")
-        path = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"]])
+        path = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"], source_name])
 
         output_json["props"].append({
             "name": name,
@@ -151,7 +164,7 @@ def generate_package_file(package_name, props, maps):
             "use_carla_materials": use_carla_materials
         })
 
-    package_config_path = os.path.join(os.getcwd(), "..", "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
     if not os.path.exists(package_config_path):
         try:
             os.makedirs(package_config_path)
@@ -173,13 +186,6 @@ def import_assets(package_name, json_dirname, props, maps):
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
-    # Get Carla's root folder
-    current_script_folder = os.path.dirname(os.path.realpath(__file__))
-    carla_root_path = ""
-    with pushd(current_script_folder):
-        os.chdir("..")
-        carla_root_path = os.getcwd()
-
     # Move maps XODR files if any
     for umap in maps:
         # Make sure XODR info is full and the file exists
@@ -190,7 +196,7 @@ def import_assets(package_name, json_dirname, props, maps):
             xodr_name = '.'.join([umap_name, "xodr"])
 
             xodr_folder_destin = os.path.join(
-                carla_root_path,
+                CARLA_ROOT_PATH,
                 "Unreal",
                 "CarlaUE4",
                 "Content",
@@ -216,6 +222,7 @@ def import_assets(package_name, json_dirname, props, maps):
 
 def import_assets_from_json_list(json_list):
     maps = []
+    package_name = ""
     for dirname, filename in json_list:
         # Read json file
         with open(os.path.join(dirname, filename)) as json_file:
@@ -229,15 +236,19 @@ def import_assets_from_json_list(json_list):
             import_assets(package_name, dirname, props, maps)
             move_uassets(package_name, maps)
 
+    if not package_name:
+        print("No Packages JSONs found, nothing to import. Exiting.")
+        exit(0)
+
     # Prepare cooking of package
     prepare_cook_commandlet(package_name)
+    print() # Fixes a ugly artifact after the commandlet output
 
 
 def move_uassets(package_name, maps):
-    dirname = os.path.dirname(os.path.realpath(__file__))
     for map in maps:
-        origin_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", package_name, "Maps", map["name"])
-        dest_base_path = os.path.join(dirname, "..", "Unreal", "CarlaUE4", "Content", package_name, "Static")
+        origin_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Maps", map["name"])
+        dest_base_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Static")
 
         # Create the 3 posible destination folder path
         marking_dir = os.path.join(dest_base_path, "MarkingNode", map["name"])
@@ -270,7 +281,8 @@ def prepare_cook_commandlet(package_name):
 
 
 def main():
-    import_folder = os.path.join(os.getcwd(), "..", "Import")
+    import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
+    print(import_folder)
     json_list = get_packages_json_list(import_folder)
     import_assets_from_json_list(json_list)
 
