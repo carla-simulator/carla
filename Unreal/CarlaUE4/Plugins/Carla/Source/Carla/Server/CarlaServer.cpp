@@ -619,12 +619,12 @@ void FCarlaServer::FPimpl::BindActions()
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to get bounding box: actor view is invalid");
+      RESPOND_ERROR("unable to apply control: actor view is invalid");
     }
-    auto Actor = Cast<AActor>(ActorView.GetActor());
-    if (Actor == nullptr)
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr)
     {
-      RESPOND_ERROR("unable to get bounding box: actor not found");
+      RESPOND_ERROR("unable to apply control: actor is not a walker");
     }
     auto Controller = Cast<AWalkerController>(Pawn->GetController());
     if (Controller == nullptr)
