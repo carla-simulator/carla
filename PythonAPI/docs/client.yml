@@ -158,15 +158,21 @@
     # --------------------------------------
     - def_name: replay_file
       params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the file.
       - param_name: start
         type: float
         doc: >
           Time in seconds where to start the playback. If it is negative, then it starts from the end.
       - param_name: duration
         type: float
-        type: int
         doc: >
           Id of the actor to follow. If this is 0 then camera is disabled
+      - param_name: follow_id
+        type: int
+        doc: >
       doc: >
         Playback a file
     # --------------------------------------
