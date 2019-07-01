@@ -25,7 +25,7 @@ namespace client {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
-  geom::Location World::GetRandomLocationFromNavigation() const {
+  boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
     return _episode.Lock()->GetRandomLocationFromNavigation();
   }
 

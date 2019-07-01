@@ -32,13 +32,6 @@ FActorSpawnResult AAIControllerFactory::SpawnActor(
     return {};
   }
 
-  UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(World);
-  if (GameInstance == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("AAIControllerFactory: cannot spawn controller, incompatible game instance."));
-    return {};
-  }
-
   FActorSpawnParameters SpawnParameters;
   SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
   auto *Controller = World->SpawnActor<AActor>(Description.Class, Transform, SpawnParameters);
