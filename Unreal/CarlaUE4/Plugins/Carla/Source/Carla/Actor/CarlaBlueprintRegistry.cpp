@@ -11,11 +11,11 @@
 namespace CommonAttributes {
   static const FString PATH = FPaths::ProjectContentDir();
   static const FString DEFAULT = TEXT("/Carla/Config/Default");
-  static const FString DEFINITIONS = TEXT("definitions");
+  static const FString DEFINITIONS = TEXT("props");
 }
 
 namespace PropAttributes {
-  static const FString REGISTRY_FORMAT = TEXT(".PropRegistry.json");
+  static const FString REGISTRY_FORMAT = TEXT(".Package.json");
   static const FString NAME = TEXT("name");
   static const FString MESH_PATH = TEXT("path");
   static const FString SIZE = TEXT("size");
