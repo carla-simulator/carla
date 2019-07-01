@@ -451,6 +451,13 @@ namespace nav {
   // set a new target point to go
   bool Navigation::SetWalkerTargetIndex(int index, carla::geom::Location to, bool use_lock) {
 
+    std::unique_lock<std::mutex> guard(_mutex, std::defer_lock);
+
+    // lock mutex
+    if (use_lock) {
+      guard.lock();
+    }
+
     // check if all is ready
     if (!_ready) {
       return false;
@@ -463,11 +470,6 @@ namespace nav {
       return false;
     }
 
-    // lock mutex
-    if (use_lock) {
-      _mutex.lock();
-    }
-
     // set target position
     float pointTo[3] = { to.x, to.z, to.y };
     float nearest[3];
@@ -475,19 +477,10 @@ namespace nav {
     dtPolyRef targetRef;
     _navQuery->findNearestPoly(pointTo, _crowd->getQueryHalfExtents(), filter, &targetRef, nearest);
     if (!targetRef) {
-      // unlock mutex
-      if (use_lock) {
-        _mutex.unlock();
-      }
       return false;
     }
 
     bool res = _crowd->requestMoveTarget(index, targetRef, pointTo);
-
-    // unlock mutex
-    if (use_lock) {
-      _mutex.unlock();
-    }
 
     return res;
   }
@@ -611,6 +604,13 @@ namespace nav {
   bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter,
   bool use_lock) {
 
+    std::unique_lock<std::mutex> guard(_mutex, std::defer_lock);
+
+    // lock mutex
+    if (use_lock) {
+      guard.lock();
+    }
+
     // check if all is ready
     if (!_ready) {
       return false;
@@ -624,11 +624,6 @@ namespace nav {
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
       filter2.setExcludeFlags(0);
       filter = &filter2;
-    }
-
-    // lock mutex
-    if (use_lock) {
-      _mutex.lock();
     }
 
     // search
@@ -646,19 +641,10 @@ namespace nav {
           break;
         }
       } else {
-        // unlock mutex
-        if (use_lock) {
-          _mutex.unlock();
-        }
         throw_exception(std::runtime_error(
             "no valid random point from navigation could be found, check filter or mesh."));
       }
     } while (1);
-
-    // unlock mutex
-    if (use_lock) {
-      _mutex.unlock();
-    }
 
     return true;
   }
