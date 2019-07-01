@@ -219,9 +219,10 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     log "\nPackaging '${PACKAGE_NAME}'..."
 
-    rm -Rf ./CarlaUE4/Metadata
-    rm -Rf ./CarlaUE4/Plugins
-    rm -f ./CarlaUE4/AssetRegistry.bin
+    rm -Rf "./CarlaUE4/Metadata"
+    rm -Rf "./CarlaUE4/Plugins"
+    rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/PropsMap"
+    rm -f "./CarlaUE4/AssetRegistry.bin"
 
     mkdir -p "${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Config/" && \
         cp "${PACKAGE_FILE}" "$_"
