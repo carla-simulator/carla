@@ -13,12 +13,13 @@
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>
-#include <carla/opendrive/parser/pugixml/pugixml.hpp>
 #include <carla/road/MapBuilder.h>
 #include <carla/road/element/RoadInfoElevation.h>
 #include <carla/road/element/RoadInfoGeometry.h>
 #include <carla/road/element/RoadInfoMarkRecord.h>
 #include <carla/road/element/RoadInfoVisitor.h>
+
+#include <pugixml/pugixml.hpp>
 
 #include <fstream>
 #include <string>
