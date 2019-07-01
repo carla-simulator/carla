@@ -19,6 +19,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
+#include <optional>
+
 namespace carla {
 namespace client {
 
@@ -52,7 +54,7 @@ namespace client {
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
 
     /// Get a random location from the pedestrians navigation mesh
-    geom::Location GetRandomLocationFromNavigation() const;
+    boost::optional<geom::Location> GetRandomLocationFromNavigation() const;
 
     /// Return the spectator actor. The spectator controls the view in the
     /// simulator window.

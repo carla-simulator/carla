@@ -24,6 +24,7 @@
 #include "carla/rpc/TrafficLightState.h"
 
 #include <memory>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -184,7 +185,7 @@ namespace detail {
 
     void UnregisterAIController(const WalkerAIController &controller);
 
-    geom::Location GetRandomLocationFromNavigation();
+    boost::optional<geom::Location> GetRandomLocationFromNavigation();
 
     std::shared_ptr<WalkerNavigation> GetNavigation() {
       return _episode->GetNavigation();
@@ -350,12 +351,6 @@ namespace detail {
     void SetReplayerTimeFactor(double time_factor) {
       _client.SetReplayerTimeFactor(time_factor);
     }
-
-    /// @}
-    // =========================================================================
-    /// @name Operations with walkers
-    // =========================================================================
-    /// @{
 
     /// @}
     // =========================================================================
