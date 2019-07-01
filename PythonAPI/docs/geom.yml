@@ -14,29 +14,48 @@
       type: float
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: x 
+        type: float
+        default: 0.0
+      - param_name: y 
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __mul__
       params:
       - param_name: other
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __sub__
       params:
       - param_name: other
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __truediv__
       params:
       - param_name: other
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
     # --------------------------------------
 
   - class_name: Vector3D
@@ -53,29 +72,55 @@
       type: float
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: rhs
+        type: carla.Location
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __mul__
       params:
       - param_name: other
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __sub__
       params:
       - param_name: other
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __truediv__
       params:
       - param_name: other
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 
   - class_name: Location
@@ -93,6 +138,25 @@
       type: float
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: x 
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z 
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: rhs
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
     - def_name: distance
       params:
       - param_name: location
@@ -106,10 +170,15 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Location
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Location
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 
   - class_name: Rotation
@@ -130,6 +199,19 @@
       type: float
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: pitch
+        type: float
+        default: 0.0
+      - param_name: yaw
+        type: float
+        default: 0.0
+      - param_name: roll
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
     - def_name: get_forward_vector
       params:
       return: carla.Vector3D
@@ -139,11 +221,16 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Rotation
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Rotation
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -159,6 +246,14 @@
       type: carla.Rotation
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+      - param_name: rotation
+        type: carla.Rotation
+      doc: >
+    # --------------------------------------
     - def_name: transform
       params:
       - param_name: in_point
@@ -169,17 +264,23 @@
         Transform a 3D point using the current transformation
     # --------------------------------------
     - def_name: get_forward_vector
+      return_type: carla.Vector3D
       doc: >
         Computes a forward vector using the rotation of the current transformation
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Transform
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -201,14 +302,27 @@
         So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+      - param_name: extent
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.BoundingBox
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.BoundingBox
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -226,15 +340,28 @@
       type: float
     # - METHODS ----------------------------
     methods:
+    - def_name: __init__
+      params:
+      - param_name: latitude
+        type: float
+        default: 0.0
+      - param_name: longitude
+        type: float
+        default: 0.0
+      - param_name: altitude
+        type: float
+        default: 0.0
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Geolocation
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Geolocation
     # --------------------------------------
-    methods:
     - def_name: __str__
       params:
     # --------------------------------------
