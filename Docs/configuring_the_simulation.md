@@ -139,10 +139,13 @@ camera.listen(image_queue.put)
 
 while True:
     world.tick()
-    world_snapshot = world.wait_for_tick()
-
     image = image_queue.get()
 ```
+
+For a more complex scenario synchronizing data from several sensors, take a look
+at the example [synchronous_mode.py][syncmodelink].
+
+[syncmodelink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/synchronous_mode.py
 
 Other command-line options
 --------------------------
