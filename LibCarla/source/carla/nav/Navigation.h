@@ -21,6 +21,10 @@
 namespace carla {
 namespace nav {
 
+  /// Manage the pedestrians navigation, using the Recast & Detour library for low level calculations.
+  ///
+  /// This class gets the binary content of the map from the server, which is required for the path finding.
+  /// Then this class can add or remove pedestrians, and also set target points to walk for each one.
   class Navigation : private NonCopyable {
 
   public:
@@ -28,32 +32,32 @@ namespace nav {
     Navigation() = default;
     ~Navigation();
 
-    // load navigation data
+    /// load navigation data
     bool Load(const std::string &filename);
-    // load navigation data from memory
+    /// load navigation data from memory
     bool Load(std::vector<uint8_t> content);
-    // return the path points to go from one position to another
+    /// return the path points to go from one position to another
     bool GetPath(carla::geom::Location from, carla::geom::Location to, dtQueryFilter * filter,
     std::vector<carla::geom::Location> &path);
 
-    // create the crowd object
+    /// create the crowd object
     void CreateCrowd(void);
-    // create a new walker
+    /// create a new walker
     bool AddWalker(ActorId id, carla::geom::Location from);
-    // remove a walker
+    /// remove a walker
     bool RemoveWalker(ActorId id);
-    // set new max speed
+    /// set new max speed
     bool SetWalkerMaxSpeed(ActorId id, float max_speed);
-    // set a new target point to go
+    /// set a new target point to go
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
     bool SetWalkerTargetIndex(int index, carla::geom::Location to, bool use_lock = true);
-    // get the walker current transform
+    /// get the walker current transform
     bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
-    // get the walker current transform
+    /// get the walker current transform
     float GetWalkerSpeed(ActorId id);
-    // update all walkers in crowd
+    /// update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
-    // get a random location for navigation
+    /// get a random location for navigation
     bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
     dtQueryFilter * filter = nullptr, bool use_lock = true);
 
@@ -62,14 +66,14 @@ namespace nav {
     bool _ready { false };
     std::vector<uint8_t> _binaryMesh;
     double _delta_seconds;
-    // meshes
+    /// meshes
     dtNavMesh *_navMesh { nullptr };
     dtNavMeshQuery *_navQuery { nullptr };
-    // crowd
+    /// crowd
     dtCrowd *_crowd { nullptr };
-    // mapping Id
+    /// mapping Id
     std::unordered_map<ActorId, int> _mappedId;
-    // Store walkers yaw angle from previous tick
+    /// Store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
 
     std::mutex _mutex;
