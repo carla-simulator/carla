@@ -10,6 +10,8 @@
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/geom/Vector3D.h"
 
+#include <optional>
+
 namespace carla {
 namespace client {
 
@@ -22,7 +24,7 @@ namespace client {
 
     void Stop();
 
-    geom::Location GetRandomLocation();
+    boost::optional<geom::Location> GetRandomLocation();
 
     void GoToLocation(const carla::geom::Location &destination);
 

@@ -21,7 +21,7 @@
 namespace carla {
 namespace nav {
 
-  class Navigation {
+  class Navigation : private NonCopyable {
 
   public:
 
@@ -29,11 +29,11 @@ namespace nav {
     ~Navigation();
 
     // load navigation data
-    bool Load(const std::string filename);
+    bool Load(const std::string &filename);
     // load navigation data from memory
-    bool Load(const std::vector<uint8_t> content);
+    bool Load(std::vector<uint8_t> content);
     // return the path points to go from one position to another
-    bool GetPath(const carla::geom::Location from, const carla::geom::Location to, dtQueryFilter * filter,
+    bool GetPath(carla::geom::Location from, carla::geom::Location to, dtQueryFilter * filter,
     std::vector<carla::geom::Location> &path);
 
     // create the crowd object

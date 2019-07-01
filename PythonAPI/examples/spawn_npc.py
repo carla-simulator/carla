@@ -54,32 +54,34 @@ def main():
         type=int,
         help='number of walkers (default: 50)')
     argparser.add_argument(
-        '-d', '--delay',
-        metavar='D',
-        default=2.0,
-        type=float,
-        help='delay in seconds between spawns (default: 2.0)')
-    argparser.add_argument(
         '--safe',
         action='store_true',
         help='avoid spawning vehicles prone to accidents')
     argparser.add_argument(
-        '--filter',
+        '--filterv',
         metavar='PATTERN',
         default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
+        help='vehicles filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--filterw',
+        metavar='PATTERN',
+        default='walker.pedestrian.*',
+        help='pedestrians filter (default: "walker.pedestrian.*")')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
     vehicles_list = []
+    walkers_list = []
+    all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(2.0)
 
     try:
 
         world = client.get_world()
-        blueprints = world.get_blueprint_library().filter(args.filter)
+        blueprints = world.get_blueprint_library().filter(args.filterv)
+        blueprintsWalkers = world.get_blueprint_library().filter(args.filterw)
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
@@ -129,18 +131,15 @@ def main():
         # -------------
         # 1. take all the random locations to spawn
         spawn_points = []
-        location_error = carla.Location(0, 0, 0)
         for i in range(args.number_of_walkers):
             spawn_point = carla.Transform()
             spawn_point.location = world.get_random_location_from_navigation()
-            # if the returned location is at (0,0,0) we can consider a problem
-            if (spawn_point.location != location_error):
+            if (spawn_point.location != None):
                 spawn_points.append(spawn_point)
         batch = []
-        walkers_list = []
         # 2. we spawn the walker object
         for spawn_point in spawn_points:
-            walker_bp = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
+            walker_bp = random.choice(blueprintsWalkers)
             # set as not invencible
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
@@ -163,7 +162,6 @@ def main():
             else:
                 walkers_list[i]["con"] = results[i].actor_id
         # 4. we put altogether the walkers and controllers id to get the objects from their id
-        all_id = []
         for i in range(len(walkers_list)):
             all_id.append(walkers_list[i]["con"])
             all_id.append(walkers_list[i]["id"])

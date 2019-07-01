@@ -131,7 +131,7 @@ void export_world() {
     .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
-    .def("get_random_location_from_navigation", &cc::World::GetRandomLocationFromNavigation)
+    .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
     .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))

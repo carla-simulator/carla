@@ -14,7 +14,6 @@
 #include "carla/client/detail/CachedActorList.h"
 #include "carla/client/detail/CallbackList.h"
 #include "carla/client/detail/EpisodeState.h"
-#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/rpc/EpisodeInfo.h"
 
 #include <vector>

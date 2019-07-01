@@ -39,8 +39,6 @@
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include "Components/CapsuleComponent.h"
-
 #include <vector>
 
 template <typename T>

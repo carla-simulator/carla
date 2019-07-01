@@ -40,19 +40,24 @@ namespace client {
     }
   }
 
-  geom::Location WalkerAIController::GetRandomLocation() {
+  boost::optional<geom::Location> WalkerAIController::GetRandomLocation() {
     auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
       return nav->GetRandomLocation();
     }
-    return geom::Location(0, 0, 0);
+    return {};
   }
 
   void WalkerAIController::GoToLocation(const carla::geom::Location &destination) {
     auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
-      if (!nav->SetWalkerTarget(GetParent()->GetId(), destination)) {
-        logging::log("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z);
+      auto walker = GetParent();
+      if (walker != nullptr) {
+        if (!nav->SetWalkerTarget(walker->GetId(), destination)) {
+          log_warning("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z);
+        }
+      } else {
+        log_warning("NAV: Failed to set request to go to ", destination.x, destination.y, destination.z, "(parent does not exist)");
       }
     }
   }
@@ -60,8 +65,13 @@ namespace client {
   void WalkerAIController::SetMaxSpeed(const float max_speed) {
     auto nav = GetEpisode().Lock()->GetNavigation();
     if (nav != nullptr) {
-      if (!nav->SetWalkerMaxSpeed(GetParent()->GetId(), max_speed)) {
-        logging::log("NAV: failed to set max speed");
+      auto walker = GetParent();
+      if (walker != nullptr) {
+        if (!nav->SetWalkerMaxSpeed(walker->GetId(), max_speed)) {
+          log_warning("NAV: failed to set max speed");
+        }
+      } else {
+        log_warning("NAV: failed to set max speed (parent does not exist)");
       }
     }
   }

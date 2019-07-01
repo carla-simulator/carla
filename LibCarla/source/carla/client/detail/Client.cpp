@@ -9,7 +9,6 @@
 #include "carla/Exception.h"
 #include "carla/Version.h"
 #include "carla/client/TimeoutException.h"
-#include "carla/nav/Navigation.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/BoneTransformData.h"
 #include "carla/rpc/Client.h"

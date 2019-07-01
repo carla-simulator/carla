@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>

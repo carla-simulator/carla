@@ -17,7 +17,7 @@ install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
-# Windows need libpng alongside with zlib to be installed, and also recast&detour libs
+# Windows need libpng alongside with zlib to be installed
 if (WIN32)
     # Install zlib headers.
     file(GLOB zlib_includes "${ZLIB_INCLUDE_PATH}/*")
@@ -211,15 +211,16 @@ if (LIBCARLA_BUILD_RELEASE)
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
     endif()
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
 
-    endif (WIN32)
+    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
 
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
     target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
-  endif()
+  endif (WIN32)
+
+endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
@@ -232,11 +233,25 @@ if (LIBCARLA_BUILD_DEBUG)
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
-  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
-  target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  if (WIN32) # @todo Fix PythonAPI build on Windows.
+    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
 
-  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
-  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
-  target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/DetourCrowd.lib")
+  else ()
+    if (NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_CLIENT)
+      set(CMAKE_CXX_FLAGS_DEBUG_CLIENT ${CMAKE_CXX_FLAGS_DEBUG})
+    endif()
+
+    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG_CLIENT}")
+
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
+
+  endif (WIN32)
+
+  target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()
