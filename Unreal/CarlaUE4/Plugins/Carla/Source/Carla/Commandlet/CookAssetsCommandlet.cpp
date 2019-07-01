@@ -72,17 +72,18 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
 
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
 
-  // Remove the meshes names from the original path, so LoadAssetDataFromPaths can be used
+  // Remove the meshes names from the original path, so LoadAssetDataFromPaths
+  // can be used
   TArray<FString> AssetsPathsDirectories;
   for (auto AssetPath : AssetsPaths)
   {
     FString Dir;
     AssetPath.Split(
-      TEXT("/"),
-      &Dir,
-      nullptr,
-      ESearchCase::Type::IgnoreCase,
-      ESearchDir::Type::FromEnd);
+        TEXT("/"),
+        &Dir,
+        nullptr,
+        ESearchCase::Type::IgnoreCase,
+        ESearchDir::Type::FromEnd);
     AssetsPathsDirectories.Add(Dir);
   }
 
@@ -142,9 +143,12 @@ void UCookAssetsCommandlet::DestroyWorldSpawnedActors(TArray<AStaticMeshActor *>
   World->MarkPackageDirty();
 }
 
-bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, FString &WorldName)
+bool UCookAssetsCommandlet::SaveWorld(
+    FAssetData &AssetData,
+    FString &PackageName,
+    FString &DestPath,
+    FString &WorldName)
 {
-  FString PackageName = DestPath + "/" + WorldName;
   UPackage *Package = AssetData.GetPackage();
   Package->SetFolderName(*DestPath);
   Package->FullyLoad();
@@ -153,13 +157,15 @@ bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
 
   // Renaming stuff for the map
   World->Rename(*WorldName, World->GetOuter());
-  FAssetRegistryModule::AssetRenamed(World, *PackageName);
+  FString PackagePath = DestPath + "/" + WorldName;
+  FAssetRegistryModule::AssetRenamed(World, *PackagePath);
   World->MarkPackageDirty();
   World->GetOuter()->MarkPackageDirty();
 
-  // @TODO: find a better solution
-  // Hardcoded so it will ignore the PropMaps umap that doesn't contains OpenDrive info
-  if (World->GetName() != "PropsMap")
+  // Check if OpenDrive file exists
+  FString PathXODR = FPaths::ProjectContentDir() + PackageName + TEXT("/Maps/") + WorldName + TEXT(
+      "/OpenDrive/") + WorldName + TEXT(".xodr");
+  if (FPaths::FileExists(PathXODR))
   {
     // Filling the map stuff (Code only applied for maps)
     AOpenDriveActor *OpenWorldActor =
@@ -170,7 +176,7 @@ bool UCookAssetsCommandlet::SaveWorld(FAssetData &AssetData, FString &DestPath, 
   }
 
   // Saving the package
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName,
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
       FPackageName::GetMapPackageExtension());
   return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
@@ -273,7 +279,7 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
     TArray<AStaticMeshActor *> SpawnedActors = AddMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
 
     // Save the World in specified path
-    SaveWorld(AssetData, Map.Path, Map.Name);
+    SaveWorld(AssetData, PackageParams.Name, Map.Path, Map.Name);
 
     // Remove spawned actors from world to keep equal as BaseMap
     DestroyWorldSpawnedActors(SpawnedActors);
@@ -295,7 +301,7 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
   // Add props in a single Base Map
   AddMeshesToWorld(AssetsPaths.PropsPaths, false);
 
-  SaveWorld(AssetData, WorldDestPath, MapName);
+  SaveWorld(AssetData, PackageParams.Name, WorldDestPath, MapName);
 
   return 0;
 }

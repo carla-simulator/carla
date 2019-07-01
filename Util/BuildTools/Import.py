@@ -144,7 +144,6 @@ def generate_package_file(package_name, props, maps):
 
         source_name = '.'.join([source_name[0], source_name[0]])
 
-        # fbx_name = ntpath.basename(prop["source"]).replace(".fbx", "")
         path = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"], source_name])
 
         output_json["props"].append({
@@ -155,7 +154,6 @@ def generate_package_file(package_name, props, maps):
 
     output_json["maps"] = []
     for map in maps:
-        # fbx_name = ntpath.basename(map["source"]).replace(".fbx", "")
         path = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
         use_carla_materials = map["use_carla_materials"] if "use_carla_materials" in map else False
         output_json["maps"].append({
