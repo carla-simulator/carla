@@ -32,8 +32,6 @@
   * [How to control vehicle physics](how_to_control_vehicle_physics.md)
   * [How to record and replay](recorder_and_playback.md)
   * [Recorder binary file format](recorder_binary_file_format.md)
-  * [How to upgrade content](how_to_upgrade_content.md)
-  * [How to make a release](how_to_make_a_release.md)
 
 <h3>Contributing</h3>
 
@@ -43,8 +41,11 @@
 
 <h3>Development</h3>
 
-  * [Map customization](map_customization.md)
-  * [Build system](build_system.md)
+  * [Index](dev/index.md)
+  * [Map customization](dev/map_customization.md)
+  * [Build system](dev/build_system.md)
+  * [How to upgrade content](dev/how_to_upgrade_content.md)
+  * [How to make a release](dev/how_to_make_a_release.md)
 
 <h3>Art guidelines</h3>
 

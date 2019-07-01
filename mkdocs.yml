@@ -28,15 +28,16 @@ nav:
   - "Recorder binary file format": 'recorder_binary_file_format.md'
   - "How to add friction triggers": "how_to_add_friction_triggers.md"
   - "How to control vehicle physics": "how_to_control_vehicle_physics.md"
-  - "How to upgrade content": 'how_to_upgrade_content.md'
-  - "How to make a release": 'how_to_make_a_release.md'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'
   - 'Coding standard': 'coding_standard.md'
   - 'Code of conduct': 'CODE_OF_CONDUCT.md'
 - Development:
-  - 'Map customization': 'map_customization.md'
-  - 'Build system': 'build_system.md'
+  - 'Index': 'dev/index.md'
+  - 'Map customization': 'dev/map_customization.md'
+  - 'Build system': 'dev/build_system.md'
+  - "How to upgrade content": 'dev/how_to_upgrade_content.md'
+  - "How to make a release": 'dev/how_to_make_a_release.md'
 - Art guidelines:
   - 'How to add assets': 'how_to_add_assets.md'
   - 'How to model vehicles': 'how_to_model_vehicles.md'
