@@ -52,6 +52,24 @@
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
   * Physics:
     - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.
+  * New High Quality Pedestrian - Female, girl and boy. Improve the meshes and textures.
+  * Improve walk animations, the animations go at the same speed as the game.
+  * Variations of colors and texture for each pedestrian.
+  * New Vehicle Audi Etron. With 25.000 Tris and their Lods.
+  * New material for Mustang. New material that will allow us to improve all the materials of the cars.
+  * New custom weather for each map
+  * Improve weather - Tweak values 
+  * Change the weight of cars. All cars have been compared with the real to have a feedback more real.
+  * Add Navigations maps for pedestrian
+  * Fixed invisible wall
+  * Fixed Vehicle bounds
+  * Fixed Tesla Wheels to Kinematic
+  * Fixed Tesla's Material
+  * Fixed Semantic segmentation on bikers
+  * Fixed Change Pedestrians Nomenclature
+  * Fixed Change the sidewalk in Town06
+  * Fixed Tesla mesh and LODS
+  * Fixed Inconsistency StreetLights on Town03
 
 ## CARLA 0.9.5
 
