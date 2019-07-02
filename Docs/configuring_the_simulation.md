@@ -4,6 +4,68 @@ Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
+Changing the map
+----------------
+
+The map can be changed from the Python API with
+
+```py
+world = client.load_map('Town01')
+```
+
+this creates an empty world with default settings. The list of currently
+available maps can be retrieved with
+
+```py
+print(client.get_available_maps())
+```
+
+To reload the world using the current active map, use
+
+```py
+world = client.reload_world()
+```
+
+Running off-screen
+------------------
+
+In Linux, you can force the simulator to run off-screen by setting the
+environment variable `DISPLAY` to empty
+
+!!! important
+    **DISPLAY= only works with OpenGL**<br>
+    Vulkan is now the default graphics API used by Unreal Engine and CARLA on
+    Linux. Unreal Engine currently crashes when Vulkan is used when running
+    off-screen. Therefore the -opengl flag must be added to force the engine to
+    use OpenGL instead. We hope that this issue is addressed by Epic in the near
+    future.
+
+```sh
+# Linux
+DISPLAY= ./CarlaUE4.sh -opengl
+```
+
+This launches the simulator without simulator window, of course you can still
+connect to it normally and run the example scripts. Note that with this method,
+in multi-GPU environments, it's not possible to select the GPU that the
+simulator will use for rendering. To do so, follow the instruction in
+[Running without display and selecting GPUs](carla_headless.md).
+
+No-rendering mode
+-----------------
+
+It is possible to completely disable rendering in the simulator by enabling
+_no-rendering mode_ in the world settings. This way is possible to simulate
+traffic and road behaviours at very high frequencies without the rendering
+overhead. Note that in this mode, cameras and other GPU-based sensors return
+empty data.
+
+```py
+settings = world.get_settings()
+settings.no_rendering_mode = True
+world.apply_settings(settings)
+```
+
 Fixed time-step
 ---------------
 
@@ -52,65 +114,6 @@ world.apply_settings(settings)
     no longer in sync with the physics engine.
     Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
 
-
-Changing the map
-----------------
-
-The map can be selected by passing the path to the map as first argument when
-launching the simulator
-
-```sh
-# Linux
-./CarlaUE4.sh /Game/Carla/Maps/Town01
-```
-
-```cmd
-rem Windows
-CarlaUE4.exe /Game/Carla/Maps/Town01
-```
-
-The path "/Game/" maps to the Content folder of our repository in
-"Unreal/CarlaUE4/Content/".
-
-Running off-screen
-------------------
-
-In Linux, you can force the simulator to run off-screen by setting the
-environment variable `DISPLAY` to empty
-
-!!! important
-    **DISPLAY= only works with OpenGL**<br>
-    Vulkan is now the default graphics API used by Unreal Engine and CARLA on
-    Linux. Unreal Engine currently crashes when Vulkan is used when running off-screen.
-    Therefore the -opengl flag must be added to force the engine to use OpenGL instead.
-    We hope that this issue is addressed by Epic in the near future.
-
-```sh
-# Linux
-DISPLAY= ./CarlaUE4.sh -opengl
-```
-
-This launches the simulator without simulator window, of course you can still
-connect to it normally and run the example scripts. Note that with this method,
-in multi-GPU environments, it's not possible to select the GPU that the
-simulator will use for rendering. To do so, follow the instruction in
-[Running without display and selecting GPUs](carla_headless.md).
-
-No-rendering mode
------------------
-
-It is possible to completely disable rendering in the simulator by enabling
-_no-rendering mode_ in the world settings. This way is possible to simulate
-traffic and road behaviours at very high frequencies without the rendering
-overhead. Note that in this mode, cameras and other GPU-based sensors return
-empty data.
-
-```py
-settings = world.get_settings()
-settings.no_rendering_mode = True
-world.apply_settings(settings)
-```
-
 Synchronous mode
 ----------------
 
@@ -156,9 +159,10 @@ at the example [synchronous_mode.py][syncmodelink].
 Other command-line options
 --------------------------
 
-  * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
+  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
+  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
   * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
   * `-no-rendering` Disable rendering.
-  * [Full list of UE4 command-line arguments][ue4clilink].
+  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
