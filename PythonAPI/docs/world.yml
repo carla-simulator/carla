@@ -122,6 +122,9 @@
         type: carla.Timestamp
       doc: >
     # --------------------------------------
+    - def_name: __str__
+      doc: > 
+    # --------------------------------------
 
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
@@ -149,24 +152,24 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_blueprint_library
-      return_type: carla.BlueprintLibrary
+      return: carla.BlueprintLibrary
       doc: >
         Return the list of blueprints available in this world. This blueprints
         can be used to spawning actor into the world.
     # --------------------------------------
     - def_name: get_map
-      return_type: carla.Map
+      return: carla.Map
       doc: >
         Return the map that describes this world.
     # --------------------------------------
     - def_name: get_spectator
-      return_type: carla.Actor
+      return: carla.Actor
       doc: >
         Return the spectator actor. The spectator controls the view in the
         simulator window.
     # --------------------------------------
     - def_name: get_settings
-      return_type: carla.WorldSettings
+      return: carla.WorldSettings
       doc: >
     # --------------------------------------
     - def_name: apply_settings
@@ -176,7 +179,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_weather
-      return_type: carla.WeatherParameters
+      return: carla.WeatherParameters
       doc: >
         Retrieve the weather parameters currently active in the world.
     # --------------------------------------
@@ -188,12 +191,12 @@
         Change the weather in the simulation.
     # --------------------------------------
     - def_name: get_snapshot
-      return_type: carla.WorldSnapshot
+      return: carla.WorldSnapshot
       doc: >
         Return a snapshot of the world at this moment.
     # --------------------------------------
     - def_name: get_actor
-      return_type: carla.Actor
+      return: carla.Actor
       params:
       - param_name: actor_id
         type: int
@@ -201,12 +204,12 @@
         Find actor by id, return nullptr if not found.
     # --------------------------------------
     - def_name: get_actors
-      return_type: carla.ActorList
+      return: carla.ActorList
       doc: >
         Return a list with all the actors currently present in the world.
     # --------------------------------------
     - def_name: get_actors
-      return_type: carla.ActorList
+      return: carla.ActorList
       params: 
       - param_name: actor_ids
         type: list(int)
@@ -214,7 +217,7 @@
         Return a list with the actors requested by ActorId.
     # --------------------------------------
     - def_name: spawn_actor
-      return_type: carla.Actor
+      return: carla.Actor
       params:
       - param_name: blueprint
         type: carla.BlueprintLibrary
@@ -237,7 +240,7 @@
         parent.
     # --------------------------------------
     - def_name: try_spawn_actor
-      return_type: carla.Actor
+      return: carla.Actor
       params:
       - param_name: blueprint
         type: carla.BlueprintLibrary
@@ -259,7 +262,7 @@
         exception.
     # --------------------------------------
     - def_name: wait_for_tick
-      return_type: carla.WorldSnapshot
+      return: carla.WorldSnapshot
       params:
       - param_name: seconds
         type: float

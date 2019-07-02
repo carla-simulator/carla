@@ -84,11 +84,6 @@
         type: float
         default: 0.0
     # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: rhs
-        type: carla.Location
-    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
@@ -149,12 +144,6 @@
       - param_name: z 
         type: float
         default: 0.0
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: rhs
-        type: carla.Vector3D
       doc: >
     # --------------------------------------
     - def_name: distance
@@ -264,7 +253,7 @@
         Transform a 3D point using the current transformation
     # --------------------------------------
     - def_name: get_forward_vector
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
         Computes a forward vector using the rotation of the current transformation
     # --------------------------------------

@@ -17,6 +17,7 @@
     - var_name: transform
       doc: >
         Sensor's transform when the data was generated.
+    # --------------------------------------
 
   - class_name: ColorConverter
     # - DESCRIPTION ------------------------
@@ -169,6 +170,10 @@
       type: float
       doc: >
         Get obstacle distance.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      doc: > 
     # --------------------------------------
 
   - class_name: LaneInvasionEvent
@@ -185,6 +190,10 @@
       type: list(carla.LaneMarking)
       doc: >
         List of lane markings that have been crossed.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      doc: > 
     # --------------------------------------
 
   - class_name: GnssEvent
@@ -202,4 +211,9 @@
     - var_name: altitude
       type: float
       doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      doc: > 
+    # --------------------------------------
 ...

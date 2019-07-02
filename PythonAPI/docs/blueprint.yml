@@ -208,14 +208,14 @@
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
-      return_type: bool
+      return: bool
       params:
       - param_name: tag
         type: str
       doc: >
     # --------------------------------------
     - def_name: match_tags
-      return_type: bool
+      return: bool
       params:
       - param_name: wildcard_pattern
         type: str
@@ -225,14 +225,14 @@
         Wildcard_pattern follows Unix shell-style wildcards.
     # --------------------------------------
     - def_name: has_attribute
-      return_type: bool
+      return: bool
       params:
       - param_name: id
         type: str
       doc: >
     # --------------------------------------
     - def_name: get_attribute
-      return_type: carla.ActorAttribute 
+      return: carla.ActorAttribute 
       params:
       - param_name: id
         type: str
@@ -276,6 +276,9 @@
         Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
     # --------------------------------------
     - def_name: __getitem__
+      params:
+      - param_name: pos
+      return: carla.BlueprintLibrary
       doc: >
     # --------------------------------------
     - def_name: __len__

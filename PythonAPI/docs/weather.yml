@@ -77,4 +77,8 @@
       return: bool
       doc: >
         Returns True if `self` and `other` are not equal
+    # --------------------------------------
+    - def_name: __str__
+      doc: > 
+    # --------------------------------------
 ...
