@@ -129,10 +129,8 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
-      type: int
       doc: >
     - var_name: SpringArm
-      type: int
       doc: >
     # --------------------------------------
 

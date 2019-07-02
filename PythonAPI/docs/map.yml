@@ -111,16 +111,21 @@
       doc: >
     - var_name: SolidSolid
       doc: >
+        For double solid line.
     - var_name: SolidBroken
       doc: >
+        From inside to outside except for center lane which is from left to right.
     - var_name: BrokenSolid
       doc: >
+        From inside to outside except for center lane which is from left to right.
     - var_name: BrokenBroken
       doc: >
+        From inside to outside except for center lane which is from left to right.
     - var_name: BottsDots
       doc: >
     - var_name: Grass
       doc: >
+        Grass edge.
     - var_name: Curb
       doc: >
 
@@ -219,6 +224,10 @@
           Path where it will be saved
       doc: >
         Save the OpenDRIVE of the current map to disk
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
 
   - class_name: LaneMarking
     # - DESCRIPTION ------------------------
@@ -339,5 +348,8 @@
         Waypoint, regardless if the lane change is allowed in this location.  
 
         Can return `None` if the lane does not exist
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
     # --------------------------------------
 ...
