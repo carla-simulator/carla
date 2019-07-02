@@ -45,7 +45,6 @@ namespace detail {
     while (frame > episode.GetState()->GetTimestamp().frame) {
       std::this_thread::yield();
     }
-    RELEASE_ASSERT(frame == episode.GetState()->GetTimestamp().frame);
   }
 
   // ===========================================================================
@@ -117,6 +116,7 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     const auto frame = _client.SendTickCue();
     SynchronizeFrame(frame, *_episode);
+    RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
     return frame;
   }
 
