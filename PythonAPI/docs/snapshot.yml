@@ -24,7 +24,7 @@
         Check if an actor is present in this snapshot.
     # --------------------------------------
     - def_name: find
-      return_type: 
+      return: 
       params: 
         - param_name: actor_id
           type: int
@@ -52,6 +52,7 @@
     - def_name: __self__
       doc: >
     # --------------------------------------
+    
   - class_name: ActorSnapshot
     # - DESCRIPTION ------------------------
     doc: >
@@ -63,19 +64,19 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_transform
-      return_type: carla.Transform
+      return: carla.Transform
       doc: >
     # --------------------------------------
     - def_name: get_velocity
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: > 
     # --------------------------------------
     - def_name: get_angular_velocity
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
     # --------------------------------------
     - def_name: get_acceleration
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
     # --------------------------------------
     - def_name: __self__

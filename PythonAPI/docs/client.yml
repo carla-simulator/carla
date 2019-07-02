@@ -52,11 +52,13 @@
     # --------------------------------------
     - def_name: get_world
       params:
+      return: carla.World
       doc: >
         Get the world object from where we can get other information about the map
     # --------------------------------------
     - def_name: get_available_maps
       params:
+      return: list(str)
       doc: >
         Get a list of strings of the maps available on server. The result can be something like:  
           '/Game/Carla/Maps/Town01'  

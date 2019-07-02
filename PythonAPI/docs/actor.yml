@@ -47,7 +47,7 @@
     # - METHODS ----------------------------
     methods:
     - def_name: destroy
-      return_type: bool
+      return: bool
       doc: >
         Tell the simulator to destroy this Actor, and return whether the actor
         was successfully destroyed. It has no effect if the Actor was already
@@ -57,12 +57,12 @@
         simulator.
     # --------------------------------------
     - def_name: get_world
-      return_type: carla.World
+      return: carla.World
       doc: >
         Return the world this actor belongs to.
     # --------------------------------------
     - def_name: get_location
-      return_type: carla.Location
+      return: carla.Location
       doc: >
         Return the current location of the actor.
       note: >
@@ -70,7 +70,7 @@
         received in the last tick.
     # --------------------------------------
     - def_name: get_velocity
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
         Return the current 3D velocity of the actor.
       note: >
@@ -78,7 +78,7 @@
         received in the last tick.
     # --------------------------------------
     - def_name: get_angular_velocity
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
         Return the current 3D angular velocity of the actor.
       note: >
@@ -86,7 +86,7 @@
         velocity received in the last tick.
     # --------------------------------------
     - def_name: get_acceleration
-      return_type: carla.Vector3D
+      return: carla.Vector3D
       doc: >
         Return the current 3D acceleration of the actor.
       note: >
@@ -137,7 +137,7 @@
         Enable or disable physics simulation on this actor.
     # --------------------------------------
     - def_name: __str__
-      return_type: str
+      return: str
     # --------------------------------------
 
   - class_name: Vehicle
@@ -162,7 +162,7 @@
         tick.
     # --------------------------------------
     - def_name: get_control
-      return_type: carla.VehicleControl
+      return: carla.VehicleControl
       doc: >
         Return the control last applied to this vehicle.
       note: >
@@ -178,7 +178,7 @@
         next tick.
     # --------------------------------------
     - def_name: get_physics_control
-      return_type: carla.VehiclePhysicsControl
+      return: carla.VehiclePhysicsControl
       doc: >
         Return the physics control last applied to this vehicle.
       warning: This function does call the simulator to retrieve the value.
@@ -192,7 +192,7 @@
         Switch on/off this vehicle's server-side autopilot.
     # --------------------------------------
     - def_name: get_speed_limit
-      return_type: float
+      return: float
       doc: >
         Return the speed limit currently affecting this vehicle. Note that the
         speed limit is only updated when passing by a speed limit signal, right
@@ -203,7 +203,7 @@
         in the last tick.
     # --------------------------------------
     - def_name: get_traffic_light_state
-      return_type: carla.TrafficLightState
+      return: carla.TrafficLightState
       doc: >
         Return the state of the traffic light currently affecting this vehicle.
         If no traffic light is currently affecting the vehicle, return Green.
@@ -212,7 +212,7 @@
         in the last tick.
     # --------------------------------------
     - def_name: is_at_traffic_light
-      return_type: bool
+      return: bool
       doc: >
         Return whether a traffic light is affecting this vehicle.
       note: >
@@ -220,12 +220,12 @@
         in the last tick.
     # --------------------------------------
     - def_name: get_traffic_light
-      return_type: carla.TrafficLight
+      return: carla.TrafficLight
       doc: >
         Retrieve the traffic light actor currently affecting this vehicle.
     # --------------------------------------
     - def_name: __str__
-      return_type: str
+      return: str
     # --------------------------------------
 
   - class_name: Walker
@@ -255,7 +255,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_control
-      return_type: carla.WalkerControl
+      return: carla.WalkerControl
       doc: >
         Return the control last applied to this walker.
       note: >
@@ -263,7 +263,7 @@
         in the last tick.
     # --------------------------------------
     - def_name: __str__
-      return_type: str
+      return: str
     # --------------------------------------
 
   - class_name: TrafficSign
@@ -303,7 +303,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_state
-      return_type: carla.Tra
+      return: carla.Tra
       doc: >
         Return the current state of the traffic light.
       note: >
@@ -317,7 +317,7 @@
         doc: >
     # --------------------------------------
     - def_name: get_green_time
-      return_type: float
+      return: float
       doc: >
       note: >
         This function does not call the simulator, it returns the data
@@ -330,7 +330,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_yellow_time
-      return_type: float
+      return: float
       doc: >
       note: >
         This function does not call the simulator, it returns the data
@@ -343,14 +343,14 @@
       doc: >
     # --------------------------------------
     - def_name: get_red_time
-      return_type: float
+      return: float
       doc: >
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
     # --------------------------------------
     - def_name: get_elapsed_time
-      return_type: float
+      return: float
       doc: >
       note: >
         This function does not call the simulator, it returns the data
@@ -369,7 +369,7 @@
         received in the last tick.
     # --------------------------------------
     - def_name: get_pole_index
-      return_type: int
+      return: int
       doc: >
     # --------------------------------------
     - def_name: get_group_traffic_lights
