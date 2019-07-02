@@ -66,7 +66,7 @@ def main():
         '--filterw',
         metavar='PATTERN',
         default='walker.pedestrian.*',
-        help='pedestrians filter (default: "walker.pedestrian.*")')
+        help='pedestrians filter (default: "walker.*")')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -136,8 +136,8 @@ def main():
             spawn_point.location = world.get_random_location_from_navigation()
             if (spawn_point.location != None):
                 spawn_points.append(spawn_point)
-        batch = []
         # 2. we spawn the walker object
+        batch = []
         for spawn_point in spawn_points:
             walker_bp = random.choice(blueprintsWalkers)
             # set as not invencible
@@ -149,7 +149,7 @@ def main():
             if results[i].error:
                 logging.error(results[i].error)
             else:
-                walkers_list.append({"id": results[i].actor_id, "trans": spawn_points[i], "con": None})
+                walkers_list.append({"id": results[i].actor_id})
         # 3. we spawn the walker controller
         batch = []
         walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
