@@ -180,7 +180,7 @@ def import_assets(package_name, json_dirname, props, maps):
 
     # Import Props
     import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps)
-    commandlet_arguments = "-importSettings=\"%s\" -AllowCommandletRendering -nosourcecontrol -replaceexisting" % import_setting_file
+    commandlet_arguments = "-importSettings=\"%s\" -nosourcecontrol -replaceexisting" % import_setting_file
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
