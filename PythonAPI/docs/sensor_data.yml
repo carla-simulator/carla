@@ -8,12 +8,15 @@
     doc: >
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: frame_number
+    - var_name: frame
       doc: >
+        Frame count when the data was generated.
     - var_name: timestamp
       doc: >
+        Simulation-time when the data was generated.
     - var_name: transform
       doc: >
+        Sensor's transform when the data was generated.
 
   - class_name: ColorConverter
     # - DESCRIPTION ------------------------
@@ -46,9 +49,18 @@
     # - METHODS ----------------------------
     methods:
     - def_name: convert
+      params:
+      - param_name: color_converter
+        type: carla.ColorConverter
       doc: >
     # --------------------------------------
     - def_name: save_to_disk
+      params:
+      - param_name: path
+        type: str
+      - param_name: color_converter
+        type: carla.ColorConverter
+        default: Raw
       doc: >
     # --------------------------------------
     - def_name: __len__
@@ -58,9 +70,18 @@
       doc: >
     # --------------------------------------
     - def_name: __getitem__
+      params:
+      - param_name: pos
       doc: >
     # --------------------------------------
     - def_name: __setitem__
+      params:
+      - param_name: pos
+      - param_name: color
+        type: carla.Color
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -79,9 +100,14 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_point_count
+      params:
+      - param_name: channel 
       doc: >
     # --------------------------------------
     - def_name: save_to_disk
+      params:
+      - param_name: path  
+        type: str
       doc: >
     # --------------------------------------
     - def_name: __len__
@@ -91,9 +117,18 @@
       doc: >
     # --------------------------------------
     - def_name: __getitem__
+      params:
+      - param_name: pos
       doc: >
     # --------------------------------------
     - def_name: __setitem__
+      params:
+      - param_name: pos
+      - param_name: location
+        type: carla.Location
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
       doc: >
     # --------------------------------------
 
@@ -104,11 +139,17 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
+      type: carla.Actor
       doc: >
+        Get "self" actor. Actor that measured the collision.
     - var_name: other_actor
+      type: carla.Actor
       doc: >
+        Get the actor to which we collided.
     - var_name: normal_impulse
+      type: carla.Vector3D
       doc: >
+        Normal impulse result of the collision.
 
   - class_name: ObstacleDetectionEvent
     parent: carla.SensorData
@@ -117,11 +158,18 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
+      type: carla.Actor
       doc: >
+        Get "self" actor. Actor that measured the collision.
     - var_name: other_actor
+      type: carla.Actor
       doc: >
+        Get the actor to which we collided.
     - var_name: distance
+      type: float
       doc: >
+        Get obstacle distance.
+    # --------------------------------------
 
   - class_name: LaneInvasionEvent
     parent: carla.SensorData
@@ -130,9 +178,14 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
+      type: carla.Actor
       doc: >
+        Get "self" actor. Actor that invaded another lane.
     - var_name: crossed_lane_markings
+      type: list(carla.LaneMarking)
       doc: >
+        List of lane markings that have been crossed.
+    # --------------------------------------
 
   - class_name: GnssEvent
     parent: carla.SensorData
@@ -141,9 +194,12 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: latitude
+      type: float
       doc: >
     - var_name: longitude
+      type: float
       doc: >
     - var_name: altitude
+      type: float
       doc: >
 ...

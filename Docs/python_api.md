@@ -88,7 +88,7 @@
         - [**OnRamp**](#carla.LaneType.OnRamp) <sub>_Instance variable_</sub>
         - [**Any**](#carla.LaneType.Any) <sub>_Instance variable_</sub>
     - [**SensorData**](#carla.SensorData) <sub>_Class_</sub>  
-        - [**frame_number**](#carla.SensorData.frame_number) <sub>_Instance variable_</sub>
+        - [**frame**](#carla.SensorData.frame) <sub>_Instance variable_</sub>
         - [**timestamp**](#carla.SensorData.timestamp) <sub>_Instance variable_</sub>
         - [**transform**](#carla.SensorData.transform) <sub>_Instance variable_</sub>
     - [**TrafficLightState**](#carla.TrafficLightState) <sub>_Class_</sub>  
@@ -226,6 +226,7 @@
         - [**transform_to_geolocation**(**self**, **location**)](#carla.Map.transform_to_geolocation) <sub>_Method_</sub>
         - [**to_opendrive**(**self**)](#carla.Map.to_opendrive) <sub>_Method_</sub>
         - [**save_to_disk**(**self**, **path**)](#carla.Map.save_to_disk) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.Map.__str__) <sub>_Method_</sub>
     - [**ObstacleDetectionEvent**](#carla.ObstacleDetectionEvent) <sub>_Class_</sub>  
         - [**actor**](#carla.ObstacleDetectionEvent.actor) <sub>_Instance variable_</sub>
         - [**other_actor**](#carla.ObstacleDetectionEvent.other_actor) <sub>_Instance variable_</sub>
@@ -342,6 +343,7 @@
         - [**next**(**self**, **distance**)](#carla.Waypoint.next) <sub>_Method_</sub>
         - [**get_right_lane**(**self**)](#carla.Waypoint.get_right_lane) <sub>_Method_</sub>
         - [**get_left_lane**(**self**)](#carla.Waypoint.get_left_lane) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.Waypoint.__str__) <sub>_Method_</sub>
     - [**WeatherParameters**](#carla.WeatherParameters) <sub>_Class_</sub>  
         - [**cloudyness**](#carla.WeatherParameters.cloudyness) <sub>_Instance variable_</sub>
         - [**precipitation**](#carla.WeatherParameters.precipitation) <sub>_Instance variable_</sub>
@@ -404,22 +406,24 @@
         - [**height**](#carla.Image.height) <sub>_Instance variable_</sub>
         - [**fov**](#carla.Image.fov) <sub>_Instance variable_</sub>
         - [**raw_data**](#carla.Image.raw_data) <sub>_Instance variable_</sub>
-        - [**convert**(**self**)](#carla.Image.convert) <sub>_Method_</sub>
-        - [**save_to_disk**(**self**)](#carla.Image.save_to_disk) <sub>_Method_</sub>
+        - [**convert**(**self**, **color_converter**)](#carla.Image.convert) <sub>_Method_</sub>
+        - [**save_to_disk**(**self**, **path**, **color_converter**=Raw)](#carla.Image.save_to_disk) <sub>_Method_</sub>
         - [**\__len__**(**self**)](#carla.Image.__len__) <sub>_Method_</sub>
         - [**\__iter__**(**self**)](#carla.Image.__iter__) <sub>_Method_</sub>
-        - [**\__getitem__**(**self**)](#carla.Image.__getitem__) <sub>_Method_</sub>
-        - [**\__setitem__**(**self**)](#carla.Image.__setitem__) <sub>_Method_</sub>
+        - [**\__getitem__**(**self**, **pos**)](#carla.Image.__getitem__) <sub>_Method_</sub>
+        - [**\__setitem__**(**self**, **pos**, **color**)](#carla.Image.__setitem__) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.Image.__str__) <sub>_Method_</sub>
     - [**LidarMeasurement**](#carla.LidarMeasurement) <sub>_Class_</sub>  
         - [**horizontal_angle**](#carla.LidarMeasurement.horizontal_angle) <sub>_Instance variable_</sub>
         - [**channels**](#carla.LidarMeasurement.channels) <sub>_Instance variable_</sub>
         - [**raw_data**](#carla.LidarMeasurement.raw_data) <sub>_Instance variable_</sub>
-        - [**get_point_count**(**self**)](#carla.LidarMeasurement.get_point_count) <sub>_Method_</sub>
-        - [**save_to_disk**(**self**)](#carla.LidarMeasurement.save_to_disk) <sub>_Method_</sub>
+        - [**get_point_count**(**self**, **channel**)](#carla.LidarMeasurement.get_point_count) <sub>_Method_</sub>
+        - [**save_to_disk**(**self**, **path**)](#carla.LidarMeasurement.save_to_disk) <sub>_Method_</sub>
         - [**\__len__**(**self**)](#carla.LidarMeasurement.__len__) <sub>_Method_</sub>
         - [**\__iter__**(**self**)](#carla.LidarMeasurement.__iter__) <sub>_Method_</sub>
-        - [**\__getitem__**(**self**)](#carla.LidarMeasurement.__getitem__) <sub>_Method_</sub>
-        - [**\__setitem__**(**self**)](#carla.LidarMeasurement.__setitem__) <sub>_Method_</sub>
+        - [**\__getitem__**(**self**, **pos**)](#carla.LidarMeasurement.__getitem__) <sub>_Method_</sub>
+        - [**\__setitem__**(**self**, **pos**, **location**)](#carla.LidarMeasurement.__setitem__) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.LidarMeasurement.__str__) <sub>_Method_</sub>
     - [**Location**](#carla.Location) <sub>_Class_</sub>  
         - [**x**](#carla.Location.x) <sub>_Instance variable_</sub>
         - [**y**](#carla.Location.y) <sub>_Instance variable_</sub>
@@ -556,8 +560,8 @@
 ## carla.AttachmentType<a name="carla.AttachmentType"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>** (_int_)  
-- <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>** (_int_)  
+- <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
+- <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
 
 ---
 
@@ -686,11 +690,16 @@ Defines the lane marking types that OpenDRIVE accepts.
 - <a name="carla.LaneMarkingType.Broken"></a>**<font color="#f8805a">Broken</font>**  
 - <a name="carla.LaneMarkingType.Solid"></a>**<font color="#f8805a">Solid</font>**  
 - <a name="carla.LaneMarkingType.SolidSolid"></a>**<font color="#f8805a">SolidSolid</font>**  
+For double solid line.  
 - <a name="carla.LaneMarkingType.SolidBroken"></a>**<font color="#f8805a">SolidBroken</font>**  
+From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.BrokenSolid"></a>**<font color="#f8805a">BrokenSolid</font>**  
+From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.BrokenBroken"></a>**<font color="#f8805a">BrokenBroken</font>**  
+From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
 - <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
+Grass edge.  
 - <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
 
 ---
@@ -727,9 +736,12 @@ All the possible lane types that OpenDRIVE accepts.
 ## carla.SensorData<a name="carla.SensorData"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.SensorData.frame_number"></a>**<font color="#f8805a">frame_number</font>**  
+- <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>**  
+Frame count when the data was generated.  
 - <a name="carla.SensorData.timestamp"></a>**<font color="#f8805a">timestamp</font>**  
+Simulation-time when the data was generated.  
 - <a name="carla.SensorData.transform"></a>**<font color="#f8805a">transform</font>**  
+Sensor's transform when the data was generated.  
 
 ---
 
@@ -1047,9 +1059,12 @@ This function executes some commands altogether as fast as it can one after the 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>**  
-- <a name="carla.CollisionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>**  
-- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>**  
+- <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
+Get "self" actor. Actor that measured the collision.  
+- <a name="carla.CollisionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
+Get the actor to which we collided.  
+- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Normal impulse result of the collision.  
 
 ---
 
@@ -1102,17 +1117,19 @@ Contains geolocation simulated data.
 ## carla.GnssEvent<a name="carla.GnssEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.GnssEvent.latitude"></a>**<font color="#f8805a">latitude</font>**  
-- <a name="carla.GnssEvent.longitude"></a>**<font color="#f8805a">longitude</font>**  
-- <a name="carla.GnssEvent.altitude"></a>**<font color="#f8805a">altitude</font>**  
+- <a name="carla.GnssEvent.latitude"></a>**<font color="#f8805a">latitude</font>** (_float_)  
+- <a name="carla.GnssEvent.longitude"></a>**<font color="#f8805a">longitude</font>** (_float_)  
+- <a name="carla.GnssEvent.altitude"></a>**<font color="#f8805a">altitude</font>** (_float_)  
 
 ---
 
 ## carla.LaneInvasionEvent<a name="carla.LaneInvasionEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.LaneInvasionEvent.actor"></a>**<font color="#f8805a">actor</font>**  
-- <a name="carla.LaneInvasionEvent.crossed_lane_markings"></a>**<font color="#f8805a">crossed_lane_markings</font>**  
+- <a name="carla.LaneInvasionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
+Get "self" actor. Actor that invaded another lane.  
+- <a name="carla.LaneInvasionEvent.crossed_lane_markings"></a>**<font color="#f8805a">crossed_lane_markings</font>** (_list([carla.LaneMarking](#carla.LaneMarking))_)  
+List of lane markings that have been crossed.  
 
 ---
 
@@ -1160,15 +1177,19 @@ Returns the OpenDRIVE of the current map as string.
 Save the OpenDRIVE of the current map to disk.  
     - **Parameters:**
         - `path` – Path where it will be saved.  
+- <a name="carla.Map.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
 ## carla.ObstacleDetectionEvent<a name="carla.ObstacleDetectionEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.ObstacleDetectionEvent.actor"></a>**<font color="#f8805a">actor</font>**  
-- <a name="carla.ObstacleDetectionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>**  
-- <a name="carla.ObstacleDetectionEvent.distance"></a>**<font color="#f8805a">distance</font>**  
+- <a name="carla.ObstacleDetectionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
+Get "self" actor. Actor that measured the collision.  
+- <a name="carla.ObstacleDetectionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
+Get the actor to which we collided.  
+- <a name="carla.ObstacleDetectionEvent.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
+Get obstacle distance.  
 
 ---
 
@@ -1506,6 +1527,7 @@ Can return `None` if the lane does not exist.
 Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
 Can return `None` if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1692,12 +1714,20 @@ Find an ActorSnapshot by id.
 - <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>**  
 
 <h3>Methods</h3>
-- <a name="carla.Image.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Image.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Image.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color_converter**</font>)  
+    - **Parameters:**
+        - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_)  
+- <a name="carla.Image.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**color_converter**=Raw</font>)  
+    - **Parameters:**
+        - `path` (_str_)  
+        - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_)  
 - <a name="carla.Image.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+- <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**color**</font>)  
+    - **Parameters:**
+        - `color` (_[carla.Color](#carla.Color)_)  
+- <a name="carla.Image.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1709,12 +1739,17 @@ Find an ActorSnapshot by id.
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>**  
 
 <h3>Methods</h3>
-- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+- <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+    - **Parameters:**
+        - `path` (_str_)  
 - <a name="carla.LidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.LidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+- <a name="carla.LidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**location**</font>)  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_)  
+- <a name="carla.LidarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
