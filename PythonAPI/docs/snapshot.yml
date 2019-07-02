@@ -58,6 +58,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: int
       doc: >
     # - METHODS ----------------------------
     methods:
