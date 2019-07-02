@@ -919,7 +919,7 @@ _</font>
 ## carla.ActorSnapshot<a name="carla.ActorSnapshot"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.ActorSnapshot.id"></a>**<font color="#f8805a">id</font>**  
+- <a name="carla.ActorSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 
 <h3>Methods</h3>
 - <a name="carla.ActorSnapshot.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1598,9 +1598,9 @@ WheelPhysicsControl constructor.
 ## carla.World<a name="carla.World"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.World.id"></a>**<font color="#f8805a">id</font>**  
+- <a name="carla.World.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 The id of the episode associated with this world.  
-- <a name="carla.World.debug"></a>**<font color="#f8805a">debug</font>**  
+- <a name="carla.World.debug"></a>**<font color="#f8805a">debug</font>** (_[carla.DebugHelper](#carla.DebugHelper)_)  
 
 <h3>Methods</h3>
 - <a name="carla.World.get_blueprint_library"></a>**<font color="#7fb800">get_blueprint_library</font>**(<font color="#00a6ed">**self**</font>)  
