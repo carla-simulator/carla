@@ -158,7 +158,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 {
   auto World = GetWorld();
   check(World != nullptr);
-  auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+  auto PlayerController = UGameplayStatics::GetPlayerController(World, 0);
   if (PlayerController == nullptr)
   {
     UE_LOG(LogCarla, Error, TEXT("Can't find player controller!"));

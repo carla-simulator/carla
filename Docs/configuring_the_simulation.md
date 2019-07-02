@@ -23,20 +23,26 @@ CARLA can be run in both modes.
 
 The simulation tries to keep up with real-time. To do so, the time-step is
 slightly adjusted each update. Simulations are not repeatable. By default, the
-simulator starts in this mode
+simulator starts in this mode, but it can be re-enabled if changed with
+
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+```
 
 <h4>Fixed time-step</h4>
 
 The simulation runs as fast as possible, simulating the same time increment on
-each step. To run the simulator this way you need to pass two parameters in the
-command-line, one to enable the fixed time-step mode, and the second to specify
-the FPS of the simulation (i.e. the inverse of the time step). For instance, to
-run the simulation at a fixed time-step of 0.1 seconds we execute
+each step. To enable this mode set a fixed delta seconds in the world settings.
+For instance, to run the simulation at a fixed time-step of 0.05 seconds (20
+FPS) apply the following settings
 
-    $ ./CarlaUE4.sh -benchmark -fps=10
-
-It is important to note that this mode can only be enabled when launching the
-simulator since this is actually a feature of Unreal Engine.
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+```
 
 !!! important
     **Do not decrease the frame-rate below 10 FPS.**<br>
