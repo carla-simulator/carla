@@ -82,6 +82,9 @@
         type: carla.VehicleControl
       doc: >
     # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
 
   - class_name: WalkerControl
     doc: >
@@ -128,6 +131,7 @@
         type: carla.WalkerControl
     # --------------------------------------
     - def_name: __str__
+      doc: >
     # --------------------------------------
 
   - class_name: WalkerBoneControl

@@ -251,6 +251,7 @@
       type: float
       doc: >
         Horizontal lane marking thickness
+    # --------------------------------------
 
   - class_name: Waypoint
     # - DESCRIPTION ------------------------
