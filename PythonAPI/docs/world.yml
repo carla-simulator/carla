@@ -140,9 +140,11 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: int
       doc: >
         The id of the episode associated with this world.
     - var_name: debug
+      type: carla.DebugHelper
       doc: >
     # - METHODS ----------------------------
     methods:
