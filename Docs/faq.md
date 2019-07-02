@@ -87,21 +87,6 @@ For more issues related to F.A.Q. see [question list](https://github.com/carla-s
 <!-- ======================================================================= -->
   <details>
     <summary><h5 style="display:inline">
-    Is it possible to dump images from the CARLA simulator view?
-    </h5></summary>
-
-  Yes, this is an Unreal Engine feature. You can dump the images of the spectator
-  camera (simulator view) by running CARLA with
-
-      $ ./CarlaUE4.sh -benchmark -fps=30 -dumpmovie
-
-  Images are saved to "CarlaUE4/Saved/Screenshots/LinuxNoEditor".
-
-  </details>
-
-<!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
     Fatal error: 'version.h' has been modified since the precompiled header.
     </h5></summary>
 

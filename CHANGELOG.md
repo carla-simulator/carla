@@ -2,6 +2,7 @@
 
   * Add access to vehicle transmission details
   * Add access to vehicle physics brake values
+  * The simulator is now compiled in "Shipping" mode, faster but it accepts less command-line arguments
   * Enabled texture streaming for scene captures
     - Enabled texture streaming in the Unreal project settings
     - Changed the scene capture to register its camera with Unreal's texture streamer every tick to enable texture streaming
