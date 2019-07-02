@@ -36,8 +36,8 @@ Each packet starts with a little header of two fields (5 bytes):
 * **id**: is the type of the packet
 * **size**: is the size of the data that has the packet
 
-Following the header comes the **data**, as many bytes as **size** field sais.
-The **data** is optional, si if the **size** is 0 means there is no **data** in this packet.
+Following the header comes the **data**, with its size in bytes determined by the value in the **size** field of the header.
+The **data** is optional, a **size** of 0 means there is no **data** in the packet.
 If the **size** is greater than 0 means that the packet has **data** bytes. The **data** needs to be reinterpreted in function of the type of the packet.
 
 The header of the packet is useful because we can just ignore those packets we are not interested in when doing playback. We only need to read the header (first 5 bytes) of the packet and jump to the next packet just skipping the data of the packet:
