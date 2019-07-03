@@ -345,7 +345,7 @@ The full list of presets can be found in the
 
 ### World Snapshot
 
-A world snapshot represents the state of every actor in the simulation at a single frame, a sort of still image of the world with a timestamp. This is meant to solve all the synchronization issues when retrieving actor locations, now is possible to record the location of every actor and make sure all of them were captured at the same frame without the need of using synchronous mode. It can also be used to remove the flickering in scripts like no-rendering mode.
+A world snapshot represents the state of every actor in the simulation at a single frame, a sort of still image of the world with a timestamp. With this feature it is possible to record the location of every actor and make sure all of them were captured at the same frame without the need of using synchronous mode.
 
 ```py
 # Retrieve a snapshot of the world at this point in time.
