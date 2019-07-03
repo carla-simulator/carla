@@ -143,9 +143,9 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero'):
+    def __init__(self, carla_world, hud, args):
         self.world = carla_world
-        self.actor_role_name = actor_role_name
+        self.actor_role_name = args.rolename
         self.map = self.world.get_map()
         self.hud = hud
         self.player = None
@@ -155,7 +155,8 @@ class World(object):
         self.camera_manager = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
-        self._actor_filter = actor_filter
+        self._actor_filter = args.filter
+        self._gamma = args.gamma
         self.restart()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
@@ -192,7 +193,7 @@ class World(object):
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
-        self.camera_manager = CameraManager(self.player, self.hud)
+        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
@@ -660,7 +661,7 @@ class GnssSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud):
+    def __init__(self, parent_actor, hud, gamma_correction):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -691,6 +692,8 @@ class CameraManager(object):
             if item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
                 bp.set_attribute('image_size_y', str(hud.dim[1]))
+                if bp.has_attribute('gamma'):
+                    bp.set_attribute('gamma', str(gamma_correction))
             elif item[0].startswith('sensor.lidar'):
                 bp.set_attribute('range', '5000')
             item.append(bp)
@@ -780,7 +783,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args.filter, args.rolename)
+        world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
@@ -846,6 +849,11 @@ def main():
         metavar='NAME',
         default='hero',
         help='actor role name (default: "hero")')
+    argparser.add_argument(
+        '--gamma',
+        default=2.2,
+        type=float,
+        help='Gamma correction of the camera (default: 2.2)')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
