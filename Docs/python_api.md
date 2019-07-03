@@ -1685,9 +1685,9 @@ Signal the simulator to continue to next tick (only has effect on synchronous mo
 ## carla.WorldSnapshot<a name="carla.WorldSnapshot"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.WorldSnapshot.id"></a>**<font color="#f8805a">id</font>**  
+- <a name="carla.WorldSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 - <a name="carla.WorldSnapshot.frame"></a>**<font color="#f8805a">frame</font>**  
-- <a name="carla.WorldSnapshot.timestamp"></a>**<font color="#f8805a">timestamp</font>**  
+- <a name="carla.WorldSnapshot.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_[carla.Timestamp](#carla.Timestamp)_)  
 
 <h3>Methods</h3>
 - <a name="carla.WorldSnapshot.has_actor"></a>**<font color="#7fb800">has_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
@@ -1699,6 +1699,7 @@ Find an ActorSnapshot by id.
     - **Parameters:**
         - `actor_id` (_int_)  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Return number of ActorSnapshots present in this WorldSnapshot.  
 - <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.WorldSnapshot.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
@@ -1726,8 +1727,11 @@ Find an ActorSnapshot by id.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Image.width"></a>**<font color="#f8805a">width</font>**  
+Image width in pixels.  
 - <a name="carla.Image.height"></a>**<font color="#f8805a">height</font>**  
+Image height in pixels.  
 - <a name="carla.Image.fov"></a>**<font color="#f8805a">fov</font>**  
+Horizontal field of view of the image in degrees.  
 - <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>**  
 
 <h3>Methods</h3>
@@ -1854,7 +1858,7 @@ Stops listening for data.
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
 - <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  
 Return the current state of the traffic light.  
-    - **Return:** _[carla.Tra](#carla.Tra)_  
+    - **Return:** _[carla.Color](#carla.Color)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
 - <a name="carla.TrafficLight.set_green_time"></a>**<font color="#7fb800">set_green_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**green_time**</font>)  
@@ -1964,7 +1968,7 @@ Apply control to this walker. The control will take effect on next tick.
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
 - <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
     - **Parameters:**
-        - `control` (_[carla.BoneControl](#carla.BoneControl)_)  
+        - `control` (_[carla.WalkerBoneControl](#carla.WalkerBoneControl)_)  
 - <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
 Return the control last applied to this walker.  
     - **Return:** _[carla.WalkerControl](#carla.WalkerControl)_  
