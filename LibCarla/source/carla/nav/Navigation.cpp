@@ -602,7 +602,7 @@ namespace nav {
 
   // get a random location for navigation
   bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter,
-  bool use_lock) {
+  bool use_lock) const {
 
     std::unique_lock<std::mutex> guard(_mutex, std::defer_lock);
 
