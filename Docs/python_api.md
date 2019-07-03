@@ -305,7 +305,7 @@
         - [**\__str__**(**self**)](#carla.VehiclePhysicsControl.__str__) <sub>_Method_</sub>
     - [**WalkerBoneControl**](#carla.WalkerBoneControl) <sub>_Class_</sub>  
         - [**bone_transforms**](#carla.WalkerBoneControl.bone_transforms) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **(name,transform)**)](#carla.WalkerBoneControl.__init__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **list(name,transform)**)](#carla.WalkerBoneControl.__init__) <sub>_Method_</sub>
         - [**\__str__**(**self**)](#carla.WalkerBoneControl.__str__) <sub>_Method_</sub>
     - [**WalkerControl**](#carla.WalkerControl) <sub>_Class_</sub>  
         - [**direction**](#carla.WalkerControl.direction) <sub>_Instance variable_</sub>
@@ -482,36 +482,29 @@
         - [**actor_id**](#commands.ApplyAngularVelocity.actor_id) <sub>_Instance variable_</sub>
         - [**angular_velocity**](#commands.ApplyAngularVelocity.angular_velocity) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **angular_velocity**)](#commands.ApplyAngularVelocity.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **angular_velocity**)](#commands.ApplyAngularVelocity.__init__) <sub>_Method_</sub>
     - [**ApplyImpulse**](#commands.ApplyImpulse) <sub>_Class_</sub>  
         - [**actor_id**](#commands.ApplyImpulse.actor_id) <sub>_Instance variable_</sub>
         - [**impulse**](#commands.ApplyImpulse.impulse) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **impulse**)](#commands.ApplyImpulse.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **impulse**)](#commands.ApplyImpulse.__init__) <sub>_Method_</sub>
     - [**ApplyTransform**](#commands.ApplyTransform) <sub>_Class_</sub>  
         - [**actor_id**](#commands.ApplyTransform.actor_id) <sub>_Instance variable_</sub>
         - [**transform**](#commands.ApplyTransform.transform) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **transform**)](#commands.ApplyTransform.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **transform**)](#commands.ApplyTransform.__init__) <sub>_Method_</sub>
     - [**ApplyVehicleControl**](#commands.ApplyVehicleControl) <sub>_Class_</sub>  
         - [**actor_id**](#commands.ApplyVehicleControl.actor_id) <sub>_Instance variable_</sub>
         - [**control**](#commands.ApplyVehicleControl.control) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **control**)](#commands.ApplyVehicleControl.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **control**)](#commands.ApplyVehicleControl.__init__) <sub>_Method_</sub>
     - [**ApplyVelocity**](#commands.ApplyVelocity) <sub>_Class_</sub>  
         - [**actor_id**](#commands.ApplyVelocity.actor_id) <sub>_Instance variable_</sub>
         - [**velocity**](#commands.ApplyVelocity.velocity) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **velocity**)](#commands.ApplyVelocity.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **velocity**)](#commands.ApplyVelocity.__init__) <sub>_Method_</sub>
     - [**ApplyWalkerControl**](#commands.ApplyWalkerControl) <sub>_Class_</sub>  
         - [**actor_id**](#commands.ApplyWalkerControl.actor_id) <sub>_Instance variable_</sub>
         - [**control**](#commands.ApplyWalkerControl.control) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **control**)](#commands.ApplyWalkerControl.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **control**)](#commands.ApplyWalkerControl.__init__) <sub>_Method_</sub>
     - [**DestroyActor**](#commands.DestroyActor) <sub>_Class_</sub>  
         - [**actor_id**](#commands.DestroyActor.actor_id) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**)](#commands.DestroyActor.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**)](#commands.DestroyActor.__init__) <sub>_Method_</sub>
     - [**Response**](#commands.Response) <sub>_Class_</sub>  
         - [**actor_id**](#commands.Response.actor_id) <sub>_Instance variable_</sub>
         - [**error**](#commands.Response.error) <sub>_Instance variable_</sub>
@@ -520,18 +513,15 @@
         - [**actor_id**](#commands.SetAutopilot.actor_id) <sub>_Instance variable_</sub>
         - [**enabled**](#commands.SetAutopilot.enabled) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **enabled**)](#commands.SetAutopilot.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **enabled**)](#commands.SetAutopilot.__init__) <sub>_Method_</sub>
     - [**SetSimulatePhysics**](#commands.SetSimulatePhysics) <sub>_Class_</sub>  
         - [**actor_id**](#commands.SetSimulatePhysics.actor_id) <sub>_Instance variable_</sub>
         - [**enabled**](#commands.SetSimulatePhysics.enabled) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **enabled**)](#commands.SetSimulatePhysics.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **actor_id**, **enabled**)](#commands.SetSimulatePhysics.__init__) <sub>_Method_</sub>
     - [**SpawnActor**](#commands.SpawnActor) <sub>_Class_</sub>  
         - [**transform**](#commands.SpawnActor.transform) <sub>_Instance variable_</sub>
         - [**parent_id**](#commands.SpawnActor.parent_id) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
         - [**\__init__**(**self**, **blueprint**, **transform**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **blueprint**, **transform**, **parent_id**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
         - [**\__init__**(**self**, **blueprint**, **transform**, **parent**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
         - [**then**(**self**, **command**)](#commands.SpawnActor.then) <sub>_Method_</sub>
 
@@ -547,6 +537,7 @@
 ---
 
 ## carla.ActorList<a name="carla.ActorList"></a> <sub><sup>_class_</sup></sub>
+Class that provides acces to actors.  
 
 <h3>Methods</h3>
 - <a name="carla.ActorList.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
@@ -563,6 +554,7 @@
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a> <sub><sup>_class_</sup></sub>
+Defines the attachment options.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
@@ -571,6 +563,7 @@
 ---
 
 ## carla.BlueprintLibrary<a name="carla.BlueprintLibrary"></a> <sub><sup>_class_</sup></sub>
+Class that provides acces to blueprints.  
 
 <h3>Methods</h3>
 - <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>)  
@@ -587,6 +580,7 @@ Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a> <sub><sup>_class_</sup></sub>
+Defines the color converter options.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
@@ -597,6 +591,7 @@ Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
 ---
 
 ## carla.DebugHelper<a name="carla.DebugHelper"></a> <sub><sup>_class_</sup></sub>
+Class that provides drawing debug shapes.  
 
 <h3>Methods</h3>
 - <a name="carla.DebugHelper.draw_point"></a>**<font color="#7fb800">draw_point</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**size**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
@@ -740,6 +735,7 @@ All the possible lane types that OpenDRIVE accepts.
 ---
 
 ## carla.SensorData<a name="carla.SensorData"></a> <sub><sup>_class_</sup></sub>
+Base class for all the objects containing data generated by a sensor.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>**  
@@ -752,6 +748,7 @@ Sensor's transform when the data was generated.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a> <sub><sup>_class_</sup></sub>
+All possible states for traffic lights.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Red"></a>**<font color="#f8805a">Red</font>**  
@@ -839,6 +836,7 @@ Enable or disable physics simulation on this actor.
 ---
 
 ## carla.ActorAttribute<a name="carla.ActorAttribute"></a> <sub><sup>_class_</sup></sub>
+Defines an attribute of a [carla.ActorBlueprint](#carla.ActorBlueprint).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorAttribute.id"></a>**<font color="#f8805a">id</font>** (_str_)  
@@ -898,6 +896,7 @@ Enable or disable physics simulation on this actor.
 ---
 
 ## carla.ActorBlueprint<a name="carla.ActorBlueprint"></a> <sub><sup>_class_</sup></sub>
+Contains all the necessary information for spawning an Actor.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorBlueprint.id"></a>**<font color="#f8805a">id</font>** (_str_)  
@@ -934,6 +933,7 @@ _</font>
 ---
 
 ## carla.ActorSnapshot<a name="carla.ActorSnapshot"></a> <sub><sup>_class_</sup></sub>
+Provides acces to the data of a [carla.Actor](#carla.Actor) in a [carla.WorldSnapshot](#carla.WorldSnapshot).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  
@@ -1080,6 +1080,7 @@ This function executes some commands altogether as fast as it can one after the 
 ---
 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
+Defines a registered collision.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -1092,6 +1093,7 @@ Normal impulse result of the collision.
 ---
 
 ## carla.Color<a name="carla.Color"></a> <sub><sup>_class_</sup></sub>
+Defines a 32-bit BGRA color.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Color.r"></a>**<font color="#f8805a">r</font>**  
@@ -1217,7 +1219,7 @@ Computes a forward vector using the current rotation.
 ## carla.Timestamp<a name="carla.Timestamp"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.Timestamp.frame"></a>**<font color="#f8805a">frame</font>** (_size_t_)  
+- <a name="carla.Timestamp.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
 Number of frames elapsed since the simulator was launched.  
 - <a name="carla.Timestamp.elapsed_seconds"></a>**<font color="#f8805a">elapsed_seconds</font>** (_float_)  
 Simulated seconds elapsed since the beginning of the current episode.  
@@ -1229,7 +1231,7 @@ Time-stamp of the frame at which this measurement was taken, in seconds as given
 <h3>Methods</h3>
 - <a name="carla.Timestamp.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frame**</font>, <font color="#00a6ed">**elapsed_seconds**</font>, <font color="#00a6ed">**delta_seconds**</font>, <font color="#00a6ed">**platform_timestamp**</font>)  
     - **Parameters:**
-        - `frame` (_size_t_)  
+        - `frame` (_int_)  
         - `elapsed_seconds` (_float_)  
         - `delta_seconds` (_float_)  
         - `platform_timestamp` (_float_)  
@@ -1436,14 +1438,15 @@ VehiclePhysicsControl constructor.
 ---
 
 ## carla.WalkerBoneControl<a name="carla.WalkerBoneControl"></a> <sub><sup>_class_</sup></sub>
+Class used for controlling the skeleton of a walker. See [walker bone control](walker_bone_control.md).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WalkerBoneControl.bone_transforms"></a>**<font color="#f8805a">bone_transforms</font>** (_list([name,transform])_)  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**(name,transform)**</font>)  
+- <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**list(name,transform)**</font>)  
     - **Parameters:**
-        - `(name,transform)` (_tuple_)  
+        - `list(name,transform)` (_tuple_)  
 - <a name="carla.WalkerBoneControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -1686,7 +1689,7 @@ Signal the simulator to continue to next tick (only has effect on synchronous mo
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  
-- <a name="carla.WorldSnapshot.frame"></a>**<font color="#f8805a">frame</font>**  
+- <a name="carla.WorldSnapshot.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
 - <a name="carla.WorldSnapshot.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_[carla.Timestamp](#carla.Timestamp)_)  
 
 <h3>Methods</h3>
@@ -1724,15 +1727,16 @@ Return number of ActorSnapshots present in this WorldSnapshot.
 ---
 
 ## carla.Image<a name="carla.Image"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
+Defines an image of 32-bit BGRA colors.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Image.width"></a>**<font color="#f8805a">width</font>**  
+- <a name="carla.Image.width"></a>**<font color="#f8805a">width</font>** (_int_)  
 Image width in pixels.  
-- <a name="carla.Image.height"></a>**<font color="#f8805a">height</font>**  
+- <a name="carla.Image.height"></a>**<font color="#f8805a">height</font>** (_int_)  
 Image height in pixels.  
-- <a name="carla.Image.fov"></a>**<font color="#f8805a">fov</font>**  
+- <a name="carla.Image.fov"></a>**<font color="#f8805a">fov</font>** (_float_)  
 Horizontal field of view of the image in degrees.  
-- <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>**  
+- <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 
 <h3>Methods</h3>
 - <a name="carla.Image.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color_converter**</font>)  
@@ -1745,8 +1749,11 @@ Horizontal field of view of the image in degrees.
 - <a name="carla.Image.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+    - **Parameters:**
+        - `pos` (_int_)  
 - <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**color**</font>)  
     - **Parameters:**
+        - `pos` (_int_)  
         - `color` (_[carla.Color](#carla.Color)_)  
 - <a name="carla.Image.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1768,20 +1775,25 @@ List of lane markings that have been crossed.
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>**  
-- <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>**  
-- <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>**  
+- <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
+- <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
+- <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+    - **Parameters:**
+        - `channel` (_int_)  
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
     - **Parameters:**
         - `path` (_str_)  
 - <a name="carla.LidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+    - **Parameters:**
+        - `pos` (_int_)  
 - <a name="carla.LidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**location**</font>)  
     - **Parameters:**
+        - `pos` (_int_)  
         - `location` (_[carla.Location](#carla.Location)_)  
 - <a name="carla.LidarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1988,11 +2000,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
-- <a name="commands.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
@@ -2006,11 +2014,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
-- <a name="commands.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**impulse**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
@@ -2024,11 +2028,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `transform` (_[carla.Transform](#carla.Transform)_)  
-- <a name="commands.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**transform**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
 
 ---
@@ -2042,11 +2042,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
-- <a name="commands.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**control**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
 
 ---
@@ -2060,11 +2056,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
-- <a name="commands.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**velocity**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
@@ -2078,11 +2070,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
-- <a name="commands.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**control**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
 
 ---
@@ -2095,10 +2083,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-- <a name="commands.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
 
 ---
 
@@ -2122,11 +2107,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `enabled` (_bool_)  
-- <a name="commands.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**enabled**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `enabled` (_bool_)  
 
 ---
@@ -2140,11 +2121,7 @@ _</font>
 <h3>Methods</h3>
 - <a name="commands.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_)  
-        - `enabled` (_bool_)  
-- <a name="commands.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**enabled**</font>)  
-    - **Parameters:**
-        - `actor_id` (_int_)  
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `enabled` (_bool_)  
 
 ---
@@ -2161,16 +2138,11 @@ _</font>
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
-- <a name="commands.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent_id**</font>)  
-    - **Parameters:**
-        - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
-        - `transform` (_[carla.Transform](#carla.Transform)_)  
-        - `parent_id` (_int_)  
 - <a name="commands.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent**</font>)  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
-        - `parent` (_[carla.Actor](#carla.Actor)_)  
+        - `parent` (_[carla.Actor](#carla.Actor) or int_)  
 - <a name="commands.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
     - **Parameters:**
         - `command` (_[carla.Command](#carla.Command)_) – CommandType.  

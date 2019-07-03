@@ -9,7 +9,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
-      type: size_t
+      type: int
       doc: >
         Number of frames elapsed since the simulator was launched.
     - var_name: elapsed_seconds
@@ -30,7 +30,7 @@
     - def_name: __init__
       params:
       - param_name: frame
-        type: size_t
+        type: int
       - param_name: elapsed_seconds
         type: float
       - param_name: delta_seconds
@@ -58,6 +58,7 @@
   - class_name: ActorList
     # - DESCRIPTION ------------------------
     doc: >
+      Class that provides acces to actors.
     # - METHODS ----------------------------
     methods:
     - def_name: find
@@ -129,6 +130,7 @@
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
+      Defines the attachment options.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
@@ -288,6 +290,7 @@
   - class_name: DebugHelper
     # - DESCRIPTION ------------------------
     doc: >
+      Class that provides drawing debug shapes.
     # - METHODS ----------------------------
     methods:
     - def_name: draw_point

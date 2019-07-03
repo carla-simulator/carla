@@ -137,6 +137,8 @@
   - class_name: WalkerBoneControl
     # - DESCRIPTION ------------------------
     doc: >
+       Class used for controlling the skeleton of a walker.
+       See [walker bone control](walker_bone_control.md)
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bone_transforms
@@ -146,7 +148,7 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: '(name,transform)'
+      - param_name: 'list(name,transform)'
         type: tuple
       doc: >
     # --------------------------------------

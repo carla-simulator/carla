@@ -278,6 +278,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
+      All possible states for traffic lights.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Red
