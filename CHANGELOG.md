@@ -39,6 +39,7 @@
   * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
+  * Added camera gamma correction as command-line argument to manual_control.py
   * Removed deprecated code and content
   * New recorder features:
     - Recorded system is documented, and binary file system is described.
