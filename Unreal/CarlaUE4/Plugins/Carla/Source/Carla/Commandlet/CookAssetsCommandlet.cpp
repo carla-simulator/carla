@@ -165,21 +165,29 @@ bool UCookAssetsCommandlet::SaveWorld(
   // Check if OpenDrive file exists
   FString PathXODR = FPaths::ProjectContentDir() + PackageName + TEXT("/Maps/") + WorldName + TEXT(
       "/OpenDrive/") + WorldName + TEXT(".xodr");
+
+  bool bPackageSaved = false;
   if (FPaths::FileExists(PathXODR))
   {
     // Filling the map stuff (Code only applied for maps)
     AOpenDriveActor *OpenWorldActor =
         CastChecked<AOpenDriveActor>(World->SpawnActor(AOpenDriveActor::StaticClass(),
         new FVector(), NULL));
+
     OpenWorldActor->BuildRoutes(WorldName);
     OpenWorldActor->AddSpawners();
-  }
 
-  // Saving the package
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
-      FPackageName::GetMapPackageExtension());
-  return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+    SavePackage(PackagePath, Package);
+
+    OpenWorldActor->RemoveRoutes();
+    OpenWorldActor->RemoveSpawners();
+    OpenWorldActor->Destroy();
+  }
+  else
+  {
+    SavePackage(PackagePath, Package);
+  }
+  return bPackageSaved;
 }
 
 FAssetsPaths UCookAssetsCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
@@ -254,6 +262,15 @@ bool SaveStringTextToFile(
   return true;
 }
 
+bool UCookAssetsCommandlet::SavePackage(const FString &PackagePath, UPackage *Package) const
+{
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
+      FPackageName::GetMapPackageExtension());
+
+  return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+}
+
 int32 UCookAssetsCommandlet::Main(const FString &Params)
 {
   FPackageParams PackageParams = ParseParams(Params);
@@ -305,5 +322,4 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
 
   return 0;
 }
-
 #endif
