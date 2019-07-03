@@ -51,7 +51,7 @@ This is the list of sensors currently available
   * [sensor.other.lane_invasion](#sensorotherlane_invasion)
   * [sensor.other.obstacle](#sensorotherobstacle)
 
-Camera sensors uses [`carla.colorConverter`](python_api.md#carlacolorconverter) in order to convert the pixels of the original image.
+Camera sensors use [`carla.colorConverter`](python_api.md#carlacolorconverter) in order to convert the pixels of the original image.
 
 sensor.camera.rgb
 -----------------
