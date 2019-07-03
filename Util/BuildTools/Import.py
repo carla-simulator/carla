@@ -234,13 +234,13 @@ def import_assets_from_json_list(json_list):
             import_assets(package_name, dirname, props, maps)
             move_uassets(package_name, maps)
 
-    if not package_name:
-        print("No Packages JSONs found, nothing to import. Exiting.")
-        exit(0)
+            if not package_name:
+                print("No Packages JSONs found, nothing to import. Skipping package.")
+                continue
 
-    # Prepare cooking of package
-    prepare_cook_commandlet(package_name)
-    print() # Fixes a ugly artifact after the commandlet output
+            # Prepare cooking of package
+            prepare_cook_commandlet(package_name)
+            print() # Fixes a ugly artifact after the commandlet output
 
 
 def move_uassets(package_name, maps):

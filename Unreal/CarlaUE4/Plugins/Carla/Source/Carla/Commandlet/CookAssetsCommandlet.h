@@ -92,7 +92,7 @@ public:
    */
   bool SaveWorld(FAssetData &AssetData, FString &PackageName, FString &DestPath, FString &WorldName);
 
-  void DestroyWorldSpawnedActors(TArray<AStaticMeshActor *> &SpawnedActors);
+  void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);
 
   /**
    * Get Path of all the Assets contained in the package to cook
