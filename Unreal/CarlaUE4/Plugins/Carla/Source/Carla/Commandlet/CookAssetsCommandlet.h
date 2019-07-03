@@ -148,4 +148,9 @@ private:
    */
   UMaterial *TerrainNodeMaterial;
 
+  /**
+   * Saves the package
+   */
+  bool SavePackage(const FString &PackagePath, UPackage *Package) const;
+
 };
