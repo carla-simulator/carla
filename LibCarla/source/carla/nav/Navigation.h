@@ -59,7 +59,7 @@ namespace nav {
     void UpdateCrowd(const client::detail::EpisodeState &state);
     /// get a random location for navigation
     bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
-    dtQueryFilter * filter = nullptr, bool use_lock = true);
+    dtQueryFilter * filter = nullptr, bool use_lock = true) const;
 
   private:
 
@@ -76,7 +76,7 @@ namespace nav {
     /// Store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
 
-    std::mutex _mutex;
+    mutable std::mutex _mutex;
 
   };
 

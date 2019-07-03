@@ -166,6 +166,10 @@ def main():
             all_id.append(walkers_list[i]["con"])
             all_id.append(walkers_list[i]["id"])
         all_actors = world.get_actors(all_id)
+
+        # wait for a tick to ensure client receives the last transform of the walkers we have just created
+        world.wait_for_tick()
+
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         for i in range(0, len(all_id), 2):
             # start walker

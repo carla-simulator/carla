@@ -617,7 +617,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to apply control: actor view is invalid");
+      RESPOND_ERROR("unable to apply control: actor not found");
     }
     auto Pawn = Cast<APawn>(ActorView.GetActor());
     if (Pawn == nullptr)

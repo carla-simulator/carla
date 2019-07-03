@@ -820,7 +820,17 @@ for i in range(len(walkers_list)):
     all_id.append(walkers_list[i]["id"])
 all_actors = world.get_actors(all_id)
 ```
-The list all_actors has now all the actor objects we created. **Using the controller** we can set the locations where we want each pedestrian walk to:
+The list all_actors has now all the actor objects we created.
+
+At this point is a good idea to **wait for a tick** on client, because then the server has time to send all new data about the new actors we just created (we need the transform of each one updated). So we can do a call like:
+
+```py
+# wait for a tick to ensure client receives the last transform of the walkers we have just created
+world.wait_for_tick()
+```
+After that, our client has the data about the actors updated.
+
+ **Using the controller** we can set the locations where we want each pedestrian walk to:
 
 ```py
 # 5. initialize each controller and set target to walk to (list is [controller, actor, controller, actor ...])
