@@ -12,6 +12,7 @@
       type: int
       doc: >
     - var_name: frame
+      type: int
       doc: >
     - var_name: timestamp
       type: carla.Timestamp
@@ -59,6 +60,7 @@
   - class_name: ActorSnapshot
     # - DESCRIPTION ------------------------
     doc: >
+      Provides acces to the data of a carla.Actor in a carla.WorldSnapshot.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
