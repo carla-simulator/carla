@@ -88,6 +88,7 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
   }
 
   AssetsObjectLibrary->AddToRoot();
+  AssetsObjectLibrary->ClearLoaded();
   AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPathsDirectories);
   AssetsObjectLibrary->LoadAssetsFromAssetData();
 
@@ -133,7 +134,7 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
   return SpawnedMeshes;
 }
 
-void UCookAssetsCommandlet::DestroyWorldSpawnedActors(TArray<AStaticMeshActor *> &SpawnedActors)
+void UCookAssetsCommandlet::DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors)
 {
   for (auto Actor : SpawnedActors)
   {
@@ -299,26 +300,32 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
     SaveWorld(AssetData, PackageParams.Name, Map.Path, Map.Name);
 
     // Remove spawned actors from world to keep equal as BaseMap
-    DestroyWorldSpawnedActors(SpawnedActors);
+    DestroySpawnedActorsInWorld(SpawnedActors);
 
     MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
   }
 
-  FString MapName("PropsMap");
-  FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
-      TEXT("/Maps/") + MapName;
+  if (AssetsPaths.PropsPaths.Num() > 0)
+  {
+    FString MapName("PropsMap");
+    FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
+        TEXT("/Maps/") + MapName;
 
-  MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
+    MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
 
-  // Save Map Path File for further use
-  FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
-  FString FileName = FString("MapPaths.txt");
-  SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+    // Save Map Path File for further use
+    FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
+    FString FileName = FString("MapPaths.txt");
+    SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
 
-  // Add props in a single Base Map
-  AddMeshesToWorld(AssetsPaths.PropsPaths, false);
+    // Add props in a single Base Map
+    TArray<AStaticMeshActor *> SpawnedActors = AddMeshesToWorld(AssetsPaths.PropsPaths, false);
 
-  SaveWorld(AssetData, PackageParams.Name, WorldDestPath, MapName);
+    SaveWorld(AssetData, PackageParams.Name, WorldDestPath, MapName);
+
+    DestroySpawnedActorsInWorld(SpawnedActors);
+    MapObjectLibrary->ClearLoaded();
+  }
 
   return 0;
 }
