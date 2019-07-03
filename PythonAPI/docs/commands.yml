@@ -50,18 +50,8 @@
         type: carla.ActorBlueprint
       - param_name: transform
         type: carla.Transform
-      - param_name: parent_id
-        type: int        
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: blueprint
-        type: carla.ActorBlueprint
-      - param_name: transform
-        type: carla.Transform
       - param_name: parent
-        type: carla.Actor       
+        type: carla.Actor or int     
       doc: >
     # --------------------------------------
     - def_name: then
@@ -86,13 +76,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       doc: >
     # --------------------------------------
 
@@ -112,20 +96,11 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
+        type: carla.Actor or int
       - param_name: control
         type: carla.VehicleControl
       doc: >
     # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
-      - param_name: control
-        type: carla.VehicleControl
-      doc: >
-    # --------------------------------------
-  
   
   - class_name: ApplyWalkerControl
     # - DESCRIPTION ------------------------
@@ -143,15 +118,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: control
-        type: carla.WalkerControl
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: control
         type: carla.WalkerControl
       doc: >
@@ -173,15 +140,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: transform
-        type: carla.Transform
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: transform
         type: carla.Transform
       doc: >
@@ -203,15 +162,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: velocity
-        type: carla.Vector3D
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: velocity
         type: carla.Vector3D
       doc: >
@@ -233,15 +184,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: angular_velocity
-        type: carla.Vector3D
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: angular_velocity
         type: carla.Vector3D
       doc: >
@@ -263,15 +206,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: impulse
-        type: carla.Vector3D
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: impulse
         type: carla.Vector3D
       doc: >
@@ -293,15 +228,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: enabled
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: enabled
         type: bool
       doc: >
@@ -323,15 +250,7 @@
     - def_name: __init__
       params:
       - param_name: actor
-        type: carla.Actor
-      - param_name: enabled
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __init__
-      params:
-      - param_name: actor_id
-        type: int
+        type: carla.Actor or int
       - param_name: enabled
         type: bool
       doc: >
