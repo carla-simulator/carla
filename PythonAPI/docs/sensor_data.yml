@@ -41,10 +41,13 @@
     instance_variables:
     - var_name: width
       doc: >
+        Image width in pixels.
     - var_name: height
       doc: >
+        Image height in pixels
     - var_name: fov
       doc: >
+        Horizontal field of view of the image in degrees.
     - var_name: raw_data
       doc: >
     # - METHODS ----------------------------
