@@ -8,6 +8,7 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WheelPhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
+#include <carla/rpc/WalkerBoneControl.h>
 
 #include <ostream>
 
@@ -16,7 +17,7 @@ namespace rpc {
 
   static auto boolalpha(bool b) {
     return b ? "True" : "False";
-  };
+  }
 
   std::ostream &operator<<(std::ostream &out, const VehicleControl &control) {
     out << "VehicleControl(throttle=" << std::to_string(control.throttle)
@@ -33,6 +34,16 @@ namespace rpc {
     out << "WalkerControl(direction=" << control.direction
         << ", speed=" << std::to_string(control.speed)
         << ", jump=" << boolalpha(control.jump) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
+    out << "WalkerBoneControl(bone_transforms(";
+    for (auto bone_transform : control.bone_transforms) {
+      out << "(name="  << bone_transform.first
+          << ", transform=" << bone_transform.second << ')';
+    }
+    out << "))";
     return out;
   }
 
@@ -65,6 +76,7 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
+
 static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
   std::vector<carla::geom::Vector2D> v;
 
@@ -78,6 +90,24 @@ static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
       v.push_back(carla::geom::Vector2D{
         boost::python::extract<float>(list[i][0u]),
         boost::python::extract<float>(list[i][1u])});
+    }
+  }
+  return v;
+}
+
+static auto GetVectorOfBoneTransformFromList(const boost::python::list &list) {
+  std::vector<carla::rpc::BoneTransformData> v;
+
+  auto length = boost::python::len(list);
+  v.reserve(static_cast<size_t>(length));
+  for (auto i = 0u; i < length; ++i) {
+    boost::python::extract<carla::rpc::BoneTransformData> ext(list[i]);
+    if (ext.check()) {
+      v.push_back(ext);
+    } else {
+      v.push_back(carla::rpc::BoneTransformData{
+        boost::python::extract<std::string>(list[i][0u]),
+        boost::python::extract<carla::geom::Transform>(list[i][1u])});
     }
   }
   return v;
@@ -122,60 +152,99 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 }
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
-    // Args names
-    const uint32_t NUM_ARGUMENTS = 16;
-    const char* args_names[NUM_ARGUMENTS] = {
-      "torque_curve",
-      "max_rpm",
-      "moi",
-      "damping_rate_full_throttle",
-      "damping_rate_zero_throttle_clutch_engaged",
-      "damping_rate_zero_throttle_clutch_disengaged",
+  // Args names
+  const uint32_t NUM_ARGUMENTS = 16;
+  const char *args_names[NUM_ARGUMENTS] = {
+    "torque_curve",
+    "max_rpm",
+    "moi",
+    "damping_rate_full_throttle",
+    "damping_rate_zero_throttle_clutch_engaged",
+    "damping_rate_zero_throttle_clutch_disengaged",
 
-      "use_gear_autobox",
-      "gear_switch_time",
-      "clutch_strength",
+    "use_gear_autobox",
+    "gear_switch_time",
+    "clutch_strength",
 
-      "mass",
-      "drag_coefficient",
+    "mass",
+    "drag_coefficient",
 
-      "center_of_mass",
-      "steering_curve",
-      "wheels"
-    };
+    "center_of_mass",
+    "steering_curve",
+    "wheels"
+  };
 
-    boost::python::object self = args[0];
-    args = boost::python::tuple(args.slice(1, boost::python::_));
+  boost::python::object self = args[0];
+  args = boost::python::tuple(args.slice(1, boost::python::_));
 
-    auto res = self.attr("__init__")();
-    if (len(args) > 0) {
-      for (unsigned int i=0; i < len(args); ++i)
-        self.attr(args_names[i]) = args[i];
+  auto res = self.attr("__init__")();
+  if (len(args) > 0) {
+    for (unsigned int i = 0; i < len(args); ++i) {
+      self.attr(args_names[i]) = args[i];
     }
+  }
 
-    for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
-      if (kwargs.contains(args_names[i])) {
-        self.attr(args_names[i]) = kwargs[args_names[i]];
-      }
+  for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
+    if (kwargs.contains(args_names[i])) {
+      self.attr(args_names[i]) = kwargs[args_names[i]];
     }
+  }
 
-    return res;
+  return res;
+}
+
+static auto GetBonesTransform(const carla::rpc::WalkerBoneControl &self) {
+  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.bone_transforms;
+  boost::python::object get_iter =
+      boost::python::iterator<const std::vector<carla::rpc::BoneTransformData>>();
+  boost::python::object iter = get_iter(bone_transform_data);
+  return boost::python::list(iter);
+}
+
+static void SetBonesTransform(carla::rpc::WalkerBoneControl &self, const boost::python::list &list) {
+  self.bone_transforms = GetVectorOfBoneTransformFromList(list);
+}
+
+boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::python::dict kwargs) {
+  // Args names
+  const uint32_t NUM_ARGUMENTS = 1;
+  const char *args_names[NUM_ARGUMENTS] = {
+    "bone_transforms"
+  };
+
+  boost::python::object self = args[0];
+  args = boost::python::tuple(args.slice(1, boost::python::_));
+
+  auto res = self.attr("__init__")();
+  if (len(args) > 0) {
+    for (unsigned int i = 0; i < len(args); ++i) {
+      self.attr(args_names[i]) = args[i];
+    }
+  }
+
+  for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
+    if (kwargs.contains(args_names[i])) {
+      self.attr(args_names[i]) = kwargs[args_names[i]];
+    }
+  }
+
+  return res;
 }
 
 void export_control() {
   using namespace boost::python;
-  namespace cr = carla::rpc;
   namespace cg = carla::geom;
+  namespace cr = carla::rpc;
 
   class_<cr::VehicleControl>("VehicleControl")
     .def(init<float, float, float, bool, bool, bool, int>(
-        (arg("throttle")=0.0f,
-         arg("steer")=0.0f,
-         arg("brake")=0.0f,
-         arg("hand_brake")=false,
-         arg("reverse")=false,
-         arg("manual_gear_shift")=false,
-         arg("gear")=0)))
+      (arg("throttle") = 0.0f,
+      arg("steer") = 0.0f,
+      arg("brake") = 0.0f,
+      arg("hand_brake") = false,
+      arg("reverse") = false,
+      arg("manual_gear_shift") = false,
+      arg("gear") = 0)))
     .def_readwrite("throttle", &cr::VehicleControl::throttle)
     .def_readwrite("steer", &cr::VehicleControl::steer)
     .def_readwrite("brake", &cr::VehicleControl::brake)
@@ -190,9 +259,9 @@ void export_control() {
 
   class_<cr::WalkerControl>("WalkerControl")
     .def(init<cg::Vector3D, float, bool>(
-        (arg("direction")=cg::Vector3D{1.0f, 0.0f, 0.0f},
-         arg("speed")=0.0f,
-         arg("jump")=false)))
+       (arg("direction") = cg::Vector3D{1.0f, 0.0f, 0.0f},
+       arg("speed") = 0.0f,
+       arg("jump") = false)))
     .def_readwrite("direction", &cr::WalkerControl::direction)
     .def_readwrite("speed", &cr::WalkerControl::speed)
     .def_readwrite("jump", &cr::WalkerControl::jump)
@@ -201,9 +270,16 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cr::WalkerBoneControl>("WalkerBoneControl")
+    .def("__init__", raw_function(WalkerBoneControl_init))
+    .def(init<>())
+    .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
-      .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
-      .def(self_ns::str(self_ns::self))
+    .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
@@ -224,28 +300,25 @@ void export_control() {
   ;
 
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl", no_init)
-    .def("__init__", raw_function(VehiclePhysicsControl_init), "raw ctor")
+    .def("__init__", raw_function(VehiclePhysicsControl_init))
     .def(init<>())
-
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
-    .def_readwrite("damping_rate_full_throttle", &cr::VehiclePhysicsControl::damping_rate_full_throttle)
-    .def_readwrite("damping_rate_zero_throttle_clutch_engaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
-    .def_readwrite("damping_rate_zero_throttle_clutch_disengaged", &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
-
+    .def_readwrite("damping_rate_full_throttle",
+        &cr::VehiclePhysicsControl::damping_rate_full_throttle)
+    .def_readwrite("damping_rate_zero_throttle_clutch_engaged",
+        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
+    .def_readwrite("damping_rate_zero_throttle_clutch_disengaged",
+        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
     .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
-
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
-
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
-
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
-
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

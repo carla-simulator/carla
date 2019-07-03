@@ -8,9 +8,10 @@
 
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
-#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/RoadTypes.h"
+
+#include <pugixml/pugixml.hpp>
 
 namespace carla {
 namespace opendrive {

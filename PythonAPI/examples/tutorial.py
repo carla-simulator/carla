@@ -87,7 +87,7 @@ def main():
         # receives an image. In this example we are saving the image to disk
         # converting the pixels to gray-scale.
         cc = carla.ColorConverter.LogarithmicDepth
-        camera.listen(lambda image: image.save_to_disk('_out/%06d.png' % image.frame_number, cc))
+        camera.listen(lambda image: image.save_to_disk('_out/%06d.png' % image.frame, cc))
 
         # Oh wait, I don't like the location we gave to the vehicle, I'm going
         # to move it a bit forward.

@@ -32,6 +32,7 @@
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
@@ -81,7 +82,6 @@ public:
 private:
 
   void BindActions();
-
 };
 
 // =============================================================================
@@ -103,10 +103,11 @@ private:
     return carla::rpc::ResponseError(carla::rpc::FromFString(fstr)); }
 
 #define REQUIRE_CARLA_EPISODE() \
-  CARLA_ENSURE_GAME_THREAD();   \
-  if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
+    CARLA_ENSURE_GAME_THREAD();   \
+    if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
 
-class ServerBinder {
+class ServerBinder
+{
 public:
 
   constexpr ServerBinder(const char *name, carla::rpc::Server &srv, bool sync)
@@ -115,10 +116,14 @@ public:
       _sync(sync) {}
 
   template <typename FuncT>
-  auto operator<<(FuncT func) {
-    if (_sync) {
+  auto operator<<(FuncT func)
+  {
+    if (_sync)
+    {
       _server.BindSync(_name, func);
-    } else {
+    }
+    else
+    {
       _server.BindAsync(_name, func);
     }
     return func;
@@ -133,8 +138,8 @@ private:
   bool _sync;
 };
 
-#define BIND_SYNC(name) auto name = ServerBinder(#name, Server, true)
-#define BIND_ASYNC(name) auto name = ServerBinder(#name, Server, false)
+#define BIND_SYNC(name)   auto name = ServerBinder(# name, Server, true)
+#define BIND_ASYNC(name)  auto name = ServerBinder(# name, Server, false)
 
 // =============================================================================
 // -- Bind Actions -------------------------------------------------------------
@@ -145,7 +150,7 @@ void FCarlaServer::FPimpl::BindActions()
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
 
-  BIND_ASYNC(version) << []() -> R<std::string>
+  BIND_ASYNC(version) << [] () -> R<std::string>
   {
     return carla::version();
   };
@@ -188,8 +193,8 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     return cr::EpisodeInfo{
-      Episode->GetId(),
-      BroadcastStream.token()};
+             Episode->GetId(),
+                 BroadcastStream.token()};
   };
 
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
@@ -351,10 +356,10 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor location: actor not found");
     }
     ActorView.GetActor()->SetActorRelativeLocation(
-    Location,
-    false,
-    nullptr,
-    ETeleportType::TeleportPhysics);
+        Location,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics);
     return R<void>::Success();
   };
 
@@ -369,10 +374,10 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor transform: actor not found");
     }
     ActorView.GetActor()->SetActorRelativeTransform(
-    Transform,
-    false,
-    nullptr,
-    ETeleportType::TeleportPhysics);
+        Transform,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics);
     return R<void>::Success();
   };
 
@@ -524,6 +529,30 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(apply_control_to_walker) << [this](
       cr::ActorId ActorId,
       cr::WalkerControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply control: actor not found");
+    }
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      RESPOND_ERROR("unable to apply control: walker has an incompatible controller");
+    }
+    Controller->ApplyWalkerControl(Control);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_bone_control_to_walker) << [this](
+      cr::ActorId ActorId,
+      cr::WalkerBoneControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -707,7 +736,9 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(show_recorder_file_info) << [this](std::string name, bool show_all) -> R<std::string>
+  BIND_SYNC(show_recorder_file_info) << [this](
+      std::string name,
+      bool show_all) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileInfo(
@@ -715,7 +746,10 @@ void FCarlaServer::FPimpl::BindActions()
         show_all));
   };
 
-  BIND_SYNC(show_recorder_collisions) << [this](std::string name, char type1, char type2) -> R<std::string>
+  BIND_SYNC(show_recorder_collisions) << [this](
+      std::string name,
+      char type1,
+      char type2) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileCollisions(
@@ -724,7 +758,10 @@ void FCarlaServer::FPimpl::BindActions()
         type2));
   };
 
-  BIND_SYNC(show_recorder_actors_blocked) << [this](std::string name, double min_time, double min_distance) -> R<std::string>
+  BIND_SYNC(show_recorder_actors_blocked) << [this](
+      std::string name,
+      double min_time,
+      double min_distance) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ShowFileActorsBlocked(
@@ -733,7 +770,11 @@ void FCarlaServer::FPimpl::BindActions()
         min_distance));
   };
 
-  BIND_SYNC(replay_file) << [this](std::string name, double start, double duration, uint32_t follow_id) -> R<std::string>
+  BIND_SYNC(replay_file) << [this](
+      std::string name,
+      double start,
+      double duration,
+      uint32_t follow_id) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
@@ -777,18 +818,20 @@ void FCarlaServer::FPimpl::BindActions()
   auto command_visitor = carla::Functional::MakeRecursiveOverload(
       [=](auto self, const C::SpawnActor &c) -> CR {
         auto result = c.parent.has_value() ?
-            spawn_actor_with_parent(
-                c.description,
-                c.transform,
-                *c.parent,
-                cr::AttachmentType::Rigid) :
-            spawn_actor(c.description, c.transform);
-        if (!result.HasError()) {
+        spawn_actor_with_parent(
+            c.description,
+            c.transform,
+            *c.parent,
+            cr::AttachmentType::Rigid) :
+        spawn_actor(c.description, c.transform);
+        if (!result.HasError())
+        {
           ActorId id = result.Get().id;
           auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
               [id](auto &s) { s.actor = id; });
-          for (auto command : c.do_after) {
+          for (auto command : c.do_after)
+          {
             boost::apply_visitor(set_id, command.command);
             boost::apply_visitor(self, command.command);
           }
@@ -808,7 +851,9 @@ void FCarlaServer::FPimpl::BindActions()
 
 #undef MAKE_RESULT
 
-  BIND_SYNC(apply_batch) << [=](const std::vector<cr::Command> &commands, bool do_tick_cue)
+  BIND_SYNC(apply_batch) << [=](
+      const std::vector<cr::Command> &commands,
+      bool do_tick_cue)
   {
     std::vector<CR> result;
     result.reserve(commands.size());
@@ -847,7 +892,12 @@ FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
 {
   Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
-  UE_LOG(LogCarlaServer, Log, TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"), RPCPort, StreamingPort);
+  UE_LOG(
+      LogCarlaServer,
+      Log,
+      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"),
+      RPCPort,
+      StreamingPort);
   return Pimpl->BroadcastStream;
 }
 

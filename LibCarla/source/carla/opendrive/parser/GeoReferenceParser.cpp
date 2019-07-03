@@ -9,8 +9,9 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/geom/GeoLocation.h"
-#include "carla/opendrive/parser/pugixml/pugixml.hpp"
 #include "carla/road/MapBuilder.h"
+
+#include <pugixml/pugixml.hpp>
 
 #include <limits>
 #include <string>

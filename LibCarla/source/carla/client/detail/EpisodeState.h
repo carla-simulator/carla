@@ -36,8 +36,8 @@ namespace detail {
       return _episode_id;
     }
 
-    auto GetFrameCount() const {
-      return _timestamp.frame_count;
+    auto GetFrame() const {
+      return _timestamp.frame;
     }
 
     const auto &GetTimestamp() const {

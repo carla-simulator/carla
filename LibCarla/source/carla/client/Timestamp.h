@@ -17,17 +17,17 @@ namespace client {
     Timestamp() = default;
 
     Timestamp(
-        std::size_t in_frame_count,
+        std::size_t in_frame,
         double in_elapsed_seconds,
         double in_delta_seconds,
         double in_platform_timestamp)
-      : frame_count(in_frame_count),
+      : frame(in_frame),
         elapsed_seconds(in_elapsed_seconds),
         delta_seconds(in_delta_seconds),
         platform_timestamp(in_platform_timestamp) {}
 
     /// Number of frames elapsed since the simulator was launched.
-    std::size_t frame_count = 0u;
+    std::size_t frame = 0u;
 
     /// Simulated seconds elapsed since the beginning of the current episode.
     double elapsed_seconds = 0.0;
@@ -40,7 +40,7 @@ namespace client {
     double platform_timestamp = 0.0;
 
     bool operator==(const Timestamp &rhs) const {
-      return frame_count == rhs.frame_count;
+      return frame == rhs.frame;
     }
 
     bool operator!=(const Timestamp &rhs) const {
