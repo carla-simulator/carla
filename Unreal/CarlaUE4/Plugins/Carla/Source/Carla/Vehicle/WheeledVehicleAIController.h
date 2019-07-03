@@ -85,7 +85,6 @@ public:
   void SetStickyControl(bool bEnabled)
   {
     bControlIsSticky = bEnabled;
-    UE_LOG(LogTemp, Warning, TEXT("StickyControl = %s"), bControlIsSticky ? TEXT("True") : TEXT("False"));
   }
 
   /// @}

@@ -175,11 +175,13 @@ public:
   TArray<float> GetWheelsFrictionScale();
 
   void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
+
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
   // ===========================================================================
   /// @{
+
 protected:
 
   virtual void BeginPlay() override;

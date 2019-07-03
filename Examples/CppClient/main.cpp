@@ -40,7 +40,7 @@ static void SaveSemSegImageToDisk(const csd::Image &image) {
   using namespace carla::image;
 
   char buffer[9u];
-  std::snprintf(buffer, sizeof(buffer), "%08zu", image.GetFrameNumber());
+  std::snprintf(buffer, sizeof(buffer), "%08zu", image.GetFrame());
   auto filename = "_images/"s + buffer + ".png";
 
   auto view = ImageView::MakeColorConvertedView(

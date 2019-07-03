@@ -56,7 +56,7 @@ namespace detail {
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
         do {
-          if (prev->GetFrameCount() >= next->GetFrameCount()) {
+          if (prev->GetFrame() >= next->GetFrame()) {
             self->_on_tick_callbacks.Call(next);
             return;
           }

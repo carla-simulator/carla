@@ -130,7 +130,7 @@ if ${DOCKER_PUSH} ; then
 
   log "Pushing Docker image."
 
-  docker push carlasim/carla
+  docker push ${DOCKER_NAME}
 
   popd >/dev/null
 
