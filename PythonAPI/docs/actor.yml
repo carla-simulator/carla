@@ -251,7 +251,7 @@
     - def_name: apply_control
       params:
       - param_name: control
-        type: carla.BoneControl
+        type: carla.WalkerBoneControl
       doc: >
     # --------------------------------------
     - def_name: get_control
@@ -303,7 +303,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_state
-      return: carla.Tra
+      return: carla.Color
       doc: >
         Return the current state of the traffic light.
       note: >

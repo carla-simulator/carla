@@ -9,10 +9,12 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
+      type: int
       doc: >
     - var_name: frame
       doc: >
     - var_name: timestamp
+      type: carla.Timestamp
       doc: >
     # - METHODS ----------------------------
     methods:
@@ -33,6 +35,7 @@
     # --------------------------------------
     - def_name: __len__
       doc: >
+        Return number of ActorSnapshots present in this WorldSnapshot.
     # --------------------------------------
     - def_name: __iter__
       doc: >
