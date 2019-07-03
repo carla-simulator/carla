@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 # de Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -11,26 +11,55 @@ import io
 import os
 import tarfile
 
+
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+RED = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+
+
+class ReadableStream():
+
+    def __init__(self, generator):
+        self._generator = generator
+
+    def read(self, bufsize):
+        return next(self._generator)
+
+
 def get_container_name(container):
-    return container.attrs['Config']['Image']
+    return str(container.attrs['Config']['Image'])
 
 
-def exec_command(container, command, user="root", silent=False, verbose=False):
+def exec_command(container, command, user="root",
+                 silent=False, verbose=False, ignore_error=True):
     command_prefix = "bash -c '"
     if not silent:
-        print(user + '@' + str(get_container_name(container)) + '$ ' + str(command))
-    command_result = container.exec_run(command_prefix + command + "'", user=user)
+        print(''.join([BOLD, BLUE,
+                       user, '@', get_container_name(container),
+                       ENDC, '$ ', str(command)]))
+
+    command_result = container.exec_run(
+        command_prefix + command + "'",
+        user=user)
     if not silent and verbose and command_result.exit_code:
-        print(''.join(['Command: "', command, '" exited with error: ', str(command_result.exit_code)]))
+        print(''.join([RED, 'Command: "', command,
+                       '" exited with error: ', str(command_result.exit_code),
+                       ENDC]))
         print('Error:')
     if not silent:
         out = command_result.output.decode().strip()
         if out:
             print(out)
+    if not ignore_error and command_result.exit_code:
+        exit(1)
     return command_result
 
 
-def get_file_names(container, path, user="root", absolute_path=True, hidden_files=True, verbose=False):
+def get_file_paths(container, path, user="root",
+                   absolute_path=True, hidden_files=True, verbose=False):
     # command = "bash -c 'ls -ad $PWD/* "
     command = "ls "
     if hidden_files:
@@ -40,7 +69,7 @@ def get_file_names(container, path, user="root", absolute_path=True, hidden_file
     result = exec_command(container, command + path, user=user, silent=True)
     if result.exit_code:
         if verbose:
-            print("No files found in " + path)
+            print(RED + "No files found in " + path + ENDC)
         return []
     file_list = [x for x in result.output.decode('utf-8').split('\n') if x]
     if verbose:
@@ -49,6 +78,7 @@ def get_file_names(container, path, user="root", absolute_path=True, hidden_file
 
 
 class IterStream(object):
+
     def __init__(self, generator):
         self.gen = generator
         self.cache = io.BytesIO(next(self.gen))
@@ -59,14 +89,6 @@ class IterStream(object):
             self.cache = io.BytesIO(next(self.gen))
             data = self.cache.read(bufsize)
         return data
-
-
-class ReadableStream():
-    def __init__(self, generator):
-        self._generator = generator
-
-    def read(self, bufsize):
-        return next(self._generator)
 
 
 def extract_files(container, file_list, out_path):
