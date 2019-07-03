@@ -258,6 +258,9 @@ This sensor, when attached to an actor, it registers an event each time the
 actor collisions against something in the world. This sensor does not have any
 configurable attribute.
 
+!!! note
+    This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+
 This sensor produces a
 [`carla.CollisionEvent`](python_api.md#carlacollisioneventcarlasensordata)
 object for each collision registered
@@ -327,6 +330,9 @@ sensor.other.obstacle
 
 This sensor, when attached to an actor, reports if there is obstacles ahead.
 
+!!! note
+    This sensor creates "fake" actors when it detects obstacles with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
 | `distance`           | float | 5       | Distance to throw the trace to |
@@ -334,7 +340,6 @@ This sensor, when attached to an actor, reports if there is obstacles ahead.
 | `only_dynamics`      | bool  | false   | If true, the trace will only look for dynamic objects |
 | `debug_linetrace`    | bool  | false   | If true, the trace will be visible |
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
-
 
 This sensor produces
 [`carla.ObstacleDetectionSensorEvent`](python_api.md#carlaobstacledetectionsensoreventdata)
