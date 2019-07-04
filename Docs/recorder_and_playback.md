@@ -1,10 +1,10 @@
 ### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and pedestrians.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
 
 All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
 
-As an estimate, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
+As an estimate, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 MB in size.
 
 #### Recording
 To start recording we only need to supply a file name:
@@ -32,19 +32,19 @@ When replaying we have some other options that we can use, the full API call is:
 ```py
 client.replay_file("recording01.log", start, duration, camera)
 ```
-* **start**: time we want to start the simulation.
-  * If the value is positive, it means the number of seconds from the beginning.
-  Ex: a value of 10 will start the simulation at second 10.
-  * If the value is negative, it means the number of seconds from the end.
-  Ex: a value of -10 will replay only the last 10 seconds of the simulation.
-* **duration**: we can say how many seconds we want to play. When the simulation reach the end, then all actors remaining will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
-* **camera**: we can specify the Id of an actor and then the camera will follow that actor while replaying. Continue reading to know which Id has an actor.
+* **start**: time we want to start the simulation from.
+  * If the value is positive, it means the number of seconds starting from the beginning.
+  E.g. a value of 10 will start the simulation at second 10.
+  * If the value is negative, it means the number of seconds starting from the end.
+  E.g. a value of -10 will replay only the last 10 seconds of the simulation.
+* **duration**: amount of seconds we want to play. When the simulation reaches the end, then all actors remaining will have autopilot enabled automatically. The purpose of this parameter is to allow users to replay a piece of a simulation and then let all actors start driving in autopilot again.
+* **camera**: Id of an actor where the camera will focus on and follow. To obtain the Ids of the actors, please read right below.
 
-It is good to note that all vehicles at the end of the playback will be set in autopilot to let them continue driving by themselves, and all pedestrians will be stopped at their current place (we plan to set  autopilot for pedestrians also, to walk at random places). This behaviour let's you for example replay a piece of simulation and test how they continue after some changes in the environment.
+Please note that all vehicles at the end of the playback will be set in autopilot to let them continue driving by themselves, and all pedestrians will be stopped at their current place (we plan to set  autopilot for pedestrians also, to walk at random places). This behaviour let's you for example replay a piece of simulation and test how they continue after some changes in the environment.
 
 #### Playback time factor (speed)
 
-We can specify the time factor (speed) for the replayer at any moment, using the next API:
+We can specify the time factor (speed) for the replayer at any moment, using the following API call:
 
 ```py
 client.set_replayer_time_factor(2.0)
@@ -52,23 +52,23 @@ client.set_replayer_time_factor(2.0)
 A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
 As a performance trick, with values over 2.0 the interpolation of positions is disabled.
 
-With a time factor of 20x we can see the flow of traffic for example:
+E.g. With a time factor of 20x we can see traffic flow:
 
 ![flow](img/RecorderFlow2.gif)
 
-The animations about pedestrians will not be affected by this time factor and will remain at normal speed. So animations are not accurate right now.
+Pedestrian's animations will not be affected by this time factor and will remain at normal speed. Therefore, animations are not accurate yet.
 
-The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
+This API call will not stop the replayer in course, it will just change the speed, so you can change that several times while the replayer is running.
 
 #### Info about the recorded file
 
-We can get details about a recorded simulation, using this API:
+We can get details about a recorded simulation, using this API call:
 
 ```py
 client.show_recorder_file_info("recording01.log")
 ```
 
-The output result is something like this:
+The output result should be similar to this one:
 
 ```
 Version: 1
@@ -129,13 +129,13 @@ Frame 2354 at 60.3753 seconds
 Frames: 2354
 Duration: 60.3753 seconds
 ```
-From here we know the **date** and the **map** where the simulation was recorded.
-Then for each frame that has an event (create or destroy an actor, collisions) it shows that info. For creating actors we see the **Id** it has and some info about the actor to create. This is the **id** we need to specify in the **camera** option when replaying if we want to follow that actor during the replay.
-At the end we can see the **total time** of the recording and also the number of **frames** that were recorded.
+From the previous log, we can retrieve the information regarding the **date** and the **map** where the simulation was recorded.
+Each frame will display information about any event that could happen (create or destroy an actor, collisions). When creating actors, it outputs for each of them its corresponding **Id** together with some other additional information. This **Id** is the one we need to specify in the **camera** attribute when replaying if we want to follow that actor during the replay.
+At the end, we can see as well the **total time** of the recording and also the number of **frames** that were recorded.
 
 #### Info about collisions
 
-In simulations whith a **hero actor** the collisions are automatically saved, so we can query a recorded file to see if any **hero actor** had collisions with some other actor. Currently the actor types we can use in the query are these:
+In simulations whith a **hero actor**, the collisions are automatically saved, so we can query a recorded file to see if any **hero actor** had collisions with some other actor. Currently, the actor types we can use in the query are these:
 
 * **h** = Hero
 * **v** = Vehicle
@@ -144,24 +144,24 @@ In simulations whith a **hero actor** the collisions are automatically saved, so
 * **o** = Other
 * **a** = Any
 
-The collision query needs to know the type of actors involved in the collision. If we don't care we can specify **a** (any) for both. These are some examples:
+The collision query needs to know the type of actors involved in the collision. If we do not want to specify it, we can specify **a** (any) for both. These are some examples:
 
-* **a** **a**: will show all collisions recorded
-* **v** **v**: will show all collisions between vehicles
-* **v** **t**: will show all collisions between a vehicle and a traffic light
-* **v** **w**: will show all collisions between a vehicle and a walker
-* **v** **o**: will show all collisions between a vehicle and other actor, like static meshes
-* **h** **w**: will show all collisions between a hero and a walker
+* **a** **a**: Will show all collisions recorded
+* **v** **v**: Will show all collisions between vehicles
+* **v** **t**: Will show all collisions between a vehicle and a traffic light
+* **v** **w**: Will show all collisions between a vehicle and a walker
+* **v** **o**: Will show all collisions between a vehicle and other actor, like static meshes
+* **h** **w**: Will show all collisions between a hero and a walker
 
-Currently only **hero actors** record the collisions, so first actor will be a hero always.
+Currently, only **hero actors** record the collisions. Therefore, we have considered that the first actor will be the hero always.
 
-The API for querying the collisions is:
+The API call for querying the collisions is:
 
 ```py
 client.show_recorder_collisions("recording01.log", "a", "a")
 ```
 
-The output is something similar to this:
+The output result should be similar to this one:
 
 ```
 Version: 1
@@ -176,39 +176,39 @@ Frames: 790
 Duration: 46 seconds
 ```
 
-We can see there for each collision the **time** when happened, the **type** of the actors involved, and the **id and description** of each actor.
+We can see here that for each collision the **time** when happened, the **type** of the actors involved, and the **id and description** of each actor.
 
-So, if we want to see what happened on that recording for the first collision where the hero actor was colliding with a vehicle, we could use this API:
+So, if we want to see what happened on that recording for the first collision where the hero actor was colliding with a vehicle, we could use this API call. So for example:
 
 ```py
 client.replay_file("col2.log", 13, 0, 122)
 ```
-We have started the replayer just a bit before the time of the collision, so we can see how it happened.
-Also, a value of 0 for the **duration** means to replay all the file (it is the default value).
+We have started the replayer just a bit before the time of the collision, so we can observe better how it happened.
+Also, if the **duration** is set to 0, the entire file will be replayed.
 
-We can see something like this then:
+The output result is similar to this:
 
 ![collision](img/collision1.gif)
 
 #### Info about blocked actors
 
-There is another API to get information about actors that has been blocked by something and can not follow its way. That could be good to find incidences in the simulation. The API is:
+There is another API to get information about actors that have been blocked by an obstacle, not letting them follow their way. That could be helpful for finding incidences. The API call is:
 
 ```py
 client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
 ```
 
-The parameters are:
-* **min_time**: the minimum time that an actor needs to be stopped to be considered as blocked (in seconds, by default 30).
-* **min_distance**: the minimum distance to consider an actor to be stopped (in cm, by default 10).
+The input parameters are:
+* **min_time**: The minimum time that an actor needs to be stopped to be considered as blocked (in seconds, by default 30).
+* **min_distance**: The minimum distance to consider an actor to be stopped (in cm, by default 10).
 
-So, if we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could use something like:
+Let's say we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could do the following:
 
 ```py
 client.show_recorder_actors_blocked("col3.log", 60, 100)
 ```
 
-The result can be something like (it is sorted by the duration):
+And this is the output format (sorted by duration):
 
 ```
 Version: 1
@@ -230,10 +230,10 @@ Frames: 6985
 Duration: 374 seconds
 ```
 
-This lines tell us when an actor was stopped for at least the minimum time specified.
-For example the 6th line, the actor 143, at time 302 seconds, was stopped for 67 seconds.
+These lines tell us when an actor was stopped for at least the minimum time specified.
+For example, looking at the 6th line, the vehicle 143 was stopped for 67 seconds at time 302 seconds.
 
-We could check what happened that time with the next API command:
+We could check what happened at that time by calling the next API command:
 
 ```py
 client.replay_file("col3.log", 302, 0, 143)
@@ -241,8 +241,8 @@ client.replay_file("col3.log", 302, 0, 143)
 
 ![actor blocked](img/actor_blocked1.png)
 
-We see there is some mess there that actually blocks the actor (red vehicle in the image).
-We can check also another actor with:
+As we can observe, there is an obstacle that is actually blocking the actor (red vehicle in the image).
+Looking at another actor using:
 
 ```py
 client.replay_file("col3.log", 75, 0, 104)
@@ -250,9 +250,9 @@ client.replay_file("col3.log", 75, 0, 104)
 
 ![actor blocked](img/actor_blocked2.png)
 
-We can see it is the same incidence but from another actor involved (police car).
+It is worth noting that it is the same incident but with another vehicle involved in it (police car).
 
-The result is sorted by duration, so the actor that is blocked for more time comes first. We could check the first line, with Id 173 at time 36 seconds it get stopped for 336 seconds. We could check how it arrived to that situation replaying a few seconds before time 36.
+The result is sorted by duration, so the actor that is blocked for more time comes first. By checking the vehicle with Id 173 at time 36 seconds, it is evident that it stopped for 336 seconds. To check the cause of it , it would be useful to check how it arrived to that situation by replaying a few seconds before the second 36:
 
 ```py
 client.replay_file("col3.log", 34, 0, 173)
@@ -260,7 +260,7 @@ client.replay_file("col3.log", 34, 0, 173)
 
 ![accident](img/accident.gif)
 
-We can see then the responsible of the incident.
+And easily determine the responsible of that incident.
 
 ### Sample Python scripts
 
