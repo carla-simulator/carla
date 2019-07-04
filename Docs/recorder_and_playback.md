@@ -32,12 +32,13 @@ When replaying we have some other options that we can use, the full API call is:
 ```py
 client.replay_file("recording01.log", start, duration, camera)
 ```
-* **start**: time we want to start the simulation from.
+
+* **start**: Time we want to start the simulation from.
   * If the value is positive, it means the number of seconds starting from the beginning.
   E.g. a value of 10 will start the simulation at second 10.
   * If the value is negative, it means the number of seconds starting from the end.
   E.g. a value of -10 will replay only the last 10 seconds of the simulation.
-* **duration**: amount of seconds we want to play. When the simulation reaches the end, then all actors remaining will have autopilot enabled automatically. The purpose of this parameter is to allow users to replay a piece of a simulation and then let all actors start driving in autopilot again.
+* **duration**: Amount of seconds we want to play. When the simulation reaches the end, then all actors remaining will have autopilot enabled automatically. The purpose of this parameter is to allow users to replay a piece of a simulation and then let all actors start driving in autopilot again.
 * **camera**: Id of an actor where the camera will focus on and follow. To obtain the Ids of the actors, please read right below.
 
 Please note that all vehicles at the end of the playback will be set in autopilot to let them continue driving by themselves, and all pedestrians will be stopped at their current place (we plan to set  autopilot for pedestrians also, to walk at random places). This behaviour let's you for example replay a piece of simulation and test how they continue after some changes in the environment.
@@ -266,24 +267,24 @@ And easily determine the responsible of that incident.
 
 There are some scripts you could use:
 
-* **start_recording.py**: this will start recording, and optionally you can spawn several actors and define how much time you want to record.
-  * **-f**: filename to write
-  * **-n**: vehicles to spawn (optional, 10 by default)
-  * **-t**: duration of the recording (optional)
+* **start_recording.py**: This will start recording, and optionally you can spawn several actors and define how much time you want to record.
+  * **-f**: Filename to write
+  * **-n**: Vehicles to spawn (optional, 10 by default)
+  * **-t**: Duration of the recording (optional)
 <br>
-* **start_replaying.py**: this will start a replay of a file. We can define the starting time, duration and also an actor to follow.
-  * **-f**: filename
-  * **-s**: starting time (optional, by default from start)
-  * **-d**: duration (optional, by default all)
-  * **-c**: actor to follow (id) (optional)
+* **start_replaying.py**: This will start a replay of a file. We can define the starting time, duration and also an actor to follow.
+  * **-f**: Filename
+  * **-s**: Starting time (optional, by default from start)
+  * **-d**: Duration (optional, by default all)
+  * **-c**: Actor to follow (id) (optional)
 <br>
-* **show_recorder_file_info.py**: this will show all the information recorded in file. It has two modes of detail, by default it only shows the frames where some event is recorded, the second is showing info about all frames (all positions and trafficlight states).
-  * **-f**: filename
-  * **-a**: flag to show all details (optional)
+* **show_recorder_file_info.py**: This will show all the information recorded in file. It has two modes of detail, by default it only shows the frames where some event is recorded, the second is showing info about all frames (all positions and trafficlight states).
+  * **-f**: Filename
+  * **-a**: Flag to show all details (optional)
 <br>
-* **show_recorder_collisions.py**: this will show all the collisions hapenned while recording (currently only involved by hero actors).
-  * **-f**: filename
-  * **-t**: two letters definning the types of the actors involved, for example: -t aa
+* **show_recorder_collisions.py**: This will show all the collisions hapenned while recording (currently only involved by hero actors).
+  * **-f**: Filename
+  * **-t**: Two letters definning the types of the actors involved, for example: -t aa
     * **h** = Hero
     * **v** = Vehicle
     * **w** = Walker
@@ -291,9 +292,9 @@ There are some scripts you could use:
     * **o** = Other
     * **a** = Any
 <br>
-* **show_recorder_actors_blocked.py**: this will show all the actors that are blocked (stopped) in the recorder. We can define the time and distance to be considered as blocked.
-  * **-f**: filename
-  * **-t**: minimum seconds stopped to be considered as blocked (optional)
-  * **-d**: minimum distance to be considered stopped (optional)
+* **show_recorder_actors_blocked.py**: This will show all the actors that are blocked (stopped) in the recorder. We can define the time and distance to be considered as blocked.
+  * **-f**: Filename
+  * **-t**: Minimum seconds stopped to be considered as blocked (optional)
+  * **-d**: Minimum distance to be considered stopped (optional)
 
 
