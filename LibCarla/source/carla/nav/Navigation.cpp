@@ -631,18 +631,16 @@ namespace nav {
     float point[3] { 0.0f, 0.0f, 0.0f };
 
     do {
-      dtStatus status = _navQuery->findRandomPoint(filter, &frand, &randomRef, point);
+      dtStatus status = _navQuery->findRandomPoint(filter, frand, &randomRef, point);
       if (status == DT_SUCCESS) {
         // set the location in Unreal coords
         location.x = point[0];
         location.y = point[2];
         location.z = point[1];
+        // check for max height (to avoid roofs, it is a workaround until next version)
         if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight)) {
           break;
         }
-      } else {
-        throw_exception(std::runtime_error(
-            "no valid random point from navigation could be found, check filter or mesh."));
       }
     } while (1);
 
