@@ -66,7 +66,7 @@ def main():
         '--filterw',
         metavar='PATTERN',
         default='walker.pedestrian.*',
-        help='pedestrians filter (default: "walker.*")')
+        help='pedestrians filter (default: "walker.pedestrian.*")')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
