@@ -10,12 +10,15 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
+      type: int
       doc: >
         Frame count when the data was generated.
     - var_name: timestamp
+      type: float
       doc: >
         Simulation-time when the data was generated.
     - var_name: transform
+      type: carla.Transform
       doc: >
         Sensor's transform when the data was generated.
     # --------------------------------------
