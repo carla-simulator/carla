@@ -266,6 +266,42 @@
       return: str
     # --------------------------------------
 
+  - class_name: WalkerAIController
+    parent: carla.Actor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class used for controlling the automation of a pedestrian.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: start
+      doc: >
+        Initializes walker controller.
+    # --------------------------------------
+    - def_name: stop
+      doc: >
+        Stops walker controller.
+    # --------------------------------------
+    - def_name: go_to_location
+      params:
+      - param_name: destination
+        type: carla.Location
+      doc: >
+        Sets the destination that the pedestrian will reach.
+    # --------------------------------------
+    - def_name: set_max_speed
+      params:
+      - param_name: speed
+        type: float
+        default: 1.4
+        doc: >
+          Speed is in m/s.
+      doc: >
+        Sets the speed of the pedestrian.
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
   - class_name: TrafficSign
     parent: carla.Actor
     # - DESCRIPTION ------------------------
@@ -274,6 +310,7 @@
     instance_variables:
     - var_name: trigger_volume
       doc: >
+    # --------------------------------------
 
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
@@ -286,6 +323,7 @@
     - var_name: Green
     - var_name: 'Off'
     - var_name: Unknown
+    # --------------------------------------
 
   - class_name: TrafficLight
     parent: carla.TrafficSign
@@ -294,6 +332,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
+      type: carla.TrafficLightState
       doc: >
     # - METHODS ----------------------------
     methods:
@@ -304,7 +343,7 @@
       doc: >
     # --------------------------------------
     - def_name: get_state
-      return: carla.Color
+      return: carla.TrafficLightState
       doc: >
         Return the current state of the traffic light.
       note: >
