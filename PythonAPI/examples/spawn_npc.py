@@ -133,8 +133,9 @@ def main():
         spawn_points = []
         for i in range(args.number_of_walkers):
             spawn_point = carla.Transform()
-            spawn_point.location = world.get_random_location_from_navigation()
-            if (spawn_point.location != None):
+            loc = world.get_random_location_from_navigation()
+            if (loc != None):
+                spawn_point.location = loc
                 spawn_points.append(spawn_point)
         # 2. we spawn the walker object
         batch = []
