@@ -223,6 +223,5 @@
       doc: >
         This function executes some commands altogether as fast as it can one after the other, and returns another list with all the responses from each command.  
         [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116)  
-        
-
+    # --------------------------------------
 ...

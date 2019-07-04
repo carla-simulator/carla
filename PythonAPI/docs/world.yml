@@ -94,8 +94,10 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: synchronous_mode
+      type: bool
       doc: >
     - var_name: no_rendering_mode
+      type: bool
       doc: >
     # - METHODS ----------------------------
     methods:

@@ -76,7 +76,7 @@
   - class_name: LaneMarkingColor
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane marking colors
+      Defines the lane marking colors.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Standard
@@ -98,7 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane marking types that OpenDRIVE accepts
+      Defines the lane marking types that OpenDRIVE accepts.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
