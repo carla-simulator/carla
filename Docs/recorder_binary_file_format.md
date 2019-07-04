@@ -33,8 +33,8 @@ Each packet starts with a little header of two fields (5 bytes):
 
 ![packet header](img/RecorderPacketHeader.png)
 
-* **id**: is the type of the packet
-* **size**: is the size of the data that has the packet
+* **id**: Is the type of the packet
+* **size**: Is the size of the data that has the packet
 
 Following the header comes the **data**, with its size in bytes determined by the value in the **size** field of the header.
 The **data** is optional, a **size** of 0 means there is no **data** in the packet.
