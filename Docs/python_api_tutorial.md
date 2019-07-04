@@ -471,7 +471,7 @@ converted to OpenDrive format, and saved to disk as such.
 
 ### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and pedestrians.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
 
 To start recording we only need to supply a file name:
 
@@ -493,4 +493,4 @@ client.replay_file("recording01.log")
 
 The replayer replicates the actor and traffic light information of the recording each frame.
 
-For more details please go to: [Recorder and Playback system](recorder_and_playback.md)
+For more details, [Recorder and Playback system](recorder_and_playback.md)
