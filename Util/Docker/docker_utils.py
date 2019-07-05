@@ -6,9 +6,6 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import docker
-import io
-import os
 import tarfile
 
 
@@ -25,7 +22,7 @@ class ReadableStream():
     def __init__(self, generator):
         self._generator = generator
 
-    def read(self, bufsize):
+    def read(self):
         return next(self._generator)
 
 
@@ -73,22 +70,8 @@ def get_file_paths(container, path, user="root",
         return []
     file_list = [x for x in result.output.decode('utf-8').split('\n') if x]
     if verbose:
-            print("Found files: " + str(file_list))
+        print("Found files: " + str(file_list))
     return file_list
-
-
-class IterStream(object):
-
-    def __init__(self, generator):
-        self.gen = generator
-        self.cache = io.BytesIO(next(self.gen))
-
-    def read(self, bufsize):
-        data = self.cache.read(bufsize)
-        if not data:
-            self.cache = io.BytesIO(next(self.gen))
-            data = self.cache.read(bufsize)
-        return data
 
 
 def extract_files(container, file_list, out_path):

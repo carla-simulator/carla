@@ -18,8 +18,8 @@ import docker_utils
 import os
 
 
-def print_formated_dict(dict):
-    for k, v in dict.items():
+def print_formated_dict(dic):
+    for k, v in dic.items():
         print(' - "' + str(k) + '"' + ": " + str(v))
     print()
 
