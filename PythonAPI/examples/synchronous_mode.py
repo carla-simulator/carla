@@ -118,22 +118,22 @@ def main():
 
             clock.tick()
             world.tick()
-            ts = world.wait_for_tick()
+            ts = world.wait_for_tick().timestamp
 
             if frame is not None:
-                if ts.frame_count != frame + 1:
+                if ts.frame != frame + 1:
                     logging.warning('frame skip!')
 
-            frame = ts.frame_count
+            frame = ts.frame
 
             while True:
                 image = image_queue.get()
-                if image.frame_number == ts.frame_count:
+                if image.frame == ts.frame:
                     break
                 logging.warning(
                     'wrong image time-stampstamp: frame=%d, image.frame=%d',
-                    ts.frame_count,
-                    image.frame_number)
+                    ts.frame,
+                    image.frame)
 
             waypoint = random.choice(waypoint.next(2))
             vehicle.set_transform(waypoint.transform)

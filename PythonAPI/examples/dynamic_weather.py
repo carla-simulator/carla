@@ -132,7 +132,7 @@ def main():
     elapsed_time = 0.0
 
     while True:
-        timestamp = world.wait_for_tick(seconds=30.0)
+        timestamp = world.wait_for_tick(seconds=30.0).timestamp
         elapsed_time += timestamp.delta_seconds
         if elapsed_time > update_freq:
             weather.tick(speed_factor * elapsed_time)

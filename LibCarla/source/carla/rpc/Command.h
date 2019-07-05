@@ -48,14 +48,17 @@ namespace rpc {
 
     struct DestroyActor : CommandBase<DestroyActor> {
       DestroyActor() = default;
-      DestroyActor(ActorId id) : actor(id) {}
+      DestroyActor(ActorId id)
+        : actor(id) {}
       ActorId actor;
       MSGPACK_DEFINE_ARRAY(actor);
     };
 
     struct ApplyVehicleControl : CommandBase<ApplyVehicleControl> {
       ApplyVehicleControl() = default;
-      ApplyVehicleControl(ActorId id, const VehicleControl &value) : actor(id), control(value) {}
+      ApplyVehicleControl(ActorId id, const VehicleControl &value)
+        : actor(id),
+          control(value) {}
       ActorId actor;
       VehicleControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
@@ -63,7 +66,9 @@ namespace rpc {
 
     struct ApplyWalkerControl : CommandBase<ApplyWalkerControl> {
       ApplyWalkerControl() = default;
-      ApplyWalkerControl(ActorId id, const WalkerControl &value) : actor(id), control(value) {}
+      ApplyWalkerControl(ActorId id, const WalkerControl &value)
+        : actor(id),
+          control(value) {}
       ActorId actor;
       WalkerControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
@@ -71,7 +76,9 @@ namespace rpc {
 
     struct ApplyTransform : CommandBase<ApplyTransform> {
       ApplyTransform() = default;
-      ApplyTransform(ActorId id, const geom::Transform &value) : actor(id), transform(value) {}
+      ApplyTransform(ActorId id, const geom::Transform &value)
+        : actor(id),
+          transform(value) {}
       ActorId actor;
       geom::Transform transform;
       MSGPACK_DEFINE_ARRAY(actor, transform);
@@ -79,7 +86,9 @@ namespace rpc {
 
     struct ApplyVelocity : CommandBase<ApplyVelocity> {
       ApplyVelocity() = default;
-      ApplyVelocity(ActorId id, const geom::Vector3D &value) : actor(id), velocity(value) {}
+      ApplyVelocity(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          velocity(value) {}
       ActorId actor;
       geom::Vector3D velocity;
       MSGPACK_DEFINE_ARRAY(actor, velocity);
@@ -87,7 +96,9 @@ namespace rpc {
 
     struct ApplyAngularVelocity : CommandBase<ApplyAngularVelocity> {
       ApplyAngularVelocity() = default;
-      ApplyAngularVelocity(ActorId id, const geom::Vector3D &value) : actor(id), angular_velocity(value) {}
+      ApplyAngularVelocity(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          angular_velocity(value) {}
       ActorId actor;
       geom::Vector3D angular_velocity;
       MSGPACK_DEFINE_ARRAY(actor, angular_velocity);
@@ -95,7 +106,9 @@ namespace rpc {
 
     struct ApplyImpulse : CommandBase<ApplyImpulse> {
       ApplyImpulse() = default;
-      ApplyImpulse(ActorId id, const geom::Vector3D &value) : actor(id), impulse(value) {}
+      ApplyImpulse(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          impulse(value) {}
       ActorId actor;
       geom::Vector3D impulse;
       MSGPACK_DEFINE_ARRAY(actor, impulse);
@@ -103,7 +116,9 @@ namespace rpc {
 
     struct SetSimulatePhysics : CommandBase<SetSimulatePhysics> {
       SetSimulatePhysics() = default;
-      SetSimulatePhysics(ActorId id, bool value) : actor(id), enabled(value) {}
+      SetSimulatePhysics(ActorId id, bool value)
+        : actor(id),
+          enabled(value) {}
       ActorId actor;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
@@ -111,7 +126,9 @@ namespace rpc {
 
     struct SetAutopilot : CommandBase<SetAutopilot> {
       SetAutopilot() = default;
-      SetAutopilot(ActorId id, bool value) : actor(id), enabled(value) {}
+      SetAutopilot(ActorId id, bool value)
+        : actor(id),
+          enabled(value) {}
       ActorId actor;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);

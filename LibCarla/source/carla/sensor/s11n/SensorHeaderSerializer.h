@@ -20,7 +20,7 @@ namespace s11n {
 #pragma pack(push, 1)
     struct Header {
       uint64_t sensor_type;
-      uint64_t frame_number;
+      uint64_t frame;
       double timestamp;
       rpc::Transform sensor_transform;
     };

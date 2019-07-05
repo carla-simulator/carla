@@ -23,5 +23,4 @@ public:
   static FActorDefinition GetSensorDefinition();
 
   ALaneInvasionSensor(const FObjectInitializer &ObjectInitializer);
-
 };

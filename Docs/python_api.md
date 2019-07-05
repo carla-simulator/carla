@@ -35,11 +35,12 @@
 - `apply_settings(world_settings)`
 - `get_weather()`
 - `set_weather(weather_parameters)`
+- `get_snapshot() -> carla.WorldSnapshot`
 - `get_actor(actor_id) -> carla.Actor`
 - `get_actors(actor_ids=None) -> carla.ActorList`
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None, attachment_type=carla.AttachmentType.Rigid)`
-- `wait_for_tick(seconds=1.0)`
+- `wait_for_tick(seconds=1.0) -> carla.WorldSnapshot`
 - `on_tick(callback)`
 - `tick()`
 
@@ -49,6 +50,22 @@
 - `no_rendering_mode`
 - `__eq__(other)`
 - `__ne__(other)`
+
+## `carla.WorldSnapshot`
+
+- `id`
+- `frame`
+- `timestamp`
+- `frame_count` _deprecated, use timestamp instead_
+- `elapsed_seconds` _deprecated, use timestamp instead_
+- `delta_seconds` _deprecated, use timestamp instead_
+- `platform_timestamp` _deprecated, use timestamp instead_
+- `has_actor(actor_id) -> bool`
+- `find(actor_id) -> carla.ActorSnapshot`
+- `__len()__`
+- `__iter()__`
+- `__eq(other)__`
+- `__ne(other)__`
 
 ## `carla.DebugHelper`
 
@@ -128,6 +145,16 @@
 - `destroy()`
 - `__str__()`
 
+## `carla.ActorSnapshot`
+
+- `id`
+- `get_location()`
+- `get_transform()`
+- `get_velocity()`
+- `get_angular_velocity()`
+- `get_acceleration()`
+- `__str__()`
+
 ## `carla.Vehicle(carla.Actor)`
 
 - `bounding_box`
@@ -141,7 +168,11 @@
 - `is_at_traffic_light()`
 - `get_traffic_light()`
 
-## `carla.TrafficLight(carla.Actor)`
+## `carla.TrafficSign(carla.Actor)`
+
+- `trigger_volume -> carla.BoundingBox`
+
+## `carla.TrafficLight(carla.TrafficSign)`
 
 - `state`
 - `set_state(traffic_light_state)`
@@ -166,7 +197,8 @@
 
 ## `carla.SensorData`
 
-- `frame_number`
+- `frame`
+- `frame_number` _deprecated, use `frame` instead_
 - `timestamp`
 - `transform`
 
@@ -231,12 +263,14 @@
 - `__ne__(other)`
 
 
-## `carla.WheelsPhysicsControl`
+## `carla.WheelPhysicsControl`
 
 - `tire_friction`
 - `damping_rate`
 - `max_steer_angle`
 - `radius`
+- `max_brake_torque`
+- `max_handbrake_torque`
 - `position`
 - `__eq__(other)`
 - `__ne__(other)`
@@ -259,6 +293,19 @@
 - `wheels`
 - `__eq__(other)`
 - `__ne__(other)`
+
+## `carla.WalkerControl`
+
+- `direction`
+- `speed`
+- `jump`
+- `__eq__(other)`
+- `__ne__(other)`
+
+## `carla.WalkerBoneControl`
+
+- `bone_transforms`
+
 
 ## `carla.Map`
 
@@ -449,7 +496,8 @@ Static presets
 
 ## `carla.Timestamp`
 
-- `frame_count`
+- `frame`
+- `frame_count` _deprecated, use `frame` instead_
 - `elapsed_seconds`
 - `delta_seconds`
 - `platform_timestamp`

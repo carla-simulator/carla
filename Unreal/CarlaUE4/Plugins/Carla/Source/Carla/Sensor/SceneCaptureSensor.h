@@ -115,19 +115,15 @@ public:
 
 protected:
 
-  virtual void PostActorCreated() override;
-
   virtual void BeginPlay() override;
+
+  virtual void Tick(float DeltaTime) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
 private:
-
-  /// Used to synchronize the DrawFrustumComponent with the
-  /// SceneCaptureComponent2D settings.
-  void UpdateDrawFrustum();
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)
@@ -151,12 +147,4 @@ private:
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
-
-  /// To display the 3d camera in the editor.
-  UPROPERTY()
-  UStaticMeshComponent *MeshComp = nullptr;
-
-  /// To allow drawing the camera frustum in the editor.
-  UPROPERTY()
-  UDrawFrustumComponent *DrawFrustum = nullptr;
 };

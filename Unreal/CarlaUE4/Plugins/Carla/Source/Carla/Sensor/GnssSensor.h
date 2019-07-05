@@ -23,5 +23,4 @@ public:
   static FActorDefinition GetSensorDefinition();
 
   AGnssSensor(const FObjectInitializer &ObjectInitializer);
-
 };

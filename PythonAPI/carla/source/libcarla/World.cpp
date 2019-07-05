@@ -19,7 +19,7 @@ namespace client {
   }
 
   std::ostream &operator<<(std::ostream &out, const Timestamp &timestamp) {
-    out << "Timestamp(frame_count=" << std::to_string(timestamp.frame_count)
+    out << "Timestamp(frame=" << std::to_string(timestamp.frame)
         << ",elapsed_seconds=" << std::to_string(timestamp.elapsed_seconds)
         << ",delta_seconds=" << std::to_string(timestamp.delta_seconds)
         << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
@@ -72,11 +72,12 @@ void export_world() {
 
   class_<cc::Timestamp>("Timestamp")
     .def(init<size_t, double, double, double>(
-        (arg("frame_count")=0u,
+        (arg("frame")=0u,
          arg("elapsed_seconds")=0.0,
          arg("delta_seconds")=0.0,
          arg("platform_timestamp")=0.0)))
-    .def_readwrite("frame_count", &cc::Timestamp::frame_count)
+    .def_readwrite("frame", &cc::Timestamp::frame)
+    .def_readwrite("frame_count", &cc::Timestamp::frame) // deprecated.
     .def_readwrite("elapsed_seconds", &cc::Timestamp::elapsed_seconds)
     .def_readwrite("delta_seconds", &cc::Timestamp::delta_seconds)
     .def_readwrite("platform_timestamp", &cc::Timestamp::platform_timestamp)
@@ -135,6 +136,7 @@ void export_world() {
     .def("apply_settings", &cc::World::ApplySettings)
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
+    .def("get_snapshot", &cc::World::GetSnapshot)
     .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("get_actors", &GetActorsById, (arg("actor_ids")))

@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from . import SmokeTest
+from . import SyncSmokeTest
 
 import carla
 
@@ -14,22 +14,7 @@ except ImportError:
     import Queue as queue
 
 
-class TestSynchronousMode(SmokeTest):
-    def setUp(self):
-        super(TestSynchronousMode, self).setUp()
-        self.world = self.client.get_world()
-        self.settings = self.world.get_settings()
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True)
-        self.world.apply_settings(settings)
-
-    def tearDown(self):
-        self.world.apply_settings(self.settings)
-        self.settings = None
-        self.world = None
-        super(TestSynchronousMode, self).tearDown()
-
+class TestSynchronousMode(SyncSmokeTest):
     def test_reloading_map(self):
         settings = carla.WorldSettings(
             no_rendering_mode=False,
@@ -51,15 +36,15 @@ class TestSynchronousMode(SmokeTest):
 
             for _ in range(0, 100):
                 self.world.tick()
-                ts = self.world.wait_for_tick()
+                ts = self.world.wait_for_tick().timestamp
 
                 if frame is not None:
-                    self.assertEqual(ts.frame_count, frame + 1)
+                    self.assertEqual(ts.frame, frame + 1)
 
-                frame = ts.frame_count
+                frame = ts.frame
 
                 image = image_queue.get()
-                self.assertEqual(image.frame_number, ts.frame_count)
+                self.assertEqual(image.frame, ts.frame)
                 self.assertEqual(image.timestamp, ts.elapsed_seconds)
 
         finally:

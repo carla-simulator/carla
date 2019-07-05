@@ -27,7 +27,7 @@ namespace sensor {
 namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Image &image) {
-    out << "Image(frame=" << image.GetFrameNumber()
+    out << "Image(frame=" << image.GetFrame()
         << ", timestamp=" << image.GetTimestamp()
         << ", size=" << image.GetWidth() << 'x' << image.GetHeight()
         << ')';
@@ -35,7 +35,7 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
-    out << "LidarMeasurement(frame=" << meas.GetFrameNumber()
+    out << "LidarMeasurement(frame=" << meas.GetFrame()
         << ", timestamp=" << meas.GetTimestamp()
         << ", number_of_points=" << meas.size()
         << ')';
@@ -43,7 +43,7 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
-    out << "CollisionEvent(frame=" << meas.GetFrameNumber()
+    out << "CollisionEvent(frame=" << meas.GetFrame()
         << ", timestamp=" << meas.GetTimestamp()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
@@ -51,7 +51,7 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const ObstacleDetectionEvent &meas) {
-    out << "ObstacleDetectionEvent(frame=" << meas.GetFrameNumber()
+    out << "ObstacleDetectionEvent(frame=" << meas.GetFrame()
         << ", timestamp=" << meas.GetTimestamp()
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
@@ -59,14 +59,14 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
-    out << "LaneInvasionEvent(frame=" << meas.GetFrameNumber()
+    out << "LaneInvasionEvent(frame=" << meas.GetFrame()
         << ", timestamp=" << meas.GetTimestamp()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const GnssEvent &meas) {
-    out << "GnssEvent(frame=" << meas.GetFrameNumber()
+    out << "GnssEvent(frame=" << meas.GetFrame()
         << ", timestamp=" << meas.GetTimestamp()
         << ", lat=" << meas.GetLatitude()
         << ", lon=" << meas.GetLongitude()
@@ -161,7 +161,8 @@ void export_sensor_data() {
   namespace csd = carla::sensor::data;
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
-    .add_property("frame_number", &cs::SensorData::GetFrameNumber)
+    .add_property("frame", &cs::SensorData::GetFrame)
+    .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
     .add_property("timestamp", &cs::SensorData::GetTimestamp)
     .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform))
   ;

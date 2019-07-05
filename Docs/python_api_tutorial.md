@@ -239,14 +239,20 @@ Where:
 carla.WheelPhysicsControl(
     tire_friction,
     damping_rate,
-    steer_angle,
-    disable_steering)
+    max_steer_angle,
+    radius,
+    max_brake_torque,
+    max_handbrake_torque,
+    position)
 ```
 Where:
 - *tire_friction*: Scalar value that indicates the friction of the wheel.
 - *damping_rate*: The damping rate of the wheel.
-- *steer_angle*: The maximum angle in degrees that the wheel can steer.
-- *disable_steering*: If true, the wheel will not steer.
+- *max_steer_angle*: The maximum angle in degrees that the wheel can steer.
+- *radius*: The radius of the wheel in centimeters.
+- *max_brake_torque*: The maximum brake torque in Nm.
+- *max_handbrake_torque*: The maximum handbrake torque in Nm.
+- *position*: The position of the wheel.
 
 
 Our vehicles also come with a handy autopilot
@@ -276,7 +282,7 @@ limit ourselves to show a small example of how sensors work
 ```py
 camera_bp = blueprint_library.find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle)
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame_number))
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 ```
 
 In this example we have attached a camera to a vehicle, and told the camera to

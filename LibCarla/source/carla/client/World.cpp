@@ -45,6 +45,10 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  WorldSnapshot World::GetSnapshot() const {
+    return _episode.Lock()->GetWorldSnapshot();
+  }
+
   SharedPtr<Actor> World::GetActor(ActorId id) const {
     auto simulator = _episode.Lock();
     auto description = simulator->GetActorById(id);
@@ -85,11 +89,11 @@ namespace client {
     }
   }
 
-  Timestamp World::WaitForTick(time_duration timeout) const {
+  WorldSnapshot World::WaitForTick(time_duration timeout) const {
     return _episode.Lock()->WaitForTick(timeout);
   }
 
-  void World::OnTick(std::function<void(Timestamp)> callback) {
+  void World::OnTick(std::function<void(WorldSnapshot)> callback) {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 

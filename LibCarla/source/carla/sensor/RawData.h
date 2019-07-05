@@ -33,8 +33,8 @@ namespace sensor {
     }
 
     /// Frame count when the data was generated.
-    uint64_t GetFrameNumber() const {
-     return GetHeader().frame_number;
+    uint64_t GetFrame() const {
+     return GetHeader().frame;
     }
 
     /// Timestamp when the data was generated.

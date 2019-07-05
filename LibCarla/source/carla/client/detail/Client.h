@@ -35,6 +35,7 @@ namespace rpc {
   class DebugShape;
   class VehicleControl;
   class WalkerControl;
+  class WalkerBoneControl;
 }
 namespace sensor {
   class SensorData;
@@ -50,8 +51,6 @@ namespace detail {
 
   /// Provides communication with the rpc and streaming servers of a CARLA
   /// simulator.
-  ///
-  /// @todo Make sure this class is really thread-safe.
   class Client : private NonCopyable {
   public:
 
@@ -148,6 +147,10 @@ namespace detail {
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
+
+    void ApplyBoneControlToWalker(
+        rpc::ActorId walker,
+        const rpc::WalkerBoneControl &control);
 
     void SetTrafficLightState(
         rpc::ActorId traffic_light,

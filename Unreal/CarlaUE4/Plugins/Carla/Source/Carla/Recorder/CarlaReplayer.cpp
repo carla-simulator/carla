@@ -359,16 +359,8 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   // stop replay?
   if (CurrentTime >= TimeToStop)
   {
-    // check if we need to stop the replayer and let it continue in simulation
-    // mode
-    if (TimeToStop < TotalTime)
-    {
-      Stop(true); // keep actors in scene so they continue with AI
-    }
-    else
-    {
-      Stop();
-    }
+    // keep actors in scene and let them continue with autopilot
+    Stop(true);
   }
 }
 

@@ -28,6 +28,8 @@
   * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
   * [How to export and import maps to distribution builds](export_import_dist.md)
   * [How to add custom props to the Blueprint Library](define_custom_props.md)
+  * [How to upgrade content](how_to_upgrade_content.md)
+  * [How to make a release](how_to_make_a_release.md)
 
 <h3>Contributing</h3>
 

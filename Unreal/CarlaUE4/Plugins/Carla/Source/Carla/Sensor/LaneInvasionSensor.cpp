@@ -5,7 +5,6 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/LaneInvasionSensor.h"
-#include "StaticMeshResources.h"
 
 FActorDefinition ALaneInvasionSensor::GetSensorDefinition()
 {
@@ -16,11 +15,4 @@ ALaneInvasionSensor::ALaneInvasionSensor(const FObjectInitializer &ObjectInitial
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
-
-  auto MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
-  MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-  MeshComp->bHiddenInGame = true;
-  MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
-  RootComponent = MeshComp;
 }

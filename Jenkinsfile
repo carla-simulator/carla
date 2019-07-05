@@ -80,7 +80,7 @@ pipeline {
         stage('Deploy') {
             when { anyOf { branch "master"; buildingTag() } }
             steps {
-                sh 'make deploy ARGS="--replace-latest"'
+                sh 'make deploy ARGS="--replace-latest --docker-push"'
             }
         }
     }
