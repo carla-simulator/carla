@@ -150,7 +150,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The Bounding box of the vehicle.
+        The bounding box of the vehicle.
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -238,7 +238,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        Bounding box of the walker.
+        The bounding box of the walker.
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control

@@ -11,7 +11,7 @@
     - var_name: frame
       type: int
       doc: >
-        Number of frames elapsed since the simulator was launched.
+        The number of frames elapsed since the simulator was launched.
     - var_name: elapsed_seconds
       type: float
       doc: >
@@ -19,7 +19,7 @@
     - var_name: delta_seconds
       type: float
       doc: >
-        Simulated seconds elapsed since previous frame.
+        Simulated seconds elapsed since the previous frame.
     - var_name: platform_timestamp
       type: float
       doc: >
@@ -159,7 +159,7 @@
       return: carla.BlueprintLibrary
       doc: >
         Return the list of blueprints available in this world. These blueprints
-        can be used to spawning actors into the world.
+        can be used to spawn actors into the world.
     # --------------------------------------
     - def_name: get_map
       return: carla.Map

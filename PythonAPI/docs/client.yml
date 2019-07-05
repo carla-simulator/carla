@@ -194,7 +194,7 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. Each command have a different number of parameters.
+          A list of commands to execute in batch. Each command has a different number of parameters.
           Currently, we can use these [commands](#commands.ApplyAngularVelocity):  
             SpawnActor  
             DestroyActor  
@@ -208,7 +208,7 @@
             SetAutopilot  
       doc: >
         This function executes some commands altogether as fast as it can.
-        For example, to set autopilot on on some actors, we could use:  
+        For example, to set autopilot on some actors, we could use:  
         [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)  
         We don't have control about the response of each command. If we need that, we can use apply_batch_sync().
 
