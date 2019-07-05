@@ -156,6 +156,54 @@
       doc: >
     # --------------------------------------
 
+  - class_name: GearPhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that provides access to vehicle transmission details.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: ratio
+      type: float
+      doc: >
+    # --------------------------------------
+    - var_name: down_ratio
+      type: float
+      doc: >
+    # --------------------------------------
+    - var_name: up_ratio
+      type: float
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: ratio
+        type: float 
+        default: 1.0
+      - param_name: down_ratio
+        type: float
+        default: 0.5
+      - param_name: up_ratio
+        type: float 
+        default: 0.65
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.GearPhysicsControl
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.GearPhysicsControl
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
   - class_name: VehiclePhysicsControl
     doc: >
       VehiclePhysicsControl is used for controlling the physics parameters of a vehicle.
@@ -206,6 +254,16 @@
       type: float
       doc: >
         The clutch strength of the vehicle. Measured in Kgm^2/s.
+    # --------------------------------------
+    - var_name: final_ratio
+      type: float
+      doc: >
+        The fixed ratio from transmission to wheels.
+    # --------------------------------------
+    - var_name: forward_gears
+      type: list(carla.GearPhysicsControl)
+      doc: >
+        List of GearPhysicsControl objects.
     # --------------------------------------
     - var_name: mass
       type: float
@@ -305,6 +363,16 @@
       type: float
       doc: >
         The radius of the wheel in centimeters.
+    # --------------------------------------
+    - var_name: max_brake_torque
+      type: float
+      doc: >
+        The maximum brake torque in Nm.
+    # --------------------------------------
+    - var_name: max_handbrake_torque
+      type: float
+      doc: >
+        The maximum handbrake torque in Nm.
     # --------------------------------------
     - var_name: position
       type: carla.Vector3D
