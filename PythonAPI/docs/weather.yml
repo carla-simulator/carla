@@ -9,10 +9,10 @@
       WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: cloudyness
+    - var_name: cloudiness
       type: float
       doc: >
-        Weather cloudyness. Values range from 0 to 100.
+        Weather cloudiness. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation
       type: float
@@ -32,7 +32,7 @@
     - var_name: sun_azimuth_angle
       type: float
       doc: >
-        Azimuth angle of the sun in degrees. Values range from 0 to 360.
+        The azimuth angle of the sun in degrees. Values range from 0 to 360.
     # --------------------------------------
     - var_name: sun_altitude_angle
       type: float
@@ -43,7 +43,7 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: cloudyness
+      - param_name: cloudiness
         type: float
         default: 0.0
       - param_name: precipitation

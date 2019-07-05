@@ -20,7 +20,7 @@
       - param_name: callback
         type: function
         doc: >
-          Function that will be called each time the sensor sends data. As a parameter the function receives a buffer with the data.
+          Function that will be called each time the sensor sends data. As a parameter, the function receives a buffer with the data.
       doc: >
     # --------------------------------------
     - def_name: stop

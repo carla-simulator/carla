@@ -22,7 +22,7 @@
   - class_name: Color
     # - DESCRIPTION ------------------------
     doc: >
-      Defines a 32-bit BGRA color.
+      Class defines a 32-bit BGRA color.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: r
@@ -73,7 +73,7 @@
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
     doc: >
-      Defines an attribute of a carla.ActorBlueprint.
+      Class that defines an attribute of a carla.ActorBlueprint.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -199,7 +199,7 @@
   - class_name: ActorBlueprint
     # - DESCRIPTION ------------------------
     doc: >
-      Contains all the necessary information for spawning an Actor.
+      Class that contains all the necessary information for spawning an Actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -266,7 +266,7 @@
   - class_name: BlueprintLibrary
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides acces to blueprints.
+      Class that provides access to blueprints.
     # - METHODS ----------------------------
     methods:
     - def_name: find

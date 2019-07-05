@@ -58,7 +58,7 @@
   - class_name: ActorList
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides acces to actors.
+      Class that provides access to actors.
     # - METHODS ----------------------------
     methods:
     - def_name: find
@@ -132,7 +132,7 @@
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the attachment options.
+      Class that defines the attachment options.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
@@ -158,8 +158,8 @@
     - def_name: get_blueprint_library
       return: carla.BlueprintLibrary
       doc: >
-        Return the list of blueprints available in this world. This blueprints
-        can be used to spawning actor into the world.
+        Return the list of blueprints available in this world. These blueprints
+        can be used to spawning actors into the world.
     # --------------------------------------
     - def_name: get_map
       return: carla.Map
