@@ -57,7 +57,7 @@
   - class_name: LaneChange
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane change options
+      Class that defines the lane change options
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -76,7 +76,7 @@
   - class_name: LaneMarkingColor
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane marking colors.
+      Class that defines the lane marking colors.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Standard
@@ -98,7 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the lane marking types that OpenDRIVE accepts.
+      Class that defines the lane marking types that OpenDRIVE accepts.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -179,13 +179,13 @@
         type: carla.LaneType
         default: carla.LaneType.Driving
         doc: > 
-          This parameter is used to limit the search on a certain lane types.
+          This parameter is used to limit the search on a certain lane type.
           This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
       return: carla.Waypoint
     # --------------------------------------
     - def_name: get_topology
       doc: >
-        Provides a minimal graph of the topology of the current OpenDRIVE file.
+        It provides a minimal graph of the topology of the current OpenDRIVE file.
         It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second
         one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be:
         `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`
@@ -196,7 +196,7 @@
       - param_name: distance
         type: float
         doc: >
-          Aproximate distance between the waypoints
+          Approximate distance between the waypoints
       return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints positioned on the center of the lanes 
@@ -295,7 +295,7 @@
       doc: >
         OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the 
         current lane with respect to the road. For more information refer to OpenDRIVE
-        [documentaion](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
+        [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
     - var_name: s
       type: float
       doc: >
@@ -304,7 +304,7 @@
       type: carla.LaneChange
       doc: >
         Lane change definition of the current Waypoint's location, based on the traffic rules defined in
-        the OpenDRIVE file. Basically it tells you if a lane change can be done and in which direction.
+        the OpenDRIVE file. Basically, it tells you if a lane change can be done and in which direction.
     - var_name: lane_type
       type: carla.LaneType
       doc: >
@@ -312,11 +312,11 @@
     - var_name: right_lane_marking
       type: carla.LaneMarking
       doc: >
-        The right lane marking information based on the directin of the Waypoint
+        The right lane marking information based on the direction of the Waypoint
     - var_name: left_lane_marking
       type: carla.LaneMarking
       doc: >
-        The left lane marking information based on the directin of the Waypoint
+        The left lane marking information based on the direction of the Waypoint
     # - METHODS ----------------------------
     methods:
     - def_name: next

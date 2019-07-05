@@ -12,17 +12,17 @@
     - var_name: throttle
       type: float
       doc: >
-        Scalar value to control the vehicle throttle.
+        A scalar value to control the vehicle throttle.
     # --------------------------------------
     - var_name: steer
       type: float
       doc: >
-        Scalar value to control the vehicle steering.
+        A scalar value to control the vehicle steering.
     # --------------------------------------
     - var_name: brake
       type: float    
       doc: >
-        Scalar value to control the vehicle brake.
+        A scalar value to control the vehicle brake.
     # --------------------------------------
     - var_name: hand_brake
       type: bool
@@ -100,7 +100,7 @@
     - var_name: speed
       type: float
       doc: >
-        Scalar value to control the walker speed.
+        A scalar value to control the walker speed.
     # --------------------------------------
     - var_name: jump
       type: bool
@@ -185,7 +185,7 @@
     - var_name: damping_rate_zero_throttle_clutch_engaged
       type: float
       doc: >
-        Damping rate when the thottle is zero with clutch engaged.
+        Damping rate when the throttle is zero with clutch engaged.
     # --------------------------------------
     - var_name: damping_rate_zero_throttle_clutch_disengaged
       type: float
@@ -195,7 +195,7 @@
     - var_name: use_gear_autobox
       type: bool
       doc: >
-        If true, the vehicle will have automatic transmission.
+        If true, the vehicle will have an automatic transmission.
     # --------------------------------------
     - var_name: gear_switch_time
       type: float
@@ -230,7 +230,7 @@
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
-        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to front left wheel, index 1 corresponds to front right wheel, index 2 corresponds to back left wheel and index 3 corresponds to back right wheel. For 2 wheeled vehicles, set same values for both front and back wheels.
+        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to front left wheel, index 1 corresponds to front right wheel, index 2 corresponds to back left wheel and index 3 corresponds to back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
 
     # - METHODS ----------------------------
     methods:
@@ -289,7 +289,7 @@
     - var_name: tire_friction
       type: float
       doc: >
-        Scalar value that indicates the friction of the wheel.
+        A scalar value that indicates the friction of the wheel.
     # --------------------------------------
     - var_name: damping_rate
       type: float

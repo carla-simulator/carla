@@ -14,7 +14,7 @@
     - var_name: id
       type: int
       doc: >
-        Unique id identifying this actor. Note ids are only unique during a
+        Unique id identifying this actor. Note ids are unique during a
         given episode.
     - var_name: type_id
       type: str
@@ -150,7 +150,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        Bounding box of the vehicle.
+        The Bounding box of the vehicle.
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -174,7 +174,7 @@
       - param_name: physics_control
         type: carla.VehiclePhysicsControl
       doc: >
-        Apply physics control to this vehicle. The control will take effect on
+        Apply physics control to this vehicle. The control will take effect on the
         next tick.
     # --------------------------------------
     - def_name: get_physics_control
@@ -246,7 +246,7 @@
       - param_name: control
         type: carla.WalkerControl
       doc: >
-        Apply control to this walker. The control will take effect on next tick.
+        Apply control to this walker. The control will take effect on the next tick.
     # --------------------------------------
     - def_name: apply_control
       params:

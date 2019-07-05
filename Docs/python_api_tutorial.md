@@ -107,8 +107,8 @@ transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
 actor = world.spawn_actor(blueprint, transform)
 ```
 
-The spawn actor function comes in two flavours, `spawn_actor` and
-`try_spawn_actor`. The former will raise an exception if the actor could not be
+The spawn actor function comes in two flavours, [`spawn_actor`](../python_api/#carla.World.spawn_actor) and
+[`try_spawn_actor`](../python_api/#carla.World.try_spawn_actor). The former will raise an exception if the actor could not be
 spawned, the later will return `None` instead. The most typical cause of
 failure is collision at spawn point, meaning the actor does not fit at the spot
 we chose; probably another vehicle is in that spot or we tried to spawn into a
@@ -180,7 +180,7 @@ by providing throttle, break, and steer values
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
 
-These are all the parameters of the `VehicleControl` object and their default
+These are all the parameters of the [`VehicleControl`](../python_api/#carla.VehicleControl) object and their default
 values
 
 ```py
@@ -199,7 +199,7 @@ Also, physics control properties can be tuned for vehicles and its wheels
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object and the gearbox details via `GearPhysicsControl`.
+These properties are controlled through a [`VehiclePhysicsControl`](../python_api/#carla.VehiclePhysicsControl) object, which also contains a property to control each wheel's physics through a [`WheelPhysicsControl`](../python_api/#carla.WheelPhysicsControl) object.
 
 ```py
 carla.VehiclePhysicsControl(
@@ -212,7 +212,6 @@ carla.VehiclePhysicsControl(
     use_gear_autobox,
     gear_switch_time,
     clutch_strength,
-
     mass,
     drag_coefficient,
     center_of_mass,
@@ -238,7 +237,7 @@ Where:
 - *drag_coefficient*: Drag coefficient of the vehicle's chassis
 - *center_of_mass*: The center of mass of the vehicle
 - *steering_curve*: Curve that indicates the maximum steering for a specific forward speed
-- *wheels*: List of `WheelPhysicsControl` objects.
+- *wheels*: List of [`WheelPhysicsControl`](../python_api/#carla.WheelPhysicsControl) objects.
 
 ```py
 carla.WheelPhysicsControl(
