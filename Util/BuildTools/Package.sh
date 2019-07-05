@@ -219,13 +219,37 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     log "\nPackaging '${PACKAGE_NAME}'..."
 
+    # Copy the pakcage config file to package
+    mkdir -p "${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Config/" && \
+        cp "${PACKAGE_FILE}" "$_"
+
+    # Copy the OpenDRIVE .xodr files to package
+    IFS='+' # space is set as delimiter
+    # MAPS_TO_COOK is read into an array as tokens separated by IFS
+    read -ra ADDR <<< "$MAPS_TO_COOK"
+    for i in "${ADDR[@]}"; do # access each element of array
+
+      XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
+      MAP_NAME=${XODR_FILE_PATH##*/}
+      XODR_FILE_PATH=${XODR_FILE_PATH%/*}/OpenDrive/${MAP_NAME}.xodr
+
+      if [ -f "$XODR_FILE_PATH" ] ; then
+        OUT_XODR_DIR="${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Maps/${MAP_NAME}/OpenDrive/"
+
+        # Create the xodr out folder if does not exist
+        if [ ! -d "$OUT_XODR_DIR" ] ; then
+          mkdir -p "${OUT_XODR_DIR}"
+        fi
+
+        cp "${XODR_FILE_PATH}" "${OUT_XODR_DIR}"
+      fi
+
+    done
+
     rm -Rf "./CarlaUE4/Metadata"
     rm -Rf "./CarlaUE4/Plugins"
     rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/PropsMap"
     rm -f "./CarlaUE4/AssetRegistry.bin"
-
-    mkdir -p "${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Config/" && \
-        cp "${PACKAGE_FILE}" "$_"
 
     tar -czvf ${DESTINATION} *
 
