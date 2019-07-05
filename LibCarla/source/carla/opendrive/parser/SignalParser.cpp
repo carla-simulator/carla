@@ -6,9 +6,9 @@
 
 #include "carla/opendrive/parser/SignalParser.h"
 
-#include "carla/opendrive/parser/pugixml/pugixml.hpp"
-
 #include "carla/road/MapBuilder.h"
+
+#include <pugixml/pugixml.hpp>
 
 namespace carla {
 namespace opendrive {

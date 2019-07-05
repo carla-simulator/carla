@@ -54,7 +54,7 @@ namespace client {
       const Timestamp &timestamp) {
     try {
       return MakeShared<sensor::data::GnssEvent>(
-               timestamp.frame_count,
+               timestamp.frame,
                timestamp.elapsed_seconds,
                GetTransform(),
                _geo_reference.Transform(GetLocation()));

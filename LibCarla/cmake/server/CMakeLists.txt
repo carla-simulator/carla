@@ -26,9 +26,6 @@ install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
 file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
 install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
 
-file(GLOB libcarla_carla_opendrive_parser_pugixml "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
-install(FILES ${libcarla_carla_opendrive_parser_pugixml} DESTINATION include/carla/opendrive/parser/pugixml)
-
 file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
 install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
@@ -37,9 +34,6 @@ install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
 
 file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
 install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
-
-file(GLOB libcarla_carla_road_element_cephes_headers "${libcarla_source_path}/carla/road/element/cephes/*.h")
-install(FILES ${libcarla_carla_road_element_cephes_headers} DESTINATION include/carla/road/element/cephes)
 
 file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
 install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
@@ -96,14 +90,10 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/opendrive/*.h"
     "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
     "${libcarla_source_path}/carla/opendrive/parser/*.h"
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp"
     "${libcarla_source_path}/carla/road/*.cpp"
     "${libcarla_source_path}/carla/road/*.h"
     "${libcarla_source_path}/carla/road/element/*.cpp"
     "${libcarla_source_path}/carla/road/element/*.h"
-    "${libcarla_source_path}/carla/road/element/cephes/*.cpp"
-    "${libcarla_source_path}/carla/road/element/cephes/*.h"
     "${libcarla_source_path}/carla/road/general/*.cpp"
     "${libcarla_source_path}/carla/road/general/*.h"
     "${libcarla_source_path}/carla/road/object/*.cpp"
@@ -120,7 +110,13 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/streaming/detail/*.h"
     "${libcarla_source_path}/carla/streaming/detail/tcp/*.cpp"
     "${libcarla_source_path}/carla/streaming/detail/tcp/*.h"
-    "${libcarla_source_path}/carla/streaming/low_level/*.h")
+    "${libcarla_source_path}/carla/streaming/low_level/*.h"
+    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
+    "${libcarla_source_thirdparty_path}/cephes/*.h"
+    "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
+    "${libcarla_source_thirdparty_path}/moodycamel/*.h"
+    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
+    "${libcarla_source_thirdparty_path}/pugixml/*.hpp")
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
