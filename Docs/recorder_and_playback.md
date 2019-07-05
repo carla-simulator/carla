@@ -242,7 +242,7 @@ client.replay_file("col3.log", 302, 0, 143)
 
 ![actor blocked](img/actor_blocked1.png)
 
-As we can observe, there is an obstacle that is actually blocking the actor (see red vehicle in).
+As we can observe, there is an obstacle that is actually blocking the actor (see red vehicle in the image).
 Looking at another actor using:
 
 ```py
@@ -251,7 +251,7 @@ client.replay_file("col3.log", 75, 0, 104)
 
 ![actor blocked](img/actor_blocked2.png)
 
-It is worth noting that it is the same incident but with another vehicle involved in it (the police car in this case).
+It is worth noting that it is the same incident but with another vehicle involved in it (i.e. the police car in this case).
 
 The result is sorted by duration, so the actor that is blocked for more time comes first. By checking the vehicle with Id 173 at time 36 seconds, it is evident that it stopped for 336 seconds. To check the cause of it , it would be useful to check how it arrived to that situation by replaying a few seconds before the second 36:
 
