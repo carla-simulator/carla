@@ -1,6 +1,6 @@
 ### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on the server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
 
 All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
 
@@ -57,7 +57,7 @@ E.g. With a time factor of 20x we can see traffic flow:
 
 ![flow](img/RecorderFlow2.gif)
 
-Pedestrian's animations will not be affected by this time factor and will remain at normal speed. Therefore, animations are not accurate yet.
+Pedestrians' animations will not be affected by this time factor and will remain at normal speed. Therefore, animations are not accurate yet.
 
 This API call will not stop the replayer in course, it will just change the speed, so you can change that several times while the replayer is running.
 
@@ -136,7 +136,7 @@ At the end, we can see as well the **total time** of the recording and also the 
 
 #### Info about collisions
 
-In simulations whith a **hero actor**, the collisions are automatically saved, so we can query a recorded file to see if any **hero actor** had collisions with some other actor. Currently, the actor types we can use in the query are these:
+In simulations with a **hero actor**, the collisions are automatically saved, so we can query a recorded file to see if any **hero actor** had collisions with some other actor. Currently, the actor types we can use in the query are these:
 
 * **h** = Hero
 * **v** = Vehicle
@@ -193,7 +193,7 @@ The output result is similar to this:
 
 #### Info about blocked actors
 
-There is another API to get information about actors that have been blocked by an obstacle, not letting them follow their way. That could be helpful for finding incidences. The API call is:
+There is another API function to get information about actors that have been blocked by an obstacle, not letting them follow their way. That could be helpful for finding incidences. The API call is:
 
 ```py
 client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
@@ -242,7 +242,7 @@ client.replay_file("col3.log", 302, 0, 143)
 
 ![actor blocked](img/actor_blocked1.png)
 
-As we can observe, there is an obstacle that is actually blocking the actor (red vehicle in the image).
+As we can observe, there is an obstacle that is actually blocking the actor (see red vehicle in).
 Looking at another actor using:
 
 ```py
@@ -251,7 +251,7 @@ client.replay_file("col3.log", 75, 0, 104)
 
 ![actor blocked](img/actor_blocked2.png)
 
-It is worth noting that it is the same incident but with another vehicle involved in it (police car).
+It is worth noting that it is the same incident but with another vehicle involved in it (the police car in this case).
 
 The result is sorted by duration, so the actor that is blocked for more time comes first. By checking the vehicle with Id 173 at time 36 seconds, it is evident that it stopped for 336 seconds. To check the cause of it , it would be useful to check how it arrived to that situation by replaying a few seconds before the second 36:
 
@@ -265,7 +265,7 @@ And easily determine the responsible of that incident.
 
 ### Sample Python scripts
 
-There are some scripts you could use:
+Here you can find a list of sample scripts you could use:
 
 * **start_recording.py**: This will start recording, and optionally you can spawn several actors and define how much time you want to record.
   * **-f**: Filename to write
@@ -292,7 +292,7 @@ There are some scripts you could use:
     * **o** = Other
     * **a** = Any
 <br>
-* **show_recorder_actors_blocked.py**: This will show all the actors that are blocked (stopped) in the recorder. We can define the time and distance to be considered as blocked.
+* **show_recorder_actors_blocked.py**: This will show all the actors that are blocked or stopped in the recorder. We can define the *time* that an actor has not been moving and *travelled* distance by the actor thresholds to determine if a vehicle is considered as blocked or not.
   * **-f**: Filename
   * **-t**: Minimum seconds stopped to be considered as blocked (optional)
   * **-d**: Minimum distance to be considered stopped (optional)
