@@ -60,7 +60,7 @@
   - class_name: ActorSnapshot
     # - DESCRIPTION ------------------------
     doc: >
-      Provides acces to the data of a carla.Actor in a carla.WorldSnapshot.
+      Class that provides access to the data of a carla.Actor in a carla.WorldSnapshot.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id

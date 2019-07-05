@@ -226,7 +226,7 @@
   - class_name: Transform
     # - DESCRIPTION ------------------------
     doc: >
-      Defines a transformation without scaling.
+      Class that defines a transformation without scaling.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: location
@@ -286,7 +286,7 @@
     - var_name: extent
       type: carla.Vector3D
       doc: >
-        Contains the vector from the center of the bounding box to one of the vertex of the box.  
+        It contains the vector from the center of the bounding box to one of the vertex of the box.  
 
         So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`
     # - METHODS ----------------------------
@@ -318,7 +318,7 @@
   - class_name: GeoLocation
     # - DESCRIPTION ------------------------
     doc: >
-      Contains geolocation simulated data 
+      Class that contains geolocation simulated data 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: latitude
