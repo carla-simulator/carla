@@ -177,10 +177,12 @@
       doc: >
     # --------------------------------------
     - def_name: apply_settings
+      return: int
       params:
       - param_name: world_settings
         type: carla.WorldSettings
       doc: >
+        Returns the id of the frame when the settings took effect.
     # --------------------------------------
     - def_name: get_weather
       return: carla.WeatherParameters
@@ -281,8 +283,9 @@
         Register a callback to be called every time a world tick is received.
     # --------------------------------------
     - def_name: tick
+      return: int
       doc: >
-        Signal the simulator to continue to next tick (only has effect on
+        Synchronizes with the simulator and returns the id of the newly started frame (only has effect on
         synchronous mode).
     # --------------------------------------
     - def_name: __str__
