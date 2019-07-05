@@ -32,7 +32,7 @@
     - var_name: reverse
       type: bool
       doc: >
-        If true, vehicle will move reverse.
+        If true, the vehicle will move reverse.
     # --------------------------------------
     - var_name: manual_gear_shift
       type: bool
@@ -95,7 +95,7 @@
     - var_name: direction
       type: carla.Vector3D
       doc: >
-        Vector that control the direction of the walker.
+        Vector that controls the direction of the walker.
     # --------------------------------------
     - var_name: speed
       type: float
@@ -230,7 +230,7 @@
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
-        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to front left wheel, index 1 corresponds to front right wheel, index 2 corresponds to back left wheel and index 3 corresponds to back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
+        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
 
     # - METHODS ----------------------------
     methods:

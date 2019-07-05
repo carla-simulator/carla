@@ -22,7 +22,7 @@
   - class_name: Color
     # - DESCRIPTION ------------------------
     doc: >
-      Class defines a 32-bit BGRA color.
+      Class that defines a 32-bit BGRA color.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: r
