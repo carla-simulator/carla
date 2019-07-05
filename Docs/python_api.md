@@ -201,6 +201,14 @@
         - [**\__eq__**(**self**, **other**)](#carla.Color.__eq__) <sub>_Method_</sub>
         - [**\__ne__**(**self**, **other**)](#carla.Color.__ne__) <sub>_Method_</sub>
         - [**\__str__**(**self**)](#carla.Color.__str__) <sub>_Method_</sub>
+    - [**GearPhysicsControl**](#carla.GearPhysicsControl) <sub>_Class_</sub>  
+        - [**ratio**](#carla.GearPhysicsControl.ratio) <sub>_Instance variable_</sub>
+        - [**down_ratio**](#carla.GearPhysicsControl.down_ratio) <sub>_Instance variable_</sub>
+        - [**up_ratio**](#carla.GearPhysicsControl.up_ratio) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **ratio**=1.0, **down_ratio**=0.5, **up_ratio**=0.65)](#carla.GearPhysicsControl.__init__) <sub>_Method_</sub>
+        - [**\__eq__**(**self**, **other**)](#carla.GearPhysicsControl.__eq__) <sub>_Method_</sub>
+        - [**\__ne__**(**self**, **other**)](#carla.GearPhysicsControl.__ne__) <sub>_Method_</sub>
+        - [**\__str__**(**self**)](#carla.GearPhysicsControl.__str__) <sub>_Method_</sub>
     - [**GeoLocation**](#carla.GeoLocation) <sub>_Class_</sub>  
         - [**latitude**](#carla.GeoLocation.latitude) <sub>_Instance variable_</sub>
         - [**longitude**](#carla.GeoLocation.longitude) <sub>_Instance variable_</sub>
@@ -294,6 +302,8 @@
         - [**use_gear_autobox**](#carla.VehiclePhysicsControl.use_gear_autobox) <sub>_Instance variable_</sub>
         - [**gear_switch_time**](#carla.VehiclePhysicsControl.gear_switch_time) <sub>_Instance variable_</sub>
         - [**clutch_strength**](#carla.VehiclePhysicsControl.clutch_strength) <sub>_Instance variable_</sub>
+        - [**final_ratio**](#carla.VehiclePhysicsControl.final_ratio) <sub>_Instance variable_</sub>
+        - [**forward_gears**](#carla.VehiclePhysicsControl.forward_gears) <sub>_Instance variable_</sub>
         - [**mass**](#carla.VehiclePhysicsControl.mass) <sub>_Instance variable_</sub>
         - [**drag_coefficient**](#carla.VehiclePhysicsControl.drag_coefficient) <sub>_Instance variable_</sub>
         - [**center_of_mass**](#carla.VehiclePhysicsControl.center_of_mass) <sub>_Instance variable_</sub>
@@ -355,6 +365,8 @@
         - [**damping_rate**](#carla.WheelPhysicsControl.damping_rate) <sub>_Instance variable_</sub>
         - [**max_steer_angle**](#carla.WheelPhysicsControl.max_steer_angle) <sub>_Instance variable_</sub>
         - [**radius**](#carla.WheelPhysicsControl.radius) <sub>_Instance variable_</sub>
+        - [**max_brake_torque**](#carla.WheelPhysicsControl.max_brake_torque) <sub>_Instance variable_</sub>
+        - [**max_handbrake_torque**](#carla.WheelPhysicsControl.max_handbrake_torque) <sub>_Instance variable_</sub>
         - [**position**](#carla.WheelPhysicsControl.position) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **tire_friction**=2.0, **damping_rate**=0.25, **max_steer_angle**=70.0, **radius**=30.0, **position**=(0.0,0.0,0.0))](#carla.WheelPhysicsControl.__init__) <sub>_Method_</sub>
         - [**\__eq__**(**self**, **other**)](#carla.WheelPhysicsControl.__eq__) <sub>_Method_</sub>
@@ -508,6 +520,11 @@
         - [**actor_id**](#commands.ApplyWalkerControl.actor_id) <sub>_Instance variable_</sub>
         - [**control**](#commands.ApplyWalkerControl.control) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**, **control**)](#commands.ApplyWalkerControl.__init__) <sub>_Method_</sub>
+    - [**ApplyWalkerState**](#commands.ApplyWalkerState) <sub>_Class_</sub>  
+        - [**actor_id**](#commands.ApplyWalkerState.actor_id) <sub>_Instance variable_</sub>
+        - [**transform**](#commands.ApplyWalkerState.transform) <sub>_Instance variable_</sub>
+        - [**speed**](#commands.ApplyWalkerState.speed) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **transform**, **speed**)](#commands.ApplyWalkerState.__init__) <sub>_Method_</sub>
     - [**DestroyActor**](#commands.DestroyActor) <sub>_Class_</sub>  
         - [**actor_id**](#commands.DestroyActor.actor_id) <sub>_Instance variable_</sub>
         - [**\__init__**(**self**, **actor**)](#commands.DestroyActor.__init__) <sub>_Method_</sub>
@@ -1121,6 +1138,30 @@ Client constructor.
 
 ---
 
+## carla.GearPhysicsControl<a name="carla.GearPhysicsControl"></a> <sub><sup>_class_</sup></sub>
+Class that provides access to vehicle transmission details.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.GearPhysicsControl.ratio"></a>**<font color="#f8805a">ratio</font>** (_float_)  
+- <a name="carla.GearPhysicsControl.down_ratio"></a>**<font color="#f8805a">down_ratio</font>** (_float_)  
+- <a name="carla.GearPhysicsControl.up_ratio"></a>**<font color="#f8805a">up_ratio</font>** (_float_)  
+
+<h3>Methods</h3>
+- <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  
+    - **Parameters:**
+        - `ratio` (_float_)  
+        - `down_ratio` (_float_)  
+        - `up_ratio` (_float_)  
+- <a name="carla.GearPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+    - **Parameters:**
+        - `other` (_[carla.GearPhysicsControl](#carla.GearPhysicsControl)_)  
+- <a name="carla.GearPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+    - **Parameters:**
+        - `other` (_[carla.GearPhysicsControl](#carla.GearPhysicsControl)_)  
+- <a name="carla.GearPhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.GeoLocation<a name="carla.GeoLocation"></a> <sub><sup>_class_</sup></sub>
 Class that contains geolocation simulated data.  
 
@@ -1419,6 +1460,10 @@ If true, the vehicle will have an automatic transmission.
 Switching time between gears.  
 - <a name="carla.VehiclePhysicsControl.clutch_strength"></a>**<font color="#f8805a">clutch_strength</font>** (_float_)  
 The clutch strength of the vehicle. Measured in Kgm^2/s.  
+- <a name="carla.VehiclePhysicsControl.final_ratio"></a>**<font color="#f8805a">final_ratio</font>** (_float_)  
+The fixed ratio from transmission to wheels.  
+- <a name="carla.VehiclePhysicsControl.forward_gears"></a>**<font color="#f8805a">forward_gears</font>** (_list([carla.GearPhysicsControl](#carla.GearPhysicsControl))_)  
+List of GearPhysicsControl objects.  
 - <a name="carla.VehiclePhysicsControl.mass"></a>**<font color="#f8805a">mass</font>** (_float_)  
 The mass of the vehicle measured in Kg.  
 - <a name="carla.VehiclePhysicsControl.drag_coefficient"></a>**<font color="#f8805a">drag_coefficient</font>** (_float_)  
@@ -1600,6 +1645,10 @@ The damping rate of the wheel.
 The maximum angle in degrees that the wheel can steer.  
 - <a name="carla.WheelPhysicsControl.radius"></a>**<font color="#f8805a">radius</font>** (_float_)  
 The radius of the wheel in centimeters.  
+- <a name="carla.WheelPhysicsControl.max_brake_torque"></a>**<font color="#f8805a">max_brake_torque</font>** (_float_)  
+The maximum brake torque in Nm.  
+- <a name="carla.WheelPhysicsControl.max_handbrake_torque"></a>**<font color="#f8805a">max_handbrake_torque</font>** (_float_)  
+The maximum handbrake torque in Nm.  
 - <a name="carla.WheelPhysicsControl.position"></a>**<font color="#f8805a">position</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 World position of the wheel. Note that it is a read-only parameter.  
 
@@ -1636,8 +1685,10 @@ Return the spectator actor. The spectator controls the view in the simulator win
 - <a name="carla.World.get_settings"></a>**<font color="#7fb800">get_settings</font>**(<font color="#00a6ed">**self**</font>)  
     - **Return:** _[carla.WorldSettings](#carla.WorldSettings)_  
 - <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)  
+Returns the id of the frame when the settings took effect.  
     - **Parameters:**
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
+    - **Return:** _int_  
 - <a name="carla.World.get_weather"></a>**<font color="#7fb800">get_weather</font>**(<font color="#00a6ed">**self**</font>)  
 Retrieve the weather parameters currently active in the world.  
     - **Return:** _[carla.WeatherParameters](#carla.WeatherParameters)_  
@@ -1685,7 +1736,8 @@ Block calling thread until a world tick is received.
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
 Register a callback to be called every time a world tick is received.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>)  
-Signal the simulator to continue to next tick (only has effect on synchronous mode).  
+Synchronizes with the simulator and returns the id of the newly started frame (only has effect on synchronous mode).  
+    - **Return:** _int_  
 - <a name="carla.World.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -2098,6 +2150,22 @@ _</font>
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
+
+---
+
+## commands.ApplyWalkerState<a name="commands.ApplyWalkerState"></a> <sub><sup>_class_</sup></sub>
+
+<h3>Instance Variables</h3>
+- <a name="commands.ApplyWalkerState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="commands.ApplyWalkerState.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+- <a name="commands.ApplyWalkerState.speed"></a>**<font color="#f8805a">speed</font>** (_float_)  
+
+<h3>Methods</h3>
+- <a name="commands.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
+        - `transform` (_[carla.Transform](#carla.Transform)_)  
+        - `speed` (_float_)  
 
 ---
 
