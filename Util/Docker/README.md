@@ -62,7 +62,7 @@ Next, this will build the image with all the necessary requisites to build Carla
 docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
 ```
 
-Finally create the actual Carla image with, it will search for `carla-prerequisites:latest`:
+Finally create the actual Carla image, it will search for `carla-prerequisites:latest`:
 
 ```
 docker build -t carla -f Carla.Dockerfile .
@@ -83,3 +83,22 @@ Clean up the intermediate images from the build (keep the ue4-source image so yo
 ```
 ue4-docker clean
 ```
+
+## Using the Docker tools
+
+The `docker_tools.py` (in `/carla/Util/Docker`) is an example of how you can take advantages of these Docker images. It uses [docker-py](https://github.com/docker/docker-py) whose documentation can be found [here](https://docker-py.readthedocs.io/en/stable/).  
+The code is really simple and can be easily expanded to interact with docker in other ways.
+
+You can create a Carla package (distribution) from the Docker image using:
+
+```
+./docker_tools.py --output /output/path
+```
+
+Or you can use it to cook assets (like new maps and meshes), ready to be consumed by a Carla package (distribution):
+
+```
+./docker_tools.py --input /assets/to/import/path --output /output/path --packages PkgeName1,PkgeName2
+```
+
+The needed files and hierarchy to import assets is explained [here](https://carla.readthedocs.io/en/latest/export_import_dist/).
