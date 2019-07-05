@@ -134,4 +134,4 @@ Once imported all the packages inside Unreal, users could also generate a **cook
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This command will create a compressed `.tar.gz` file for each cooked package and place it in the Carla `Dist` folder. Finally, you could use these packages in Carla releases by simply moving those compressed cooked packages in the Carla `ExportedAssets` folder.
+This command will create the distribution packages compressed in a `.tar.gz` file for each cooked package and place it in the Carla `Dist` folder. Finally, you could use these distribution packages in the Carla distribution packages by simply moving them in the Carla `Import` folder and executing the `ImportAssets.sh` script.
