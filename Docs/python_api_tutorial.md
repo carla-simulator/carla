@@ -198,7 +198,7 @@ Also, physics control properties can be tuned for vehicles and its wheels
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object.
+These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object and the gearbox details via `GearPhysicsControl`.
 
 ```py
 carla.VehiclePhysicsControl(
@@ -211,6 +211,7 @@ carla.VehiclePhysicsControl(
     use_gear_autobox,
     gear_switch_time,
     clutch_strength,
+
     mass,
     drag_coefficient,
     center_of_mass,
@@ -229,6 +230,9 @@ Where:
 - *gear_switch_time*: Switching time between gears
 - *clutch_strength*: The clutch strength of the vehicle. Measured in Kgm^2/s
 
+- *final_ratio*: The fixed ratio from transmission to wheels.
+- *forward_gears*: List of `GearPhysicsControl` objects.
+
 - *mass*: The mass of the vehicle measured in Kg
 - *drag_coefficient*: Drag coefficient of the vehicle's chassis
 - *center_of_mass*: The center of mass of the vehicle
@@ -239,15 +243,31 @@ Where:
 carla.WheelPhysicsControl(
     tire_friction,
     damping_rate,
-    steer_angle,
-    disable_steering)
+    max_steer_angle,
+    radius,
+    max_brake_torque,
+    max_handbrake_torque,
+    position)
 ```
 Where:
 - *tire_friction*: Scalar value that indicates the friction of the wheel.
 - *damping_rate*: The damping rate of the wheel.
-- *steer_angle*: The maximum angle in degrees that the wheel can steer.
-- *disable_steering*: If true, the wheel will not steer.
+- *max_steer_angle*: The maximum angle in degrees that the wheel can steer.
+- *radius*: The radius of the wheel in centimeters.
+- *max_brake_torque*: The maximum brake torque in Nm.
+- *max_handbrake_torque*: The maximum handbrake torque in Nm.
+- *position*: The position of the wheel.
 
+```py
+carla.GearPhysicsControl(
+    ratio,
+    down_ratio,
+    up_ratio)
+```
+Where:
+- *ratio*: The transmission ratio of this gear.
+- *down_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.
+- *up_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.
 
 Our vehicles also come with a handy autopilot
 
@@ -336,6 +356,43 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 
 The full list of presets can be found in the
 [WeatherParameters reference](python_api.md#carlaweatherparameters).
+
+### World Snapshot
+
+A world snapshot represents the state of every actor in the simulation at a single frame, a sort of still image of the world with a timestamp. With this feature it is possible to record the location of every actor and make sure all of them were captured at the same frame without the need of using synchronous mode.
+
+```py
+# Retrieve a snapshot of the world at this point in time.
+world_snapshot = world.get_snapshot()
+
+# Wait for the next tick and retrieve the snapshot of the tick.
+world_snapshot = world.wait_for_tick()
+
+# Register a callback to get called every time we receive a new snapshot.
+world.on_tick(lambda world_snapshot: do_something(world_snapshot))
+```
+
+The world snapshot contains a timestamp and a list of actor snapshots. Actor snapshots do not allow to operate on the actor directly as they only contain data about the physical state of the actor, but you can use their id to retrieve the actual actor. And the other way around, you can look up snapshots by id (average O(1) complexity).
+
+```py
+timestamp = world_snapshot.timestamp
+timestamp.frame_count
+timestamp.elapsed_seconds
+timestamp.delta_seconds
+timestamp.platform_timestamp
+
+
+for actor_snapshot in world_snapshot:
+    actor_snapshot.get_transform()
+    actor_snapshot.get_velocity()
+    actor_snapshot.get_angular_velocity()
+    actor_snapshot.get_acceleration()
+
+    actual_actor = world.get_actor(actor_snapshot.id)
+
+
+actor_snapshot = world_snapshot.find(actual_actor.id)
+```
 
 #### Map and waypoints
 

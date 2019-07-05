@@ -25,6 +25,12 @@ struct CARLA_API FWheelPhysicsControl
   UPROPERTY(Category = "Wheel Shape Radius", EditAnywhere, BlueprintReadWrite)
   float Radius = 30.0f;
 
+  UPROPERTY(Category = "Wheel Max Brake Torque (Nm)", EditAnywhere, BlueprintReadWrite)
+  float MaxBrakeTorque = 1500.0f;
+
+  UPROPERTY(Category = "Wheel Max Handbrake Torque (Nm)", EditAnywhere, BlueprintReadWrite)
+  float MaxHandBrakeTorque = 3000.0f;
+
   UPROPERTY(Category = "Wheel Position", EditAnywhere, BlueprintReadWrite)
   FVector Position = FVector::ZeroVector;
 };

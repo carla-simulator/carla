@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
+// Copyright (c) 2019 Intel Corporation
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -9,6 +10,7 @@
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector2D.h"
+#include "carla/rpc/GearPhysicsControl.h"
 #include "carla/rpc/WheelPhysicsControl.h"
 
 #include <string>
@@ -32,6 +34,8 @@ namespace rpc {
         bool in_use_gear_autobox,
         float in_gear_switch_time,
         float in_clutch_strength,
+        float in_final_ratio,
+        std::vector<GearPhysicsControl> &in_forward_gears,
 
         float in_mass,
         float in_drag_coefficient,
@@ -47,11 +51,21 @@ namespace rpc {
         use_gear_autobox(in_use_gear_autobox),
         gear_switch_time(in_gear_switch_time),
         clutch_strength(in_clutch_strength),
+        final_ratio(in_final_ratio),
+        forward_gears(in_forward_gears),
         mass(in_mass),
         drag_coefficient(in_drag_coefficient),
         center_of_mass(in_center_of_mass),
         steering_curve(in_steering_curve),
         wheels(in_wheels) {}
+
+    const std::vector<GearPhysicsControl> &GetForwardGears() const {
+      return forward_gears;
+    }
+
+    void SetForwardGears(std::vector<GearPhysicsControl> &in_forward_gears) {
+      forward_gears = in_forward_gears;
+    }
 
     const std::vector<WheelPhysicsControl> &GetWheels() const {
       return wheels;
@@ -87,6 +101,8 @@ namespace rpc {
     bool use_gear_autobox = true;
     float gear_switch_time = 0.5f;
     float clutch_strength = 10.0f;
+    float final_ratio = 4.0f;
+    std::vector<GearPhysicsControl> forward_gears;
 
     float mass = 1000.0f;
     float drag_coefficient = 0.3f;
@@ -106,6 +122,8 @@ namespace rpc {
         use_gear_autobox != rhs.use_gear_autobox ||
         gear_switch_time != rhs.gear_switch_time ||
         clutch_strength != rhs.clutch_strength ||
+        final_ratio != rhs.final_ratio ||
+        forward_gears != rhs.forward_gears ||
 
         mass != rhs.mass ||
         drag_coefficient != rhs.drag_coefficient ||
@@ -138,6 +156,11 @@ namespace rpc {
       use_gear_autobox = Control.bUseGearAutoBox;
       gear_switch_time = Control.GearSwitchTime;
       clutch_strength = Control.ClutchStrength;
+      final_ratio = Control.FinalRatio;
+      forward_gears = std::vector<GearPhysicsControl>();
+      for (const auto &Gear : Control.ForwardGears) {
+        forward_gears.push_back(GearPhysicsControl(Gear));
+      }
 
       // Vehicle Setup
       mass = Control.Mass;
@@ -154,7 +177,7 @@ namespace rpc {
 
       // Wheels Setup
       wheels = std::vector<WheelPhysicsControl>();
-      for (auto Wheel : Control.Wheels) {
+      for (const auto &Wheel : Control.Wheels) {
         wheels.push_back(WheelPhysicsControl(Wheel));
       }
     }
@@ -164,7 +187,7 @@ namespace rpc {
 
       // Engine Setup
       FRichCurve TorqueCurve;
-      for (auto point : torque_curve) {
+      for (const auto &point : torque_curve) {
         TorqueCurve.AddKey(point.x, point.y);
       }
       Control.TorqueCurve = TorqueCurve;
@@ -178,6 +201,13 @@ namespace rpc {
       Control.bUseGearAutoBox = use_gear_autobox;
       Control.GearSwitchTime = gear_switch_time;
       Control.ClutchStrength = clutch_strength;
+      Control.FinalRatio = final_ratio;
+      TArray<FGearPhysicsControl> ForwardGears;
+      for (const auto &gear : forward_gears) {
+        ForwardGears.Add(FGearPhysicsControl(gear));
+      }
+      Control.ForwardGears = ForwardGears;
+
 
       // Vehicle Setup
       Control.Mass = mass;
@@ -185,7 +215,7 @@ namespace rpc {
 
       // Transmission Setup
       FRichCurve SteeringCurve;
-      for (auto point : steering_curve) {
+      for (const auto &point : steering_curve) {
         SteeringCurve.AddKey(point.x, point.y);
       }
       Control.SteeringCurve = SteeringCurve;
@@ -194,7 +224,7 @@ namespace rpc {
 
       // Wheels Setup
       TArray<FWheelPhysicsControl> Wheels;
-      for (auto wheel : wheels) {
+      for (const auto &wheel : wheels) {
         Wheels.Add(FWheelPhysicsControl(wheel));
       }
       Control.Wheels = Wheels;
@@ -213,6 +243,8 @@ namespace rpc {
         use_gear_autobox,
         gear_switch_time,
         clutch_strength,
+        final_ratio,
+        forward_gears,
         mass,
         drag_coefficient,
         center_of_mass,

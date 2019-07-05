@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
+// Copyright (c) 2019 Intel Corporation
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
@@ -231,6 +232,22 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   PhysicsControl.bUseGearAutoBox = Vehicle4W->TransmissionSetup.bUseGearAutoBox;
   PhysicsControl.GearSwitchTime = Vehicle4W->TransmissionSetup.GearSwitchTime;
   PhysicsControl.ClutchStrength = Vehicle4W->TransmissionSetup.ClutchStrength;
+  PhysicsControl.FinalRatio = Vehicle4W->TransmissionSetup.FinalRatio;
+
+  TArray<FGearPhysicsControl> ForwardGears;
+
+  for (const auto &Gear : Vehicle4W->TransmissionSetup.ForwardGears)
+  {
+    FGearPhysicsControl GearPhysicsControl;
+
+    GearPhysicsControl.Ratio = Gear.Ratio;
+    GearPhysicsControl.UpRatio = Gear.UpRatio;
+    GearPhysicsControl.DownRatio = Gear.DownRatio;
+
+    ForwardGears.Add(GearPhysicsControl);
+  }
+
+  PhysicsControl.ForwardGears = ForwardGears;
 
   // Vehicle Setup
   PhysicsControl.Mass = Vehicle4W->Mass;
@@ -259,6 +276,9 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
     PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
     PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
     PhysicsWheel.Radius = PWheelData.mRadius;
+    PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
+    PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
+
     PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
 
     Wheels.Add(PhysicsWheel);
@@ -291,6 +311,24 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   Vehicle4W->TransmissionSetup.bUseGearAutoBox = PhysicsControl.bUseGearAutoBox;
   Vehicle4W->TransmissionSetup.GearSwitchTime = PhysicsControl.GearSwitchTime;
   Vehicle4W->TransmissionSetup.ClutchStrength = PhysicsControl.ClutchStrength;
+  Vehicle4W->TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
+
+  TArray<FVehicleGearData> ForwardGears;
+
+  for (const auto &Gear : PhysicsControl.ForwardGears)
+  {
+    FVehicleGearData GearData;
+
+    GearData.Ratio = Gear.Ratio;
+    GearData.UpRatio = Gear.UpRatio;
+    GearData.DownRatio = Gear.DownRatio;
+
+    ForwardGears.Add(GearData);
+  }
+
+  Vehicle4W->TransmissionSetup.ForwardGears = ForwardGears;
+
+
 
   // Vehicle Setup
   Vehicle4W->Mass = PhysicsControl.Mass;
@@ -323,6 +361,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     PWheelData.mRadius = PhysicsControl.Wheels[i].Radius;
     PWheelData.mMaxSteer = FMath::DegreesToRadians(PhysicsControl.Wheels[i].MaxSteerAngle);
     PWheelData.mDampingRate = M2ToCm2(PhysicsControl.Wheels[i].DampingRate);
+    PWheelData.mMaxBrakeTorque = M2ToCm2(PhysicsControl.Wheels[i].MaxBrakeTorque);
+    PWheelData.mMaxHandBrakeTorque = M2ToCm2(PhysicsControl.Wheels[i].MaxHandBrakeTorque);
 
     Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
