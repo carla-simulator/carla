@@ -131,7 +131,7 @@ This packet records the position and orientation of all actors of type **vehicle
 
 #### 3.8 Packet 7: TrafficLight
 
-This packet records the state of all **traffic lights** in the scene. Which means to it stores the state (red, orange or green) and the time it is waiting to change to a new state.
+This packet records the state of all **traffic lights** in the scene. Which means that it stores the state (red, orange or green) and the time it is waiting to change to a new state.
 
 ![state](img/RecorderTrafficLight.png)
 
@@ -149,7 +149,7 @@ This packet records the animation of the walker. It just saves the **speed** of 
 
 ### 4. Frame Layout
 
-A frame consists on several packets, where all of them are optional, except the ones that have the **start** and **end** in that frame, that must be there always.
+A frame consists of several packets, where all of them are optional, except the ones that have the **start** and **end** in that frame, that must be there always.
 
 ![layout](img/RecorderFrameLayout.png)
 
@@ -167,7 +167,7 @@ The layout of the file starts with the **info header** and then follows a collec
 
 Usually, it is a good idea to have all packets regarding events first, and then the packets regarding position and state later.
 
-The event packets are optional, since they appear when they happen, so we could have a layout like this:
+The event packets are optional, since they appear when they happen, so we could have a layout like this one:
 
 ![layout](img/RecorderLayoutSample.png)
 
