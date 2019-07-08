@@ -38,7 +38,7 @@ namespace detail {
       // remove from list
       auto list = _walkers.Load();
       unsigned int i = 0;
-      while (i < (*list).size()) {
+      while (i < list->size()) {
         if ((*list)[i].walker == walker_id &&
         (*list)[i].controller == controller_id) {
           _walkers.Delete(i);
@@ -91,6 +91,9 @@ namespace detail {
     };
 
     AtomicList<WalkerHandle> _walkers;
+
+    // check a few walkers and if they don't exist then remove from the crowd
+    void CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state, int totalToCheck = 1);
   };
 
 } // namespace detail

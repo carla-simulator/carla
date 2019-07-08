@@ -26,6 +26,9 @@ namespace detail {
       return;
     }
 
+    // purge all possible dead walkers
+    CheckIfWalkerExist(*walkers, state);
+
     // update crowd in navigation module
     _nav.UpdateCrowd(state);
 
@@ -42,6 +45,29 @@ namespace detail {
     }
 
     _client.ApplyBatch(std::move(commands), false);
+  }
+
+  void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state, int totalToCheck) {
+    static unsigned long currentIndex = 0;
+
+    for (int i=0; i<totalToCheck; ++i) {
+
+      // check with total
+      if (currentIndex >= walkers.size())
+        currentIndex = 0;
+
+      // check the existence
+      if (!state.ContainsActorSnapshot(walkers[currentIndex].walker)) {
+        // remove from the crowd
+        RemoveWalker(walkers[currentIndex].walker);
+        // destroy the controller
+        _client.DestroyActor(walkers[currentIndex].controller);
+        // unregister from list
+        UnregisterWalker(walkers[currentIndex].walker, walkers[currentIndex].controller);
+      }
+      else
+        ++currentIndex;
+    }
   }
 
 } // namespace detail
