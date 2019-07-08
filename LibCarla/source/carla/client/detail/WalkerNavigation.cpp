@@ -15,7 +15,7 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  WalkerNavigation::WalkerNavigation(Client &client) : _client(client) {
+  WalkerNavigation::WalkerNavigation(Client &client) : _client(client), _next_check_index(0) {
     // Here call the server to retrieve the navmesh data.
     _nav.Load(_client.GetNavigationMesh());
   }
@@ -47,27 +47,24 @@ namespace detail {
     _client.ApplyBatch(std::move(commands), false);
   }
 
-  void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state, int totalToCheck) {
-    static unsigned long currentIndex = 0;
+  void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state) {
 
-    for (int i=0; i<totalToCheck; ++i) {
+    // check with total
+    if (_next_check_index >= walkers.size())
+      _next_check_index = 0;
 
-      // check with total
-      if (currentIndex >= walkers.size())
-        currentIndex = 0;
-
-      // check the existence
-      if (!state.ContainsActorSnapshot(walkers[currentIndex].walker)) {
-        // remove from the crowd
-        RemoveWalker(walkers[currentIndex].walker);
-        // destroy the controller
-        _client.DestroyActor(walkers[currentIndex].controller);
-        // unregister from list
-        UnregisterWalker(walkers[currentIndex].walker, walkers[currentIndex].controller);
-      }
-      else
-        ++currentIndex;
+    // check the existence
+    if (!state.ContainsActorSnapshot(walkers[_next_check_index].walker)) {
+      // remove from the crowd
+      RemoveWalker(walkers[_next_check_index].walker);
+      // destroy the controller
+      _client.DestroyActor(walkers[_next_check_index].controller);
+      // unregister from list
+      UnregisterWalker(walkers[_next_check_index].walker, walkers[_next_check_index].controller);
     }
+
+    ++_next_check_index;
+
   }
 
 } // namespace detail
