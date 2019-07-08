@@ -25,7 +25,6 @@
   * [Running in a Docker](carla_docker.md)
   * [How to make a new map with RoadRunner](how_to_make_a_new_map.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
-  * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
   * [How to export and import maps and props for distribution builds](export_import_dist.md)
   * [How to add friction triggers](how_to_add_friction_triggers.md)
   * [How to control vehicle physics](how_to_control_vehicle_physics.md)
