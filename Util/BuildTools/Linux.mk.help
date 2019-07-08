@@ -18,9 +18,9 @@ Use the following commands:
         Launch CarlaUE4 project in Unreal Engine's Editor, but skip building
         step (assume the project is already built).
 
-    import
+    import:
 
-        Import maps and assets that are in "carla/Import" directly to Unreal,
+        Import maps and assets that are located in "carla/Import" directly to Unreal,
         so they will be ready to export.
 
     package:
