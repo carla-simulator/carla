@@ -16,7 +16,7 @@
 #include <AssetRegistry/Public/AssetRegistryModule.h>
 #endif // WITH_EDITORONLY_DATA
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
-#include "CookAssetsCommandlet.generated.h"
+#include "PrepareAssetsForCookingCommandlet.generated.h"
 
 USTRUCT()
 struct CARLA_API FPackageParams
@@ -51,7 +51,7 @@ struct CARLA_API FAssetsPaths
 };
 
 UCLASS()
-class UCookAssetsCommandlet
+class UPrepareAssetsForCookingCommandlet
   : public UCommandlet
 {
   GENERATED_BODY()
@@ -59,7 +59,7 @@ class UCookAssetsCommandlet
 public:
 
   /** Default constructor. */
-  UCookAssetsCommandlet();
+  UPrepareAssetsForCookingCommandlet();
 #if WITH_EDITORONLY_DATA
 
   /**
