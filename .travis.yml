@@ -70,9 +70,10 @@ matrix:
         - pip3 install -q --user -r PythonAPI/examples/requirements.txt
         - pip3 install -q --user -r PythonAPI/test/requirements.txt
         - pip3 install -q --user -r PythonAPI/util/requirements.txt
+        - pip3 install -q --user -r Util/Docker/requirements.txt
       script:
         - shopt -s globstar
-        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py
 
     - env: TEST="MkDocs"
       install:
