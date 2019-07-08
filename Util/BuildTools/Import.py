@@ -273,7 +273,7 @@ def move_uassets(package_name, maps):
 
 
 def prepare_cook_commandlet(package_name):
-    commandlet_name = "CookAssets"
+    commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = "-PackageName=%s" % package_name
     invoke_commandlet(commandlet_name, commandlet_arguments)
 

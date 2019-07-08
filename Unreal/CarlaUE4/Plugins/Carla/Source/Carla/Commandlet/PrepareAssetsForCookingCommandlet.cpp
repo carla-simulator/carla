@@ -1,6 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-#include "CookAssetsCommandlet.h"
+#include "PrepareAssetsForCookingCommandlet.h"
 #include "GameFramework/WorldSettings.h"
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/PlatformFile.h"
@@ -9,7 +9,7 @@
 
 // #include "CommandletPluginPrivate.h"
 
-UCookAssetsCommandlet::UCookAssetsCommandlet()
+UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 {
   IsClient = false;
   IsEditor = true;
@@ -33,7 +33,7 @@ UCookAssetsCommandlet::UCookAssetsCommandlet()
 }
 #if WITH_EDITORONLY_DATA
 
-FPackageParams UCookAssetsCommandlet::ParseParams(const FString &InParams) const
+FPackageParams UPrepareAssetsForCookingCommandlet::ParseParams(const FString &InParams) const
 {
   TArray<FString> Tokens;
   TArray<FString> Params;
@@ -48,7 +48,7 @@ FPackageParams UCookAssetsCommandlet::ParseParams(const FString &InParams) const
   return PackageParams;
 }
 
-void UCookAssetsCommandlet::LoadWorld(FAssetData &AssetData)
+void UPrepareAssetsForCookingCommandlet::LoadWorld(FAssetData &AssetData)
 {
   FString BaseMap = TEXT("/Game/Carla/Maps/BaseMap");
 
@@ -64,7 +64,7 @@ void UCookAssetsCommandlet::LoadWorld(FAssetData &AssetData)
   }
 }
 
-TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
+TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::AddMeshesToWorld(
     const TArray<FString> &AssetsPaths,
     bool bUseCarlaMaterials,
     bool bIsPropsMap)
@@ -136,7 +136,7 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
   return SpawnedMeshes;
 }
 
-void UCookAssetsCommandlet::DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors)
+void UPrepareAssetsForCookingCommandlet::DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors)
 {
   for (auto Actor : SpawnedActors)
   {
@@ -146,7 +146,7 @@ void UCookAssetsCommandlet::DestroySpawnedActorsInWorld(TArray<AStaticMeshActor 
   World->MarkPackageDirty();
 }
 
-bool UCookAssetsCommandlet::SaveWorld(
+bool UPrepareAssetsForCookingCommandlet::SaveWorld(
     FAssetData &AssetData,
     FString &PackageName,
     FString &DestPath,
@@ -193,7 +193,7 @@ bool UCookAssetsCommandlet::SaveWorld(
   return bPackageSaved;
 }
 
-FAssetsPaths UCookAssetsCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
+FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
 {
 
   FString PackageConfigPath = FPaths::ProjectContentDir() + PackageName + TEXT("/Config/");
@@ -265,7 +265,7 @@ bool SaveStringTextToFile(
   return true;
 }
 
-bool UCookAssetsCommandlet::SavePackage(const FString &PackagePath, UPackage *Package) const
+bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath, UPackage *Package) const
 {
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
       FPackageName::GetMapPackageExtension());
@@ -274,7 +274,7 @@ bool UCookAssetsCommandlet::SavePackage(const FString &PackagePath, UPackage *Pa
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 }
 
-int32 UCookAssetsCommandlet::Main(const FString &Params)
+int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
 {
   FPackageParams PackageParams = ParseParams(Params);
 
