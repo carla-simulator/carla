@@ -55,7 +55,7 @@ matrix:
         - pip2 install -q --user -r PythonAPI/util/requirements.txt
       script:
         - shopt -s globstar
-        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/BuildTools/*.py
 
     - env: TEST="Pylint 3"
       addons:
@@ -73,7 +73,7 @@ matrix:
         - pip3 install -q --user -r Util/Docker/requirements.txt
       script:
         - shopt -s globstar
-        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py Util/BuildTools/*.py
 
     - env: TEST="MkDocs"
       install:
