@@ -28,7 +28,7 @@
   * [How to automatically generate a map from RoadRunner](generate_map_from_fbx.md)
   * [How to export and import maps to distribution builds](export_import_dist.md)
   * [How to add custom props to the Blueprint Library](define_custom_props.md)
-  * [Recorder and playback](recorder_and_playback.md)
+  * [How to record and replay](recorder_and_playback.md)
   * [Recorder binary file format](recorder_binary_file_format.md)
   * [How to upgrade content](how_to_upgrade_content.md)
   * [How to make a release](how_to_make_a_release.md)
