@@ -9,6 +9,7 @@
 #include "carla/AtomicList.h"
 #include "carla/NonCopyable.h"
 
+#include <atomic>
 #include <functional>
 
 namespace carla {
@@ -23,13 +24,19 @@ namespace detail {
 
     void Call(InputsT... args) const {
       auto list = _list.Load();
-      for (auto &callback : *list) {
-        callback(args...);
+      for (auto &item : *list) {
+        item.callback(args...);
       }
     }
 
-    void RegisterCallback(CallbackType &&callback) {
-      _list.Push(std::move(callback));
+    size_t Push(CallbackType &&callback) {
+      auto id = ++_counter;
+      _list.Push(Item{id, std::move(callback)});
+      return id;
+    }
+
+    void Remove(size_t id) {
+      _list.DeleteByValue(id);
     }
 
     void Clear() {
@@ -38,7 +45,26 @@ namespace detail {
 
   private:
 
-    AtomicList<CallbackType> _list;
+    struct Item {
+      size_t id;
+      CallbackType callback;
+
+      friend bool operator==(const Item &lhs, const Item &rhs) {
+        return lhs.id == rhs.id;
+      }
+
+      friend bool operator==(const Item &lhs, size_t rhs) {
+        return lhs.id == rhs;
+      }
+
+      friend bool operator==(size_t lhs, const Item &rhs) {
+        return lhs == rhs.id;
+      }
+    };
+
+    std::atomic_size_t _counter{0u};
+
+    AtomicList<Item> _list;
   };
 
 } // namespace detail

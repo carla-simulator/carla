@@ -9,6 +9,8 @@
 #include "carla/client/ClientSideSensor.h"
 #include "carla/geom/Location.h"
 
+#include <boost/optional.hpp>
+
 #include <array>
 
 namespace carla {
@@ -38,20 +40,20 @@ namespace client {
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _is_listening;
+      return _callback_id.has_value();
     }
 
   private:
 
     SharedPtr<sensor::SensorData> TickLaneInvasionSensor(const Timestamp &timestamp);
 
-    bool _is_listening = false;
-
     SharedPtr<Map> _map;
 
     SharedPtr<Vehicle> _vehicle;
 
     std::array<geom::Location, 4u> _bounds;
+
+    boost::optional<size_t> _callback_id;
   };
 
 } // namespace client
