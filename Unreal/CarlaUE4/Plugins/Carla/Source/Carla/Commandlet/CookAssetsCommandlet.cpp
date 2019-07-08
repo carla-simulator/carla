@@ -66,7 +66,8 @@ void UCookAssetsCommandlet::LoadWorld(FAssetData &AssetData)
 
 TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
     const TArray<FString> &AssetsPaths,
-    bool bUseCarlaMaterials)
+    bool bUseCarlaMaterials,
+    bool bIsPropsMap)
 {
   TArray<AStaticMeshActor *> SpawnedMeshes;
 
@@ -74,21 +75,21 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
 
   // Remove the meshes names from the original path, so LoadAssetDataFromPaths
   // can be used
-  TArray<FString> AssetsPathsDirectories;
-  for (auto AssetPath : AssetsPaths)
+  TArray<FString> AssetsPathsDirectories = AssetsPaths;
+  if (bIsPropsMap)
   {
-    FString Dir;
-    AssetPath.Split(
-        TEXT("/"),
-        &Dir,
-        nullptr,
-        ESearchCase::Type::IgnoreCase,
-        ESearchDir::Type::FromEnd);
-    AssetsPathsDirectories.Add(Dir);
+    for (auto &AssetPath : AssetsPathsDirectories)
+    {
+      AssetPath.Split(
+          TEXT("/"),
+          &AssetPath,
+          nullptr,
+          ESearchCase::Type::IgnoreCase,
+          ESearchDir::Type::FromEnd);
+    }
   }
 
   AssetsObjectLibrary->AddToRoot();
-  AssetsObjectLibrary->ClearLoaded();
   AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPathsDirectories);
   AssetsObjectLibrary->LoadAssetsFromAssetData();
 
@@ -129,6 +130,7 @@ TArray<AStaticMeshActor *> UCookAssetsCommandlet::AddMeshesToWorld(
       }
     }
   }
+  AssetsObjectLibrary->ClearLoaded();
 
   World->MarkPackageDirty();
   return SpawnedMeshes;
@@ -313,13 +315,8 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
 
     MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
 
-    // Save Map Path File for further use
-    FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
-    FString FileName = FString("MapPaths.txt");
-    SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
-
     // Add props in a single Base Map
-    TArray<AStaticMeshActor *> SpawnedActors = AddMeshesToWorld(AssetsPaths.PropsPaths, false);
+    TArray<AStaticMeshActor *> SpawnedActors = AddMeshesToWorld(AssetsPaths.PropsPaths, false, true);
 
     SaveWorld(AssetData, PackageParams.Name, WorldDestPath, MapName);
 
@@ -327,6 +324,10 @@ int32 UCookAssetsCommandlet::Main(const FString &Params)
     MapObjectLibrary->ClearLoaded();
   }
 
+  // Save Map Path File for further use
+  FString SaveDirectory = FPaths::ProjectContentDir() + PackageParams.Name + TEXT("/Config");
+  FString FileName = FString("MapPaths.txt");
+  SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
   return 0;
 }
 #endif
