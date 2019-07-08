@@ -14,7 +14,6 @@ from contextlib import contextmanager
 import errno
 import fnmatch
 import json
-import ntpath
 import os
 import shutil
 import subprocess
@@ -113,10 +112,10 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
                 "FileNames": file_names
             })
 
-        for map in maps:
-            maps_dest = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
+        for umap in maps:
+            maps_dest = "/" + "/".join(["Game", package_name, "Maps", umap["name"]])
 
-            file_names = [os.path.join(json_dirname, map["source"])]
+            file_names = [os.path.join(json_dirname, umap["source"])]
             import_groups.append({
                 "ImportSettings": import_settings,
                 "FactoryName": "FbxFactory",
@@ -153,11 +152,11 @@ def generate_package_file(package_name, props, maps):
         })
 
     output_json["maps"] = []
-    for map in maps:
-        path = "/" + "/".join(["Game", package_name, "Maps", map["name"]])
-        use_carla_materials = map["use_carla_materials"] if "use_carla_materials" in map else False
+    for umap in maps:
+        path = "/" + "/".join(["Game", package_name, "Maps", umap["name"]])
+        use_carla_materials = umap["use_carla_materials"] if "use_carla_materials" in umap else False
         output_json["maps"].append({
-            "name": map["name"],
+            "name": umap["name"],
             "path": path,
             "use_carla_materials": use_carla_materials
         })
@@ -225,7 +224,7 @@ def import_assets_from_json_list(json_list):
         # Read json file
         with open(os.path.join(dirname, filename)) as json_file:
             data = json.load(json_file)
-            # Take all the fbx registerd in the provided json files
+            # Take all the fbx registered in the provided json files
             # and place it inside unreal in the provided path (by the json file)
             maps = data["maps"]
             props = data["props"]
@@ -244,14 +243,14 @@ def import_assets_from_json_list(json_list):
 
 
 def move_uassets(package_name, maps):
-    for map in maps:
-        origin_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Maps", map["name"])
+    for umap in maps:
+        origin_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Maps", umap["name"])
         dest_base_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Static")
 
         # Create the 3 posible destination folder path
-        marking_dir = os.path.join(dest_base_path, "MarkingNode", map["name"])
-        road_dir = os.path.join(dest_base_path, "RoadNode", map["name"])
-        terrain_dir = os.path.join(dest_base_path, "TerrainNode", map["name"])
+        marking_dir = os.path.join(dest_base_path, "MarkingNode", umap["name"])
+        road_dir = os.path.join(dest_base_path, "RoadNode", umap["name"])
+        terrain_dir = os.path.join(dest_base_path, "TerrainNode", umap["name"])
 
         # Create folders if they do not exist
         if not os.path.exists(marking_dir):
@@ -261,7 +260,7 @@ def move_uassets(package_name, maps):
         if not os.path.exists(terrain_dir):
             os.makedirs(terrain_dir)
 
-        # Move uassets to correspoding folder
+        # Move uassets to corresponding folder
         for filename in os.listdir(origin_path):
             if "MarkingNode" in filename:
                 shutil.move(os.path.join(origin_path, filename), os.path.join(marking_dir, filename))
@@ -280,7 +279,6 @@ def prepare_cook_commandlet(package_name):
 
 def main():
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
-    print(import_folder)
     json_list = get_packages_json_list(import_folder)
     import_assets_from_json_list(json_list)
 

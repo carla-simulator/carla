@@ -18,16 +18,7 @@
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
-USTRUCT()
-struct CARLA_API FPackageParams
-{
-  GENERATED_USTRUCT_BODY()
-
-  FString Name;
-
-  bool bUseCarlaMapMaterials;
-};
-
+/// Struct containing map data read from .Package.json file.
 USTRUCT()
 struct CARLA_API FMapData
 {
@@ -40,6 +31,7 @@ struct CARLA_API FMapData
   bool bUseCarlaMapMaterials;
 };
 
+/// Struct containing all assets data read from .Package.json file.
 USTRUCT()
 struct CARLA_API FAssetsPaths
 {
@@ -58,102 +50,85 @@ class UPrepareAssetsForCookingCommandlet
 
 public:
 
-  /** Default constructor. */
+  /// Default constructor.
   UPrepareAssetsForCookingCommandlet();
 #if WITH_EDITORONLY_DATA
 
-  /**
-   * Parses the command line parameters
-   * @param InParams - The parameters to parse
-   */
-  FPackageParams ParseParams(const FString &InParams) const;
+  /// Parses the command line parameters provided through @a InParams
+  FString ParseParams(const FString &InParams) const;
 
-  /**
-   * Loads a UWorld object from a given path into a asset data structure.
-   * @param AssetData - Structure in which the loaded UWorld will be saved.
-   */
+  /// Loads a UWorld object contained in Carla BaseMap into @a AssetData data
+  /// structure.
   void LoadWorld(FAssetData &AssetData);
 
-  /**
-   * Add StaticMeshes from a folder into the World loaded as UPROPERTY.
-   * @param SrcPath - Array containing the folders from which the Assets will be
-   * loaded
-   * @param bMaterialWorkaround - Flag that will trigger a change in the
-   * materials to fix a known bug
-   * in RoadRunner.
-   */
-  TArray<AStaticMeshActor *> AddMeshesToWorld(
+  /// Spawns all the static meshes located in @a AssetsPaths inside the World.
+  /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
+  /// to true, otherwise it will use RoadRunner materials.
+  /// If meshes are been added to a PropsMap, set @a bIsPropMap to true.
+  ///
+  /// @pre World is expected to be previously loaded
+  TArray<AStaticMeshActor *> SpawnMeshesToWorld(
       const TArray<FString> &AssetsPaths,
       bool bUseCarlaMaterials,
       bool bIsPropsMap = false);
 
-  /**
-   * Save a given Asset containing a World into a given path with a given name.
-   * @param AssetData - Contains all the info about the World to be saved
-   * @param DestPath - Path in which the asset will be saved.
-   * @param WorldName - Name for the saved world.
-   */
+  /// Saves the current World, contained in @a AssetData, into @a DestPath
+  /// composed of @a PackageName and with @a WorldName.
   bool SaveWorld(FAssetData &AssetData, FString &PackageName, FString &DestPath, FString &WorldName);
 
+  /// Destroys all the previously spawned actors stored in @a SpawnedActors
   void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);
 
-  /**
-   * Get Path of all the Assets contained in the package to cook
-   * @param PackageName - The name of the package to cook
-   */
+  /// Gets the Path of all the Assets contained in the package to cook with name
+  /// @a PackageName
   FAssetsPaths GetAssetsPathFromPackage(const FString &PackageName) const;
 
 public:
 
-  /**
-   * Main method and entry of the commandlet
-   * @param Params - Parameters of the commandlet.
-   */
+  /// Main method and entry of the commandlet, taking as input parameters @a
+  /// Params.
   virtual int32 Main(const FString &Params) override;
 
 #endif // WITH_EDITORONLY_DATA
 
 private:
 
-  UPROPERTY()
-  UObjectLibrary *MapObjectLibrary;
-
-  UPROPERTY()
-  UObjectLibrary *AssetsObjectLibrary;
-
+  /// Loaded assets from any object library
   UPROPERTY()
   TArray<FAssetData> AssetDatas;
 
-  UPROPERTY()
-  UWorld *World;
-
+  /// Loaded maps from any object library
   UPROPERTY()
   TArray<FAssetData> MapContents;
 
-  /** Materials for the workaround */
-  /**
-   * Workaround material for MarkingNodes mesh
-   */
+  /// Used for loading maps in object library. Loaded Data is stored in
+  /// AssetDatas.
+  UPROPERTY()
+  UObjectLibrary *MapObjectLibrary;
+
+  /// Used for loading assets in object library. Loaded Data is stored in
+  /// AssetDatas.
+  UPROPERTY()
+  UObjectLibrary *AssetsObjectLibrary;
+
+  /// Base map world loaded from Carla Content
+  UPROPERTY()
+  UWorld *World;
+
+  /// Workaround material for MarkingNodes mesh
   UMaterial *MarkingNodeMaterial;
 
-  /**
-   * Workaround material for the RoadNode mesh
-   */
+  /// Workaround material for the RoadNode mesh
   UMaterial *RoadNodeMaterial;
 
-  /**
-   * Workaround material for the second material for the MarkingNodes
-   */
+  /// Workaround material for the second material for the MarkingNodes
   UMaterial *MarkingNodeMaterialAux;
 
-  /**
-   * Workaround material for the TerrainNodes
-   */
+  /// Workaround material for the TerrainNodes
   UMaterial *TerrainNodeMaterial;
 
-  /**
-   * Saves the package
-   */
+  /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
+  /// Content folder
   bool SavePackage(const FString &PackagePath, UPackage *Package) const;
 
 };
