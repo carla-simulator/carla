@@ -137,7 +137,7 @@ Now we have everything ready for importing assets. To do so, you just need to ru
 ```sh
 make import
 ```
-This command will read the JSON file and take each asset and place it inside the Content in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the recently imported package folder that will be used for **defining** its props in the blueprint library, **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed. If a package was already imported before, it will overwrite it.
+This command will read the JSON file and take each asset and place it inside the Content in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's `Config` folder that will be used for **defining** its props in the Carla blueprint library, **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed. If a package was already imported before, it will overwrite it.
 
 
 <h4>How to export assets</h4>
