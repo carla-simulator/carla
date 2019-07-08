@@ -82,7 +82,10 @@ public:
    * materials to fix a known bug
    * in RoadRunner.
    */
-  TArray<AStaticMeshActor *> AddMeshesToWorld(const TArray<FString> &AssetsPaths, bool bUseCarlaMaterials);
+  TArray<AStaticMeshActor *> AddMeshesToWorld(
+      const TArray<FString> &AssetsPaths,
+      bool bUseCarlaMaterials,
+      bool bIsPropsMap = false);
 
   /**
    * Save a given Asset containing a World into a given path with a given name.
