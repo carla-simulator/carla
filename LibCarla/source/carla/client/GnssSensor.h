@@ -6,9 +6,8 @@
 #pragma once
 
 #include "carla/client/ClientSideSensor.h"
-#include "carla/geom/GeoLocation.h"
 
-#include <boost/optional.hpp>
+#include <atomic>
 
 namespace carla {
 namespace client {
@@ -35,16 +34,12 @@ namespace client {
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _callback_id.has_value();
+      return _callback_id != 0u;
     }
 
   private:
 
-    SharedPtr<sensor::SensorData> TickGnssSensor(const Timestamp &timestamp);
-
-    geom::GeoLocation _geo_reference;
-
-    boost::optional<size_t> _callback_id;
+    std::atomic_size_t _callback_id{0u};
   };
 
 } // namespace client
