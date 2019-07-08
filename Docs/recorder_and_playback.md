@@ -2,7 +2,7 @@
 
 CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on the server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
 
-All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
+All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of `\`, `/` or `:` characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: `/home/carla/recording01.log` or `c:\records\recording01.log`).
 
 As an estimate, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 MB in size.
 
@@ -268,33 +268,39 @@ And easily determine the responsible of that incident.
 Here you can find a list of sample scripts you could use:
 
 * **start_recording.py**: This will start recording, and optionally you can spawn several actors and define how much time you want to record.
-  * **-f**: Filename to write
-  * **-n**: Vehicles to spawn (optional, 10 by default)
-  * **-t**: Duration of the recording (optional)
-<br>
+    + `-f`: Filename to write
+    + `-n`: Vehicles to spawn (optional, 10 by default)
+    + `-t`: Duration of the recording (optional)
+
+---
+
 * **start_replaying.py**: This will start a replay of a file. We can define the starting time, duration and also an actor to follow.
-  * **-f**: Filename
-  * **-s**: Starting time (optional, by default from start)
-  * **-d**: Duration (optional, by default all)
-  * **-c**: Actor to follow (id) (optional)
-<br>
+    + `-f`: Filename
+    + `-s`: Starting time (optional, by default from start)
+    + `-d`: Duration (optional, by default all)
+    + `-c`: Actor to follow (id) (optional)
+
+---
+
 * **show_recorder_file_info.py**: This will show all the information recorded in file. It has two modes of detail, by default it only shows the frames where some event is recorded, the second is showing info about all frames (all positions and trafficlight states).
-  * **-f**: Filename
-  * **-a**: Flag to show all details (optional)
-<br>
+    + `-f`: Filename
+    + `-a`: Flag to show all details (optional)
+
+---
+
 * **show_recorder_collisions.py**: This will show all the collisions hapenned while recording (currently only involved by hero actors).
-  * **-f**: Filename
-  * **-t**: Two letters definning the types of the actors involved, for example: -t aa
-    * **h** = Hero
-    * **v** = Vehicle
-    * **w** = Walker
-    * **t** = Traffic light
-    * **o** = Other
-    * **a** = Any
-<br>
+    + `-f`: Filename
+    + `-t`: Two letters definning the types of the actors involved, for example: -t aa
+        - `h` = Hero
+        - `v` = Vehicle
+        - `w` = Walker
+        - `t` = Traffic light
+        - `o` = Other
+        - `a` = Any
+
+---
+
 * **show_recorder_actors_blocked.py**: This will show all the actors that are blocked or stopped in the recorder. We can define the *time* that an actor has not been moving and *travelled* distance by the actor thresholds to determine if a vehicle is considered as blocked or not.
-  * **-f**: Filename
-  * **-t**: Minimum seconds stopped to be considered as blocked (optional)
-  * **-d**: Minimum distance to be considered stopped (optional)
-
-
+    + `-f`: Filename
+    + `-t`: Minimum seconds stopped to be considered as blocked (optional)
+    + `-d`: Minimum distance to be considered stopped (optional)
