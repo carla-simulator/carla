@@ -1,8 +1,7 @@
 @echo off
 setlocal
 
-rem BAT script that downloads and installs a ready to use
-rem rpclib build for CARLA (carla.org).
+rem BAT script that downloads and installs Recast & Detour library
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
@@ -33,53 +32,62 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set RPC_VERSION=v2.2.1_c2
-set RPC_SRC=rpclib-src
-set RPC_SRC_DIR=%BUILD_DIR%%RPC_SRC%\
-set RPC_INSTALL=rpclib-install
-set RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\
-set RPC_BUILD_DIR=%RPC_SRC_DIR%build
+set RECAST_SRC=recast-src
+set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
+set RECAST_INSTALL=recast-install
+set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
+set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
 
-set PUSHD_RPC=%RPC_SRC_DIR:\=/%
+set RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+set RECAST_BASENAME=%RECAST_SRC%
 
-if exist "%RPC_INSTALL_DIR%" (
+
+if exist "%RECAST_INSTALL_DIR%" (
     goto already_build
 )
 
-if not exist "%RPC_SRC_DIR%" (
-    echo %FILE_N% Cloning rpclib - version "%RPC_VERSION%"...
+if not exist "%RECAST_SRC_DIR%" (
+    echo %FILE_N% Cloning "Recast & Detour"
 
-    call git clone -b %RPC_VERSION% https://github.com/carla-simulator/rpclib.git %RPC_SRC_DIR%
+    call git clone https://github.com/recastnavigation/recastnavigation.git %RECAST_SRC_DIR%
+    cd %RECAST_SRC_DIR%
+    call git reset --hard %RECAST_COMMIT%
+    cd ..
     if %errorlevel% neq 0 goto error_git
 ) else (
-    echo %FILE_N% Not cloning rpclib because already exists a folder called "%RPC_SRC%".
+    echo %FILE_N% Not cloning "Recast & Detour" because already exists a folder called "%RECAST_SRC%".
 )
 
-if not exist "%RPC_BUILD_DIR%" (
-    echo %FILE_N% Creating "%RPC_BUILD_DIR%"
-    mkdir "%RPC_BUILD_DIR%"
+if not exist "%RECAST_BUILD_DIR%" (
+    echo %FILE_N% Creating "%RECAST_BUILD_DIR%"
+    mkdir "%RECAST_BUILD_DIR%"
 )
 
-cd "%RPC_BUILD_DIR%"
+cd "%RECAST_BUILD_DIR%"
 echo %FILE_N% Generating build...
 
 cmake .. -G "Visual Studio 15 2017 Win64"^
-        -DCMAKE_BUILD_TYPE=Release^
-        -RPCLIB_BUILD_EXAMPLES=OFF^
-        -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-        -DCMAKE_INSTALL_PREFIX=%RPC_INSTALL_DIR%^
-        %RPC_SRC_DIR%
-if %errorlevel% neq 0 goto error_cmake
+    -DCMAKE_BUILD_TYPE=Release^
+    -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
+    -DCMAKE_INSTALL_PREFIX=%RECAST_INSTALL_DIR%^
+    -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
+    -DRECASTNAVIGATION_DEMO=False^
+    -DRECASTNAVIGATION_TEST=False^
+    %RECAST_SRC_DIR%
+if %errorlevel%  neq 0 goto error_cmake
 
 echo %FILE_N% Building...
 cmake --build . --config Release --target install
 
-if %errorlevel% neq 0 goto error_install
+if errorlevel  neq 0 goto error_install
 
-rem Remove the downloaded rpclib source because is no more needed
+rem Remove the downloaded Recast & Detour source because is no more needed
 if %DEL_SRC% == true (
-  rd /s /q "%RPC_SRC_DIR%"
+    rd /s /q "%RECAST_SRC_DIR%"
 )
+
+md "%RECAST_INSTALL_DIR%include\\recast"
+move "%RECAST_INSTALL_DIR%include\\*.h" "%RECAST_INSTALL_DIR%include\\recast"
 
 goto success
 
@@ -89,12 +97,12 @@ rem ============================================================================
 
 :success
     echo.
-    echo %FILE_N% rpclib has been successfully installed in "%RPC_INSTALL_DIR%"!
+    echo %FILE_N% "Recast & Detour" has been successfully installed in "%RECAST_INSTALL_DIR%"!
     goto good_exit
 
 :already_build
-    echo %FILE_N% A rpclib installation already exists.
-    echo %FILE_N% Delete "%RPC_INSTALL_DIR%" if you want to force a rebuild.
+    echo %FILE_N% A "Recast & Detour" installation already exists.
+    echo %FILE_N% Delete "%RECAST_INSTALL_DIR%" if you want to force a rebuild.
     goto good_exit
 
 :error_git
@@ -111,7 +119,6 @@ rem ============================================================================
     echo %FILE_N% [CMAKE ERROR] Possible causes:
     echo %FILE_N%                - Make sure "CMake" is installed.
     echo %FILE_N%                - Make sure it is available on your Windows "path".
-    echo %FILE_N%                - CMake 3.9.0 or higher is required.
     goto bad_exit
 
 :error_install
@@ -126,12 +133,11 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal
-    set install_rpclib=done
+    endlocal & set install_recast=%RECAST_INSTALL_DIR%
     exit /b 0
 
 :bad_exit
-    if exist "%RPC_INSTALL_DIR%" rd /s /q "%RPC_INSTALL_DIR%"
+    if exist "%RECAST_INSTALL_DIR%" rd /s /q "%RECAST_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
     exit /b %errorlevel%

@@ -19,6 +19,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
+#include <optional>
+
 namespace carla {
 namespace client {
 
@@ -50,6 +52,9 @@ namespace client {
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
+
+    /// Get a random location from the pedestrians navigation mesh
+    boost::optional<geom::Location> GetRandomLocationFromNavigation() const;
 
     /// Return the spectator actor. The spectator controls the view in the
     /// simulator window.

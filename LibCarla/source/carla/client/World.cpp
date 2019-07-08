@@ -25,6 +25,10 @@ namespace client {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
+  boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
+    return _episode.Lock()->GetRandomLocationFromNavigation();
+  }
+
   SharedPtr<Actor> World::GetSpectator() const {
     return _episode.Lock()->GetSpectator();
   }

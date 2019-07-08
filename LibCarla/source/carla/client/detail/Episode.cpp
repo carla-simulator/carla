@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -68,6 +69,14 @@ namespace detail {
 
         // Notify waiting threads and do the callbacks.
         self->_snapshot.SetValue(next);
+
+        // Tick navigation.
+        auto navigation = self->_navigation.load();
+        if (navigation != nullptr) {
+          navigation->Tick(*next);
+        }
+
+        // Call user callbacks.
         self->_on_tick_callbacks.Call(next);
       }
     });
@@ -85,6 +94,18 @@ namespace detail {
     return actor;
   }
 
+  std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
+    std::shared_ptr<WalkerNavigation> navigation;
+    do {
+      navigation = _navigation.load();
+      if (navigation == nullptr) {
+        auto new_navigation = std::make_shared<WalkerNavigation>(_client);
+        _navigation.compare_exchange(&navigation, new_navigation);
+      }
+    } while (navigation == nullptr);
+    return navigation;
+  }
+
   std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
     return GetActorsById_Impl(_client, _actors, actor_ids);
   }
@@ -96,6 +117,7 @@ namespace detail {
   void Episode::OnEpisodeStarted() {
     _actors.Clear();
     _on_tick_callbacks.Clear();
+    _navigation.reset();
   }
 
 } // namespace detail

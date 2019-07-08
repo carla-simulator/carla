@@ -157,7 +157,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c1
+RPCLIB_PATCH=v2.2.1_c2
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -286,6 +286,63 @@ fi
 unset GTEST_BASENAME
 
 # ==============================================================================
+# -- Get Recast&Detour and compile it with libc++ ------------------------------
+# ==============================================================================
+
+RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+RECAST_BASENAME=recast-${CXX_TAG}
+
+RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
+RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
+
+if [[ -d "${RECAST_BASENAME}-install" ]] ; then
+  log "${RECAST_BASENAME} already installed."
+else
+  rm -Rf \
+      ${RECAST_BASENAME}-source \
+      ${RECAST_BASENAME}-build \
+      ${RECAST_BASENAME}-install
+
+  log "Retrieving Recast & Detour"
+
+  git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+
+  pushd ${RECAST_BASENAME}-source >/dev/null
+
+  git reset --hard ${RECAST_COMMIT}
+
+  popd >/dev/null
+
+  log "Building Recast & Detour with libc++."
+
+  mkdir -p ${RECAST_BASENAME}-build
+
+  pushd ${RECAST_BASENAME}-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
+      -DRECASTNAVIGATION_DEMO=False \
+      -DRECASTNAVIGATION_TEST=False \
+      ../${RECAST_BASENAME}-source
+
+  ninja
+
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
+
+  # move headers inside 'recast' folder
+  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
+  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
+
+fi
+
+unset RECAST_BASENAME
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -378,6 +435,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
+  set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
+  set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
 endif ()
 
 EOL

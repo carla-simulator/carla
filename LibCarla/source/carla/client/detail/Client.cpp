@@ -136,6 +136,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::MapInfo>("get_map_info");
   }
 
+  std::vector<uint8_t> Client::GetNavigationMesh() const {
+    return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
+  }
+
   std::vector<std::string> Client::GetAvailableMaps() {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
