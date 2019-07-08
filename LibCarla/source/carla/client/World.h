@@ -104,7 +104,12 @@ namespace client {
     WorldSnapshot WaitForTick(time_duration timeout) const;
 
     /// Register a @a callback to be called every time a world tick is received.
-    void OnTick(std::function<void(WorldSnapshot)> callback);
+    ///
+    /// @return ID of the callback, use it to remove the callback.
+    size_t OnTick(std::function<void(WorldSnapshot)> callback);
+
+    /// Remove a callback registered with OnTick.
+    void RemoveOnTick(size_t callback_id);
 
     /// Signal the simulator to continue to next tick (only has effect on
     /// synchronous mode).

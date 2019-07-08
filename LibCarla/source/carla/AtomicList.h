@@ -20,8 +20,9 @@ namespace detail {
   ///
   /// @warning Only Load method is atomic, modifications to the list are locked
   /// with a mutex.
-  template <typename T, typename ListT = std::vector<T>>
+  template <typename T>
   class AtomicList : private NonCopyable {
+    using ListT = std::vector<T>;
   public:
 
     AtomicList() : _list(std::make_shared<ListT>()) {}
@@ -30,15 +31,25 @@ namespace detail {
     void Push(ValueT &&value) {
       std::lock_guard<std::mutex> lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
-      new_list->push_back(std::forward<ValueT>(value));
+      new_list->emplace_back(std::forward<ValueT>(value));
       _list = new_list;
     }
 
-    void Delete(unsigned int index) {
+    void DeleteByIndex(size_t index) {
       std::lock_guard<std::mutex> lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
-      new_list->erase(new_list->begin() + index);
+      auto begin = new_list->begin();
+      std::advance(begin, index);
+      new_list->erase(begin);
       _list = new_list;
+    }
+
+    template <typename ValueT>
+    void DeleteByValue(const ValueT &value) {
+      std::lock_guard<std::mutex> lock(_mutex);
+      auto list = std::make_shared<ListT>(*Load());
+      list->erase(std::remove(list->begin(), list->end(), value), list->end());
+      _list = list;
     }
 
     void Clear() {

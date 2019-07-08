@@ -41,7 +41,8 @@
 - `spawn_actor(blueprint, transform, attach_to=None)`
 - `try_spawn_actor(blueprint, transform, attach_to=None, attachment_type=carla.AttachmentType.Rigid)`
 - `wait_for_tick(seconds=1.0) -> carla.WorldSnapshot`
-- `on_tick(callback)`
+- `on_tick(callback) -> id of the callback`
+- `remove_on_tick(id)`
 - `tick() -> int (id of the newly started frame)`
 
 ## `carla.WorldSettings`

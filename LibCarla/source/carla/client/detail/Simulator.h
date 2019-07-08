@@ -140,9 +140,14 @@ namespace detail {
 
     WorldSnapshot WaitForTick(time_duration timeout);
 
-    void RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
+    size_t RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
       DEBUG_ASSERT(_episode != nullptr);
-      _episode->RegisterOnTickEvent(std::move(callback));
+      return _episode->RegisterOnTickEvent(std::move(callback));
+    }
+
+    void RemoveOnTickEvent(size_t id) {
+      DEBUG_ASSERT(_episode != nullptr);
+      _episode->RemoveOnTickEvent(id);
     }
 
     uint64_t Tick();
