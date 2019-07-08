@@ -83,6 +83,8 @@ namespace detail {
 
     Client &_client;
 
+    unsigned long _next_check_index;
+
     carla::nav::Navigation _nav;
 
     struct WalkerHandle {
@@ -93,7 +95,7 @@ namespace detail {
     AtomicList<WalkerHandle> _walkers;
 
     // check a few walkers and if they don't exist then remove from the crowd
-    void CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state, int totalToCheck = 1);
+    void CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state);
   };
 
 } // namespace detail
