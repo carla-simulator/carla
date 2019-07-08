@@ -83,6 +83,7 @@
   * Fixed Change the sidewalk in Town06
   * Fixed Tesla mesh and LODS
   * Fixed Inconsistency StreetLights on Town03
+  * Simplified pipeline for importing/packaging props and maps
 
 ## CARLA 0.9.5
 
