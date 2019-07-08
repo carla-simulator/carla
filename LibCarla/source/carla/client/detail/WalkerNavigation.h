@@ -41,7 +41,7 @@ namespace detail {
       while (i < list->size()) {
         if ((*list)[i].walker == walker_id &&
         (*list)[i].controller == controller_id) {
-          _walkers.Delete(i);
+          _walkers.DeleteByIndex(i);
           break;
         }
         ++i;

@@ -52,8 +52,8 @@ static auto WaitForTick(const carla::client::World &world, double seconds) {
   return world.WaitForTick(TimeDurationFromSeconds(seconds));
 }
 
-static void OnTick(carla::client::World &self, boost::python::object callback) {
-  self.OnTick(MakeCallback(std::move(callback)));
+static size_t OnTick(carla::client::World &self, boost::python::object callback) {
+  return self.OnTick(MakeCallback(std::move(callback)));
 }
 
 static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
@@ -145,6 +145,7 @@ void export_world() {
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
+    .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
     .def("tick", CALL_WITHOUT_GIL(cc::World, Tick))
     .def(self_ns::str(self_ns::self))
   ;

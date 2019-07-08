@@ -43,7 +43,7 @@ namespace client {
   LaneInvasionSensor::~LaneInvasionSensor() = default;
 
   void LaneInvasionSensor::Listen(CallbackFunctionType callback) {
-    if (_is_listening) {
+    if (IsListening()) {
       log_error(GetDisplayId(), ": already listening");
       return;
     }
@@ -60,7 +60,7 @@ namespace client {
     auto self = boost::static_pointer_cast<LaneInvasionSensor>(shared_from_this());
 
     log_debug(GetDisplayId(), ": subscribing to tick event");
-    GetEpisode().Lock()->RegisterOnTickEvent([
+    _callback_id = GetEpisode().Lock()->RegisterOnTickEvent([
         cb=std::move(callback),
         weak_self=WeakPtr<LaneInvasionSensor>(self)](const auto &snapshot) {
       auto self = weak_self.lock();
@@ -71,12 +71,13 @@ namespace client {
         }
       }
     });
-    _is_listening = true;
   }
 
   void LaneInvasionSensor::Stop() {
-    /// @todo We need unsubscribe from the world on tick.
-    _is_listening = false;
+    if (_callback_id.has_value()) {
+      GetEpisode().Lock()->RemoveOnTickEvent(*_callback_id);
+      _callback_id = boost::none;
+    }
   }
 
   SharedPtr<sensor::SensorData> LaneInvasionSensor::TickLaneInvasionSensor(
@@ -98,8 +99,8 @@ namespace client {
               _vehicle,
               crossed_lanes);
     } catch (const std::exception &e) {
-      /// @todo We need to unsubscribe the sensor.
-      // log_error("LaneInvasionSensor:", e.what());
+      log_error("LaneInvasionSensor:", e.what());
+      Stop();
       return nullptr;
     }
   }

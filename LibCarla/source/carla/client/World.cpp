@@ -97,8 +97,12 @@ namespace client {
     return _episode.Lock()->WaitForTick(timeout);
   }
 
-  void World::OnTick(std::function<void(WorldSnapshot)> callback) {
+  size_t World::OnTick(std::function<void(WorldSnapshot)> callback) {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
+  }
+
+  void World::RemoveOnTick(size_t callback_id) {
+    _episode.Lock()->RemoveOnTickEvent(callback_id);
   }
 
   uint64_t World::Tick() {

@@ -18,7 +18,7 @@ namespace client {
   GnssSensor::~GnssSensor() = default;
 
   void GnssSensor::Listen(CallbackFunctionType callback) {
-    if (_is_listening) {
+    if (IsListening()) {
       log_error(GetDisplayId(), ": already listening");
       return;
     }
@@ -35,7 +35,7 @@ namespace client {
     auto self = boost::static_pointer_cast<GnssSensor>(shared_from_this());
 
     log_debug(GetDisplayId(), ": subscribing to tick event");
-    GetEpisode().Lock()->RegisterOnTickEvent([
+    _callback_id = GetEpisode().Lock()->RegisterOnTickEvent([
         cb=std::move(callback),
         weak_self=WeakPtr<GnssSensor>(self)](const auto &snapshot) {
       auto self = weak_self.lock();
@@ -46,8 +46,6 @@ namespace client {
         }
       }
     });
-
-    _is_listening = true;
   }
 
   SharedPtr<sensor::SensorData> GnssSensor::TickGnssSensor(
@@ -59,15 +57,17 @@ namespace client {
                GetTransform(),
                _geo_reference.Transform(GetLocation()));
     } catch (const std::exception &e) {
-      /// @todo We need to unsubscribe the sensor.
-      // log_error("GnssSensor:", e.what());
+      log_error("GnssSensor:", e.what());
+      Stop();
       return nullptr;
     }
   }
 
   void GnssSensor::Stop() {
-    /// @todo We need unsubscribe from the world on tick.
-    _is_listening = false;
+    if (_callback_id.has_value()) {
+      GetEpisode().Lock()->RemoveOnTickEvent(*_callback_id);
+      _callback_id = boost::none;
+    }
   }
 
 } // namespace client
