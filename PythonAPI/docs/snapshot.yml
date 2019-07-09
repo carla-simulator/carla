@@ -32,7 +32,7 @@
         - param_name: actor_id
           type: int
       doc: > 
-        Find an ActorSnapshot by id.
+        Find an ActorSnapshot by id, return None if the actor is not found.
     # --------------------------------------
     - def_name: __len__
       doc: >
