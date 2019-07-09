@@ -13,6 +13,7 @@ USAGE_STRING="Usage: $0 [-h|--help] [--no-zip] [--clean-intermediate] [--package
 PACKAGES="Carla"
 DO_TARBALL=true
 DO_CLEAN_INTERMEDIATE=false
+PROPS_MAP_NAME=PropsMap
 
 OPTS=`getopt -o h --long help,no-zip,clean-intermediate,packages: -n 'parse-options' -- "$@"`
 
@@ -197,19 +198,28 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   mkdir -p ${BUILD_FOLDER}
 
-  PACKAGE_FILE=${PACKAGE_PATH}/Config/${PACKAGE_NAME}.Package.json
-  MAP_LIST_FILE=${PACKAGE_PATH}/Config/MapPaths.txt
-
-  MAPS_TO_COOK=$(<${MAP_LIST_FILE})
-
   log "Cooking package '${PACKAGE_NAME}'..."
 
   pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
+
+  # Prepare cooking of package
+  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+      -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME}
+
+  PACKAGE_FILE=${PACKAGE_PATH}/Config/${PACKAGE_NAME}.Package.json
+  MAP_LIST_FILE=${PACKAGE_PATH}/Config/MapPaths.txt
+  MAPS_TO_COOK=$(<${MAP_LIST_FILE})
 
   # Cook maps
   ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
       -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
       -OutputDir="${BUILD_FOLDER}"
+
+  PROP_MAP_FOLDER="${PACKAGE_PATH}/Maps/${PROPS_MAP_NAME}"
+
+  if [ -d ${PROP_MAP_FOLDER} ] ; then
+    rm -Rf ${PROP_MAP_FOLDER}
+  fi
 
   popd >/dev/null
 
@@ -233,7 +243,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
       MAP_NAME=${XODR_FILE_PATH##*/}
       XODR_FILE_PATH=${XODR_FILE_PATH%/*}/OpenDrive/${MAP_NAME}.xodr
 
-      if [ -f "$XODR_FILE_PATH" ] ; then
+      if [ -f "${XODR_FILE_PATH}" ] ; then
         OUT_XODR_DIR="${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Maps/${MAP_NAME}/OpenDrive/"
 
         # Create the xodr out folder if does not exist
@@ -248,7 +258,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     rm -Rf "./CarlaUE4/Metadata"
     rm -Rf "./CarlaUE4/Plugins"
-    rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/PropsMap"
+    rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
     rm -f "./CarlaUE4/AssetRegistry.bin"
 
     tar -czvf ${DESTINATION} *
