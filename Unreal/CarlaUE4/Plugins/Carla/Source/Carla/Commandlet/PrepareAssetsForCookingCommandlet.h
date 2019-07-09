@@ -131,4 +131,8 @@ private:
   /// Content folder
   bool SavePackage(const FString &PackagePath, UPackage *Package) const;
 
+  /// Gets the first .Package.json file found in Unreal Content Directory with
+  /// @a PackageName
+  FString GetFirstPackagePath(const FString &PackageName) const;
+
 };
