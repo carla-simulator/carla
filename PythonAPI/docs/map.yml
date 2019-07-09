@@ -1,0 +1,356 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: LaneType
+    # - DESCRIPTION ------------------------
+    doc: >
+      All the possible lane types that OpenDRIVE accepts
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Driving
+      doc: >
+    - var_name: Stop
+      doc: >
+    - var_name: Shoulder
+      doc: >
+    - var_name: Biking
+      doc: >
+    - var_name: Sidewalk
+      doc: >
+    - var_name: Border
+      doc: >
+    - var_name: Restricted
+      doc: >
+    - var_name: Parking
+      doc: >
+    - var_name: Bidirectional
+      doc: >
+    - var_name: Median
+      doc: >
+    - var_name: Special1
+      doc: >
+    - var_name: Special2
+      doc: >
+    - var_name: Special3
+      doc: >
+    - var_name: RoadWorks
+      doc: >
+    - var_name: Tram
+      doc: >
+    - var_name: Rail
+      doc: >
+    - var_name: Entry
+      doc: >
+    - var_name: Exit
+      doc: >
+    - var_name: OffRamp
+      doc: >
+    - var_name: OnRamp
+      doc: >
+    - var_name: Any
+      doc: >
+
+  - class_name: LaneChange
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the lane change options
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+        Traffic rules do not allow turning right or left, only going straight
+    - var_name: Right
+      doc: >
+        Traffic rules allow turning right
+    - var_name: Left
+      doc: >
+        Traffic rules allow turning left
+    - var_name: Both
+      doc: >
+        Traffic rules allow turning right or left
+
+  - class_name: LaneMarkingColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the lane marking colors.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Standard
+      doc: >
+        White by default
+    - var_name: Blue
+      doc: >
+    - var_name: Green
+      doc: >
+    - var_name: Red
+      doc: >
+    - var_name: White
+      doc: >
+    - var_name: Yellow
+      doc: >
+    - var_name: Other
+      doc: >
+
+  - class_name: LaneMarkingType
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the lane marking types that OpenDRIVE accepts.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Other
+      doc: >
+    - var_name: Broken
+      doc: >
+    - var_name: Solid
+      doc: >
+    - var_name: SolidSolid
+      doc: >
+        For double solid line.
+    - var_name: SolidBroken
+      doc: >
+        From inside to outside except for center lane which is from left to right.
+    - var_name: BrokenSolid
+      doc: >
+        From inside to outside except for center lane which is from left to right.
+    - var_name: BrokenBroken
+      doc: >
+        From inside to outside except for center lane which is from left to right.
+    - var_name: BottsDots
+      doc: >
+    - var_name: Grass
+      doc: >
+        Grass edge.
+    - var_name: Curb
+      doc: >
+
+  - class_name: Map
+    # - DESCRIPTION ------------------------
+    doc: >
+      Map description that provides a Waypoint query system, that extracts
+      the information from the OpenDRIVE file
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      doc: >
+        Map name. Comes from the Unreal's UMap name if loaded from a Carla server
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: name
+        type: str
+        doc: > 
+          Name of the current map
+      - param_name: xodr_content
+        type: str
+        doc: >
+          XODR content as string
+      return: list(carla.Transform)
+      doc: >
+        Constructor for this class useful if you want to use a `XODR` (OpenDRIVE) file without
+        importing it from any Carla server running
+    # --------------------------------------
+    - def_name: get_spawn_points
+      return: list(carla.Transform)
+      doc: >
+        Returns a list of transformations corresponding to the recommended spawn points over the map
+    # --------------------------------------
+    - def_name: get_waypoint
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: > 
+          Location where you want to get the carla.Waypoint
+      - param_name: project_to_road
+        type: bool
+        default: "True"
+        doc: > 
+          If **True**, the waypoint will be at the center of the nearest lane.  
+
+          If **False**, the waypoint will be at the given location. Also, in this second case, the result may be
+          `None` if the waypoint is not found
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: > 
+          This parameter is used to limit the search on a certain lane type.
+          This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
+      return: carla.Waypoint
+    # --------------------------------------
+    - def_name: get_topology
+      doc: >
+        It provides a minimal graph of the topology of the current OpenDRIVE file.
+        It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second
+        one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be:
+        `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`
+      return: list(tuple(carla.Waypoint, carla.Waypoint))
+    # --------------------------------------
+    - def_name: generate_waypoints
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          Approximate distance between the waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints positioned on the center of the lanes 
+        all over the map with an approximate distance between them.
+    # --------------------------------------
+    - def_name: transform_to_geolocation
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          Location to convert
+      return: carla.GeoLocation
+      doc: >
+        Converts a given carla.Location `(x, y, z)` to a carla.GeoLocation `(lat, lon, alt)`.
+    # --------------------------------------
+    - def_name: to_opendrive
+      doc: >
+        Returns the OpenDRIVE of the current map as string
+      return: str
+    # --------------------------------------
+    - def_name: save_to_disk
+      params:
+      - param_name: path
+        doc: >
+          Path where it will be saved
+      doc: >
+        Save the OpenDRIVE of the current map to disk
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: LaneMarking
+    # - DESCRIPTION ------------------------
+    doc: >
+      Struct that defines a lane marking
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: type
+      type: carla.LaneMarkingType
+      doc: >
+        Lane marking type
+    - var_name: color
+      type: carla.Color
+      doc: >
+        Actual color of the marking
+    - var_name: lane_change
+      type: carla.LaneChange
+      doc: >
+        Lane change availability
+    - var_name: width
+      type: float
+      doc: >
+        Horizontal lane marking thickness
+    # --------------------------------------
+
+  - class_name: Waypoint
+    # - DESCRIPTION ------------------------
+    doc: >
+      3D directed point that stores information about the road definition that OpenDRIVE provides.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        Waypoint id, it's generated using a hash combination of its `road_id`, `section_id`, 
+        `lane_id` and `s` values, all them come from the OpenDRIVE. The `s` precision is set 
+        to 2 centimeters, so 2 waypoints at a distance `s` less than 2 centimeters in the same 
+        road, section and lane, will have the same `id`.
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Transform indicating it's position and orientation according to the current lane information.
+    - var_name: is_intersection
+      type: bool
+      doc: >
+        _Deprecated, use is_junction instead_
+    - var_name: is_junction
+      type: bool
+      doc: >
+        True if the current Waypoint is on a junction
+    - var_name: lane_width
+      type: float
+      doc: >
+        Horizontal size of the road at current `s`
+    - var_name: road_id
+      type: int
+      doc: >
+        OpenDRIVE road's id
+    - var_name: section_id
+      type: int
+      doc: >
+        OpenDRIVE section's id, based on the order that they are originally defined
+    - var_name: lane_id
+      type: int
+      doc: >
+        OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the 
+        current lane with respect to the road. For more information refer to OpenDRIVE
+        [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
+    - var_name: s
+      type: float
+      doc: >
+        OpenDRIVE `s` value of the current position
+    - var_name: lane_change
+      type: carla.LaneChange
+      doc: >
+        Lane change definition of the current Waypoint's location, based on the traffic rules defined in
+        the OpenDRIVE file. Basically, it tells you if a lane change can be done and in which direction.
+    - var_name: lane_type
+      type: carla.LaneType
+      doc: >
+        The lane type of the current Waypoint, based on OpenDRIVE types.
+    - var_name: right_lane_marking
+      type: carla.LaneMarking
+      doc: >
+        The right lane marking information based on the direction of the Waypoint
+    - var_name: left_lane_marking
+      type: carla.LaneMarking
+      doc: >
+        The left lane marking information based on the direction of the Waypoint
+    # - METHODS ----------------------------
+    methods:
+    - def_name: next
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          The approximate distance where to get the next Waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of Waypoints at a certain approximate distance from the current Waypoint,
+        taking into account the shape of the road and its possible deviations, without performing
+        any lane change.  
+
+        The list may be empty if the road ends before the specified distance, for instance,
+        a lane ending with the only option of incorporating to another road.
+    # --------------------------------------
+    - def_name: get_right_lane
+      return: carla.Waypoint
+      doc: >
+        Generates a Waypoint at the center of the right lane based on the direction of the current
+        Waypoint, regardless if the lane change is allowed in this location.  
+
+        Can return `None` if the lane does not exist.
+    # --------------------------------------
+    - def_name: get_left_lane
+      return: carla.Waypoint
+      doc: >
+        Generates a Waypoint at the center of the left lane based on the direction of the current
+        Waypoint, regardless if the lane change is allowed in this location.  
+
+        Can return `None` if the lane does not exist
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+...

@@ -1,0 +1,90 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: WorldSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+    - var_name: frame
+      type: int
+      doc: >
+    - var_name: timestamp
+      type: carla.Timestamp
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_actor
+      params:
+        - param_name: actor_id
+          type: int
+      doc: >
+        Check if an actor is present in this snapshot.
+    # --------------------------------------
+    - def_name: find
+      return: 
+      params: 
+        - param_name: actor_id
+          type: int
+      doc: > 
+        Find an ActorSnapshot by id, return None if the actor is not found.
+    # --------------------------------------
+    - def_name: __len__
+      doc: >
+        Return number of ActorSnapshots present in this WorldSnapshot.
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
+    # --------------------------------------
+    
+  - class_name: ActorSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that provides access to the data of a carla.Actor in a carla.WorldSnapshot.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_transform
+      return: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: get_velocity
+      return: carla.Vector3D
+      doc: > 
+    # --------------------------------------
+    - def_name: get_angular_velocity
+      return: carla.Vector3D
+      doc: >
+    # --------------------------------------
+    - def_name: get_acceleration
+      return: carla.Vector3D
+      doc: >
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
+    # --------------------------------------
+...

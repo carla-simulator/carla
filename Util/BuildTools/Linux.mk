@@ -85,6 +85,9 @@ PythonAPI.2: LibCarla.client.release
 PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
+PythonAPI.docs:
+	@python PythonAPI/docs/doc_gen.py
+
 .PHONY: LibCarla
 LibCarla: LibCarla.release LibCarla.debug
 

@@ -7,10 +7,13 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#include "carla/MsgPackAdaptors.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #  include "Carla/Settings/EpisodeSettings.h"
 #endif // LIBCARLA_INCLUDED_FROM_UE4
+
+#include <boost/optional.hpp>
 
 namespace carla {
 namespace rpc {
@@ -26,7 +29,9 @@ namespace rpc {
 
     bool no_rendering_mode = false;
 
-    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode);
+    boost::optional<double> fixed_delta_seconds;
+
+    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -36,9 +41,12 @@ namespace rpc {
 
     EpisodeSettings(
         bool synchronous_mode,
-        bool no_rendering_mode)
+        bool no_rendering_mode,
+        double fixed_delta_seconds = 0.0)
       : synchronous_mode(synchronous_mode),
-        no_rendering_mode(no_rendering_mode) {}
+        no_rendering_mode(no_rendering_mode),
+        fixed_delta_seconds(
+            fixed_delta_seconds > 0.0 ? fixed_delta_seconds : boost::optional<double>{}) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -47,7 +55,8 @@ namespace rpc {
     bool operator==(const EpisodeSettings &rhs) const {
       return
           (synchronous_mode == rhs.synchronous_mode) &&
-          (no_rendering_mode == rhs.no_rendering_mode);
+          (no_rendering_mode == rhs.no_rendering_mode) &&
+          (fixed_delta_seconds == rhs.fixed_delta_seconds);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -61,13 +70,18 @@ namespace rpc {
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
     EpisodeSettings(const FEpisodeSettings &Settings)
-      : synchronous_mode(Settings.bSynchronousMode),
-        no_rendering_mode(Settings.bNoRenderingMode) {}
+      : EpisodeSettings(
+            Settings.bSynchronousMode,
+            Settings.bNoRenderingMode,
+            Settings.FixedDeltaSeconds.Get(0.0)) {}
 
     operator FEpisodeSettings() const {
       FEpisodeSettings Settings;
       Settings.bSynchronousMode = synchronous_mode;
       Settings.bNoRenderingMode = no_rendering_mode;
+      if (fixed_delta_seconds.has_value()) {
+        Settings.FixedDeltaSeconds = *fixed_delta_seconds;
+      }
       return Settings;
     }
 

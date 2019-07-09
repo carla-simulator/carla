@@ -9,7 +9,7 @@ in the client-side.
 The goal is to be able to call Unreal Engine's functions from a separate Python
 process.
 
-![modules](img/modules.png)
+![modules](../img/modules.png)
 
 In Linux, we compile CARLA and all the dependencies with clang-7.0 and C++14
 standard. We however link against different runtime C++ libraries depending on

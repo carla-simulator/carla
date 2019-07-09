@@ -1,0 +1,235 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Client
+    # - DESCRIPTION ------------------------
+    doc: >
+      Client used to connect to a Carla server
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: host
+        type: str
+        doc: >
+          IP address where a CARLA Simulator instance is running
+      - param_name: port
+        type: int
+        doc: >
+          TCP port where the CARLA Simulator instance is running
+      - param_name: worker_threads
+        type: int
+        default: 0
+        doc: >
+          Number of working threads used for background updates. If 0, use all
+          available concurrency.
+      doc: >
+        Client constructor
+    # --------------------------------------
+    - def_name: set_timeout
+      params:
+      - param_name: seconds
+        type: float
+        doc: >
+          New timeout value in seconds
+      doc: >
+        Set the timeout in seconds allowed to block when doing networking calls
+    # --------------------------------------
+    - def_name: get_client_version
+      params:
+      return: str
+      doc: >
+        Get the client version as a string
+    # --------------------------------------
+    - def_name: get_server_version
+      params:
+      return: str
+      doc: >
+        Get the server version as a string
+    # --------------------------------------
+    - def_name: get_world
+      params:
+      return: carla.World
+      doc: >
+        Get the world currently active in the simulation
+    # --------------------------------------
+    - def_name: get_available_maps
+      params:
+      return: list(str)
+      doc: >
+        Get a list of strings of the maps available on server. The result can be something like:  
+          '/Game/Carla/Maps/Town01'  
+          '/Game/Carla/Maps/Town02'  
+          '/Game/Carla/Maps/Town03'  
+          '/Game/Carla/Maps/Town04'  
+          '/Game/Carla/Maps/Town05'  
+          '/Game/Carla/Maps/Town06'  
+          '/Game/Carla/Maps/Town07'  
+    # --------------------------------------
+    - def_name: reload_world
+      params:
+      raises: RuntimeError
+      doc: >
+        Reload the current world, note that a new world is created with default
+        settings using the same map. All actors present in the world will be
+        destroyed.
+    # --------------------------------------
+    - def_name: load_world
+      params:
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map to load, accepts both full paths and map names, e.g.
+          '/Game/Carla/Maps/Town01' or 'Town01'.
+      doc: >
+        Load a new world with default settings using `map_name` map. All actors
+        present in the current world will be destroyed.
+    # --------------------------------------
+    - def_name: start_recorder
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the file to write the recorded data
+      doc: >
+        If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'.
+        If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.
+    # --------------------------------------
+    - def_name: stop_recorder
+      params:
+      doc: >
+        Stops the recording in progress.
+    # --------------------------------------
+    - def_name: show_recorder_file_info
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: show_all
+        type: bool
+        doc: >
+          Show all detailed info, or just a summary
+      doc: >
+        Will show info about the recorded file (frames, times, events, state, positions...)
+        We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.
+    # --------------------------------------
+    - def_name: show_recorder_collisions
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: category1
+        type: single char
+        doc: >
+          Character specifying the category of the first actor
+      - param_name: category2
+        type: single char
+        doc: >
+          Character specifying the category of the second actor
+      doc: >
+        This will show which collisions were recorded in the file. We can use a filter for the collisions we want, using two categories.
+        The categories can be:  
+          'h' = Hero  
+          'v' = Vehicle  
+          'w' = Walker  
+          't' = Traffic light  
+          'o' = Other  
+          'a' = Any  
+        So, if you want to see only collisions about a vehicle and a walker, we would use for category1 'v' and category2 'w'.
+        Or if you want all the collisions (filter off) you can use 'a' as both categories.
+    # --------------------------------------
+    - def_name: show_recorder_actors_blocked
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: min_time
+        type: float
+        doc: >
+          How many seconds has to be stoped an actor to be considered as blocked
+      - param_name: min_distance
+        type: float
+        doc: >
+          How many centimeters needs to move the actor in order to be considered as moving, and not blocked
+      doc: >
+        Shows which actors seem blocked by some reason.
+        The idea is to calculate which actors are not moving as much as 'min_distance' for a period of 'min_time'.
+        By default min_time = 60 seconds (1 min) and min_distance = 100 centimeters (1 m).
+    # --------------------------------------
+    - def_name: replay_file
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the file.
+      - param_name: start
+        type: float
+        doc: >
+          Time in seconds where to start the playback. If it is negative, then it starts from the end.
+      - param_name: duration
+        type: float
+        doc: >
+          Id of the actor to follow. If this is 0 then camera is disabled
+      - param_name: follow_id
+        type: int
+        doc: >
+      doc: >
+        Playback a file
+    # --------------------------------------
+    - def_name: set_replayer_time_factor
+      params:
+      - param_name: time_factor
+        type: float
+        doc: >
+          A value of 1.0 means normal time factor.
+          A value < 1.0 means slow motion (for example 0.5 is half speed)
+          A value > 1.0 means fast motion (for example 2.0 is double speed)
+      doc: >
+        Apply a different playback speed to current playback. Can be used several times while a playback is in curse.
+    # --------------------------------------
+    - def_name: apply_batch
+      params:
+      - param_name: commands
+        type: list
+        doc: >
+          A list of commands to execute in batch. Each command has a different number of parameters.
+          Currently, we can use these [commands](#command.ApplyAngularVelocity):  
+            SpawnActor  
+            DestroyActor  
+            ApplyVehicleControl  
+            ApplyWalkerControl  
+            ApplyTransform  
+            ApplyVelocity  
+            AplyAngularVelocity  
+            ApplyImpulse  
+            SetSimulatePhysics  
+            SetAutopilot  
+      doc: >
+        This function executes the whole list of commands on a single simulation step.
+        For example, to set autopilot on some actors, we could use:  
+        [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)  
+        We don't have control about the response of each command. If we need that, we can use apply_batch_sync().
+
+    # --------------------------------------
+    - def_name: apply_batch_sync
+      params:
+      - param_name: commands
+        type: list
+        doc: >
+          A list of commands to execute in batch. For a list of commands available see function above apply_batch().
+      return: list
+      doc: >
+        This function executes the whole list of commands on a single simulation
+        step, blocks until the commands are executed, and returns a list of
+        [`command.Response`](#command.Response) that can be used to determine whether a single
+        command succeeded or not.
+        [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116)  
+    # --------------------------------------
+...

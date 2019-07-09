@@ -1,0 +1,36 @@
+---
+- module_name: carla
+  doc: >
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Sensor
+    parent: carla.Actor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: is_listening
+      type: boolean
+      doc: >
+        Is true if the sensor is listening for data
+    # - METHODS ----------------------------
+    methods:
+    - def_name: listen
+      params:
+      - param_name: callback
+        type: function
+        doc: >
+          Register a callback to be executed each time a new measurement is
+          received. The callback must accept a single argument containing the
+          sensor data; the type of this object varies depending on the type of
+          sensor, but they all derive from carla.SensorData.
+      doc: >
+    # --------------------------------------
+    - def_name: stop
+      doc: >
+        Stops listening for data
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+...

@@ -2,6 +2,7 @@
 
   * Add access to vehicle transmission details
   * Add access to vehicle physics brake values
+  * The simulator is now compiled in "Shipping" mode, faster but it accepts less command-line arguments
   * Enabled texture streaming for scene captures
     - Enabled texture streaming in the Unreal project settings
     - Changed the scene capture to register its camera with Unreal's texture streamer every tick to enable texture streaming
@@ -32,12 +33,15 @@
   * API extension: `world.tick()` now synchronizes with the simulator and returns the id of the newly started frame
   * API extension: `world.apply_settings(settings)` now synchronizes with the simulator and returns the id of the frame when the settings took effect
   * API extension: added `world.remove_on_tick(id)` to allow removing on tick callbacks
+  * API extension: allow setting fixed frame-rate from client-side, now is part of `carla.WorldSettings`
   * API change: Rename `frame_count` and `frame_number` as `frame`, old members are kept as deprecated
   * API change: `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
   * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
   * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
   * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
+  * Added camera gamma correction as command-line argument to manual_control.py
   * Removed deprecated code and content
+  * Added PythonAPI documentation generator
   * New recorder features:
     - Recorded system is documented, and binary file system is described.
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)

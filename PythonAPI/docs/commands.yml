@@ -1,0 +1,289 @@
+---
+- module_name: command
+  doc: >
+  classes:
+  - class_name: Response
+    # - DESCRIPTION ------------------------
+    doc: >
+      Execution result of a command, contains either an error string or and
+      actor ID, depending on whether or not the command succeeded. See
+      `client.apply_batch_sync()`
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: error
+      type: str
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_error
+      params:
+      doc: >
+    # --------------------------------------
+
+  - class_name: SpawnActor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+    - var_name: parent_id
+      type: int
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      doc: >
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+      - param_name: transform
+        type: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+      - param_name: transform
+        type: carla.Transform
+      - param_name: parent
+        type: carla.Actor or int     
+      doc: >
+    # --------------------------------------
+    - def_name: then
+      params:
+      - param_name: command
+        type: carla.Command
+        doc: > 
+          CommandType.
+      doc: >
+    # --------------------------------------
+
+  - class_name: DestroyActor
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyVehicleControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: control
+      type: carla.VehicleControl
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: control
+        type: carla.VehicleControl
+      doc: >
+    # --------------------------------------
+  
+  - class_name: ApplyWalkerControl
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: control
+      type: carla.VehicleControl
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: control
+        type: carla.WalkerControl
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyTransform
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: transform
+        type: carla.Transform
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyWalkerState
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+    - var_name: speed
+      type: float
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+      - param_name: speed
+        type: float
+        doc: >
+    # --------------------------------------
+
+  - class_name: ApplyVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: velocity
+      type: carla.Vector3D
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: velocity
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyAngularVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: angular_velocity
+      type: carla.Vector3D
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: angular_velocity
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+
+  - class_name: ApplyImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: impulse
+      type: carla.Vector3D
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: impulse
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+
+  - class_name: SetSimulatePhysics
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: enabled
+      type: bool
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: enabled
+        type: bool
+      doc: >
+    # --------------------------------------
+
+  - class_name: SetAutopilot
+    # - DESCRIPTION ------------------------
+    doc: >
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+    - var_name: enabled
+      type: bool
+      doc: >
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+      - param_name: enabled
+        type: bool
+      doc: >
+    # --------------------------------------
+...

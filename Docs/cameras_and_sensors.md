@@ -85,7 +85,7 @@ applied to the image to create a more realistic feel
   * **Lens flares** Simulates the reflection of bright objects on the lens.
   * **Depth of field** Blurs objects near or very far away of the camera.
 
-This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
+This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
 
 | Sensor data attribute | Type | Description |
@@ -113,7 +113,7 @@ pixel to the camera (also known as **depth buffer** or **z-buffer**).
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
-This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
+This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
 
 | Sensor data attribute | Type | Description |
@@ -152,7 +152,7 @@ pedestrians appear in a different color than vehicles.
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
-This sensor produces [`carla.Image`](python_api.md#carlaimagecarlasensordata)
+This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
 
 | Sensor data attribute | Type | Description |
@@ -220,7 +220,7 @@ supposed to generate this frame; `points_per_second / (FPS * channels)`.
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces
-[`carla.LidarMeasurement`](python_api.md#carlalidarmeasurementcarlasensordata)
+[`carla.LidarMeasurement`](python_api.md#carla.LidarMeasurement)
 objects.
 
 | Sensor data attribute      | Type       | Description |
@@ -233,7 +233,7 @@ objects.
 | `get_point_count(channel)` | int        | Number of points per channel captured this frame |
 | `raw_data`                 | bytes      | Array of 32-bits floats (XYZ of each point) |
 
-The object also acts as a Python list of `carla.Location`
+The object also acts as a Python list of [`carla.Location`](python_api.md#carla.Location)
 
 ```py
 for location in lidar_measurement:
@@ -262,7 +262,7 @@ configurable attribute.
     This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
 
 This sensor produces a
-[`carla.CollisionEvent`](python_api.md#carlacollisioneventcarlasensordata)
+[`carla.CollisionEvent`](python_api.md#carla.CollisionEvent)
 object for each collision registered
 
 | Sensor data attribute  | Type        | Description |
@@ -294,7 +294,7 @@ by this sensor.
 This sensor does not have any configurable attribute.
 
 This sensor produces a
-[`carla.LaneInvasionEvent`](python_api.md#carlalaneinvasioneventcarlasensordata)
+[`carla.LaneInvasionEvent`](python_api.md#carla.LaneInvasionEvent)
 object for each lane marking crossed by the actor
 
 | Sensor data attribute   | Type        | Description |
@@ -313,7 +313,7 @@ The gnss position is internally calculated by adding the metric position to
 an initial geo reference location defined within the OpenDRIVE map definition.
 
 This sensor produces
-[`carla.GnssEvent`](python_api.md#carlagnsseventcarlasensordata)
+[`carla.GnssEvent`](python_api.md#carla.GnssEvent)
 objects.
 
 | Sensor data attribute  | Type        | Description |
@@ -342,7 +342,7 @@ This sensor, when attached to an actor, reports if there is obstacles ahead.
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
 
 This sensor produces
-[`carla.ObstacleDetectionSensorEvent`](python_api.md#carlaobstacledetectionsensoreventdata)
+[`carla.ObstacleDetectionEvent`](python_api.md#carla.ObstacleDetectionEvent)
 objects.
 
 | Sensor data attribute  | Type        | Description |

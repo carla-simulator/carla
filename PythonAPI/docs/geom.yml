@@ -1,0 +1,357 @@
+---
+- module_name: carla
+  doc: >
+  classes:
+  - class_name: Vector2D
+    # - DESCRIPTION ------------------------
+    doc: >
+      Vector 2D helper class
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+    - var_name: 'y'
+      type: float
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x 
+        type: float
+        default: 0.0
+      - param_name: y 
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
+    - def_name: __add__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __self__
+      doc: >
+    # --------------------------------------
+
+  - class_name: Vector3D
+    # - DESCRIPTION ------------------------
+    doc: >
+      Vector 3D helper class
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+    - var_name: 'y'
+      type: float
+    - var_name: z
+      type: float
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: __add__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: Location
+    parent: carla.Vector3D
+  # - DESCRIPTION ------------------------
+    doc: >
+      Represents a location in the world (in meters).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+    - var_name: 'y'
+      type: float
+    - var_name: z
+      type: float
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x 
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z 
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
+    - def_name: distance
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The Location from where to compute the distance
+      return: float
+      doc: >
+        Computes the Euclidean distance in meters from this location to another one
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Location
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Location
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: Rotation
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a 3D rotation. All rotation angles are stored in degrees.
+
+
+      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)  
+      _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: pitch
+      type: float
+    - var_name: yaw
+      type: float
+    - var_name: roll
+      type: float
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: pitch
+        type: float
+        default: 0.0
+      - param_name: yaw
+        type: float
+        default: 0.0
+      - param_name: roll
+        type: float
+        default: 0.0
+      doc: >
+    # --------------------------------------
+    - def_name: get_forward_vector
+      params:
+      return: carla.Vector3D
+      doc: >
+        Computes a forward vector using the current rotation
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Rotation
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Rotation
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: Transform
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a transformation without scaling.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      type: carla.Location
+    - var_name: rotation
+      type: carla.Rotation
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+      - param_name: rotation
+        type: carla.Rotation
+      doc: >
+    # --------------------------------------
+    - def_name: transform
+      params:
+      - param_name: in_point
+        type: carla.Location
+        doc: >
+          Location in the space to which the transformation will be applied
+      doc: >
+        Transform a 3D point using the current transformation
+    # --------------------------------------
+    - def_name: get_forward_vector
+      return: carla.Vector3D
+      doc: >
+        Computes a forward vector using the rotation of the current transformation
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Transform
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: BoundingBox
+    # - DESCRIPTION ------------------------
+    doc: >
+      Bounding box helper class.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      type: carla.Location
+      doc: >
+        The center of the bounding box relative to its parent actor.
+    - var_name: extent
+      type: carla.Vector3D
+      doc: >
+        It contains the vector from the center of the bounding box to one of the vertex of the box.  
+
+        So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+      - param_name: extent
+        type: carla.Vector3D
+      doc: >
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.BoundingBox
+      doc: >
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.BoundingBox
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: GeoLocation
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that contains geolocation simulated data 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: latitude
+      type: float
+    - var_name: longitude
+      type: float
+    - var_name: altitude
+      type: float
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: latitude
+        type: float
+        default: 0.0
+      - param_name: longitude
+        type: float
+        default: 0.0
+      - param_name: altitude
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Geolocation
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Geolocation
+    # --------------------------------------
+    - def_name: __str__
+      params:
+    # --------------------------------------
+...
