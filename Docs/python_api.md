@@ -1747,7 +1747,7 @@ Synchronizes with the simulator and returns the id of the newly started frame (o
 ---
 
 ## carla.WorldSettings<a name="carla.WorldSettings"></a> <sub><sup>_class_</sup></sub>
-More information in our [section](../configuring_the_simulation/#no-rendering-mode).  
+More information in our [section](../configuring_the_simulation/).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSettings.synchronous_mode"></a>**<font color="#f8805a">synchronous_mode</font>** (_bool_)  
