@@ -200,7 +200,7 @@
         type: list
         doc: >
           A list of commands to execute in batch. Each command has a different number of parameters.
-          Currently, we can use these [commands](#commands.ApplyAngularVelocity):  
+          Currently, we can use these [commands](#command.ApplyAngularVelocity):  
             SpawnActor  
             DestroyActor  
             ApplyVehicleControl  
@@ -228,7 +228,7 @@
       doc: >
         This function executes the whole list of commands on a single simulation
         step, blocks until the commands are executed, and returns a list of
-        carla.command.Response that can be used to determine whether a single
+        [`command.Response`](#command.Response) that can be used to determine whether a single
         command succeeded or not.
         [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116)  
     # --------------------------------------

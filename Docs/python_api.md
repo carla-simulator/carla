@@ -385,7 +385,6 @@
         - [**get_snapshot**(**self**)](#carla.World.get_snapshot) <sub>_Method_</sub>
         - [**get_actor**(**self**, **actor_id**)](#carla.World.get_actor) <sub>_Method_</sub>
         - [**get_actors**(**self**)](#carla.World.get_actors) <sub>_Method_</sub>
-        - [**get_actors**(**self**, **actor_ids**)](#carla.World.get_actors) <sub>_Method_</sub>
         - [**spawn_actor**(**self**, **blueprint**, **transform**, **attach_to**=None, **attachment**=Rigid)](#carla.World.spawn_actor) <sub>_Method_</sub>
         - [**try_spawn_actor**(**self**, **blueprint**, **transform**, **attach_to**=None, **attachment**=Rigid)](#carla.World.try_spawn_actor) <sub>_Method_</sub>
         - [**wait_for_tick**(**self**, **seconds**=10.0)](#carla.World.wait_for_tick) <sub>_Method_</sub>
@@ -497,58 +496,58 @@
         - [**apply_control**(**self**, **control**)](#carla.Walker.apply_control) <sub>_Method_</sub>
         - [**get_control**(**self**)](#carla.Walker.get_control) <sub>_Method_</sub>
         - [**\__str__**(**self**)](#carla.Walker.__str__) <sub>_Method_</sub>
-- [**commands**](#commands) <sub>_Module_</sub>  
-    - [**ApplyAngularVelocity**](#commands.ApplyAngularVelocity) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyAngularVelocity.actor_id) <sub>_Instance variable_</sub>
-        - [**angular_velocity**](#commands.ApplyAngularVelocity.angular_velocity) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **angular_velocity**)](#commands.ApplyAngularVelocity.__init__) <sub>_Method_</sub>
-    - [**ApplyImpulse**](#commands.ApplyImpulse) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyImpulse.actor_id) <sub>_Instance variable_</sub>
-        - [**impulse**](#commands.ApplyImpulse.impulse) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **impulse**)](#commands.ApplyImpulse.__init__) <sub>_Method_</sub>
-    - [**ApplyTransform**](#commands.ApplyTransform) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyTransform.actor_id) <sub>_Instance variable_</sub>
-        - [**transform**](#commands.ApplyTransform.transform) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **transform**)](#commands.ApplyTransform.__init__) <sub>_Method_</sub>
-    - [**ApplyVehicleControl**](#commands.ApplyVehicleControl) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyVehicleControl.actor_id) <sub>_Instance variable_</sub>
-        - [**control**](#commands.ApplyVehicleControl.control) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **control**)](#commands.ApplyVehicleControl.__init__) <sub>_Method_</sub>
-    - [**ApplyVelocity**](#commands.ApplyVelocity) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyVelocity.actor_id) <sub>_Instance variable_</sub>
-        - [**velocity**](#commands.ApplyVelocity.velocity) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **velocity**)](#commands.ApplyVelocity.__init__) <sub>_Method_</sub>
-    - [**ApplyWalkerControl**](#commands.ApplyWalkerControl) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyWalkerControl.actor_id) <sub>_Instance variable_</sub>
-        - [**control**](#commands.ApplyWalkerControl.control) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **control**)](#commands.ApplyWalkerControl.__init__) <sub>_Method_</sub>
-    - [**ApplyWalkerState**](#commands.ApplyWalkerState) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.ApplyWalkerState.actor_id) <sub>_Instance variable_</sub>
-        - [**transform**](#commands.ApplyWalkerState.transform) <sub>_Instance variable_</sub>
-        - [**speed**](#commands.ApplyWalkerState.speed) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **transform**, **speed**)](#commands.ApplyWalkerState.__init__) <sub>_Method_</sub>
-    - [**DestroyActor**](#commands.DestroyActor) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.DestroyActor.actor_id) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**)](#commands.DestroyActor.__init__) <sub>_Method_</sub>
-    - [**Response**](#commands.Response) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.Response.actor_id) <sub>_Instance variable_</sub>
-        - [**error**](#commands.Response.error) <sub>_Instance variable_</sub>
-        - [**has_error**(**self**)](#commands.Response.has_error) <sub>_Method_</sub>
-    - [**SetAutopilot**](#commands.SetAutopilot) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.SetAutopilot.actor_id) <sub>_Instance variable_</sub>
-        - [**enabled**](#commands.SetAutopilot.enabled) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **enabled**)](#commands.SetAutopilot.__init__) <sub>_Method_</sub>
-    - [**SetSimulatePhysics**](#commands.SetSimulatePhysics) <sub>_Class_</sub>  
-        - [**actor_id**](#commands.SetSimulatePhysics.actor_id) <sub>_Instance variable_</sub>
-        - [**enabled**](#commands.SetSimulatePhysics.enabled) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **actor**, **enabled**)](#commands.SetSimulatePhysics.__init__) <sub>_Method_</sub>
-    - [**SpawnActor**](#commands.SpawnActor) <sub>_Class_</sub>  
-        - [**transform**](#commands.SpawnActor.transform) <sub>_Instance variable_</sub>
-        - [**parent_id**](#commands.SpawnActor.parent_id) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **blueprint**, **transform**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
-        - [**\__init__**(**self**, **blueprint**, **transform**, **parent**)](#commands.SpawnActor.__init__) <sub>_Method_</sub>
-        - [**then**(**self**, **command**)](#commands.SpawnActor.then) <sub>_Method_</sub>
+- [**command**](#command) <sub>_Module_</sub>  
+    - [**ApplyAngularVelocity**](#command.ApplyAngularVelocity) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyAngularVelocity.actor_id) <sub>_Instance variable_</sub>
+        - [**angular_velocity**](#command.ApplyAngularVelocity.angular_velocity) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **angular_velocity**)](#command.ApplyAngularVelocity.__init__) <sub>_Method_</sub>
+    - [**ApplyImpulse**](#command.ApplyImpulse) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyImpulse.actor_id) <sub>_Instance variable_</sub>
+        - [**impulse**](#command.ApplyImpulse.impulse) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **impulse**)](#command.ApplyImpulse.__init__) <sub>_Method_</sub>
+    - [**ApplyTransform**](#command.ApplyTransform) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyTransform.actor_id) <sub>_Instance variable_</sub>
+        - [**transform**](#command.ApplyTransform.transform) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **transform**)](#command.ApplyTransform.__init__) <sub>_Method_</sub>
+    - [**ApplyVehicleControl**](#command.ApplyVehicleControl) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyVehicleControl.actor_id) <sub>_Instance variable_</sub>
+        - [**control**](#command.ApplyVehicleControl.control) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **control**)](#command.ApplyVehicleControl.__init__) <sub>_Method_</sub>
+    - [**ApplyVelocity**](#command.ApplyVelocity) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyVelocity.actor_id) <sub>_Instance variable_</sub>
+        - [**velocity**](#command.ApplyVelocity.velocity) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **velocity**)](#command.ApplyVelocity.__init__) <sub>_Method_</sub>
+    - [**ApplyWalkerControl**](#command.ApplyWalkerControl) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyWalkerControl.actor_id) <sub>_Instance variable_</sub>
+        - [**control**](#command.ApplyWalkerControl.control) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **control**)](#command.ApplyWalkerControl.__init__) <sub>_Method_</sub>
+    - [**ApplyWalkerState**](#command.ApplyWalkerState) <sub>_Class_</sub>  
+        - [**actor_id**](#command.ApplyWalkerState.actor_id) <sub>_Instance variable_</sub>
+        - [**transform**](#command.ApplyWalkerState.transform) <sub>_Instance variable_</sub>
+        - [**speed**](#command.ApplyWalkerState.speed) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **transform**, **speed**)](#command.ApplyWalkerState.__init__) <sub>_Method_</sub>
+    - [**DestroyActor**](#command.DestroyActor) <sub>_Class_</sub>  
+        - [**actor_id**](#command.DestroyActor.actor_id) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**)](#command.DestroyActor.__init__) <sub>_Method_</sub>
+    - [**Response**](#command.Response) <sub>_Class_</sub>  
+        - [**actor_id**](#command.Response.actor_id) <sub>_Instance variable_</sub>
+        - [**error**](#command.Response.error) <sub>_Instance variable_</sub>
+        - [**has_error**(**self**)](#command.Response.has_error) <sub>_Method_</sub>
+    - [**SetAutopilot**](#command.SetAutopilot) <sub>_Class_</sub>  
+        - [**actor_id**](#command.SetAutopilot.actor_id) <sub>_Instance variable_</sub>
+        - [**enabled**](#command.SetAutopilot.enabled) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **enabled**)](#command.SetAutopilot.__init__) <sub>_Method_</sub>
+    - [**SetSimulatePhysics**](#command.SetSimulatePhysics) <sub>_Class_</sub>  
+        - [**actor_id**](#command.SetSimulatePhysics.actor_id) <sub>_Instance variable_</sub>
+        - [**enabled**](#command.SetSimulatePhysics.enabled) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **actor**, **enabled**)](#command.SetSimulatePhysics.__init__) <sub>_Method_</sub>
+    - [**SpawnActor**](#command.SpawnActor) <sub>_Class_</sub>  
+        - [**transform**](#command.SpawnActor.transform) <sub>_Instance variable_</sub>
+        - [**parent_id**](#command.SpawnActor.parent_id) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**)](#command.SpawnActor.__init__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **blueprint**, **transform**)](#command.SpawnActor.__init__) <sub>_Method_</sub>
+        - [**\__init__**(**self**, **blueprint**, **transform**, **parent**)](#command.SpawnActor.__init__) <sub>_Method_</sub>
+        - [**then**(**self**, **command**)](#command.SpawnActor.then) <sub>_Method_</sub>
 
 ## carla.ActorAttributeType<a name="carla.ActorAttributeType"></a> <sub><sup>_class_</sup></sub>
 
@@ -579,7 +578,7 @@ Class that provides access to actors.
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the attachment options.  
+Class that defines the attachment options. See  [`world.spawn_actor`](#[carla.World.spawn_actor](#carla.World.spawn_actor)).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
@@ -593,11 +592,14 @@ Class that provides access to blueprints.
 <h3>Methods</h3>
 - <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
-Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.  
+Filters a list of ActorBlueprint with id or tags matching wildcard_pattern. The pattern is matched against each blueprint's id and tags.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
-- <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
+    - **Note:** <font color="#8E8E8E">_wildcard_pattern follows Unix shell-style wildcards (fnmatch).
+_</font>  
+- <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+    - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 - <a name="carla.BlueprintLibrary.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.BlueprintLibrary.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.BlueprintLibrary.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -933,7 +935,7 @@ Class that contains all the necessary information for spawning an Actor.
         - `tag` (_str_)  
     - **Return:** _bool_  
 - <a name="carla.ActorBlueprint.match_tags"></a>**<font color="#7fb800">match_tags</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
-Test if any of the flags matches wildcard_pattern.  
+Test if any of the flags or id matches wildcard_pattern.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _bool_  
@@ -981,7 +983,7 @@ Bounding box helper class.
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
-The center of the bounding box in the world.  
+The center of the bounding box relative to its parent actor.  
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 It contains the vector from the center of the bounding box to one of the vertex of the box.  
 So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`.  
@@ -1008,11 +1010,11 @@ Client used to connect to a Carla server.
 - <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**</font>, <font color="#00a6ed">**port**</font>, <font color="#00a6ed">**worker_threads**=0</font>)  
 Client constructor.  
     - **Parameters:**
-        - `host` (_str_) – IP where Carla is running.  
-        - `port` (_int_) – Port where Carla is running.  
-        - `worker_threads` (_int_) – Number of working threads.  
+        - `host` (_str_) – IP address where a CARLA Simulator instance is running.  
+        - `port` (_int_) – TCP port where the CARLA Simulator instance is running.  
+        - `worker_threads` (_int_) – Number of working threads used for background updates. If 0, use all available concurrency.  
 - <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
-Sets the server timeout in seconds.  
+Set the timeout in seconds allowed to block when doing networking calls.  
     - **Parameters:**
         - `seconds` (_float_) – New timeout value in seconds.  
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1022,7 +1024,7 @@ Get the client version as a string.
 Get the server version as a string.  
     - **Return:** _str_  
 - <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
-Get the world object from where we can get other information about the map.  
+Get the world currently active in the simulation.  
     - **Return:** _[carla.World](#carla.World)_  
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
 Get a list of strings of the maps available on server. The result can be something like:  
@@ -1035,18 +1037,18 @@ Get a list of strings of the maps available on server. The result can be somethi
   '/Game/Carla/Maps/Town07'.  
     - **Return:** _list(str)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
-Start again current world.  
+Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed.  
     - **Raises:** RuntimeError  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
-Load one of the available worlds on server.  
+Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed.  
     - **Parameters:**
-        - `map_name` (_str_) – Name of the map to load, like '/Game/Carla/Maps/Town01'.  
+        - `map_name` (_str_) – Name of the map to load, accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'.  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'. If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.  
     - **Parameters:**
         - `filename` (_str_) – Name of the file to write the recorded data.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
-Stops the recording in curse.  
+Stops the recording in progress.  
 - <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
 Will show info about the recorded file (frames, times, events, state, positions...) We have the option to show all the details per frame, that includes all the traffic light states, position of all actors, and animations data.  
     - **Parameters:**
@@ -1083,9 +1085,9 @@ Apply a different playback speed to current playback. Can be used several times 
     - **Parameters:**
         - `time_factor` (_float_) – A value of 1.0 means normal time factor. A value < 1.0 means slow motion (for example 0.5 is half speed) A value > 1.0 means fast motion (for example 2.0 is double speed).  
 - <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
-This function executes some commands altogether as fast as it can. For example, to set autopilot on some actors, we could use:   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)   We don't have control about the response of each command. If we need that, we can use apply_batch_sync().  
+This function executes the whole list of commands on a single simulation step. For example, to set autopilot on some actors, we could use:   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)   We don't have control about the response of each command. If we need that, we can use apply_batch_sync().  
     - **Parameters:**
-        - `commands` (_list_) – A list of commands to execute in batch. Each command has a different number of parameters. Currently, we can use these [commands](#commands.ApplyAngularVelocity):  
+        - `commands` (_list_) – A list of commands to execute in batch. Each command has a different number of parameters. Currently, we can use these [commands](#command.ApplyAngularVelocity):  
   SpawnActor  
   DestroyActor  
   ApplyVehicleControl  
@@ -1097,7 +1099,7 @@ This function executes some commands altogether as fast as it can. For example, 
   SetSimulatePhysics  
   SetAutopilot.  
 - <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
-This function executes some commands altogether as fast as it can one after the other, and returns another list with all the responses from each command.   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116).  
+This function executes the whole list of commands on a single simulation step, blocks until the commands are executed, and returns a list of [`command.Response`](#command.Response) that can be used to determine whether a single command succeeded or not. [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116).  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. For a list of commands available see function above apply_batch().  
     - **Return:** _list_  
@@ -1237,7 +1239,7 @@ Save the OpenDRIVE of the current map to disk.
 ---
 
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
-Class that represents a 3D rotation.  
+Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
 ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)   _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
@@ -1405,11 +1407,11 @@ VehicleControl is used for controlling the basic movement of a vehicle.
 
 <h3>Instance Variables</h3>
 - <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>** (_float_)  
-A scalar value to control the vehicle throttle.  
+A scalar value to control the vehicle throttle [0.0, 1.0].  
 - <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>** (_float_)  
-A scalar value to control the vehicle steering.  
+A scalar value to control the vehicle steering [-1.0, 1.0].  
 - <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>** (_float_)  
-A scalar value to control the vehicle brake.  
+A scalar value to control the vehicle brake [0.0, 1.0].  
 - <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>** (_bool_)  
 If true, hand brake will be used.  
 - <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>** (_bool_)  
@@ -1702,17 +1704,12 @@ Change the weather in the simulation.
 Return a snapshot of the world at this moment.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
 - <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
-Find actor by id, return nullptr if not found.  
+Find actor by id, return None if not found.  
     - **Parameters:**
         - `actor_id` (_int_)  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.get_actors"></a>**<font color="#7fb800">get_actors</font>**(<font color="#00a6ed">**self**</font>)  
-Return a list with all the actors currently present in the world.  
-    - **Return:** _[carla.ActorList](#carla.ActorList)_  
-- <a name="carla.World.get_actors"></a>**<font color="#7fb800">get_actors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>)  
-Return a list with the actors requested by ActorId.  
-    - **Parameters:**
-        - `actor_ids` (_list(int)_)  
+By default it returns a list with every actor present in the world. _A list of ids can be used as a parameter_.  
     - **Return:** _[carla.ActorList](#carla.ActorList)_  
 - <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
 Spawn an actor into the world based on the blueprint provided at transform. If a parent is provided, the actor is attached to parent.  
@@ -1723,7 +1720,7 @@ Spawn an actor into the world based on the blueprint provided at transform. If a
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_)  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
-Same as SpawnActor but return nullptr on failure instead of throwing an exception.  
+Same as SpawnActor but return none on failure instead of throwing an exception.  
     - **Parameters:**
         - `blueprint` (_[carla.BlueprintLibrary](#carla.BlueprintLibrary)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_) – If attached to parent, transform acts like a relative_transform to the parent actor.  
@@ -1736,7 +1733,10 @@ Block calling thread until a world tick is received.
         - `seconds` (_float_)  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
-Register a callback to be called every time a world tick is received.  
+Returns the ID of the callback so it can be removed with `remove_on_tick`.  
+    - **Parameters:**
+        - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_)  
+    - **Return:** _int_  
 - <a name="carla.World.remove_on_tick"></a>**<font color="#7fb800">remove_on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback_id**</font>)  
 Removes on tick callbacks.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1747,6 +1747,7 @@ Synchronizes with the simulator and returns the id of the newly started frame (o
 ---
 
 ## carla.WorldSettings<a name="carla.WorldSettings"></a> <sub><sup>_class_</sup></sub>
+More information in our [section](../configuring_the_simulation/#no-rendering-mode).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSettings.synchronous_mode"></a>**<font color="#f8805a">synchronous_mode</font>** (_bool_)  
@@ -1782,7 +1783,7 @@ Check if an actor is present in this snapshot.
     - **Parameters:**
         - `actor_id` (_int_)  
 - <a name="carla.WorldSnapshot.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
-Find an ActorSnapshot by id.  
+Find an ActorSnapshot by id, return None if the actor is not found.  
     - **Parameters:**
         - `actor_id` (_int_)  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1884,7 +1885,7 @@ List of lane markings that have been crossed.
 ---
 
 ## carla.Location<a name="carla.Location"></a><sub><sup>([carla.Vector3D](#carla.Vector3D))</sup></sub> <sub><sup>_class_</sup></sub>
-Represents a location in the world.  
+Represents a location in the world (in meters).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>** (_float_)  
@@ -1898,7 +1899,7 @@ Represents a location in the world.
         - `y` (_float_)  
         - `z` (_float_)  
 - <a name="carla.Location.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
-Computes the Euclidean distance between the current location to another one.  
+Computes the Euclidean distance in meters from this location to another one.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – The Location from where to compute the distance.  
     - **Return:** _float_  
@@ -1936,7 +1937,7 @@ Is true if the sensor is listening for data.
 <h3>Methods</h3>
 - <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
     - **Parameters:**
-        - `callback` (_function_) – Function that will be called each time the sensor sends data. As a parameter, the function receives a buffer with the data.  
+        - `callback` (_function_) – Register a callback to be executed each time a new measurement is received. The callback must accept a single argument containing the sensor data; the type of this object varies depending on the type of sensor, but they all derive from [carla.SensorData](#carla.SensorData).  
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Stops listening for data.  
 - <a name="carla.Sensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2075,99 +2076,99 @@ _</font>
 
 ---
 
-## commands.ApplyAngularVelocity<a name="commands.ApplyAngularVelocity"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyAngularVelocity<a name="command.ApplyAngularVelocity"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="command.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+- <a name="command.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
 
-## commands.ApplyImpulse<a name="commands.ApplyImpulse"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyImpulse<a name="command.ApplyImpulse"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="command.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
+- <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
 
-## commands.ApplyTransform<a name="commands.ApplyTransform"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyTransform<a name="command.ApplyTransform"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyTransform.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyTransform.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+- <a name="command.ApplyTransform.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyTransform.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="command.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
 
 ---
 
-## commands.ApplyVehicleControl<a name="commands.ApplyVehicleControl"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyVehicleControl<a name="command.ApplyVehicleControl"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyVehicleControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyVehicleControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
+- <a name="command.ApplyVehicleControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyVehicleControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="command.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
 
 ---
 
-## commands.ApplyVelocity<a name="commands.ApplyVelocity"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyVelocity<a name="command.ApplyVelocity"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyVelocity.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="command.ApplyVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyVelocity.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
+- <a name="command.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
 
-## commands.ApplyWalkerControl<a name="commands.ApplyWalkerControl"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyWalkerControl<a name="command.ApplyWalkerControl"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyWalkerControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyWalkerControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
+- <a name="command.ApplyWalkerControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyWalkerControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="command.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
 
 ---
 
-## commands.ApplyWalkerState<a name="commands.ApplyWalkerState"></a> <sub><sup>_class_</sup></sub>
+## command.ApplyWalkerState<a name="command.ApplyWalkerState"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.ApplyWalkerState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.ApplyWalkerState.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-- <a name="commands.ApplyWalkerState.speed"></a>**<font color="#f8805a">speed</font>** (_float_)  
+- <a name="command.ApplyWalkerState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.ApplyWalkerState.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+- <a name="command.ApplyWalkerState.speed"></a>**<font color="#f8805a">speed</font>** (_float_)  
 
 <h3>Methods</h3>
-- <a name="commands.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
+- <a name="command.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
@@ -2175,75 +2176,76 @@ _</font>
 
 ---
 
-## commands.DestroyActor<a name="commands.DestroyActor"></a> <sub><sup>_class_</sup></sub>
+## command.DestroyActor<a name="command.DestroyActor"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.DestroyActor.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.DestroyActor.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 
 <h3>Methods</h3>
-- <a name="commands.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  
+- <a name="command.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
 
 ---
 
-## commands.Response<a name="commands.Response"></a> <sub><sup>_class_</sup></sub>
+## command.Response<a name="command.Response"></a> <sub><sup>_class_</sup></sub>
+Execution result of a command, contains either an error string or and actor ID, depending on whether or not the command succeeded. See `client.apply_batch_sync()`.  
 
 <h3>Instance Variables</h3>
-- <a name="commands.Response.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.Response.error"></a>**<font color="#f8805a">error</font>** (_str_)  
+- <a name="command.Response.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.Response.error"></a>**<font color="#f8805a">error</font>** (_str_)  
 
 <h3>Methods</h3>
-- <a name="commands.Response.has_error"></a>**<font color="#7fb800">has_error</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="command.Response.has_error"></a>**<font color="#7fb800">has_error</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
-## commands.SetAutopilot<a name="commands.SetAutopilot"></a> <sub><sup>_class_</sup></sub>
+## command.SetAutopilot<a name="command.SetAutopilot"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.SetAutopilot.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.SetAutopilot.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
+- <a name="command.SetAutopilot.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.SetAutopilot.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
 
 <h3>Methods</h3>
-- <a name="commands.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
-    - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
-        - `enabled` (_bool_)  
-
----
-
-## commands.SetSimulatePhysics<a name="commands.SetSimulatePhysics"></a> <sub><sup>_class_</sup></sub>
-
-<h3>Instance Variables</h3>
-- <a name="commands.SetSimulatePhysics.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-- <a name="commands.SetSimulatePhysics.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
-
-<h3>Methods</h3>
-- <a name="commands.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
+- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_)  
         - `enabled` (_bool_)  
 
 ---
 
-## commands.SpawnActor<a name="commands.SpawnActor"></a> <sub><sup>_class_</sup></sub>
+## command.SetSimulatePhysics<a name="command.SetSimulatePhysics"></a> <sub><sup>_class_</sup></sub>
 
 <h3>Instance Variables</h3>
-- <a name="commands.SpawnActor.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-- <a name="commands.SpawnActor.parent_id"></a>**<font color="#f8805a">parent_id</font>** (_int_)  
+- <a name="command.SetSimulatePhysics.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+- <a name="command.SetSimulatePhysics.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
 
 <h3>Methods</h3>
-- <a name="commands.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="commands.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="command.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_)  
+        - `enabled` (_bool_)  
+
+---
+
+## command.SpawnActor<a name="command.SpawnActor"></a> <sub><sup>_class_</sup></sub>
+
+<h3>Instance Variables</h3>
+- <a name="command.SpawnActor.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+- <a name="command.SpawnActor.parent_id"></a>**<font color="#f8805a">parent_id</font>** (_int_)  
+
+<h3>Methods</h3>
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>)  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
-- <a name="commands.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent**</font>)  
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent**</font>)  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
         - `parent` (_[carla.Actor](#carla.Actor) or int_)  
-- <a name="commands.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
+- <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
     - **Parameters:**
         - `command` (_[carla.Command](#carla.Command)_) – CommandType.  
 
