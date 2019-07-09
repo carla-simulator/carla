@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 #include "carla/MsgPackAdaptors.h"
 #include "carla/geom/Transform.h"
+#include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
@@ -84,6 +85,15 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, transform);
     };
 
+    struct ApplyWalkerState : CommandBase<ApplyWalkerState> {
+      ApplyWalkerState() = default;
+      ApplyWalkerState(ActorId id, const geom::Transform &value, const float speed) : actor(id), transform(value), speed(speed) {}
+      ActorId actor;
+      geom::Transform transform;
+      float speed;
+      MSGPACK_DEFINE_ARRAY(actor, transform, speed);
+    };
+
     struct ApplyVelocity : CommandBase<ApplyVelocity> {
       ApplyVelocity() = default;
       ApplyVelocity(ActorId id, const geom::Vector3D &value)
@@ -140,6 +150,7 @@ namespace rpc {
         ApplyVehicleControl,
         ApplyWalkerControl,
         ApplyTransform,
+        ApplyWalkerState,
         ApplyVelocity,
         ApplyAngularVelocity,
         ApplyImpulse,

@@ -77,6 +77,8 @@ namespace detail {
 
     rpc::MapInfo GetMapInfo();
 
+    std::vector<uint8_t> GetNavigationMesh() const;
+
     std::vector<std::string> GetAvailableMaps();
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();

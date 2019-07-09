@@ -8,6 +8,7 @@
 #include <carla/client/TrafficLight.h>
 #include <carla/client/Vehicle.h>
 #include <carla/client/Walker.h>
+#include <carla/client/WalkerAIController.h>
 #include <carla/rpc/TrafficLightState.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -109,6 +110,14 @@ void export_actor() {
       .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)
       .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::WalkerAIController, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::WalkerAIController>>("WalkerAIController", no_init)
+    .def("start", &cc::WalkerAIController::Start)
+    .def("stop", &cc::WalkerAIController::Stop)
+    .def("go_to_location", &cc::WalkerAIController::GoToLocation, (arg("destination")))
+    .def("set_max_speed", &cc::WalkerAIController::SetMaxSpeed, (arg("speed")))
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::TrafficSign, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficSign>>(

@@ -140,6 +140,24 @@ if not defined install_gtest (
 )
 
 rem ============================================================================
+rem -- Download and install Recast & Detour ------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing "Recast & Detour"...
+call "%INSTALLERS_DIR%install_recast.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+
+if %errorlevel% neq 0 goto failed
+
+if not defined install_recast (
+
+    echo %FILE_N% Failed while installing "Recast & Detour".
+    goto failed
+) else (
+    set RECAST_INSTALL_DIR=%install_recast:\=/%
+)
+
+rem ============================================================================
 rem -- Download and install Boost ----------------------------------------------
 rem ============================================================================
 
@@ -216,6 +234,8 @@ set CMAKE_CONFIG_FILE="%INSTALLATION_DIR%CMakeLists.txt.in"
 >>"%CMAKE_CONFIG_FILE%" echo   set(ZLIB_LIB_PATH "%ZLIB_INSTALL_DIR%/lib")
 >>"%CMAKE_CONFIG_FILE%" echo   set(LIBPNG_INCLUDE_PATH "%LIBPNG_INSTALL_DIR%/include")
 >>"%CMAKE_CONFIG_FILE%" echo   set(LIBPNG_LIB_PATH "%LIBPNG_INSTALL_DIR%/lib")
+>>"%CMAKE_CONFIG_FILE%" echo   set(RECAST_INCLUDE_PATH "%RECAST_INSTALL_DIR%/include")
+>>"%CMAKE_CONFIG_FILE%" echo   set(RECAST_LIB_PATH "%RECAST_INSTALL_DIR%/lib")
 >>"%CMAKE_CONFIG_FILE%" echo endif ()
 
 goto success
