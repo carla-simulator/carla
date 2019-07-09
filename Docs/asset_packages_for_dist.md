@@ -1,4 +1,4 @@
-<h1>Standalone Asset Packages creation for distribution</h1>
+<h1>Creating standalone asset packages for distribution</h1>
 
 *Please note that we will use the term *assets* for referring to **props** and also **maps**.* 
 
