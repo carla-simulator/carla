@@ -109,7 +109,7 @@ Import
 │   │   ├── LaneMarking1_Spec.png
 │   │   ├── MapToImport01.fbx
 │   │   └── MapToImport01.xodr
-|   └── MapToImport02
+|   ├── MapToImport02
 │   │   ├── MapToImport02.fbx
 │   │   └── MapToImport02.xodr
 |   ├── AssetsToImport
