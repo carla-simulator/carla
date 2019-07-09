@@ -49,16 +49,20 @@ class CarlaSyncMode(object):
 
     """
 
-    def __init__(self, world, *sensors):
+    def __init__(self, world, *sensors, **kwargs):
         self.world = world
         self.sensors = sensors
         self.frame = None
+        self.delta_seconds = 1.0 / kwargs.get('fps', 20)
         self._queues = []
+        self._settings = None
 
     def __enter__(self):
-        settings = self.world.get_settings()
-        settings.synchronous_mode = True
-        self.frame = self.world.apply_settings(settings)
+        self._settings = self.world.get_settings()
+        self.frame = self.world.apply_settings(carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=self.delta_seconds))
 
         def make_queue(register_event):
             q = queue.Queue()
@@ -77,9 +81,7 @@ class CarlaSyncMode(object):
         return data
 
     def __exit__(self, *args, **kwargs):
-        settings = self.world.get_settings()
-        settings.synchronous_mode = False
-        self.world.apply_settings(settings)
+        self.world.apply_settings(self._settings)
 
     def _retrieve_data(self, sensor_queue, timeout):
         while True:
@@ -158,7 +160,7 @@ def main():
         actor_list.append(camera_semseg)
 
         # Create a synchronous mode context.
-        with CarlaSyncMode(world, camera_rgb, camera_semseg) as sync_mode:
+        with CarlaSyncMode(world, camera_rgb, camera_semseg, fps=30) as sync_mode:
             while True:
                 if should_quit():
                     return
@@ -172,7 +174,7 @@ def main():
                 vehicle.set_transform(waypoint.transform)
 
                 image_semseg.convert(carla.ColorConverter.CityScapesPalette)
-                fps = 1.0 / snapshot.timestamp.delta_seconds
+                fps = round(1.0 / snapshot.timestamp.delta_seconds)
 
                 # Draw the display.
                 draw_image(display, image_rgb)

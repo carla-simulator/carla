@@ -136,6 +136,11 @@ namespace detail {
   }
 
   uint64_t Simulator::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    if (settings.synchronous_mode && !settings.fixed_delta_seconds) {
+      log_warning(
+          "synchronous mode enabled with variable delta seconds. It is highly "
+          "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
+    }
     const auto frame = _client.SetEpisodeSettings(settings);
     SynchronizeFrame(frame, *_episode);
     return frame;

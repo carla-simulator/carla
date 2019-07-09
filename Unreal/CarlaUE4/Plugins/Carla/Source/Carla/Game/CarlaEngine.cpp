@@ -12,12 +12,33 @@
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
 
+#include "Runtime/Core/Public/Misc/App.h"
+
 #include <thread>
 
-static uint32 GetNumberOfThreadsForRPCServer()
+// =============================================================================
+// -- Static local methods -----------------------------------------------------
+// =============================================================================
+
+static uint32 FCarlaEngine_GetNumberOfThreadsForRPCServer()
 {
   return std::max(std::thread::hardware_concurrency(), 4u) - 2u;
 }
+
+static TOptional<double> FCarlaEngine_GetFixedDeltaSeconds()
+{
+  return FApp::IsBenchmarking() ? FApp::GetFixedDeltaTime() : TOptional<double>{};
+}
+
+static void FCarlaEngine_SetFixedDeltaSeconds(TOptional<double> FixedDeltaSeconds)
+{
+  FApp::SetBenchmarking(FixedDeltaSeconds.IsSet());
+  FApp::SetFixedDeltaTime(FixedDeltaSeconds.Get(0.0));
+}
+
+// =============================================================================
+// -- FCarlaEngine -------------------------------------------------------------
+// =============================================================================
 
 FCarlaEngine::~FCarlaEngine()
 {
@@ -35,7 +56,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   {
     const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
     auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort);
-    Server.AsyncRun(GetNumberOfThreadsForRPCServer());
+    Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
     WorldObserver.SetStream(BroadcastStream);
 
@@ -55,6 +76,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
 void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
+  Episode.EpisodeSettings.FixedDeltaSeconds = FCarlaEngine_GetFixedDeltaSeconds();
   CurrentEpisode = &Episode;
   Server.NotifyBeginEpisode(Episode);
 }
@@ -91,4 +113,6 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   {
     GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode;
   }
+
+  FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
 }

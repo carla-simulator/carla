@@ -4,67 +4,33 @@ Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
-Fixed time-step
----------------
+!!! tip
+    Use [PythonAPI/util/config.py][configlink] to configure the simulator
+    from the command-line.
 
-The time-step is the _simulation-time_ elapsed between two steps of the
-simulation. In video-games, this _simulation-time_ is almost always adjusted to
-real time for better realism. This is achieved by having a **variable
-time-step** that adjusts the simulation to keep up with real-time. In
-simulations however, it is better to detach the _simulation-time_ from
-real-time, and let the simulation run as fast as possible using a **fixed
-time-step**. Doing so, we are not only able to simulate longer periods in less
-time, but also gain repeatability by reducing the float-point arithmetic errors
-that a variable time-step introduces.
-
-CARLA can be run in both modes.
-
-<h4>Variable time-step</h4>
-
-The simulation tries to keep up with real-time. To do so, the time-step is
-slightly adjusted each update. Simulations are not repeatable. By default, the
-simulator starts in this mode
-
-<h4>Fixed time-step</h4>
-
-The simulation runs as fast as possible, simulating the same time increment on
-each step. To run the simulator this way you need to pass two parameters in the
-command-line, one to enable the fixed time-step mode, and the second to specify
-the FPS of the simulation (i.e. the inverse of the time step). For instance, to
-run the simulation at a fixed time-step of 0.1 seconds we execute
-
-    $ ./CarlaUE4.sh -benchmark -fps=10
-
-It is important to note that this mode can only be enabled when launching the
-simulator since this is actually a feature of Unreal Engine.
-
-!!! important
-    **Do not decrease the frame-rate below 10 FPS.**<br>
-    Our settings are adjusted to clamp the physics engine to a minimum of 10
-    FPS. If the game tick falls below this, the physics engine will still
-    simulate 10 FPS. In that case, things dependent on the game's delta time are
-    no longer in sync with the physics engine.
-    Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
-
+[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
 
 Changing the map
 ----------------
 
-The map can be selected by passing the path to the map as first argument when
-launching the simulator
+The map can be changed from the Python API with
 
-```sh
-# Linux
-./CarlaUE4.sh /Game/Carla/Maps/Town01
+```py
+world = client.load_map('Town01')
 ```
 
-```cmd
-rem Windows
-CarlaUE4.exe /Game/Carla/Maps/Town01
+this creates an empty world with default settings. The list of currently
+available maps can be retrieved with
+
+```py
+print(client.get_available_maps())
 ```
 
-The path "/Game/" maps to the Content folder of our repository in
-"Unreal/CarlaUE4/Content/".
+To reload the world using the current active map, use
+
+```py
+world = client.reload_world()
+```
 
 Running off-screen
 ------------------
@@ -75,9 +41,10 @@ environment variable `DISPLAY` to empty
 !!! important
     **DISPLAY= only works with OpenGL**<br>
     Vulkan is now the default graphics API used by Unreal Engine and CARLA on
-    Linux. Unreal Engine currently crashes when Vulkan is used when running off-screen.
-    Therefore the -opengl flag must be added to force the engine to use OpenGL instead.
-    We hope that this issue is addressed by Epic in the near future.
+    Linux. Unreal Engine currently crashes when Vulkan is used when running
+    off-screen. Therefore the -opengl flag must be added to force the engine to
+    use OpenGL instead. We hope that this issue is addressed by Epic in the near
+    future.
 
 ```sh
 # Linux
@@ -104,6 +71,54 @@ settings = world.get_settings()
 settings.no_rendering_mode = True
 world.apply_settings(settings)
 ```
+
+Fixed time-step
+---------------
+
+The time-step is the _simulation-time_ elapsed between two steps of the
+simulation. In video-games, this _simulation-time_ is almost always adjusted to
+real time for better realism. This is achieved by having a **variable
+time-step** that adjusts the simulation to keep up with real-time. In
+simulations however, it is better to detach the _simulation-time_ from
+real-time, and let the simulation run as fast as possible using a **fixed
+time-step**. Doing so, we are not only able to simulate longer periods in less
+time, but also gain repeatability by reducing the float-point arithmetic errors
+that a variable time-step introduces.
+
+CARLA can be run in both modes.
+
+<h4>Variable time-step</h4>
+
+The simulation tries to keep up with real-time. To do so, the time-step is
+slightly adjusted each update. Simulations are not repeatable. By default, the
+simulator starts in this mode, but it can be re-enabled if changed with
+
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+```
+
+<h4>Fixed time-step</h4>
+
+The simulation runs as fast as possible, simulating the same time increment on
+each step. To enable this mode set a fixed delta seconds in the world settings.
+For instance, to run the simulation at a fixed time-step of 0.05 seconds (20
+FPS) apply the following settings
+
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+```
+
+!!! important
+    **Do not decrease the frame-rate below 10 FPS.**<br>
+    Our settings are adjusted to clamp the physics engine to a minimum of 10
+    FPS. If the game tick falls below this, the physics engine will still
+    simulate 10 FPS. In that case, things dependent on the game's delta time are
+    no longer in sync with the physics engine.
+    Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
 
 Synchronous mode
 ----------------
@@ -150,9 +165,10 @@ at the example [synchronous_mode.py][syncmodelink].
 Other command-line options
 --------------------------
 
-  * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
+  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
+  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
   * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
   * `-no-rendering` Disable rendering.
-  * [Full list of UE4 command-line arguments][ue4clilink].
+  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments

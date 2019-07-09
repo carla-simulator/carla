@@ -68,7 +68,7 @@ if $DO_PACKAGE ; then
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
-      -clientconfig=Development -ue4exe=UE4Editor \
+      -clientconfig=Shipping -ue4exe=UE4Editor \
       -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${BUILD_FOLDER}"
 
