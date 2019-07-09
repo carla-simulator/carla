@@ -18,29 +18,12 @@ import os
 import shutil
 import subprocess
 
-
-@contextmanager
-def pushd(directory):
-    """Context manager to temporally change working directory."""
-    cwd = os.getcwd()
-    try:
-        os.chdir(directory)
-        yield
-    finally:
-        os.chdir(cwd)
-
-
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
 SCRIPT_NAME = os.path.basename(__file__)
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-CARLA_ROOT_PATH = ""
-# Temporary get into current script folder to find Carla root path
-with pushd(SCRIPT_DIR):
-    # Go two directories above the current one
-    os.chdir(os.path.pardir)
-    os.chdir(os.path.pardir)
-    CARLA_ROOT_PATH = os.getcwd()
+# Go two directories above the current script
+CARLA_ROOT_PATH = os.path.normpath(SCRIPT_DIR + '/../..')
 
 
 def get_packages_json_list(folder):
