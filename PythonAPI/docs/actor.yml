@@ -36,7 +36,7 @@
       type: bool
       deprecated: >
         This method is not reliable to check if an actor is still alive. Use
-        `world.get_actors([actor.id])` to check if the actor is still present in
+        `world.get_actors(actor.id)` to check if the actor is still present in
         the simulation.
       doc: >
         Return whether this object was destroyed using this actor handle.

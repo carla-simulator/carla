@@ -91,6 +91,7 @@
   - class_name: WorldSettings
     # - DESCRIPTION ------------------------
     doc: >
+      More information in our [section](../configuring_the_simulation/#no-rendering-mode)
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: synchronous_mode
@@ -139,7 +140,8 @@
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the attachment options.
+      Class that defines the attachment options. See 
+      [`world.spawn_actor`](#carla.World.spawn_actor)
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
@@ -214,20 +216,13 @@
       - param_name: actor_id
         type: int
       doc: >
-        Find actor by id, return nullptr if not found.
+        Find actor by id, return None if not found.
     # --------------------------------------
     - def_name: get_actors
       return: carla.ActorList
       doc: >
-        Return a list with all the actors currently present in the world.
-    # --------------------------------------
-    - def_name: get_actors
-      return: carla.ActorList
-      params: 
-      - param_name: actor_ids
-        type: list(int)
-      doc: >
-        Return a list with the actors requested by ActorId.
+        By default it returns a list with every actor present in the world.
+        _A list of ids can be used as a parameter_
     # --------------------------------------
     - def_name: spawn_actor
       return: carla.Actor
@@ -271,7 +266,7 @@
         default: Rigid
         doc: >
       doc: >
-        Same as SpawnActor but return nullptr on failure instead of throwing an
+        Same as SpawnActor but return none on failure instead of throwing an
         exception.
     # --------------------------------------
     - def_name: wait_for_tick
@@ -284,10 +279,12 @@
         Block calling thread until a world tick is received.
     # --------------------------------------
     - def_name: on_tick
+      return: int
       params:
       - param_name: callback
+        type: carla.WorldSnapshot
       doc: >
-        Register a callback to be called every time a world tick is received.
+        Returns the ID of the callback so it can be removed with `remove_on_tick`.
     # --------------------------------------
     - def_name: remove_on_tick
       params:

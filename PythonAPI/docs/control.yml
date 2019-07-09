@@ -12,17 +12,17 @@
     - var_name: throttle
       type: float
       doc: >
-        A scalar value to control the vehicle throttle.
+        A scalar value to control the vehicle throttle [0.0, 1.0].
     # --------------------------------------
     - var_name: steer
       type: float
       doc: >
-        A scalar value to control the vehicle steering.
+        A scalar value to control the vehicle steering [-1.0, 1.0].
     # --------------------------------------
     - var_name: brake
       type: float    
       doc: >
-        A scalar value to control the vehicle brake.
+        A scalar value to control the vehicle brake [0.0, 1.0].
     # --------------------------------------
     - var_name: hand_brake
       type: bool
