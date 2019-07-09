@@ -396,7 +396,8 @@
     - [**WorldSettings**](#carla.WorldSettings) <sub>_Class_</sub>  
         - [**synchronous_mode**](#carla.WorldSettings.synchronous_mode) <sub>_Instance variable_</sub>
         - [**no_rendering_mode**](#carla.WorldSettings.no_rendering_mode) <sub>_Instance variable_</sub>
-        - [**\__init__**(**self**, **synchronous_mode**=False, **no_rendering_mode**=False)](#carla.WorldSettings.__init__) <sub>_Method_</sub>
+        - [**fixed_delta_seconds**](#carla.WorldSettings.fixed_delta_seconds) <sub>_Instance variable_</sub>
+        - [**\__init__**(**self**, **synchronous_mode**=False, **no_rendering_mode**=False, **fixed_delta_seconds**=0.0)](#carla.WorldSettings.__init__) <sub>_Method_</sub>
         - [**\__eq__**(**self**, **other**)](#carla.WorldSettings.__eq__) <sub>_Method_</sub>
         - [**\__ne__**(**self**, **other**)](#carla.WorldSettings.__ne__) <sub>_Method_</sub>
         - [**\__str__**(**self**)](#carla.WorldSettings.__str__) <sub>_Method_</sub>
@@ -1750,12 +1751,14 @@ Synchronizes with the simulator and returns the id of the newly started frame (o
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSettings.synchronous_mode"></a>**<font color="#f8805a">synchronous_mode</font>** (_bool_)  
 - <a name="carla.WorldSettings.no_rendering_mode"></a>**<font color="#f8805a">no_rendering_mode</font>** (_bool_)  
+- <a name="carla.WorldSettings.fixed_delta_seconds"></a>**<font color="#f8805a">fixed_delta_seconds</font>** (_float_)  
 
 <h3>Methods</h3>
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>)  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
     - **Parameters:**
         - `synchronous_mode` (_bool_)  
         - `no_rendering_mode` (_bool_)  
+        - `fixed_delta_seconds` (_float_)  
 - <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
         - `other` (_[carla.Timestamp](#carla.Timestamp)_)  

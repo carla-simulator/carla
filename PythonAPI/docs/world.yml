@@ -99,6 +99,9 @@
     - var_name: no_rendering_mode
       type: bool
       doc: >
+    - var_name: fixed_delta_seconds
+      type: float
+      doc: >
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -110,6 +113,10 @@
       - param_name: no_rendering_mode
         type: bool
         default: false
+        doc: >
+      - param_name: fixed_delta_seconds
+        type: float
+        default: 0.0
         doc: >
       doc: >
     # --------------------------------------
