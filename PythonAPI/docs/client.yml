@@ -16,16 +16,17 @@
       - param_name: host
         type: str
         doc: >
-          IP where Carla is running
+          IP address where a CARLA Simulator instance is running
       - param_name: port
         type: int
         doc: >
-          Port where Carla is running
+          TCP port where the CARLA Simulator instance is running
       - param_name: worker_threads
         type: int
         default: 0
         doc: >
-          Number of working threads
+          Number of working threads used for background updates. If 0, use all
+          available concurrency.
       doc: >
         Client constructor
     # --------------------------------------
@@ -36,7 +37,7 @@
         doc: >
           New timeout value in seconds
       doc: >
-        Sets the server timeout in seconds
+        Set the timeout in seconds allowed to block when doing networking calls
     # --------------------------------------
     - def_name: get_client_version
       params:
@@ -54,7 +55,7 @@
       params:
       return: carla.World
       doc: >
-        Get the world object from where we can get other information about the map
+        Get the world currently active in the simulation
     # --------------------------------------
     - def_name: get_available_maps
       params:
@@ -73,16 +74,20 @@
       params:
       raises: RuntimeError
       doc: >
-        Start again current world
+        Reload the current world, note that a new world is created with default
+        settings using the same map. All actors present in the world will be
+        destroyed.
     # --------------------------------------
     - def_name: load_world
       params:
       - param_name: map_name
         type: str
         doc: >
-          Name of the map to load, like '/Game/Carla/Maps/Town01'
+          Name of the map to load, accepts both full paths and map names, e.g.
+          '/Game/Carla/Maps/Town01' or 'Town01'.
       doc: >
-        Load one of the available worlds on server
+        Load a new world with default settings using `map_name` map. All actors
+        present in the current world will be destroyed.
     # --------------------------------------
     - def_name: start_recorder
       params:
@@ -97,7 +102,7 @@
     - def_name: stop_recorder
       params:
       doc: >
-        Stops the recording in curse.
+        Stops the recording in progress.
     # --------------------------------------
     - def_name: show_recorder_file_info
       params:
@@ -207,7 +212,7 @@
             SetSimulatePhysics  
             SetAutopilot  
       doc: >
-        This function executes some commands altogether as fast as it can.
+        This function executes the whole list of commands on a single simulation step.
         For example, to set autopilot on some actors, we could use:  
         [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)  
         We don't have control about the response of each command. If we need that, we can use apply_batch_sync().
@@ -221,7 +226,10 @@
           A list of commands to execute in batch. For a list of commands available see function above apply_batch().
       return: list
       doc: >
-        This function executes some commands altogether as fast as it can one after the other, and returns another list with all the responses from each command.  
+        This function executes the whole list of commands on a single simulation
+        step, blocks until the commands are executed, and returns a list of
+        carla.command.Response that can be used to determine whether a single
+        command succeeded or not.
         [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116)  
     # --------------------------------------
 ...
