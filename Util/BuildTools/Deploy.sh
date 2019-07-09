@@ -95,19 +95,19 @@ fi
 
 if ${UPLOAD_MAPS} ; then
 
-  mkdir -p ${CARLA_EXPORTED_MAPS_FOLDER}
-  pushd "${CARLA_EXPORTED_MAPS_FOLDER}" >/dev/null
+  mkdir -p ${CARLA_DIST_FOLDER}
 
-  for MAP_PACKAGE in *.tar.gz; do
+  pushd "${CARLA_DIST_FOLDER}" >/dev/null
 
-    DEPLOY_MAP_NAME=$(basename "${MAP_PACKAGE}" .tar.gz)_${REPOSITORY_TAG}.tar.gz
-    DEPLOY_MAP_URI=${S3_PREFIX}/${DEPLOY_MAP_NAME}
+  for MAP_PACKAGE in *_${REPOSITORY_TAG}.tar.gz ; do if [[ ${MAP_PACKAGE} != ${LATEST_PACKAGE} ]] ; then
+
+    DEPLOY_MAP_URI=${S3_PREFIX}/${MAP_PACKAGE}
 
     ${AWS_COPY} ${MAP_PACKAGE} ${DEPLOY_MAP_URI}
 
     log "${MAP_PACKAGE} uploaded to ${DEPLOY_MAP_URI}."
 
-  done
+  fi ; done
 
   popd >/dev/null
 
