@@ -205,11 +205,25 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   return bPackageSaved;
 }
 
+FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &PackageName) const
+{
+  // Get all Package names
+  TArray<FString> PackageList;
+  IFileManager::Get().FindFilesRecursive(PackageList, *(FPaths::ProjectContentDir()),
+      *(PackageName + TEXT(".Package.json")), true, false, false);
+
+  if (PackageList.Num() == 0)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Package json file not found."));
+    return {};
+  }
+
+  return IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PackageList[0]);
+}
+
 FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
 {
-
-  FString PackageConfigPath = FPaths::ProjectContentDir() + PackageName + TEXT("/Config/");
-  FString PackageJsonFilePath = PackageConfigPath + PackageName + TEXT(".Package.json");
+  FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
 
   FAssetsPaths AssetsPaths;
 
@@ -282,6 +296,11 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
       FPackageName::GetMapPackageExtension());
 
+  if (FPaths::FileExists(*PackageFileName))
+  {
+    // Will not save package if it already exists
+    return false;
+  }
   return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 }
@@ -335,11 +354,21 @@ int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
     DestroySpawnedActorsInWorld(SpawnedActors);
     MapObjectLibrary->ClearLoaded();
   }
-
+  else
+  {
+    if (MapPathData.Len() >= 0)
+    {
+      MapPathData.RemoveFromEnd(TEXT("+"));
+    }
+  }
   // Save Map Path File for further use
-  FString SaveDirectory = FPaths::ProjectContentDir() + PackageName + TEXT("/Config");
+  FString SaveDirectory = FPaths::ProjectContentDir();
   FString FileName = FString("MapPaths.txt");
   SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+
+  FileName = FString("PackagePath.txt");
+  FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
+  SaveStringTextToFile(SaveDirectory, FileName, PackageJsonFilePath, true);
   return 0;
 }
 #endif

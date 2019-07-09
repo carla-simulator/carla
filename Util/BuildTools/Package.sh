@@ -186,15 +186,15 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
   DESTINATION=${BUILD_FOLDER}.tar.gz
-  PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
+  # PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
 
-  if [ ! -d "${PACKAGE_PATH}" ] ; then
+  # if [ ! -d "${PACKAGE_PATH}" ] ; then
 
-    ERROR_MSG="Package \"${PACKAGE_NAME}\" not found! Make sure you have "
-    ERROR_MSG+="imported the package already and the package name is correct."
-    fatal_error "${ERROR_MSG}"
+  #   ERROR_MSG="Package \"${PACKAGE_NAME}\" not found! Make sure you have "
+  #   ERROR_MSG+="imported the package already and the package name is correct."
+  #   fatal_error "${ERROR_MSG}"
 
-  fi
+  # fi
 
   mkdir -p ${BUILD_FOLDER}
 
@@ -206,8 +206,10 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
       -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME}
 
-  PACKAGE_FILE=${PACKAGE_PATH}/Config/${PACKAGE_NAME}.Package.json
-  MAP_LIST_FILE=${PACKAGE_PATH}/Config/MapPaths.txt
+  PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
+  MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
+
+  PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
 
   # Cook maps
