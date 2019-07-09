@@ -9,6 +9,8 @@ source $(dirname "$0")/Environment.sh
 REPLACE_LATEST=false
 DOCKER_PUSH=false
 AWS_COPY="aws s3 cp"
+DOCKER="docker"
+UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
 
 # ==============================================================================
@@ -35,6 +37,8 @@ while true; do
       shift ;;
     --dry-run )
       AWS_COPY="echo ${AWS_COPY}";
+      DOCKER="echo ${DOCKER}";
+      UNTAR="echo ${UNTAR}";
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -120,17 +124,17 @@ if ${DOCKER_PUSH} ; then
 
   mkdir -p ${DOCKER_BUILD_FOLDER}
 
-  tar -xvzf ${LATEST_PACKAGE_PATH} -C ${DOCKER_BUILD_FOLDER}/
+  ${UNTAR} ${LATEST_PACKAGE_PATH} -C ${DOCKER_BUILD_FOLDER}/
 
   pushd "${DOCKER_BUILD_FOLDER}" >/dev/null
 
   log "Building Docker image ${DOCKER_NAME}."
 
-  docker build -t ${DOCKER_NAME} -f Dockerfile .
+  ${DOCKER} build -t ${DOCKER_NAME} -f Dockerfile .
 
   log "Pushing Docker image."
 
-  docker push ${DOCKER_NAME}
+  ${DOCKER} push ${DOCKER_NAME}
 
   popd >/dev/null
 
