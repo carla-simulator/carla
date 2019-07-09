@@ -5,10 +5,10 @@ account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
 !!! tip
-    Use [PythonAPI/examples/config.py][configlink] to configure the simulator
+    Use [PythonAPI/util/config.py][configlink] to configure the simulator
     from the command-line.
 
-[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/config.py
+[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
 
 Changing the map
 ----------------
