@@ -216,7 +216,6 @@ def import_assets(package_name, json_dirname, props, maps):
     generate_package_file(package_name, props, maps)
 
 
-
 def import_assets_from_json_list(json_list):
     maps = []
     package_name = ""
@@ -236,10 +235,6 @@ def import_assets_from_json_list(json_list):
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
-
-            # Prepare cooking of package
-            prepare_cook_commandlet(package_name)
-            print() # Fixes a ugly artifact after the commandlet output
 
 
 def move_uassets(package_name, maps):
@@ -268,13 +263,6 @@ def move_uassets(package_name, maps):
                 shutil.move(os.path.join(origin_path, filename), os.path.join(road_dir, filename))
             if "TerrainNode" in filename:
                 shutil.move(os.path.join(origin_path, filename), os.path.join(terrain_dir, filename))
-
-
-
-def prepare_cook_commandlet(package_name):
-    commandlet_name = "PrepareAssetsForCooking"
-    commandlet_arguments = "-PackageName=%s" % package_name
-    invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
 def main():
