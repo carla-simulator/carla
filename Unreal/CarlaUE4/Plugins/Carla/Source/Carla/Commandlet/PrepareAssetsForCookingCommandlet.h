@@ -18,6 +18,17 @@
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
+/// Struct containing Package Params
+USTRUCT()
+struct CARLA_API FPackageParams
+{
+  GENERATED_USTRUCT_BODY()
+
+  FString Name;
+
+  bool bOnlyPrepareMaps;
+};
+
 /// Struct containing map data read from .Package.json file.
 USTRUCT()
 struct CARLA_API FMapData
@@ -55,7 +66,7 @@ public:
 #if WITH_EDITORONLY_DATA
 
   /// Parses the command line parameters provided through @a InParams
-  FString ParseParams(const FString &InParams) const;
+  FPackageParams ParseParams(const FString &InParams) const;
 
   /// Loads a UWorld object contained in Carla BaseMap into @a AssetData data
   /// structure.
