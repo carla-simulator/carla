@@ -31,7 +31,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 }
 #if WITH_EDITORONLY_DATA
 
-FString UPrepareAssetsForCookingCommandlet::ParseParams(const FString &InParams) const
+FPackageParams UPrepareAssetsForCookingCommandlet::ParseParams(const FString &InParams) const
 {
   TArray<FString> Tokens;
   TArray<FString> Params;
@@ -39,10 +39,10 @@ FString UPrepareAssetsForCookingCommandlet::ParseParams(const FString &InParams)
 
   ParseCommandLine(*InParams, Tokens, Params);
 
-  FString PackageName;
-  FParse::Value(*InParams, TEXT("PackageName="), PackageName);
-
-  return PackageName;
+  FPackageParams PackageParams;
+  FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
+  FParse::Bool(*InParams, TEXT("OnlyPrepareMaps="), PackageParams.bOnlyPrepareMaps);
+  return PackageParams;
 }
 
 void UPrepareAssetsForCookingCommandlet::LoadWorld(FAssetData &AssetData)
@@ -307,68 +307,78 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
 
 int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
 {
-  FString PackageName = ParseParams(Params);
+  FPackageParams PackageParams = ParseParams(Params);
 
   // Get Props and Maps Path
-  FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageName);
+  FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
 
   // Load World
   FAssetData AssetData;
   LoadWorld(AssetData);
   World = CastChecked<UWorld>(AssetData.GetAsset());
 
-  FString MapPathData;
-  for (auto Map : AssetsPaths.MapsPaths)
+  if (PackageParams.bOnlyPrepareMaps)
   {
-    FString RoadsPath = TEXT("/Game/") + PackageName + TEXT("/Static/RoadNode/") + Map.Name;
-    FString MarkingLinePath = TEXT("/Game/") + PackageName + TEXT("/Static/MarkingNode/") + Map.Name;
-    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/TerrainNode/") + Map.Name;
+    for (auto Map : AssetsPaths.MapsPaths)
+    {
+      FString RoadsPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/RoadNode/") + Map.Name;
+      FString MarkingLinePath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/MarkingNode/") + Map.Name;
+      FString TerrainPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Static/TerrainNode/") + Map.Name;
 
-    TArray<FString> DataPath = {RoadsPath, MarkingLinePath, TerrainPath};
+      TArray<FString> DataPath = {RoadsPath, MarkingLinePath, TerrainPath};
 
-    // Add Meshes to inside the loaded World
-    TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
+      // Add Meshes to inside the loaded World
+      TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
 
-    // Save the World in specified path
-    SaveWorld(AssetData, PackageName, Map.Path, Map.Name);
+      // Save the World in specified path
+      SaveWorld(AssetData, PackageParams.Name, Map.Path, Map.Name);
 
-    // Remove spawned actors from world to keep equal as BaseMap
-    DestroySpawnedActorsInWorld(SpawnedActors);
-
-    MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
-  }
-
-  if (AssetsPaths.PropsPaths.Num() > 0)
-  {
-    FString MapName("PropsMap");
-    FString WorldDestPath = TEXT("/Game/") + PackageName +
-        TEXT("/Maps/") + MapName;
-
-    MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
-
-    // Add props in a single Base Map
-    TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(AssetsPaths.PropsPaths, false, true);
-
-    SaveWorld(AssetData, PackageName, WorldDestPath, MapName);
-
-    DestroySpawnedActorsInWorld(SpawnedActors);
-    MapObjectLibrary->ClearLoaded();
+      // Remove spawned actors from world to keep equal as BaseMap
+      DestroySpawnedActorsInWorld(SpawnedActors);
+    }
   }
   else
   {
-    if (MapPathData.Len() >= 0)
+    FString MapPathData;
+    for (auto Map : AssetsPaths.MapsPaths)
     {
-      MapPathData.RemoveFromEnd(TEXT("+"));
+      MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
     }
-  }
-  // Save Map Path File for further use
-  FString SaveDirectory = FPaths::ProjectContentDir();
-  FString FileName = FString("MapPaths.txt");
-  SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
 
-  FileName = FString("PackagePath.txt");
-  FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
-  SaveStringTextToFile(SaveDirectory, FileName, PackageJsonFilePath, true);
+    if (AssetsPaths.PropsPaths.Num() > 0)
+    {
+      FString MapName("PropsMap");
+      FString WorldDestPath = TEXT("/Game/") + PackageParams.Name +
+          TEXT("/Maps/") + MapName;
+
+      MapPathData.Append(WorldDestPath + TEXT("/") + MapName);
+
+      // Add props in a single Base Map
+      TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(AssetsPaths.PropsPaths, false, true);
+
+      SaveWorld(AssetData, PackageParams.Name, WorldDestPath, MapName);
+
+      DestroySpawnedActorsInWorld(SpawnedActors);
+      MapObjectLibrary->ClearLoaded();
+    }
+    else
+    {
+      if (MapPathData.Len() >= 0)
+      {
+        MapPathData.RemoveFromEnd(TEXT("+"));
+      }
+    }
+
+    // Save Map Path File for further use
+    FString SaveDirectory = FPaths::ProjectContentDir();
+    FString FileName = FString("MapPaths.txt");
+    SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+
+    FileName = FString("PackagePath.txt");
+    FString PackageJsonFilePath = GetFirstPackagePath(PackageParams.Name);
+    SaveStringTextToFile(SaveDirectory, FileName, PackageJsonFilePath, true);
+  }
+
   return 0;
 }
 #endif

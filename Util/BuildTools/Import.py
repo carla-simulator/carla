@@ -10,7 +10,6 @@
 
 from __future__ import print_function
 
-from contextlib import contextmanager
 import errno
 import fnmatch
 import json
@@ -218,6 +217,7 @@ def import_assets_from_json_list(json_list):
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
+            prepare_maps_commandlet_for_cooking(package_name)
 
 
 def move_uassets(package_name, maps):
@@ -247,6 +247,11 @@ def move_uassets(package_name, maps):
             if "TerrainNode" in filename:
                 shutil.move(os.path.join(origin_path, filename), os.path.join(terrain_dir, filename))
 
+def prepare_maps_commandlet_for_cooking(package_name):
+    commandlet_name = "PrepareAssetsForCooking"
+    commandlet_arguments = "-PackageName=%s" % package_name
+    commandlet_arguments += " -OnlyPrepareMaps=%d" % True
+    invoke_commandlet(commandlet_name, commandlet_arguments)
 
 def main():
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
