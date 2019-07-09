@@ -282,6 +282,12 @@
       doc: >
         Register a callback to be called every time a world tick is received.
     # --------------------------------------
+    - def_name: remove_on_tick
+      params:
+      - param_name: callback_id
+      doc: >
+        Removes on tick callbacks.
+    # --------------------------------------
     - def_name: tick
       return: int
       doc: >
