@@ -6,6 +6,7 @@ Util/Build
 Install
 
 /ExportedMaps
+/Import
 /RoadRunnerFiles/*/
 
 *.VC.db
