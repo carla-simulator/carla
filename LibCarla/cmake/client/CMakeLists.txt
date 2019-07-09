@@ -83,12 +83,6 @@ file(GLOB libcarla_carla_opendrive_parser_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_sources}")
 install(FILES ${libcarla_carla_opendrive_parser_sources} DESTINATION include/carla/opendrive/parser)
 
-file(GLOB libcarla_pugixml_sources
-    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.hpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
-
 file(GLOB libcarla_carla_pointcloud_sources
     "${libcarla_source_path}/carla/pointcloud/*.cpp"
     "${libcarla_source_path}/carla/pointcloud/*.h")
@@ -110,11 +104,6 @@ file(GLOB libcarla_carla_road_element_sources
     "${libcarla_source_path}/carla/road/element/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_sources}")
 install(FILES ${libcarla_carla_road_element_sources} DESTINATION include/carla/road/element)
-
-file(GLOB libcarla_carla_cephes_sources
-    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
-    "${libcarla_source_thirdparty_path}/cephes/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_cephes_sources}")
 
 file(GLOB libcarla_carla_road_general_sources
     "${libcarla_source_path}/carla/road/general/*.cpp"
@@ -182,10 +171,23 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_cephes_sources
+    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
+    "${libcarla_source_thirdparty_path}/cephes/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
+install(FILES ${libcarla_cephes_sources} DESTINATION include/cephes)
+
 file(GLOB libcarla_moodycamel_sources
     "${libcarla_source_thirdparty_path}/moodycamel/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_moodycamel_sources}")
 install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
+
+file(GLOB libcarla_pugixml_sources
+    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
+    "${libcarla_source_thirdparty_path}/pugixml/*.hpp"
+    "${libcarla_source_thirdparty_path}/pugixml/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
+install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
