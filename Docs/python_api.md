@@ -390,6 +390,7 @@
         - [**try_spawn_actor**(**self**, **blueprint**, **transform**, **attach_to**=None, **attachment**=Rigid)](#carla.World.try_spawn_actor) <sub>_Method_</sub>
         - [**wait_for_tick**(**self**, **seconds**=10.0)](#carla.World.wait_for_tick) <sub>_Method_</sub>
         - [**on_tick**(**self**, **callback**)](#carla.World.on_tick) <sub>_Method_</sub>
+        - [**remove_on_tick**(**self**, **callback_id**)](#carla.World.remove_on_tick) <sub>_Method_</sub>
         - [**tick**(**self**)](#carla.World.tick) <sub>_Method_</sub>
         - [**\__str__**(**self**)](#carla.World.__str__) <sub>_Method_</sub>
     - [**WorldSettings**](#carla.WorldSettings) <sub>_Class_</sub>  
@@ -1735,6 +1736,8 @@ Block calling thread until a world tick is received.
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
 Register a callback to be called every time a world tick is received.  
+- <a name="carla.World.remove_on_tick"></a>**<font color="#7fb800">remove_on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback_id**</font>)  
+Removes on tick callbacks.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>)  
 Synchronizes with the simulator and returns the id of the newly started frame (only has effect on synchronous mode).  
     - **Return:** _int_  
