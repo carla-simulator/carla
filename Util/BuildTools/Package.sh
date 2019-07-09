@@ -180,21 +180,16 @@ fi
 # -- Cook other packages -------------------------------------------------------
 # ==============================================================================
 
+PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
+MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
+
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
   log "Preparing environment for cooking '${PACKAGE_NAME}'."
 
   BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
   DESTINATION=${BUILD_FOLDER}.tar.gz
-  # PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
-
-  # if [ ! -d "${PACKAGE_PATH}" ] ; then
-
-  #   ERROR_MSG="Package \"${PACKAGE_NAME}\" not found! Make sure you have "
-  #   ERROR_MSG+="imported the package already and the package name is correct."
-  #   fatal_error "${ERROR_MSG}"
-
-  # fi
+  PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
 
   mkdir -p ${BUILD_FOLDER}
 
@@ -205,9 +200,6 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   # Prepare cooking of package
   ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
       -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME} -OnlyPrepareMaps=false
-
-  PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-  MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
 
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
@@ -231,9 +223,11 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     log "\nPackaging '${PACKAGE_NAME}'..."
 
+    SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
+    SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
+
     # Copy the pakcage config file to package
-    mkdir -p "${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Config/" && \
-        cp "${PACKAGE_FILE}" "$_"
+    mkdir -p "$(dirname ${SUBST_FILE})" && cp "${PACKAGE_FILE}" "$_"
 
     # Copy the OpenDRIVE .xodr files to package
     IFS='+' # space is set as delimiter
@@ -243,17 +237,15 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
       XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
       MAP_NAME=${XODR_FILE_PATH##*/}
-      XODR_FILE_PATH=${XODR_FILE_PATH%/*}/OpenDrive/${MAP_NAME}.xodr
+      XODR_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.xodr" -print -quit)
 
-      if [ -f "${XODR_FILE_PATH}" ] ; then
-        OUT_XODR_DIR="${BUILD_FOLDER}/CarlaUE4/Content/${PACKAGE_NAME}/Maps/${MAP_NAME}/OpenDrive/"
+      if [ -f "${XODR_FILE}" ] ; then
 
-        # Create the xodr out folder if does not exist
-        if [ ! -d "$OUT_XODR_DIR" ] ; then
-          mkdir -p "${OUT_XODR_DIR}"
-        fi
+        SUBST_FILE="${XODR_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-        cp "${XODR_FILE_PATH}" "${OUT_XODR_DIR}"
+        # Copy the pakcage config file to package
+        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${XODR_FILE}" "$_"
+
       fi
 
     done
