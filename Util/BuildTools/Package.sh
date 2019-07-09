@@ -204,7 +204,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   # Prepare cooking of package
   ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
-      -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME}
+      -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME} -OnlyPrepareMaps=false
 
   PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
   MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
