@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -7,9 +7,8 @@
 #pragma once
 
 #include "carla/client/ClientSideSensor.h"
-#include "carla/geom/Location.h"
 
-#include <array>
+#include <atomic>
 
 namespace carla {
 namespace client {
@@ -27,31 +26,24 @@ namespace client {
     /// Register a @a callback to be executed each time a new measurement is
     /// received.
     ///
-    /// @warning This function should not be called twice.
-    /// @todo This is different from other sensors.
+    /// @warning Calling this function on a sensor that is already listening
+    /// steals the data stream from the previously set callback. Note that
+    /// several instances of Sensor (even in different processes) may point to
+    /// the same sensor in the simulator.
     void Listen(CallbackFunctionType callback) override;
 
     /// Stop listening for new measurements.
-    /// @throw Not implemented error.
     void Stop() override;
 
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _is_listening;
+      return _callback_id != 0u;
     }
 
   private:
 
-    SharedPtr<sensor::SensorData> TickLaneInvasionSensor(const Timestamp &timestamp);
-
-    bool _is_listening = false;
-
-    SharedPtr<Map> _map;
-
-    SharedPtr<Vehicle> _vehicle;
-
-    std::array<geom::Location, 4u> _bounds;
+    std::atomic_size_t _callback_id{0u};
   };
 
 } // namespace client

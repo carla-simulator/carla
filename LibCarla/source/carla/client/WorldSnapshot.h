@@ -26,6 +26,10 @@ namespace client {
       return _state->GetEpisodeId();
     }
 
+    size_t GetFrame() const {
+      return GetTimestamp().frame;
+    }
+
     /// Get timestamp of this snapshot.
     const Timestamp &GetTimestamp() const {
       return _state->GetTimestamp();

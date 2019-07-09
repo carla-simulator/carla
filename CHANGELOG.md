@@ -31,6 +31,7 @@
   * API extension: added `WorldSnapshot` that contains a list of `ActorSnapshot`, allows capturings a "still image" of the world at a single frame
   * API extension: `world.tick()` now synchronizes with the simulator and returns the id of the newly started frame
   * API extension: `world.apply_settings(settings)` now synchronizes with the simulator and returns the id of the frame when the settings took effect
+  * API extension: added `world.remove_on_tick(id)` to allow removing on tick callbacks
   * API change: Rename `frame_count` and `frame_number` as `frame`, old members are kept as deprecated
   * API change: `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
   * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
