@@ -5,19 +5,8 @@ Physics properties can be tuned for vehicles and its wheels. These changes are a
 These properties are controlled through a [carla.VehiclePhysicsControl](/python_api/#carla.VehiclePhysicsControl) object, which also provides the control of each wheel's physics through a [carla.WheelPhysicsControl](/python_api/#carla.WheelPhysicsControl) object.
 
 ##### Example
+
 ```py
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 import random
 

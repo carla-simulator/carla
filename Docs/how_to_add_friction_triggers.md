@@ -12,19 +12,8 @@ In order to spawn a friction trigger using PythonAPI, users must first get the `
 Once done that, define a transform to specify the location and rotation for the friction trigger and spawn it.
 
 ##### Example
+
 ```py
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 
 def main():
