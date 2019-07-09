@@ -223,7 +223,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Test if any of the flags matches wildcard_pattern.
+        Test if any of the flags or id matches wildcard_pattern.
       note: > 
         Wildcard_pattern follows Unix shell-style wildcards.
     # --------------------------------------
@@ -278,11 +278,15 @@
         type: str
       doc: >
         Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
+        The pattern is matched against each blueprint's id and tags.
+      note: > 
+        wildcard_pattern follows Unix shell-style wildcards (fnmatch).
+      return: carla.BlueprintLibrary
     # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
-      return: carla.BlueprintLibrary
+      return: carla.ActorBlueprint
       doc: >
     # --------------------------------------
     - def_name: __len__

@@ -1,10 +1,13 @@
 ---
-- module_name: commands
+- module_name: command
   doc: >
   classes:
   - class_name: Response
     # - DESCRIPTION ------------------------
     doc: >
+      Execution result of a command, contains either an error string or and
+      actor ID, depending on whether or not the command succeeded. See
+      `client.apply_batch_sync()`
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id

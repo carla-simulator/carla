@@ -20,7 +20,10 @@
       - param_name: callback
         type: function
         doc: >
-          Function that will be called each time the sensor sends data. As a parameter, the function receives a buffer with the data.
+          Register a callback to be executed each time a new measurement is
+          received. The callback must accept a single argument containing the
+          sensor data; the type of this object varies depending on the type of
+          sensor, but they all derive from carla.SensorData.
       doc: >
     # --------------------------------------
     - def_name: stop
