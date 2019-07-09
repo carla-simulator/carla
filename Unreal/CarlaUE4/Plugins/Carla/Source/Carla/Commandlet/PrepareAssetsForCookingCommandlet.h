@@ -1,19 +1,24 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
-#include "Commandlets/Commandlet.h"
-#include <Engine/World.h>
-#include <UObject/Package.h>
-#include <Misc/PackageName.h>
-#include "CoreMinimal.h"
-#include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
 #include "Carla/OpenDrive/OpenDriveActor.h"
+#include "Commandlets/Commandlet.h"
 #include "Containers/Map.h"
+#include "CoreMinimal.h"
+#include <Engine/World.h>
+#include <Misc/PackageName.h>
+#include <Runtime/Engine/Classes/Engine/ObjectLibrary.h>
+#include <UObject/Package.h>
 
 #if WITH_EDITORONLY_DATA
-#include <Developer/AssetTools/Public/IAssetTools.h>
-#include <Developer/AssetTools/Public/AssetToolsModule.h>
 #include <AssetRegistry/Public/AssetRegistryModule.h>
+#include <Developer/AssetTools/Public/AssetToolsModule.h>
+#include <Developer/AssetTools/Public/IAssetTools.h>
 #endif // WITH_EDITORONLY_DATA
 #include <Runtime/Engine/Classes/Engine/StaticMeshActor.h>
 #include "PrepareAssetsForCookingCommandlet.generated.h"
@@ -127,15 +132,19 @@ private:
   UWorld *World;
 
   /// Workaround material for MarkingNodes mesh
+  UPROPERTY()
   UMaterial *MarkingNodeMaterial;
 
   /// Workaround material for the RoadNode mesh
+  UPROPERTY()
   UMaterial *RoadNodeMaterial;
 
   /// Workaround material for the second material for the MarkingNodes
+  UPROPERTY()
   UMaterial *MarkingNodeMaterialAux;
 
   /// Workaround material for the TerrainNodes
+  UPROPERTY()
   UMaterial *TerrainNodeMaterial;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
