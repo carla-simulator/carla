@@ -25,7 +25,7 @@
   * [Running in a Docker](carla_docker.md)
   * [How to make a new map with RoadRunner](how_to_make_a_new_map.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
-  * [Standalone Asset Packages creation for distribution](asset_packages_for_dist.md)
+  * [Creating standalone asset packages for distribution](asset_packages_for_dist.md)
   * [How to add friction triggers](how_to_add_friction_triggers.md)
   * [How to control vehicle physics](how_to_control_vehicle_physics.md)
   * [How to record and replay](recorder_and_playback.md)
