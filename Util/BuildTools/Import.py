@@ -250,7 +250,7 @@ def move_uassets(package_name, maps):
 def prepare_maps_commandlet_for_cooking(package_name):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = "-PackageName=%s" % package_name
-    commandlet_arguments += " -OnlyPrepareMaps=%d" % True
+    commandlet_arguments += " -OnlyPrepareMaps=true"
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 def main():
