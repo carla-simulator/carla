@@ -175,6 +175,11 @@ def main():
         '-b', '--list-blueprints',
         metavar='FILTER',
         help='list available blueprints matching FILTER (use \'*\' to list them all)')
+
+    if len(sys.argv) < 2:
+        argparser.print_help()
+        return
+
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port, worker_threads=1)
