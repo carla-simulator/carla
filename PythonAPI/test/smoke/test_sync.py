@@ -18,7 +18,8 @@ class TestSynchronousMode(SyncSmokeTest):
     def test_reloading_map(self):
         settings = carla.WorldSettings(
             no_rendering_mode=False,
-            synchronous_mode=True)
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
         for _ in range(0, 4):
             self.world = self.client.reload_world()
             self.world.apply_settings(settings)
