@@ -6,19 +6,25 @@ the standard Unreal Engine 4.21 distribution.
 Prerequisites
 -------------
 
-### Install Xcode 9.2
+### Install Xcode 9.4
 
-If you are running macOS "Sierra" 10.12.6, then Xcode 9.2 is the most up-to-date
-version, so you should simply be able to install from the AppStore, otherwise
-you can install from [Apple's developer downloads](https://developer.apple.com/download/more/).
+*Later versions of Xcode may work, but using the same version that is used by Unreal 4.21 seems a safe bet.*
 
-If you have installed more than one version of Xcode, you should activate 9.2 using
+You should be able to install from [Apple's developer downloads](https://developer.apple.com/download/more/).
+
+If you have installed more than one version of Xcode, you should activate 9.4 using
 the `xcode-select` command line utility. This will set `/usr/bin/clang` and `/usr/bin/clang++`
 to the appropriate versions, and these are what will be used in the build.
 
 Note that Apple's has it's own clang versioning scheme that tracks the Xcode versions,
 so it is not obvious how the features compare to the LLVM distributions, but this version
 should fully support c++14 features.
+
+**On Mac OSX Mojave 10.14 you also need to install the MacOS headers using:**
+
+~~~sh
+sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+~~~
 
 ### Install Unreal Engine 4.21
 
