@@ -1,89 +1,83 @@
 ## Latest
 
-  * Add access to vehicle transmission details
-  * Add access to vehicle physics brake values
-  * The simulator is now compiled in "Shipping" mode, faster but it accepts less command-line arguments
-  * Enabled texture streaming for scene captures
-    - Enabled texture streaming in the Unreal project settings
-    - Changed the scene capture to register its camera with Unreal's texture streamer every tick to enable texture streaming
-  * Bugfix about recorder query system
-  * Fixed problem when vehicles enable autopilot after a replayer, now it works better.
-    - When a recorded session finish replaying, all vehicles will continue in autopilot, and all pedestrians will stop.
-  * Added pedestrian support:
-    - We can spawn pedestrians that will walk over sidewalks at random points continually.
-    - The script 'spawn_npc.py' now can spawn pedestrians with the flag '-w' and the number of pedestrians.
-  * Vulkan support: Changed project settings to make vulkan default on linux and updated make script to allow user to select opengl
-  * Add ability to set motion blur settings for rgb camera in sensor python blueprint
-  * Improved visual quality of the screen capture for the rgb sensor
-    - Enabled Temporal AA for screen captures with no post-processing to prevent jaggies during motion
-    - Reduced the target gamma of render target to 1.4 to minimize brightness differences with main camera
   * Upgraded to Unreal Engine 4.22
-  * Recorder fixes:
-    - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically.
-    - Actors at start of playback could interpolate positions from its current position instead than the recorded position, making some fast sliding effect during 1 frame.
-    - Camera following in playback was not working if a new map was needed to load.
-    - API function 'show_recorder_file_info' was showing the wrong parent id.
-    - Script 'start_recording.py' now properly saves destruction of actors at stop.
-  * API extension: add attachment type "SpringArm" for cinematic cameras
-  * API extension: waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
-  * API extension: add gamma value as attribute to RGB camera
-  * API extension: add `world.get_actor(id)` to find a single actor by id
-  * API extension: add `carla.WeatherParameters.Default` for a default (tailor-made for each town) weather profile
-  * API extension: added `WorldSnapshot` that contains a list of `ActorSnapshot`, allows capturings a "still image" of the world at a single frame
-  * API extension: `world.tick()` now synchronizes with the simulator and returns the id of the newly started frame
-  * API extension: `world.apply_settings(settings)` now synchronizes with the simulator and returns the id of the frame when the settings took effect
-  * API extension: added `world.remove_on_tick(id)` to allow removing on tick callbacks
-  * API extension: allow setting fixed frame-rate from client-side, now is part of `carla.WorldSettings`
-  * API change: Rename `frame_count` and `frame_number` as `frame`, old members are kept as deprecated
-  * API change: `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
-  * API change: the callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
-  * API change: deprecated waypoint's `is_intersection`, now is `is_junction`
-  * API update: solve the problem of RuntimeError: std::bad_cast described here: #1125 (comment)
+  * Added Vulkan support, if installed, CARLA will use Vulkan, use `-opengl` flag to launch with OpenGL
+  * The simulator is now compiled in "Shipping" mode, faster but it accepts less command-line arguments
+  * Pedestrians are back:
+    - Spawn pedestrians that will roam randomly on sidewalks
+    - The script 'spawn_npc.py' spawns now pedestrians, adjust the number with the flag `-w`
+    - Added navigation meshes for each maps for pedestrian navigation
+  * Allow adding custom props (FBX) to CARLA Blueprint library so they are spawnable
+  * Simplified pipeline for importing and packaging maps and custom props
+  * Vehicle physics:
+    - Added access to vehicle transmission details
+    - Added access to vehicle physics brake values
+    - Added tire friction trigger boxes for simulating slippery surfaces
   * Added camera gamma correction as command-line argument to manual_control.py
-  * Removed deprecated code and content
-  * Added PythonAPI documentation generator
+  * Added ability to set motion blur settings for RGB camera in sensor python blueprint
+  * Added C++ client example using LibCarla
+  * Added PythonAPI documentation generator, we documented in detail all the Python reference
   * New recorder features:
-    - Recorded system is documented, and binary file system is described.
+    - Documented recorded system and binary file
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
-    - Added playback speed (slow/fast motion) for the replayer
-    - We can use an absolute path for the recorded files (to choose where to 'write to' or 'read from')
-    - New data recorded to replay animations:
-      + Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and cycles
-      + Walkers animation is simulated in playback (through speed of walker), so they walk properly.
-  * Fixed Lidar effectiveness bug in manual_control.py
+    - Added playback speed (slow/fast motion) to the replayer
+    - Allow custom paths for saving the recorded files
+    - More data is now recorded to replay animations:
+      + Wheels of vehicles are animated (steering, throttle, handbrake), also bikes and motorbikes
+      + Walker animations are simulated (through speed of walker)
+  * New high quality pedestrians: female, girl and boy; improved meshes and textures
+  * More color and texture variations for each pedestrian
+  * New vehicle Audi Etron: 25.000 tris and LODs
+  * New material for Mustang, new system that will allow us to improve all the vehicle materials
+  * Improved vehicle Tesla
+  * New high-quality "Default" weather tailor-made for each map
+  * Improved the rest of weather profiles too
+  * RGB camera improvements:
+    - Enabled temporal antialiasing and motion blur
+    - Added gamma value and motion blur as a blueprint attributes
+    - Enabled texture streaming for scene captures
+  * API changes:
+    - Renamed `frame_count` and `frame_number` as `frame`, old members are kept as deprecated
+    - `world.wait_for_tick()` now returns a `carla.WorldSnapshot`
+    - The callback of `world.on_tick(callback)` now receives a `carla.WorldSnapshot`
+    - Deprecated waypoint's `is_intersection`, use `is_junction` instead
+  * API extensions:
+    - Added attachment type "SpringArm" for cinematic cameras
+    - Added waypoint's `junction_id` that returns de OpenDrive identifier of the current junction
+    - Added `world.get_actor(id)` to find a single actor by id
+    - Added `carla.WeatherParameters.Default` for the default (tailor-made for each town) weather profile
+    - Added `WorldSnapshot` that contains a list of `ActorSnapshot`, allows capturings a "still image" of the world at a single frame
+    - Added `world.tick()` now synchronizes with the simulator and returns the id of the newly started frame
+    - Added `world.apply_settings(settings)` now synchronizes with the simulator and returns the id of the frame when the settings took effect
+    - Added `world.remove_on_tick(id)` to allow removing on tick callbacks
+    - Added allow setting fixed frame-rate from client-side, now is part of `carla.WorldSettings`
+    - Added `is_invincible` to walkers
+  * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Updated OpenDriveActor to use the new Waypoint API
+  * Removed deprecated code and content
+  * Exposed waypoints and OpenDrive map to UE4 Blueprints
+  * Change the weight of cars. All cars have been compared with the real to have a feedback more real
+  * Recorder fixes:
+    - When a recorded session finish replaying, all vehicles will continue in autopilot, and all pedestrians will stop
+    - Fixed a possible crash if an actor is respawned before the episode is ready when a new map is loaded automatically
+    - Actors at start of playback could interpolate positions from its current position instead than the recorded position
+    - Camera following in playback was not working if a new map was needed to load
+    - API function 'show_recorder_file_info' was showing the wrong parent id
+    - Script 'start_recording.py' now properly saves destruction of actors at stop
+    - Problem when vehicles enable autopilot after a replayer, now it works better
   * Fixed dead-lock when loading a new map in synchronous mode
   * Fixed get_actors may produce actors without parent
-  * Added C++ client example using LibCarla
-  * Updated OpenDriveActor to use the new Waypoint API
-  * Fixed wrong units in VehiclePhysicsControl's center of mass
-  * Several optimizations to the RPC server, now supports a bigger load of async messages
-  * Corrected Latitude in WGS84 reprojection code such that Latitudes increase as one move north in Carla worlds
-  * Register user props in fbx format, make them available in Carla Blueprint Library and spawnable.
-  * Exposed 'is_invincible' for pedestrians
-  * Exposed waypoints and OpenDrive map to UE4 Blueprints
+  * Fixed std::bad_cast when importing other libraries, like tensorflow, before carla
+  * Fixed latitude in WGS84 reprojection code such that Latitudes increase as one move north in CARLA worlds
+  * Fixed walking animations, the animations now go at the same speed as the game
+  * Fixed loading and reloading world not using the timeout
   * Fixed XODR files can be found now anywhere in content
   * Fixed bug related with Pygame error of surface too large, added sidewalks and improved lane markings in `no_rendering_mode.py`
-  * Physics:
-    - Added Friction Trigger Boxes for simulating, for example, slippery surfaces in any region of the map defined by users.
-  * New High Quality Pedestrian - Female, girl and boy. Improve the meshes and textures.
-  * Improve walk animations, the animations go at the same speed as the game.
-  * Variations of colors and texture for each pedestrian.
-  * New Vehicle Audi Etron. With 25.000 Tris and their Lods.
-  * New material for Mustang. New material that will allow us to improve all the materials of the cars.
-  * New custom weather for each map
-  * Improve weather - Tweak values
-  * Change the weight of cars. All cars have been compared with the real to have a feedback more real.
-  * Add Navigations maps for pedestrian
-  * Fixed invisible wall
-  * Fixed Vehicle bounds
-  * Fixed Tesla Wheels to Kinematic
-  * Fixed Tesla's Material
-  * Fixed Semantic segmentation on bikers
-  * Fixed Change Pedestrians Nomenclature
-  * Fixed Change the sidewalk in Town06
-  * Fixed Tesla mesh and LODS
-  * Fixed Inconsistency StreetLights on Town03
-  * Simplified pipeline for importing/packaging props and maps
+  * Fixed Lidar effectiveness bug in manual_control.py
+  * Fixed wrong units in VehiclePhysicsControl's center of mass
+  * Fixed semantic segmentation of bike riders
+  * Fixed inconsistent streetlights in Town03
+  * Fixed incorrect vehicle bounds
 
 ## CARLA 0.9.5
 
