@@ -8,6 +8,7 @@
 #include "Carla/Util/DebugShapeDrawer.h"
 
 #include "DrawDebugHelpers.h"
+#include "Components/LineBatchComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/DebugShape.h>
@@ -22,31 +23,29 @@ struct FShapeVisitor
     : World(&InWorld),
       Color(InColor),
       LifeTime(InLifeTime),
-      bPersistentLines(bInPersistentLines) {}
+      bPersistentLines(bInPersistentLines)
+  {}
 
   void operator()(const Shape::Point &Point) const
   {
-    DrawDebugPoint(
-        World,
+    World->PersistentLineBatcher->DrawPoint(
         Point.location,
-        1e2f * Point.size,
         Color,
-        bPersistentLines,
-        LifeTime,
-        DepthPriority);
+        1e2f * Point.size,
+        SDPG_World,
+        LifeTime);
   }
 
   void operator()(const Shape::Line &Line) const
   {
-    DrawDebugLine(
-        World,
-        Line.begin,
-        Line.end,
-        Color,
-        bPersistentLines,
-        LifeTime,
-        DepthPriority,
-        1e2f * Line.thickness);
+    World->PersistentLineBatcher->DrawLines(TArray<FBatchedLine>({
+        FBatchedLine(
+            Line.begin,
+            Line.end,
+            Color,
+            LifeTime,
+            1e2f * Line.thickness,
+            SDPG_World)}));
   }
 
   void operator()(const Shape::Arrow &Arrow) const
