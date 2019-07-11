@@ -18,7 +18,6 @@ namespace image {
 
   class ImageView {
   private:
-  public:
 
     template <typename SrcViewT>
     using GrayPixelLayout = boost::gil::pixel<typename boost::gil::channel_type<SrcViewT>::type, boost::gil::gray_layout_t>;
