@@ -1,4 +1,4 @@
-## Latest
+## CARLA 0.9.6
 
   * Upgraded to Unreal Engine 4.22
   * Added Vulkan support, if installed, CARLA will use Vulkan, use `-opengl` flag to launch with OpenGL
