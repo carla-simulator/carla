@@ -214,8 +214,8 @@
       doc: >
         This function executes the whole list of commands on a single simulation step.
         For example, to set autopilot on some actors, we could use:  
-        [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)  
-        We don't have control about the response of each command. If we need that, we can use apply_batch_sync().
+        [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126).  
+        We don't have control about the response of each command. If we need that, we can use `apply_batch_sync()`.
 
     # --------------------------------------
     - def_name: apply_batch_sync

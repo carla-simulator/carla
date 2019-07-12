@@ -4,7 +4,8 @@
 
 The main objective for importing and exporting assets is to reduce the size of the distribution build. This is possible since these assets will be imported as independent packages that can be plugged in anytime inside Carla and also exported. 
 
-<h4>How to import assets inside Unreal Engine</h4>
+How to import assets inside Unreal Engine
+-----------------------------------------
 
 The first step is to create an empty folder inside the Carla `Import` folder and rename it with any folder name desired. For simplifying this newly created folder structure, we recommend having as many subfolders as maps to import and one single subfolder containing all the props to import. Inside each subfolder, we will place all the files needed for importing. 
 So basically, for a **map** subfolder, we will need to place the following files:
@@ -21,6 +22,7 @@ And for the **props** folder, we will need the following files:
 Additionally, we have to create a **JSON file inside the package** that will contain information about its assets. The file extension must be `.json`. We recommend the JSON file to have the same name as the package name in order to keep it organized. **Please, keep in mind that the name of this file will used as the name of the distribution package**.
 
 The content of this JSON file should be similar to the following:
+
 ```json
 {
   "maps": [{
@@ -132,15 +134,16 @@ Import
 
 *Please note that the maps exported from **RoadRunner** are also supported for importing them inside Carla. So, basically, once created your **RoadRunner** map, you just need to export it, take the required files and place them following the structure listed above.*
 
-
 Now we have everything ready for importing assets. To do so, you just need to run the command:
+
 ```sh
 make import
 ```
+
 This command will read the JSON file and take each asset and place it inside the Content in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's `Config` folder that will be used for **defining** its props in the Carla blueprint library, **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed. If a package was already imported before, it will overwrite it.
 
-
-<h4>How to export assets</h4>
+How to export assets
+--------------------
 
 Once imported all the packages inside Unreal, users could also generate a **cooked package** for each of them. This last step is important in order to have all packages ready to add for distribution versions of Carla and for any supported platform. To export the packages, simply run the command:
 

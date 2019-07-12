@@ -26,12 +26,16 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: r
+      type: int
       doc: >
     - var_name: g
+      type: int
       doc: >
     - var_name: b
+      type: int
       doc: >
     - var_name: a
+      type: int
       doc: >
     # - METHODS ----------------------------
     methods:

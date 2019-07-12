@@ -1085,7 +1085,7 @@ Apply a different playback speed to current playback. Can be used several times 
     - **Parameters:**
         - `time_factor` (_float_) – A value of 1.0 means normal time factor. A value < 1.0 means slow motion (for example 0.5 is half speed) A value > 1.0 means fast motion (for example 2.0 is double speed).  
 - <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
-This function executes the whole list of commands on a single simulation step. For example, to set autopilot on some actors, we could use:   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126)   We don't have control about the response of each command. If we need that, we can use apply_batch_sync().  
+This function executes the whole list of commands on a single simulation step. For example, to set autopilot on some actors, we could use:   [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126).   We don't have control about the response of each command. If we need that, we can use `apply_batch_sync()`.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. Each command has a different number of parameters. Currently, we can use these [commands](#command.ApplyAngularVelocity):  
   SpawnActor  
@@ -1123,10 +1123,10 @@ Normal impulse result of the collision.
 Class that defines a 32-bit BGRA color.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Color.r"></a>**<font color="#f8805a">r</font>**  
-- <a name="carla.Color.g"></a>**<font color="#f8805a">g</font>**  
-- <a name="carla.Color.b"></a>**<font color="#f8805a">b</font>**  
-- <a name="carla.Color.a"></a>**<font color="#f8805a">a</font>**  
+- <a name="carla.Color.r"></a>**<font color="#f8805a">r</font>** (_int_)  
+- <a name="carla.Color.g"></a>**<font color="#f8805a">g</font>** (_int_)  
+- <a name="carla.Color.b"></a>**<font color="#f8805a">b</font>** (_int_)  
+- <a name="carla.Color.a"></a>**<font color="#f8805a">a</font>** (_int_)  
 
 <h3>Methods</h3>
 - <a name="carla.Color.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=0</font>, <font color="#00a6ed">**g**=0</font>, <font color="#00a6ed">**b**=0</font>, <font color="#00a6ed">**a**=255</font>)  
@@ -1194,7 +1194,7 @@ Class that contains geolocation simulated data.
 Map description that provides a Waypoint query system, that extracts the information from the OpenDRIVE file.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.Map.name"></a>**<font color="#f8805a">name</font>**  
+- <a name="carla.Map.name"></a>**<font color="#f8805a">name</font>** (_str_)  
 Map name. Comes from the Unreal's UMap name if loaded from a Carla server.  
 
 <h3>Methods</h3>
