@@ -159,14 +159,14 @@ struct FShapeVisitor
 
   void operator()(const Shape::String &Str) const
   {
-    DrawDebugString(
-        World,
-        Str.location,
-        carla::rpc::ToFString(Str.text),
-        nullptr,
-        Color,
-        LifeTime,
-        Str.draw_shadow);
+    auto PlayerController = UGameplayStatics::GetPlayerController(World, 0);
+    if (PlayerController == nullptr)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Can't find player controller!"));
+      return;
+    }
+    ACarlaHUD *Hud = Cast<ACarlaHUD>(PlayerController->GetHUD());
+    Hud->AddHUDString(carla::rpc::ToFString(Str.text), Str.location, Color, LifeTime);
   }
 
 private:
