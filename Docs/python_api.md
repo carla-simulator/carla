@@ -627,7 +627,7 @@ Class that provides drawing debug shapes.
         - `size` (_float_)  
         - `color` (_[carla.Color](#carla.Color)_)  
         - `life_time` (_float_)  
-        - `persistent_lines` (_bool_)  
+        - `persistent_lines` (_bool_) – _Deprecated, use `life_time=0` instead_.  
 - <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)_)  
@@ -635,7 +635,7 @@ Class that provides drawing debug shapes.
         - `thickness` (_float_)  
         - `color` (_[carla.Color](#carla.Color)_)  
         - `life_time` (_float_)  
-        - `persistent_lines` (_bool_)  
+        - `persistent_lines` (_bool_) – _Deprecated, use `life_time=0` instead_.  
 - <a name="carla.DebugHelper.draw_arrow"></a>**<font color="#7fb800">draw_arrow</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**arrow_size**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)_)  
@@ -644,7 +644,7 @@ Class that provides drawing debug shapes.
         - `arrow_size` (_float_)  
         - `color` (_[carla.Color](#carla.Color)_)  
         - `life_time` (_float_)  
-        - `persistent_lines` (_bool_)  
+        - `persistent_lines` (_bool_) – _Deprecated, use `life_time=0` instead_.  
 - <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -652,7 +652,7 @@ Class that provides drawing debug shapes.
         - `thickness` (_float_)  
         - `color` (_[carla.Color](#carla.Color)_)  
         - `life_time` (_float_)  
-        - `persistent_lines` (_bool_)  
+        - `persistent_lines` (_bool_) – _Deprecated, use `life_time=0` instead_.  
 - <a name="carla.DebugHelper.draw_string"></a>**<font color="#7fb800">draw_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**text**</font>, <font color="#00a6ed">**draw_shadow**=False</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
@@ -660,7 +660,7 @@ Class that provides drawing debug shapes.
         - `draw_shadow` (_bool_)  
         - `color` (_[carla.Color](#carla.Color)_)  
         - `life_time` (_float_)  
-        - `persistent_lines` (_bool_)  
+        - `persistent_lines` (_bool_) – _Deprecated, set a high `life_time` instead_.  
 
 ---
 
