@@ -107,10 +107,9 @@ struct FShapeVisitor
     B[0] = -Extent;
     B[1] =  Extent;
 
-    int32 i, j;
-    for( i=0; i<2; i++ )
+    for(int32 i = 0; i < 2; ++i)
     {
-      for( j=0; j<2; j++ )
+      for(int32 j = 0; j < 2; ++j)
       {
         P.X=B[i].X;
         Q.X=B[i].X;
