@@ -17,6 +17,7 @@
   * Added ability to set motion blur settings for RGB camera in sensor python blueprint
   * Added C++ client example using LibCarla
   * Added PythonAPI documentation generator, we documented in detail all the Python reference
+  * Added a new Python script config.py that allows the user to configure the simulator from the command-line
   * New recorder features:
     - Documented recorded system and binary file
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
