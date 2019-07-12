@@ -32,49 +32,129 @@ struct FShapeVisitor
         Point.location,
         Color,
         1e2f * Point.size,
-        SDPG_World,
+        DepthPriority,
         LifeTime);
   }
 
   void operator()(const Shape::Line &Line) const
   {
-    World->PersistentLineBatcher->DrawLines(TArray<FBatchedLine>({
-        FBatchedLine(
-            Line.begin,
-            Line.end,
-            Color,
-            LifeTime,
-            1e2f * Line.thickness,
-            SDPG_World)}));
+    World->PersistentLineBatcher->DrawLine(
+        Line.begin,
+        Line.end,
+        Color,
+        DepthPriority,
+        1e2f * Line.thickness,
+        LifeTime);
   }
 
   void operator()(const Shape::Arrow &Arrow) const
   {
-    DrawDebugDirectionalArrow(
-        World,
-        Arrow.line.begin,
-        Arrow.line.end,
-        1e2f * Arrow.arrow_size,
-        Color,
-        bPersistentLines,
-        LifeTime,
-        DepthPriority,
-        1e2f * Arrow.line.thickness);
+    const auto Diff = Arrow.line.end - Arrow.line.begin;
+    const FRotator LookAt = FRotationMatrix::MakeFromX(Diff).Rotator();
+    const FTransform Transform = {LookAt, Arrow.line.begin};
+
+    // Everything in centimeters
+    const auto Dist = 1e2f * Diff.Length();
+    const auto ArrowSize = 1e2f * Arrow.arrow_size;
+    const auto ArrowTipDist = Dist - ArrowSize;
+    const auto Thickness = 1e2f * Arrow.line.thickness;
+
+    World->PersistentLineBatcher->DrawLines(TArray<FBatchedLine>({
+        FBatchedLine(
+            Arrow.line.begin,
+            Arrow.line.end,
+            Color,
+            LifeTime,
+            Thickness,
+            DepthPriority),
+        FBatchedLine(
+            Transform.TransformPosition(FVector(ArrowTipDist, +ArrowSize, +ArrowSize)),
+            Arrow.line.end,
+            Color,
+            LifeTime,
+            Thickness,
+            DepthPriority),
+        FBatchedLine(
+            Transform.TransformPosition(FVector(ArrowTipDist, +ArrowSize, -ArrowSize)),
+            Arrow.line.end,
+            Color,
+            LifeTime,
+            Thickness,
+            DepthPriority),
+        FBatchedLine(
+            Transform.TransformPosition(FVector(ArrowTipDist, -ArrowSize, +ArrowSize)),
+            Arrow.line.end,
+            Color,
+            LifeTime,
+            Thickness,
+            DepthPriority),
+        FBatchedLine(
+            Transform.TransformPosition(FVector(ArrowTipDist, -ArrowSize, -ArrowSize)),
+            Arrow.line.end,
+            Color,
+            LifeTime,
+            Thickness,
+            DepthPriority)}));
   }
 
   void operator()(const Shape::Box &Box) const
   {
-    FVector Extent = {Box.box.extent.x, Box.box.extent.y, Box.box.extent.z};
-    DrawDebugBox(
-        World,
-        Box.box.location,
-        1e2f * Extent,
-        FQuat(FRotator(Box.rotation)),
-        Color,
-        bPersistentLines,
-        LifeTime,
-        DepthPriority,
-        1e2f * Box.thickness);
+    const FVector Extent = 1e2f * FVector{Box.box.extent.x, Box.box.extent.y, Box.box.extent.z};
+    const FTransform Transform = {FRotator(Box.rotation), Box.box.location};
+    const auto Thickness = 1e2f * Box.thickness;
+
+    FVector B[2], P, Q;
+    B[0] = -Extent;
+    B[1] =  Extent;
+
+    int32 i, j;
+    for( i=0; i<2; i++ )
+    {
+      for( j=0; j<2; j++ )
+      {
+        P.X=B[i].X;
+        Q.X=B[i].X;
+        P.Y=B[j].Y;
+        Q.Y=B[j].Y;
+        P.Z=B[0].Z;
+        Q.Z=B[1].Z;
+        World->PersistentLineBatcher->DrawLine(
+            Transform.TransformPosition(P),
+            Transform.TransformPosition(Q),
+            Color,
+            DepthPriority,
+            Thickness,
+            LifeTime);
+
+        P.Y=B[i].Y;
+        Q.Y=B[i].Y;
+        P.Z=B[j].Z;
+        Q.Z=B[j].Z;
+        P.X=B[0].X;
+        Q.X=B[1].X;
+        World->PersistentLineBatcher->DrawLine(
+            Transform.TransformPosition(P),
+            Transform.TransformPosition(Q),
+            Color,
+            DepthPriority,
+            Thickness,
+            LifeTime);
+
+        P.Z=B[i].Z;
+        Q.Z=B[i].Z;
+        P.X=B[j].X;
+        Q.X=B[j].X;
+        P.Y=B[0].Y;
+        Q.Y=B[1].Y;
+        World->PersistentLineBatcher->DrawLine(
+            Transform.TransformPosition(P),
+            Transform.TransformPosition(Q),
+            Color,
+            DepthPriority,
+            Thickness,
+            LifeTime);
+      }
+    }
   }
 
   void operator()(const Shape::String &Str) const
@@ -99,7 +179,7 @@ private:
 
   bool bPersistentLines;
 
-  uint8 DepthPriority = 0;
+  uint8 DepthPriority = SDPG_World;
 };
 
 void FDebugShapeDrawer::Draw(const carla::rpc::DebugShape &Shape)
