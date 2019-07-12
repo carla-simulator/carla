@@ -53,6 +53,7 @@
     - Added allow setting fixed frame-rate from client-side, now is part of `carla.WorldSettings`
     - Added `is_invincible` to walkers
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Updated DebugHelper to render on Shipping packages, it has also better performance
   * Updated OpenDriveActor to use the new Waypoint API
   * Removed deprecated code and content
   * Exposed waypoints and OpenDrive map to UE4 Blueprints
