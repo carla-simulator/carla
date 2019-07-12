@@ -35,7 +35,7 @@ public:
 
   virtual void DrawHUD() override;
 
-  void AddHUDString(FString Str, FVector Location, FColor Color, double LifeTime);
+  void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
 
 private:
   TArray<HUDString> StringList;
