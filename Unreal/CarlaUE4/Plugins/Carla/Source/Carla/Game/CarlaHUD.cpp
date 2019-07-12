@@ -10,10 +10,6 @@ void ACarlaHUD::DrawHUD()
 {
   Super::DrawHUD();
 
-  double Now = FPlatformTime::Seconds();
-  int ScreenWidth = 0;
-  int ScreenHeight = 0;
-
   auto Player = GetOwningPlayerController();
   if (Player == nullptr)
   {
@@ -22,8 +18,11 @@ void ACarlaHUD::DrawHUD()
   }
 
   // get viewport size for culling
+  int ScreenWidth = 0;
+  int ScreenHeight = 0;
   Player->GetViewportSize(ScreenWidth, ScreenHeight);
 
+  double Now = FPlatformTime::Seconds();
   int i = 0;
   while (i < StringList.Num())
   {
@@ -39,7 +38,6 @@ void ACarlaHUD::DrawHUD()
     // check to remove the string
     if (Now >= StringList[i].TimeToDie)
     {
-      // remove the string
       StringList.RemoveAt(i);
     }
     else
@@ -47,7 +45,7 @@ void ACarlaHUD::DrawHUD()
   }
 }
 
-void ACarlaHUD::AddHUDString(FString Str, FVector Location, FColor Color, double LifeTime)
+void ACarlaHUD::AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime)
 {
   double Now = FPlatformTime::Seconds();
   HUDString Obj { Str, Location, Color, Now + LifeTime };
