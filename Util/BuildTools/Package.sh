@@ -8,14 +8,15 @@ source $(dirname "$0")/Environment.sh
 
 DOC_STRING="Makes a packaged version of CARLA and other content packages ready for distribution."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...]"
+USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...]"
 
 PACKAGES="Carla"
 DO_TARBALL=true
 DO_CLEAN_INTERMEDIATE=false
 PROPS_MAP_NAME=PropsMap
+PACKAGE_CONFIG=Shipping
 
-OPTS=`getopt -o h --long help,no-zip,clean-intermediate,packages: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages: -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -23,6 +24,9 @@ eval set -- "$OPTS"
 
 while true; do
   case "$1" in
+    --config )
+      PACKAGE_CONFIG="$2"
+      shift 2 ;;
     --no-zip )
       DO_TARBALL=false
       shift ;;
@@ -67,9 +71,15 @@ fi
 
 REPOSITORY_TAG=$(get_git_repository_version)
 
-RELEASE_BUILD_FOLDER=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}
+RELEASE_BUILD_FOLDER=${CARLA_DIST_FOLDER}/CARLA_${PACKAGE_CONFIG}_${REPOSITORY_TAG}
 
-log "Packaging version '${REPOSITORY_TAG}'."
+if [[ ${PACKAGE_CONFIG} == "Shipping" ]] ; then
+  RELEASE_PACKAGE_PATH=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
+else
+  RELEASE_PACKAGE_PATH=${CARLA_DIST_FOLDER}/CARLA_${PACKAGE_CONFIG}_${REPOSITORY_TAG}.tar.gz
+fi
+
+log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 
 # ==============================================================================
 # -- Cook CARLA project --------------------------------------------------------
@@ -87,7 +97,7 @@ if ${DO_CARLA_RELEASE} ; then
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
-      -clientconfig=Shipping -ue4exe=UE4Editor \
+      -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
       -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${RELEASE_BUILD_FOLDER}"
 
@@ -146,7 +156,7 @@ fi
 
 if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
 
-  DESTINATION=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
+  DESTINATION=${RELEASE_PACKAGE_PATH}
   SOURCE=${RELEASE_BUILD_FOLDER}/LinuxNoEditor
 
   pushd "${SOURCE}" >/dev/null
@@ -282,11 +292,10 @@ fi ; done
 
 if ${DO_CARLA_RELEASE} ; then
   if ${DO_TARBALL} ; then
-    FINAL_PACKAGE=${CARLA_DIST_FOLDER}/CARLA_${REPOSITORY_TAG}.tar.gz
+    log "CARLA release created at ${RELEASE_PACKAGE_PATH}"
   else
-    FINAL_PACKAGE=${RELEASE_BUILD_FOLDER}
+    log "CARLA release created at ${RELEASE_BUILD_FOLDER}"
   fi
-  log "CARLA release created at ${FINAL_PACKAGE}"
 fi
 
 # ==============================================================================
