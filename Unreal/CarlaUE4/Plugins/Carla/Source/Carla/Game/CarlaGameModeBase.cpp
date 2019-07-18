@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaHUD.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -21,6 +22,9 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
+
+  // HUD
+  HUDClass = ACarlaHUD::StaticClass();
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));

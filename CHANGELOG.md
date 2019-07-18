@@ -1,4 +1,4 @@
-## Latest
+## CARLA 0.9.6
 
   * Upgraded to Unreal Engine 4.22
   * Added Vulkan support, if installed, CARLA will use Vulkan, use `-opengl` flag to launch with OpenGL
@@ -17,6 +17,7 @@
   * Added ability to set motion blur settings for RGB camera in sensor python blueprint
   * Added C++ client example using LibCarla
   * Added PythonAPI documentation generator, we documented in detail all the Python reference
+  * Added a new Python script config.py that allows the user to configure the simulator from the command-line
   * New recorder features:
     - Documented recorded system and binary file
     - Added optional parameter to show more details about a recorder file (related to `show_recorder_file_info.py`)
@@ -53,6 +54,7 @@
     - Added allow setting fixed frame-rate from client-side, now is part of `carla.WorldSettings`
     - Added `is_invincible` to walkers
   * Several optimizations to the RPC server, now supports a bigger load of async messages
+  * Updated DebugHelper to render on Shipping packages, it has also better performance
   * Updated OpenDriveActor to use the new Waypoint API
   * Removed deprecated code and content
   * Exposed waypoints and OpenDrive map to UE4 Blueprints
