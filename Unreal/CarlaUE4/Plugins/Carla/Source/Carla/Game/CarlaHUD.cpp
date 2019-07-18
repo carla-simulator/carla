@@ -17,22 +17,16 @@ void ACarlaHUD::DrawHUD()
     return;
   }
 
-  // get viewport size for culling
-  int ScreenWidth = 0;
-  int ScreenHeight = 0;
-  Player->GetViewportSize(ScreenWidth, ScreenHeight);
-
   double Now = FPlatformTime::Seconds();
   int i = 0;
   while (i < StringList.Num())
   {
     // project position from camera
     FVector2D Screen;
-    Player->ProjectWorldLocationToScreen(StringList[i].Location, Screen, true);
-    if (Screen.X >= 0 && Screen.Y >= 0 && Screen.X < ScreenWidth && Screen.Y < ScreenHeight)
+    if (Player->ProjectWorldLocationToScreen(StringList[i].Location, Screen, true))
     {
       // draw text
-      DrawText(StringList[i].Str, StringList[i].Color, Screen.X, Screen.Y, nullptr, 1.0f, false);
+      DrawText(StringList[i].Str, StringList[i].Color, Screen.X, Screen.Y);
     }
 
     // check to remove the string

@@ -6,6 +6,21 @@
 
 #pragma once
 
+// Workaround to fix Windows conflict: Windows change the name of some functions (DrawText, LoadLibrary...)
+// with Unicode / ANSI versions for his own API (DrawTextW, DrawTextA, LoadLibraryW, LoadLibraryA...).
+// But the changes are global for the compiler. Deep in headers, windows has something like:
+// #ifdef UNICODE
+//   #define DrawText  DrawTextW
+//   #define LoadLibrary LoadLibraryW
+// #else
+//   #define DrawText  DrawTextA
+//   #define LoadLibrary LoadLibraryA
+// #endif
+// Then linker tries to find function DrawTextW on external DLL and an unresolved external error happens because
+// Unreal has no the function DrawTextW, it has just DrawText.
+// We fix that just undefining the function that conflicts by name with the Windows API Unicode.
+#undef DrawText
+
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
 
