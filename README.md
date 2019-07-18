@@ -17,6 +17,7 @@ and protocols, CARLA provides open digital assets (urban layouts, buildings,
 vehicles) that were created for this purpose and can be used freely. The
 simulation platform supports flexible specification of sensor suites and
 environmental conditions.
+is there anything to change
 
 [![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=BjH-pFGlZ0M)
 
