@@ -19,7 +19,7 @@ pipeline {
                 sh 'cd ~/carla-simulator.github.io && \
                     git add Doxygen && \
                     git commit -m "Updated c++ docs" || true && \
-                    git push'
+                    git push '
             
             }
         }
