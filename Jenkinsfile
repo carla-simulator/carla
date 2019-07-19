@@ -15,7 +15,7 @@ pipeline {
             steps {
                 sh 'make docs'
                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
-                sh 'cp Doxygen ~/carla-simulator.github.io'
+                sh 'cp ./Doxygen/ ~/carla-simulator.github.io/'
                 sh 'cd ~/carla-simulator.github.io'
                 sh 'git add Doxygen'
                 sh 'git commit -m "Updated c++ docs"'
