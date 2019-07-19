@@ -14,12 +14,13 @@ pipeline {
         stage('Docs') {
             steps {
                 sh 'make docs'
-                sh 'mv /Doxygen ~/carla-simulator.github.io'
+                sh 'mv Doxygen/ ~/carla-simulator.github.io'
                 sh 'cd ~/carla-simulator.github.io'
                 sh 'git add Doxygen'
                 sh 'git commit -m "Updated c++ docs"'
                 sh 'git push'
                 sh 'cd ~/carla'
+                
             }
         }
 
