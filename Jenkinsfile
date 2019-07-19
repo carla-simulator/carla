@@ -11,67 +11,12 @@ pipeline {
 
     stages {
 
-        stage('Setup') {
+        stage('Docs') {
             steps {
-                sh 'make setup'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'make LibCarla'
-                sh 'make PythonAPI'
-                sh 'make CarlaUE4Editor'
-                sh 'make examples'
-            }
-            post {
-                always {
-                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                }
-            }
-        }
-
-        stage('Unit Tests') {
-            steps {
-                sh 'make check ARGS="--all --xml"'
-            }
-            post {
-                always {
-                    junit 'Build/test-results/*.xml'
-                    archiveArtifacts 'profiler.csv'
-                }
-            }
-        }
-
-        stage('Retrieve Content') {
-            steps {
-                sh './Update.sh'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'make package'
-                sh 'make package ARGS="--packages=Town06,Town07 --clean-intermediate"'
-            }
-            post {
-                always {
-                    archiveArtifacts 'Dist/*.tar.gz'
-                }
-            }
-        }
-
-        stage('Smoke Tests') {
-            steps {
-                sh 'DISPLAY= ./Dist/*/LinuxNoEditor/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                sh 'make smoke_tests ARGS="--xml"'
-                sh 'make run-examples ARGS="localhost 3654"'
-            }
-            post {
-                always {
-                    archiveArtifacts 'CarlaUE4.log'
-                    junit 'Build/test-results/smoke-tests-*.xml'
-                }
+                sh 'make docs'
+                sh 'mv Doxygen ~/carla-simulator.github.io'
+                sh 'cd to repo'
+                sh 'git commit & push'
             }
         }
 
