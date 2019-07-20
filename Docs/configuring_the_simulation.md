@@ -16,7 +16,7 @@ Changing the map
 The map can be changed from the Python API with
 
 ```py
-world = client.load_map('Town01')
+world = client.load_world('Town01')
 ```
 
 this creates an empty world with default settings. The list of currently
