@@ -33,7 +33,7 @@ namespace carla {
   ///
   /// This is a move-only type, meant to be cheap to pass by value. If the
   /// buffer is retrieved from a BufferPool, the memory is automatically pushed
-  /// back to the pool on destruction!.
+  /// back to the pool on destruction.
   ///
   /// @warning Creating a buffer bigger than max_size() is undefined.
   class Buffer {

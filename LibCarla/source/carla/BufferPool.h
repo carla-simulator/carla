@@ -26,7 +26,7 @@ namespace carla {
   ///
   /// @warning Buffers adjust their size only by growing, they never shrink
   /// unless explicitly cleared. The allocated memory is only deleted when this
-  /// pool is destroyed!
+  /// pool is destroyed.
   class BufferPool : public std::enable_shared_from_this<BufferPool> {
   public:
 
