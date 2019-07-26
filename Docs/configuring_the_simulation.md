@@ -32,6 +32,34 @@ To reload the world using the current active map, use
 world = client.reload_world()
 ```
 
+Graphics Quality
+----------------
+
+<h4>Vulkan vs OpenGL</h4>
+
+Vulkan _(if installed)_ is the default graphics API used by Unreal Engine and CARLA on Linux.  
+It consumes more memory but performs faster.  
+On the other hand, OpenGL is less memory consuming but performs slower than Vulkan.
+
+!!!note
+    Vulkan is an experimental build so it may have some bugs when running the simulator.
+
+OpenGL API can be selected with the flag `-opengl`.
+
+```sh
+> ./CarlaUE4.sh -opengl
+```
+
+<h4>Quality levels</h4>
+
+Currently, there are two levels of quality, `Low` and `Epic` _(default)_. The image below shows how the simulator has to be started with the appropiate flag in order to set a quality level and the difference between qualities.
+
+![](img/epic_quality_capture.png)  |  ![](img/low_quality_capture.png)
+:-------------------------:|:-------------------------:
+`./CarlaUE4.sh -quality-level=Epic`  |  `./CarlaUE4.sh -quality-level=Low`
+
+**Low mode runs significantly faster**, ideal for users that don't rely on quality precision.
+
 Running off-screen
 ------------------
 
@@ -40,9 +68,8 @@ environment variable `DISPLAY` to empty
 
 !!! important
     **DISPLAY= only works with OpenGL**<br>
-    Vulkan is now the default graphics API used by Unreal Engine and CARLA on
-    Linux. Unreal Engine currently crashes when Vulkan is used when running
-    off-screen. Therefore the -opengl flag must be added to force the engine to
+    Unreal Engine currently crashes when Vulkan is used when running
+    off-screen. Therefore the `-opengl` flag must be added to force the engine to
     use OpenGL instead. We hope that this issue is addressed by Epic in the near
     future.
 
@@ -162,12 +189,12 @@ at the example [synchronous_mode.py][syncmodelink].
 
 [syncmodelink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/synchronous_mode.py
 
-Other command-line options
+Command-line options
 --------------------------
 
   * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
   * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
-  * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
+  * `-quality-level={Low,Epic}` Change graphics quality level.
   * `-no-rendering` Disable rendering.
   * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
 
