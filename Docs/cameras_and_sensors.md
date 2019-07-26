@@ -347,6 +347,9 @@ objects.
 
 | Sensor data attribute  | Type        | Description |
 | ---------------------- | ----------- | ----------- |
+| `frame`                | int         | Frame number when the measurement took place |
+| `timestamp`            | double      | Timestamp of the measurement in simulation seconds since the beginning of the epispode |
+| `transform`            | carla.Transform | Transform in world 
 | `actor`                | carla.Actor | Actor that detected the obstacle ("self" actor) |
 | `other_actor`          | carla.Actor | Actor detected as obstacle |
 | `distance    `         | float       | Distance from actor to other_actor |

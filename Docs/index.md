@@ -21,7 +21,9 @@
 <h3>Advanced topics</h3>
 
   * [Python API reference](python_api.md)
-  * [Blueprint Library] (bp_library.md)
+  * [Python Cookbook](python_cookbook.md)
+  * [Blueprint Library](bp_library.md)
+  * [C++ Reference](c++_reference.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
   * [How to make a new map with RoadRunner](how_to_make_a_new_map.md)

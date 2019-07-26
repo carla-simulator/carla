@@ -60,7 +60,7 @@ blueprints also has an ID that uniquely identifies it and all the actor
 instances created with it. Examples of IDs are "vehicle.nissan.patrol" or
 "sensor.camera.depth".
 
-The list of all available blueprints is kept in the **blueprint library**
+The list of all available blueprints is kept in the [**blueprint library**](/bp_library)
 
 ```py
 blueprint_library = world.get_blueprint_library()
@@ -231,7 +231,7 @@ Where:
 - *clutch_strength*: The clutch strength of the vehicle. Measured in Kgm^2/s
 
 - *final_ratio*: The fixed ratio from transmission to wheels.
-- *forward_gears*: List of `GearPhysicsControl` objects.
+- *forward_gears*: List of [`GearPhysicsControl`](python_api.md#carla.GearPhysicsControl) objects.
 
 - *mass*: The mass of the vehicle measured in Kg
 - *drag_coefficient*: Drag coefficient of the vehicle's chassis
