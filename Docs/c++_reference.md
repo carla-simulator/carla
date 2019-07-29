@@ -1,6 +1,6 @@
 
 <h1>C++ Reference </h1>
-We use Doxygen to generate the documentation of the following C++ code:
+We use Doxygen to generate the documentation of our C++ code:
 
 [Libcarla/Source](https://carla.org/Doxygen/html/dir_b9166249188ce33115fd7d5eed1849f2.html)<br>
 [Unreal/CarlaUE4/Source](https://carla.org/Doxygen/html/dir_733e9da672a36443d0957f83d26e7dbf.html)<br>
