@@ -75,6 +75,18 @@ pipeline {
             }
         }
 
+        stage('Docs') {
+            steps {
+                sh 'make docs'
+                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
+                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                sh 'cd ~/carla-simulator.github.io && \
+                    git add Doxygen && \
+                    git commit -m "Updated c++ docs" || true && \
+                    git push'    
+            }
+        }
+        
         stage('Deploy') {
             when { anyOf { branch "master"; buildingTag() } }
             steps {
