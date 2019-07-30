@@ -21,7 +21,6 @@
 <h3>Advanced topics</h3>
 
   * [Python API reference](python_api.md)
-  * [Python Cookbook](python_cookbook.md)
   * [Blueprint Library](bp_library.md)
   * [C++ Reference](c++_reference.md)
   * [Running without display and selecting GPUs](carla_headless.md)
