@@ -81,6 +81,20 @@ pipeline {
                 sh 'make deploy ARGS="--replace-latest --docker-push"'
             }
         }
+        
+        stage('Doxygen') {
+            when { anyOf { branch "master"; buildingTag() } }
+            steps {
+                sh 'make docs'
+                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
+                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                sh 'cd ~/carla-simulator.github.io && \
+                    git pull && \
+                    git add Doxygen && \
+                    git commit -m "Updated c++ docs" || true && \
+                    git push'
+            }
+        }
     }
 
     post {
