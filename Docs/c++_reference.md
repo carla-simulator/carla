@@ -6,7 +6,7 @@ We use Doxygen to generate the documentation of our C++ code:
 [Unreal/CarlaUE4/Source](https://carla.org/Doxygen/html/dir_733e9da672a36443d0957f83d26e7dbf.html)<br>
 [Unreal/CarlaUE4/Carla/Plugins](https://carla.org/Doxygen/html/dir_8fc34afb5f07a67966c78bf5319f94ae.html)
 
-The documentation generated is available at this link **<https://carla.org/Doxygen/html/index.html/>**
+The documentation generated is available at this link **<https://carla.org/Doxygen/html/index.html>**
 
 !!! note
     The documentation updates automatically with the github repository,
