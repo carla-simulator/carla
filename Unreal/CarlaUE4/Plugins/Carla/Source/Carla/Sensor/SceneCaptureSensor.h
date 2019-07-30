@@ -116,10 +116,58 @@ public:
   float GetFocalDistance() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetDepthBlurAmount(float Amount);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurAmount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthBlurRadius(float Radius);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurRadius() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetBladeCount(int Count);
 
   UFUNCTION(BlueprintCallable)
   int GetBladeCount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthOfFieldMinFstop(float MinFstop);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthOfFieldMinFstop() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmSlope(float Slope);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmSlope() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmToe(float Toe);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmToe() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmShoulder(float Shoulder);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmShoulder() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmBlackClip(float BlackClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmBlackClip() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmWhiteClip(float WhiteClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmWhiteClip() const;
 
   UFUNCTION(BlueprintCallable)
   void SetExposureMinBrightness(float Brightness);
