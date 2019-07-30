@@ -1,3 +1,7 @@
+## Latest
+  * Added Doxygen documentation online with automatic updates through Jenkins pipeline
+
+
 ## CARLA 0.9.6
 
   * Upgraded to Unreal Engine 4.22
