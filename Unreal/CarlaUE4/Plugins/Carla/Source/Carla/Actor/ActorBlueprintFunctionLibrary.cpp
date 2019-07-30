@@ -229,7 +229,7 @@ static void AddVariationsForSensor(FActorDefinition &Def)
 
   Tick.Id = TEXT("sensor_tick");
   Tick.Type = EActorAttributeType::Float;
-  Tick.RecommendedValues = { TEXT("0.0f") };
+  Tick.RecommendedValues = { TEXT("0.0") };
   Tick.bRestrictToRecommended = false;
 
   Def.Variations.Emplace(Tick);
@@ -357,13 +357,16 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
-    // Exposure
-    // More ingo at:
+    // More info at:
     // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
+    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
+    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
+
+    // Exposure
     FActorVariation ExposureMode;
     ExposureMode.Id = TEXT("exposure_mode");
     ExposureMode.Type = EActorAttributeType::String;
-    ExposureMode.RecommendedValues = { TEXT("histogram"), TEXT("manual") };
+    ExposureMode.RecommendedValues = { TEXT("manual"), TEXT("histogram") };
     ExposureMode.bRestrictToRecommended = true;
 
     // Logarithmic adjustment for the exposure. Only used if a tonemapper is
@@ -401,7 +404,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     // Defines the size of the opening for the camera lens.
     // Using larger numbers will reduce the DOF effect.
     FActorVariation Aperture; // N
-    Aperture.Id = TEXT("aperture");
+    Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
     Aperture.RecommendedValues = { TEXT("1.4") };
     Aperture.bRestrictToRecommended = false;
@@ -452,14 +455,28 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation FocalDistance;
     FocalDistance.Id = TEXT("focal_distance");
     FocalDistance.Type = EActorAttributeType::Float;
-    FocalDistance.RecommendedValues = { TEXT("1000") };
+    FocalDistance.RecommendedValues = { TEXT("1000.0") };
     FocalDistance.bRestrictToRecommended = false;
+
+    // Depth blur km for 50%
+    FActorVariation DepthBlurAmount;
+    DepthBlurAmount.Id = TEXT("blur_amount");
+    DepthBlurAmount.Type = EActorAttributeType::Float;
+    DepthBlurAmount.RecommendedValues = { TEXT("1.0") };
+    DepthBlurAmount.bRestrictToRecommended = false;
+
+    // Depth blur radius in pixels at 1920x
+    FActorVariation DepthBlurRadius;
+    DepthBlurRadius.Id = TEXT("blur_radius");
+    DepthBlurRadius.Type = EActorAttributeType::Float;
+    DepthBlurRadius.RecommendedValues = { TEXT("0.0") };
+    DepthBlurRadius.bRestrictToRecommended = false;
 
     // Defines the opening of the camera lens, Aperture is 1.0/fstop,
     // typical lens go down to f/1.2 (large opening),
     // larger numbers reduce the DOF effect
     FActorVariation MaxAperture;
-    MaxAperture.Id = TEXT("max_aperture");
+    MaxAperture.Id = TEXT("min_fstop");
     MaxAperture.Type = EActorAttributeType::Float;
     MaxAperture.RecommendedValues = { TEXT("1.2") };
     MaxAperture.bRestrictToRecommended = false;
@@ -471,6 +488,39 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     BladeCount.Type = EActorAttributeType::Int;
     BladeCount.RecommendedValues = { TEXT("5") };
     BladeCount.bRestrictToRecommended = false;
+
+    // - Tonemapper Settings -----------------------------------
+    // You can adjust these tonemapper controls to emulate other
+    // types of film stock for your project
+    FActorVariation FilmSlope;
+    FilmSlope.Id = TEXT("slope");
+    FilmSlope.Type = EActorAttributeType::Float;
+    FilmSlope.RecommendedValues = { TEXT("0.88") };
+    FilmSlope.bRestrictToRecommended = false;
+
+    FActorVariation FilmToe;
+    FilmToe.Id = TEXT("toe");
+    FilmToe.Type = EActorAttributeType::Float;
+    FilmToe.RecommendedValues = { TEXT("0.55") };
+    FilmToe.bRestrictToRecommended = false;
+
+    FActorVariation FilmShoulder;
+    FilmShoulder.Id = TEXT("shoulder");
+    FilmShoulder.Type = EActorAttributeType::Float;
+    FilmShoulder.RecommendedValues = { TEXT("0.26") };
+    FilmShoulder.bRestrictToRecommended = false;
+
+    FActorVariation FilmBlackClip;
+    FilmBlackClip.Id = TEXT("black_clip");
+    FilmBlackClip.Type = EActorAttributeType::Float;
+    FilmBlackClip.RecommendedValues = { TEXT("0.0") };
+    FilmBlackClip.bRestrictToRecommended = false;
+
+    FActorVariation FilmWhiteClip;
+    FilmWhiteClip.Id = TEXT("white_clip");
+    FilmWhiteClip.Type = EActorAttributeType::Float;
+    FilmWhiteClip.RecommendedValues = { TEXT("0.04") };
+    FilmWhiteClip.bRestrictToRecommended = false;
 
     Definition.Variations.Append({
       ExposureMode,
@@ -490,7 +540,14 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       CalibrationConstant,
       FocalDistance,
       MaxAperture,
-      BladeCount});
+      BladeCount,
+      DepthBlurAmount,
+      DepthBlurRadius,
+      FilmSlope,
+      FilmToe,
+      FilmShoulder,
+      FilmBlackClip,
+      FilmWhiteClip});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -984,7 +1041,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetISO(
         RetrieveActorAttributeToFloat("iso", Description.Variations, 1200.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("aperture", Description.Variations, 1.4f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
 
     Camera->SetExposureMinBrightness(
         RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));
@@ -999,10 +1056,25 @@ void UActorBlueprintFunctionLibrary::SetCamera(
 
     Camera->SetFocalDistance(
         RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 1000.0f));
-    Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("max_aperture", Description.Variations, 1.2f));
+    Camera->SetDepthBlurAmount(
+        RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 0.0f));
+    Camera->SetDepthBlurRadius(
+        RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 1.0f));
+    Camera->SetDepthOfFieldMinFstop(
+        RetrieveActorAttributeToFloat("min_fstop", Description.Variations, 1.2f));
     Camera->SetBladeCount(
         RetrieveActorAttributeToInt("blade_count", Description.Variations, 5));
+
+    Camera->SetFilmSlope(
+        RetrieveActorAttributeToFloat("slope", Description.Variations, 0.88f));
+    Camera->SetFilmToe(
+        RetrieveActorAttributeToFloat("toe", Description.Variations, 0.55f));
+    Camera->SetFilmShoulder(
+        RetrieveActorAttributeToFloat("shoulder", Description.Variations, 0.26f));
+    Camera->SetFilmBlackClip(
+        RetrieveActorAttributeToFloat("black_clip", Description.Variations, 0.0f));
+    Camera->SetFilmWhiteClip(
+        RetrieveActorAttributeToFloat("white_clip", Description.Variations, 0.04f));
   }
 }
 

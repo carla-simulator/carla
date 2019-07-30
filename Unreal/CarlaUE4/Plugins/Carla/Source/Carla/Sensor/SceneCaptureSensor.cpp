@@ -161,6 +161,42 @@ float ASceneCaptureSensor::GetFocalDistance() const
   return CaptureComponent2D->PostProcessSettings.DepthOfFieldFocalDistance;
 }
 
+void ASceneCaptureSensor::SetDepthBlurAmount(float Amount)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.DepthOfFieldDepthBlurAmount = Amount;
+}
+
+float ASceneCaptureSensor::GetDepthBlurAmount() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.DepthOfFieldDepthBlurAmount;
+}
+
+void ASceneCaptureSensor::SetDepthBlurRadius(float Radius)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.DepthOfFieldDepthBlurRadius = Radius;
+}
+
+float ASceneCaptureSensor::GetDepthBlurRadius() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.DepthOfFieldDepthBlurRadius;
+}
+
+void ASceneCaptureSensor::SetDepthOfFieldMinFstop(float MinFstop)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.DepthOfFieldMinFstop = MinFstop;
+}
+
+float ASceneCaptureSensor::GetDepthOfFieldMinFstop() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.DepthOfFieldMinFstop;
+}
+
 void ASceneCaptureSensor::SetBladeCount(int Count)
 {
   check(CaptureComponent2D != nullptr);
@@ -171,6 +207,66 @@ int ASceneCaptureSensor::GetBladeCount() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.DepthOfFieldBladeCount;
+}
+
+void ASceneCaptureSensor::SetFilmSlope(float Slope)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.FilmSlope = Slope;
+}
+
+float ASceneCaptureSensor::GetFilmSlope() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.FilmSlope;
+}
+
+void ASceneCaptureSensor::SetFilmToe(float Toe)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.FilmToe = Toe; // FilmToeAmount?
+}
+
+float ASceneCaptureSensor::GetFilmToe() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.FilmToe;
+}
+
+void ASceneCaptureSensor::SetFilmShoulder(float Shoulder)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.FilmShoulder = Shoulder;
+}
+
+float ASceneCaptureSensor::GetFilmShoulder() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.FilmShoulder;
+}
+
+void ASceneCaptureSensor::SetFilmBlackClip(float BlackClip)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.FilmBlackClip = BlackClip;
+}
+
+float ASceneCaptureSensor::GetFilmBlackClip() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.FilmBlackClip;
+}
+
+void ASceneCaptureSensor::SetFilmWhiteClip(float WhiteClip)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.FilmWhiteClip = WhiteClip;
+}
+
+float ASceneCaptureSensor::GetFilmWhiteClip() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.FilmWhiteClip;
 }
 
 void ASceneCaptureSensor::SetExposureMinBrightness(float Brightness)
@@ -350,6 +446,8 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_DepthOfFieldMethod = true;
     PostProcessSettings.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_CircleDOF;
     PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
 
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
@@ -367,6 +465,13 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_DepthOfFieldFstop = true;
     PostProcessSettings.bOverride_DepthOfFieldMinFstop = true;
     PostProcessSettings.bOverride_DepthOfFieldBladeCount = true;
+
+    // Film (Tonemapper)
+    PostProcessSettings.bOverride_FilmSlope = true;
+    PostProcessSettings.bOverride_FilmToe = true;
+    PostProcessSettings.bOverride_FilmShoulder = true;
+    PostProcessSettings.bOverride_FilmWhiteClip = true;
+    PostProcessSettings.bOverride_FilmBlackClip = true;
 
     // Motion blur
     PostProcessSettings.bOverride_MotionBlurAmount = true;
