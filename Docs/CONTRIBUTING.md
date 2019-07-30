@@ -43,11 +43,14 @@ GitHub or locally in your machine.
 
 Once you are done with your changes, please submit a pull-request.
 
-**TIP:** You can build and serve it locally by running `mkdocs` in the project's
-main folder
+!!! tip
+    You can build and serve it locally by running `mkdocs` in the project's
+    main folder
 
-    $ sudo pip install mkdocs
-    $ mkdocs serve
+```sh
+  > sudo pip install mkdocs
+  > mkdocs serve
+```
 
 Code contributions
 ------------------
@@ -56,12 +59,12 @@ So you are considering making a code contribution, great! we love to have
 contributions from the community.
 
 Before starting hands-on on coding, please check out our
-[issue board][wafflelink] to see if we are already working on that, it would
+[issue board][issueboard] to see if we are already working on that, it would
 be a pity putting an effort into something just to discover that someone else
 was already working on that. In case of doubt or to discuss how to proceed,
-please contact one of us (or send an email to carla.simulator@gmail.com).
+please contact one of us (or send an email to <carla.simulator@gmail.com>).
 
-[wafflelink]: https://waffle.io/carla-simulator/carla
+[issueboard]: https://github.com/carla-simulator/carla/issues
 
 #### Where can I learn more about Unreal Engine?
 
@@ -81,27 +84,6 @@ on the different modules that compose CARLA, and chose the most appropriate one
 to hold the new feature. We are aware the developers documentation is still
 scarce, please ask us in case of doubt, and of course don't hesitate to improve
 the current documentation if you feel confident enough.
-
-#### Are there any examples in CARLA to see how Unreal programming works?
-
-You can find an example of how C++ classes work in UE4 in
-[`ASceneCaptureToDiskCamera`][capturelink] (and its parent class
-`ASceneCaptureCamera`). This class creates an actor that can be dropped into the
-scene. In the editor, type _"Scene Capture To Disk"_ in the Modes tab, and drag
-and drop the actor into the scene. Now searching for its detail tab you can find
-all the `UPROPERTY` members reflected. This shows the basic mechanism to use C++
-classes in Unreal Editor.
-
-For a more advanced example on how to extend C++ classes with blueprints, you
-can take a look at the _"VehicleSpawner"_ blueprint. It derives from the C++
-class `AVehicleSpawnerBase`. The C++ class decides where and when it spawns a
-vehicle, then calls the function `SpawnVehicle()`, which is implemented in the
-blueprint. The blueprint then decides model and color of the vehicle being
-spawned. Note that the blueprint can call back C++ functions, for instance for
-getting the random engine. This way there is a back-and-forth communication
-between C++ code and blueprints.
-
-[capturelink]: https://github.com/carla-simulator/carla/blob/master/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/SceneCaptureToDiskCamera.h
 
 #### Coding standard
 

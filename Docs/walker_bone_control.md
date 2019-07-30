@@ -10,13 +10,79 @@ all classes and methods available can be found at
     The user should read the Python API tutorial before reading this document.
     [Python API tutorial](python_api_tutorial.md).
 
-
 ### Walker skeleton structure
+
 All walkers have the same skeleton hierarchy and bone names. Below is an image of the skeleton
 hierarchy.
 
-![Skeleton Hierarchy](img/skeleton_hierarchy.jpg)
-
+```
+crl_root
+└── crl_hips__C
+    ├── crl_spine__C
+    │   └── crl_spine01__C
+    │       ├── ctrl_shoulder__L
+    │       │   └── crl_arm__L
+    │       │       └── crl_foreArm__L
+    │       │           └── crl_hand__L
+    │       │               ├── crl_handThumb__L
+    │       │               │   └── crl_handThumb01__L
+    │       │               │       └── crl_handThumb02__L
+    │       │               │           └── crl_handThumbEnd__L
+    │       │               ├── crl_handIndex__L
+    │       │               │   └── crl_handIndex01__L
+    │       │               │       └── crl_handIndex02__L
+    │       │               │           └── crl_handIndexEnd__L
+    │       │               ├── crl_handMiddle_L
+    │       │               │   └── crl_handMiddle01__L
+    │       │               │       └── crl_handMiddle02__L
+    │       │               │           └── crl_handMiddleEnd__L
+    │       │               ├── crl_handRing_L
+    │       │               │   └── crl_handRing01__L
+    │       │               │       └── crl_handRing02__L
+    │       │               │           └── crl_handRingEnd__L
+    │       │               └── crl_handPinky_L
+    │       │                   └── crl_handPinky01__L
+    │       │                       └── crl_handPinky02__L
+    │       │                           └── crl_handPinkyEnd__L
+    │       ├── crl_neck__C
+    │       │   └── crl_Head__C
+    │       │       ├── crl_eye__L
+    │       │       └── crl_eye__R
+    │       └── crl_shoulder__R
+    │           └── crl_arm__R
+    │               └── crl_foreArm__R
+    │                   └── crl_hand__R
+    │                       ├── crl_handThumb__R
+    │                       │   └── crl_handThumb01__R
+    │                       │       └── crl_handThumb02__R
+    │                       │           └── crl_handThumbEnd__R
+    │                       ├── crl_handIndex__R
+    │                       │   └── crl_handIndex01__R
+    │                       │       └── crl_handIndex02__R
+    │                       │           └── crl_handIndexEnd__R
+    │                       ├── crl_handMiddle_R
+    │                       │   └── crl_handMiddle01__R
+    │                       │       └── crl_handMiddle02__R
+    │                       │           └── crl_handMiddleEnd__R
+    │                       ├── crl_handRing_R
+    │                       │   └── crl_handRing01__R
+    │                       │       └── crl_handRing02__R
+    │                       │           └── crl_handRingEnd__R
+    │                       └── crl_handPinky_R
+    │                           └── crl_handPinky01__R
+    │                               └── crl_handPinky02__R
+    │                                   └── crl_handPinkyEnd__R
+    ├── crl_thigh__L
+    │   └── crl_leg__L
+    │       └── crl_foot__L
+    │           └── crl_toe__L
+    │               └── crl_toeEnd__L
+    └── crl_thigh__R
+        └── crl_leg__R
+            └── crl_foot__R
+                └── crl_toe__R
+                    └── crl_toeEnd__R
+```
 
 ### How to manually control a walker's bones
 
@@ -40,6 +106,7 @@ client.set_timeout(2.0)
 ```
 
 #### Spawning a walker
+
 Spawn a random walker at one of the map's spawn points
 
 ```py
@@ -71,6 +138,3 @@ second_tuple = ('crl_hand__L', carla.Transform(rotation=carla.Rotation(roll=90))
 control.bone_transforms = [first_tuple, second_tuple]
 world.player.apply_control(control)
 ```
-
-
-

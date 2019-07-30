@@ -137,6 +137,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: name
+      type: str
       doc: >
         Map name. Comes from the Unreal's UMap name if loaded from a Carla server
     # - METHODS ----------------------------

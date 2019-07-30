@@ -413,7 +413,7 @@ map = world.get_map()
 For starters, the map has a [`name`](python_api.md#carla.Map.name) attribute that matches the name of the
 currently loaded city, e.g. Town01. And, as we've seen before, we can also ask
 the map to provide a list of recommended locations for spawning vehicles,
-`map.get_spawn_points()`.
+[`map.get_spawn_points()`](python_api.md#carla.Map.get_spawn_points).
 
 However, the real power of this map API comes apparent when we introduce
 waypoints. We can tell the map to give us a waypoint on the road closest to our
