@@ -37,22 +37,6 @@ Repositories associated to the CARLA simulation platform:
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
 
-2019 Roadmap
--------
-![carla.org](Docs/img/carla_timeline.png "CARLA Road Map")
-
-We are continuously working on improving CARLA, and we appreciate contributions
-from the community. Our most immediate goals are:
-
-- [x] Support simulation of traffic scenarios
-- [x] Support ROS interface
-- [x] Allowing for flexible and user-friendly import and editing of maps
-- [x] Control of all vehicles from client side
-- [x] Control of pedestrians from client side
-- [x] No rendering mode for high performance simulation
-- [ ] Support parallel simulation of traffic scenarios in the cloud
-- [ ] RADAR simulation
-
 Paper
 -----
 
