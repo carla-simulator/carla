@@ -80,6 +80,78 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  void SetExposureMethod(EAutoExposureMethod Method);
+
+  UFUNCTION(BlueprintCallable)
+  EAutoExposureMethod GetExposureMethod() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCompensation(float Compensation);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCompensation() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetShutterSpeed(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetShutterSpeed() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetISO(float ISO);
+
+  UFUNCTION(BlueprintCallable)
+  float GetISO() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetAperture(float Aperture);
+
+  UFUNCTION(BlueprintCallable)
+  float GetAperture() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFocalDistance(float Distance);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFocalDistance() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetBladeCount(int Count);
+
+  UFUNCTION(BlueprintCallable)
+  int GetBladeCount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMinBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMinBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMaxBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMaxBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedDown(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedDown() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedUp(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedUp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCalibrationConstant(float Constant);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCalibrationConstant() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetMotionBlurIntensity(float Intensity);
 
   UFUNCTION(BlueprintCallable)

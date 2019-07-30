@@ -81,7 +81,7 @@ pipeline {
                 sh 'make deploy ARGS="--replace-latest --docker-push"'
             }
         }
-        
+
         stage('Doxygen') {
             when { anyOf { branch "master"; buildingTag() } }
             steps {
