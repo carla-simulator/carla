@@ -17,7 +17,6 @@ nav:
   - 'How to build on Windows': 'how_to_build_on_windows.md'
 - Advanced topics:
   - 'Python API reference': 'python_api.md'
-  - 'Python Cookbook': 'python_cookbook.md'
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'c++_reference.md'
   - 'Running without display and selecting GPUs': 'carla_headless.md'
