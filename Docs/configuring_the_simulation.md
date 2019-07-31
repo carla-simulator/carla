@@ -207,7 +207,7 @@ To check all the available configurations, run the following command:
 > ./config.py --help
 ```
 
-Also available:
+Commands directly available:
 
   * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
   * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.

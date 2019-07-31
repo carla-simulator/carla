@@ -18,7 +18,7 @@ Also:
 - [Unreal Engine](https://www.unrealengine.com/download) (v4.22.x)
 - [Visual Studio](https://www.visualstudio.com/downloads/) (2017)
 
-Make sure all the modules of the **requierements.txt** files are installed.
+Make sure all the modules of the **requirements.txt** files are installed.
 
 <h3>Environment Setup</h3>
 In order to build CARLA you must **enable the x64 Visual C++ Toolset**.  The Windows 8.1 SDK is also required for installation.
