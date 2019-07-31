@@ -522,6 +522,19 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FilmWhiteClip.RecommendedValues = { TEXT("0.04") };
     FilmWhiteClip.bRestrictToRecommended = false;
 
+    // Color
+    FActorVariation Temperature;
+    Temperature.Id = TEXT("temp");
+    Temperature.Type = EActorAttributeType::Float;
+    Temperature.RecommendedValues = { TEXT("6500.0") };
+    Temperature.bRestrictToRecommended = false;
+
+    FActorVariation Tint;
+    Tint.Id = TEXT("tint");
+    Tint.Type = EActorAttributeType::Float;
+    Tint.RecommendedValues = { TEXT("0.0") };
+    Tint.bRestrictToRecommended = false;
+
     Definition.Variations.Append({
       ExposureMode,
       ExposureCompensation,
@@ -547,7 +560,9 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       FilmToe,
       FilmShoulder,
       FilmBlackClip,
-      FilmWhiteClip});
+      FilmWhiteClip,
+      Temperature,
+      Tint});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -1075,6 +1090,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("black_clip", Description.Variations, 0.0f));
     Camera->SetFilmWhiteClip(
         RetrieveActorAttributeToFloat("white_clip", Description.Variations, 0.04f));
+
+    Camera->SetWhiteTemp(
+        RetrieveActorAttributeToFloat("temp", Description.Variations, 6500.0f));
+    Camera->SetWhiteTint(
+        RetrieveActorAttributeToFloat("tint", Description.Variations, 0.0f));
   }
 }
 
