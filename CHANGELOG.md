@@ -1,4 +1,5 @@
 ## Latest
+  * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
 
 
