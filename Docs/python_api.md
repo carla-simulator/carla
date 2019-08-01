@@ -128,16 +128,6 @@
         - [**as_str**(**self**)](#carla.ActorAttribute.as_str) <sub>_Method_</sub>
         - [**as_color**(**self**)](#carla.ActorAttribute.as_color) <sub>_Method_</sub>
         - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__eq__**(**self**, **other**)](#carla.ActorAttribute.__eq__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
-        - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
         - [**\__ne__**(**self**, **other**)](#carla.ActorAttribute.__ne__) <sub>_Method_</sub>
         - [**\__nonzero__**(**self**)](#carla.ActorAttribute.__nonzero__) <sub>_Method_</sub>
         - [**\__bool__**(**self**)](#carla.ActorAttribute.__bool__) <sub>_Method_</sub>
@@ -587,7 +577,7 @@ Class that defines the attachment options. See  [`world.spawn_actor`](#[carla.Wo
 ---
 
 ## carla.BlueprintLibrary<a name="carla.BlueprintLibrary"></a> <sub><sup>_class_</sup></sub>
-Class that provides access to blueprints.  
+Class that provides access to [blueprints](../bp_library/).  
 
 <h3>Methods</h3>
 - <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>)  
@@ -879,40 +869,10 @@ Class that defines an attribute of a [carla.ActorBlueprint](#carla.ActorBlueprin
 - <a name="carla.ActorAttribute.as_color"></a>**<font color="#7fb800">as_color</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
-        - `other` (_bool_)  
-- <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_int_)  
-- <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_float_)  
-- <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_str_)  
-- <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_[carla.Color](#carla.Color)_)  
-- <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_[carla.ActorAttribute](#carla.ActorAttribute)_)  
+        - `other` (_bool / int / float / str / [carla.Color](#carla.Color) / [carla.ActorAttribute](#carla.ActorAttribute)_)  
 - <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
-        - `other` (_bool_)  
-- <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_int_)  
-- <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_float_)  
-- <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_str_)  
-- <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_[carla.Color](#carla.Color)_)  
-- <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-    - **Parameters:**
-        - `other` (_[carla.ActorAttribute](#carla.ActorAttribute)_)  
+        - `other` (_bool / int / float / str / [carla.Color](#carla.Color) / [carla.ActorAttribute](#carla.ActorAttribute)_)  
 - <a name="carla.ActorAttribute.__nonzero__"></a>**<font color="#7fb800">\__nonzero__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__bool__"></a>**<font color="#7fb800">\__bool__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__int__"></a>**<font color="#7fb800">\__int__</font>**(<font color="#00a6ed">**self**</font>)  

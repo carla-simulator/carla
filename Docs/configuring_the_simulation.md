@@ -4,12 +4,6 @@ Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
-!!! tip
-    Use [PythonAPI/util/config.py][configlink] to configure the simulator
-    from the command-line.
-
-[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
-
 Changing the map
 ----------------
 
@@ -41,7 +35,7 @@ Vulkan _(if installed)_ is the default graphics API used by Unreal Engine and CA
 It consumes more memory but performs faster.  
 On the other hand, OpenGL is less memory consuming but performs slower than Vulkan.
 
-!!!note
+!!! note
     Vulkan is an experimental build so it may have some bugs when running the simulator.
 
 OpenGL API can be selected with the flag `-opengl`.
@@ -192,10 +186,38 @@ at the example [synchronous_mode.py][syncmodelink].
 Command-line options
 --------------------------
 
+!!! important
+    Some of the command-line options are not available in `Linux` due to the "Shipping" build. Therefore, the use of
+    [`config.py`][configlink] script is needed to configure the simulation.
+
+[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
+
+Some configuration examples:
+
+```sh
+> ./config.py --no-rendering      # Disable rendering
+> ./config.py --map Town05        # Change map
+> ./config.py --weather ClearNoon # Change weather
+...
+```
+
+To check all the available configurations, run the following command:
+
+```sh
+> ./config.py --help
+```
+
+Commands directly available:
+
   * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
   * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
   * `-quality-level={Low,Epic}` Change graphics quality level.
-  * `-no-rendering` Disable rendering.
   * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
+
+Example:
+
+```sh
+> ./CarlaUE4.sh -carla-rpc-port=3000
+```
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
