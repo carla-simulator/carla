@@ -441,7 +441,7 @@ lane_type = waypoint.lane_type
 lane_change = waypoint.lane_change
 ```
 
-Surrounding lane markings _(right / left)_ can also be accessed through the waypoint API. Therefore it is possible to know all the information
+Surrounding lane markings _(right / left)_ can also be accessed through the waypoint API. Therefore, it is possible to know all the information
 provided by a [`carla.LaneMarking`](python_api.md#carla.LaneMarking), like the lane marking [`type`](python_api.md#carla.LaneMarkingType) and its
 [`lane_change`](python_api.md#carla.LaneChange) availability.
 

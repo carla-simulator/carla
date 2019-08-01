@@ -1,5 +1,5 @@
 
-<h1>Cpp Reference </h1>
+<h1>C++ Reference </h1>
 We use Doxygen to generate the documentation of our C++ code:
 
 [Libcarla/Source](http://carla.org/Doxygen/html/dir_b9166249188ce33115fd7d5eed1849f2.html)<br>
