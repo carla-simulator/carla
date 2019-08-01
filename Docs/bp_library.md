@@ -1,292 +1,718 @@
 
 <h1>Blueprint Library</h1>
+The Blueprint Library ([`carla.BlueprintLibrary`](/python_api/#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](/python_api/#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](/python_api/#carla.ActorAttribute)) available to the user in CARLA.  
+
+Here is an example code for printing all actor blueprints and their attributes:  
+```py
+blueprints = [bp for bp in world.get_blueprint_library().filter('*')]
+for blueprint in blueprints:
+   print(blueprint.id)
+   for attr in blueprint:
+       print(attr)
+```
+  
+Check out our [blueprint tutorial](/python_api_tutorial/#blueprints).  
 
 ### walker
-- <font color="#737373">walker.pedestrian.0001</font>  
-
-- <font color="#737373">walker.pedestrian.0002</font>  
-
-- <font color="#737373">walker.pedestrian.0003</font>  
-
-- <font color="#737373">walker.pedestrian.0004</font>  
-
-- <font color="#737373">walker.pedestrian.0005</font>  
-
-- <font color="#737373">walker.pedestrian.0006</font>  
-
-- <font color="#737373">walker.pedestrian.0007</font>  
-
-- <font color="#737373">walker.pedestrian.0008</font>  
-
-- <font color="#737373">walker.pedestrian.0009</font>  
-
-- <font color="#737373">walker.pedestrian.0010</font>  
-
-- <font color="#737373">walker.pedestrian.0011</font>  
-
-- <font color="#737373">walker.pedestrian.0012</font>  
-
-- <font color="#737373">walker.pedestrian.0013</font>  
-
-- <font color="#737373">walker.pedestrian.0014</font>  
-
+- **<font color="#498efc">walker.pedestrian.0001</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0002</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0003</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0004</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0005</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0006</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0007</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0008</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0009</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0010</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0011</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0012</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0013</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">walker.pedestrian.0014</font>**  
+    - **Attributes:**
+        - `gender` (String)
+        - `is_invincible` (Bool) – Modifiable
+        - `age` (String)
+        - `role_name` (String) – Modifiable
 
 ### static
-- <font color="#737373">static.prop.advertisement</font>  
-
-- <font color="#737373">static.prop.atm</font>  
-
-- <font color="#737373">static.prop.barbeque</font>  
-
-- <font color="#737373">static.prop.barrel</font>  
-
-- <font color="#737373">static.prop.bench01</font>  
-
-- <font color="#737373">static.prop.bench02</font>  
-
-- <font color="#737373">static.prop.bench03</font>  
-
-- <font color="#737373">static.prop.bike helmet</font>  
-
-- <font color="#737373">static.prop.bikeparking</font>  
-
-- <font color="#737373">static.prop.bin</font>  
-
-- <font color="#737373">static.prop.box01</font>  
-
-- <font color="#737373">static.prop.box02</font>  
-
-- <font color="#737373">static.prop.box03</font>  
-
-- <font color="#737373">static.prop.briefcase</font>  
-
-- <font color="#737373">static.prop.brokentile01</font>  
-
-- <font color="#737373">static.prop.brokentile02</font>  
-
-- <font color="#737373">static.prop.brokentile03</font>  
-
-- <font color="#737373">static.prop.brokentile04</font>  
-
-- <font color="#737373">static.prop.busstop</font>  
-
-- <font color="#737373">static.prop.chainbarrier</font>  
-
-- <font color="#737373">static.prop.chainbarrierend</font>  
-
-- <font color="#737373">static.prop.clothcontainer</font>  
-
-- <font color="#737373">static.prop.clothesline</font>  
-
-- <font color="#737373">static.prop.colacan</font>  
-
-- <font color="#737373">static.prop.constructioncone</font>  
-
-- <font color="#737373">static.prop.container</font>  
-
-- <font color="#737373">static.prop.creasedbox01</font>  
-
-- <font color="#737373">static.prop.creasedbox02</font>  
-
-- <font color="#737373">static.prop.creasedbox03</font>  
-
-- <font color="#737373">static.prop.dirtdebris01</font>  
-
-- <font color="#737373">static.prop.dirtdebris02</font>  
-
-- <font color="#737373">static.prop.dirtdebris03</font>  
-
-- <font color="#737373">static.prop.doghouse</font>  
-
-- <font color="#737373">static.prop.fountain</font>  
-
-- <font color="#737373">static.prop.garbage01</font>  
-
-- <font color="#737373">static.prop.garbage02</font>  
-
-- <font color="#737373">static.prop.garbage03</font>  
-
-- <font color="#737373">static.prop.garbage04</font>  
-
-- <font color="#737373">static.prop.garbage05</font>  
-
-- <font color="#737373">static.prop.garbage06</font>  
-
-- <font color="#737373">static.prop.gardenlamp</font>  
-
-- <font color="#737373">static.prop.glasscontainer</font>  
-
-- <font color="#737373">static.prop.gnome</font>  
-
-- <font color="#737373">static.prop.guitarcase</font>  
-
-- <font color="#737373">static.prop.ironplank</font>  
-
-- <font color="#737373">static.prop.kiosk_01</font>  
-
-- <font color="#737373">static.prop.mailbox</font>  
-
-- <font color="#737373">static.prop.maptable</font>  
-
-- <font color="#737373">static.prop.mobile</font>  
-
-- <font color="#737373">static.prop.motorhelmet</font>  
-
-- <font color="#737373">static.prop.pergola</font>  
-
-- <font color="#737373">static.prop.plantpot01</font>  
-
-- <font color="#737373">static.prop.plantpot02</font>  
-
-- <font color="#737373">static.prop.plantpot03</font>  
-
-- <font color="#737373">static.prop.plantpot04</font>  
-
-- <font color="#737373">static.prop.plantpot05</font>  
-
-- <font color="#737373">static.prop.plantpot06</font>  
-
-- <font color="#737373">static.prop.plantpot07</font>  
-
-- <font color="#737373">static.prop.plantpot08</font>  
-
-- <font color="#737373">static.prop.plasticbag</font>  
-
-- <font color="#737373">static.prop.plasticchair</font>  
-
-- <font color="#737373">static.prop.plastictable</font>  
-
-- <font color="#737373">static.prop.platformgarbage01</font>  
-
-- <font color="#737373">static.prop.purse</font>  
-
-- <font color="#737373">static.prop.shop01</font>  
-
-- <font color="#737373">static.prop.shoppingbag</font>  
-
-- <font color="#737373">static.prop.shoppingcart</font>  
-
-- <font color="#737373">static.prop.shoppingtrolley</font>  
-
-- <font color="#737373">static.prop.slide</font>  
-
-- <font color="#737373">static.prop.streetbarrier</font>  
-
-- <font color="#737373">static.prop.streetfountain</font>  
-
-- <font color="#737373">static.prop.streetsign</font>  
-
-- <font color="#737373">static.prop.streetsign01</font>  
-
-- <font color="#737373">static.prop.streetsign04</font>  
-
-- <font color="#737373">static.prop.swing</font>  
-
-- <font color="#737373">static.prop.swingcouch</font>  
-
-- <font color="#737373">static.prop.table</font>  
-
-- <font color="#737373">static.prop.trafficcone01</font>  
-
-- <font color="#737373">static.prop.trafficcone02</font>  
-
-- <font color="#737373">static.prop.trafficwarning</font>  
-
-- <font color="#737373">static.prop.trampoline</font>  
-
-- <font color="#737373">static.prop.trashbag</font>  
-
-- <font color="#737373">static.prop.trashcan01</font>  
-
-- <font color="#737373">static.prop.trashcan02</font>  
-
-- <font color="#737373">static.prop.trashcan03</font>  
-
-- <font color="#737373">static.prop.trashcan04</font>  
-
-- <font color="#737373">static.prop.trashcan05</font>  
-
-- <font color="#737373">static.prop.travelcase</font>  
-
-- <font color="#737373">static.prop.vendingmachine</font>  
-
-- <font color="#737373">static.prop.wateringcan</font>  
-
-- <font color="#737373">static.trigger.friction</font>  
-
+- **<font color="#498efc">static.prop.advertisement</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.atm</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.barbeque</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.barrel</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bench01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bench02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bench03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bike helmet</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bikeparking</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.bin</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.box01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.box02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.box03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.briefcase</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.brokentile01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.brokentile02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.brokentile03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.brokentile04</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.busstop</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.chainbarrier</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.chainbarrierend</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.clothcontainer</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.clothesline</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.colacan</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.constructioncone</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.container</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.creasedbox01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.creasedbox02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.creasedbox03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.dirtdebris01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.dirtdebris02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.dirtdebris03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.doghouse</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.fountain</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage04</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage05</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.garbage06</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.gardenlamp</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.glasscontainer</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.gnome</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.guitarcase</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.ironplank</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.kiosk_01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.mailbox</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.maptable</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.mobile</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.motorhelmet</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.pergola</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot04</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot05</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot06</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot07</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plantpot08</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plasticbag</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plasticchair</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.plastictable</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.platformgarbage01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.purse</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.shop01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.shoppingbag</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.shoppingcart</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.shoppingtrolley</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.slide</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.streetbarrier</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.streetfountain</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.streetsign</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.streetsign01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.streetsign04</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.swing</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.swingcouch</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.table</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trafficcone01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trafficcone02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trafficwarning</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trampoline</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashbag</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashcan01</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashcan02</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashcan03</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashcan04</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.trashcan05</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.travelcase</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.vendingmachine</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.prop.wateringcan</font>**  
+    - **Attributes:**
+        - `size` (String)
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">static.trigger.friction</font>**  
+    - **Attributes:**
+        - `extent_y` (Float) – Modifiable
+        - `extent_z` (Float) – Modifiable
+        - `extent_x` (Float) – Modifiable
+        - `friction` (Float) – Modifiable
+        - `role_name` (String) – Modifiable
 
 ### controller
-- <font color="#737373">controller.ai.walker</font>  
-
+- **<font color="#498efc">controller.ai.walker</font>**  
+    - **Attributes:**
+        - `role_name` (String) – Modifiable
 
 ### sensor
-- <font color="#737373">sensor.camera.depth</font>  
-
-- <font color="#737373">sensor.camera.rgb</font>  
-
-- <font color="#737373">sensor.camera.semantic_segmentation</font>  
-
-- <font color="#737373">sensor.lidar.ray_cast</font>  
-
-- <font color="#737373">sensor.other.collision</font>  
-
-- <font color="#737373">sensor.other.gnss</font>  
-
-- <font color="#737373">sensor.other.lane_invasion</font>  
-
-- <font color="#737373">sensor.other.obstacle</font>  
-
+- **<font color="#498efc">sensor.camera.depth</font>**  
+    - **Attributes:**
+        - `fov` (Float) – Modifiable
+        - `image_size_y` (Int) – Modifiable
+        - `sensor_tick` (Float) – Modifiable
+        - `image_size_x` (Int) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.camera.rgb</font>**  
+    - **Attributes:**
+        - `motion_blur_max_distortion` (Float) – Modifiable
+        - `motion_blur_intensity` (Float) – Modifiable
+        - `gamma` (Float) – Modifiable
+        - `enable_postprocess_effects` (Bool) – Modifiable
+        - `fov` (Float) – Modifiable
+        - `image_size_y` (Int) – Modifiable
+        - `image_size_x` (Int) – Modifiable
+        - `motion_blur_min_object_screen_size` (Float) – Modifiable
+        - `sensor_tick` (Float) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.camera.semantic_segmentation</font>**  
+    - **Attributes:**
+        - `fov` (Float) – Modifiable
+        - `image_size_y` (Int) – Modifiable
+        - `sensor_tick` (Float) – Modifiable
+        - `image_size_x` (Int) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.lidar.ray_cast</font>**  
+    - **Attributes:**
+        - `lower_fov` (Float) – Modifiable
+        - `upper_fov` (Float) – Modifiable
+        - `rotation_frequency` (Float) – Modifiable
+        - `points_per_second` (Int) – Modifiable
+        - `range` (Float) – Modifiable
+        - `channels` (Int) – Modifiable
+        - `sensor_tick` (Float) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.other.collision</font>**  
+    - **Attributes:**
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.other.gnss</font>**  
+    - **Attributes:**
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.other.lane_invasion</font>**  
+    - **Attributes:**
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">sensor.other.obstacle</font>**  
+    - **Attributes:**
+        - `debug_linetrace` (Bool) – Modifiable
+        - `hit_radius` (Float) – Modifiable
+        - `distance` (Float) – Modifiable
+        - `sensor_tick` (Float) – Modifiable
+        - `only_dynamics` (Bool) – Modifiable
+        - `role_name` (String) – Modifiable
 
 ### vehicle
-- <font color="#737373">vehicle.audi.a2</font>  
-
-- <font color="#737373">vehicle.audi.etron</font>  
-
-- <font color="#737373">vehicle.audi.tt</font>  
-
-- <font color="#737373">vehicle.bh.crossbike</font>  
-
-- <font color="#737373">vehicle.bmw.grandtourer</font>  
-
-- <font color="#737373">vehicle.bmw.isetta</font>  
-
-- <font color="#737373">vehicle.carlamotors.carlacola</font>  
-
-- <font color="#737373">vehicle.chevrolet.impala</font>  
-
-- <font color="#737373">vehicle.citroen.c3</font>  
-
-- <font color="#737373">vehicle.diamondback.century</font>  
-
-- <font color="#737373">vehicle.dodge_charger.police</font>  
-
-- <font color="#737373">vehicle.ford.mustang</font>  
-
-- <font color="#737373">vehicle.gazelle.omafiets</font>  
-
-- <font color="#737373">vehicle.harley-davidson.low rider</font>  
-
-- <font color="#737373">vehicle.jeep.wrangler_rubicon</font>  
-
-- <font color="#737373">vehicle.kawasaki.ninja</font>  
-
-- <font color="#737373">vehicle.lincoln.mkz2017</font>  
-
-- <font color="#737373">vehicle.mercedes-benz.coupe</font>  
-
-- <font color="#737373">vehicle.mini.cooperst</font>  
-
-- <font color="#737373">vehicle.nissan.micra</font>  
-
-- <font color="#737373">vehicle.nissan.patrol</font>  
-
-- <font color="#737373">vehicle.seat.leon</font>  
-
-- <font color="#737373">vehicle.tesla.model3</font>  
-
-- <font color="#737373">vehicle.toyota.prius</font>  
-
-- <font color="#737373">vehicle.volkswagen.t2</font>  
-
-- <font color="#737373">vehicle.yamaha.yzf</font>  
-
+- **<font color="#498efc">vehicle.audi.a2</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.audi.etron</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.audi.tt</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.bh.crossbike</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.bmw.grandtourer</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.bmw.isetta</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.carlamotors.carlacola</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.chevrolet.impala</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.citroen.c3</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.diamondback.century</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.dodge_charger.police</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.ford.mustang</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.gazelle.omafiets</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.harley-davidson.low rider</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.jeep.wrangler_rubicon</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.kawasaki.ninja</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.lincoln.mkz2017</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.mercedes-benz.coupe</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.mini.cooperst</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.nissan.micra</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.nissan.patrol</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.seat.leon</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.tesla.model3</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.toyota.prius</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.volkswagen.t2</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `sticky_control` (Bool) – Modifiable
+        - `object_type` (String)
+        - `color` (RGBColor) – Modifiable
+        - `role_name` (String) – Modifiable
+- **<font color="#498efc">vehicle.yamaha.yzf</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (Int)
+        - `object_type` (String)
+        - `sticky_control` (Bool) – Modifiable
+        - `driver_id` (Int) – Modifiable
+        - `role_name` (String) – Modifiable

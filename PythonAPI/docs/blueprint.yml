@@ -112,73 +112,13 @@
     - def_name: __eq__
       params:
       - param_name: other
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: int
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: float
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: str
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: carla.Color
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: int
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: float
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: str
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: carla.Color
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __nonzero__
@@ -270,7 +210,7 @@
   - class_name: BlueprintLibrary
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides access to blueprints.
+      Class that provides access to [blueprints](../bp_library/).
     # - METHODS ----------------------------
     methods:
     - def_name: find
