@@ -182,10 +182,16 @@
     instance_variables:
     - var_name: pitch
       type: float
+      doc: >
+        Rotation about Y-axis.
     - var_name: yaw
       type: float
+      doc: >
+        Rotation about Z-axis.
     - var_name: roll
       type: float
+      doc: >
+        Rotation about X-axis.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -323,10 +329,16 @@
     instance_variables:
     - var_name: latitude
       type: float
+      doc: >
+        North/South value of a point on the map.
     - var_name: longitude
       type: float
+      doc: >
+        West/East value of a point on the map.
     - var_name: altitude
       type: float
+      doc: >
+        Height regarding ground level.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
