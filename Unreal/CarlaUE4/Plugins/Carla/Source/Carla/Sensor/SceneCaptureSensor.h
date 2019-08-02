@@ -80,6 +80,126 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  void SetExposureMethod(EAutoExposureMethod Method);
+
+  UFUNCTION(BlueprintCallable)
+  EAutoExposureMethod GetExposureMethod() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCompensation(float Compensation);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCompensation() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetShutterSpeed(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetShutterSpeed() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetISO(float ISO);
+
+  UFUNCTION(BlueprintCallable)
+  float GetISO() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetAperture(float Aperture);
+
+  UFUNCTION(BlueprintCallable)
+  float GetAperture() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFocalDistance(float Distance);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFocalDistance() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthBlurAmount(float Amount);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurAmount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthBlurRadius(float Radius);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurRadius() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetBladeCount(int Count);
+
+  UFUNCTION(BlueprintCallable)
+  int GetBladeCount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthOfFieldMinFstop(float MinFstop);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthOfFieldMinFstop() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmSlope(float Slope);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmSlope() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmToe(float Toe);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmToe() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmShoulder(float Shoulder);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmShoulder() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmBlackClip(float BlackClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmBlackClip() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmWhiteClip(float WhiteClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmWhiteClip() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMinBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMinBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMaxBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMaxBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedDown(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedDown() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedUp(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedUp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCalibrationConstant(float Constant);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCalibrationConstant() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetMotionBlurIntensity(float Intensity);
 
   UFUNCTION(BlueprintCallable)
@@ -96,6 +216,18 @@ public:
 
   UFUNCTION(BlueprintCallable)
   float GetMotionBlurMinObjectScreenSize() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTemp(float Temp);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTemp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTint(float Tint);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTint() const;
 
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)

@@ -2,6 +2,7 @@
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
+  * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
 
 ## CARLA 0.9.6
 
