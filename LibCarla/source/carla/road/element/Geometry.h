@@ -108,7 +108,7 @@ namespace element {
 
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point in this line from the
-    ///              begining of the shape.
+    ///              beginning of the shape.
     /// - @b second: Euclidean distance from the nearest point in this line to
     /// p.
     ///   @param p point to calculate the distance
@@ -137,7 +137,7 @@ namespace element {
 
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point in this arc from the
-    ///              begining of the shape.
+    ///              beginning of the shape.
     /// - @b second: Euclidean distance from the nearest point in this arc to p.
     ///   @param p point to calculate the distance
     std::pair<float, float> DistanceTo(const geom::Location &p) const override {
