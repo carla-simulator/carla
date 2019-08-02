@@ -147,7 +147,7 @@
     - var_name: bone_transforms
       type: list([name,transform])
       doc: >
-        List of tuples of value pairs where the first value is the bone name
+        List of pairs where the first value is the bone name
         and the second value is the bone transform.
     # - METHODS ----------------------------
     methods:

@@ -76,7 +76,7 @@
       doc: >
         Filters a list of Actors with type_id matching wildcard_pattern.
       note: >
-         wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
+         The wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
     # --------------------------------------
     - def_name: __getitem__
       params:

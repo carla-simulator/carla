@@ -563,7 +563,7 @@ Find an actor by ID.
 Filters a list of Actors with type_id matching wildcard_pattern.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
-    - **Note:** <font color="#8E8E8E">_wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
+    - **Note:** <font color="#8E8E8E">_The wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
 _</font>  
 - <a name="carla.ActorList.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
     - **Parameters:**
@@ -595,7 +595,7 @@ Filters a list of ActorBlueprint with id or tags matching wildcard_pattern. The 
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
-    - **Note:** <font color="#8E8E8E">_wildcard_pattern follows Unix shell-style wildcards (fnmatch).
+    - **Note:** <font color="#8E8E8E">_The wildcard_pattern follows Unix shell-style wildcards (fnmatch).
 _</font>  
 - <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
     - **Parameters:**
@@ -808,7 +808,7 @@ Parent actor of this instance, None if this instance is not attached to another 
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
 List of semantic tags of all components of this actor, see semantic segmentation sensor for the list of available tags. E.g., a traffic light actor could contain "pole" and "traffic light" tags.  
 - <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
-Return whether this object was destroyed using this actor handle.  
+Returns whether this object was destroyed using this actor handle.  
 - <a name="carla.Actor.attributes"></a>**<font color="#f8805a">attributes</font>** (_dict_)  
 Dictionary of attributes of the blueprint that created this actor.  
 
@@ -819,25 +819,25 @@ Tell the simulator to destroy this Actor, and return whether the actor was succe
     - **Warning:** <font color="#ED2F2F">_This function blocks until the destruction operation is completed by the simulator.
 _</font>  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
-Return the world this actor belongs to.  
+Returns the world this actor belongs to.  
     - **Return:** _[carla.World](#carla.World)_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current location of the actor.  
+Returns the current location of the actor.  
     - **Return:** _[carla.Location](#carla.Location)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the location received in the last tick.
 _</font>  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current 3D velocity of the actor.  
+Returns the current 3D velocity of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the velocity received in the last tick.
 _</font>  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current 3D angular velocity of the actor.  
+Returns the current 3D angular velocity of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the angular velocity received in the last tick.
 _</font>  
 - <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current 3D acceleration of the actor.  
+Returns the current 3D acceleration of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the acceleration received in the last tick.
 _</font>  
@@ -917,7 +917,7 @@ Test if any of the flags or id matches wildcard_pattern.
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _bool_  
-    - **Note:** <font color="#8E8E8E">_Wildcard_pattern follows Unix shell-style wildcards.
+    - **Note:** <font color="#8E8E8E">_The wildcard_pattern follows Unix shell-style wildcards.
 _</font>  
 - <a name="carla.ActorBlueprint.has_attribute"></a>**<font color="#7fb800">has_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
     - **Parameters:**
@@ -1532,7 +1532,7 @@ Class used for controlling the skeleton of a walker. See [walker bone control](w
 
 <h3>Instance Variables</h3>
 - <a name="carla.WalkerBoneControl.bone_transforms"></a>**<font color="#f8805a">bone_transforms</font>** (_list([name,transform])_)  
-List of tuples of value pairs where the first value is the bone name and the second value is the bone transform.  
+List of pairs where the first value is the bone name and the second value is the bone transform.  
 
 <h3>Methods</h3>
 - <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**list(name,transform)**</font>)  
@@ -1907,7 +1907,7 @@ Horizontal angle that the Lidar has rotated.
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers.  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Array of BGRA 32-bit pixels.  
+List of 3D points.  
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
@@ -2004,7 +2004,7 @@ Sets a given state to a traffic light actor.
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
 - <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current state of the traffic light.  
+Returns the current state of the traffic light.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2012,7 +2012,7 @@ _</font>
     - **Parameters:**
         - `green_time` (_float_) – Sets a given time (in seconds) to the green state to be active.  
 - <a name="carla.TrafficLight.get_green_time"></a>**<font color="#7fb800">get_green_time</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current time set for the green light to be active.  
+Returns the current time set for the green light to be active.  
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2021,7 +2021,7 @@ Sets a given time (in seconds) to the yellow state to be active.
     - **Parameters:**
         - `yellow_time` (_float_)  
 - <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current time set for the yellow light to be active.  
+Returns the current time set for the yellow light to be active.  
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2030,12 +2030,12 @@ Sets a given time (in seconds) to the red state to be active.
     - **Parameters:**
         - `red_time` (_float_)  
 - <a name="carla.TrafficLight.get_red_time"></a>**<font color="#7fb800">get_red_time</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current time set for the red light to be active.  
+Returns the current time set for the red light to be active.  
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
 - <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
-Return the current countdown of the state of a traffic light.  
+Returns the current countdown of the state of a traffic light.  
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2044,15 +2044,15 @@ Stops the traffic light at its current state.
     - **Parameters:**
         - `freeze` (_bool_)  
 - <a name="carla.TrafficLight.is_frozen"></a>**<font color="#7fb800">is_frozen</font>**(<font color="#00a6ed">**self**</font>)  
-Return `True` if a traffic light is frozen.  
+Returns `True` if a traffic light is frozen.  
     - **Return:** _bool_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
 - <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  
-Return the index of the pole in the traffic light group.  
+Returns the index of the pole in the traffic light group.  
     - **Return:** _int_  
 - <a name="carla.TrafficLight.get_group_traffic_lights"></a>**<font color="#7fb800">get_group_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
-Return all traffic lights in the group this one belongs to.  
+Returns all traffic lights in the group this one belongs to.  
     - **Return:** _list([carla.TrafficLight](#carla.TrafficLight))_  
     - **Note:** <font color="#8E8E8E">_This function calls the simulator.
 _</font>  
@@ -2073,7 +2073,7 @@ Apply control to this vehicle. The control will take effect on next tick.
     - **Parameters:**
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
-Return the control last applied to this vehicle.  
+Returns the control last applied to this vehicle.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2082,7 +2082,7 @@ Apply physics control to this vehicle. The control will take effect on the next 
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
 - <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
-Return the physics control last applied to this vehicle.  
+Returns the physics control last applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
     - **Warning:** <font color="#ED2F2F">_This function does call the simulator to retrieve the value._</font>  
 - <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
@@ -2090,17 +2090,17 @@ Switch on/off this vehicle's server-side autopilot.
     - **Parameters:**
         - `enabled` (_bool_)  
 - <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  
-Return the speed limit currently affecting this vehicle. Note that the speed limit is only updated when passing by a speed limit signal, right after spawning a vehicle it might not reflect the actual speed limit of the current road.  
+Returns the speed limit currently affecting this vehicle. Note that the speed limit is only updated when passing by a speed limit signal, right after spawning a vehicle it might not reflect the actual speed limit of the current road.  
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
-Return the state of the traffic light currently affecting this vehicle. If no traffic light is currently affecting the vehicle, return Green.  
+Returns the state of the traffic light currently affecting this vehicle. If no traffic light is currently affecting the vehicle, return Green.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
-Return whether a traffic light is affecting this vehicle.  
+Returns whether a traffic light is affecting this vehicle.  
     - **Return:** _bool_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
@@ -2133,7 +2133,7 @@ Apply bone control to this walker.
     - **Note:** <font color="#8E8E8E">_The control will take effect on the next tick.
 _</font>  
 - <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
-Return the control last applied to this walker.  
+Returns the control last applied to this walker.  
     - **Return:** _[carla.WalkerControl](#carla.WalkerControl)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the data received in the last tick.
 _</font>  
