@@ -6,6 +6,7 @@
   - class_name: ActorAttributeType
     # - DESCRIPTION ------------------------
     doc: >
+      Class that defines the type of attribute of a carla.ActorAttribute.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
@@ -28,15 +29,19 @@
     - var_name: r
       type: int
       doc: >
+        Red color (0-255)
     - var_name: g
       type: int
       doc: >
+        Green color (0-255)
     - var_name: b
       type: int
       doc: >
+        Blue color (0-255)
     - var_name: a
       type: int
       doc: >
+        Alpha channel (0-255)
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -63,11 +68,13 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __str__
@@ -169,7 +176,7 @@
       doc: >
         Test if any of the flags or id matches wildcard_pattern.
       note: > 
-        Wildcard_pattern follows Unix shell-style wildcards.
+        The wildcard_pattern follows Unix shell-style wildcards.
     # --------------------------------------
     - def_name: has_attribute
       return: bool
@@ -224,12 +231,13 @@
         Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
         The pattern is matched against each blueprint's id and tags.
       note: > 
-        wildcard_pattern follows Unix shell-style wildcards (fnmatch).
+        The wildcard_pattern follows Unix shell-style wildcards (fnmatch).
       return: carla.BlueprintLibrary
     # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
+        type: int
       return: carla.ActorBlueprint
       doc: >
     # --------------------------------------

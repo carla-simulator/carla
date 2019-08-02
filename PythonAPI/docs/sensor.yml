@@ -7,6 +7,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
+      A sensor actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: is_listening

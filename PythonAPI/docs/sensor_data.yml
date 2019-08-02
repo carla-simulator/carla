@@ -67,15 +67,19 @@
       - param_name: color_converter
         type: carla.ColorConverter
       doc: >
+        Convert the image with the applied conversion.
     # --------------------------------------
     - def_name: save_to_disk
       params:
       - param_name: path
         type: str
+        doc: >
+          Path where it will be saved
       - param_name: color_converter
         type: carla.ColorConverter
         default: Raw
       doc: >
+        Save the image to disk.
     # --------------------------------------
     - def_name: __len__
       doc: >
@@ -105,17 +109,21 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
+      Lidar sensor measurement data.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: horizontal_angle
       type: float
       doc: >
+        Horizontal angle that the Lidar has rotated
     - var_name: channels
       type: int
       doc: >
+        Number of lasers
     - var_name: raw_data
       type: bytes
       doc: >
+        List of 3D points
     # - METHODS ----------------------------
     methods:
     - def_name: get_point_count
@@ -178,6 +186,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
+      Obstacle detection sensor data
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
@@ -202,6 +211,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
+      Lane invasion sensor data.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
@@ -222,17 +232,21 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
+      Gnss sensor data
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: latitude
       type: float
       doc: >
+        North/South value of a point on the map. 
     - var_name: longitude
       type: float
       doc: >
+        West/East value of a point on the map. 
     - var_name: altitude
       type: float
       doc: >
+        Height regarding ground level.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

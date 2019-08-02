@@ -39,7 +39,7 @@
         `world.get_actor(actor.id)` to check if the actor is still present in
         the simulation.
       doc: >
-        Return whether this object was destroyed using this actor handle.
+        Returns whether this object was destroyed using this actor handle.
     - var_name: attributes
       type: dict
       doc: >
@@ -59,12 +59,12 @@
     - def_name: get_world
       return: carla.World
       doc: >
-        Return the world this actor belongs to.
+        Returns the world this actor belongs to.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
       doc: >
-        Return the current location of the actor.
+        Returns the current location of the actor.
       note: >
         This function does not call the simulator, it returns the location
         received in the last tick.
@@ -72,7 +72,7 @@
     - def_name: get_velocity
       return: carla.Vector3D
       doc: >
-        Return the current 3D velocity of the actor.
+        Returns the current 3D velocity of the actor.
       note: >
         This function does not call the simulator, it returns the velocity
         received in the last tick.
@@ -80,7 +80,7 @@
     - def_name: get_angular_velocity
       return: carla.Vector3D
       doc: >
-        Return the current 3D angular velocity of the actor.
+        Returns the current 3D angular velocity of the actor.
       note: >
         This function does not call the simulator, it returns the angular
         velocity received in the last tick.
@@ -88,7 +88,7 @@
     - def_name: get_acceleration
       return: carla.Vector3D
       doc: >
-        Return the current 3D acceleration of the actor.
+        Returns the current 3D acceleration of the actor.
       note: >
         This function does not call the simulator, it returns the acceleration
         received in the last tick.
@@ -164,7 +164,7 @@
     - def_name: get_control
       return: carla.VehicleControl
       doc: >
-        Return the control last applied to this vehicle.
+        Returns the control last applied to this vehicle.
       note: >
         This function does not call the simulator, it returns the data received
         in the last tick.
@@ -180,7 +180,7 @@
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
       doc: >
-        Return the physics control last applied to this vehicle.
+        Returns the physics control last applied to this vehicle.
       warning: This function does call the simulator to retrieve the value.
     # --------------------------------------
     - def_name: set_autopilot
@@ -194,7 +194,7 @@
     - def_name: get_speed_limit
       return: float
       doc: >
-        Return the speed limit currently affecting this vehicle. Note that the
+        Returns the speed limit currently affecting this vehicle. Note that the
         speed limit is only updated when passing by a speed limit signal, right
         after spawning a vehicle it might not reflect the actual speed limit of
         the current road.
@@ -205,7 +205,7 @@
     - def_name: get_traffic_light_state
       return: carla.TrafficLightState
       doc: >
-        Return the state of the traffic light currently affecting this vehicle.
+        Returns the state of the traffic light currently affecting this vehicle.
         If no traffic light is currently affecting the vehicle, return Green.
       note: >
         This function does not call the simulator, it returns the data received
@@ -214,7 +214,7 @@
     - def_name: is_at_traffic_light
       return: bool
       doc: >
-        Return whether a traffic light is affecting this vehicle.
+        Returns whether a traffic light is affecting this vehicle.
       note: >
         This function does not call the simulator, it returns the data received
         in the last tick.
@@ -246,18 +246,23 @@
       - param_name: control
         type: carla.WalkerControl
       doc: >
-        Apply control to this walker. The control will take effect on the next tick.
+        Apply control to this walker.
+      note: >
+         The control will take effect on the next tick.
     # --------------------------------------
     - def_name: apply_control
       params:
       - param_name: control
         type: carla.WalkerBoneControl
       doc: >
+        Apply bone control to this walker.
+      note: >
+         The control will take effect on the next tick.
     # --------------------------------------
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
-        Return the control last applied to this walker.
+        Returns the control last applied to this walker.
       note: >
         This function does not call the simulator, it returns the data received
         in the last tick.
@@ -306,10 +311,13 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
+      A traffic sign actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: trigger_volume
       doc: >
+        A carla.BoundingBox situated near a traffic sign where the
+        carla.Actor who is inside can know about its state.
     # --------------------------------------
 
   - class_name: TrafficLightState
@@ -329,11 +337,13 @@
     parent: carla.TrafficSign
     # - DESCRIPTION ------------------------
     doc: >
+      A traffic light actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
       type: carla.TrafficLightState
       doc: >
+        Current traffic light state.
     # - METHODS ----------------------------
     methods:
     - def_name: set_state
@@ -341,11 +351,12 @@
       - param_name: state
         type: carla.TrafficLightState
       doc: >
+        Sets a given state to a traffic light actor.
     # --------------------------------------
     - def_name: get_state
       return: carla.TrafficLightState
       doc: >
-        Return the current state of the traffic light.
+        Returns the current state of the traffic light.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -355,10 +366,12 @@
       - param_name: green_time
         type: float
         doc: >
+          Sets a given time (in seconds) to the green state to be active.
     # --------------------------------------
     - def_name: get_green_time
       return: float
       doc: >
+        Returns the current time set for the green light to be active.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -368,10 +381,12 @@
       - param_name: yellow_time
         type: float
       doc: >
+        Sets a given time (in seconds) to the yellow state to be active.
     # --------------------------------------
     - def_name: get_yellow_time
       return: float
       doc: >
+        Returns the current time set for the yellow light to be active.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -381,10 +396,12 @@
       - param_name: red_time
         type: float
       doc: >
+        Sets a given time (in seconds) to the red state to be active.
     # --------------------------------------
     - def_name: get_red_time
       return: float
       doc: >
+        Returns the current time set for the red light to be active.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -392,6 +409,7 @@
     - def_name: get_elapsed_time
       return: float
       doc: >
+        Returns the current countdown of the state of a traffic light.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -401,9 +419,12 @@
       - param_name: freeze
         type: bool
       doc: >
+        Stops the traffic light at its current state.
     # --------------------------------------
     - def_name: is_frozen
+      return: bool
       doc: >
+        Returns `True` if a traffic light is frozen.
       note: >
         This function does not call the simulator, it returns the data
         received in the last tick.
@@ -411,10 +432,12 @@
     - def_name: get_pole_index
       return: int
       doc: >
+        Returns the index of the pole in the traffic light group.
     # --------------------------------------
     - def_name: get_group_traffic_lights
+      return: list(carla.TrafficLight)
       doc: >
-        Return all traffic lights in the group this one belongs to.
+        Returns all traffic lights in the group this one belongs to.
       note: >
         This function calls the simulator.
     # --------------------------------------
