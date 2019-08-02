@@ -233,7 +233,7 @@
   - class_name: LaneMarking
     # - DESCRIPTION ------------------------
     doc: >
-      Struct that defines a lane marking
+      Class that defines a lane marking
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: type
