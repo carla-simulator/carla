@@ -63,8 +63,7 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
     with open(importfile, "w+") as fh:
         import_groups = []
         file_names = []
-        import_settings = []
-        import_settings.append({
+        import_settings = {
             "bImportMesh": 1,
             "bConvertSceneUnit": 1,
             "bConvertScene": 1,
@@ -78,9 +77,10 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
             "StaticMeshImportData": {
                 "bRemoveDegenerates": 1,
                 "bAutoGenerateCollision": 0,
-                "bCombineMeshes": 0
+                "bCombineMeshes": 0,
+                "bConvertSceneUnit": 1
             }
-        })
+        }
 
         for prop in props:
             props_dest = "/" + "/".join(["Game", package_name, "Static", prop["tag"], prop["name"]])
