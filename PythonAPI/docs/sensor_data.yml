@@ -26,7 +26,7 @@
   - class_name: ColorConverter
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the color converter options.
+      Class that defines the color converter options. Check out this [`recipe`](../python_cookbook/#converted-image-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Raw

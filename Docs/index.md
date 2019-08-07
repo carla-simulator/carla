@@ -22,6 +22,7 @@
 
   * [Python API reference](python_api.md)
   * [C++ Reference](cpp_reference.md)
+  * [Python Cookbook](python_cookbook.md)
   * [Blueprint Library](bp_library.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
