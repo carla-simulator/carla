@@ -80,7 +80,7 @@ TArray<FWaypoint> UOpenDriveMap::GenerateWaypoints(float ApproxDistance) const
   }
   check(HasMap());
   using namespace UOpenDriveMap_Private;
-  return TransformToTArray<FWaypoint>(Map->GenerateWaypoints(1e2f * ApproxDistance));
+  return TransformToTArray<FWaypoint>(Map->GenerateWaypoints(ApproxDistance / 1e2f));
 }
 
 TArray<FWaypointConnection> UOpenDriveMap::GenerateTopology() const
@@ -136,5 +136,5 @@ TArray<FWaypoint> UOpenDriveMap::GetNext(FWaypoint Waypoint, float Distance) con
   }
   check(HasMap());
   using namespace UOpenDriveMap_Private;
-  return TransformToTArray<FWaypoint>(Map->GetNext(Waypoint.Waypoint, 1e2f * Distance));
+  return TransformToTArray<FWaypoint>(Map->GetNext(Waypoint.Waypoint, Distance / 1e2f));
 }

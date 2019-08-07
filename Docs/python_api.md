@@ -654,7 +654,9 @@ Draws an arrow between two given locations.
         - `life_time` (_float_)  
         - `persistent_lines` (_bool_) – _Deprecated, use `life_time = 0` instead_.  
 - <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
+
 Draws the [carla.BoundingBox](#carla.BoundingBox) of a given bounding_box.<br> Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!.  
+
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
@@ -1923,7 +1925,9 @@ Lidar sensor measurement data.
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle that the Lidar has rotated at the time of the measurement.  
+
+Horizontal angle that the Lidar has rotated at the time of the measurement. 
+
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers.  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  

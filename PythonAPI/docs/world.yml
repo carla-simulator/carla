@@ -149,6 +149,7 @@
     doc: >
       Class that defines the attachment options. See carla.World.spawn_actor.<br>
       Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!
+      
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
@@ -413,6 +414,7 @@
       doc: >
         Draws the carla.BoundingBox of a given bounding_box.<br>
         Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!
+        
     # --------------------------------------
     - def_name: draw_string
       params: 
