@@ -18,8 +18,13 @@ TEST(vector3D, make_unit_vec) {
   ASSERT_EQ(Vector3D(0,10,0).MakeUnitVector(), Vector3D(0,1,0));
   ASSERT_EQ(Vector3D(0,0,512).MakeUnitVector(), Vector3D(0,0,1));
   ASSERT_NE(Vector3D(0,1,512).MakeUnitVector(), Vector3D(0,0,1));
-#ifndef NDEBUG
+#ifdef LIBCARLA_NO_EXCEPTIONS
   ASSERT_DEATH_IF_SUPPORTED(
-    Vector3D().MakeUnitVector(), "len > std::numeric_limits<double>::epsilon()");
-#endif // NDEBUG
+      Vector3D().MakeUnitVector(),
+      "length > 2.0f \\* std::numeric_limits<float>::epsilon()");
+#else
+  ASSERT_THROW(
+      Vector3D().MakeUnitVector(),
+      std::runtime_error);
+#endif // LIBCARLA_NO_EXCEPTIONS
 }

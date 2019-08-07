@@ -9,7 +9,6 @@
 #include "Engine/StaticMesh.h"
 
 #include "Carla/Settings/QualityLevelUE.h"
-#include "Carla/Settings/WeatherDescription.h"
 
 #include "CarlaSettings.generated.h"
 
@@ -52,35 +51,8 @@ public:
   /// section is ignored.
   void LoadSettingsFromString(const FString &INIFileContents);
 
-  /// Load weather description from config files. (There may be overrides for
-  /// each map).
-  void LoadWeatherDescriptions();
-
-  /// Check if requested weather id is present in WeatherDescriptions.
-  void ValidateWeatherId();
-
   /// Log settings values.
   void LogSettings() const;
-
-  const FWeatherDescription *GetActiveWeatherDescription() const
-  {
-    if ((WeatherId >= 0) && (WeatherId < WeatherDescriptions.Num()))
-    {
-      return &WeatherDescriptions[WeatherId];
-    }
-    return nullptr;
-  }
-
-  // Special overload for blueprints.
-  UFUNCTION(BlueprintCallable, Category = "CARLA Settings")
-  void GetActiveWeatherDescription(
-      bool &bWeatherWasChanged,
-      FWeatherDescription &WeatherDescription) const;
-
-  UFUNCTION(BlueprintCallable)
-  const FWeatherDescription &GetWeatherDescriptionByIndex(int32 Index);
-
-  /// ----------- constants ------------------
 
 public:
 
@@ -106,78 +78,22 @@ private:
 
 public:
 
-  /// If active, wait for the client to connect and control the pawn.
-  UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
-  bool bUseNetworking = false;
-
   /// World port to listen for client connections.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  uint32 WorldPort = 2000u;
+  uint32 RPCPort = 2000u;
 
-  /// Time-out in milliseconds for the networking operations.
-  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  uint32 ServerTimeOut = 10000u;
+  /// Optional setting for the secondary port.
+  TOptional<uint32> StreamingPort;
 
   /// In synchronous mode, CARLA waits every tick until the control from the
   /// client is received.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  bool bSynchronousMode = true;
-
-  /// Send info about every non-player agent in the scene every frame.
-  UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
-  bool bSendNonPlayerAgentsInfo = false;
+  bool bSynchronousMode = false;
 
   /// Enable or disable the viewport rendering of the world. Disabled by
   /// default.
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
   bool bDisableRendering = false;
-
-  /// @}
-  // ===========================================================================
-  /// @name Level Settings
-  // ===========================================================================
-  /// @{
-
-public:
-
-  /// Display name of the current map.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  FString MapName;
-
-  /// Path to the pawn class of the player.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  FString PlayerVehicle;
-
-  /// Number of NPC vehicles to be spawned into the level.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  uint32 NumberOfVehicles = 5u;
-
-  /// Number of NPC pedestrians to be spawned into the level.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  uint32 NumberOfPedestrians = 15u;
-
-  /// Index of the weather setting to use. If negative, weather won't be
-  /// changed.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  int32 WeatherId = -1;
-
-  /// Available weather settings.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  TArray<FWeatherDescription> WeatherDescriptions;
-
-  /// Random seed for the pedestrian spawner.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  int32 SeedPedestrians = 123456789;
-
-  /// Random seed for the vehicle spawner.
-  UPROPERTY(Category = "Level Settings", VisibleAnywhere)
-  int32 SeedVehicles = 123456789;
-
-  /// Disable bikes and motorbikes.
-  UPROPERTY(Category = "Level Settings", BlueprintReadOnly, VisibleAnywhere)
-  bool bDisableTwoWheeledVehicles = false;
-
-  /// @}
 
   // ===========================================================================
   /// @name Quality Settings
@@ -228,21 +144,6 @@ public:
       config,
       DisplayName = "Road Materials List for EPIC Quality")
   TArray<FStaticMaterial> EpicRoadMaterials;
-
-  /// @}
-
-  // ===========================================================================
-  /// @name Sensors
-  // ===========================================================================
-  /// @{
-
-public:
-
-  /// Whether semantic segmentation should be activated. The mechanisms for
-  /// semantic segmentation impose some performance penalties even if it is not
-  /// used, we only enable it if necessary.
-  UPROPERTY(Category = "Sensors", BlueprintReadOnly, VisibleAnywhere)
-  bool bSemanticSegmentationEnabled = true;
 
   /// @}
 };

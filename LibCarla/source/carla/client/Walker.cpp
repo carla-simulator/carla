@@ -18,9 +18,12 @@ namespace client {
     }
   }
 
-  Walker::Control Walker::GetWalkerControl() const {
-    return GetEpisode().Lock()->GetActorDynamicState(*this).state.walker_control;
+  void Walker::ApplyControl(const BoneControl &bone_control) {
+    GetEpisode().Lock()->ApplyBoneControlToWalker(*this, bone_control);
   }
 
+  Walker::Control Walker::GetWalkerControl() const {
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.walker_control;
+  }
 } // namespace client
 } // namespace carla

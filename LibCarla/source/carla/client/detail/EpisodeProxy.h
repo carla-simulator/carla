@@ -8,6 +8,8 @@
 
 #include "carla/AtomicSharedPtr.h"
 
+#include <cstdint>
+
 namespace carla {
 namespace client {
 namespace detail {
@@ -37,21 +39,29 @@ namespace detail {
       : _episode_id(other._episode_id),
         _simulator(other._simulator) {}
 
-    SharedPtrType TryLock() const;
+    auto GetId() const noexcept {
+      return _episode_id;
+    }
+
+    SharedPtrType TryLock() const noexcept;
 
     /// Same as TryLock but never return nullptr.
     ///
     /// @throw std::runtime_error if episode is gone.
     SharedPtrType Lock() const;
 
-    void Clear();
+    bool IsValid() const noexcept {
+      return TryLock() != nullptr;
+    }
+
+    void Clear() noexcept;
 
   private:
 
     template <typename T>
     friend class EpisodeProxyImpl;
 
-    size_t _episode_id;
+    uint64_t _episode_id;
 
     PointerT _simulator;
   };

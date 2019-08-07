@@ -9,12 +9,14 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
-#include "carla/client/LaneDetector.h"
 #include "carla/client/GnssSensor.h"
+#include "carla/client/LaneInvasionSensor.h"
 #include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
+#include "carla/client/TrafficSign.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
+#include "carla/client/WalkerAIController.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/Client.h"
 
@@ -69,12 +71,11 @@ namespace detail {
   SharedPtr<Actor> ActorFactory::MakeActor(
       EpisodeProxy episode,
       rpc::Actor description,
-      SharedPtr<Actor> parent,
       GarbageCollectionPolicy gc) {
-    auto init = ActorInitializer{description, episode, parent};
-    if (description.description.id == "sensor.other.lane_detector") { /// @todo
-      return MakeActorImpl<LaneDetector>(std::move(init), gc);
-    } else if (description.description.id == "sensor.other.gnss") { /// @todo
+    auto init = ActorInitializer{description, episode};
+    if (description.description.id == "sensor.other.lane_invasion") {
+      return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
+    } else if (description.description.id == "sensor.other.gnss") {
       return MakeActorImpl<GnssSensor>(std::move(init), gc);
     } else if (description.HasAStream()) {
       return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
@@ -84,6 +85,10 @@ namespace detail {
       return MakeActorImpl<Walker>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "traffic.traffic_light")) {
       return MakeActorImpl<TrafficLight>(std::move(init), gc);
+    } else if (StringUtil::StartsWith(description.description.id, "traffic.")) {
+      return MakeActorImpl<TrafficSign>(std::move(init), gc);
+    } else if (description.description.id == "controller.ai.walker") {
+      return MakeActorImpl<WalkerAIController>(std::move(init), gc);
     }
     return MakeActorImpl<Actor>(std::move(init), gc);
   }

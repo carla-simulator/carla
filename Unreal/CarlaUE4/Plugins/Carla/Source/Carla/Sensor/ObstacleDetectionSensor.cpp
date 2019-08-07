@@ -11,7 +11,7 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
-#include "Carla/Game/TheNewCarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -42,25 +42,12 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
       "only_dynamics",
       Description.Variations,
       bOnlyDynamics);
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
   bDebugLineTrace = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "debug_linetrace",
       Description.Variations,
       bDebugLineTrace);
-
-}
-
-void AObstacleDetectionSensor::BeginPlay()
-{
-  Super::BeginPlay();
-
-  auto *GameMode = Cast<ATheNewCarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-
-  if (GameMode == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("AObstacleDetectionSensor: Game mode not compatible with this sensor"));
-    return;
-  }
-  Episode = &GameMode->GetCarlaEpisode();
+#endif
 }
 
 void AObstacleDetectionSensor::Tick(float DeltaSeconds)
@@ -69,7 +56,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
 
   const FVector &Start = GetActorLocation();
   const FVector &End = Start + (GetActorForwardVector() * Distance);
-  UWorld* currentWorld = GetWorld();
+  UWorld* CurrentWorld = GetWorld();
 
   // Struct in which the result of the scan will be saved
   FHitResult HitOut = FHitResult();
@@ -77,14 +64,16 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
   // Initialization of Query Parameters
   FCollisionQueryParams TraceParams(FName(TEXT("ObstacleDetection Trace")), true, this);
 
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
   // If debug mode enabled, we create a tag that will make the sweep be
   // displayed.
   if (bDebugLineTrace)
   {
     const FName TraceTag("ObstacleDebugTrace");
-    currentWorld->DebugDrawTraceTag = TraceTag;
+    CurrentWorld->DebugDrawTraceTag = TraceTag;
     TraceParams.TraceTag = TraceTag;
   }
+#endif
 
   // Hit against complex meshes
   TraceParams.bTraceComplex = true;
@@ -108,7 +97,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
     // If we go only for dynamics, we check the object type AllDynamicObjects
     FCollisionObjectQueryParams TraceChannel = FCollisionObjectQueryParams(
         FCollisionObjectQueryParams::AllDynamicObjects);
-    isHitReturned = currentWorld->SweepSingleByObjectType(
+    isHitReturned = CurrentWorld->SweepSingleByObjectType(
         HitOut,
         Start,
         End,
@@ -122,7 +111,7 @@ void AObstacleDetectionSensor::Tick(float DeltaSeconds)
     // Else, if we go for everything, we get everything that interacts with a
     // Pawn
     ECollisionChannel TraceChannel = ECC_WorldStatic;
-    isHitReturned = currentWorld->SweepSingleByChannel(
+    isHitReturned = CurrentWorld->SweepSingleByChannel(
         HitOut,
         Start,
         End,
@@ -144,11 +133,12 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     float HitDistance,
     const FHitResult &Hit)
 {
-  if ((Episode != nullptr) && (Actor != nullptr) && (OtherActor != nullptr))
+  if ((Actor != nullptr) && (OtherActor != nullptr))
   {
+    const auto &Episode = GetEpisode();
     GetDataStream(*this).Send(*this,
-        Episode->SerializeActor(Episode->FindOrFakeActor(Actor)),
-        Episode->SerializeActor(Episode->FindOrFakeActor(OtherActor)),
+        Episode.SerializeActor(Episode.FindOrFakeActor(Actor)),
+        Episode.SerializeActor(Episode.FindOrFakeActor(OtherActor)),
         HitRadius);
   }
 }

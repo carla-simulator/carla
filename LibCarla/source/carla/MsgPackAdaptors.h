@@ -98,14 +98,14 @@ namespace adaptor {
       if (o.via.array.size != 2) {
         ::carla::throw_exception(clmdep_msgpack::type_error());
       }
-      const auto index = o.via.array.ptr[0].as<int>();
+      const auto index = o.via.array.ptr[0].as<uint64_t>();
       copy_to_variant(index, o, v, std::make_index_sequence<sizeof...(Ts)>());
       return o;
     }
 
   private:
 
-    template <size_t I>
+    template <uint64_t I>
     static void copy_to_variant_impl(
         const clmdep_msgpack::object &o,
         boost::variant<Ts...> &v) {
@@ -115,9 +115,9 @@ namespace adaptor {
       v = o.via.array.ptr[1].as<T>();
     }
 
-    template <size_t... Is>
+    template <uint64_t... Is>
     static void copy_to_variant(
-        const size_t index,
+        const uint64_t index,
         const clmdep_msgpack::object &o,
         boost::variant<Ts...> &v,
         std::index_sequence<Is...>) {
@@ -134,7 +134,7 @@ namespace adaptor {
         clmdep_msgpack::packer<Stream> &o,
         const boost::variant<Ts...> &v) const {
       o.pack_array(2);
-      o.pack(static_cast<int>(v.which()));
+      o.pack(static_cast<uint64_t>(v.which()));
       boost::apply_visitor([&](const auto &value) { o.pack(value); }, v);
       return o;
     }
@@ -150,7 +150,7 @@ namespace adaptor {
       o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(
           sizeof(clmdep_msgpack::object) * o.via.array.size,
           MSGPACK_ZONE_ALIGNOF(clmdep_msgpack::object)));
-      o.via.array.ptr[0] = clmdep_msgpack::object(static_cast<int>(v.which()), o.zone);
+      o.via.array.ptr[0] = clmdep_msgpack::object(static_cast<uint64_t>(v.which()), o.zone);
       boost::apply_visitor([&](const auto &value) {
         o.via.array.ptr[1] = clmdep_msgpack::object(value, o.zone);
       }, v);

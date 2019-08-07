@@ -67,6 +67,168 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetFOVAngle() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetTargetGamma(float InTargetGamma)
+  {
+    TargetGamma = InTargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  float GetTargetGamma() const
+  {
+    return TargetGamma;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMethod(EAutoExposureMethod Method);
+
+  UFUNCTION(BlueprintCallable)
+  EAutoExposureMethod GetExposureMethod() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCompensation(float Compensation);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCompensation() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetShutterSpeed(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetShutterSpeed() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetISO(float ISO);
+
+  UFUNCTION(BlueprintCallable)
+  float GetISO() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetAperture(float Aperture);
+
+  UFUNCTION(BlueprintCallable)
+  float GetAperture() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFocalDistance(float Distance);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFocalDistance() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthBlurAmount(float Amount);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurAmount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthBlurRadius(float Radius);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthBlurRadius() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetBladeCount(int Count);
+
+  UFUNCTION(BlueprintCallable)
+  int GetBladeCount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetDepthOfFieldMinFstop(float MinFstop);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDepthOfFieldMinFstop() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmSlope(float Slope);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmSlope() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmToe(float Toe);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmToe() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmShoulder(float Shoulder);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmShoulder() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmBlackClip(float BlackClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmBlackClip() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetFilmWhiteClip(float WhiteClip);
+
+  UFUNCTION(BlueprintCallable)
+  float GetFilmWhiteClip() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMinBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMinBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureMaxBrightness(float Brightness);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureMaxBrightness() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedDown(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedDown() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureSpeedUp(float Speed);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureSpeedUp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetExposureCalibrationConstant(float Constant);
+
+  UFUNCTION(BlueprintCallable)
+  float GetExposureCalibrationConstant() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMaxDistortion(float MaxDistortion);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMaxDistortion() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetMotionBlurMinObjectScreenSize(float ScreenSize);
+
+  UFUNCTION(BlueprintCallable)
+  float GetMotionBlurMinObjectScreenSize() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTemp(float Temp);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTemp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTint(float Tint);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTint() const;
+
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const
@@ -85,19 +247,15 @@ public:
 
 protected:
 
-  virtual void PostActorCreated() override;
-
   virtual void BeginPlay() override;
+
+  virtual void Tick(float DeltaTime) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
 private:
-
-  /// Used to synchronize the DrawFrustumComponent with the
-  /// SceneCaptureComponent2D settings.
-  void UpdateDrawFrustum();
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)
@@ -111,6 +269,9 @@ private:
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
+  UPROPERTY(EditAnywhere)
+  float TargetGamma = 2.2f;
+
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
   UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
@@ -118,12 +279,4 @@ private:
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
-
-  /// To display the 3d camera in the editor.
-  UPROPERTY()
-  UStaticMeshComponent *MeshComp = nullptr;
-
-  /// To allow drawing the camera frustum in the editor.
-  UPROPERTY()
-  UDrawFrustumComponent *DrawFrustum = nullptr;
 };

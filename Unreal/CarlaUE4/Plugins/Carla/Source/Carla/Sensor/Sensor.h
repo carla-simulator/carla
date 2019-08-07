@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Sensor/DataStream.h"
 
 #include "GameFramework/Actor.h"
@@ -21,6 +22,13 @@ class CARLA_API ASensor : public AActor
   GENERATED_BODY()
 
 public:
+
+  ASensor(const FObjectInitializer &ObjectInitializer);
+
+  void SetEpisode(const UCarlaEpisode &InEpisode)
+  {
+    Episode = &InEpisode;
+  }
 
   virtual void Set(const FActorDescription &Description);
 
@@ -40,7 +48,15 @@ public:
 
 protected:
 
+  void PostActorCreated() override;
+
   void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+
+  const UCarlaEpisode &GetEpisode() const
+  {
+    check(Episode != nullptr);
+    return *Episode;
+  }
 
   /// Return the FDataStream associated with this sensor.
   ///
@@ -49,10 +65,12 @@ protected:
   template <typename SensorT>
   FAsyncDataStream GetDataStream(const SensorT &Self)
   {
-    return Stream.MakeAsyncDataStream(Self);
+    return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
 private:
 
   FDataStream Stream;
+
+  const UCarlaEpisode *Episode = nullptr;
 };

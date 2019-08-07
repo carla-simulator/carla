@@ -15,7 +15,7 @@ Every frame is described by three different counters/time-stamps
 
 Key                        | Type      | Units        | Description
 -------------------------- | --------- | ------------ | ------------
-frame_number               | uint64    |              | Frame counter (it is **not** restarted on each episode).
+frame                      | uint64    |              | Frame number (it is **not** restarted on each episode).
 platform_timestamp         | uint32    | milliseconds | Time-stamp of the current frame, as given by the OS.
 game_timestamp             | uint32    | milliseconds | In-game time-stamp, elapsed since the beginning of the current episode.
 

@@ -6,9 +6,19 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  private bool IsWindows(ReadOnlyTargetRules Target)
+  {
+    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
+  }
+
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
     PrivatePCHHeaderFile = "Carla.h";
+
+    if (IsWindows(Target))
+    {
+      bEnableExceptions = true;
+    }
 
     PublicIncludePaths.AddRange(
       new string[] {
@@ -36,12 +46,17 @@ public class Carla : ModuleRules
       new string[]
       {
         "AIModule",
+        "AssetRegistry",
         "CoreUObject",
         "Engine",
         "Foliage",
         "ImageWriteQueue",
+        "Json",
+        "JsonUtilities",
         "Landscape",
+        "PhysX",
         "PhysXVehicles",
+        "PhysXVehicleLib",
         "Slate",
         "SlateCore"
         // ... add private dependencies that you statically link with here ...
@@ -56,11 +71,6 @@ public class Carla : ModuleRules
       );
 
     AddCarlaServerDependency(Target);
-  }
-
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
   private bool UseDebugLibs(ReadOnlyTargetRules Target)

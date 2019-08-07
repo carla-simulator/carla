@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -18,18 +19,29 @@ namespace detail {
 
   static auto &CastData(const sensor::SensorData &data) {
     using target_t = const sensor::data::RawEpisodeState;
-    DEBUG_ASSERT(dynamic_cast<target_t *>(&data) != nullptr);
     return static_cast<target_t &>(data);
   }
 
+  template <typename RangeT>
+  static auto GetActorsById_Impl(Client &client, CachedActorList &actors, const RangeT &actor_ids) {
+    auto missing_ids = actors.GetMissingIds(actor_ids);
+    if (!missing_ids.empty()) {
+      actors.InsertRange(client.GetActorsById(missing_ids));
+    }
+    return actors.GetActorsById(actor_ids);
+  }
+
   Episode::Episode(Client &client)
+    : Episode(client, client.GetEpisodeInfo()) {}
+
+  Episode::Episode(Client &client, const rpc::EpisodeInfo &info)
     : _client(client),
-      _description(client.GetEpisodeInfo()),
-      _state(std::make_shared<EpisodeState>()) {}
+      _state(std::make_shared<EpisodeState>(info.id)),
+      _token(info.token) {}
 
   Episode::~Episode() {
     try {
-      _client.UnSubscribeFromStream(_description.token);
+      _client.UnSubscribeFromStream(_token);
     } catch (const std::exception &e) {
       log_error("exception trying to disconnect from episode:", e.what());
     }
@@ -37,28 +49,75 @@ namespace detail {
 
   void Episode::Listen() {
     std::weak_ptr<Episode> weak = shared_from_this();
-    _client.SubscribeToStream(_description.token, [weak](auto buffer) {
+    _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
       if (self != nullptr) {
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-        auto prev = self->_state.load();
-        auto next = prev->DeriveNextStep(CastData(*data));
-        /// @todo Check that this state occurred after.
-        self->_state = next;
-        self->_timestamp.SetValue(next->GetTimestamp());
-        self->_on_tick_callbacks.Call(next->GetTimestamp());
+
+        auto next = std::make_shared<const EpisodeState>(CastData(*data));
+        auto prev = self->GetState();
+        do {
+          if (prev->GetFrame() >= next->GetFrame()) {
+            self->_on_tick_callbacks.Call(next);
+            return;
+          }
+        } while (!self->_state.compare_exchange(&prev, next));
+
+        if (next->GetEpisodeId() != prev->GetEpisodeId()) {
+          self->OnEpisodeStarted();
+        }
+
+        // Notify waiting threads and do the callbacks.
+        self->_snapshot.SetValue(next);
+
+        // Tick navigation.
+        auto navigation = self->_navigation.load();
+        if (navigation != nullptr) {
+          navigation->Tick(*next);
+        }
+
+        // Call user callbacks.
+        self->_on_tick_callbacks.Call(next);
       }
     });
   }
 
-  std::vector<rpc::Actor> Episode::GetActors() {
-    auto state = GetState();
-    auto actor_ids = state->GetActorIds();
-    auto missing_ids = _actors.GetMissingIds(actor_ids);
-    if (!missing_ids.empty()) {
-      _actors.InsertRange(_client.GetActorsById(missing_ids));
+  boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {
+    auto actor = _actors.GetActorById(id);
+    if (!actor.has_value()) {
+      auto actor_list = _client.GetActorsById({id});
+      if (!actor_list.empty()) {
+        actor = std::move(actor_list.front());
+        _actors.Insert(*actor);
+      }
     }
-    return _actors.GetActorsById(actor_ids);
+    return actor;
+  }
+
+  std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
+    std::shared_ptr<WalkerNavigation> navigation;
+    do {
+      navigation = _navigation.load();
+      if (navigation == nullptr) {
+        auto new_navigation = std::make_shared<WalkerNavigation>(_client);
+        _navigation.compare_exchange(&navigation, new_navigation);
+      }
+    } while (navigation == nullptr);
+    return navigation;
+  }
+
+  std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
+    return GetActorsById_Impl(_client, _actors, actor_ids);
+  }
+
+  std::vector<rpc::Actor> Episode::GetActors() {
+    return GetActorsById_Impl(_client, _actors, GetState()->GetActorIds());
+  }
+
+  void Episode::OnEpisodeStarted() {
+    _actors.Clear();
+    _on_tick_callbacks.Clear();
+    _navigation.reset();
   }
 
 } // namespace detail

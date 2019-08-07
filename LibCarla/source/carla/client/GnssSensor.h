@@ -5,18 +5,17 @@
 
 #pragma once
 
-#include "carla/client/Sensor.h"
+#include "carla/client/ClientSideSensor.h"
+
+#include <atomic>
 
 namespace carla {
 namespace client {
 
-  class Map;
-  class Vehicle;
-
-  class GnssSensor final : public Sensor {
+  class GnssSensor final : public ClientSideSensor {
   public:
 
-    using Sensor::Sensor;
+    using ClientSideSensor::ClientSideSensor;
 
     ~GnssSensor();
 
@@ -35,19 +34,12 @@ namespace client {
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _is_listening;
+      return _callback_id != 0u;
     }
 
   private:
 
-    SharedPtr<sensor::SensorData> TickGnssSensor(const Timestamp &timestamp);
-
-    double _map_latitude;
-
-    double _map_longitude;
-
-    bool _is_listening = false;
-
+    std::atomic_size_t _callback_id{0u};
   };
 
 } // namespace client

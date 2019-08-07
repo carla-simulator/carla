@@ -10,7 +10,6 @@
   * [Getting started](getting_started.md)
   * [Python API tutorial](python_api_tutorial.md)
   * [Configuring the simulation](configuring_the_simulation.md)
-  <!-- * [Measurements](measurements.md) -->
   * [Cameras and sensors](cameras_and_sensors.md)
   * [F.A.Q.](faq.md)
 
@@ -22,11 +21,18 @@
 <h3>Advanced topics</h3>
 
   * [Python API reference](python_api.md)
+  * [C++ Reference](cpp_reference.md)
+  * [Blueprint Library](bp_library.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
   * [How to make a new map with RoadRunner](how_to_make_a_new_map.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
-  * [How to export and import maps to distribution builds](export_import_dist.md)
+  * [Creating standalone asset packages for distribution](asset_packages_for_dist.md)
+  * [How to add friction triggers](how_to_add_friction_triggers.md)
+  * [How to control vehicle physics](how_to_control_vehicle_physics.md)
+  * [How to record and replay](recorder_and_playback.md)
+  * [Recorder binary file format](recorder_binary_file_format.md)
+  * [How to control walker skeletons](walker_bone_control.md)
 
 <h3>Contributing</h3>
 
@@ -36,8 +42,11 @@
 
 <h3>Development</h3>
 
-  * [Map customization](map_customization.md)
-  * [Build system](build_system.md)
+  * [Index](dev/index.md)
+  * [Map customization](dev/map_customization.md)
+  * [Build system](dev/build_system.md)
+  * [How to upgrade content](dev/how_to_upgrade_content.md)
+  * [How to make a release](dev/how_to_make_a_release.md)
 
 <h3>Art guidelines</h3>
 

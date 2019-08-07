@@ -57,13 +57,14 @@ namespace client {
   }
 
   bool Actor::Destroy() {
-    if (_is_alive) {
+    if (IsAlive()) {
       // Let the exceptions leave the function, IsAlive() will still be true.
       _is_alive = !GetEpisode().Lock()->DestroyActor(*this);
     } else {
       log_warning(
           "attempting to destroy an actor that is already dead:",
           GetDisplayId());
+      _is_alive = false;
     }
     return _is_alive;
   }

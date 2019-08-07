@@ -11,7 +11,7 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> ObstacleDetectionEventSerializer::Deserialize(RawData data) {
+  SharedPtr<SensorData> ObstacleDetectionEventSerializer::Deserialize(RawData &&data) {
     return SharedPtr<SensorData>(new data::ObstacleDetectionEvent(std::move(data)));
   }
 

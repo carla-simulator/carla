@@ -6,36 +6,28 @@
 
 #pragma once
 
-#include "../types.h"
-
-#include "./pugixml/pugixml.hpp"
+namespace pugi {
+  class xml_document;
+} // namespace pugi
 
 namespace carla {
+
+namespace road {
+  class MapBuilder;
+} // namespace road
+
 namespace opendrive {
 namespace parser {
 
   class GeometryParser {
-  private:
-
-    void ParseArc(
-        const pugi::xml_node &xmlNode,
-        carla::opendrive::types::GeometryAttributesArc *out_geometry_arc);
-
-    void ParseLine(
-        const pugi::xml_node &xmlNode,
-        carla::opendrive::types::GeometryAttributesLine *out_geometry_line);
-
-    void ParseSpiral(
-        const pugi::xml_node &xmlNode,
-        carla::opendrive::types::GeometryAttributesSpiral *out_geometry_spiral);
-
   public:
 
     static void Parse(
-        const pugi::xml_node &xmlNode,
-        std::vector<std::unique_ptr<carla::opendrive::types::GeometryAttributes>> &out_geometry_attributes);
+        const pugi::xml_document &xml,
+        carla::road::MapBuilder &map_builder);
+
   };
 
-}
-}
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

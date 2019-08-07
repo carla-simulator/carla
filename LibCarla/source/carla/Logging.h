@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "carla/Platform.h"
+
 #define LIBCARLA_LOG_LEVEL_DEBUG     10
 #define LIBCARLA_LOG_LEVEL_INFO      20
 #define LIBCARLA_LOG_LEVEL_WARNING   30
@@ -46,6 +48,7 @@ namespace logging {
 
   // https://stackoverflow.com/a/27375675
   template <typename Arg, typename ... Args>
+  LIBCARLA_NOINLINE
   static void write_to_stream(std::ostream &out, Arg &&arg, Args && ... args) {
     out << std::boolalpha << std::forward<Arg>(arg);
     using expander = int[];

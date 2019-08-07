@@ -1,0 +1,5 @@
+numpy
+psutil
+py-cpuinfo
+pygame
+python-tr

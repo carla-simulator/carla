@@ -37,6 +37,10 @@ namespace geom {
 
     Transform() = default;
 
+    Transform(const Location &in_location)
+      : location(in_location),
+        rotation() {}
+
     Transform(const Location &in_location, const Rotation &in_rotation)
       : location(in_location),
         rotation(in_rotation) {}
@@ -51,12 +55,12 @@ namespace geom {
 
     void TransformPoint(Vector3D &in_point) const {
       // Rotate
-      double cy = cos(Math::to_radians(rotation.yaw));
-      double sy = sin(Math::to_radians(rotation.yaw));
-      double cr = cos(Math::to_radians(rotation.roll));
-      double sr = sin(Math::to_radians(rotation.roll));
-      double cp = cos(Math::to_radians(rotation.pitch));
-      double sp = sin(Math::to_radians(rotation.pitch));
+      const float cy = std::cos(Math::ToRadians(rotation.yaw));
+      const float sy = std::sin(Math::ToRadians(rotation.yaw));
+      const float cr = std::cos(Math::ToRadians(rotation.roll));
+      const float sr = std::sin(Math::ToRadians(rotation.roll));
+      const float cp = std::cos(Math::ToRadians(rotation.pitch));
+      const float sp = std::sin(Math::ToRadians(rotation.pitch));
 
       Vector3D out_point;
       out_point.x = in_point.x * (cp * cy) +

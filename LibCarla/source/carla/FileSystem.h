@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace carla {
 
@@ -24,6 +25,16 @@ namespace carla {
     static void ValidateFilePath(
         std::string &filepath,
         const std::string &default_extension = "");
+
+    /// List (not recursively) regular files at @a folder_path matching
+    /// @a wildcard_pattern.
+    ///
+    /// @throw std::invalid_argument if folder does not exist.
+    ///
+    /// @todo Do permission check.
+    static std::vector<std::string> ListFolder(
+        const std::string &folder_path,
+        const std::string &wildcard_pattern);
   };
 
 } // namespace carla

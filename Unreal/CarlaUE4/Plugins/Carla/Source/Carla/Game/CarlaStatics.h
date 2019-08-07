@@ -8,7 +8,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
-#include "Carla/Game/TheNewCarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Settings/CarlaSettings.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -28,7 +28,7 @@ class CARLA_API UCarlaStatics : public UBlueprintFunctionLibrary
 public:
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
-  static ATheNewCarlaGameModeBase *GetGameMode(const UObject *WorldContextObject);
+  static ACarlaGameModeBase *GetGameMode(const UObject *WorldContextObject);
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static UCarlaGameInstance *GetGameInstance(const UObject *WorldContextObject);
@@ -38,15 +38,18 @@ public:
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static UCarlaSettings *GetCarlaSettings(const UObject *WorldContextObject);
+
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllMapNames();
 };
 
 // =============================================================================
 // -- UCarlaStatics implementation ---------------------------------------------
 // =============================================================================
 
-inline ATheNewCarlaGameModeBase *UCarlaStatics::GetGameMode(const UObject *WorldContext)
+inline ACarlaGameModeBase *UCarlaStatics::GetGameMode(const UObject *WorldContext)
 {
-  return Cast<ATheNewCarlaGameModeBase>(UGameplayStatics::GetGameMode(WorldContext));
+  return Cast<ACarlaGameModeBase>(UGameplayStatics::GetGameMode(WorldContext));
 }
 
 inline UCarlaGameInstance *UCarlaStatics::GetGameInstance(const UObject *WorldContext)
@@ -65,4 +68,3 @@ inline UCarlaSettings *UCarlaStatics::GetCarlaSettings(const UObject *WorldConte
   auto GameInstance = GetGameInstance(WorldContext);
   return GameInstance != nullptr ? GameInstance->GetCARLASettings() : nullptr;
 }
-

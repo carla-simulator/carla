@@ -13,6 +13,7 @@ WARN_IF_UNDOCUMENTED    =  NO
 WARN_LOGFILE            =  Doxygen/warnings.log
 INPUT                   =  Unreal/CarlaUE4/Source Unreal/CarlaUE4/Plugins/Carla/Source LibCarla/source
 FILE_PATTERNS           =  *.cpp *.h *.hpp *.cc
+EXCLUDE                 =  LibCarla/source/carla/Version.h
 RECURSIVE               =  YES
 SOURCE_BROWSER          =  YES
 STRIP_CODE_COMMENTS     =  NO

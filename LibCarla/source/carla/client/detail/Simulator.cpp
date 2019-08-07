@@ -6,14 +6,20 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/Debug.h"
+#include "carla/Exception.h"
 #include "carla/Logging.h"
+#include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/TimeoutException.h"
+#include "carla/client/WalkerAIController.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
+#include <thread>
 
 using namespace std::string_literals;
 
@@ -37,6 +43,12 @@ namespace detail {
     }
   }
 
+  static void SynchronizeFrame(uint64_t frame, const Episode &episode) {
+    while (frame > episode.GetState()->GetTimestamp().frame) {
+      std::this_thread::yield();
+    }
+  }
+
   // ===========================================================================
   // -- Constructor ------------------------------------------------------------
   // ===========================================================================
@@ -52,6 +64,25 @@ namespace detail {
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
   // ===========================================================================
+  // -- Load a new episode -----------------------------------------------------
+  // ===========================================================================
+
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+    const auto id = GetCurrentEpisode().GetId();
+    _client.LoadEpisode(std::move(map_name));
+    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;
+    for (auto i = 0u; i < number_of_attempts; ++i) {
+      using namespace std::literals::chrono_literals;
+      _episode->WaitForState(10ms);
+      auto episode = GetCurrentEpisode();
+      if (episode.GetId() != id) {
+        return episode;
+      }
+    }
+    throw_exception(std::runtime_error("failed to connect to newly created map"));
+  }
+
+  // ===========================================================================
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================
 
@@ -60,6 +91,9 @@ namespace detail {
       ValidateVersions(_client);
       _episode = std::make_shared<Episode>(_client);
       _episode->Listen();
+      if (!GetEpisodeSettings().synchronous_mode) {
+        WaitForTick(_client.GetTimeout());
+      }
     }
     return EpisodeProxy{shared_from_this()};
   }
@@ -69,26 +103,83 @@ namespace detail {
   }
 
   // ===========================================================================
+  // -- Tick -------------------------------------------------------------------
+  // ===========================================================================
+
+  WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto result = _episode->WaitForState(timeout);
+    if (!result.has_value()) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return *result;
+  }
+
+  uint64_t Simulator::Tick() {
+    DEBUG_ASSERT(_episode != nullptr);
+    const auto frame = _client.SendTickCue();
+    SynchronizeFrame(frame, *_episode);
+    RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
+    return frame;
+  }
+
+  // ===========================================================================
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
 
   SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
     auto defs = _client.GetActorDefinitions();
-    { /// @todo
-      rpc::ActorDefinition def;
-      def.id = "sensor.other.lane_detector";
-      def.tags = "sensor,other,lane_detector";
-      defs.emplace_back(def);
-    }
     return MakeShared<BlueprintLibrary>(std::move(defs));
   }
 
   SharedPtr<Actor> Simulator::GetSpectator() {
-    return ActorFactory::MakeActor(
-        GetCurrentEpisode(),
-        _client.GetSpectator(),
-        nullptr,
-        GarbageCollectionPolicy::Disabled);
+    return MakeActor(_client.GetSpectator());
+  }
+
+  uint64_t Simulator::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    if (settings.synchronous_mode && !settings.fixed_delta_seconds) {
+      log_warning(
+          "synchronous mode enabled with variable delta seconds. It is highly "
+          "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
+    }
+    const auto frame = _client.SetEpisodeSettings(settings);
+    SynchronizeFrame(frame, *_episode);
+    return frame;
+  }
+
+  // ===========================================================================
+  // -- AI ---------------------------------------------------------------------
+  // ===========================================================================
+
+  void Simulator::RegisterAIController(const WalkerAIController &controller) {
+    auto walker = controller.GetParent();
+    if (walker == nullptr) {
+      throw_exception(std::runtime_error(controller.GetDisplayId() + ": not attached to walker"));
+      return;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->RegisterWalker(walker->GetId(), controller.GetId());
+  }
+
+  void Simulator::UnregisterAIController(const WalkerAIController &controller) {
+    auto walker = controller.GetParent();
+    if (walker == nullptr) {
+      throw_exception(std::runtime_error(controller.GetDisplayId() + ": not attached to walker"));
+      return;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->UnregisterWalker(walker->GetId(), controller.GetId());
+  }
+
+  boost::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    return navigation->GetRandomLocation();
   }
 
   // ===========================================================================
@@ -99,15 +190,15 @@ namespace detail {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
+      rpc::AttachmentType attachment_type,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
-    if (blueprint.GetId() == "sensor.other.lane_detector") { /// @todo
-      actor.description = blueprint.MakeActorDescription();
-    } else if (parent != nullptr) {
+    if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->Serialize());
+          parent->GetId(),
+          attachment_type);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -116,8 +207,7 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
-    auto parent_ptr = parent != nullptr ? parent->shared_from_this() : SharedPtr<Actor>();
-    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, parent_ptr, gca);
+    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     log_debug(
         result->GetDisplayId(),
         "created",
@@ -128,9 +218,7 @@ namespace detail {
 
   bool Simulator::DestroyActor(Actor &actor) {
     bool success = true;
-    if (actor.GetTypeId() != "sensor.other.lane_detector") { /// @todo
-      success = _client.DestroyActor(actor.Serialize());
-    }
+    success = _client.DestroyActor(actor.GetId());
     if (success) {
       // Remove it's persistent state so it cannot access the client anymore.
       actor.GetEpisode().Clear();

@@ -30,6 +30,9 @@ the contents of the package in a folder of your choice.
 <!-- Latest release button -->
 <p align="middle"><a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release"><span class="icon icon-github"></span> Get the latest release</a></p>
 
+<!-- Nightly build button -->
+<p align="middle"><a href="http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz" target="_blank" class="btn btn-neutral" title="Go to the nightly CARLA release"><span class="icon icon-github"></span> Get the nightly build</a></p>
+
 The release package contains a precompiled version of the simulator, the Python
 API module, and some Python scripts with usage examples. In order to run our
 usage examples, you may need to install the following Python modules

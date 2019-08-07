@@ -4,6 +4,95 @@ Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
 the most important ones.
 
+Changing the map
+----------------
+
+The map can be changed from the Python API with
+
+```py
+world = client.load_world('Town01')
+```
+
+this creates an empty world with default settings. The list of currently
+available maps can be retrieved with
+
+```py
+print(client.get_available_maps())
+```
+
+To reload the world using the current active map, use
+
+```py
+world = client.reload_world()
+```
+
+Graphics Quality
+----------------
+
+<h4>Vulkan vs OpenGL</h4>
+
+Vulkan _(if installed)_ is the default graphics API used by Unreal Engine and CARLA on Linux.  
+It consumes more memory but performs faster.  
+On the other hand, OpenGL is less memory consuming but performs slower than Vulkan.
+
+!!! note
+    Vulkan is an experimental build so it may have some bugs when running the simulator.
+
+OpenGL API can be selected with the flag `-opengl`.
+
+```sh
+> ./CarlaUE4.sh -opengl
+```
+
+<h4>Quality levels</h4>
+
+Currently, there are two levels of quality, `Low` and `Epic` _(default)_. The image below shows how the simulator has to be started with the appropiate flag in order to set a quality level and the difference between qualities.
+
+![](img/epic_quality_capture.png)  |  ![](img/low_quality_capture.png)
+:-------------------------:|:-------------------------:
+`./CarlaUE4.sh -quality-level=Epic`  |  `./CarlaUE4.sh -quality-level=Low`
+
+**Low mode runs significantly faster**, ideal for users that don't rely on quality precision.
+
+Running off-screen
+------------------
+
+In Linux, you can force the simulator to run off-screen by setting the
+environment variable `DISPLAY` to empty
+
+!!! important
+    **DISPLAY= only works with OpenGL**<br>
+    Unreal Engine currently crashes when Vulkan is used when running
+    off-screen. Therefore the `-opengl` flag must be added to force the engine to
+    use OpenGL instead. We hope that this issue is addressed by Epic in the near
+    future.
+
+```sh
+# Linux
+DISPLAY= ./CarlaUE4.sh -opengl
+```
+
+This launches the simulator without simulator window, of course you can still
+connect to it normally and run the example scripts. Note that with this method,
+in multi-GPU environments, it's not possible to select the GPU that the
+simulator will use for rendering. To do so, follow the instruction in
+[Running without display and selecting GPUs](carla_headless.md).
+
+No-rendering mode
+-----------------
+
+It is possible to completely disable rendering in the simulator by enabling
+_no-rendering mode_ in the world settings. This way is possible to simulate
+traffic and road behaviours at very high frequencies without the rendering
+overhead. Note that in this mode, cameras and other GPU-based sensors return
+empty data.
+
+```py
+settings = world.get_settings()
+settings.no_rendering_mode = True
+world.apply_settings(settings)
+```
+
 Fixed time-step
 ---------------
 
@@ -23,20 +112,26 @@ CARLA can be run in both modes.
 
 The simulation tries to keep up with real-time. To do so, the time-step is
 slightly adjusted each update. Simulations are not repeatable. By default, the
-simulator starts in this mode
+simulator starts in this mode, but it can be re-enabled if changed with
+
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+```
 
 <h4>Fixed time-step</h4>
 
 The simulation runs as fast as possible, simulating the same time increment on
-each step. To run the simulator this way you need to pass two parameters in the
-command-line, one to enable the fixed time-step mode, and the second to specify
-the FPS of the simulation (i.e. the inverse of the time step). For instance, to
-run the simulation at a fixed time-step of 0.1 seconds we execute
+each step. To enable this mode set a fixed delta seconds in the world settings.
+For instance, to run the simulation at a fixed time-step of 0.05 seconds (20
+FPS) apply the following settings
 
-    $ ./CarlaUE4.sh -benchmark -fps=10
-
-It is important to note that this mode can only be enabled when launching the
-simulator since this is actually a feature of Unreal Engine.
+```py
+settings = world.get_settings()
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+```
 
 !!! important
     **Do not decrease the frame-rate below 10 FPS.**<br>
@@ -46,95 +141,83 @@ simulator since this is actually a feature of Unreal Engine.
     no longer in sync with the physics engine.
     Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
 
-
-Changing the map
+Synchronous mode
 ----------------
 
-The map can be selected by passing the path to the map as first argument when
-launching the simulator
-
-```sh
-# Linux
-./CarlaUE4.sh /Game/Carla/Maps/Town01
-```
-
-```cmd
-rem Windows
-CarlaUE4.exe /Game/Carla/Maps/Town01
-```
-
-The path "/Game/" maps to the Content folder of our repository in
-"Unreal/CarlaUE4/Content/".
-
-Running off-screen
-------------------
-
-In Linux, you can force the simulator to run off-screen by setting the
-environment variable `DISPLAY` to empty
-
-```sh
-# Linux
-DISPLAY= ./CarlaUE4.sh
-```
-
-This launches the simulator without simulator window, of course you can still
-connect to it normally and run the example scripts. Note that with this method,
-in multi-GPU environments, it's not possible to select the GPU that the
-simulator will use for rendering. To do so, follow the instruction in
-[Running without display and selecting GPUs](carla_headless.md).
-
-Other command-line options
---------------------------
-
-  * `-carla-port=N` Listen for client connections at port N, streaming port is set to N+1.
-  * `-quality-level={Low,Epic}` Change graphics quality level, "Low" mode runs significantly faster.
-  * [Full list of UE4 command-line arguments][ue4clilink].
-
-[ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
-
-<!-- Disabled for now...
-
-Synchronous vs Asynchronous mode
---------------------------------
+!!! important
+    **Always run the simulator at fixed time-step when using the synchronous
+    mode**. Otherwise the physics engine will try to recompute at once all the
+    time spent waiting for the client, this usually results in inconsistent or
+    not very realistic physics.
 
 The client-simulator communication can be synchronized by using the _synchronous
-mode_. The synchronous mode enables two things
+mode_. When the synchronous mode is enabled, the simulation is halted each
+update until a _tick_ message is received.
 
-  * The simulator waits for the sensor data to be ready before sending the
-    measurements.
-  * The simulator halts each frame until a control message is received.
+This is very useful when dealing with slow client applications, as the simulator
+waits until the client is ready to continue. This mode can also be used to
+synchronize data among sensors by waiting until all the data is received. Note
+that data coming from GPU-based sensors (cameras) is usually generated with a
+delay of a couple of frames respect to data coming from CPU-based sensors.
 
-This is very useful when dealing with slow client applications, as the
-simulation is halted until the client is ready to continue. This also ensures
-that the generated data of every sensor is received every frame by the client.
-As opposed to _asynchronous mode_, in which the sensor data may arrive a couple
-of frames later or even be lost if the client is not fast enough.
-
-However, there are a couple of caveats to bear in mind when using the
-synchronous mode. First of all, **it is very important to run the simulator at
-fixed time-step when using the synchronous mode**. Otherwise the physics engine
-will try to recompute at once all the time spent waiting for the client, this
-usually results in inconsistent or not very realistic physics.
-
-Secondly, the synchronous mode imposes a significant performance penalty. There
-is a price in waiting for the render thread to have the images ready and halting
-the simulation when the client is slow. There is a trade-off in using the
-synchronous mode.
-
-The synchronous mode can be enabled at the beginning of each episode both in the
-INI file or the Python API
-
-**Python**
+The synchronous mode can be enabled at any time in the world settings.
 
 ```py
-settings = CarlaSettings()
-settings.set(SynchronousMode=True)
+# Example: Synchronizing a camera with synchronous mode.
+
+settings = world.get_settings()
+settings.synchronous_mode = True
+world.apply_settings(settings)
+
+camera = world.spawn_actor(blueprint, transform)
+image_queue = queue.Queue()
+camera.listen(image_queue.put)
+
+while True:
+    world.tick()
+    image = image_queue.get()
 ```
 
-**CarlaSettings.ini**
+For a more complex scenario synchronizing data from several sensors, take a look
+at the example [synchronous_mode.py][syncmodelink].
 
-```ini
-[CARLA/Server]
-SynchronousMode=true
+[syncmodelink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/synchronous_mode.py
+
+Command-line options
+--------------------------
+
+!!! important
+    Some of the command-line options are not available in `Linux` due to the "Shipping" build. Therefore, the use of
+    [`config.py`][configlink] script is needed to configure the simulation.
+
+[configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
+
+Some configuration examples:
+
+```sh
+> ./config.py --no-rendering      # Disable rendering
+> ./config.py --map Town05        # Change map
+> ./config.py --weather ClearNoon # Change weather
+...
 ```
- -->
+
+To check all the available configurations, run the following command:
+
+```sh
+> ./config.py --help
+```
+
+Commands directly available:
+
+  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
+  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
+  * `-quality-level={Low,Epic}` Change graphics quality level.
+  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
+
+Example:
+
+```sh
+> ./CarlaUE4.sh -carla-rpc-port=3000
+```
+
+[ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments

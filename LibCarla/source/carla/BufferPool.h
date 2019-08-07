@@ -8,7 +8,14 @@
 
 #include "carla/Buffer.h"
 
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#endif
 #include "moodycamel/ConcurrentQueue.h"
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 #include <memory>
 
@@ -43,7 +50,7 @@ namespace carla {
 
     friend class Buffer;
 
-    void Push(Buffer buffer) {
+    void Push(Buffer &&buffer) {
       _queue.enqueue(std::move(buffer));
     }
 

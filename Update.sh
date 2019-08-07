@@ -46,7 +46,8 @@ pushd "$SCRIPT_DIR" >/dev/null
 
 CONTENT_FOLDER=$SCRIPT_DIR/Unreal/CarlaUE4/Content/Carla
 
-CONTENT_GDRIVE_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
+CONTENT_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
+CONTENT_LINK=http://carla-assets-internal.s3.amazonaws.com/Content/${CONTENT_ID}.tar.gz
 
 VERSION_FILE=${CONTENT_FOLDER}/.version
 
@@ -57,11 +58,18 @@ function download_content {
   fi
   mkdir -p $CONTENT_FOLDER
   mkdir -p Content
-  ./Util/download_from_gdrive.py $CONTENT_GDRIVE_ID Content.tar.gz
+  if hash aria2c 2>/dev/null; then
+    echo -e "${CONTENT_LINK}\n\tout=Content.tar.gz" > .aria2c.input
+    aria2c -j16 -x16 --input-file=.aria2c.input
+    rm -f .aria2c.input
+  else
+    wget -c ${CONTENT_LINK} -O Content.tar.gz
+  fi
   tar -xvzf Content.tar.gz -C Content
   rm Content.tar.gz
   mv Content/* $CONTENT_FOLDER
-  echo "$CONTENT_GDRIVE_ID" > "$VERSION_FILE"
+  rm -rf Content
+  echo "$CONTENT_ID" > "$VERSION_FILE"
   echo "Content updated successfully."
 }
 
@@ -72,7 +80,7 @@ function download_content {
 if $SKIP_DOWNLOAD ; then
   echo "Skipping 'Content' update. Please manually download the package from"
   echo
-  echo "  https://drive.google.com/open?id=$CONTENT_GDRIVE_ID"
+  echo "  ${CONTENT_LINK}"
   echo
   echo "and extract it under Unreal/CarlaUE4/Content/Carla."
   exit 0
@@ -81,7 +89,7 @@ fi
 if [[ -d "$CONTENT_FOLDER/.git" ]]; then
   echo "Using git version of 'Content', skipping update."
 elif [[ -f "$CONTENT_FOLDER/.version" ]]; then
-  if [ "$CONTENT_GDRIVE_ID" == `cat $VERSION_FILE` ]; then
+  if [ "$CONTENT_ID" == `cat $VERSION_FILE` ]; then
     echo "Content is up-to-date."
   else
     download_content

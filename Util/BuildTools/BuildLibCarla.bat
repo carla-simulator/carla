@@ -28,31 +28,25 @@ if not "%1"=="" (
         set BUILD_SERVER=true
         set BUILD_CLIENT=true
     )
-
     if "%1"=="--server" (
         set BUILD_SERVER=true
     )
-
     if "%1"=="--client" (
         set BUILD_CLIENT=true
     )
-
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
     )
-
     if "%1"=="-h" (
         echo %DOC_STRING%
         echo %USAGE_STRING%
         GOTO :eof
     )
-
     if "%1"=="--help" (
         echo %DOC_STRING%
         echo %USAGE_STRING%
         GOTO :eof
     )
-
     shift
     goto :arg-parse
 )
@@ -66,19 +60,38 @@ if %REMOVE_INTERMEDIATE% == false (
     )
 )
 
+rem ============================================================================
+rem -- Local Variables ---------------------------------------------------------
+rem ============================================================================
+
 rem Set the visual studio solution directory
 rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR%libcarla-visualstudio
 
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
-set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\dependencies
+set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\carla\dependencies
 
 if %REMOVE_INTERMEDIATE% == true (
-    echo %FILE_N% Cleaning "%LIBCARLA_SERVER_INSTALL_PATH%"
-    if exist "%LIBCARLA_SERVER_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_SERVER_INSTALL_PATH%"
+    rem Remove directories
+    for %%G in (
+        "%LIBCARLA_SERVER_INSTALL_PATH:/=\%",
+        "%LIBCARLA_CLIENT_INSTALL_PATH:/=\%",
+    ) do (
+        if exist %%G (
+            echo %FILE_N% Cleaning %%G
+            rmdir /s/q %%G
+        )
+    )
 
-    echo %FILE_N% Cleaning "%LIBCARLA_CLIENT_INSTALL_PATH%"
-    if exist "%LIBCARLA_CLIENT_INSTALL_PATH%" rmdir /S /Q "%LIBCARLA_CLIENT_INSTALL_PATH%"
+    rem Remove files
+    for %%G in (
+        "%ROOT_PATH:/=\%LibCarla\source\carla\Version.h"
+    ) do (
+        if exist %%G (
+            echo %FILE_N% Cleaning %%G
+            del %%G
+        )
+    )
 )
 
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
@@ -87,7 +100,11 @@ cd "%LIBCARLA_VSPROJECT_PATH%"
 rem Build libcarla server
 rem
 if %BUILD_SERVER% == true (
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Server -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH% %ROOT_PATH%
+    cmake -G "Visual Studio 15 2017 Win64"^
+      -DCMAKE_BUILD_TYPE=Server^
+      -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
+      -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH%^
+      %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
@@ -97,10 +114,14 @@ if %BUILD_SERVER% == true (
 rem Build libcarla client
 rem
 if %BUILD_CLIENT% == true (
-    cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Client -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP" -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH% %ROOT_PATH%
+    cmake -G "Visual Studio 15 2017 Win64"^
+      -DCMAKE_BUILD_TYPE=Client^
+      -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
+      -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH%^
+      %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake
 
-    cmake --build . --config Release --target install  | findstr /V "Up-to-date:"
+    cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
 )
 

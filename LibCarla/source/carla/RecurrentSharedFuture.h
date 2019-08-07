@@ -9,6 +9,7 @@
 #include "carla/Exception.h"
 #include "carla/Time.h"
 
+#include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include <condition_variable>
@@ -19,7 +20,9 @@
 namespace carla {
 
 namespace detail {
+
   class SharedException;
+
 } // namespace detail
 
   // ===========================================================================
@@ -36,7 +39,9 @@ namespace detail {
 
     /// Wait until the next value is set. Any number of threads can be waiting
     /// simultaneously.
-    T WaitFor(time_duration timeout);
+    ///
+    /// @return empty optional if the timeout is met.
+    boost::optional<T> WaitFor(time_duration timeout);
 
     /// Set the value and notify all waiting threads.
     template <typename T2>
@@ -58,7 +63,7 @@ namespace detail {
 
     struct mapped_type {
       bool should_wait;
-      boost::variant<T, SharedException> value;
+      boost::variant<SharedException, T> value;
     };
 
     std::map<const char *, mapped_type> _map;
@@ -75,7 +80,8 @@ namespace detail {
   class SharedException : public std::exception {
   public:
 
-    SharedException(const SharedException &) = default;
+    SharedException()
+      : _exception(std::make_shared<std::runtime_error>("uninitialized SharedException")) {}
 
     SharedException(std::shared_ptr<std::exception> e)
       : _exception(std::move(e)) {}
@@ -96,14 +102,14 @@ namespace detail {
 } // namespace detail
 
   template <typename T>
-  T RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
+  boost::optional<T> RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
     std::unique_lock<std::mutex> lock(_mutex);
     auto &r = _map[&detail::thread_tag];
     r.should_wait = true;
     if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; })) {
-      throw_exception(std::runtime_error("RecurrentSharedFuture.WaitFor: time-out"));
+      return {};
     }
-    if (r.value.which() == 1) {
+    if (r.value.which() == 0) {
       throw_exception(boost::get<SharedException>(r.value));
     }
     return boost::get<T>(std::move(r.value));

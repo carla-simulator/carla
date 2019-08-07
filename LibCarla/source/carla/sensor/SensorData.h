@@ -11,7 +11,6 @@
 #include "carla/sensor/RawData.h"
 
 /// @todo This shouldn't be exposed in this namespace.
-#include "carla/client/World.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
 namespace carla {
@@ -23,20 +22,26 @@ namespace sensor {
       private NonCopyable {
   protected:
 
-    SensorData(size_t frame_number, const rpc::Transform &sensor_transform)
-      : _frame_number(frame_number),
+    SensorData(size_t frame, double timestamp, const rpc::Transform &sensor_transform)
+      : _frame(frame),
+        _timestamp(timestamp),
         _sensor_transform(sensor_transform) {}
 
     explicit SensorData(const RawData &data)
-      : SensorData(data.GetFrameNumber(), data.GetSensorTransform()) {}
+      : SensorData(data.GetFrame(), data.GetTimestamp(), data.GetSensorTransform()) {}
 
   public:
 
     virtual ~SensorData() = default;
 
     /// Frame count when the data was generated.
-    size_t GetFrameNumber() const {
-      return _frame_number;
+    size_t GetFrame() const {
+      return _frame;
+    }
+
+    /// Simulation-time when the data was generated.
+    double GetTimestamp() const {
+      return _timestamp;
     }
 
     /// Sensor's transform when the data was generated.
@@ -56,7 +61,9 @@ namespace sensor {
     friend class client::detail::Simulator;
     client::detail::WeakEpisodeProxy _episode;
 
-    const size_t _frame_number;
+    const size_t _frame;
+
+    const double _timestamp;
 
     const rpc::Transform _sensor_transform;
   };

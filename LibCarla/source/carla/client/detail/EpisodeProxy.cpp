@@ -29,7 +29,7 @@ namespace detail {
       _simulator(std::move(simulator)) {}
 
   template <typename T>
-  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::TryLock() const {
+  typename EpisodeProxyImpl<T>::SharedPtrType EpisodeProxyImpl<T>::TryLock() const noexcept {
     auto ptr = Load(_simulator);
     const bool is_valid = (ptr != nullptr) && (_episode_id == ptr->GetCurrentEpisodeId());
     return is_valid ? ptr : nullptr;
@@ -52,7 +52,7 @@ namespace detail {
   }
 
   template <typename T>
-  void EpisodeProxyImpl<T>::Clear() {
+  void EpisodeProxyImpl<T>::Clear() noexcept {
     _simulator.reset();
   }
 

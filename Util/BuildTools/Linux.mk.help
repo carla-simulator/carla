@@ -18,9 +18,15 @@ Use the following commands:
         Launch CarlaUE4 project in Unreal Engine's Editor, but skip building
         step (assume the project is already built).
 
+    import:
+
+        Import maps and assets that are located in "carla/Import" directly to Unreal,
+        so they will be ready to export.
+
     package:
 
-        Makes a packaged version of CARLA ready for distribution.
+        Makes a packaged version of CARLA ready for distribution. Used with
+        ARGS="--package=PackageNames" will create specific asset packages.
 
     docs:
 
@@ -40,10 +46,6 @@ Use the following commands:
         Engine's pre-compiled headers. Useful for fixing "version.h has been
         modified since the precompiled header" errors. Beware, recompilation
         takes a long time!
-
-    export-maps:
-        Export maps from /Game/Carla/ExportedMaps to the ExportedMaps folder
-        at the root of the Carla project.
 
 
 There are also some lower level commands for building individual modules helpful
@@ -65,6 +67,10 @@ for developers:
 
         Run the benchmark tests for LibCarla.
 
+    (run-)examples:
+
+        Build (and run) the C++ client examples.
+
     CarlaUE4Editor:
 
         Build CarlaUE4 project, but do not launch the editor.
@@ -73,13 +79,21 @@ for developers:
 
         Build and package the Python API module for Python 2 and/or 3.
 
-    LibCarla(.server|.client):
+    LibCarla(.server|.client)(.debug|.release):
 
         Build LibCarla, "Server" and/or "Client" configurations.
+
+    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+
+        Remove intermediate build files for the specific module.
 
     setup:
 
         Run the setup step only.
+
+    deploy:
+
+        Upload nightly build.
 
     pretty:
 

@@ -135,7 +135,7 @@ TEST(geom, nearest_point_segment) {
     double min_dist = std::numeric_limits<double>::max();
     int id = -1;
     for (int j = 0; j < 40; j += 4) {
-      const double dist = Math::DistSegmentPoint(
+      const double dist = Math::DistanceSegmentToPoint(
           point[i],
           {segment[j + 0], segment[j + 1], 0},
           {segment[j + 2], segment[j + 3], 0}).second;
@@ -169,52 +169,13 @@ TEST(geom, forward_vector) {
   compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
-TEST(geom, point_in_rectangle) {
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(0, 0, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1, -1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1, -1, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(-1.01, -1.01, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), 0, Vector3D(1.01, 1.01, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(0, 0, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(2, 2, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(1.5, 1.5, 0), Vector3D(1, 1, 0), 0, Vector3D(1, 1, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), Math::pi_half() * 0.5, Vector3D(1, 1, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 0, 0), Vector3D(1, 1, 0), Math::pi_half() * 0.5, Vector3D(1, 0, 0)));
-  ASSERT_TRUE(Math::PointInRectangle(
-      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2, 2, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2.1, 2, 0)));
-  ASSERT_FALSE(Math::PointInRectangle(
-      Vector3D(0, 2, 0), Vector3D(0.5, 2, 0), Math::pi_half(), Vector3D(2, 2.6, 0)));
-}
-
 TEST(geom, nearest_point_arc) {
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,0,0),
-      Vector3D(0,0,0), 1.57, 0, 1).second, 0.414214, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(2,-1,0),
-      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(0,-1,0),
-      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
-  ASSERT_NEAR(Math::DistArcPoint(Vector3D(1,-2,0),
-      Vector3D(0,0,0), 1.57, 0, 1).second, 1.0, 0.01);
+  ASSERT_NEAR(Math::DistanceArcToPoint(Vector3D(1,0,0),
+      Vector3D(0,0,0), 1.57f, 0, 1).second, 0.414214f, 0.01f);
+  ASSERT_NEAR(Math::DistanceArcToPoint(Vector3D(2,1,0),
+      Vector3D(0,0,0), 1.57f, 0, 1).second, 1.0f, 0.01f);
+  ASSERT_NEAR(Math::DistanceArcToPoint(Vector3D(0,1,0),
+      Vector3D(0,0,0), 1.57f, 0, 1).second, 1.0f, 0.01f);
+  ASSERT_NEAR(Math::DistanceArcToPoint(Vector3D(1,2,0),
+      Vector3D(0,0,0), 1.57f, 0, 1).second, 1.0f, 0.01f);
 }

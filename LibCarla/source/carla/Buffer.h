@@ -85,9 +85,18 @@ namespace carla {
       copy_from(source);
     }
 
-    Buffer(const value_type *data, size_type size) {
+    explicit Buffer(const value_type *data, size_type size) {
       copy_from(data, size);
     }
+
+    /// @copydoc Buffer(size_type)
+    explicit Buffer(const value_type *data, uint64_t size)
+      : Buffer(data, [size]() {
+          if (size > max_size()) {
+            throw_exception(std::invalid_argument("message size too big"));
+          }
+          return static_cast<size_type>(size);
+        } ()) {}
 
     Buffer(const Buffer &) = delete;
 
@@ -156,17 +165,17 @@ namespace carla {
     /// @warning Boost.Asio buffers do not own the data, it's up to the caller
     /// to not delete the memory that this buffer holds until the asio buffer is
     /// no longer used.
-    boost::asio::const_buffer cbuffer() const {
+    boost::asio::const_buffer cbuffer() const noexcept {
       return {data(), size()};
     }
 
     /// @copydoc cbuffer()
-    boost::asio::const_buffer buffer() const {
+    boost::asio::const_buffer buffer() const noexcept {
       return cbuffer();
     }
 
     /// @copydoc cbuffer()
-    boost::asio::mutable_buffer buffer() {
+    boost::asio::mutable_buffer buffer() noexcept {
       return {data(), size()};
     }
 
@@ -186,7 +195,7 @@ namespace carla {
       return _size;
     }
 
-    static constexpr size_type max_size() {
+    static constexpr size_type max_size() noexcept {
       return std::numeric_limits<size_type>::max();
     }
 
@@ -326,7 +335,7 @@ namespace carla {
     /// Copy @a size bytes of the memory pointed by @a data into this buffer,
     /// leaving at the front an offset of @a offset bytes uninitialized.
     /// Allocates memory if necessary.
-    void copy_from(size_t offset, const value_type *data, size_type size) {
+    void copy_from(size_type offset, const value_type *data, size_type size) {
       copy_from(offset, boost::asio::buffer(data, size));
     }
 

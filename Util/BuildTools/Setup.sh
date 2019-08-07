@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-6.0 >/dev/null 2>&1 || {
-  echo >&2 "clang 6.0 is required, but it's not installed.";
-  echo >&2 "make sure you build Unreal Engine with clang 6.0 too.";
+command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
+  echo >&2 "clang 7 is required, but it's not installed.";
   exit 1;
 }
 
-export CC=/usr/bin/clang-6.0
-export CXX=/usr/bin/clang++-6.0
+CXX_TAG=c7
+export CC=/usr/bin/clang-7
+export CXX=/usr/bin/clang++-7
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-6.0-ex
+LLVM_BASENAME=llvm-7.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -34,9 +34,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_60  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -70,7 +70,7 @@ unset LLVM_BASENAME
 # ==============================================================================
 
 BOOST_VERSION=1.69.0
-BOOST_BASENAME="boost-${BOOST_VERSION}"
+BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -81,16 +81,19 @@ else
 
   rm -Rf ${BOOST_BASENAME}-source
 
+  BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
+
   log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION//./_}.tar.gz"
-  log "Extracting boost."
-  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
+
+  log "Extracting boost for Python 2."
+  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-6.0"
+  BOOST_TOOLSET="clang-7.1"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
@@ -102,8 +105,7 @@ else
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
 
-  if ${TRAVIS}
-  then
+  if ${TRAVIS} ; then
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
@@ -116,9 +118,12 @@ else
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
   rm -Rf ${BOOST_BASENAME}-source
-  tar -xzf ${BOOST_BASENAME//[-.]/_}.tar.gz
+
+  log "Extracting boost for Python 3."
+  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_BASENAME//[-.]/_} ${BOOST_BASENAME}-source
+  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+
   pushd ${BOOST_BASENAME}-source >/dev/null
 
   py3="/usr/bin/env python3"
@@ -130,8 +135,7 @@ else
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
 
-  if ${TRAVIS}
-  then
+  if ${TRAVIS} ; then
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
@@ -143,7 +147,7 @@ else
   popd >/dev/null
 
   rm -Rf ${BOOST_BASENAME}-source
-  rm ${BOOST_BASENAME//[-.]/_}.tar.gz
+  rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
 fi
 
@@ -153,8 +157,8 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c1
-RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}
+RPCLIB_PATCH=v2.2.1_c2
+RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
 RPCLIB_LIBCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libcxx-install/lib
@@ -221,7 +225,8 @@ unset RPCLIB_BASENAME
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
-GTEST_BASENAME=googletest-1.8.0-ex
+GTEST_VERSION=1.8.1
+GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
 GTEST_LIBCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libcxx-install/include
 GTEST_LIBCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libcxx-install/lib
@@ -238,7 +243,7 @@ else
 
   log "Retrieving Google Test."
 
-  git clone --depth=1 -b release-1.8.0 https://github.com/google/googletest.git ${GTEST_BASENAME}-source
+  git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
   log "Building Google Test with libc++."
 
@@ -281,6 +286,78 @@ fi
 unset GTEST_BASENAME
 
 # ==============================================================================
+# -- Get Recast&Detour and compile it with libc++ ------------------------------
+# ==============================================================================
+
+RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+RECAST_BASENAME=recast-${CXX_TAG}
+
+RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
+RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
+
+if [[ -d "${RECAST_BASENAME}-install" ]] ; then
+  log "${RECAST_BASENAME} already installed."
+else
+  rm -Rf \
+      ${RECAST_BASENAME}-source \
+      ${RECAST_BASENAME}-build \
+      ${RECAST_BASENAME}-install
+
+  log "Retrieving Recast & Detour"
+
+  git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+
+  pushd ${RECAST_BASENAME}-source >/dev/null
+
+  git reset --hard ${RECAST_COMMIT}
+
+  popd >/dev/null
+
+  log "Building Recast & Detour with libc++."
+
+  mkdir -p ${RECAST_BASENAME}-build
+
+  pushd ${RECAST_BASENAME}-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
+      -DRECASTNAVIGATION_DEMO=False \
+      -DRECASTNAVIGATION_TEST=False \
+      ../${RECAST_BASENAME}-source
+
+  ninja
+
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
+
+  # move headers inside 'recast' folder
+  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
+  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
+
+fi
+
+unset RECAST_BASENAME
+
+# ==============================================================================
+# -- Generate Version.h --------------------------------------------------------
+# ==============================================================================
+
+CARLA_VERSION=$(get_git_repository_version)
+
+log "CARLA version ${CARLA_VERSION}."
+
+VERSION_H_FILE=${LIBCARLA_ROOT_FOLDER}/source/carla/Version.h
+VERSION_H_FILE_GEN=${CARLA_BUILD_FOLDER}/Version.h
+
+sed -e "s|\${CARLA_VERSION}|${CARLA_VERSION}|g" ${VERSION_H_FILE}.in > ${VERSION_H_FILE_GEN}
+
+move_if_changed "${VERSION_H_FILE_GEN}" "${VERSION_H_FILE}"
+
+# ==============================================================================
 # -- Generate CMake toolchains and config --------------------------------------
 # ==============================================================================
 
@@ -295,10 +372,14 @@ set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wheader-hygiene" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_ENABLE_LIFETIME_PROFILER -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -309,8 +390,8 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -I${LLVM_INCLUDE}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
@@ -319,8 +400,6 @@ EOL
 
 cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 # Automatically generated by `basename "$0"`
-
-set(CARLA_VERSION $(get_carla_version))
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
@@ -336,6 +415,8 @@ endif ()
 # add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
 # add_definitions(-DLIBCARLA_IMAGE_WITH_JPEG_SUPPORT)
 # add_definitions(-DLIBCARLA_IMAGE_WITH_TIFF_SUPPORT)
+
+add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
@@ -354,6 +435,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
+  set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
+  set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
 endif ()
 
 EOL

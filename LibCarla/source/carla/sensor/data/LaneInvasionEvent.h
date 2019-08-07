@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include "carla/road/element/LaneMarking.h"
 #include "carla/sensor/SensorData.h"
+
+#include "carla/client/Actor.h"
+#include "carla/road/element/LaneMarking.h"
+#include "carla/rpc/ActorId.h"
 
 #include <vector>
 
@@ -22,18 +25,17 @@ namespace data {
     using LaneMarking = road::element::LaneMarking;
 
     explicit LaneInvasionEvent(
-        size_t frame_number,
+        size_t frame,
+        double timestamp,
         const rpc::Transform &sensor_transform,
-        SharedPtr<client::Actor> self_actor,
+        ActorId parent,
         std::vector<LaneMarking> crossed_lane_markings)
-      : SensorData(frame_number, sensor_transform),
-        _self_actor(std::move(self_actor)),
+      : SensorData(frame, timestamp, sensor_transform),
+        _parent(parent),
         _crossed_lane_markings(std::move(crossed_lane_markings)) {}
 
     /// Get "self" actor. Actor that invaded another lane.
-    SharedPtr<client::Actor> GetActor() const {
-      return _self_actor;
-    }
+    SharedPtr<client::Actor> GetActor() const;
 
     /// List of lane markings that have been crossed.
     const std::vector<LaneMarking> &GetCrossedLaneMarkings() const {
@@ -42,7 +44,7 @@ namespace data {
 
   private:
 
-    SharedPtr<client::Actor> _self_actor;
+    ActorId _parent;
 
     std::vector<LaneMarking> _crossed_lane_markings;
   };

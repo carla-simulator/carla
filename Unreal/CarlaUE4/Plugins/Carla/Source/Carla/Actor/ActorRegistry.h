@@ -37,7 +37,7 @@ public:
   /// actor.
   ///
   /// @warning Undefined if an actor is registered more than once.
-  FActorView Register(AActor &Actor, FActorDescription Description);
+  FActorView Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
   void Deregister(IdType Id);
 
@@ -92,12 +92,12 @@ public:
 
   auto begin() const noexcept
   {
-    return carla::iterator::make_map_values_iterator(ActorDatabase.begin());
+    return carla::iterator::make_map_values_const_iterator(ActorDatabase.begin());
   }
 
   auto end() const noexcept
   {
-    return carla::iterator::make_map_values_iterator(ActorDatabase.end());
+    return carla::iterator::make_map_values_const_iterator(ActorDatabase.end());
   }
 
   /// @}

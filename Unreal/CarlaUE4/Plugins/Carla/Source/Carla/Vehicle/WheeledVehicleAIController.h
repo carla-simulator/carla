@@ -8,7 +8,7 @@
 
 #include <queue>
 
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/Controller.h"
 
 #include "Traffic/TrafficLightState.h"
 #include "Vehicle/VehicleControl.h"
@@ -21,7 +21,7 @@ class URoadMap;
 
 /// Wheeled vehicle controller with optional AI.
 UCLASS()
-class CARLA_API AWheeledVehicleAIController : public APlayerController
+class CARLA_API AWheeledVehicleAIController final : public AController
 {
   GENERATED_BODY()
 
@@ -38,15 +38,15 @@ public:
 
   /// @}
   // ===========================================================================
-  /// @name APlayerController overrides
+  /// @name Controller overrides
   // ===========================================================================
   /// @{
 
 public:
 
-  void Possess(APawn *aPawn) override;
+  void OnPossess(APawn *aPawn) override;
 
-  void UnPossess() override;
+  void OnUnPossess() override;
 
   void Tick(float DeltaTime) override;
 
@@ -75,10 +75,16 @@ public:
     return Vehicle;
   }
 
+  /// @}
+  // ===========================================================================
+  /// @name Control options
+  // ===========================================================================
+  /// @{
+
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  virtual bool IsPossessingThePlayer() const
+  void SetStickyControl(bool bEnabled)
   {
-    return false;
+    bControlIsSticky = bEnabled;
   }
 
   /// @}
@@ -130,11 +136,11 @@ public:
   }
 
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  void SetAutopilot(bool Enable)
+  void SetAutopilot(bool Enable, bool KeepState = false)
   {
     if (IsAutopilotEnabled() != Enable)
     {
-      ConfigureAutopilot(Enable);
+      ConfigureAutopilot(Enable, KeepState);
     }
   }
 
@@ -146,7 +152,7 @@ public:
 
 private:
 
-  void ConfigureAutopilot(bool Enable);
+  void ConfigureAutopilot(const bool Enable, const bool KeepState = false);
 
   /// @}
   // ===========================================================================
@@ -203,20 +209,10 @@ public:
   void SetFixedRoute(const TArray<FVector> &Locations, bool bOverwriteCurrent = true);
 
   /// @}
-  // ===========================================================================
-  /// @name AI
-  // ===========================================================================
-  /// @{
-
-  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
-  const FVehicleControl &GetAutopilotControl() const
-  {
-    return AutopilotControl;
-  }
 
 private:
 
-  void TickAutopilotController();
+  FVehicleControl TickAutopilotController();
 
   /// Returns steering value.
   float GoToNextTargetLocation(FVector &Direction);
@@ -251,6 +247,9 @@ private:
   bool bAutopilotEnabled = false;
 
   UPROPERTY(VisibleAnywhere)
+  bool bControlIsSticky = true;
+
+  UPROPERTY(VisibleAnywhere)
   float SpeedLimit = 30.0f;
 
   UPROPERTY(VisibleAnywhere)
@@ -261,8 +260,6 @@ private:
 
   UPROPERTY()
   ATrafficLightBase *TrafficLight;
-
-  FVehicleControl AutopilotControl;
 
   std::queue<FVector> TargetLocations;
 };

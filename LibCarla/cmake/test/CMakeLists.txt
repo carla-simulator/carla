@@ -23,38 +23,60 @@ file(GLOB libcarla_test_sources
 
 file(GLOB libcarla_test_client_sources "")
 
+if (LIBCARLA_BUILD_DEBUG)
+  list(APPEND build_targets libcarla_test_${carla_config}_debug)
+endif()
+
+if (LIBCARLA_BUILD_RELEASE)
+  list(APPEND build_targets libcarla_test_${carla_config}_release)
+endif()
+
 # Create targets for debug and release in the same build type.
-foreach(target libcarla_test_${carla_config}_debug libcarla_test_${carla_config}_release)
-    add_executable(${target} ${libcarla_test_sources})
+foreach(target ${build_targets})
 
-    target_compile_definitions(${target} PUBLIC
-        -DLIBCARLA_ENABLE_PROFILER
-        -DLIBCARLA_WITH_GTEST)
+  add_executable(${target} ${libcarla_test_sources})
 
-    target_include_directories(${target} PRIVATE
-        "${BOOST_INCLUDE_PATH}"
-        "${RPCLIB_INCLUDE_PATH}"
-        "${GTEST_INCLUDE_PATH}"
-        "${libcarla_source_path}/test")
+  target_compile_definitions(${target} PUBLIC
+      -DLIBCARLA_ENABLE_PROFILER
+      -DLIBCARLA_WITH_GTEST)
 
-    if (WIN32)
-        target_link_libraries(${target} "gtest_main.lib")
-        target_link_libraries(${target} "gtest.lib")
-        target_link_libraries(${target} "rpc.lib")
-    else()
-        target_link_libraries(${target} "-lrpc")
-        target_link_libraries(${target} "-lgtest_main")
-        target_link_libraries(${target} "-lgtest")
-    endif()
+  target_include_directories(${target} SYSTEM PRIVATE
+      "${BOOST_INCLUDE_PATH}"
+      "${RPCLIB_INCLUDE_PATH}"
+      "${GTEST_INCLUDE_PATH}")
 
-    install(TARGETS ${target} DESTINATION test)
+  target_include_directories(${target} PRIVATE
+      "${libcarla_source_path}/test")
+
+  if (WIN32)
+      target_link_libraries(${target} "gtest_main.lib")
+      target_link_libraries(${target} "gtest.lib")
+      target_link_libraries(${target} "rpc.lib")
+  else()
+      target_link_libraries(${target} "-lrpc")
+      target_link_libraries(${target} "-lgtest_main")
+      target_link_libraries(${target} "-lgtest")
+  endif()
+
+  install(TARGETS ${target} DESTINATION test OPTIONAL)
 endforeach(target)
 
-# Specific options for debug.
-set_target_properties(libcarla_test_${carla_config}_debug PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-target_link_libraries(libcarla_test_${carla_config}_debug "carla_${carla_config}_debug")
-target_compile_definitions(libcarla_test_${carla_config}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+if (LIBCARLA_BUILD_DEBUG)
+  # Specific options for debug.
+  set_target_properties(libcarla_test_${carla_config}_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+  target_link_libraries(libcarla_test_${carla_config}_debug "carla_${carla_config}_debug")
+  target_compile_definitions(libcarla_test_${carla_config}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  if (CMAKE_BUILD_TYPE STREQUAL "Client")
+      target_link_libraries(libcarla_test_${carla_config}_debug "${BOOST_LIB_PATH}/libboost_filesystem.a")
+  endif()
+endif()
 
-# Specific options for release.
-set_target_properties(libcarla_test_${carla_config}_release PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-target_link_libraries(libcarla_test_${carla_config}_release "carla_${carla_config}")
+if (LIBCARLA_BUILD_RELEASE)
+  # Specific options for release.
+  set_target_properties(libcarla_test_${carla_config}_release PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+  target_link_libraries(libcarla_test_${carla_config}_release "carla_${carla_config}")
+  if (CMAKE_BUILD_TYPE STREQUAL "Client")
+      target_link_libraries(libcarla_test_${carla_config}_release "${BOOST_LIB_PATH}/libboost_filesystem.a")
+  endif()
+endif()
+

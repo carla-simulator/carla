@@ -8,14 +8,12 @@
 
 #include "Engine/GameInstance.h"
 
-#include "Carla/Game/CarlaGameControllerBase.h"
-#include "Carla/Game/DataRouter.h"
-#include "Carla/Server/TheNewCarlaServer.h"
+#include "Carla/Game/CarlaEngine.h"
+#include "Carla/Server/CarlaServer.h"
 
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
-struct FMockGameControllerSettings;
 
 /// The game instance contains elements that must be kept alive in between
 /// levels. It is instantiate once per game.
@@ -29,18 +27,6 @@ public:
   UCarlaGameInstance();
 
   ~UCarlaGameInstance();
-
-  void InitializeGameControllerIfNotPresent(
-      const FMockGameControllerSettings &MockControllerSettings);
-
-  /// Starts the Carla server if not already running.
-  void StartServer();
-
-  ICarlaGameControllerBase &GetGameController()
-  {
-    check(GameController != nullptr);
-    return *GameController;
-  }
 
   UCarlaSettings &GetCarlaSettings()
   {
@@ -64,50 +50,33 @@ public:
   UFUNCTION(BlueprintCallable)
   UCarlaEpisode *GetCarlaEpisode()
   {
-    return CurrentEpisode;
+    return CarlaEngine.GetCurrentEpisode();
   }
 
-  FDataRouter &GetDataRouter()
+  void NotifyInitGame()
   {
-    return DataRouter;
+    CarlaEngine.NotifyInitGame(GetCarlaSettings());
   }
 
   void NotifyBeginEpisode(UCarlaEpisode &Episode)
   {
-    CurrentEpisode = &Episode;
-    Server.NotifyBeginEpisode(Episode);
-  }
-
-  void Tick(float /*DeltaSeconds*/)
-  {
-    Server.RunSome(10u); /// @todo
+    CarlaEngine.NotifyBeginEpisode(Episode);
   }
 
   void NotifyEndEpisode()
   {
-    Server.NotifyEndEpisode();
-    CurrentEpisode = nullptr;
+    CarlaEngine.NotifyEndEpisode();
   }
 
-  const FTheNewCarlaServer &GetServer() const
+  const FCarlaServer &GetServer() const
   {
-    return Server;
+    return CarlaEngine.GetServer();
   }
 
 private:
 
-  UPROPERTY(VisibleAnywhere)
-  bool bServerIsRunning = false;
-
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
 
-  UPROPERTY()
-  UCarlaEpisode *CurrentEpisode = nullptr;
-
-  FDataRouter DataRouter;
-
-  TUniquePtr<ICarlaGameControllerBase> GameController;
-
-  FTheNewCarlaServer Server;
+  FCarlaEngine CarlaEngine;
 };

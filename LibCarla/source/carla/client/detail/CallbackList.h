@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "carla/AtomicSharedPtr.h"
+#include "carla/AtomicList.h"
 #include "carla/NonCopyable.h"
 
+#include <atomic>
 #include <functional>
-#include <vector>
 
 namespace carla {
 namespace client {
@@ -22,27 +22,50 @@ namespace detail {
 
     using CallbackType = std::function<void(InputsT...)>;
 
-    CallbackList() : _list(std::make_shared<ListType>()) {}
-
     void Call(InputsT... args) const {
-      auto list = _list.load();
-      for (auto &callback : *list) {
-        callback(args...);
+      auto list = _list.Load();
+      for (auto &item : *list) {
+        item.callback(args...);
       }
     }
 
-    /// @todo This function cannot be called concurrently.
-    void RegisterCallback(CallbackType callback) {
-      auto new_list = std::make_shared<ListType>(*_list.load());
-      new_list->emplace_back(std::move(callback));
-      _list = new_list;
+    size_t Push(CallbackType &&callback) {
+      auto id = ++_counter;
+      DEBUG_ASSERT(id != 0u);
+      _list.Push(Item{id, std::move(callback)});
+      return id;
+    }
+
+    void Remove(size_t id) {
+      _list.DeleteByValue(id);
+    }
+
+    void Clear() {
+      _list.Clear();
     }
 
   private:
 
-    using ListType = std::vector<CallbackType>;
+    struct Item {
+      size_t id;
+      CallbackType callback;
 
-    AtomicSharedPtr<const ListType> _list;
+      friend bool operator==(const Item &lhs, const Item &rhs) {
+        return lhs.id == rhs.id;
+      }
+
+      friend bool operator==(const Item &lhs, size_t rhs) {
+        return lhs.id == rhs;
+      }
+
+      friend bool operator==(size_t lhs, const Item &rhs) {
+        return lhs == rhs.id;
+      }
+    };
+
+    std::atomic_size_t _counter{0u};
+
+    AtomicList<Item> _list;
   };
 
 } // namespace detail

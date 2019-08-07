@@ -5,18 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "CarlaGameInstance.h"
+#include "Carla/Game/CarlaGameInstance.h"
 
-#include "Game/MockGameController.h"
-#include "Server/ServerGameController.h"
-#include "Settings/CarlaSettings.h"
-
-#include <thread>
-
-static uint32 GetNumberOfThreadsForRPCServer()
-{
-  return std::max(std::thread::hardware_concurrency(), 4u) - 2u;
-}
+#include "Carla/Settings/CarlaSettings.h"
 
 UCarlaGameInstance::UCarlaGameInstance() {
   CarlaSettings = CreateDefaultSubobject<UCarlaSettings>(TEXT("CarlaSettings"));
@@ -26,26 +17,3 @@ UCarlaGameInstance::UCarlaGameInstance() {
 }
 
 UCarlaGameInstance::~UCarlaGameInstance() = default;
-
-void UCarlaGameInstance::InitializeGameControllerIfNotPresent(
-    const FMockGameControllerSettings &MockControllerSettings)
-{
-  if (GameController == nullptr) {
-    if (CarlaSettings->bUseNetworking) {
-      GameController = MakeUnique<FServerGameController>(DataRouter);
-    } else {
-      GameController = MakeUnique<MockGameController>(DataRouter, MockControllerSettings);
-      UE_LOG(LogCarla, Log, TEXT("Using mock CARLA controller"));
-    }
-  }
-}
-
-void UCarlaGameInstance::StartServer()
-{
-  if (!bServerIsRunning)
-  {
-    Server.Start(CarlaSettings->WorldPort);
-    Server.AsyncRun(GetNumberOfThreadsForRPCServer());
-    bServerIsRunning = true;
-  }
-}

@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "Components/CapsuleComponent.h"
@@ -37,6 +38,23 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
         FVector Origin = {0.0f, 0.0f, 0.0f};
         FVector Extent = {Radius, Radius, HalfHeight};
         return {Origin, Extent};
+      }
+    }
+    // Traffic sign.
+    auto TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (TrafficSign != nullptr)
+    {
+      auto TriggerVolume = TrafficSign->GetTriggerVolume();
+      if (TriggerVolume != nullptr)
+      {
+        FVector Origin = TriggerVolume->GetRelativeTransform().GetTranslation();
+        FVector Extent = TriggerVolume->GetScaledBoxExtent();
+        return {Origin, Extent};
+      }
+      else
+      {
+        UE_LOG(LogCarla, Warning, TEXT("Traffic sign missing trigger volume: %s"), *Actor->GetName());
+        return {};
       }
     }
   }

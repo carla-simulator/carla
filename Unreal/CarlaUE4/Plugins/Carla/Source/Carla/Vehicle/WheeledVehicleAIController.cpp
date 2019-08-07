@@ -8,6 +8,7 @@
 #include "WheeledVehicleAIController.h"
 
 #include "MapGen/RoadMap.h"
+#include "Traffic/RoutePlanner.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 
 #include "EngineUtils.h"
@@ -93,12 +94,12 @@ AWheeledVehicleAIController::AWheeledVehicleAIController(const FObjectInitialize
 AWheeledVehicleAIController::~AWheeledVehicleAIController() {}
 
 // =============================================================================
-// -- APlayerController --------------------------------------------------------
+// -- AController --------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::Possess(APawn *aPawn)
+void AWheeledVehicleAIController::OnPossess(APawn *aPawn)
 {
-  Super::Possess(aPawn);
+  Super::OnPossess(aPawn);
 
   if (IsPossessingAVehicle())
   {
@@ -118,9 +119,9 @@ void AWheeledVehicleAIController::Possess(APawn *aPawn)
   }
 }
 
-void AWheeledVehicleAIController::UnPossess()
+void AWheeledVehicleAIController::OnUnPossess()
 {
-  Super::UnPossess();
+  Super::OnUnPossess();
 
   Vehicle = nullptr;
 }
@@ -134,33 +135,64 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
     return;
   }
 
-  TickAutopilotController();
-
   if (bAutopilotEnabled)
   {
-    Vehicle->ApplyVehicleControl(AutopilotControl);
+    Vehicle->ApplyVehicleControl(TickAutopilotController(), EVehicleInputPriority::Autopilot);
   }
+  else if (!bControlIsSticky)
+  {
+    Vehicle->ApplyVehicleControl(FVehicleControl{}, EVehicleInputPriority::Relaxation);
+  }
+
+  Vehicle->FlushVehicleControl();
 }
 
 // =============================================================================
 // -- Autopilot ----------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable)
+void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable, const bool KeepState)
 {
   bAutopilotEnabled = Enable;
-  // Reset state.
-  Vehicle->SetSteeringInput(0.0f);
-  Vehicle->SetThrottleInput(0.0f);
-  Vehicle->SetBrakeInput(0.0f);
-  Vehicle->SetReverse(false);
-  Vehicle->SetHandbrakeInput(false);
+  if (!KeepState)
+  {
+    // Reset state.
+    Vehicle->SetSteeringInput(0.0f);
+    Vehicle->SetThrottleInput(0.0f);
+    Vehicle->SetBrakeInput(0.0f);
+    Vehicle->SetReverse(false);
+    Vehicle->SetHandbrakeInput(false);
+    ClearQueue(TargetLocations);
+    Vehicle->SetAIVehicleState(
+        bAutopilotEnabled ?
+        ECarlaWheeledVehicleState::FreeDriving :
+        ECarlaWheeledVehicleState::AutopilotOff);
+  }
+
   TrafficLightState = ETrafficLightState::Green;
-  ClearQueue(TargetLocations);
-  Vehicle->SetAIVehicleState(
-      bAutopilotEnabled ?
-      ECarlaWheeledVehicleState::FreeDriving :
-      ECarlaWheeledVehicleState::AutopilotOff);
+
+  /// @todo Workaround for a race condition between client and server when
+  /// enabling autopilot right after initializing a vehicle.
+  if (bAutopilotEnabled)
+  {
+    for (TActorIterator<ARoutePlanner> It(GetWorld()); It; ++It)
+    {
+      ARoutePlanner *RoutePlanner = *It;
+      // Check if we are inside this route planner.
+      TSet<AActor *> OverlappingActors;
+      RoutePlanner->TriggerVolume->GetOverlappingActors(
+          OverlappingActors,
+          ACarlaWheeledVehicle::StaticClass());
+      for (auto *Actor : OverlappingActors)
+      {
+        if (Actor == Vehicle)
+        {
+          RoutePlanner->AssignRandomRoute(*this);
+          return;
+        }
+      }
+    }
+  }
 }
 
 // =============================================================================
@@ -185,13 +217,13 @@ void AWheeledVehicleAIController::SetFixedRoute(
 // -- AI -----------------------------------------------------------------------
 // =============================================================================
 
-void AWheeledVehicleAIController::TickAutopilotController()
+FVehicleControl AWheeledVehicleAIController::TickAutopilotController()
 {
 #if WITH_EDITOR // This happens in simulation mode in editor.
   if (Vehicle == nullptr)
   {
     bAutopilotEnabled = false;
-    return;
+    return {};
   }
 #endif // WITH_EDITOR
 
@@ -229,6 +261,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
     Throttle = Move(Speed);
   }
 
+  FVehicleControl AutopilotControl;
+
   if (Throttle < 0.001f)
   {
     AutopilotControl.Brake = 1.0f;
@@ -240,6 +274,8 @@ void AWheeledVehicleAIController::TickAutopilotController()
     AutopilotControl.Throttle = Throttle;
   }
   AutopilotControl.Steer = Steering;
+
+  return AutopilotControl;
 }
 
 float AWheeledVehicleAIController::GoToNextTargetLocation(FVector &Direction)

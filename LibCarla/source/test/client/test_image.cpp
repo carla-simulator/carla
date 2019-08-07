@@ -27,16 +27,18 @@ static auto MakeTestImage(size_t width, size_t height) {
       width,
       height,
       reinterpret_cast<PixelT*>(data.get()),
-      sizeof(PixelT) * width);
+      static_cast<long>(sizeof(PixelT) * width));
   return TestImage<decltype(view), PixelT>{std::move(data), view};
 }
 
+#ifndef PLATFORM_WINDOWS
 TEST(image, support) {
   using namespace carla::image::io;
   carla::logging::log("PNG  support =", has_png_support());
   carla::logging::log("JPEG support =", has_jpeg_support());
   carla::logging::log("TIFF support =", has_tiff_support());
 }
+#endif // PLATFORM_WINDOWS
 
 TEST(image, depth) {
 #ifndef NDEBUG
@@ -75,9 +77,9 @@ TEST(image, depth) {
         for (auto b = 0u; b < 256u; ++b) {
           decltype(img_bgra8)::pixel_type &p_bgra8 = *it_bgra8;
           decltype(img_gray8)::pixel_type &p_gray8 = *it_gray8;
-          get_color(p_bgra8, red_t()) = r;
-          get_color(p_bgra8, green_t()) = g;
-          get_color(p_bgra8, blue_t()) = b;
+          get_color(p_bgra8, red_t()) = static_cast<uint8_t>(r);
+          get_color(p_bgra8, green_t()) = static_cast<uint8_t>(g);
+          get_color(p_bgra8, blue_t()) = static_cast<uint8_t>(b);
           const float depth = r + (g * 256) + (b  * 256 * 256);
           const float normalized = depth / static_cast<float>(256 * 256 * 256 - 1);
           p_gray8[0] = static_cast<uint8_t>(255.0 * normalized);
@@ -144,11 +146,11 @@ TEST(image, semantic_segmentation) {
 
     for (auto tag = 0u; tag < width; ++tag) {
       decltype(img_bgra8)::pixel_type &p_bgra8 = *it_bgra8;
-      get_color(p_bgra8, red_t()) = tag;
+      get_color(p_bgra8, red_t()) = static_cast<uint8_t>(tag);
       get_color(p_bgra8, green_t()) = 0u;
       get_color(p_bgra8, blue_t()) = 0u;
       decltype(img_ss)::pixel_type &p_ss = *it_ss;
-      auto color = CityScapesPalette::GetColor(tag);
+      auto color = CityScapesPalette::GetColor(static_cast<uint8_t>(tag));
       get_color(p_ss, red_t()) =  color[0u];
       get_color(p_ss, green_t()) = color[1u];
       get_color(p_ss, blue_t()) = color[2u];

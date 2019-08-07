@@ -20,7 +20,7 @@ namespace detail {
     using StreamStateBase::StreamStateBase;
 
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    void Write(Buffers &&... buffers) {
       auto session = _session.load();
       if (session != nullptr) {
         session->Write(std::move(buffers)...);

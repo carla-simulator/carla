@@ -4,166 +4,212 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "LaneParser.h"
+#include "carla/opendrive/parser/LaneParser.h"
 
-void carla::opendrive::parser::LaneParser::ParseLane(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LaneInfo> &out_lane) {
-  for (pugi::xml_node lane = xmlNode.child("lane"); lane; lane = lane.next_sibling("lane")) {
-    carla::opendrive::types::LaneInfo currentLane;
+#include "carla/road/MapBuilder.h"
 
-    currentLane.attributes.type = lane.attribute("type").value();
-    currentLane.attributes.level = lane.attribute("level").value();
-    currentLane.attributes.id = std::atoi(lane.attribute("id").value());
+#include <pugixml/pugixml.hpp>
 
-    ParseLaneSpeed(lane, currentLane.lane_speed);
-    ParseLaneWidth(lane, currentLane.lane_width);
+namespace carla {
+namespace opendrive {
+namespace parser {
 
-    ParseLaneLink(lane.child("link"), currentLane.link);
-    ParseLaneRoadMark(lane.child("roadMark"), currentLane.road_marker);
+  static void ParseLanes(
+      road::RoadId road_id,
+      double s,
+      const pugi::xml_node &parent_node,
+      carla::road::MapBuilder &map_builder) {
+    for (pugi::xml_node lane_node : parent_node.children("lane")) {
 
-    out_lane.emplace_back(std::move(currentLane));
+      road::LaneId lane_id = lane_node.attribute("id").as_int();
+
+      road::Lane *lane = map_builder.GetLane(road_id, lane_id, s);
+
+      // Lane Width
+      for (pugi::xml_node lane_width_node : lane_node.children("width")) {
+        const double s_offset = lane_width_node.attribute("sOffset").as_double();
+        const double a = lane_width_node.attribute("a").as_double();
+        const double b = lane_width_node.attribute("b").as_double();
+        const double c = lane_width_node.attribute("c").as_double();
+        const double d = lane_width_node.attribute("d").as_double();
+
+        // Call Map builder create Lane Width function
+        map_builder.CreateLaneWidth(lane, s_offset + s, a, b, c, d);
+      }
+
+      // Lane Border
+      for (pugi::xml_node lane_border_node : lane_node.children("border")) {
+        const double s_offset = lane_border_node.attribute("sOffset").as_double();
+        const double a = lane_border_node.attribute("a").as_double();
+        const double b = lane_border_node.attribute("b").as_double();
+        const double c = lane_border_node.attribute("c").as_double();
+        const double d = lane_border_node.attribute("d").as_double();
+
+        // Call Map builder create Lane Border function
+        map_builder.CreateLaneBorder(lane, s_offset + s, a, b, c, d);
+      }
+
+      // Lane Road Mark
+      int road_mark_id = 0;
+      for (pugi::xml_node lane_road_mark : lane_node.children("roadMark")) {
+        pugi::xml_node road_mark_type;
+        {
+          const double s_offset = lane_road_mark.attribute("sOffset").as_double();
+          const std::string type = lane_road_mark.attribute("type").value();
+          const std::string weight = lane_road_mark.attribute("weight").value();
+          const std::string color = lane_road_mark.attribute("color").value();
+          const std::string material = lane_road_mark.attribute("material").value();
+          const double width = lane_road_mark.attribute("width").as_double();
+          const std::string lane_change = lane_road_mark.attribute("laneChange").value();
+          const double height = lane_road_mark.attribute("height").as_double();
+
+          // Call map builder for LaneRoadMarkType
+
+          std::string type_name = "";
+          double type_width = 0.0;
+          road_mark_type = lane_road_mark.child("type");
+          if (road_mark_type) {
+            type_name = road_mark_type.attribute("name").value();
+            type_width = road_mark_type.attribute("width").as_double();
+          }
+
+          // Call map builder for LaneRoadMark
+          map_builder.CreateRoadMark(
+              lane,
+              road_mark_id,
+              s_offset + s,
+              type,
+              weight,
+              color,
+              material,
+              width,
+              lane_change,
+              height,
+              type_name,
+              type_width);
+        }
+
+        for (pugi::xml_node road_mark_type_line_node : road_mark_type.children("line")) {
+
+          const double length = road_mark_type_line_node.attribute("length").as_double();
+          const double space = road_mark_type_line_node.attribute("space").as_double();
+          const double t = road_mark_type_line_node.attribute("tOffset").as_double();
+          const double s_offset = road_mark_type_line_node.attribute("sOffset").as_double();
+          const std::string rule = road_mark_type_line_node.attribute("rule").value();
+          const double width = road_mark_type_line_node.attribute("width").as_double();
+
+          // Call map builder for LaneRoadMarkType LaneRoadMarkTypeLine
+          map_builder.CreateRoadMarkTypeLine(
+              lane,
+              road_mark_id,
+              length,
+              space,
+              t,
+              s_offset + s,
+              rule,
+              width);
+        }
+        ++road_mark_id;
+      }
+
+      // Lane Material
+      for (pugi::xml_node lane_material_node : lane_node.children("material")) {
+
+        const double s_offset = lane_material_node.attribute("sOffset").as_double();
+        const std::string surface = lane_material_node.attribute("surface").value();
+        const double friction = lane_material_node.attribute("friction").as_double();
+        const double roughness = lane_material_node.attribute("roughness").as_double();
+
+        // Create map builder for Lane Material
+        map_builder.CreateLaneMaterial(lane, s_offset + s, surface, friction, roughness);
+      }
+
+      // Lane Visibility
+      for (pugi::xml_node lane_visibility_node : lane_node.children("visibility")) {
+        const double s_offset = lane_visibility_node.attribute("sOffset").as_double();
+        const double forward = lane_visibility_node.attribute("forward").as_double();
+        const double back = lane_visibility_node.attribute("back").as_double();
+        const double left = lane_visibility_node.attribute("left").as_double();
+        const double right = lane_visibility_node.attribute("right").as_double();
+
+        // Create map builder for Lane Visibility
+        map_builder.CreateLaneVisibility(lane, s_offset + s, forward, back, left, right);
+      }
+
+      // Lane Speed
+      for (pugi::xml_node lane_speed_node : lane_node.children("speed")) {
+        const double s_offset = lane_speed_node.attribute("sOffset").as_double();
+        const double max = lane_speed_node.attribute("max").as_double();
+        std::string unit = lane_speed_node.attribute("unit").value();
+
+        // Create map builder for Lane Speed
+        map_builder.CreateLaneSpeed(lane, s_offset + s, max, unit);
+      }
+
+      // Lane Access
+      for (pugi::xml_node lane_access_node : lane_node.children("access")) {
+        const double s_offset = lane_access_node.attribute("sOffset").as_double();
+        const std::string restriction = lane_access_node.attribute("restriction").value();
+
+        // Create map builder for Lane Access
+        map_builder.CreateLaneAccess(lane, s_offset + s, restriction);
+      }
+
+      // Lane Height
+      for (pugi::xml_node lane_height_node : lane_node.children("height")) {
+        const double s_offset = lane_height_node.attribute("sOffset").as_double();
+        const double inner = lane_height_node.attribute("inner").as_double();
+        const double outer = lane_height_node.attribute("outer").as_double();
+
+        // Create map builder for Lane Height
+        map_builder.CreateLaneHeight(lane, s_offset + s, inner, outer);
+      }
+
+      // Lane Rule
+      for (pugi::xml_node lane_rule_node : lane_node.children("rule")) {
+        const double s_offset = lane_rule_node.attribute("sOffset").as_double();
+        const std::string value = lane_rule_node.attribute("value").value();
+
+        // Create map builder for Lane Height
+        map_builder.CreateLaneRule(lane, s_offset + s, value);
+      }
+
+    }
   }
-}
 
-void carla::opendrive::parser::LaneParser::ParseLaneWidth(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LaneWidth> &out_lane_width) {
-  for (pugi::xml_node laneWidth = xmlNode.child("width");
-      laneWidth;
-      laneWidth = laneWidth.next_sibling("width")) {
-    carla::opendrive::types::LaneWidth laneWidthInfo;
+  void LaneParser::Parse(
+      const pugi::xml_document &xml,
+      carla::road::MapBuilder &map_builder) {
 
-    laneWidthInfo.soffset = std::stod(laneWidth.attribute("sOffset").value());
+    pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
-    laneWidthInfo.width = std::stod(laneWidth.attribute("a").value());
-    laneWidthInfo.slope = std::stod(laneWidth.attribute("b").value());
+    // Lanes
+    for (pugi::xml_node road_node : open_drive_node.children("road")) {
+      road::RoadId road_id = road_node.attribute("id").as_uint();
 
-    laneWidthInfo.vertical_curvature = std::stod(laneWidth.attribute("c").value());
-    laneWidthInfo.curvature_change = std::stod(laneWidth.attribute("d").value());
+      for (pugi::xml_node lanes_node : road_node.children("lanes")) {
 
-    out_lane_width.emplace_back(laneWidthInfo);
-  }
-}
+        for (pugi::xml_node lane_section_node : lanes_node.children("laneSection")) {
+          double s = lane_section_node.attribute("s").as_double();
+          pugi::xml_node left_node = lane_section_node.child("left");
+          if (left_node) {
+            ParseLanes(road_id, s, left_node, map_builder);
+          }
 
-void carla::opendrive::parser::LaneParser::ParseLaneLink(
-    const pugi::xml_node &xmlNode,
-    std::unique_ptr<carla::opendrive::types::LaneLink> &out_lane_link) {
-  const pugi::xml_node predecessorNode = xmlNode.child("predecessor");
-  const pugi::xml_node successorNode = xmlNode.child("successor");
+          pugi::xml_node center_node = lane_section_node.child("center");
+          if (center_node) {
+            ParseLanes(road_id, s, center_node, map_builder);
+          }
 
-  out_lane_link =
-      (predecessorNode || successorNode) ? std::make_unique<opendrive::types::LaneLink>() : nullptr;
-  if (out_lane_link == nullptr) {
-    return;
-  }
-
-  out_lane_link->predecessor_id = predecessorNode ? std::atoi(predecessorNode.attribute("id").value()) : 0;
-  out_lane_link->successor_id = successorNode ? std::atoi(successorNode.attribute("id").value()) : 0;
-}
-
-void carla::opendrive::parser::LaneParser::ParseLaneOffset(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LaneOffset> &out_lane_offset) {
-  carla::opendrive::types::LaneOffset lanesOffset;
-
-  lanesOffset.s = std::stod(xmlNode.attribute("s").value());
-  lanesOffset.a = std::stod(xmlNode.attribute("a").value());
-  lanesOffset.b = std::stod(xmlNode.attribute("b").value());
-  lanesOffset.c = std::stod(xmlNode.attribute("c").value());
-  lanesOffset.d = std::stod(xmlNode.attribute("d").value());
-
-  out_lane_offset.emplace_back(lanesOffset);
-}
-
-void carla::opendrive::parser::LaneParser::ParseLaneRoadMark(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LaneRoadMark> &out_lane_mark) {
-  if (xmlNode == nullptr) {
-    return;
-  }
-  carla::opendrive::types::LaneRoadMark roadMarker;
-
-  if (xmlNode.attribute("sOffset") != nullptr) {
-    roadMarker.soffset = std::stod(xmlNode.attribute("sOffset").value());
-  } else {
-    roadMarker.soffset = 0.0;
+          pugi::xml_node right_node = lane_section_node.child("right");
+          if (right_node) {
+            ParseLanes(road_id, s, right_node, map_builder);
+          }
+        }
+      }
+    }
   }
 
-  if (xmlNode.attribute("width") != nullptr) {
-    roadMarker.width = std::stod(xmlNode.attribute("width").value());
-  } else {
-    roadMarker.width = 0.0;
-  }
-
-  if (xmlNode.attribute("type") != nullptr) {
-    roadMarker.type = xmlNode.attribute("type").value();
-  } else {
-    roadMarker.type = "";
-  }
-
-  if (xmlNode.attribute("weight") != nullptr) {
-    roadMarker.weigth = xmlNode.attribute("weight").value();
-  } else {
-    roadMarker.weigth = "";
-  }
-
-  if (xmlNode.attribute("color") != nullptr) {
-    roadMarker.color = xmlNode.attribute("color").value();
-  } else {
-    roadMarker.color = "";
-  }
-
-  if (xmlNode.attribute("laneChange") != nullptr) {
-    roadMarker.lange_change = xmlNode.attribute("laneChange").value();
-  } else {
-    roadMarker.lange_change = "";
-  }
-
-  out_lane_mark.emplace_back(roadMarker);
-}
-
-void carla::opendrive::parser::LaneParser::ParseLaneSpeed(
-    const pugi::xml_node &xmlNode,
-    std::vector<carla::opendrive::types::LaneSpeed> &out_lane_speed) {
-  for (pugi::xml_node laneSpeed = xmlNode.child("speed");
-      laneSpeed;
-      laneSpeed = laneSpeed.next_sibling("speed")) {
-    carla::opendrive::types::LaneSpeed lane_speed = { 0.0, 0.0 };
-
-    lane_speed.soffset = std::stod(laneSpeed.attribute("sOffset").value());
-    lane_speed.max_speed = std::stod(laneSpeed.attribute("max").value());
-
-    out_lane_speed.emplace_back(lane_speed);
-  }
-}
-
-void carla::opendrive::parser::LaneParser::Parse(
-    const pugi::xml_node &xmlNode,
-    carla::opendrive::types::Lanes &out_lanes) {
-  carla::opendrive::parser::LaneParser laneParser;
-
-  for (pugi::xml_node laneSection = xmlNode.child("laneOffset");
-      laneSection;
-      laneSection = laneSection.next_sibling("laneOffset")) {
-    laneParser.ParseLaneOffset(xmlNode.child("laneOffset"), out_lanes.lane_offset);
-  }
-
-  for (pugi::xml_node laneSection = xmlNode.child("laneSection");
-      laneSection;
-      laneSection = laneSection.next_sibling("laneSection")) {
-    carla::opendrive::types::LaneSection laneSec;
-    laneSec.start_position = std::stod(laneSection.attribute("s").value());
-
-    pugi::xml_node lane = laneSection.child("left");
-    laneParser.ParseLane(lane, laneSec.left);
-
-    lane = laneSection.child("center");
-    laneParser.ParseLane(lane, laneSec.center);
-
-    lane = laneSection.child("right");
-    laneParser.ParseLane(lane, laneSec.right);
-
-    out_lanes.lane_sections.emplace_back(std::move(laneSec));
-  }
-}
+} // namespace parser
+} // namespace opendrive
+} // namespace carla

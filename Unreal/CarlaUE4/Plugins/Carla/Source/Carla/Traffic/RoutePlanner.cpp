@@ -99,7 +99,7 @@ void ARoutePlanner::AddRoute(float probability, const TArray<FVector> &routePoin
   NewSpline->bHiddenInGame = true;
 
   #if WITH_EDITOR
-  NewSpline->EditorUnselectedSplineSegmentColor = FLinearColor(0.15f, 0.15f, 0.15f);
+  NewSpline->EditorUnselectedSplineSegmentColor = FLinearColor(1.f, 0.15f, 0.15f);
   #endif // WITH_EDITOR
 
   NewSpline->SetLocationAtSplinePoint(0, routePoints[0], ESplineCoordinateSpace::World, true);
@@ -118,6 +118,33 @@ void ARoutePlanner::CleanRoute()
 {
   Routes.Empty();
   Probabilities.Empty();
+}
+
+void ARoutePlanner::AssignRandomRoute(AWheeledVehicleAIController &Controller) const
+{
+  if (!Controller.IsPendingKill() && (Controller.GetRandomEngine() != nullptr))
+  {
+    auto *RandomEngine = Controller.GetRandomEngine();
+    auto *Route = PickARoute(*RandomEngine, Routes, Probabilities);
+
+    TArray<FVector> WayPoints;
+    const auto Size = Route->GetNumberOfSplinePoints();
+    if (Size > 1)
+    {
+      WayPoints.Reserve(Size);
+      for (auto i = 1; i < Size; ++i)
+      {
+        WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
+      }
+
+      Controller.SetFixedRoute(WayPoints);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
+    }
+  }
+
 }
 
 void ARoutePlanner::Init()
@@ -170,27 +197,9 @@ void ARoutePlanner::OnTriggerBeginOverlap(
     const FHitResult & /*SweepResult*/)
 {
   auto *Controller = GetVehicleController(OtherActor);
-  auto *RandomEngine = (Controller != nullptr ? Controller->GetRandomEngine() : nullptr);
-  if (RandomEngine != nullptr)
+  if (Controller != nullptr)
   {
-    auto *Route = PickARoute(*RandomEngine, Routes, Probabilities);
-
-    TArray<FVector> WayPoints;
-    const auto Size = Route->GetNumberOfSplinePoints();
-    if (Size > 1)
-    {
-      WayPoints.Reserve(Size);
-      for (auto i = 1; i < Size; ++i)
-      {
-        WayPoints.Add(Route->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World));
-      }
-
-      Controller->SetFixedRoute(WayPoints);
-    }
-    else
-    {
-      UE_LOG(LogCarla, Error, TEXT("ARoutePlanner '%s' has a route with zero way-points."), *GetName());
-    }
+    AssignRandomRoute(*Controller);
   }
 }
 
