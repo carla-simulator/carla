@@ -170,17 +170,17 @@
     - var_name: ratio
       type: float
       doc: >
-        Gear ratio.
+        The transmission ratio of the gear.
     # --------------------------------------
     - var_name: down_ratio
       type: float
       doc: >
-        Lower limit to gear down.
+        The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.
     # --------------------------------------
     - var_name: up_ratio
       type: float
       doc: >
-        Upper limit to gear up.
+        The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
