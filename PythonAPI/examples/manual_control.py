@@ -24,7 +24,7 @@ Use ARROWS or WASD keys for control.
     ,/.          : gear up/down
 
     TAB          : change sensor position
-    `            : next sensor
+    N            : next sensor
     [1-9]        : change to sensor [1-9]
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
@@ -86,7 +86,6 @@ try:
     from pygame.locals import KMOD_SHIFT
     from pygame.locals import K_0
     from pygame.locals import K_9
-    from pygame.locals import K_BACKQUOTE
     from pygame.locals import K_BACKSPACE
     from pygame.locals import K_COMMA
     from pygame.locals import K_DOWN
@@ -104,6 +103,7 @@ try:
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_m
+    from pygame.locals import K_n
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
@@ -268,7 +268,7 @@ class KeyboardControl(object):
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
-                elif event.key == K_BACKQUOTE:
+                elif event.key == K_n:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
