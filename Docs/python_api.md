@@ -1154,11 +1154,11 @@ Class that provides access to vehicle transmission details.
 
 <h3>Instance Variables</h3>
 - <a name="carla.GearPhysicsControl.ratio"></a>**<font color="#f8805a">ratio</font>** (_float_)  
-Gear ratio.  
+The transmission ratio of the gear.  
 - <a name="carla.GearPhysicsControl.down_ratio"></a>**<font color="#f8805a">down_ratio</font>** (_float_)  
-Lower limit to gear down.  
+The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.  
 - <a name="carla.GearPhysicsControl.up_ratio"></a>**<font color="#f8805a">up_ratio</font>** (_float_)  
-Upper limit to gear up.  
+The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.  
 
 <h3>Methods</h3>
 - <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  
