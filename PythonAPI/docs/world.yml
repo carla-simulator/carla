@@ -6,6 +6,7 @@
   - class_name: Timestamp
     # - DESCRIPTION ------------------------
     doc: >
+      Class that contains Timestamp simulated data.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
@@ -66,16 +67,21 @@
       - param_name: actor_id
         type: int
       doc: >
+        Find an actor by ID.
     # --------------------------------------
     - def_name: filter
       params:
       - param_name: wildcard_pattern
         type: str
       doc: >
+        Filters a list of Actors with type_id matching wildcard_pattern.
+      note: >
+         The wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
     # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
+        type: int
       doc: >
     # --------------------------------------
     - def_name: __len__
@@ -91,7 +97,8 @@
   - class_name: WorldSettings
     # - DESCRIPTION ------------------------
     doc: >
-      More information in our [section](../configuring_the_simulation/)
+      Class that provides access to modifiable world settings.
+      Check it out in our [section](../configuring_the_simulation/)
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: synchronous_mode
@@ -140,19 +147,21 @@
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the attachment options. See 
-      [`world.spawn_actor`](#carla.World.spawn_actor)
+      Class that defines the attachment options. See carla.World.spawn_actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
       doc: >
+        Standard fixed attachment.
     - var_name: SpringArm
       doc: >
+        Attachment that expands or retracts based on camera situation.
     # --------------------------------------
 
   - class_name: World
     # - DESCRIPTION ------------------------
     doc: >
+      Class that contains the current loaded map.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -306,6 +315,7 @@
     # - DESCRIPTION ------------------------
     doc: >
       Class that provides drawing debug shapes.
+      Check out this [`example`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/lane_explorer.py)
     # - METHODS ----------------------------
     methods:
     - def_name: draw_point
@@ -325,8 +335,9 @@
         type: bool
         default: True
         doc: >
-          _Deprecated, use `life_time=0` instead_
+          _Deprecated, use `life_time = 0` instead_
       doc: >
+        Draws a point in the given location.
     # --------------------------------------
     - def_name: draw_line
       params:
@@ -347,8 +358,9 @@
         type: bool
         default: True
         doc: >
-          _Deprecated, use `life_time=0` instead_
+          _Deprecated, use `life_time = 0` instead_
       doc: >
+        Draws a line between two given locations.
     # --------------------------------------
     - def_name: draw_arrow
       params:
@@ -372,8 +384,10 @@
         type: bool
         default: True
         doc: >
-          _Deprecated, use `life_time=0` instead_
+          _Deprecated, use `life_time = 0` instead_
       doc: >
+        Draws an arrow between two given locations.
+
     # --------------------------------------
     - def_name: draw_box
       params:
@@ -394,8 +408,9 @@
         type: bool
         default: True
         doc: >
-          _Deprecated, use `life_time=0` instead_
+          _Deprecated, use `life_time = 0` instead_
       doc: >
+        Draws the carla.BoundingBox of a given bounding_box.
     # --------------------------------------
     - def_name: draw_string
       params: 
@@ -418,5 +433,8 @@
         doc: >
           _Deprecated, set a high `life_time` instead_
       doc: >
+        Draws a string in a given location.
+      note: >
+        Strings can only be seen on the server-side.
     # --------------------------------------
 ...
