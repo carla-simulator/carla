@@ -575,7 +575,7 @@ _</font>
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).<br> Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!.  
+Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).<br> Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
@@ -612,7 +612,7 @@ _</font>
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a> <sub><sup>_class_</sup></sub>
-Class that defines the color converter options. Check out this [`recipe`](../python_cookbook/#converted-image-recipe)!.  
+Class that defines the color converter options. Check out this [`recipe`](../python_cookbook/#converted-image-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
@@ -654,7 +654,7 @@ Draws an arrow between two given locations.
         - `life_time` (_float_)  
         - `persistent_lines` (_bool_) – _Deprecated, use `life_time = 0` instead_.  
 - <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
-Draws the [carla.BoundingBox](#carla.BoundingBox) of a given bounding_box.<br> Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!.  
+Draws the [carla.BoundingBox](#carla.BoundingBox) of a given bounding_box.<br> Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
@@ -677,7 +677,7 @@ _</font>
 ---
 
 ## carla.LaneChange<a name="carla.LaneChange"></a> <sub><sup>_class_</sup></sub>
-Class that defines the lane change options. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!.  
+Class that defines the lane change options. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneChange.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -722,7 +722,7 @@ White by default.
 ---
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the lane marking types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!.  
+Class that defines the lane marking types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -745,7 +745,7 @@ Grass edge.
 ---
 
 ## carla.LaneType<a name="carla.LaneType"></a> <sub><sup>_class_</sup></sub>
-All the possible lane types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!.  
+All the possible lane types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -787,7 +787,7 @@ Sensor's transform when the data was generated.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a> <sub><sup>_class_</sup></sub>
-All possible states for traffic lights. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!.  
+All possible states for traffic lights. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Red"></a>**<font color="#f8805a">Red</font>**  
@@ -2016,7 +2016,7 @@ Stops listening for data.
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a><sub><sup>([carla.TrafficSign](#carla.TrafficSign))</sup></sub> <sub><sup>_class_</sup></sub>
-A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!.  
+A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
