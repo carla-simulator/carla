@@ -3,7 +3,7 @@
 ![Client window](img/client_window.png)
 
 Sensors are a special type of actor able to measure and stream data. All the
-sensors have a `listen` method that registers the callback function that will
+sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the callback function that will
 be called each time the sensor produces a new measurement. Sensors are typically
 attached to vehicles and produce data either each simulation update, or when a
 certain event is registered.
