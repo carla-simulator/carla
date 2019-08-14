@@ -170,6 +170,49 @@ for actor_snapshot in world_snapshot:
 
 ![debug_bb_recipe](/img/debug_bb_recipe.png)
 
+## Debug Vehicle Trail Recipe
+
+This recipe is a modification of [`lane_explorer.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/lane_explorer.py) example.
+It draws the path of an actor through the world, printing information at each waypoint.
+
+Focused on:<br>
+[`carla.DebugHelper`](../python_api/#carla.DebugHelper)<br>
+[`carla.Waypoint`](../python_api/#carla.Waypoint)<br>
+[`carla.Actor`](../python_api/#carla.Actor)
+
+Used:<br>
+[`carla.ActorSnapshot`](../python_api/#carla.ActorSnapshot)<br>
+[`carla.Vector3D`](../python_api/#carla.Vector3D)<br>
+[`carla.Color`](../python_api/#carla.Color)<br>
+[`carla.Map`](../python_api/#carla.Map)
+
+```py
+# ...
+current_w = map.get_waypoint(vehicle.get_location())
+while True:
+
+    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
+    # Check if vehicle is moving
+    if next_w.id != current_w.id:
+        vector = vehicle.get_velocity()
+        # Check if the vehicle is on a sidewalk
+        if current_w.lane_type == carla.LaneType.Sidewalk:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+        else:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+        draw_transform(debug, current_w.transform, white, 60)
+
+    # Update the current waypoint and sleep for some time
+    current_w = next_w
+    time.sleep(args.tick_time)
+# ...
+```
+
+The image below shows how a vehicle loses control and drives on a sidewalk. The trail shows the path it was following and the speed at each waypoint.
+
+![debug_trail_recipe](/img/debug_trail_recipe.png)
+
 ## Traffic lights Recipe
 
 This recipe changes from red to green the traffic light that affects the vehicle.
