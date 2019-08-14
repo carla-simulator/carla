@@ -90,15 +90,19 @@
     - var_name: id
       type: str
       doc: >
+        String identifier of the attribute
     - var_name: type
       type: carla.ActorAttributeType
       doc: >
+        The attribute parameter type
     - var_name: recommended_values
       type: list(str)
       doc: >
+        List of recommended values that the attribute may have.
     - var_name: is_modifiable
       type: bool
       doc: >
+        True if the attribute is modifiable.
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
@@ -156,9 +160,11 @@
     - var_name: id
       type: str
       doc: >
+        Actor blueprint identifier, e.g. `walker.pedestrian.0001`.
     - var_name: tags
       type: list(str)
       doc: >
+        List of tags of an actor blueprint e.g. `['0001', 'pedestrian', 'walker']`
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
@@ -166,7 +172,10 @@
       params:
       - param_name: tag
         type: str
+        doc: >
+          e.g. 'walker'
       doc: >
+        Returns `true` if an actor blueprint has the tag.
     # --------------------------------------
     - def_name: match_tags
       return: bool
@@ -183,7 +192,10 @@
       params:
       - param_name: id
         type: str
+        doc: >
+          e.g 'gender'
       doc: >
+        Returns `true` if the blueprint contains the specified attribute
     # --------------------------------------
     - def_name: get_attribute
       return: carla.ActorAttribute 
@@ -191,6 +203,7 @@
       - param_name: id
         type: str
       doc: >
+        Returns the current actor attribute through its id
       Return: carla.ActorAttribute
     # --------------------------------------
     - def_name: set_attribute
@@ -203,6 +216,9 @@
         type: str
         doc: >
       doc: >
+        Sets an existing attribute to the actor's blueprint
+      note: >
+        Attribute can only be set or changed if it is modifiable
     # --------------------------------------
     - def_name: __len__
       doc: >
@@ -221,7 +237,12 @@
     # - METHODS ----------------------------
     methods:
     - def_name: find
+      params:
+      - param_name: id
+        type: str
+      return: carla.ActorBlueprint
       doc: >
+        Returns a carla.ActorBlueprint through its id
     # --------------------------------------
     - def_name: filter
       params:

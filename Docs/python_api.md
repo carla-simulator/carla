@@ -17,7 +17,7 @@
         - [**Rigid**](#carla.AttachmentType.Rigid) <sub>_Instance variable_</sub>
         - [**SpringArm**](#carla.AttachmentType.SpringArm) <sub>_Instance variable_</sub>
     - [**BlueprintLibrary**](#carla.BlueprintLibrary) <sub>_Class_</sub>  
-        - [**find**(**self**)](#carla.BlueprintLibrary.find) <sub>_Method_</sub>
+        - [**find**(**self**, **id**)](#carla.BlueprintLibrary.find) <sub>_Method_</sub>
         - [**filter**(**self**, **wildcard_pattern**)](#carla.BlueprintLibrary.filter) <sub>_Method_</sub>
         - [**\__getitem__**(**self**, **pos**)](#carla.BlueprintLibrary.__getitem__) <sub>_Method_</sub>
         - [**\__len__**(**self**)](#carla.BlueprintLibrary.__len__) <sub>_Method_</sub>
@@ -575,7 +575,7 @@ _</font>
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).  
+Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).<br> Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
@@ -589,7 +589,11 @@ Attachment that expands or retracts based on camera situation.
 Class that provides access to [blueprints](../bp_library/).  
 
 <h3>Methods</h3>
-- <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+Returns a [carla.ActorBlueprint](#carla.ActorBlueprint) through its id.  
+    - **Parameters:**
+        - `id` (_str_)  
+    - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 - <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
 Filters a list of ActorBlueprint with id or tags matching wildcard_pattern. The pattern is matched against each blueprint's id and tags.  
     - **Parameters:**
@@ -608,7 +612,7 @@ _</font>
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a> <sub><sup>_class_</sup></sub>
-Class that defines the color converter options.  
+Class that defines the color converter options. Check out this [`recipe`](../python_cookbook/#converted-image-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
@@ -650,7 +654,7 @@ Draws an arrow between two given locations.
         - `life_time` (_float_)  
         - `persistent_lines` (_bool_) – _Deprecated, use `life_time = 0` instead_.  
 - <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>, <font color="#00a6ed">**persistent_lines**=True</font>)  
-Draws the [carla.BoundingBox](#carla.BoundingBox) of a given bounding_box.  
+Draws the [carla.BoundingBox](#carla.BoundingBox) of a given bounding_box.<br> Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
@@ -673,7 +677,7 @@ _</font>
 ---
 
 ## carla.LaneChange<a name="carla.LaneChange"></a> <sub><sup>_class_</sup></sub>
-Class that defines the lane change options.  
+Class that defines the lane change options. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneChange.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -718,7 +722,7 @@ White by default.
 ---
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the lane marking types that OpenDRIVE accepts.  
+Class that defines the lane marking types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -741,7 +745,7 @@ Grass edge.
 ---
 
 ## carla.LaneType<a name="carla.LaneType"></a> <sub><sup>_class_</sup></sub>
-All the possible lane types that OpenDRIVE accepts.  
+All the possible lane types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -783,7 +787,7 @@ Sensor's transform when the data was generated.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a> <sub><sup>_class_</sup></sub>
-All possible states for traffic lights.  
+All possible states for traffic lights. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Red"></a>**<font color="#f8805a">Red</font>**  
@@ -875,9 +879,13 @@ Class that defines an attribute of a [carla.ActorBlueprint](#carla.ActorBlueprin
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorAttribute.id"></a>**<font color="#f8805a">id</font>** (_str_)  
+String identifier of the attribute.  
 - <a name="carla.ActorAttribute.type"></a>**<font color="#f8805a">type</font>** (_[carla.ActorAttributeType](#carla.ActorAttributeType)_)  
+The attribute parameter type.  
 - <a name="carla.ActorAttribute.recommended_values"></a>**<font color="#f8805a">recommended_values</font>** (_list(str)_)  
+List of recommended values that the attribute may have.  
 - <a name="carla.ActorAttribute.is_modifiable"></a>**<font color="#f8805a">is_modifiable</font>** (_bool_)  
+True if the attribute is modifiable.  
 
 <h3>Methods</h3>
 - <a name="carla.ActorAttribute.as_bool"></a>**<font color="#7fb800">as_bool</font>**(<font color="#00a6ed">**self**</font>)  
@@ -905,12 +913,15 @@ Class that contains all the necessary information for spawning an Actor.
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorBlueprint.id"></a>**<font color="#f8805a">id</font>** (_str_)  
+Actor blueprint identifier, e.g. `walker.pedestrian.0001`.  
 - <a name="carla.ActorBlueprint.tags"></a>**<font color="#f8805a">tags</font>** (_list(str)_)  
+List of tags of an actor blueprint e.g. `['0001', 'pedestrian', 'walker']`.  
 
 <h3>Methods</h3>
 - <a name="carla.ActorBlueprint.has_tag"></a>**<font color="#7fb800">has_tag</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tag**</font>)  
+Returns `true` if an actor blueprint has the tag.  
     - **Parameters:**
-        - `tag` (_str_)  
+        - `tag` (_str_) – e.g. 'walker'.  
     - **Return:** _bool_  
 - <a name="carla.ActorBlueprint.match_tags"></a>**<font color="#7fb800">match_tags</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
 Test if any of the flags or id matches wildcard_pattern.  
@@ -920,17 +931,22 @@ Test if any of the flags or id matches wildcard_pattern.
     - **Note:** <font color="#8E8E8E">_The wildcard_pattern follows Unix shell-style wildcards.
 _</font>  
 - <a name="carla.ActorBlueprint.has_attribute"></a>**<font color="#7fb800">has_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+Returns `true` if the blueprint contains the specified attribute.  
     - **Parameters:**
-        - `id` (_str_)  
+        - `id` (_str_) – e.g 'gender'.  
     - **Return:** _bool_  
 - <a name="carla.ActorBlueprint.get_attribute"></a>**<font color="#7fb800">get_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+Returns the current actor attribute through its id.  
     - **Parameters:**
         - `id` (_str_)  
     - **Return:** _[carla.ActorAttribute](#carla.ActorAttribute)_  
 - <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
+Sets an existing attribute to the actor's blueprint.  
     - **Parameters:**
         - `id` (_str_)  
         - `value` (_str_)  
+    - **Note:** <font color="#8E8E8E">_Attribute can only be set or changed if it is modifiable
+_</font>  
 - <a name="carla.ActorBlueprint.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorBlueprint.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorBlueprint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -946,12 +962,16 @@ Identifier of the actor snapshot.
 
 <h3>Methods</h3>
 - <a name="carla.ActorSnapshot.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the current transform of the actor.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
 - <a name="carla.ActorSnapshot.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the current 3D velocity of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.ActorSnapshot.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the current 3D angular velocity of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the current 3D acceleration of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.ActorSnapshot.__self__"></a>**<font color="#7fb800">\__self__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1134,11 +1154,11 @@ Class that provides access to vehicle transmission details.
 
 <h3>Instance Variables</h3>
 - <a name="carla.GearPhysicsControl.ratio"></a>**<font color="#f8805a">ratio</font>** (_float_)  
-Gear ratio.  
+The transmission ratio of the gear.  
 - <a name="carla.GearPhysicsControl.down_ratio"></a>**<font color="#f8805a">down_ratio</font>** (_float_)  
-Lower limit to gear down.  
+The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.  
 - <a name="carla.GearPhysicsControl.up_ratio"></a>**<font color="#f8805a">up_ratio</font>** (_float_)  
-Upper limit to gear up.  
+The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.  
 
 <h3>Methods</h3>
 - <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  
@@ -1571,7 +1591,7 @@ WalkerControl constructor.
 ---
 
 ## carla.Waypoint<a name="carla.Waypoint"></a> <sub><sup>_class_</sup></sub>
-3D directed point that stores information about the road definition that OpenDRIVE provides.  
+3D directed point that stores information about the road definition provided by OpenDRIVE.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Waypoint.id"></a>**<font color="#f8805a">id</font>** (_int_)  
@@ -1903,7 +1923,7 @@ Lidar sensor measurement data.
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle that the Lidar has rotated.  
+Horizontal angle that the Lidar has rotated at the time of the measurement.  
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers.  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
@@ -1911,9 +1931,13 @@ List of 3D points.
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+Retrieve the number of points that are generated by this channel.  
     - **Parameters:**
         - `channel` (_int_)  
+    - **Note:** <font color="#8E8E8E">_Points are sorted by channel, so this method allows to identify the channel that generated each point.
+_</font>  
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+Save point cloud to disk.  
     - **Parameters:**
         - `path` (_str_)  
 - <a name="carla.LidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1992,7 +2016,7 @@ Stops listening for data.
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a><sub><sup>([carla.TrafficSign](#carla.TrafficSign))</sup></sub> <sub><sup>_class_</sup></sub>
-A traffic light actor.  
+A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
@@ -2143,10 +2167,13 @@ _</font>
 ---
 
 ## command.ApplyAngularVelocity<a name="command.ApplyAngularVelocity"></a> <sub><sup>_class_</sup></sub>
+Set the actor's angular velocity.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+The 3D angular velocity that will be applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
@@ -2157,10 +2184,13 @@ _</font>
 ---
 
 ## command.ApplyImpulse<a name="command.ApplyImpulse"></a> <sub><sup>_class_</sup></sub>
+Adds impulse to the actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Impulse applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
@@ -2171,10 +2201,13 @@ _</font>
 ---
 
 ## command.ApplyTransform<a name="command.ApplyTransform"></a> <sub><sup>_class_</sup></sub>
+Sets a new transform to the actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyTransform.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.ApplyTransform.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+Transformation to be applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  
@@ -2185,10 +2218,13 @@ _</font>
 ---
 
 ## command.ApplyVehicleControl<a name="command.ApplyVehicleControl"></a> <sub><sup>_class_</sup></sub>
+Apply control to the vehicle.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyVehicleControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Vehicle actor affected by the command.  
 - <a name="command.ApplyVehicleControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
+Vehicle control to be applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
@@ -2199,10 +2235,13 @@ _</font>
 ---
 
 ## command.ApplyVelocity<a name="command.ApplyVelocity"></a> <sub><sup>_class_</sup></sub>
+Sets actor's velocity.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.ApplyVelocity.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+The 3D velocity applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
@@ -2213,10 +2252,13 @@ _</font>
 ---
 
 ## command.ApplyWalkerControl<a name="command.ApplyWalkerControl"></a> <sub><sup>_class_</sup></sub>
+Apply control to the walker.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyWalkerControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Walker actor affected by the command.  
 - <a name="command.ApplyWalkerControl.control"></a>**<font color="#f8805a">control</font>** (_[carla.VehicleControl](#carla.VehicleControl)_)  
+Walker control to be applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
@@ -2227,11 +2269,15 @@ _</font>
 ---
 
 ## command.ApplyWalkerState<a name="command.ApplyWalkerState"></a> <sub><sup>_class_</sup></sub>
+Apply a state to the walker actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyWalkerState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Walker actor affected by the command.  
 - <a name="command.ApplyWalkerState.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+Transform to be applied.  
 - <a name="command.ApplyWalkerState.speed"></a>**<font color="#f8805a">speed</font>** (_float_)  
+Speed to be applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
@@ -2243,9 +2289,11 @@ _</font>
 ---
 
 ## command.DestroyActor<a name="command.DestroyActor"></a> <sub><sup>_class_</sup></sub>
+Tell the simulator to destroy this Actor, and return whether the actor was successfully destroyed. It has no effect if the Actor was already successfully destroyed.  
 
 <h3>Instance Variables</h3>
 - <a name="command.DestroyActor.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 
 <h3>Methods</h3>
 - <a name="command.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  
@@ -2259,6 +2307,7 @@ Execution result of a command, contains either an error string or an actor ID, d
 
 <h3>Instance Variables</h3>
 - <a name="command.Response.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.Response.error"></a>**<font color="#f8805a">error</font>** (_str_)  
 
 <h3>Methods</h3>
@@ -2267,10 +2316,13 @@ Execution result of a command, contains either an error string or an actor ID, d
 ---
 
 ## command.SetAutopilot<a name="command.SetAutopilot"></a> <sub><sup>_class_</sup></sub>
+Switch on/off vehicle's server-side autopilot.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetAutopilot.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor that is affected by the command.  
 - <a name="command.SetAutopilot.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
+If the autopilot is enabled or not.  
 
 <h3>Methods</h3>
 - <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
@@ -2281,10 +2333,13 @@ Execution result of a command, contains either an error string or an actor ID, d
 ---
 
 ## command.SetSimulatePhysics<a name="command.SetSimulatePhysics"></a> <sub><sup>_class_</sup></sub>
+Whether an actor will be affected by physics or not.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetSimulatePhysics.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
 - <a name="command.SetSimulatePhysics.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
+If physics will affect the actor.  
 
 <h3>Methods</h3>
 - <a name="command.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
@@ -2295,10 +2350,13 @@ Execution result of a command, contains either an error string or an actor ID, d
 ---
 
 ## command.SpawnActor<a name="command.SpawnActor"></a> <sub><sup>_class_</sup></sub>
+Spawn an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to parent.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SpawnActor.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+Transform to be applied.  
 - <a name="command.SpawnActor.parent_id"></a>**<font color="#f8805a">parent_id</font>** (_int_)  
+Parent's actor id.  
 
 <h3>Methods</h3>
 - <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2312,6 +2370,7 @@ Execution result of a command, contains either an error string or an actor ID, d
         - `transform` (_[carla.Transform](#carla.Transform)_)  
         - `parent` (_[carla.Actor](#carla.Actor) or int_)  
 - <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
+Link another command to be executed right after.  
     - **Parameters:**
         - `command` (_[carla.Command](#carla.Command)_) – CommandType.  
 

@@ -323,7 +323,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
-      All possible states for traffic lights.
+      All possible states for traffic lights. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Red
@@ -337,7 +337,7 @@
     parent: carla.TrafficSign
     # - DESCRIPTION ------------------------
     doc: >
-      A traffic light actor.
+      A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
