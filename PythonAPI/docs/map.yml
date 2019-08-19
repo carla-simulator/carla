@@ -6,7 +6,7 @@
   - class_name: LaneType
     # - DESCRIPTION ------------------------
     doc: >
-      All the possible lane types that OpenDRIVE accepts
+      All the possible lane types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -57,7 +57,7 @@
   - class_name: LaneChange
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the lane change options
+      Class that defines the lane change options. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -98,7 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the lane marking types that OpenDRIVE accepts.
+      Class that defines the lane marking types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -257,7 +257,7 @@
   - class_name: Waypoint
     # - DESCRIPTION ------------------------
     doc: >
-      3D directed point that stores information about the road definition that OpenDRIVE provides.
+      3D directed point that stores information about the road definition provided by OpenDRIVE.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id

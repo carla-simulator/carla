@@ -37,6 +37,8 @@ Repositories associated to the CARLA simulation platform:
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
 
+**Like what you see? Star us on GitHub to support the project!**
+
 Paper
 -----
 
