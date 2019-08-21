@@ -6,11 +6,7 @@
   - class_name: LaneType
     # - DESCRIPTION ------------------------
     doc: >
-<<<<<<< HEAD
-      All the possible lane types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
-=======
       All the possible lane types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
->>>>>>> master
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -102,11 +98,7 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-<<<<<<< HEAD
-      Class that defines the lane marking types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
-=======
       Class that defines the lane marking types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!
->>>>>>> master
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE

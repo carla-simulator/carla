@@ -919,7 +919,7 @@ Actor's blueprint tag list e.g. `['0001', 'pedestrian', 'walker']`.
 
 <h3>Methods</h3>
 - <a name="carla.ActorBlueprint.has_tag"></a>**<font color="#7fb800">has_tag</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tag**</font>)  
-Returns `true` if an actor bueprint has the tag.  
+Returns `true` if an actor blueprint has the tag.  
     - **Parameters:**
         - `tag` (_str_) – e.g. 'walker'.  
     - **Return:** _bool_  
