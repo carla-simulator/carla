@@ -147,7 +147,7 @@
       - param_name: name
         type: str
         doc: > 
-          Name of the current map
+          The map's current name
       - param_name: xodr_content
         type: str
         doc: >
@@ -160,7 +160,7 @@
     - def_name: get_spawn_points
       return: list(carla.Transform)
       doc: >
-        Returns a list of transformations corresponding to the recommended spawn points over the map
+        Returns a carla.Transform's list corresponding to the recommended spawn points over the map
     # --------------------------------------
     - def_name: get_waypoint
       params:
@@ -172,7 +172,7 @@
         type: bool
         default: "True"
         doc: > 
-          If **True**, the waypoint will be at the center of the nearest lane.  
+          If **True**, the waypoint will be at the nearest lane's center.
 
           If **False**, the waypoint will be at the given location. Also, in this second case, the result may be
           `None` if the waypoint is not found
@@ -187,7 +187,7 @@
     - def_name: get_topology
       doc: >
         It provides a minimal graph of the topology of the current OpenDRIVE file.
-        It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second
+        It is constituted by a waypoint's pair list, where the first waypoint is the origin and the second
         one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be:
         `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`
       return: list(tuple(carla.Waypoint, carla.Waypoint))
@@ -200,7 +200,7 @@
           Approximate distance between the waypoints
       return: list(carla.Waypoint)
       doc: >
-        Returns a list of waypoints positioned on the center of the lanes 
+        Returns a waypoint's list positioned on the lane's center 
         all over the map with an approximate distance between them.
     # --------------------------------------
     - def_name: transform_to_geolocation
@@ -215,7 +215,7 @@
     # --------------------------------------
     - def_name: to_opendrive
       doc: >
-        Returns the OpenDRIVE of the current map as string
+        Returns the map's OpenDRIVE as string
       return: str
     # --------------------------------------
     - def_name: save_to_disk
@@ -224,7 +224,7 @@
         doc: >
           Path where it will be saved
       doc: >
-        Save the OpenDRIVE of the current map to disk
+        Save the map's OpenDRIVE to disk
     # --------------------------------------
     - def_name: __str__
       doc: >
@@ -243,7 +243,7 @@
     - var_name: color
       type: carla.Color
       doc: >
-        Actual color of the marking
+        Actual marking's color
     - var_name: lane_change
       type: carla.LaneChange
       doc: >
@@ -282,7 +282,7 @@
     - var_name: lane_width
       type: float
       doc: >
-        Horizontal size of the road at current `s`
+        The road's horizontal size at current `s`
     - var_name: road_id
       type: int
       doc: >
@@ -309,15 +309,15 @@
     - var_name: lane_type
       type: carla.LaneType
       doc: >
-        The lane type of the current Waypoint, based on OpenDRIVE types.
+        The waypoint's current lane type, based on OpenDRIVE types.
     - var_name: right_lane_marking
       type: carla.LaneMarking
       doc: >
-        The right lane marking information based on the direction of the Waypoint
+        The right lane marking information based on the waypoint's direction
     - var_name: left_lane_marking
       type: carla.LaneMarking
       doc: >
-        The left lane marking information based on the direction of the Waypoint
+        The left lane marking information based on the waypoint's direction
     # - METHODS ----------------------------
     methods:
     - def_name: next
@@ -328,7 +328,7 @@
           The approximate distance where to get the next Waypoints
       return: list(carla.Waypoint)
       doc: >
-        Returns a list of Waypoints at a certain approximate distance from the current Waypoint,
+        Returns a Waypoints' list at a certain approximate distance from the current Waypoint,
         taking into account the shape of the road and its possible deviations, without performing
         any lane change.  
 
@@ -338,16 +338,16 @@
     - def_name: get_right_lane
       return: carla.Waypoint
       doc: >
-        Generates a Waypoint at the center of the right lane based on the direction of the current
-        Waypoint, regardless if the lane change is allowed in this location.  
+        Generates a Waypoint at the right lane's center based on the waypoint's current direction,
+        regardless if the lane change is allowed in this location.  
 
         Can return `None` if the lane does not exist.
     # --------------------------------------
     - def_name: get_left_lane
       return: carla.Waypoint
       doc: >
-        Generates a Waypoint at the center of the left lane based on the direction of the current
-        Waypoint, regardless if the lane change is allowed in this location.  
+        Generates a Waypoint at the left lane's center based on the waypoint's current direction,
+        regardless if the lane change is allowed in this location.  
 
         Can return `None` if the lane does not exist
     # --------------------------------------

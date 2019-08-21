@@ -25,7 +25,7 @@
         type: int
         default: 0
         doc: >
-          Number of working threads used for background updates. If 0, use all
+          The working threads' number used for background updates. If 0, use all
           available concurrency.
       doc: >
         Client constructor
@@ -94,7 +94,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the file to write the recorded data
+          The file's name to write the recorded data
       doc: >
         If we use a simple name like 'recording.log' then it will be saved at server folder 'CarlaUE4/Saved/recording.log'.
         If we use some folder in the name, then it will be considered to be an absolute path, like '/home/carla/recording.log'.
@@ -109,7 +109,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the recorded file to load
+          The recorder's file name to load
       - param_name: show_all
         type: bool
         doc: >
@@ -123,7 +123,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the recorded file to load
+          The recorder's file name to load
       - param_name: category1
         type: single char
         doc: >
@@ -168,7 +168,7 @@
       - param_name: name
         type: str
         doc: >
-          Name of the file.
+          The file's name.
       - param_name: start
         type: float
         doc: >
@@ -176,7 +176,7 @@
       - param_name: duration
         type: float
         doc: >
-          Id of the actor to follow. If this is 0 then camera is disabled
+          The actor's Id to follow. If this is 0 then camera is disabled
       - param_name: follow_id
         type: int
         doc: >

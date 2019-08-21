@@ -288,7 +288,7 @@
     - var_name: location
       type: carla.Location
       doc: >
-        The center of the bounding box relative to its parent actor.
+        The bounding box's center relative to its parent actor.
     - var_name: extent
       type: carla.Vector3D
       doc: >

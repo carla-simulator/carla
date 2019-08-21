@@ -5,7 +5,7 @@
   - class_name: Response
     # - DESCRIPTION ------------------------
     doc: >
-      Execution result of a command, contains either an error string or an
+      Command's execution result, contains either an error string or an
       actor ID, depending on whether or not the command succeeded. See carla.Client.apply_batch_sync
     # - PROPERTIES -------------------------
     instance_variables:

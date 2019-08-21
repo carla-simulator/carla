@@ -6,7 +6,7 @@
   - class_name: VehicleControl
     # - DESCRIPTION ------------------------
     doc: >
-      VehicleControl is used for controlling the basic movement of a vehicle.
+      VehicleControl is used for controlling the vehicle's basic movement.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: throttle
@@ -88,14 +88,14 @@
 
   - class_name: WalkerControl
     doc: >
-      WalkerControl is used for controlling the basic movement of a walker.
+      WalkerControl is used for controlling the walker's basic movement.
 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: direction
       type: carla.Vector3D
       doc: >
-        Vector that controls the direction of the walker.
+        Vector that controls the walker's direction.
     # --------------------------------------
     - var_name: speed
       type: float
@@ -140,7 +140,7 @@
   - class_name: WalkerBoneControl
     # - DESCRIPTION ------------------------
     doc: >
-       Class used for controlling the skeleton of a walker.
+       Class used for controlling the walker's skeleton.
        See [walker bone control](walker_bone_control.md)
     # - PROPERTIES -------------------------
     instance_variables:
@@ -170,17 +170,17 @@
     - var_name: ratio
       type: float
       doc: >
-        The transmission ratio of the gear.
+        The gear's transmission ratio.
     # --------------------------------------
     - var_name: down_ratio
       type: float
       doc: >
-        The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.
+        The RPM level (in relation to MaxRPM) where the gear autobox initiates shifting down.
     # --------------------------------------
     - var_name: up_ratio
       type: float
       doc: >
-        The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.
+        The RPM level (in relation to MaxRPM) where the gear autobox initiates shifting up.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -214,7 +214,7 @@
 
   - class_name: VehiclePhysicsControl
     doc: >
-      VehiclePhysicsControl is used for controlling the physics parameters of a vehicle.
+      VehiclePhysicsControl is used for controlling the vehicle's physics parameters.
 
     # - PROPERTIES -------------------------
     instance_variables:
@@ -226,12 +226,12 @@
     - var_name: max_rpm
       type: float
       doc: >
-        The maximum RPM of the vehicle's engine.
+        The vehicle's engine maximum RPM.
     # --------------------------------------
     - var_name: moi
       type: float
       doc: >
-        The moment of inertia of the vehicle's engine.
+        The vehicle's engine moment of inertia.
     # --------------------------------------
     - var_name: damping_rate_full_throttle
       type: float
@@ -261,7 +261,7 @@
     - var_name: clutch_strength
       type: float
       doc: >
-        The clutch strength of the vehicle. Measured in Kgm^2/s.
+        The vehicle's clutch strength. Measured in Kgm^2/s.
     # --------------------------------------
     - var_name: final_ratio
       type: float
@@ -271,22 +271,22 @@
     - var_name: forward_gears
       type: list(carla.GearPhysicsControl)
       doc: >
-        List of GearPhysicsControl objects.
+        GearPhysicsControl objects' list.
     # --------------------------------------
     - var_name: mass
       type: float
       doc: >
-        The mass of the vehicle measured in Kg.
+        The vehicle's mass measured in Kg.
     # --------------------------------------
     - var_name: drag_coefficient
       type: float
       doc: >
-        Drag coefficient of the vehicle's chassis.
+        The vehicle's chassis drag coefficient.
     # --------------------------------------
     - var_name: center_of_mass
       type: carla.Vector3D
       doc: >
-        The center of mass of the vehicle.
+        The vehicle's center of mass.
     # --------------------------------------
     - var_name: steering_curve
       type: list(carla.Vector2D)
@@ -296,7 +296,7 @@
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
-        List of carla.WheelPhysicsControl objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
+         The carla.WheelPhysicsControl objects' list. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
 
     # - METHODS ----------------------------
     methods:
@@ -368,7 +368,7 @@
 
   - class_name: WheelPhysicsControl
     doc: >
-      WheelPhysicsControl is used for controlling the physics parameters of a vehicle's wheel.
+      WheelPhysicsControl is used for controlling the vehicle's wheel physics parameters.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: tire_friction
@@ -379,7 +379,7 @@
     - var_name: damping_rate
       type: float
       doc: >
-        The damping rate of the wheel.
+        The wheel's damping rate.
     # --------------------------------------
     - var_name: max_steer_angle
       type: float
@@ -389,7 +389,7 @@
     - var_name: radius
       type: float
       doc: >
-        The radius of the wheel in centimeters.
+        The wheel's radius in centimeters.
     # --------------------------------------
     - var_name: max_brake_torque
       type: float
@@ -404,7 +404,7 @@
     - var_name: position
       type: carla.Vector3D
       doc: >
-        World position of the wheel. Note that it is a read-only parameter.
+        The wheel's world position. Note that it is a read-only parameter.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

@@ -183,6 +183,7 @@ Focused on:<br>
 Used:<br>
 [`carla.ActorSnapshot`](../python_api/#carla.ActorSnapshot)<br>
 [`carla.Vector3D`](../python_api/#carla.Vector3D)<br>
+[`carla.LaneType`](../python_api/#carla.LaneType)<br>
 [`carla.Color`](../python_api/#carla.Color)<br>
 [`carla.Map`](../python_api/#carla.Map)
 
@@ -192,7 +193,7 @@ current_w = map.get_waypoint(vehicle.get_location())
 while True:
 
     next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
-    # Check if vehicle is moving
+    # Check if the vehicle is moving
     if next_w.id != current_w.id:
         vector = vehicle.get_velocity()
         # Check if the vehicle is on a sidewalk

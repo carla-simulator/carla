@@ -12,7 +12,7 @@
     - var_name: frame
       type: int
       doc: >
-        The number of frames elapsed since the simulator was launched.
+        The frames' number elapsed since the simulator was launched.
     - var_name: elapsed_seconds
       type: float
       doc: >
@@ -24,7 +24,7 @@
     - var_name: platform_timestamp
       type: float
       doc: >
-        Time-stamp of the frame at which this measurement was taken, in seconds
+        The frame's time-stamp at which this measurement was taken, in seconds
         as given by the OS.
     # - METHODS ----------------------------
     methods:
@@ -74,7 +74,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Filters a list of Actors with type_id matching wildcard_pattern.
+        Filters an actors' list with type_id matching wildcard_pattern.
       note: >
          The wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
     # --------------------------------------
@@ -169,7 +169,7 @@
     - var_name: id
       type: int
       doc: >
-        The id of the episode associated with this world.
+        The episode's id associated with this world.
     - var_name: debug
       type: carla.DebugHelper
       doc: >
@@ -178,7 +178,7 @@
     - def_name: get_blueprint_library
       return: carla.BlueprintLibrary
       doc: >
-        Return the list of blueprints available in this world. These blueprints
+        Return blueprint's list available in this world. These blueprints
         can be used to spawn actors into the world.
     # --------------------------------------
     - def_name: get_map
@@ -202,7 +202,7 @@
       - param_name: world_settings
         type: carla.WorldSettings
       doc: >
-        Returns the id of the frame when the settings took effect.
+        Returns the frame's id when the settings took effect.
     # --------------------------------------
     - def_name: get_weather
       return: carla.WeatherParameters
@@ -219,7 +219,7 @@
     - def_name: get_snapshot
       return: carla.WorldSnapshot
       doc: >
-        Return a snapshot of the world at this moment.
+        Return a world's snapshot at this moment.
     # --------------------------------------
     - def_name: get_actor
       return: carla.Actor

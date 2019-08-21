@@ -6,7 +6,7 @@
   - class_name: ActorAttributeType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the type of attribute of a carla.ActorAttribute.
+      Class that defines the carla.ActorAttribute's type.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
@@ -84,7 +84,7 @@
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines an attribute of a carla.ActorBlueprint.
+      Class that defines a carla.ActorBlueprint's attribute.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -164,7 +164,7 @@
     - var_name: tags
       type: list(str)
       doc: >
-        List of tags of an actor blueprint e.g. `['0001', 'pedestrian', 'walker']`
+        Actor's blueprint tag list e.g. `['0001', 'pedestrian', 'walker']`
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
@@ -249,7 +249,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
+        Filters an ActorBlueprint's list with id or tags matching wildcard_pattern.
         The pattern is matched against each blueprint's id and tags.
       note: > 
         The wildcard_pattern follows Unix shell-style wildcards (fnmatch).
