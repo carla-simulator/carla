@@ -175,7 +175,7 @@
         doc: >
           e.g. 'walker'
       doc: >
-        Returns `true` if an actor bueprint has the tag.
+        Returns `true` if an actor blueprint has the tag.
     # --------------------------------------
     - def_name: match_tags
       return: bool
@@ -216,7 +216,7 @@
         type: str
         doc: >
       doc: >
-        Sets an existing attribute to the actor blueprint
+        Sets an existing attribute to the actor's blueprint
       note: >
         Attribute can only be set or changed if it is modifiable
     # --------------------------------------

@@ -722,7 +722,7 @@ White by default.
 ---
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a> <sub><sup>_class_</sup></sub>
-Class that defines the lane marking types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
+Class that defines the lane marking types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -745,7 +745,7 @@ Grass edge.
 ---
 
 ## carla.LaneType<a name="carla.LaneType"></a> <sub><sup>_class_</sup></sub>
-All the possible lane types that OpenDRIVE accepts. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
+All the possible lane types accepted by OpenDRIVE. Check out this [`recipe`](../python_cookbook/#lanes-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -941,7 +941,7 @@ Returns the current actor attribute through its id.
         - `id` (_str_)  
     - **Return:** _[carla.ActorAttribute](#carla.ActorAttribute)_  
 - <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
-Sets an existing attribute to the actor blueprint.  
+Sets an existing attribute to the actor's blueprint.  
     - **Parameters:**
         - `id` (_str_)  
         - `value` (_str_)  
@@ -1591,7 +1591,7 @@ WalkerControl constructor.
 ---
 
 ## carla.Waypoint<a name="carla.Waypoint"></a> <sub><sup>_class_</sup></sub>
-3D directed point that stores information about the road definition that OpenDRIVE provides.  
+3D directed point that stores information about the road definition provided by OpenDRIVE.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Waypoint.id"></a>**<font color="#f8805a">id</font>** (_int_)  
@@ -2356,7 +2356,7 @@ Spawn an actor into the world based on the blueprint provided and the transform.
 - <a name="command.SpawnActor.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
 Transform to be applied.  
 - <a name="command.SpawnActor.parent_id"></a>**<font color="#f8805a">parent_id</font>** (_int_)  
-Parent actor id.  
+Parent's actor id.  
 
 <h3>Methods</h3>
 - <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  

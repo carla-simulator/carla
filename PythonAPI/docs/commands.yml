@@ -37,7 +37,7 @@
     - var_name: parent_id
       type: int
       doc: >
-        Parent actor id
+        Parent's actor id
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
