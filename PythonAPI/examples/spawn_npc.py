@@ -141,7 +141,7 @@ def main():
         batch = []
         for spawn_point in spawn_points:
             walker_bp = random.choice(blueprintsWalkers)
-            # set as not invencible
+            # set as not invincible
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
             batch.append(SpawnActor(walker_bp, spawn_point))
