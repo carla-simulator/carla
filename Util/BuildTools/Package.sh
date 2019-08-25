@@ -96,7 +96,7 @@ if ${DO_CARLA_RELEASE} ; then
 
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
-      -nocompileeditor -nop4 -cook -stage -archive -package \
+      -nocompileeditor -nop4 -cook -stage -archive -package -iterate \
       -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
       -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${RELEASE_BUILD_FOLDER}"
