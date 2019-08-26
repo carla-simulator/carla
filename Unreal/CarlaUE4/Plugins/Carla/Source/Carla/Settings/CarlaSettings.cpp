@@ -128,7 +128,7 @@ void UCarlaSettings::LoadSettings()
     {
       QualityLevel = QualityLevelFromString(StringQualityLevel, EQualityLevel::Epic);
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("-no-rendering")))
+    if (FParse::Param(FCommandLine::Get(), TEXT("no-rendering")))
     {
       bDisableRendering = true;
     }
