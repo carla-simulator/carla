@@ -3,6 +3,7 @@ repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 theme: readthedocs
+extra_css: [extra.css]
 
 nav:
 - Home: 'index.md'
