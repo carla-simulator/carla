@@ -10,6 +10,7 @@
 #include "SyncQueue.h"
 #include "CreateGrid.h"
 #include "BufferMap.h"
+#include "TrafficDistributor.h"
 
 namespace traffic_manager {
 
@@ -31,11 +32,13 @@ namespace traffic_manager {
 
   public:
 
-    std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
-    std::shared_ptr<InMemoryMap> local_map;
-    BufferMap<int, std::shared_ptr<SyncQueue<std::shared_ptr<SimpleWaypoint>>>> buffer_map;
     carla::client::Client *client;
     carla::client::DebugHelper *debug;
+    std::shared_ptr<InMemoryMap> local_map;
+    TrafficDistributor traffic_distributor;
+
+    std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
+    BufferMap<int, std::shared_ptr<SyncQueue<std::shared_ptr<SimpleWaypoint>>>> buffer_map;
     std::map<int, StateEntry> state_map;
 
     SharedData();

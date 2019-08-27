@@ -28,7 +28,12 @@ namespace traffic_manager {
         }
 
         D get(K key) {
-            return data_map.at(key);;
+            D data;
+            if (data_map.find(key) != data_map.end()) {
+                data = data_map.at(key);
+            }
+
+            return data;
         }
 
         bool contains(K key){

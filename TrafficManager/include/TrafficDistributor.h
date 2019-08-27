@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <memory>
 #include <map>
@@ -7,11 +9,17 @@
 
 namespace traffic_manager {
 
+    struct GeoIds {
+        uint32_t road_id = 0;
+        uint32_t section_id = 0;
+        int lane_id = 0;
+    };
+
     class TrafficDistributor {
 
     private:
 
-        std::mutex distributor_update_mutex;
+        std::mutex vehicle_add_mutex;
 
         std::map<
             int, std::map<
@@ -27,16 +35,14 @@ namespace traffic_manager {
             >
         > co_lane_vehicle_count;
 
-        std::map<int, std::vector<int>> vehicle_id_to_road_map;
+        std::map<int, GeoIds> vehicle_id_to_road_map;
 
-        void setVehicleId(int, int, int, int);
-        void eraseVehicleId(int, int, int, int);
-        void setCoLaneCount(int, int, int, int);
-        void setRoadIds(int, int, int, int);
+        void setVehicleId(int, GeoIds);
+        void eraseVehicleId(int, GeoIds);
+        void setRoadIds(int, GeoIds);
 
-        std::map<int, int> getVehicleIds(int, int, int);
-        int getCoLaneCount(int, int, int);
-        std::vector<int> getRoadIds(int);
+        std::map<int, std::map<int, int>> getVehicleIds(GeoIds);
+        GeoIds getRoadIds(int);
 
     public:
         TrafficDistributor();
@@ -46,9 +52,10 @@ namespace traffic_manager {
             std::shared_ptr<SimpleWaypoint>
         > assignDistribution (
             int actor_id,
-            int road_id,
-            int section_id,
-            int lane_id
+            uint32_t road_id,
+            uint32_t section_id,
+            int lane_id,
+            std::shared_ptr<traffic_manager::SimpleWaypoint> waypoint
         );
     };
 }

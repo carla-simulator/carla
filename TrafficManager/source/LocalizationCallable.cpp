@@ -51,6 +51,19 @@ namespace traffic_manager {
       if (waypoint_buffer->empty()) {
         auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
         waypoint_buffer->push(closest_waypoint);
+      } 
+
+      /// Make lane change decisions
+      auto way_front = waypoint_buffer->back()->getWaypoint();
+      auto lane_change_waypoints = shared_data->traffic_distributor.assignDistribution(
+        actor_id,
+        way_front->GetRoadId(),
+        way_front->GetSectionId(),
+        way_front->GetLaneId(),
+        waypoint_buffer->back()
+      );
+      for (auto wp: lane_change_waypoints) {
+        waypoint_buffer->push(wp);
       }
 
       /// Re-populate buffer
@@ -67,7 +80,11 @@ namespace traffic_manager {
     } else {       // New actor to buffer map
 
       /// Make size of queue a derived or constant
-      while (!(shared_data->buffer_map.contains(actor_id))) {
+      while (
+        !(shared_data->buffer_map.contains(actor_id))
+        or
+        shared_data->buffer_map.get(actor_id) == nullptr
+      ) {
         shared_data->buffer_map.put(
             actor_id, std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200)
         );
@@ -94,8 +111,10 @@ namespace traffic_manager {
       std::max(
       std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
       TARGET_WAYPOINT_HORIZON_LENGTH)
-      );
-    auto target_waypoint = shared_data->buffer_map.get(actor_id)->get(horizon_index);
+    );
+    while (!(shared_data->buffer_map.contains(actor_id)));
+    auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
+    auto target_waypoint = waypoint_buffer->get(horizon_index);
     float dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
     float cross_product = deviationCrossProduct(vehicle, target_waypoint->getLocation());
     dot_product = 1 - dot_product;
