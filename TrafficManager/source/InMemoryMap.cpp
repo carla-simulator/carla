@@ -29,7 +29,7 @@ namespace traffic_manager {
         /// Adding entry waypoint
         auto current_waypoint = begin_waypoint;
         this->dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
-        
+
         structuredWaypoints(dense_topology.back());
 
         this->entry_node_list.push_back(this->dense_topology.back());
@@ -104,9 +104,9 @@ namespace traffic_manager {
     }
 
     // Linking lane change connections
-    for(auto simple_waypoint:dense_topology) {
+    for (auto simple_waypoint:dense_topology) {
       FindAndLinkLaneChange(simple_waypoint);
-    }  
+    }
 
   }
 
@@ -129,68 +129,70 @@ namespace traffic_manager {
     return this->dense_topology;
   }
 
-
-  void InMemoryMap::structuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint)
-  { 
+  void InMemoryMap::structuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint) {
     auto current_waypoint = waypoint->getWaypoint();
     auto section_id = current_waypoint->GetSectionId();
     auto road_id = current_waypoint->GetRoadId();
     auto lane_id = current_waypoint->GetLaneId();
 
     if (waypoint_structure.find(road_id) != waypoint_structure.end()) {
-      if(waypoint_structure[road_id].find(section_id) != waypoint_structure[road_id].end()) {
-        if(waypoint_structure[road_id][section_id].find(lane_id) != waypoint_structure[road_id][section_id].end()) {
-            
-            waypoint_structure[road_id][section_id][lane_id].push_back(waypoint);
-            // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id << "\tLane id : " << lane_id << "\t#Waypoints : " << 
-            //   waypoint_structure[road_id][section_id][lane_id].size() << std::endl;
+      if (waypoint_structure[road_id].find(section_id) != waypoint_structure[road_id].end()) {
+        if (waypoint_structure[road_id][section_id].find(lane_id) !=
+            waypoint_structure[road_id][section_id].end()) {
+
+          waypoint_structure[road_id][section_id][lane_id].push_back(waypoint);
+          // std::cout << "Road id : " << road_id << "\tSection Id : " <<
+          // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
+          //   waypoint_structure[road_id][section_id][lane_id].size() <<
+          // std::endl;
         } else {
           std::vector<std::shared_ptr<SimpleWaypoint>> lane_wp;
           lane_wp.push_back(waypoint);
           waypoint_structure[road_id][section_id].insert(
-            std::pair<int32_t,std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id,lane_wp)
-          );
-            // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id << "\tLane id : " << lane_id << "\t#Waypoints : " << 
-            //   waypoint_structure[road_id][section_id][lane_id].size() << std::endl;
+              std::pair<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id, lane_wp));
+          // std::cout << "Road id : " << road_id << "\tSection Id : " <<
+          // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
+          //   waypoint_structure[road_id][section_id][lane_id].size() <<
+          // std::endl;
         }
       } else {
         std::vector<std::shared_ptr<SimpleWaypoint>> lane_wp;
         lane_wp.push_back(waypoint);
-        std::map<int32_t,std::vector<std::shared_ptr<SimpleWaypoint>>> lane_map;
+        std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>> lane_map;
         lane_map.insert(
-          std::pair<int32_t,std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id,lane_wp)
-        ); 
+            std::pair<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id, lane_wp));
         waypoint_structure[road_id].insert(
-          std::pair<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>(section_id, lane_map)
-        );
-        // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id << "\tLane id : " << lane_id << "\t#Waypoints : " << 
-        //       waypoint_structure[road_id][section_id][lane_id].size() << std::endl;              
+            std::pair<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>(section_id,
+            lane_map));
+        // std::cout << "Road id : " << road_id << "\tSection Id : " <<
+        // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
+        //       waypoint_structure[road_id][section_id][lane_id].size() <<
+        // std::endl;
       }
     } else {
 
       std::vector<std::shared_ptr<SimpleWaypoint>> lane_wp;
       lane_wp.push_back(waypoint);
-      std::map<int32_t,std::vector<std::shared_ptr<SimpleWaypoint>>> lane_map;
+      std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>> lane_map;
       lane_map.insert(
-        std::pair<int32_t,std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id,lane_wp)
-      );
+          std::pair<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id, lane_wp));
       std::map<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>> section_map;
       section_map.insert(
-        std::pair<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>(section_id, lane_map)
-      );
+          std::pair<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>(section_id,
+          lane_map));
       waypoint_structure.insert(
-        std::pair<uint32_t, std::map<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>>(road_id, section_map)
-      );
-      // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id << "\tLane id : " << lane_id << "\t#Waypoints : " << 
+          std::pair<uint32_t, std::map<uint32_t, std::map<int32_t,
+          std::vector<std::shared_ptr<SimpleWaypoint>>>>>(road_id, section_map));
+      // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id
+      // << "\tLane id : " << lane_id << "\t#Waypoints : " <<
       //   waypoint_structure[road_id][section_id][lane_id].size() << std::endl;
     }
   }
 
   void InMemoryMap::LinkLaneChangePoint(
-    std::shared_ptr<SimpleWaypoint> reference_waypoint,
-    carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
-    int side
-  ){
+      std::shared_ptr<SimpleWaypoint> reference_waypoint,
+      carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
+      int side) {
 
     if (neighbor_waypoint != nullptr) {
       auto neighbour_road_id = neighbor_waypoint->GetRoadId();
@@ -201,14 +203,13 @@ namespace traffic_manager {
         waypoint_structure.find(neighbour_road_id) != waypoint_structure.end()
         and
         waypoint_structure[neighbour_road_id].find(neighbour_section_id)
-          != waypoint_structure[neighbour_road_id].end()
+        != waypoint_structure[neighbour_road_id].end()
         and
         waypoint_structure[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
-          != waypoint_structure[neighbour_road_id][neighbour_section_id].end()
-      ) {
+        != waypoint_structure[neighbour_road_id][neighbour_section_id].end()) {
 
-        std::vector<std::shared_ptr<SimpleWaypoint>> waypoints_to_left
-          = waypoint_structure
+        std::vector<std::shared_ptr<SimpleWaypoint>> waypoints_to_left =
+            waypoint_structure
             [neighbor_waypoint->GetRoadId()]
             [neighbor_waypoint->GetSectionId()]
             [neighbor_waypoint->GetLaneId()];
@@ -216,18 +217,18 @@ namespace traffic_manager {
         if (waypoints_to_left.size() > 0) {
           auto nearest_waypoint = waypoints_to_left[0];
           auto smallest_left_distance = INFINITE_DISTANCE;
-          for(auto left_wp : waypoints_to_left) {
-            if(reference_waypoint->distance(left_wp->getLocation()) < smallest_left_distance)
-            {
+          for (auto left_wp : waypoints_to_left) {
+            if (reference_waypoint->distance(left_wp->getLocation()) < smallest_left_distance) {
               smallest_left_distance = reference_waypoint->distance(left_wp->getLocation());
               nearest_waypoint = left_wp;
             }
           }
 
-          if (side < 0)
+          if (side < 0) {
             reference_waypoint->setLeftWaypoint(nearest_waypoint);
-          else if (side > 0)
+          } else if (side > 0) {
             reference_waypoint->setRightWaypoint(nearest_waypoint);
+          }
         }
       }
     }
@@ -246,7 +247,7 @@ namespace traffic_manager {
     if ((lane_change & change_left) > 0) {
       auto left_waypoint =  raw_waypoint->GetLeft();
       LinkLaneChangePoint(reference_waypoint, left_waypoint, -1);
-     }
-    
+    }
+
   }
 }

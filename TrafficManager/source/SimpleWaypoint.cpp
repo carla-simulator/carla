@@ -13,15 +13,15 @@ namespace traffic_manager {
     return this->next_waypoints;
   }
 
-  carla::SharedPtr<carla::client::Waypoint> SimpleWaypoint::getWaypoint() const{
+  carla::SharedPtr<carla::client::Waypoint> SimpleWaypoint::getWaypoint() const {
     return this->waypoint;
   }
 
-  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::getLeftWaypoint(){
+  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::getLeftWaypoint() {
     return this->next_left_waypoint;
   }
 
-  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::getRightWaypoint(){
+  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::getRightWaypoint() {
     return this->next_right_waypoint;
   }
 
@@ -49,15 +49,15 @@ namespace traffic_manager {
     return waypoints.size();
   }
 
-  void SimpleWaypoint::setLeftWaypoint(std::shared_ptr<SimpleWaypoint> waypoint){
+  void SimpleWaypoint::setLeftWaypoint(std::shared_ptr<SimpleWaypoint> waypoint) {
     this->next_left_waypoint = waypoint;
   }
 
-  void SimpleWaypoint::setRightWaypoint(std::shared_ptr<SimpleWaypoint> waypoint){
+  void SimpleWaypoint::setRightWaypoint(std::shared_ptr<SimpleWaypoint> waypoint) {
     this->next_right_waypoint = waypoint;
   }
 
-  float SimpleWaypoint::distance(const carla::geom::Location& location) const {
+  float SimpleWaypoint::distance(const carla::geom::Location &location) const {
     return this->waypoint->GetTransform().location.Distance(location);
   }
 
@@ -65,5 +65,4 @@ namespace traffic_manager {
     return this->waypoint->IsJunction();
   }
 
-  
 }

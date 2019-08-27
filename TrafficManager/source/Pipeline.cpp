@@ -15,14 +15,13 @@ namespace traffic_manager {
   int read_core_count() {
     auto core_count = std::thread::hardware_concurrency();
     // Assuming quad core if core count not available
-    return core_count > 0? core_count: MINIMUM_CORE_COUNT;
+    return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
 
-  std::vector<carla::SharedPtr<carla::client::Actor>> spawn_traffic (
-    carla::client::World& world,
-    int core_count,
-    int target_amount = 0
-  ) {
+  std::vector<carla::SharedPtr<carla::client::Actor>> spawn_traffic(
+      carla::client::World &world,
+      int core_count,
+      int target_amount = 0) {
     std::vector<carla::SharedPtr<carla::client::Actor>> actor_list;
     auto world_map = world.GetMap();
     auto spawn_points = world_map->GetRecommendedSpawnPoints();
@@ -31,34 +30,35 @@ namespace traffic_manager {
 
     int number_of_vehicles;
     if (target_amount <= 0) {
-      if (core_count <= 4)
+      if (core_count <= 4) {
         number_of_vehicles = 100;
-      else if (core_count <= 8)
+      } else if (core_count <= 8) {
         number_of_vehicles = 150;
-      else if (core_count <= 16)
+      } else if (core_count <= 16) {
         number_of_vehicles = 200;
-      else
+      } else {
         number_of_vehicles = 250;
+      }
     } else {
       number_of_vehicles = target_amount;
     }
 
     if (number_of_vehicles > spawn_points.size()) {
-      std::cout << "Number of requested vehicles more than number available spawn points"
-      << std::endl << "Spawning vehicle at every spawn point" << std::endl;
+      std::cout << "Number of requested vehicles more than number available spawn points" <<
+        std::endl << "Spawning vehicle at every spawn point" << std::endl;
       number_of_vehicles = spawn_points.size();
     }
 
     std::cout << "Spawning " << number_of_vehicles << " vehicles" << std::endl;
 
-    for (int i=0; i<number_of_vehicles; i++) {
+    for (int i = 0; i < number_of_vehicles; i++) {
       auto spawn_point = spawn_points[i];
       auto blueprint = RandomChoice(*blueprint_library, rng);
-      while(
+      while (
         blueprint.GetAttribute("number_of_wheels") != 4
         or blueprint.GetId().compare("vehicle.carlamotors.carlacola") == 0
         or blueprint.GetId().compare("vehicle.bmw.isetta") == 0
-      ) {
+        ) {
         blueprint = RandomChoice(*blueprint_library, rng);
       }
       auto actor = world.TrySpawnActor(blueprint, spawn_point);
@@ -73,13 +73,13 @@ namespace traffic_manager {
       std::vector<float> lateral_PID_parameters,
       float target_velocity,
       int pipeline_width,
-      SharedData& shared_data)
+      SharedData &shared_data)
     : longitudinal_PID_parameters(longitudinal_PID_parameters),
       lateral_PID_parameters(lateral_PID_parameters),
       target_velocity(target_velocity),
       pipeline_width(pipeline_width),
       shared_data(shared_data)
-    {}
+  {}
 
   void Pipeline::setup() {
 
@@ -131,7 +131,7 @@ namespace traffic_manager {
   }
 
   void Pipeline::stop() {
-    int i =0;
+    int i = 0;
     for (auto stage: stages) {
       stage->stop();
       i++;

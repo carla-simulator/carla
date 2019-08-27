@@ -20,7 +20,7 @@ namespace traffic_manager {
       >
       > TopologyList;
   typedef std::vector<std::shared_ptr<SimpleWaypoint>> NodeList;
-  
+
   class InMemoryMap {
 
     /// This class constructs a descretised local map cache.
@@ -33,23 +33,23 @@ namespace traffic_manager {
     std::vector<std::shared_ptr<SimpleWaypoint>> dense_topology;
     NodeList entry_node_list;
     NodeList exit_node_list;
-    
-    std::map <
-      uint32_t,
-      std::map<
+
+    std::map<
         uint32_t,
         std::map<
-          int32_t,
-          std::vector<std::shared_ptr<SimpleWaypoint>>
+        uint32_t,
+        std::map<
+        int32_t,
+        std::vector<std::shared_ptr<SimpleWaypoint>>
         >
-      >
-    > waypoint_structure;
+        >
+        > waypoint_structure;
 
   public:
 
     InMemoryMap(TopologyList topology);
     ~InMemoryMap();
-    
+
     /// Constructs the local map with a resolution of sampling_resolution.
     void setUp(int sampling_resolution);
 
@@ -60,12 +60,14 @@ namespace traffic_manager {
     std::vector<std::shared_ptr<SimpleWaypoint>> get_dense_topology() const;
 
     void structuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint);
+
     void LinkLaneChangePoint(
-      std::shared_ptr<SimpleWaypoint> reference_waypoint,
-      carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
-      int side
-    );
-    void FindAndLinkLaneChange (std::shared_ptr<SimpleWaypoint> reference_waypoint);
+        std::shared_ptr<SimpleWaypoint> reference_waypoint,
+        carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
+        int side);
+
+    void FindAndLinkLaneChange(std::shared_ptr<SimpleWaypoint> reference_waypoint);
+
   };
 
 }

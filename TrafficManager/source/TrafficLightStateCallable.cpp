@@ -40,8 +40,7 @@ namespace traffic_manager {
           traffic_light_state == carla::rpc::TrafficLightState::Yellow
         )
         and
-        next_waypoint->checkJunction()
-      ) {
+        next_waypoint->checkJunction()) {
         traffic_hazard = 1;
       }
     }

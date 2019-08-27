@@ -16,8 +16,12 @@ namespace traffic_manager {
       SharedData *shared_data,
       std::vector<float> longitudinal_parameters = {
     0.1f, 0.15f, 0.01f
-  },/// This is a good tune for most cars
-      std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}   /// Pretty stable, still needs improvement
+  }, /// This is a good tune for most cars
+      std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}   /// Pretty
+                                                                    /// stable,
+                                                                    /// still
+                                                                    /// needs
+                                                                    /// improvement
       ) : longitudinal_parameters(longitudinal_parameters),
           lateral_parameters(lateral_parameters),
           shared_data(shared_data),
@@ -61,8 +65,7 @@ namespace traffic_manager {
       shared_data->buffer_map.contains(actor_id)
       and
       shared_data->buffer_map.get(actor_id)->get(junction_index)->checkJunction()
-      and !(shared_data->buffer_map.get(actor_id)->get(1)->checkJunction())
-    ) {
+      and !(shared_data->buffer_map.get(actor_id)->get(1)->checkJunction())) {
       bool found_true_horizon = false;
       if (speed_limit > HIGHWAY_SPEED) {
         auto horizon_to_junction = shared_data->buffer_map.get(actor_id)->getContent(junction_index);

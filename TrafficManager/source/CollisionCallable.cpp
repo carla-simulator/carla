@@ -24,12 +24,11 @@ namespace traffic_manager {
     auto actor_list = getClosestActors(message.getActor());
 
     float collision_hazard = -1;
-    for(auto it = actor_list.begin(); it != actor_list.end(); it++ ) {
+    for (auto it = actor_list.begin(); it != actor_list.end(); it++) {
       auto actor = it->first;
       if (
         actor->GetId() != message.getActorID()
-        and shared_data->buffer_map.contains(actor->GetId())
-      ) {
+        and shared_data->buffer_map.contains(actor->GetId())) {
         auto ego_actor = message.getActor();
         auto ego_actor_location = ego_actor->GetLocation();
         float actor_distance = actor->GetLocation().Distance(ego_actor_location);
@@ -51,7 +50,7 @@ namespace traffic_manager {
     return out_message;
   }
 
-  void CollisionCallable::drawBoundary(const std::vector<carla::geom::Location> &boundary) const{
+  void CollisionCallable::drawBoundary(const std::vector<carla::geom::Location> &boundary) const {
     for (int i = 0; i < boundary.size(); i++) {
       shared_data->debug->DrawLine(
           boundary[i] + carla::geom::Location(0, 0, 1),
@@ -107,8 +106,7 @@ namespace traffic_manager {
       if (
         reference_geodesic_boundary.size() > 0
         and
-        other_geodesic_boundary.size() > 0
-      ) {
+        other_geodesic_boundary.size() > 0) {
         auto reference_polygon = getPolygon(reference_geodesic_boundary);
         auto other_polygon = getPolygon(other_geodesic_boundary);
 
@@ -127,7 +125,8 @@ namespace traffic_manager {
     return overlap;
   }
 
-  traffic_manager::polygon CollisionCallable::getPolygon(const std::vector<carla::geom::Location> &boundary) const {
+  traffic_manager::polygon CollisionCallable::getPolygon(const std::vector<carla::geom::Location> &boundary)
+  const {
     std::string wkt_string;
     for (auto location: boundary) {
       wkt_string += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
@@ -149,14 +148,13 @@ namespace traffic_manager {
       std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
       std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
       BOUNDARY_EXTENSION_MINIMUM
-    );   // Account for these constants
+      ); // Account for these constants
 
     std::vector<carla::geom::Location> geodesic_boundary;
     if (
       this->shared_data->buffer_map.contains(actor->GetId())
       and
-      this->shared_data->buffer_map.get(actor->GetId()) != nullptr
-    ) {
+      this->shared_data->buffer_map.get(actor->GetId()) != nullptr) {
       bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
       auto simple_waypoints = this->shared_data->buffer_map.get(actor->GetId())->getContent(bbox_extension);
       std::vector<carla::geom::Location> left_boundary;
@@ -191,7 +189,9 @@ namespace traffic_manager {
     auto heading_vector = vehicle->GetTransform().GetForwardVector();
     heading_vector.z = 0;
     heading_vector = heading_vector.MakeUnitVector();
-    auto perpendicular_vector = carla::geom::Vector3D(-1 * heading_vector.y, heading_vector.x, 0);
+    auto perpendicular_vector = carla::geom::Vector3D(-1 * heading_vector.y,
+        heading_vector.x,
+        0);
 
     return {
              location + carla::geom::Location(heading_vector * extent.x + perpendicular_vector * extent.y),
@@ -203,26 +203,27 @@ namespace traffic_manager {
     };
   }
 
-  std::map< carla::SharedPtr <carla::client::Actor > , int> CollisionCallable::getClosestActors(carla::SharedPtr<carla::client::Actor> actor) {
+  std::map<carla::SharedPtr<carla::client::Actor>, int> CollisionCallable::getClosestActors(
+      carla::SharedPtr<carla::client::Actor> actor) {
 
-    //getting nearest GridIDs
-    std::map< carla::SharedPtr <carla::client::Actor > , int> _closest_actors;
-    std::pair < int, int> grid_key;
+    // getting nearest GridIDs
+    std::map<carla::SharedPtr<carla::client::Actor>, int> _closest_actors;
+    std::pair<int, int> grid_key;
     auto GridID = shared_data->Grid.GetGridID(actor);
-    for ( int iter = -1 ; iter < 2 ; iter++) {
+    for (int iter = -1; iter < 2; iter++) {
 
-      for (int iterator = -1 ; iterator < 2 ; iterator++) {
+      for (int iterator = -1; iterator < 2; iterator++) {
 
         grid_key.first = GridID.first + iter;
         grid_key.second = GridID.second + iterator;
         auto actor_list_grid = shared_data->Grid.GetActor(grid_key);
-        if( actor_list_grid.size() > 0) {
-          //std::cout << "working" << std::endl;
-          _closest_actors.insert( actor_list_grid.begin(), actor_list_grid.end() );
-          }
-
+        if (actor_list_grid.size() > 0) {
+          // std::cout << "working" << std::endl;
+          _closest_actors.insert(actor_list_grid.begin(), actor_list_grid.end());
         }
+
       }
-      return _closest_actors;
+    }
+    return _closest_actors;
   }
 }

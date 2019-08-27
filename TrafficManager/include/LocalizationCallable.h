@@ -26,8 +26,7 @@ namespace traffic_manager {
     /// horizon.
     float deviationDotProduct(
         carla::SharedPtr<carla::client::Actor>,
-        const carla::geom::Location&
-        ) const;
+        const carla::geom::Location &) const;
 
     /// Returns the cross product (z component value) between vehicle's heading
     /// vector and
@@ -35,8 +34,7 @@ namespace traffic_manager {
     /// horizon.
     float deviationCrossProduct(
         carla::SharedPtr<carla::client::Actor>,
-        const carla::geom::Location&
-        ) const;
+        const carla::geom::Location &) const;
 
   public:
 

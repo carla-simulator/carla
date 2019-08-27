@@ -1,44 +1,47 @@
-#include<memory>
-#include<map>
-#include<mutex>
-#include<utility>
+#include <memory>
+#include <map>
+#include <mutex>
+#include <utility>
 
 namespace traffic_manager {
 
-    template <typename K, typename D>
-    class BufferMap {
+  template <typename K, typename D>
+  class BufferMap {
 
-    private:
-        std::map<K, D>          data_map;
-        std::mutex              put_mutex;
+  private:
 
-    public:
-        BufferMap() {}
-        ~BufferMap() {}
+    std::map<K, D> data_map;
+    std::mutex put_mutex;
 
-        void put(K key, D data) {
+  public:
 
-            if (data_map.find(key) == data_map.end()) {
-                std::lock_guard<std::mutex> lock (put_mutex);
-                
-                if (data_map.find(key) == data_map.end()) {
-                    data_map.insert(std::pair<K, D>(key, data));
-                }
-            }
+    BufferMap() {}
+    ~BufferMap() {}
+
+    void put(K key, D data) {
+
+      if (data_map.find(key) == data_map.end()) {
+        std::lock_guard<std::mutex> lock(put_mutex);
+
+        if (data_map.find(key) == data_map.end()) {
+          data_map.insert(std::pair<K, D>(key, data));
         }
+      }
+    }
 
-        D get(K key) {
-            D data;
-            if (data_map.find(key) != data_map.end()) {
-                data = data_map.at(key);
-            }
+    D get(K key) {
+      D data;
+      if (data_map.find(key) != data_map.end()) {
+        data = data_map.at(key);
+      }
 
-            return data;
-        }
+      return data;
+    }
 
-        bool contains(K key){
-            return data_map.find(key) != data_map.end();
-        }
+    bool contains(K key) {
+      return data_map.find(key) != data_map.end();
+    }
 
-    };
+  };
+
 }

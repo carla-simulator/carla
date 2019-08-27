@@ -11,27 +11,25 @@
 #include "Pipeline.h"
 
 void run_pipeline(
-    carla::client::World& world,
+    carla::client::World &world,
     carla::client::Client &client_conn,
-    int target_traffic_amount
-);
+    int target_traffic_amount);
 
 std::atomic<bool> quit(false);
-void got_signal(int)
-{
-    quit.store(true);
+void got_signal(int) {
+  quit.store(true);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
   auto world = client_conn.GetWorld();
 
-  int target_traffic_amount =0;
+  int target_traffic_amount = 0;
   if (argc == 3 and std::string(argv[1]) == "-n") {
     try {
       target_traffic_amount = std::stoi(argv[2]);
-    } catch(const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cout << "Failed to parse argument, choosing defaults" << std::endl;
     }
   }
@@ -42,16 +40,15 @@ int main(int argc, char* argv[]) {
 }
 
 void run_pipeline(
-    carla::client::World& world,
+    carla::client::World &world,
     carla::client::Client &client_conn,
-    int target_traffic_amount
-  ) {
+    int target_traffic_amount) {
 
   struct sigaction sa;
-  memset( &sa, 0, sizeof(sa) );
+  memset(&sa, 0, sizeof(sa));
   sa.sa_handler = got_signal;
   sigfillset(&sa.sa_mask);
-  sigaction(SIGINT,&sa,NULL);
+  sigaction(SIGINT, &sa, NULL);
 
   traffic_manager::SharedData shared_data;
   auto world_map = world.GetMap();
@@ -72,17 +69,19 @@ void run_pipeline(
       {0.1f, 0.15f, 0.01f},
       {10.0f, 0.0f, 0.1f},
       7.0f,
-      std::ceil(core_count/4),
+      std::ceil(core_count / 4),
       shared_data
       );
   pipeline.setup();
   pipeline.start();
 
-  std::cout << "Started " << 2 + 4 * std::ceil(core_count/4) << " pipeline threads" << std::endl;
+  std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
 
   while (true) {
     sleep(1);
-    if(quit.load()) break; 
+    if (quit.load()) {
+      break;
+    }
   }
 
   pipeline.stop();

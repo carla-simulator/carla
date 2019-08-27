@@ -10,10 +10,9 @@ namespace traffic_manager {
   void SharedData::destroy() {
     for (auto actor: registered_actors) {
       if (
-          actor != nullptr
-          and
-          actor->IsAlive()
-        ) {
+        actor != nullptr
+        and
+        actor->IsAlive()) {
         actor->Destroy();
       }
     }

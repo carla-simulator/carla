@@ -22,8 +22,7 @@ namespace traffic_manager {
         if (
           actor != nullptr
           and
-          actor->IsAlive()
-        ) {
+          actor->IsAlive()) {
           message.setActor(actor);
           writeQueue(message);
         }
@@ -31,9 +30,9 @@ namespace traffic_manager {
       auto compute_time_end = std::chrono::system_clock::now();
       std::chrono::duration<double> compute_duration = compute_time_end - compute_time_start;
 
-      double cpu_redundancy_time = (1.0/UPDATE_FREQUENCY) - compute_duration.count();
+      double cpu_redundancy_time = (1.0 / UPDATE_FREQUENCY) - compute_duration.count();
       int redundancy_microseconds = static_cast<int>(std::floor(cpu_redundancy_time * 1000000));
-      redundancy_microseconds = redundancy_microseconds > 0 ? redundancy_microseconds: 0;
+      redundancy_microseconds = redundancy_microseconds > 0 ? redundancy_microseconds : 0;
       std::this_thread::sleep_for(std::chrono::microseconds(redundancy_microseconds));
     }
     PipelineMessage empty_message;
