@@ -39,6 +39,7 @@
 
   * [Contribution guidelines](CONTRIBUTING.md)
   * [Coding standard](coding_standard.md)
+  * [Documentation standard](doc_standard.md)
   * [Code of conduct](CODE_OF_CONDUCT.md)
 
 <h3>Development</h3>
