@@ -19,7 +19,11 @@ Rules
   `<hx>Heading<hx>` to make a heading that **won't show** on the navigation bar.
   * Use `------` underlining a Heading or `#` hierarchy to make headings and show them in the
   navigation bar.
-  
+
+<h3>Exceptions:</h3>
+
+  * Documentation generated via python scripts like PythonAPI reference
+
 Handy markdown [cheatsheet][cheatlink].
 
 [cheatlink]: https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet

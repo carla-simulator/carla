@@ -3,10 +3,10 @@
 ![Client window](img/client_window.png)
 
 Sensors are a special type of actor able to measure and stream data. All the
-sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the callback function that will
-be called each time the sensor produces a new measurement. Sensors are typically
-attached to vehicles and produce data either each simulation update, or when a
-certain event is registered.
+sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the
+callback function that will be called each time the sensor produces a new measurement.
+Sensors are typically attached to vehicles and produce data either each simulation update,
+or when a certain event is registered.
 
 The following Python excerpt shows how you would typically attach a sensor to a
 vehicle, in this case we are adding a dashboard HD camera to a vehicle.
@@ -51,7 +51,8 @@ This is the list of sensors currently available
   * [sensor.other.lane_invasion](#sensorotherlane_invasion)
   * [sensor.other.obstacle](#sensorotherobstacle)
 
-Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to convert the pixels of the original image.
+Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to
+convert the pixels of the original image.
 
 sensor.camera.rgb
 -----------------
@@ -72,7 +73,9 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | `motion_blur_max_distortion`  | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
 | `motion_blur_min_object_screen_size`  | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
 
-`sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
+The `sensor_tick` tells how fast we want the sensor to capture the data.
+A value of 1.5 means that we want the sensor to capture data each second and a half.
+By default a value of 0.0 means as fast as possible.
 
 If `enable_postprocess_effects` is enabled, a set of post-process effects is
 applied to the image to create a more realistic feel
@@ -259,7 +262,8 @@ actor collisions against something in the world. This sensor does not have any
 configurable attribute.
 
 !!! note
-    This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it collides with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
 
 This sensor produces a
 [`carla.CollisionEvent`](python_api.md#carla.CollisionEvent)
@@ -331,7 +335,8 @@ sensor.other.obstacle
 This sensor, when attached to an actor, reports if there is obstacles ahead.
 
 !!! note
-    This sensor creates "fake" actors when it detects obstacles with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it detects obstacles with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |

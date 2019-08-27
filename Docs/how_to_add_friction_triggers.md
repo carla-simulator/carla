@@ -1,15 +1,21 @@
 <h1>How to add friction triggers</h1>
 
-*Friction Triggers* are box triggers that can be added on runtime and let users define a different friction of the vehicles' wheels when being inside those type of triggers. For example, this could be useful for making slippery surfaces in certain regions of a map dynamically.
+*Friction Triggers* are box triggers that can be added on runtime and let users define
+a different friction of the vehicles' wheels when being inside those type of triggers.
+For example, this could be useful for making slippery surfaces in certain regions of
+a map dynamically.
 
-In order to spawn a friction trigger using PythonAPI, users must first get the `static.trigger.friction` blueprint definition, and then set the following necessary attributes to that blueprint definition:
+In order to spawn a friction trigger using PythonAPI, users must first get the
+`static.trigger.friction` blueprint definition, and then set the following necessary
+attributes to that blueprint definition:
 
 - *friction*: The friction of the trigger box when vehicles are inside it.
 - *extent_x*: The extent of the bounding box in the X coordinate in centimeters.
 - *extent_y*: The extent of the bounding box in the Y coordinate in centimeters.
 - *extent_z*: The extent of the bounding box in the Z coordinate in centimeters.
 
-Once done that, define a transform to specify the location and rotation for the friction trigger and spawn it.
+Once done that, define a transform to specify the location and rotation for the friction
+trigger and spawn it.
 
 ##### Example
 

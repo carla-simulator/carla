@@ -2,16 +2,18 @@
 
 ![Town03](img/create_map_01.jpg)
 
-<h2>RoadRunner</h2>
+## RoadRunner
 
-RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy, in a few steps you will be able to create an impressive scene. You can download
+RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy,
+in a few steps you will be able to create an impressive scene. You can download
 a trial of RoadRunner at:
 
 ![vectorzero](img/logo_vectorzero.jpg) [https://www.vectorzero.io/](https://www.vectorzero.io/)
 
-<h2>Step 1 - Create your map in RoadRunner:</h2>
+## Step 1 - Create your map in RoadRunner
 
-* Start by becoming familiar with the RoadRunner editor. Play with the controllers to define roads, sidewalks, etc. Please, keep in mind the following rules:
+* Start by becoming familiar with the RoadRunner editor. Play with the controllers to define roads,
+sidewalks, etc. Please, keep in mind the following rules:
   * Create your maps centered arround (0,0). This is required to maintain compatibility with CARLA maps.
   * At the beginning of the map creation select Tools/TransformScene and aply a 180º rotation.
     Currently OpenDrive appears rotated 180 degrees by default --We are working on fixing that.
@@ -38,7 +40,8 @@ a trial of RoadRunner at:
 
 <h3>Exporting:</h3>
 
-After verifying that everything is correct it is time to export the map to Unreal. You need export two files to create a map in Unreal.
+After verifying that everything is correct it is time to export the map to Unreal.
+You need export two files to create a map in Unreal.
 
 * OpendDrive (.xodr) Information that cars need to circulate on the
 map.
@@ -62,7 +65,7 @@ In order to export these files you need to follow these steps:
 
 ![Tutorial_RoadRunner](img/tutorial_roadrunner.jpg)
 
-<h2>Step 2 - Unreal</h2>
+## Step 2 - Unreal
 
 <h2>Importing into Unreal:</h2>
 
@@ -80,13 +83,14 @@ In order to export these files you need to follow these steps:
 <h2>Working with maps in Unreal:</h2>
 
 First of all create a level with the Map name (this will be important later)
-and save it inside Game/Carla/Maps/
+and save it inside `Game/Carla/Maps/`
 
 Once everything is loaded up you should end with several staticMeshes in the folder
 you have selected. Drag them all to the level and you will have
 your map in Unreal! Congratulations!.
 
-The time taken by the loading process will depend on how many pieces you cut the map into. Be patient! All the pieces share the same center pivot, so if they are positioned
+The time taken by the loading process will depend on how many pieces you cut the map into.
+Be patient! All the pieces share the same center pivot, so if they are positioned
 in the same place they should fit as they did in the RoadRunner Editor. When
 unreal finish loading the meshes must be centered at point (0, 0, 0).
 
@@ -95,10 +99,11 @@ unreal finish loading the meshes must be centered at point (0, 0, 0).
 <h3>Semantic Segmentation Ground Truth</h3>
 
 Once you have loaded the correct map and materials, we will prepare the semantic
-segmantation ground truth. In order for the semantic segmentation to work, you will need to  save the different pieces of the map in their corresponding folder. This
+segmantation ground truth. In order for the semantic segmentation to work, you will need to save
+the different pieces of the map in their corresponding folder. This
 is a bit difficult today as with the current version there is no name
 identification for the different pieces but this is a just temporal issue from
-Roadrunner side. Typically you will need only 3 Folders: ../Content/Static/
+Roadrunner side. Typically you will need only 3 Folders: `../Content/Static/`
 1- Road, 2-Terrain, 3- RoadLines.
 
 <h3>How to put meshes in the right folder</h3>
@@ -118,16 +123,18 @@ assets creates a road material, a sidewalk material and so on.
 
 Roadrunner roads come with premade materials, but for CARLA weather to work
 properly you will need to change the pavement materials to some of our own (Stored
-under Carla/Static/GenericMaterials/WetPavement). To this end you can change the
-materials one by one or you could remove the Roadrunner materials. This action will trigger the replace references window in which you can select and change the new material
+under `Carla/Static/GenericMaterials/WetPavement`). To this end you can change the
+materials one by one or you could remove the Roadrunner materials. This action will trigger the
+replace references window in which you can select and change the new material
 for the meshes the last one was referencing.
 
-<h2>Step 3 - Loading OpenDrive into CARLA</h2>
+## Step 3 - Loading OpenDrive into CARLA
 
 - In RoadRunner go into File/Export and choose OpenDrive(.xodr). In the Export
-  window choose the save folder and name the file with the same name as the map. Let everything else with the default values and press export.
+  window choose the save folder and name the file with the same name as the map. Let everything else
+  with the default values and press export.
 
-- Copy the .xodr file inside the Content/Carla/Maps/OpenDrive folder.
+- Copy the .xodr file inside the `Content/Carla/Maps/OpenDrive` folder.
 
 - Open Your Unreal level and drag the OpenDriveActor inside the scene. This will
   read the level name, search the Opendrive file with the same name and load
@@ -137,13 +144,17 @@ for the meshes the last one was referencing.
   your map. Congratulations!
 
 !!! note
-    It is possible that the map that Opendrive generates is rotated. Maybe you did not rotate it in RoadRunner when you told you so? If this happens you only need to select all
+    It is possible that the map that Opendrive generates is rotated. Maybe you did not rotate it in
+    RoadRunner when you told you so? If this happens you only need to select all
     map import from RoadRunner and rotate Z: by 180 degrees.
 
 <h2>Setting up the traffic based on OpenDrive:</h2>
 
 !!! Note
-    the current version of CARLA needs a CarlaMapGenerator spawned in order to use the server autopilot functionality. From the current version it is also to drive all vehicles using the new client nvaigation stack. However, if you still want to use the server autopilot you will need to create a CarlaMapGenerator for your city --never above or under it.
+    the current version of CARLA needs a CarlaMapGenerator spawned in order to use the server
+    autopilot functionality. From the current version it is also to drive all vehicles using
+    the new client nvaigation stack. However, if you still want to use the server autopilot
+    you will need to create a CarlaMapGenerator for your city --never above or under it.
 
 * You will need to place points for the vehicles to spawn. The actor that sets the
   spawn position of the vehicles is called VehicleSpawnPoint. CARLA vehicles
@@ -160,9 +171,10 @@ for the meshes the last one was referencing.
 
 * Traffic lights must be placed in every crossing in which vehicles might
   conflict. These are the childs of "TrafficLightBase" and are stored inside
-  Game/Carla/Static/TrafficSigns/Streetlights_01.
+  `Game/Carla/Static/TrafficSigns/Streetlights_01`.
 
-Again, remember this is just needed to use the server autopilot. We recommend to start using new the client driving stack provided from 0.9.2 version.
+Again, remember this is just needed to use the server autopilot. We recommend to start using new
+the client driving stack provided from 0.9.2 version.
 
 <h2>Working with BP_TrafficLight and BP_TrafficLightGroups:</h2>
 
