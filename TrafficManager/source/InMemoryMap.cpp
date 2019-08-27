@@ -188,22 +188,23 @@ namespace traffic_manager {
 
   void InMemoryMap::LinkLaneChangePoint(
     std::shared_ptr<SimpleWaypoint> reference_waypoint,
-    carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint
+    carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
+    int side
   ){
 
     if (neighbor_waypoint != nullptr) {
       auto neighbour_road_id = neighbor_waypoint->GetRoadId();
-      auto neigbhour_section_id = neighbor_waypoint->GetSectionId();
-      auto neigbhour_lane_id = neighbor_waypoint->GetLaneId();
+      auto neighbour_section_id = neighbor_waypoint->GetSectionId();
+      auto neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
       if (
         waypoint_structure.find(neighbour_road_id) != waypoint_structure.end()
         and
-        waypoint_structure[neighbour_road_id].find(neigbhour_section_id)
+        waypoint_structure[neighbour_road_id].find(neighbour_section_id)
           != waypoint_structure[neighbour_road_id].end()
         and
-        waypoint_structure[neighbour_road_id][neigbhour_section_id].find(neigbhour_lane_id)
-          != waypoint_structure[neighbour_road_id][neigbhour_section_id].end()
+        waypoint_structure[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
+          != waypoint_structure[neighbour_road_id][neighbour_section_id].end()
       ) {
 
         std::vector<std::shared_ptr<SimpleWaypoint>> waypoints_to_left
@@ -213,16 +214,20 @@ namespace traffic_manager {
             [neighbor_waypoint->GetLaneId()];
 
         if (waypoints_to_left.size() > 0) {
-          auto nearest_left_waypoint = waypoints_to_left[0];
+          auto nearest_waypoint = waypoints_to_left[0];
           auto smallest_left_distance = INFINITE_DISTANCE;
           for(auto left_wp : waypoints_to_left) {
             if(reference_waypoint->distance(left_wp->getLocation()) < smallest_left_distance)
             {
               smallest_left_distance = reference_waypoint->distance(left_wp->getLocation());
-              nearest_left_waypoint = left_wp;
+              nearest_waypoint = left_wp;
             }
           }
-          reference_waypoint->setLeftWaypoint(nearest_left_waypoint);
+
+          if (side < 0)
+            reference_waypoint->setLeftWaypoint(nearest_waypoint);
+          else if (side > 0)
+            reference_waypoint->setRightWaypoint(nearest_waypoint);
         }
       }
     }
@@ -236,11 +241,11 @@ namespace traffic_manager {
 
     if ((lane_change & change_right) > 0) {
       auto right_waypoint =  raw_waypoint->GetRight();
-      LinkLaneChangePoint(reference_waypoint, right_waypoint);
+      LinkLaneChangePoint(reference_waypoint, right_waypoint, +1);
     }
     if ((lane_change & change_left) > 0) {
       auto left_waypoint =  raw_waypoint->GetLeft();
-      LinkLaneChangePoint(reference_waypoint, left_waypoint);
+      LinkLaneChangePoint(reference_waypoint, left_waypoint, -1);
      }
     
   }

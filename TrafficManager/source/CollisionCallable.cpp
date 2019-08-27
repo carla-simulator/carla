@@ -152,7 +152,11 @@ namespace traffic_manager {
     );   // Account for these constants
 
     std::vector<carla::geom::Location> geodesic_boundary;
-    if (this->shared_data->buffer_map.contains(actor->GetId())) {
+    if (
+      this->shared_data->buffer_map.contains(actor->GetId())
+      and
+      this->shared_data->buffer_map.get(actor->GetId()) != nullptr
+    ) {
       bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
       auto simple_waypoints = this->shared_data->buffer_map.get(actor->GetId())->getContent(bbox_extension);
       std::vector<carla::geom::Location> left_boundary;
@@ -198,6 +202,7 @@ namespace traffic_manager {
              location + carla::geom::Location(heading_vector * extent.x - perpendicular_vector * extent.y)
     };
   }
+
   std::map< carla::SharedPtr <carla::client::Actor > , int> CollisionCallable::getClosestActors(carla::SharedPtr<carla::client::Actor> actor) {
 
     //getting nearest GridIDs
