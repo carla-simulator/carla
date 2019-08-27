@@ -9,6 +9,7 @@
 
 #include "PipelineCallable.h"
 #include "SimpleWaypoint.h"
+#include "TrafficDistributor.h"
 
 namespace traffic_manager {
 

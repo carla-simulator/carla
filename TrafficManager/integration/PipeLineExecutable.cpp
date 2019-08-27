@@ -28,9 +28,14 @@ int main(int argc, char* argv[]) {
   auto world = client_conn.GetWorld();
 
   int target_traffic_amount =0;
-  // if (argc > 1) {
-  //   target_traffic_amount = std::stoi(argv[1]);
-  // }
+  if (argc == 3 and std::string(argv[1]) == "-n") {
+    try {
+      target_traffic_amount = std::stoi(argv[2]);
+    } catch(const std::exception& e) {
+      std::cout << "Failed to parse argument, choosing defaults" << std::endl;
+    }
+  }
+
   run_pipeline(world, client_conn, target_traffic_amount);
 
   return 0;
@@ -65,7 +70,7 @@ void run_pipeline(
 
   traffic_manager::Pipeline pipeline(
       {0.1f, 0.15f, 0.01f},
-      {10.0f, 0.01f, 0.1f},
+      {10.0f, 0.0f, 0.1f},
       7.0f,
       std::ceil(core_count/4),
       shared_data

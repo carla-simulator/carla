@@ -30,7 +30,7 @@ namespace traffic_manager {
     std::mt19937_64 rng((std::random_device())());
 
     int number_of_vehicles;
-    if (target_amount == 0) {
+    if (target_amount <= 0) {
       if (core_count <= 4)
         number_of_vehicles = 100;
       else if (core_count <= 8)
@@ -43,8 +43,11 @@ namespace traffic_manager {
       number_of_vehicles = target_amount;
     }
 
-    if (number_of_vehicles > spawn_points.size())
+    if (number_of_vehicles > spawn_points.size()) {
+      std::cout << "Number of requested vehicles more than number available spawn points"
+      << std::endl << "Spawning vehicle at every spawn point" << std::endl;
       number_of_vehicles = spawn_points.size();
+    }
 
     std::cout << "Spawning " << number_of_vehicles << " vehicles" << std::endl;
 
