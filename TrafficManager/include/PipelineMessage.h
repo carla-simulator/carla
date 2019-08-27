@@ -42,7 +42,7 @@ namespace traffic_manager {
     float getAttribute(const std::string &);
 
     /// Checks if a given attribute is set for the object.
-    bool hasAttribute(std::string)const;
+    bool hasAttribute(std::string) const;
 
     /// Removes the attribute with the string key passed.
     void removeAttribute(std::string);

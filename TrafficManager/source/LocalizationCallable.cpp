@@ -28,8 +28,8 @@ namespace traffic_manager {
     if (
       shared_data->buffer_map.contains(actor_id)
       and
-      !(shared_data->buffer_map.get(actor_id)->empty())
-    ) { // Existing actor in buffer map
+      !(shared_data->buffer_map.get(actor_id)->empty())) { // Existing actor in
+                                                           // buffer map
 
       auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
       /// Purge past waypoints
@@ -51,18 +51,17 @@ namespace traffic_manager {
       if (waypoint_buffer->empty()) {
         auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
         waypoint_buffer->push(closest_waypoint);
-      } 
+      }
 
       /// Make lane change decisions
       auto simple_way_front = waypoint_buffer->back();
       auto way_front = simple_way_front->getWaypoint();
       auto lane_change_waypoints = shared_data->traffic_distributor.assignDistribution(
-        actor_id,
-        way_front->GetRoadId(),
-        way_front->GetSectionId(),
-        way_front->GetLaneId(),
-        simple_way_front
-      );
+          actor_id,
+          way_front->GetRoadId(),
+          way_front->GetSectionId(),
+          way_front->GetLaneId(),
+          simple_way_front);
       for (auto wp: lane_change_waypoints) {
         waypoint_buffer->push(wp);
       }
@@ -70,8 +69,9 @@ namespace traffic_manager {
       /// Re-populate buffer
       while (
         waypoint_buffer->back()->distance(
-        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a constant
-      ) {
+        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
+                                                                 // constant
+        ) {
         auto next_waypoints = waypoint_buffer->back()->getNextWaypoint();
         auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
         auto feed_waypoint = next_waypoints[selection_index];
@@ -85,10 +85,9 @@ namespace traffic_manager {
         !(shared_data->buffer_map.contains(actor_id))
         or
         shared_data->buffer_map.get(actor_id) == nullptr
-      ) {
+        ) {
         shared_data->buffer_map.put(
-            actor_id, std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200)
-        );
+            actor_id, std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200));
       }
       auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
       /// Initialize buffer for actor
@@ -97,8 +96,9 @@ namespace traffic_manager {
       /// Populate buffer
       while (
         waypoint_buffer->back()->distance(
-        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a constant
-      ) {
+        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
+                                                                 // constant
+        ) {
         auto next_waypoints = closest_waypoint->getNextWaypoint();
         auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
         closest_waypoint = next_waypoints[selection_index];
@@ -112,8 +112,8 @@ namespace traffic_manager {
       std::max(
       std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
       TARGET_WAYPOINT_HORIZON_LENGTH)
-    );
-    while (!(shared_data->buffer_map.contains(actor_id)));
+      );
+    while (!(shared_data->buffer_map.contains(actor_id))) {}
     auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
     auto target_waypoint = waypoint_buffer->get(horizon_index);
     float dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
@@ -131,7 +131,7 @@ namespace traffic_manager {
 
   float LocalizationCallable::deviationDotProduct(
       carla::SharedPtr<carla::client::Actor> actor,
-      const carla::geom::Location& target_location) const{
+      const carla::geom::Location &target_location) const {
     auto heading_vector = actor->GetTransform().GetForwardVector();
     auto next_vector = target_location - actor->GetLocation();
     next_vector = next_vector.MakeUnitVector();
@@ -142,7 +142,7 @@ namespace traffic_manager {
 
   float LocalizationCallable::deviationCrossProduct(
       carla::SharedPtr<carla::client::Actor> actor,
-      const carla::geom::Location& target_location) const {
+      const carla::geom::Location &target_location) const {
     auto heading_vector = actor->GetTransform().GetForwardVector();
     auto next_vector = target_location - actor->GetLocation();
     next_vector = next_vector.MakeUnitVector();

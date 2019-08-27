@@ -10,7 +10,7 @@ namespace traffic_manager {
     : pool_size(pool_size),
       thread_callable(thread_callable) {}
 
-  PipelineStage::~PipelineStage(){}
+  PipelineStage::~PipelineStage() {}
 
   void PipelineStage::runThreads() {
     for (int range = pool_size; range > 0; range--) {

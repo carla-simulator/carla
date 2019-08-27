@@ -42,13 +42,13 @@ namespace traffic_manager {
         carla::SharedPtr<carla::client::Actor> ego_vehicle) const;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    std::vector<carla::geom::Location> getBoundary(carla::SharedPtr<carla::client::Actor> actor)const;
+    std::vector<carla::geom::Location> getBoundary(carla::SharedPtr<carla::client::Actor> actor) const;
 
     /// Returns the extrapolated bounding box of the vehicle along it's
     /// trajectory.
     std::vector<carla::geom::Location> getGeodesicBoundary(
         carla::SharedPtr<carla::client::Actor> actor,
-        const std::vector<carla::geom::Location> &bbox)const;
+        const std::vector<carla::geom::Location> &bbox) const;
 
     /// Method to construct a boost polygon object
     polygon getPolygon(const std::vector<carla::geom::Location> &boundary) const;
@@ -57,10 +57,11 @@ namespace traffic_manager {
     /// other_vehicle to pass.
     bool negotiateCollision(
         carla::SharedPtr<carla::client::Actor> ego_vehicle,
-        carla::SharedPtr<carla::client::Actor> other_vehicle)const;
+        carla::SharedPtr<carla::client::Actor> other_vehicle) const;
 
     /* Method for getting the nearby vehicles */
-    std::map< carla::SharedPtr <carla::client::Actor > , int> getClosestActors(carla::SharedPtr<carla::client::Actor> actor);
+    std::map<carla::SharedPtr<carla::client::Actor>, int> getClosestActors(
+        carla::SharedPtr<carla::client::Actor> actor);
 
   public:
 

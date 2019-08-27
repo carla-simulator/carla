@@ -86,7 +86,7 @@ namespace traffic_manager {
       std::unique_lock<std::mutex> lock(q_mutex);
       this->empty_condition.wait(lock, [=] { return !this->queue.empty(); });
       auto queue_size = this->size();
-      index = index >= queue_size ? queue_size-1 : index;
+      index = index >= queue_size ? queue_size - 1 : index;
       return queue.at(index);
     }
   };

@@ -30,16 +30,16 @@ namespace traffic_manager {
     carla::geom::Location getLocation() const;
 
     /// Returns a carla::shared_ptr to carla::waypoint
-    carla::SharedPtr<carla::client::Waypoint> getWaypoint() const; 
+    carla::SharedPtr<carla::client::Waypoint> getWaypoint() const;
 
     /// Returns the list of next waypoints.
     std::vector<std::shared_ptr<SimpleWaypoint>> getNextWaypoint() const;
 
     /// Returns the vector along the waypoint's direction.
-    carla::geom::Vector3D getVector()const;
+    carla::geom::Vector3D getVector() const;
 
     /// Returns the location of the waypoint as a list of x,y,z float values.
-    std::vector<float> getXYZ()const;
+    std::vector<float> getXYZ() const;
 
     /// This method is used to set the next waypoints.
     int setNextWaypoint(std::vector<std::shared_ptr<SimpleWaypoint>> next_waypoints);
@@ -52,14 +52,13 @@ namespace traffic_manager {
 
     /// This method is used to get the closest left waypoint for lane change
     std::shared_ptr<SimpleWaypoint> getLeftWaypoint();
-    
+
     /// This method is used to get the closest right waypoint for lane change
     std::shared_ptr<SimpleWaypoint> getRightWaypoint();
 
-
     /// Calculates the distance from the object's waypoint to the passed
     /// location.
-    float distance(const carla::geom::Location& location)const;
+    float distance(const carla::geom::Location &location) const;
 
     /// Returns true if the object's waypoint belongs to an intersection.
     bool checkJunction() const;

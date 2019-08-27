@@ -20,10 +20,10 @@ namespace traffic_manager {
   void PipelineMessage::setAttribute(std::string name, float value) {
     attributes[name] = value;
   }
-  float PipelineMessage::getAttribute(const std::string& name) {
+  float PipelineMessage::getAttribute(const std::string &name) {
     return attributes[name];
   }
-  bool PipelineMessage::hasAttribute(std::string name)const {
+  bool PipelineMessage::hasAttribute(std::string name) const {
     if (attributes.find(name) != attributes.end()) {
       return true;
     } else {

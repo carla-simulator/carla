@@ -9,7 +9,8 @@ namespace traffic_manager {
   class PipelineStage {
 
     /// This is the class for stage objects in the pipeline.
-    /// Construct objects of this type by passing the appropriate callable object
+    /// Construct objects of this type by passing the appropriate callable
+    /// object
     /// and threading information to create the pipeline stage.
 
   private:

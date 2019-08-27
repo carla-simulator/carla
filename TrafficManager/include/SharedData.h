@@ -45,6 +45,7 @@ namespace traffic_manager {
     ~SharedData();
 
     void destroy();
+
     CreateGrid Grid;
   };
 

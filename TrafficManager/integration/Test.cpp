@@ -19,25 +19,27 @@
 #include "Pipeline.h"
 
 void test_dense_topology(const carla::client::World &);
+
 void test_in_memory_map(carla::SharedPtr<carla::client::Map>);
+
 void test_lane_change(const carla::client::World &world);
+
 void test_pipeline_stages(
     carla::SharedPtr<carla::client::ActorList> actor_list,
     carla::SharedPtr<carla::client::Map> world_map,
     carla::client::Client &client_conn);
+
 void test_pipeline(
-    carla::client::World& world,
+    carla::client::World &world,
     carla::client::Client &client_conn,
-    int target_traffic_amount
-  );
+    int target_traffic_amount);
 
 std::atomic<bool> quit(false);    // signal flag
-void got_signal(int)
-{
-    quit.store(true);
+void got_signal(int) {
+  quit.store(true);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
   auto world = client_conn.GetWorld();
@@ -55,16 +57,15 @@ int main(int argc, char* argv[]) {
 }
 
 void test_pipeline(
-    carla::client::World& world,
+    carla::client::World &world,
     carla::client::Client &client_conn,
-    int target_traffic_amount
-  ) {
+    int target_traffic_amount) {
 
   struct sigaction sa;
-  memset( &sa, 0, sizeof(sa) );
+  memset(&sa, 0, sizeof(sa));
   sa.sa_handler = got_signal;
   sigfillset(&sa.sa_mask);
-  sigaction(SIGINT,&sa,NULL);
+  sigaction(SIGINT, &sa, NULL);
 
   traffic_manager::SharedData shared_data;
   auto world_map = world.GetMap();
@@ -85,17 +86,19 @@ void test_pipeline(
       {0.1f, 0.15f, 0.01f},
       {10.0f, 0.01f, 0.1f},
       7.0f,
-      std::ceil(core_count/4),
+      std::ceil(core_count / 4),
       shared_data
       );
   pipeline.setup();
   pipeline.start();
 
-  std::cout << "Started " << 2 + 4 * std::ceil(core_count/4) << " pipeline threads" << std::endl;
+  std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
 
   while (true) {
     sleep(1);
-    if(quit.load()) break; 
+    if (quit.load()) {
+      break;
+    }
   }
 
   pipeline.stop();
@@ -224,14 +227,14 @@ void test_lane_change(const carla::client::World &world) {
 
     if ((lane_change & change_right) > 0 and !(point->checkJunction())) {
       total_right_lane_links++;
-      if(point->getRightWaypoint() == nullptr) {
+      if (point->getRightWaypoint() == nullptr) {
         missing_right_lane_links++;
       }
     }
 
     if ((lane_change & change_left) > 0 and !(point->checkJunction())) {
       total_left_lane_links++;
-      if(point->getLeftWaypoint() == nullptr) {
+      if (point->getLeftWaypoint() == nullptr) {
         missing_left_lane_links++;
       }
     }
@@ -240,7 +243,7 @@ void test_lane_change(const carla::client::World &world) {
   std::cout << "Total right lane changes available : " << total_right_lane_links << std::endl;
   std::cout << "Missed right lane changes : " << missing_right_lane_links << std::endl;
   std::cout << "Total left lane changes available : " << total_left_lane_links << std::endl;
-  std::cout << "Missed left lane changes : " << missing_left_lane_links << std:: endl;
+  std::cout << "Missed left lane changes : " << missing_left_lane_links << std::endl;
 
   sleep(1);
   std::terminate();

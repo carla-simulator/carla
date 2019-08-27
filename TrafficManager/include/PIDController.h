@@ -37,7 +37,7 @@ namespace traffic_manager {
         StateEntry present_state,
         StateEntry previous_state,
         const std::vector<float> &longitudinal_parameters,
-        const std::vector<float> &lateral_parameters)const;
+        const std::vector<float> &lateral_parameters) const;
 
   };
 
