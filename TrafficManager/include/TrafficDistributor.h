@@ -41,8 +41,8 @@ namespace traffic_manager {
     void eraseVehicleId(int, GeoIds);
     void setRoadIds(int, GeoIds);
 
-    std::map<int, std::map<int, int>> getVehicleIds(GeoIds);
-    GeoIds getRoadIds(int);
+    std::map<int, std::map<int, int>> getVehicleIds(GeoIds) const;
+    GeoIds getRoadIds(int) const;
 
   public:
 
