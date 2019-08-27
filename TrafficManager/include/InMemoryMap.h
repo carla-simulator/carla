@@ -62,7 +62,8 @@ namespace traffic_manager {
     void structuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint);
     void LinkLaneChangePoint(
       std::shared_ptr<SimpleWaypoint> reference_waypoint,
-      carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint
+      carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
+      int side
     );
     void FindAndLinkLaneChange (std::shared_ptr<SimpleWaypoint> reference_waypoint);
   };

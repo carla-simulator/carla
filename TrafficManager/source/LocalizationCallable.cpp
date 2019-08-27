@@ -54,13 +54,14 @@ namespace traffic_manager {
       } 
 
       /// Make lane change decisions
-      auto way_front = waypoint_buffer->back()->getWaypoint();
+      auto simple_way_front = waypoint_buffer->back();
+      auto way_front = simple_way_front->getWaypoint();
       auto lane_change_waypoints = shared_data->traffic_distributor.assignDistribution(
         actor_id,
         way_front->GetRoadId(),
         way_front->GetSectionId(),
         way_front->GetLaneId(),
-        waypoint_buffer->back()
+        simple_way_front
       );
       for (auto wp: lane_change_waypoints) {
         waypoint_buffer->push(wp);

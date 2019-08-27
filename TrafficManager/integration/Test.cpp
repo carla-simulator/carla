@@ -47,13 +47,9 @@ int main(int argc, char* argv[]) {
 
   // test_dense_topology(world);
   // test_in_memory_map(world_map);
-  // test_lane_change(world);
   // test_pipeline_stages(vehicle_list, world_map, client_conn);
-  int target_traffic_amount =0;
-  // if (argc > 1) {
-  //   target_traffic_amount = std::stoi(argv[1]);
-  // }
-  test_pipeline(world, client_conn, target_traffic_amount);
+  test_lane_change(world);
+  // test_pipeline(world, client_conn, 0);
 
   return 0;
 }
@@ -207,20 +203,45 @@ void test_dense_topology(const carla::client::World &world) {
 }
 
 void test_lane_change(const carla::client::World &world) {
+
   auto debug = world.MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
   auto topology = dao.getTopology();
   traffic_manager::InMemoryMap local_map(topology);
   local_map.setUp(1.0);
+
+  int missing_left_lane_links = 0;
+  int missing_right_lane_links = 0;
+  int total_left_lane_links = 0;
+  int total_right_lane_links = 0;
+
   for (auto point : local_map.get_dense_topology()) {
-    auto zoffset = carla::geom::Location(0,0,5);
-    if(point->getLeftWaypoint() != nullptr){
-      debug.DrawArrow(point->getLocation()+zoffset,(point->getLeftWaypoint())->getLocation()+zoffset);
+
+    auto raw_waypoint = point->getWaypoint();
+    uint8_t lane_change = static_cast<uint8_t>(raw_waypoint->GetLaneChange());
+    uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
+    uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
+
+    if ((lane_change & change_right) > 0 and !(point->checkJunction())) {
+      total_right_lane_links++;
+      if(point->getRightWaypoint() == nullptr) {
+        missing_right_lane_links++;
+      }
     }
-    world.WaitForTick(carla::time_duration(std::chrono::duration<int, std::milli>(1000)));
-    if(point->getRightWaypoint() != nullptr){
-      debug.DrawArrow(point->getLocation()+zoffset,(point->getRightWaypoint())->getLocation()+zoffset);
+
+    if ((lane_change & change_left) > 0 and !(point->checkJunction())) {
+      total_left_lane_links++;
+      if(point->getLeftWaypoint() == nullptr) {
+        missing_left_lane_links++;
+      }
     }
-    world.WaitForTick(carla::time_duration(std::chrono::duration<int, std::milli>(1000)));
   }
+
+  std::cout << "Total right lane changes available : " << total_right_lane_links << std::endl;
+  std::cout << "Missed right lane changes : " << missing_right_lane_links << std::endl;
+  std::cout << "Total left lane changes available : " << total_left_lane_links << std::endl;
+  std::cout << "Missed left lane changes : " << missing_left_lane_links << std:: endl;
+
+  sleep(1);
+  std::terminate();
 }

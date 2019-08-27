@@ -131,47 +131,60 @@ namespace traffic_manager {
                     }
 
                     for (int i =0; i< abs(target_lane_id - lane_id); i++) {
-                        // std::cout << "Calculating lane change : " << actor_id << std::endl;
                         std::shared_ptr<SimpleWaypoint> change_point;
-                        if (abs(target_lane_id) > abs(lane_id)) {
-                            auto change_point = waypoint->getRightWaypoint();
-                        } else {
-                            auto change_point = waypoint->getLeftWaypoint();
+
+                        auto right_change_point = waypoint->getRightWaypoint();
+                        auto left_change_point = waypoint->getLeftWaypoint();
+                        if (right_change_point == nullptr) {
+                            change_point = left_change_point;
+                        } else if (left_change_point == nullptr) {
+                            change_point = right_change_point;
                         }
+
+                        if (right_change_point != nullptr and left_change_point != nullptr) {
+                            int right_lane_id = right_change_point->getWaypoint()->GetLaneId();
+                            int left_lane_id = left_change_point->getWaypoint()->GetLaneId();
+
+                            if (abs(right_lane_id - target_lane_id) < abs(left_lane_id - target_lane_id)) {
+                                change_point = right_change_point;
+                            } else {
+                                change_point = left_change_point;
+                            }
+                        }
+
                         if (change_point != nullptr) {
                             for (int i=0; i<LANE_CHANGE_DISTANCE; i++) {
                                 change_point = change_point->getNextWaypoint()[0];
                             }
                             lane_change_waypoints.push_back(change_point);
-                            // std::cout << "Get lane change is not null" << std::endl;
-                        } else {
-                            // std::cout << "Get lane change returned null" << std::endl;
                         }
                     }
 
                     if (lane_change_waypoints.size() >0) {
-                        // std::cout << "Changing lane for actor : " << actor_id << std::endl;
+
                         auto end_wp = lane_change_waypoints.back()->getWaypoint();
                         road_id = end_wp->GetRoadId();
                         section_id = end_wp->GetSectionId();
                         lane_id = end_wp->GetLaneId();
                         eraseVehicleId(actor_id, old_ids);
-                        setVehicleId(actor_id, new_ids);
-                        setRoadIds(actor_id, new_ids);
-                    } else {
-                        // std::cout << "Failed to change lane for actor : " << actor_id << std::endl;
+                        setVehicleId(actor_id, {road_id, section_id, lane_id});
+                        setRoadIds(actor_id, {road_id, section_id, lane_id});
                     }
+                    eraseVehicleId(actor_id, old_ids);
+                    setVehicleId(actor_id, new_ids);
+                    setRoadIds(actor_id, new_ids);
                 }
+                eraseVehicleId(actor_id, old_ids);
+                setVehicleId(actor_id, new_ids);
+                setRoadIds(actor_id, new_ids);
             }
         } else if (!(waypoint->checkJunction())) {
             std::lock_guard<std::mutex> lock(vehicle_add_mutex);
             if (getRoadIds(actor_id).lane_id == 0) {
-                // std::cout << "Adding vehicle to system : " << actor_id << std::endl;
                 setVehicleId(actor_id, new_ids);
                 setRoadIds(actor_id, new_ids);
             }
         }
-
         return lane_change_waypoints;
     }
 
