@@ -29,7 +29,7 @@ namespace traffic_manager {
       }
     }
 
-    D get(K key) {
+    D get(K key) const {
       D data;
       if (data_map.find(key) != data_map.end()) {
         data = data_map.at(key);
@@ -38,7 +38,7 @@ namespace traffic_manager {
       return data;
     }
 
-    bool contains(K key) {
+    bool contains(K key) const {
       return data_map.find(key) != data_map.end();
     }
 

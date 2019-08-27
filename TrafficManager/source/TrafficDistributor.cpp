@@ -53,27 +53,27 @@ namespace traffic_manager {
     vehicle_id_to_road_map[vehicle_id] = ids;
   }
 
-  GeoIds TrafficDistributor::getRoadIds(int vehicle_id) {
+  GeoIds TrafficDistributor::getRoadIds(int vehicle_id) const {
     if (vehicle_id_to_road_map.find(vehicle_id) != vehicle_id_to_road_map.end()) {
-      return vehicle_id_to_road_map[vehicle_id];
+      return vehicle_id_to_road_map.at(vehicle_id);
     } else {
       GeoIds ids = {0, 0, 0};
       return ids;
     }
   }
 
-  std::map<int, std::map<int, int>> TrafficDistributor::getVehicleIds(GeoIds ids) {
+  std::map<int, std::map<int, int>> TrafficDistributor::getVehicleIds(GeoIds ids) const {
 
     bool entry_found = false;
     if (road_to_vehicle_id_map.find(ids.road_id) != road_to_vehicle_id_map.end()) {
       if (
-        road_to_vehicle_id_map[ids.road_id].find(ids.section_id)
+        road_to_vehicle_id_map.at(ids.road_id).find(ids.section_id)
         !=
-        road_to_vehicle_id_map[ids.section_id].end()) {
+        road_to_vehicle_id_map.at(ids.section_id).end()) {
         if (
-          road_to_vehicle_id_map[ids.road_id][ids.section_id].find(ids.lane_id)
+          road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).find(ids.lane_id)
           !=
-          road_to_vehicle_id_map[ids.road_id][ids.section_id].end()) {
+          road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).end()) {
           entry_found = true;
         }
       }
@@ -81,7 +81,7 @@ namespace traffic_manager {
 
     if (entry_found) {
       std::map<int, std::map<int, int>> vehicle_id_map;
-      for (auto lane: road_to_vehicle_id_map[ids.road_id][ids.section_id]) {
+      for (auto lane: road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id)) {
         if (lane.first * ids.lane_id > 0) {
           vehicle_id_map.insert(lane);
         }

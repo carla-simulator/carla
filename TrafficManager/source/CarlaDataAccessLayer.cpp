@@ -15,7 +15,7 @@ namespace traffic_manager {
       carla::SharedPtr<carla::client::Waypoint>,
       carla::SharedPtr<carla::client::Waypoint>
       >
-      > CarlaDataAccessLayer::getTopology() {
+      > CarlaDataAccessLayer::getTopology() const {
     return world_map->GetTopology();
   }
 }
