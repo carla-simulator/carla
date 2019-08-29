@@ -3,6 +3,7 @@
 namespace traffic_manager {
 
   int MINIMUM_CORE_COUNT = 4;
+  int VEHICLES_PER_CORE = 10;
 
   /// Pick a random element from @a range.
   template <typename RangeT, typename RNG>
@@ -30,15 +31,7 @@ namespace traffic_manager {
 
     int number_of_vehicles;
     if (target_amount <= 0) {
-      if (core_count <= 4) {
-        number_of_vehicles = 100;
-      } else if (core_count <= 8) {
-        number_of_vehicles = 150;
-      } else if (core_count <= 16) {
-        number_of_vehicles = 200;
-      } else {
-        number_of_vehicles = 250;
-      }
+      number_of_vehicles = core_count * VEHICLES_PER_CORE;
     } else {
       number_of_vehicles = target_amount;
     }
