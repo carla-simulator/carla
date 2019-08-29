@@ -81,14 +81,9 @@ namespace traffic_manager {
     } else {       // New actor to buffer map
 
       /// Make size of queue a derived or constant
-      while (
-        !(shared_data->buffer_map.contains(actor_id))
-        or
-        shared_data->buffer_map.get(actor_id) == nullptr
-        ) {
-        shared_data->buffer_map.put(
-            actor_id, std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200));
-      }
+      auto queue_ptr = std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200);
+      shared_data->buffer_map.put(actor_id, queue_ptr);
+
       auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
       /// Initialize buffer for actor
       auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
@@ -97,8 +92,8 @@ namespace traffic_manager {
       while (
         waypoint_buffer->back()->distance(
         waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
-                                                                 // constant
-        ) {
+                                                                // constant
+      ) {
         auto next_waypoints = closest_waypoint->getNextWaypoint();
         auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
         closest_waypoint = next_waypoints[selection_index];
@@ -108,22 +103,31 @@ namespace traffic_manager {
 
     /// Generate output message
     PipelineMessage out_message;
+    out_message.setActor(message.getActor());
+    out_message.setAttribute("velocity", vehicle_velocity);
+    float dot_product = 0;
+
     auto horizon_index = static_cast<int>(
       std::max(
       std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
       TARGET_WAYPOINT_HORIZON_LENGTH)
-      );
-    while (!(shared_data->buffer_map.contains(actor_id))) {}
-    auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
-    auto target_waypoint = waypoint_buffer->get(horizon_index);
-    float dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
-    float cross_product = deviationCrossProduct(vehicle, target_waypoint->getLocation());
-    dot_product = 1 - dot_product;
-    if (cross_product < 0) {
-      dot_product *= -1;
+    );
+
+    if (
+      shared_data->buffer_map.contains(actor_id)
+    ) {
+      auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
+      if (waypoint_buffer != nullptr) {
+        auto target_waypoint = waypoint_buffer->get(horizon_index);
+        dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
+        float cross_product = deviationCrossProduct(vehicle, target_waypoint->getLocation());
+        dot_product = 1 - dot_product;
+        if (cross_product < 0) {
+          dot_product *= -1;
+        }
+      }
     }
-    out_message.setActor(message.getActor());
-    out_message.setAttribute("velocity", vehicle_velocity);
+
     out_message.setAttribute("deviation", dot_product);
 
     return out_message;

@@ -20,22 +20,36 @@ namespace traffic_manager {
 
     void put(K key, D data) {
 
-      if (data_map.find(key) == data_map.end()) {
-        std::lock_guard<std::mutex> lock(put_mutex);
-
-        if (data_map.find(key) == data_map.end()) {
+      if (
+        data_map.find(key) == data_map.end()
+        or
+          (
+            data_map.at(key) == nullptr
+            and
+            data != nullptr
+          )
+      ) {
+        std::unique_lock<std::mutex> lock(put_mutex);
+        if (
+          data_map.find(key) == data_map.end()
+          or
+          (
+            data_map.at(key) == nullptr
+            and
+            data != nullptr
+          )
+        ) {
           data_map.insert(std::pair<K, D>(key, data));
         }
       }
     }
 
     D get(K key) const {
-      D data;
       if (data_map.find(key) != data_map.end()) {
-        data = data_map.at(key);
+        return data_map.at(key);
+      } else {
+        return D();
       }
-
-      return data;
     }
 
     bool contains(K key) const {

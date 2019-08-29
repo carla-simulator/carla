@@ -1,6 +1,9 @@
+#include <cstdlib>
 #include <iostream>
 #include <signal.h>
 #include <atomic>
+#include <execinfo.h>
+#include <stdexcept>
 
 #include "carla/client/Client.h"
 #include "CarlaDataAccessLayer.h"
@@ -20,7 +23,44 @@ void got_signal(int) {
   quit.store(true);
 }
 
+std::vector<carla::SharedPtr<carla::client::Actor>>* actors_to_be_destroyed;
+bool exiting_normal = false;
+
+void handler() {
+
+  if (exiting_normal) {
+
+    std::cout << "TrafficManager stopped by user" << std::endl;
+    exit(0);
+
+  } else {
+
+    std::cout << "TrafficManager encountered a problem" << std::endl;
+    std::cout << "Destroying spawned actors" << std::endl;
+    if (actors_to_be_destroyed != nullptr) {
+      for (auto actor: *actors_to_be_destroyed) {
+        if (actor != nullptr and actor->IsAlive()) {
+          actor->Destroy();
+        }
+      }
+    }
+
+    void *trace_elems[20];
+    int trace_elem_count(backtrace( trace_elems, 20 ));
+    char **stack_syms(backtrace_symbols( trace_elems, trace_elem_count ));
+    for ( int i = 0 ; i < trace_elem_count ; ++i )
+    {
+        std::cout << stack_syms[i] << "\n";
+    }
+    free(stack_syms);
+
+    exit(1);
+  }
+}  
+
 int main(int argc, char *argv[]) {
+  std::set_terminate(handler);
+
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
   auto world = client_conn.GetWorld();
@@ -64,6 +104,7 @@ void run_pipeline(
   auto core_count = traffic_manager::read_core_count();
   std::cout << "Found " << core_count << " CPU cores" << std::endl;
   shared_data.registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
+  actors_to_be_destroyed = &(shared_data.registered_actors);
 
   traffic_manager::Pipeline pipeline(
       {0.1f, 0.15f, 0.01f},
@@ -80,6 +121,7 @@ void run_pipeline(
   while (true) {
     sleep(1);
     if (quit.load()) {
+      exiting_normal = true;
       break;
     }
   }

@@ -13,7 +13,7 @@ namespace traffic_manager {
       if (
         road_to_vehicle_id_map[ids.road_id].find(ids.section_id)
         !=
-        road_to_vehicle_id_map[ids.section_id].end()) {
+        road_to_vehicle_id_map[ids.road_id].end()) {
         if (
           road_to_vehicle_id_map[ids.road_id][ids.section_id].find(ids.lane_id)
           !=
@@ -22,8 +22,7 @@ namespace traffic_manager {
           [ids.road_id]
           [ids.section_id]
           [ids.lane_id]
-          [vehicle_id] =
-              0;
+          .insert(std::pair<int, int>(vehicle_id, 0));
         } else {
           road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id] = std::map<int, int>();
           road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id][vehicle_id] = 0;
@@ -69,7 +68,7 @@ namespace traffic_manager {
       if (
         road_to_vehicle_id_map.at(ids.road_id).find(ids.section_id)
         !=
-        road_to_vehicle_id_map.at(ids.section_id).end()) {
+        road_to_vehicle_id_map.at(ids.road_id).end()) {
         if (
           road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).find(ids.lane_id)
           !=
