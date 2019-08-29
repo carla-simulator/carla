@@ -11,7 +11,9 @@ namespace traffic_manager {
   private:
 
     std::map<K, D> data_map;
-    std::mutex put_mutex;
+    std::mutex put_data_mutex;
+    std::map<K, std::shared_ptr<std::mutex>> mutex_map;
+    std::mutex put_mutex_mutex;
 
   public:
 
@@ -20,25 +22,9 @@ namespace traffic_manager {
 
     void put(K key, D data) {
 
-      if (
-        data_map.find(key) == data_map.end()
-        or
-          (
-            data_map.at(key) == nullptr
-            and
-            data != nullptr
-          )
-      ) {
-        std::unique_lock<std::mutex> lock(put_mutex);
-        if (
-          data_map.find(key) == data_map.end()
-          or
-          (
-            data_map.at(key) == nullptr
-            and
-            data != nullptr
-          )
-        ) {
+      if (data_map.find(key) == data_map.end()) {
+        std::unique_lock<std::mutex> lock(put_data_mutex);
+        if (data_map.find(key) == data_map.end()) {
           data_map.insert(std::pair<K, D>(key, data));
         }
       }

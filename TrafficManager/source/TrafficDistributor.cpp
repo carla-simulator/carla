@@ -24,26 +24,64 @@ namespace traffic_manager {
           [ids.lane_id]
           .insert(std::pair<int, int>(vehicle_id, 0));
         } else {
-          road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id] = std::map<int, int>();
-          road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id][vehicle_id] = 0;
+
+          road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).insert(
+            std::pair<int, std::map<int, int>>(
+              ids.lane_id, std::map<int, int>()
+            )
+          );
+
+          road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).at(ids.lane_id)
+            .insert(std::pair<int, int>(vehicle_id, 0));
         }
       } else {
-        road_to_vehicle_id_map[ids.road_id][ids.section_id] = std::map<int, std::map<int, int>>();
-        road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id] = std::map<int, int>();
-        road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id][vehicle_id] = 0;
+        road_to_vehicle_id_map.at(ids.road_id).insert(
+          std::pair<int, std::map<int, std::map<int, int>>>(
+            ids.section_id, std::map<int, std::map<int, int>>()
+          )
+        );
+
+        road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).insert(
+          std::pair<int, std::map<int, int>>(
+            ids.lane_id, std::map<int, int>()
+          )
+        );
+
+        road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).at(ids.lane_id)
+          .insert(std::pair<int, int>(vehicle_id, 0));
       }
     } else {
-      road_to_vehicle_id_map[ids.road_id] = std::map<int, std::map<int, std::map<int, int>>>();
-      road_to_vehicle_id_map[ids.road_id][ids.section_id] = std::map<int, std::map<int, int>>();
-      road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id] = std::map<int, int>();
-      road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id][vehicle_id] = 0;
+      road_to_vehicle_id_map.insert(
+        std::pair<int, std::map<int, std::map<int, std::map<int, int>>>>(
+          ids.road_id, std::map<int, std::map<int, std::map<int, int>>>()
+        )
+      );
+
+      road_to_vehicle_id_map.at(ids.road_id).insert(
+          std::pair<int, std::map<int, std::map<int, int>>>(
+            ids.section_id, std::map<int, std::map<int, int>>()
+          )
+        );
+
+        road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).insert(
+          std::pair<int, std::map<int, int>>(
+            ids.lane_id, std::map<int, int>()
+          )
+        );
+
+        road_to_vehicle_id_map.at(ids.road_id).at(ids.section_id).at(ids.lane_id)
+          .insert(std::pair<int, int>(vehicle_id, 0));
     }
   }
 
   void TrafficDistributor::eraseVehicleId(
       int vehicle_id,
       GeoIds ids) {
-    road_to_vehicle_id_map[ids.road_id][ids.section_id][ids.lane_id].erase(vehicle_id);
+
+    road_to_vehicle_id_map
+      .at(ids.road_id)
+      .at(ids.section_id)
+      .at(ids.lane_id).erase(vehicle_id);
   }
 
   void TrafficDistributor::setRoadIds(

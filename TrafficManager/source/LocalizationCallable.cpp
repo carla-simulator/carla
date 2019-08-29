@@ -18,6 +18,7 @@ namespace traffic_manager {
 
     auto vehicle = message.getActor();
     auto actor_id = message.getActorID();
+
     auto vehicle_location = vehicle->GetLocation();
     auto vehicle_velocity = vehicle->GetVelocity().Length();
 
@@ -25,25 +26,24 @@ namespace traffic_manager {
         WAYPOINT_TIME_HORIZON * vehicle_velocity,
         MINIMUM_HORIZON_LENGTH);
 
-    if (
-      shared_data->buffer_map.contains(actor_id)
-      and
-      !(shared_data->buffer_map.get(actor_id)->empty())) { // Existing actor in
-                                                           // buffer map
+    if (shared_data->buffer_map.contains(actor_id)) { // Existing actor in
+                                                      // buffer map
 
       auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
-      /// Purge past waypoints
-      auto dot_product = deviationDotProduct(
-          vehicle,
-          waypoint_buffer->front()->getLocation());
-      while (dot_product <= 0) {
-        waypoint_buffer->pop();
-        if (!waypoint_buffer->empty()) {
-          dot_product = deviationDotProduct(
-              vehicle,
-              waypoint_buffer->front()->getLocation());
-        } else {
-          break;
+      if (!waypoint_buffer->empty()) {
+        /// Purge past waypoints
+        auto dot_product = deviationDotProduct(
+            vehicle,
+            waypoint_buffer->front()->getLocation());
+        while (dot_product <= 0) {
+          waypoint_buffer->pop();
+          if (!waypoint_buffer->empty()) {
+            dot_product = deviationDotProduct(
+                vehicle,
+                waypoint_buffer->front()->getLocation());
+          } else {
+            break;
+          }
         }
       }
 
@@ -53,29 +53,25 @@ namespace traffic_manager {
         waypoint_buffer->push(closest_waypoint);
       }
 
-      /// Make lane change decisions
-      auto simple_way_front = waypoint_buffer->back();
-      auto way_front = simple_way_front->getWaypoint();
-      auto lane_change_waypoints = shared_data->traffic_distributor.assignDistribution(
-          actor_id,
-          way_front->GetRoadId(),
-          way_front->GetSectionId(),
-          way_front->GetLaneId(),
-          simple_way_front);
-      for (auto wp: lane_change_waypoints) {
-        waypoint_buffer->push(wp);
+      try
+      {
+        /// Make lane change decisions
+        auto simple_way_front = waypoint_buffer->back();
+        auto way_front = simple_way_front->getWaypoint();
+        auto lane_change_waypoints = shared_data->traffic_distributor.assignDistribution(
+            actor_id,
+            way_front->GetRoadId(),
+            way_front->GetSectionId(),
+            way_front->GetLaneId(),
+            simple_way_front);
+        for (auto wp: lane_change_waypoints) {
+          waypoint_buffer->push(wp);
+        }        
       }
-
-      /// Re-populate buffer
-      while (
-        waypoint_buffer->back()->distance(
-        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
-                                                                 // constant
-        ) {
-        auto next_waypoints = waypoint_buffer->back()->getNextWaypoint();
-        auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
-        auto feed_waypoint = next_waypoints[selection_index];
-        waypoint_buffer->push(feed_waypoint);
+      catch(const std::exception& e)
+      {
+        std::cout << "Failed to make lane change decision for actor : " << actor_id << std::endl;
+        std::cout << e.what() << '\n';
       }
 
     } else {       // New actor to buffer map
@@ -84,49 +80,44 @@ namespace traffic_manager {
       auto waypoint_buffer = std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200);
       shared_data->buffer_map.put(actor_id, waypoint_buffer);
 
-      auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
       /// Initialize buffer for actor
+      auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
       waypoint_buffer->push(closest_waypoint);
-      /// Populate buffer
-      while (
-        waypoint_buffer->back()->distance(
-        waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
-                                                                // constant
-      ) {
-        auto next_waypoints = closest_waypoint->getNextWaypoint();
-        auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
-        closest_waypoint = next_waypoints[selection_index];
-        waypoint_buffer->push(closest_waypoint);
-      }
+
+    }
+
+    auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
+    /// Populate buffer
+    while (
+      waypoint_buffer->back()->distance(
+      waypoint_buffer->front()->getLocation()) <= horizon_size // Make this a
+                                                              // constant
+    ) {
+      
+      auto way_front = waypoint_buffer->back();
+      auto next_waypoints = way_front->getNextWaypoint();
+      auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
+      way_front = next_waypoints[selection_index];
+      waypoint_buffer->push(way_front);
     }
 
     /// Generate output message
     PipelineMessage out_message;
     out_message.setActor(message.getActor());
     out_message.setAttribute("velocity", vehicle_velocity);
-    float dot_product = 0;
 
     auto horizon_index = static_cast<int>(
       std::max(
       std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
       TARGET_WAYPOINT_HORIZON_LENGTH)
     );
-
-    if (
-      shared_data->buffer_map.contains(actor_id)
-    ) {
-      auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
-      if (waypoint_buffer != nullptr) {
-        auto target_waypoint = waypoint_buffer->get(horizon_index);
-        dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
-        float cross_product = deviationCrossProduct(vehicle, target_waypoint->getLocation());
-        dot_product = 1 - dot_product;
-        if (cross_product < 0) {
-          dot_product *= -1;
-        }
-      }
+    auto target_waypoint = waypoint_buffer->get(horizon_index);
+    auto dot_product = deviationDotProduct(vehicle, target_waypoint->getLocation());
+    float cross_product = deviationCrossProduct(vehicle, target_waypoint->getLocation());
+    dot_product = 1 - dot_product;
+    if (cross_product < 0) {
+      dot_product *= -1;
     }
-
     out_message.setAttribute("deviation", dot_product);
 
     return out_message;

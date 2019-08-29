@@ -21,25 +21,32 @@ namespace traffic_manager {
   CollisionCallable::~CollisionCallable() {}
 
   PipelineMessage CollisionCallable::action(PipelineMessage &message) {
-    auto actor_list = getClosestActors(message.getActor());
 
     float collision_hazard = -1;
-    for (auto it = actor_list.begin(); it != actor_list.end(); it++) {
-      auto actor = it->first;
-      if (
-        actor->GetId() != message.getActorID()
-        and shared_data->buffer_map.contains(actor->GetId())
-        and shared_data->buffer_map.get(actor->GetId()) != nullptr ) {
-        auto ego_actor = message.getActor();
-        auto ego_actor_location = ego_actor->GetLocation();
-        float actor_distance = actor->GetLocation().Distance(ego_actor_location);
-        if (actor_distance <= SEARCH_RADIUS) {
-          if (negotiateCollision(ego_actor, actor)) {
-            collision_hazard = 1;
-            break;
+    try {
+      auto actor_list = getClosestActors(message.getActor());
+      for (auto it = actor_list.begin(); it != actor_list.end(); it++) {
+        auto actor = it->first;
+        if (
+          actor->GetId() != message.getActorID()
+          and shared_data->buffer_map.contains(actor->GetId())
+          and shared_data->buffer_map.get(actor->GetId()) != nullptr ) {
+          auto ego_actor = message.getActor();
+          auto ego_actor_location = ego_actor->GetLocation();
+          float actor_distance = actor->GetLocation().Distance(ego_actor_location);
+          if (actor_distance <= SEARCH_RADIUS) {
+            if (negotiateCollision(ego_actor, actor)) {
+              collision_hazard = 1;
+              break;
+            }
           }
         }
       }
+    }
+    catch(const std::exception& e)
+    {
+      std::cout << "Failed to determine collision for actor : " << message.getActorID() << std::endl;
+      std::cout << e.what() << '\n';
     }
 
     PipelineMessage out_message;
