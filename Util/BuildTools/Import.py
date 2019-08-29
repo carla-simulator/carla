@@ -212,7 +212,7 @@ def import_assets_from_json_list(json_list):
             package_name = filename.replace(".json", "")
 
             import_assets(package_name, dirname, props, maps)
-            move_uassets(package_name, maps)
+            # move_uassets(package_name, maps)
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")

@@ -337,19 +337,19 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
   MoveAssetsObjectLibrary->AddToRoot();
 
   // @TODO: Fix and Refactor Move Meshes inside UE4
-  for (auto Map : MapsPaths)
-  {
-    FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
-    FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
-    FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
-    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
+  // for (auto Map : MapsPaths)
+  // {
+  //   FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
+  //   FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
+  //   FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
+  //   FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
 
-    // First move the meshes inside the Package to the correct place
-    // @TODO: Change to Destination Path to {DefaultPath, RoadsPath,
-    // MarkingPath, TerrainPath}
-    FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
-    MoveMeshes(SrcPath, {DefaultPath, RoadsPath, MarkingPath, TerrainPath});
-  }
+  //   // First move the meshes inside the Package to the correct place
+  //   // @TODO: Change to Destination Path to {DefaultPath, RoadsPath,
+  //   // MarkingPath, TerrainPath}
+  //   FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
+  //   // MoveMeshes(SrcPath, {DefaultPath, RoadsPath, MarkingPath, TerrainPath});
+  // }
 
   // Load World
   FAssetData AssetData;
