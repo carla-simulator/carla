@@ -28,30 +28,30 @@ namespace traffic_manager {
 
     /// Adds an element to the end of the queue.
     void push(T value) {
-      std::unique_lock<std::mutex> lock(this->q_mutex);
-      this->full_condition.wait(lock, [=] { return !(this->queue.size() >= buffer_size); });
+      std::unique_lock<std::mutex> lock(q_mutex);
+      full_condition.wait(lock, [=] {return !(queue.size() >= buffer_size); });
       queue.push_back(value);
-      this->empty_condition.notify_one();
+      empty_condition.notify_one();
     }
 
     /// Returns and removes an element from the front of the queue.
     T pop() {
-      std::unique_lock<std::mutex> lock(this->q_mutex);
-      this->empty_condition.wait(lock, [=] { return !this->queue.empty(); });
-      T rc(std::move(this->queue.front()));
-      this->queue.pop_front();
-      this->full_condition.notify_one();
+      std::unique_lock<std::mutex> lock(q_mutex);
+      empty_condition.wait(lock, [=] { return !queue.empty(); });
+      T rc(std::move(queue.front()));
+      queue.pop_front();
+      full_condition.notify_one();
       return rc;
     }
 
     /// Returns a reference to the element at the front of the queue.
     T front() {
-      return this->queue.front();
+      return queue.front();
     }
 
     /// Returns a reference to the element at the back of the queue.
     T back() {
-      return this->queue.back();
+      return queue.back();
     }
 
     /// Returns the number of elements in the queue.
@@ -73,9 +73,9 @@ namespace traffic_manager {
     /// number of elements.
     std::vector<T> getContent(int number_of_elements) {
       std::unique_lock<std::mutex> lock(q_mutex);
-      this->empty_condition.wait(lock, [=] { return !this->queue.empty(); });
+      empty_condition.wait(lock, [=] { return !queue.empty(); });
       if (queue.size() >= number_of_elements) {
-        return std::vector<T>(queue.begin(), queue.begin() + number_of_elements);
+        return std::vector<T>(queue.begin(), queue.begin() + number_of_elements - 1);
       } else {
         return std::vector<T>(queue.begin(), queue.end());
       }
@@ -84,8 +84,8 @@ namespace traffic_manager {
     /// Returns the reference to the element at a given index on the queue.
     T get(int index) {
       std::unique_lock<std::mutex> lock(q_mutex);
-      this->empty_condition.wait(lock, [=] { return !this->queue.empty(); });
-      auto queue_size = this->size();
+      empty_condition.wait(lock, [=] { return !queue.empty(); });
+      auto queue_size = size();
       index = index >= queue_size ? queue_size - 1 : index;
       return queue.at(index);
     }

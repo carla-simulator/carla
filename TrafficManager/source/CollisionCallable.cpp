@@ -28,7 +28,8 @@ namespace traffic_manager {
       auto actor = it->first;
       if (
         actor->GetId() != message.getActorID()
-        and shared_data->buffer_map.contains(actor->GetId())) {
+        and shared_data->buffer_map.contains(actor->GetId())
+        and shared_data->buffer_map.get(actor->GetId()) != nullptr ) {
         auto ego_actor = message.getActor();
         auto ego_actor_location = ego_actor->GetLocation();
         float actor_distance = actor->GetLocation().Distance(ego_actor_location);
@@ -154,28 +155,34 @@ namespace traffic_manager {
     if (
       this->shared_data->buffer_map.contains(actor->GetId())
       and
-      this->shared_data->buffer_map.get(actor->GetId()) != nullptr) {
+      this->shared_data->buffer_map.get(actor->GetId()) != nullptr
+    ) {
+
       bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
-      auto simple_waypoints = this->shared_data->buffer_map.get(actor->GetId())->getContent(bbox_extension);
-      std::vector<carla::geom::Location> left_boundary;
-      std::vector<carla::geom::Location> right_boundary;
-      auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
-      float width = vehicle->GetBoundingBox().extent.y;
+      auto waypoint_buffer = this->shared_data->buffer_map.get(actor->GetId());
+      if (waypoint_buffer != nullptr) {
 
-      for (auto swp: simple_waypoints) {
-        auto vector = swp->getVector();
-        auto location = swp->getLocation();
-        auto perpendicular_vector = carla::geom::Vector3D(-1 * vector.y, vector.x, 0);
-        perpendicular_vector = perpendicular_vector.MakeUnitVector();
-        left_boundary.push_back(location + carla::geom::Location(perpendicular_vector * width));
-        right_boundary.push_back(location - carla::geom::Location(perpendicular_vector * width));
+        auto simple_waypoints = waypoint_buffer->getContent(bbox_extension);
+        std::vector<carla::geom::Location> left_boundary;
+        std::vector<carla::geom::Location> right_boundary;
+        auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
+        float width = vehicle->GetBoundingBox().extent.y;
+
+        for (auto swp: simple_waypoints) {
+          auto vector = swp->getVector();
+          auto location = swp->getLocation();
+          auto perpendicular_vector = carla::geom::Vector3D(-1 * vector.y, vector.x, 0);
+          perpendicular_vector = perpendicular_vector.MakeUnitVector();
+          left_boundary.push_back(location + carla::geom::Location(perpendicular_vector * width));
+          right_boundary.push_back(location - carla::geom::Location(perpendicular_vector * width));
+        }
+
+        std::reverse(left_boundary.begin(), left_boundary.end());
+        geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
+        geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
+        geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
+        std::reverse(geodesic_boundary.begin(), geodesic_boundary.end());
       }
-
-      std::reverse(left_boundary.begin(), left_boundary.end());
-      geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
-      geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
-      geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
-      std::reverse(geodesic_boundary.begin(), geodesic_boundary.end());
     }
     return geodesic_boundary;
   }
