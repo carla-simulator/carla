@@ -64,8 +64,11 @@ namespace traffic_manager {
     if (
       shared_data->buffer_map.contains(actor_id)
       and
+      shared_data->buffer_map.get(actor_id) != nullptr
+      and
       shared_data->buffer_map.get(actor_id)->get(junction_index)->checkJunction()
-      and !(shared_data->buffer_map.get(actor_id)->get(1)->checkJunction())) {
+      and
+      !(shared_data->buffer_map.get(actor_id)->get(1)->checkJunction())) {
       bool found_true_horizon = false;
       if (speed_limit > HIGHWAY_SPEED) {
         auto horizon_to_junction = shared_data->buffer_map.get(actor_id)->getContent(junction_index);

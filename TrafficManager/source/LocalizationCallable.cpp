@@ -81,12 +81,11 @@ namespace traffic_manager {
     } else {       // New actor to buffer map
 
       /// Make size of queue a derived or constant
-      auto queue_ptr = std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200);
-      shared_data->buffer_map.put(actor_id, queue_ptr);
+      auto waypoint_buffer = std::make_shared<SyncQueue<std::shared_ptr<SimpleWaypoint>>>(200);
+      shared_data->buffer_map.put(actor_id, waypoint_buffer);
 
       auto closest_waypoint = shared_data->local_map->getWaypoint(vehicle_location);
       /// Initialize buffer for actor
-      auto waypoint_buffer = shared_data->buffer_map.get(actor_id);
       waypoint_buffer->push(closest_waypoint);
       /// Populate buffer
       while (
