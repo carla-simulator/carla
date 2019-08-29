@@ -75,8 +75,10 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   TArray<AStaticMeshActor *> SpawnedMeshes;
   // Load assets specified in AssetsPaths by using an object library
   // for building map world
+
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
   AssetsObjectLibrary->AddToRoot();
+
   AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPaths);
   AssetsObjectLibrary->LoadAssetsFromAssetData();
   MapContents.Empty();
@@ -104,12 +106,12 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       // Set Carla Materials
       FString AssetName;
       MapAsset.AssetName.ToString(AssetName);
-      if (AssetName.Contains("MarkingNode"))
+      if (AssetName.Contains("Marking"))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
         MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
       }
-      else if (AssetName.Contains("RoadNode"))
+      else if (AssetName.Contains("Road"))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
       }
@@ -330,6 +332,25 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     FString &PackageName,
     const TArray<FMapData> &MapsPaths)
 {
+
+  MoveAssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
+  MoveAssetsObjectLibrary->AddToRoot();
+
+  // @TODO: Fix and Refactor Move Meshes inside UE4
+  for (auto Map : MapsPaths)
+  {
+    FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
+    FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
+    FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
+    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
+
+    // First move the meshes inside the Package to the correct place
+    // @TODO: Change to Destination Path to {DefaultPath, RoadsPath,
+    // MarkingPath, TerrainPath}
+    FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
+    MoveMeshes(SrcPath, {DefaultPath, RoadsPath, MarkingPath, TerrainPath});
+  }
+
   // Load World
   FAssetData AssetData;
   LoadWorld(AssetData);
@@ -337,15 +358,22 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
 
   for (auto Map : MapsPaths)
   {
-    FString RoadsPath = TEXT("/Game/") + PackageName + TEXT("/Static/RoadNode/") + Map.Name;
-    FString MarkingLinePath = TEXT("/Game/") + PackageName + TEXT("/Static/MarkingNode/") + Map.Name;
-    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/TerrainNode/") + Map.Name;
 
-    TArray<FString> DataPath = {RoadsPath, MarkingLinePath, TerrainPath};
+    FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
+    FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
+    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
+    FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
+
+    FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
 
     // Add Meshes to inside the loaded World
-    TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
+    // @TODO: Change to DataPath = {DefaultPath, RoadsPath, MarkingPath,
+    // TerrainPath}
+    // when moving assets work.
+    TArray<FString> DataPath = {SrcPath};
 
+    TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
+    UE_LOG(LogTemp, Log, TEXT("SPAWNED CARLA %d ACTORS"), SpawnedActors.Num());
     // Save the World in specified path
     SaveWorld(AssetData, PackageName, Map.Path, Map.Name);
 
@@ -386,6 +414,81 @@ void UPrepareAssetsForCookingCommandlet::PreparePropsForCooking(
 
   DestroySpawnedActorsInWorld(SpawnedActors);
   MapObjectLibrary->ClearLoaded();
+}
+
+void UPrepareAssetsForCookingCommandlet::MoveMeshes(const FString &SrcPath, const TArray<FString> &DestPath)
+{
+  // Prepare a UObjectLibrary for moving assets
+  MoveAssetsObjectLibrary->LoadAssetDataFromPath(*SrcPath);
+  MoveAssetsObjectLibrary->LoadAssetsFromAssetData();
+
+  // Load Assets to move
+  MoveMapContents.Empty();
+  MoveAssetsObjectLibrary->GetAssetDataList(MoveMapContents);
+  MoveAssetsObjectLibrary->ClearLoaded();
+
+  if (MoveMapContents.Num() > 0)
+  {
+
+    FString AssetName;
+
+    for (const auto &MapAsset : MoveMapContents)
+    {
+
+      // Get AssetName
+      UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
+      FString ObjectName = MeshAsset->GetName();
+      MapAsset.AssetName.ToString(AssetName);
+
+      if (SrcPath.Len())
+      {
+
+        const FString CurrentPackageName = MeshAsset->GetOutermost()->GetName();
+
+        if (!ensure(CurrentPackageName.StartsWith(SrcPath)))
+        {
+          continue;
+        }
+
+        // Classify in different folders according to semantic segmentation
+        EAssetType AssetType = EAssetType::DEFAULT;
+
+        if (AssetName.Contains("Road"))
+        {
+          AssetType = EAssetType::ROAD;
+        }
+        else if (AssetName.Contains("Marking"))
+        {
+          AssetType = EAssetType::MARKING;
+        }
+        else if (AssetName.Contains("Terrain"))
+        {
+          AssetType = EAssetType::TERRAIN;
+        }
+
+        // Save package in destination path
+        FString SemanticDestPath = DestPath[static_cast<int>(AssetType)];
+        FString NewPackageName = SemanticDestPath + "/" + ObjectName;
+
+        MeshAsset->AddToRoot();
+
+        UPackage *AssetPackage = MapAsset.GetPackage();
+        AssetPackage->SetFolderName(*SemanticDestPath);
+        AssetPackage->FullyLoad();
+        AssetPackage->MarkPackageDirty();
+        FAssetRegistryModule::AssetCreated(MeshAsset);
+
+        MeshAsset->MarkPackageDirty();
+        MeshAsset->GetOuter()->MarkPackageDirty();
+
+        FString CompleteFilename = FPackageName::LongPackageNameToFilename(NewPackageName,
+            FPackageName::GetAssetPackageExtension());
+        UPackage::SavePackage(AssetPackage, MeshAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+            *CompleteFilename, GError, nullptr, true, true, SAVE_NoError);
+      }
+    }
+  }
+
 }
 
 int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
