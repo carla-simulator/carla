@@ -5,14 +5,14 @@
   - class_name: Response
     # - DESCRIPTION ------------------------
     doc: >
-      Execution result of a command, contains either an error string or and
-      actor ID, depending on whether or not the command succeeded. See
-      `client.apply_batch_sync()`
+      Execution result of a command, contains either an error string or an
+      actor ID, depending on whether or not the command succeeded. See carla.Client.apply_batch_sync
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     - var_name: error
       type: str
       doc: >
@@ -26,14 +26,18 @@
   - class_name: SpawnActor
     # - DESCRIPTION ------------------------
     doc: >
+      Spawn an actor into the world based on the blueprint provided and the transform.
+      If a parent is provided, the actor is attached to parent.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: transform
       type: carla.Transform
       doc: >
+        Transform to be applied
     - var_name: parent_id
       type: int
       doc: >
+        Parent's actor id
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -64,16 +68,21 @@
         doc: > 
           CommandType.
       doc: >
+        Link another command to be executed right after.
     # --------------------------------------
 
   - class_name: DestroyActor
     # - DESCRIPTION ------------------------
     doc: >
+      Tell the simulator to destroy this Actor, and return whether the actor was
+      successfully destroyed. It has no effect if the Actor was already
+      successfully destroyed.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -86,14 +95,17 @@
   - class_name: ApplyVehicleControl
     # - DESCRIPTION ------------------------
     doc: >
+      Apply control to the vehicle.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Vehicle actor affected by the command
     - var_name: control
       type: carla.VehicleControl
       doc: >
+        Vehicle control to be applied
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -108,14 +120,17 @@
   - class_name: ApplyWalkerControl
     # - DESCRIPTION ------------------------
     doc: >
+      Apply control to the walker
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Walker actor affected by the command
     - var_name: control
       type: carla.VehicleControl
       doc: >
+        Walker control to be applied
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -130,14 +145,17 @@
   - class_name: ApplyTransform
     # - DESCRIPTION ------------------------
     doc: >
+      Sets a new transform to the actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     - var_name: transform
       type: carla.Transform
       doc: >
+        Transformation to be applied
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -152,17 +170,21 @@
   - class_name: ApplyWalkerState
     # - DESCRIPTION ------------------------
     doc: >
+      Apply a state to the walker actor
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Walker actor affected by the command
     - var_name: transform
       type: carla.Transform
       doc: >
+        Transform to be applied
     - var_name: speed
       type: float
       doc: >
+        Speed to be applied
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -180,14 +202,17 @@
   - class_name: ApplyVelocity
     # - DESCRIPTION ------------------------
     doc: >
+      Sets actor's velocity
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command.
     - var_name: velocity
       type: carla.Vector3D
       doc: >
+        The 3D velocity applied to the actor
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -202,14 +227,17 @@
   - class_name: ApplyAngularVelocity
     # - DESCRIPTION ------------------------
     doc: >
+      Set the actor's angular velocity
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     - var_name: angular_velocity
       type: carla.Vector3D
       doc: >
+        The 3D angular velocity that will be applied to the actor
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -224,14 +252,17 @@
   - class_name: ApplyImpulse
     # - DESCRIPTION ------------------------
     doc: >
+      Adds impulse to the actor
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     - var_name: impulse
       type: carla.Vector3D
       doc: >
+        Impulse applied to the actor
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -246,14 +277,17 @@
   - class_name: SetSimulatePhysics
     # - DESCRIPTION ------------------------
     doc: >
+      Whether an actor will be affected by physics or not.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor affected by the command
     - var_name: enabled
       type: bool
       doc: >
+        If physics will affect the actor
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -268,14 +302,17 @@
   - class_name: SetAutopilot
     # - DESCRIPTION ------------------------
     doc: >
+      Switch on/off vehicle's server-side autopilot
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
+        Actor that is affected by the command.
     - var_name: enabled
       type: bool
       doc: >
+        If the autopilot is enabled or not.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

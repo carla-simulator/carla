@@ -133,9 +133,9 @@ namespace data {
       : Array(0u, std::move(data)) {}
 
     void SetOffset(size_t offset) {
+      _offset = offset;
       DEBUG_ASSERT(_data.size() >= _offset);
       DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
-      _offset = offset;
       DEBUG_ASSERT(begin() <= end());
     }
 

@@ -19,11 +19,14 @@ COLOR_WARNING = '#ED2F2F'
 
 QUERY = re.compile(r'([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
+
 def create_hyperlinks(text):
     return re.sub(QUERY, r'[\1](#\1)', text)
 
-def join(elem, separator = ''):
+
+def join(elem, separator=''):
     return separator.join(elem)
+
 
 class MarkdownFile:
     def __init__(self):
@@ -82,42 +85,55 @@ class MarkdownFile:
         return join(['```', language, '\n', self.list_depth(), buf, '\n', self.list_depth(), '```\n'])
 
     def prettify_doc(self, doc):
+        punctuation_marks = ['.', '!', '?']
         doc = doc.strip()
-        doc += '' if doc[-1:] == '.' else '.'
+        doc += '' if doc[-1:] in punctuation_marks else '.'
         return doc
+
 
 def italic(buf):
     return join(['_', buf, '_'])
 
+
 def bold(buf):
     return join(['**', buf, '**'])
+
 
 def code(buf):
     return join(['`', buf, '`'])
 
+
 def brackets(buf):
     return join(['[', buf, ']'])
+
 
 def parentheses(buf):
     return join(['(', buf, ')'])
 
+
 def small(buf):
     return join(['<sub><sup>', buf, '</sup></sub>'])
+
 
 def sub(buf):
     return join(['<sub>', buf, '</sub>'])
 
+
 def html_key(buf):
     return join(['<a name="', buf, '"></a>'])
+
 
 def color(col, buf):
     return join(['<font color="', col, '">', buf, '</font>'])
 
+
 def valid_dic_val(dic, value):
     return value in dic and dic[value]
 
+
 class YamlFile:
     """Yaml file class"""
+
     def __init__(self, path):
         self._path = path
         with open(path) as yaml_file:
@@ -167,15 +183,15 @@ class YamlFile:
                                 exit(0)
                             if 'params' in met and met['params']:
                                 for param in met['params']:
-                                    if 'param_name' not in param:                            
+                                    if 'param_name' not in param:
                                         print('\n[ERROR] File: ' + self._path)
                                         print("'param_name' not found inside 'params' of class: " + cl['class_name'])
                                         exit(0)
-                                    if 'param_name' in param and param['param_name'] is None:                            
+                                    if 'param_name' in param and param['param_name'] is None:
                                         print('\n[ERROR] File: ' + self._path)
                                         print("'param_name' is empty in:")
                                         exit(0)
-                                    if 'type' in param and param['type'] is None:                            
+                                    if 'type' in param and param['type'] is None:
                                         print('\n[ERROR] File: ' + self._path)
                                         print("'type' is empty in:")
                                         exit(0)
@@ -192,7 +208,7 @@ def gen_stub_method_def(method):
         p_type = join([': ', str(p['type'])]) if 'type' in p else ''
         default = join([' = ', str(p['default'])]) if 'default' in p else ''
         param = join([param, p['param_name'], p_type, default, ', '])
-    param = param[:-2] # delete the last ', '
+    param = param[:-2]  # delete the last ', '
     return_type = join([' -> ', method['return']]) if 'return' in method else ''
     return join([method_name, parentheses(param), return_type])
 
@@ -213,7 +229,7 @@ def gen_doc_method_def(method, is_indx=False, with_self=True):
         method_name = bold(color(COLOR_METHOD, method_name))
 
     if with_self:
-        if not 'params' in method or method['params'] == None:
+        if not 'params' in method or method['params'] is None:
             method['params'] = []
         method['params'].insert(0, {'param_name': 'self'})
 
@@ -227,10 +243,10 @@ def gen_doc_method_def(method, is_indx=False, with_self=True):
 
     if with_self:
         method['params'] = method['params'][1:]
-        if not method['params']: # if is empty delete it
+        if not method['params']:  # if is empty delete it
             del method['params']
 
-    param = param[:-2] # delete the last ', '
+    param = param[:-2]  # delete the last ', '
     return join([method_name, parentheses(param)])
 
 
@@ -356,6 +372,7 @@ def add_doc_inst_var(md, inst_var, class_key):
 
     md.list_pop()
 
+
 class Documentation:
     """Main documentation class"""
 
@@ -453,6 +470,7 @@ class Documentation:
         """Generates the whole markdown file"""
         return join([self.gen_overview(), self.gen_body()], '\n').strip()
 
+
 def main():
     """Main function"""
     print("Generating PythonAPI documentation...")
@@ -461,6 +479,7 @@ def main():
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
         md_file.write(docs.gen_markdown())
     print("Done!")
+
 
 if __name__ == "__main__":
     main()

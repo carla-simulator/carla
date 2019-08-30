@@ -192,7 +192,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
         CurrentWp = Successors.front();
       } while (CurrentWp.road_id == Wp.road_id);
 
-      // connect the last wp of the current toad to the first wp of the following road
+      // connect the last wp of the current road to the first wp of the following road
       const auto FollowingWp = map->GetSuccessors(CurrentWp);
       if (!FollowingWp.empty())
       {
