@@ -217,6 +217,18 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetMotionBlurMinObjectScreenSize() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTemp(float Temp);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTemp() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetWhiteTint(float Tint);
+
+  UFUNCTION(BlueprintCallable)
+  float GetWhiteTint() const;
+
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const

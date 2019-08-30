@@ -365,6 +365,30 @@ float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
   return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
+void ASceneCaptureSensor::SetWhiteTemp(float Temp)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.WhiteTemp = Temp;
+}
+
+float ASceneCaptureSensor::GetWhiteTemp() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.WhiteTemp;
+}
+
+void ASceneCaptureSensor::SetWhiteTint(float Tint)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.WhiteTint = Tint;
+}
+
+float ASceneCaptureSensor::GetWhiteTint() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.WhiteTint;
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
@@ -480,6 +504,10 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.MotionBlurMax = 0.35f;
     PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
     PostProcessSettings.MotionBlurPerObjectSize = 0.1f;
+
+    // Color Grading
+    PostProcessSettings.bOverride_WhiteTemp = true;
+    PostProcessSettings.bOverride_WhiteTint = true;
   }
 
   // Remove the show flags that might interfere with post-processing effects

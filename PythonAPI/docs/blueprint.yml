@@ -6,6 +6,7 @@
   - class_name: ActorAttributeType
     # - DESCRIPTION ------------------------
     doc: >
+      Class that defines the type of attribute of a carla.ActorAttribute.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
@@ -28,15 +29,19 @@
     - var_name: r
       type: int
       doc: >
+        Red color (0-255)
     - var_name: g
       type: int
       doc: >
+        Green color (0-255)
     - var_name: b
       type: int
       doc: >
+        Blue color (0-255)
     - var_name: a
       type: int
       doc: >
+        Alpha channel (0-255)
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -63,11 +68,13 @@
     - def_name: __eq__
       params:
       - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
+        type: carla.Color
       doc: >
     # --------------------------------------
     - def_name: __str__
@@ -83,15 +90,19 @@
     - var_name: id
       type: str
       doc: >
+        String identifier of the attribute
     - var_name: type
       type: carla.ActorAttributeType
       doc: >
+        The attribute parameter type
     - var_name: recommended_values
       type: list(str)
       doc: >
+        List of recommended values that the attribute may have.
     - var_name: is_modifiable
       type: bool
       doc: >
+        True if the attribute is modifiable.
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
@@ -112,73 +123,13 @@
     - def_name: __eq__
       params:
       - param_name: other
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: int
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: float
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: str
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: carla.Color
-      doc: >
-    # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: bool
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: int
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: float
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: str
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: carla.Color
-      doc: >
-    # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
     # --------------------------------------
     - def_name: __nonzero__
@@ -209,9 +160,11 @@
     - var_name: id
       type: str
       doc: >
+        Actor blueprint identifier, e.g. `walker.pedestrian.0001`.
     - var_name: tags
       type: list(str)
       doc: >
+        List of tags of an actor blueprint e.g. `['0001', 'pedestrian', 'walker']`
     # - METHODS ----------------------------
     methods:
     - def_name: has_tag
@@ -219,7 +172,10 @@
       params:
       - param_name: tag
         type: str
+        doc: >
+          e.g. 'walker'
       doc: >
+        Returns `true` if an actor blueprint has the tag.
     # --------------------------------------
     - def_name: match_tags
       return: bool
@@ -229,14 +185,17 @@
       doc: >
         Test if any of the flags or id matches wildcard_pattern.
       note: > 
-        Wildcard_pattern follows Unix shell-style wildcards.
+        The wildcard_pattern follows Unix shell-style wildcards.
     # --------------------------------------
     - def_name: has_attribute
       return: bool
       params:
       - param_name: id
         type: str
+        doc: >
+          e.g 'gender'
       doc: >
+        Returns `true` if the blueprint contains the specified attribute
     # --------------------------------------
     - def_name: get_attribute
       return: carla.ActorAttribute 
@@ -244,6 +203,7 @@
       - param_name: id
         type: str
       doc: >
+        Returns the current actor attribute through its id
       Return: carla.ActorAttribute
     # --------------------------------------
     - def_name: set_attribute
@@ -256,6 +216,9 @@
         type: str
         doc: >
       doc: >
+        Sets an existing attribute to the actor's blueprint
+      note: >
+        Attribute can only be set or changed if it is modifiable
     # --------------------------------------
     - def_name: __len__
       doc: >
@@ -270,11 +233,16 @@
   - class_name: BlueprintLibrary
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides access to blueprints.
+      Class that provides access to [blueprints](../bp_library/).
     # - METHODS ----------------------------
     methods:
     - def_name: find
+      params:
+      - param_name: id
+        type: str
+      return: carla.ActorBlueprint
       doc: >
+        Returns a carla.ActorBlueprint through its id
     # --------------------------------------
     - def_name: filter
       params:
@@ -284,12 +252,13 @@
         Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
         The pattern is matched against each blueprint's id and tags.
       note: > 
-        wildcard_pattern follows Unix shell-style wildcards (fnmatch).
+        The wildcard_pattern follows Unix shell-style wildcards (fnmatch).
       return: carla.BlueprintLibrary
     # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
+        type: int
       return: carla.ActorBlueprint
       doc: >
     # --------------------------------------
