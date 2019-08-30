@@ -527,7 +527,7 @@ buffer.reset(2048u); // (size 2048 bytes, capacity 2048 bytes) -> allocates
 ## Appendix: Sending data asynchronously
 
 Some sensors may require to send data asynchronously, either for performance or
-because the data is generated in a different, for instance, camera sensors send
+because the data is generated in a different thread, for instance, camera sensors send
 the images from the render thread.
 
 Using the data stream asynchronously is perfectly fine, as long as the stream
@@ -555,7 +555,7 @@ computations. Examples of such sensors are the _GNSS_ and the _LaneInvasion_
 sensors.
 
 The usual approach is to create a "dummy" sensor in the server-side, just so the
-simulator is aware that such actor exists. However, this dummy sensor does tick
+simulator is aware that such actor exists. However, this dummy sensor doesn't tick
 nor sends any sort of data. Its counterpart on the client-side however,
 registers a "on tick" callback to execute some code on every new update. For
 instance, the GNSS sensor registers a callback that converts the current 3D
