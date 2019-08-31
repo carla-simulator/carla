@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <deque>
+#include <algorithm>
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
@@ -23,6 +24,7 @@ namespace traffic_manager {
 
   typedef std::vector<MotionControlMessage> MessageFrame;
   typedef Messenger<std::shared_ptr<MessageFrame>> MessengerType;
+  typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
 
   class LocalizationStage : PipelineStage {
 
@@ -35,7 +37,7 @@ namespace traffic_manager {
 
     InMemoryMap& local_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
-    std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> buffer_list;
+    BufferList buffer_list;
     std::shared_ptr<MessengerType> motion_control_messenger;
     std::shared_ptr<MessageFrame> motion_control_frame;
 
@@ -53,6 +55,8 @@ namespace traffic_manager {
     float DeviationCrossProduct(
         carla::SharedPtr<carla::client::Actor>,
         const carla::geom::Location &) const;
+
+    std::shared_ptr<BufferList> CopyBufferList();
 
   public:
 
