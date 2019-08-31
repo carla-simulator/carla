@@ -36,11 +36,10 @@ namespace traffic_manager {
       std::shared_lock<std::shared_timed_mutex> lock(wait_for_action_mutex);
       wake_action_notifier.wait(lock, [=] {return run_stage.load();});
 
-      for (
-        int i = thread_id*load_per_thread;
-        i < thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
-        i++
-      ) {
+      int array_start_index = thread_id*load_per_thread;
+      int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
+
+      for (int i = array_start_index; i < array_end_index; i++) {
 
           auto vehicle = actor_list.at(i);
           auto actor_id = vehicle->GetId();
