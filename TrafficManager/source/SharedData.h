@@ -7,9 +7,7 @@
 #include "carla/client/Actor.h"
 
 #include "InMemoryMap.h"
-#include "SyncQueue.h"
 #include "CreateGrid.h"
-#include "BufferMap.h"
 #include "TrafficDistributor.h"
 
 namespace traffic_manager {
@@ -36,17 +34,24 @@ namespace traffic_manager {
     carla::client::DebugHelper *debug;
     std::shared_ptr<InMemoryMap> local_map;
     TrafficDistributor traffic_distributor;
+    CreateGrid Grid;
 
     std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
-    BufferMap<int, std::shared_ptr<SyncQueue<std::shared_ptr<SimpleWaypoint>>>> buffer_map;
     std::map<int, StateEntry> state_map;
 
     SharedData();
     ~SharedData();
 
-    void destroy();
-
-    CreateGrid Grid;
+    void Destroy() {
+    for (auto actor: registered_actors) {
+      if (
+          actor != nullptr
+          and
+          actor->IsAlive()) {
+          actor->Destroy();
+        }
+      }
+    }
   };
 
 }
