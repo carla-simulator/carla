@@ -8,14 +8,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -O3 -DNDEBUG -g -fsanit
 
 set(LIBCARLA_LOCATION $ENV{LIBCARLA_LOCATION})
 
-include_directories(include/)
+include_directories(source/)
 include_directories(${LIBCARLA_LOCATION}/include)
 include_directories(${LIBCARLA_LOCATION}/include/system/)
 
 link_directories(${LIBCARLA_LOCATION}/lib/)
 
 file(GLOB SOURCES source/*.cpp)
-file(GLOB SOURCES_EXE integration/PipeLineExecutable.cpp)
+file(GLOB SOURCES_EXE Test.cpp)
 
 add_library(pipeline ${SOURCES})
 add_executable(traffic_manager ${SOURCES_EXE})
