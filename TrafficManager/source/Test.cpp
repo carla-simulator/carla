@@ -1,9 +1,8 @@
-#pragma once
-
 #include <iostream>
 #include <signal.h>
 #include <atomic>
 
+#include "boost/stacktrace.hpp"
 #include "carla/client/Client.h"
 #include "CarlaDataAccessLayer.h"
 #include "carla/client/ActorList.h"
@@ -28,12 +27,20 @@ void test_pipeline(
     carla::client::Client &client_conn,
     int target_traffic_amount);
 
-std::atomic<bool> quit(false);    // signal flag
+std::atomic<bool> quit(false);
 void got_signal(int) {
   quit.store(true);
 }
 
+void handler() {
+
+  std::cout << boost::stacktrace::stacktrace() << std::endl;
+  exit(1);
+} 
+
 int main(int argc, char *argv[]) {
+  std::set_terminate(handler);
+
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
   auto world = client_conn.GetWorld();
@@ -60,18 +67,27 @@ void test_pipeline_stages(
     registered_actors.push_back(*it);
   }
 
+  std::cout << "Setting up local map cache ... " << std::endl;
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.getTopology();
   auto local_map = traffic_manager::InMemoryMap(topology);
   local_map.setUp(1.0);
+  std::cout << "Map set up !" << std::endl;
 
   auto motion_control_messenger = std::make_shared<traffic_manager::MessengerType>();
   traffic_manager::LocalizationStage localization_stage(
     8, motion_control_messenger, registered_actors, local_map
   );
 
+  std::cout << "Starting stages ... " << std::endl;
+
+  localization_stage.Start();
+
+  std::cout << "All stages started !" << std::endl;
+
   while (motion_control_messenger->GetState() == 0);
 
+  std::cout << "Sensed pipeline output !" << std::endl;
   int messenger_state;
   long count = 0;
   auto last_time = std::chrono::system_clock::now();
@@ -81,6 +97,7 @@ void test_pipeline_stages(
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_time;
 
+    count++;
     if (diff.count() > 1.0) {
       last_time = current_time;
       std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;

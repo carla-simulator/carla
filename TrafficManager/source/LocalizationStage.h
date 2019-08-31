@@ -69,6 +69,8 @@ namespace traffic_manager {
     void Action(int thread_id) override;
     void DataSender() override;
 
+    using PipelineStage::Start;
+
   };
 
 }
