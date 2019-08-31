@@ -147,10 +147,23 @@ namespace traffic_manager {
       };
       motion_control_messenger_state = motion_control_messenger->SendData(data_packet);
 
+      CopyBufferList();
+
       run_receiver.store(true);
       wake_receiver_notifier.notify_one();
       run_sender.store(false);
     }
+  }
+
+  std::shared_ptr<BufferList> LocalizationStage::CopyBufferList() {
+    auto buffer_list_copy = std::make_shared<BufferList>(buffer_list.size());
+    for (int i=0; i<buffer_list.size(); i++) {
+      auto buffer = buffer_list.at(i);
+      auto buffer_copy = buffer_list_copy->at(i);
+      std::copy(buffer.begin(), buffer.end(), buffer_copy.begin());
+    }
+
+    return buffer_list_copy;
   }
 
   float LocalizationStage::DeviationDotProduct(
