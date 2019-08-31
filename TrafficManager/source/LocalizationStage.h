@@ -21,6 +21,9 @@ namespace traffic_manager {
     float deviation;
   };
 
+  typedef std::vector<MotionControlMessage> MessageFrame;
+  typedef Messenger<std::shared_ptr<MessageFrame>> MessengerType;
+
   class LocalizationStage : PipelineStage {
 
     /// This class is responsible of maintaining a horizon of waypoints ahead
@@ -28,9 +31,13 @@ namespace traffic_manager {
 
   private:
 
+    int motion_control_messenger_state;
+
     InMemoryMap& local_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
     std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> buffer_list;
+    std::shared_ptr<MessengerType> motion_control_messenger;
+    std::shared_ptr<MessageFrame> motion_control_frame;
 
     /// Returns the dot product between vehicle's heading vector and
     /// the vector along the direction to the next target waypoint in the
@@ -51,14 +58,14 @@ namespace traffic_manager {
 
     LocalizationStage(
       int pool_size,
-      std::shared_ptr<Messenger<MotionControlMessage>> motion_control_messenger,
+      std::shared_ptr<MessengerType> motion_control_messenger,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
       InMemoryMap& local_map
     );
 
     ~LocalizationStage();
 
-    void DataReciever() override;
+    void DataReceiver() override;
     void Action(int thread_id) override;
     void DataSender() override;
 

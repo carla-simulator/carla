@@ -1,11 +1,13 @@
+#pragma once
 
+#include <atomic>
 #include <mutex>
 #include <condition_variable>
 
 namespace traffic_manager {
 
     template<typename Data>
-    struct MarkedPacket {
+    struct DataPacket {
         int id;
         Data data;
     };
@@ -14,7 +16,7 @@ namespace traffic_manager {
     class Messenger {
 
     private:
-        int state_counter =0;
+        std::atomic<int> state_counter;
         Data data;
 
         std::mutex data_modification_mutex;
@@ -23,34 +25,40 @@ namespace traffic_manager {
 
     public:
 
-        Messenger() {}
+        Messenger() {
+            state_counter = 0;
+        }
         ~Messenger() {}
 
-        int SendData(MarkedPacket<Data> packet) {
+        int SendData(DataPacket<Data> packet) {
 
-            std::lock_guard<std::mutex> lock(data_modification_mutex);
-            send_condition.wait(lock, [=] {return state_counter != packet.id;});
+            std::unique_lock<std::mutex> lock(data_modification_mutex);
+            if (state_counter.load() == packet.id) {
+                send_condition.wait(lock, [=] {return state_counter.load() != packet.id;});
+            }
             data = packet.data;
             state_counter++;
-            int present_state = state_counter;
+            int present_state = state_counter.load();
             recieve_condition.notify_one();
 
             return present_state;
         }
 
-        MarkedPacket<Data> RecieveData(int old_state) {
+        DataPacket<Data> RecieveData(int old_state) {
 
-            std::lock_guard<std::mutex> lock(data_modification_mutex);
-            recieve_condition.wait(lock, [=] {return state_counter != old_state;});
+            std::unique_lock<std::mutex> lock(data_modification_mutex);
+            if (state_counter.load() == old_state) {
+                recieve_condition.wait(lock, [=] {return state_counter.load() != old_state;});
+            }
             state_counter++;
-            MarkedPacket<Data> packet = {state_counter, data};
+            DataPacket<Data> packet = {state_counter.load(), data};
             send_condition.notify_one();
 
             return packet;
         }
 
         int GetState() {
-            return state_counter;
+            return state_counter.load();
         }
 
     };

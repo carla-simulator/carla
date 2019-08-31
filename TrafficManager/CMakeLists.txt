@@ -15,7 +15,7 @@ include_directories(${LIBCARLA_LOCATION}/include/system/)
 link_directories(${LIBCARLA_LOCATION}/lib/)
 
 file(GLOB SOURCES source/*.cpp)
-file(GLOB SOURCES_EXE Test.cpp)
+file(GLOB SOURCES_EXE source/Test.cpp)
 
 add_library(pipeline ${SOURCES})
 add_executable(traffic_manager ${SOURCES_EXE})

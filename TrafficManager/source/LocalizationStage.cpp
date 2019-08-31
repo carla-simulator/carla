@@ -9,10 +9,15 @@ namespace traffic_manager {
 
   LocalizationStage::LocalizationStage (
     int pool_size,
-    std::shared_ptr<Messenger<MotionControlMessage>> motion_control_messenger,
+    std::shared_ptr<MessengerType> motion_control_messenger,
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
     InMemoryMap& local_map
-  ) : local_map(local_map), actor_list(actor_list), PipelineStage(pool_size) {
+  ) :
+  PipelineStage(pool_size),
+  motion_control_messenger(motion_control_messenger),
+  actor_list(actor_list),
+  local_map(local_map)
+  {
 
     /// Initializing buffer list
     for (int i=0; i < actor_list.size(); i++) {
@@ -27,9 +32,9 @@ namespace traffic_manager {
     int array_size = actor_list.size();
     int load_per_thread = std::floor(array_size/pool_size);
 
-    while (run_stage) {
-      std::shared_lock<std::shared_timed_mutex> lock(wait_for_start_mutex);
-      wake_up_notifier.wait(lock, run_threads);
+    while (run_stage.load()) {
+      std::shared_lock<std::shared_timed_mutex> lock(wait_for_action_mutex);
+      wake_action_notifier.wait(lock, [=] {return run_stage.load();});
 
       for (
         int i = thread_id*load_per_thread;
@@ -99,9 +104,53 @@ namespace traffic_manager {
           if (cross_product < 0) {
             dot_product *= -1;
           }
+
+          auto message = motion_control_frame->at(i);
+          message.actor = vehicle;
+          message.deviation = dot_product;
+      }
+      action_counter++;
+
+      if (action_counter.load() == pool_size) {
+        run_sender.store(true);
+        wake_sender_notifier.notify_one();
       }
 
-      run_threads = false;
+      if (run_threads.load()) {
+        run_threads.store(false);
+      }
+    }
+  }
+
+  void LocalizationStage::DataReceiver() {
+    while (run_stage.load()) {
+      std::unique_lock<std::mutex> lock(wait_receiver_mutex);
+      if (!run_receiver.load()) {
+        wake_receiver_notifier.wait(lock, [=] {return run_receiver.load();});
+      }
+
+      motion_control_frame = std::make_shared<MessageFrame>(actor_list.size());
+
+      run_threads.store(true);
+      wake_action_notifier.notify_all();
+      run_receiver.store(false);
+    }
+  }
+
+  void LocalizationStage::DataSender() {
+    while (run_stage.load()) {
+      std::unique_lock<std::mutex> lock(wait_sender_mutex);
+      wake_sender_notifier.wait(lock, [=] {return run_sender.load();});
+
+      DataPacket<std::shared_ptr<MessageFrame>> data_packet = {
+        motion_control_messenger_state,
+        motion_control_frame
+      };
+      motion_control_messenger_state = motion_control_messenger->SendData(data_packet);
+
+      run_receiver.store(true);
+      wake_receiver_notifier.notify_one();
+      run_sender.store(false);
     }
   }
 
