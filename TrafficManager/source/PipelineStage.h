@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <vector>
 #include <thread>
 #include <memory>
@@ -18,14 +19,13 @@ namespace traffic_manager {
 
   private:
 
+    const int pool_size;
+    const int number_of_vehicles;
+
     std::shared_ptr<std::thread> data_receiver;
     std::shared_ptr<std::thread> data_sender;
     std::vector<std::shared_ptr<std::thread>> action_threads;
 
-  protected:
-
-    const int pool_size;
-    const int number_of_vehicles;
     std::atomic<int> action_counter;
     std::atomic<bool> run_stage;
     std::atomic<bool> run_threads;
@@ -39,6 +39,14 @@ namespace traffic_manager {
     std::condition_variable wake_receiver_notifier;
     std::condition_variable wake_sender_notifier;
 
+    void ReceiverThreadManager();
+
+    void ActionThreadManager(int thread_id);
+
+    void SenderThreadManager();
+
+  protected:
+
     /// Implement this method with the logic to recieve data from
     /// Previous stage(s) and distribute to Action() threads
     virtual void DataReceiver()=0;
@@ -48,7 +56,7 @@ namespace traffic_manager {
     virtual void DataSender()=0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(int thread_id)=0;
+    virtual void Action(int array_index)=0;
 
   public:
 
