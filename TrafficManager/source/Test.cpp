@@ -76,7 +76,7 @@ void test_pipeline_stages(
 
   auto motion_control_messenger = std::make_shared<traffic_manager::MessengerType>();
   traffic_manager::LocalizationStage localization_stage(
-    8, motion_control_messenger, registered_actors, local_map
+    1, motion_control_messenger, registered_actors, local_map
   );
 
   std::cout << "Starting stages ... " << std::endl;
