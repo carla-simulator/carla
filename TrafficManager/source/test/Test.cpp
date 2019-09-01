@@ -9,6 +9,7 @@
 
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
+#include "MotionPlannerStage.h"
 
 void test_dense_topology(const carla::client::World &);
 
@@ -78,20 +79,29 @@ void test_pipeline_stages(
     registered_actors, local_map, localization_planner_messenger, 1, registered_actors.size()
   );
 
+  auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
+  traffic_manager::MotionPlannerStage planner_stage(
+    localization_planner_messenger, planner_control_messenger,
+    static_cast<int>(registered_actors.size()),
+    25/3.6, 50/3.6, 1, {0.1f, 0.15f, 0.01f},
+    {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
+  );
+
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();
+  planner_stage.Start();
 
   std::cout << "All stages started !" << std::endl;
 
-  while (localization_planner_messenger->GetState() == 0);
-
+  int messenger_state = planner_control_messenger->GetState() -1;
+  while (planner_control_messenger->GetState() == 0);
   std::cout << "Sensed pipeline output !" << std::endl;
-  int messenger_state;
+
   long count = 0;
   auto last_time = std::chrono::system_clock::now();
   while (true) {
-    auto dummy = localization_planner_messenger->RecieveData(messenger_state);
+    auto dummy = planner_control_messenger->RecieveData(messenger_state);
     messenger_state = dummy.id;
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_time;

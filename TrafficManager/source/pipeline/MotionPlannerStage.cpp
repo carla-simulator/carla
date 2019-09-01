@@ -15,7 +15,7 @@ namespace traffic_manager {
     float highway_target_velocity = 50/3.6,
     int pool_size = 1,
     std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
-    std::vector<float> highway_longitudinal_parameters = {5.0, 0.1, 0.01},
+    std::vector<float> highway_longitudinal_parameters = {10.0f, 0.01f, 0.1f},
     std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
   ) :
   urban_target_velocity(urban_target_velocity),
@@ -27,12 +27,15 @@ namespace traffic_manager {
   control_messenger(control_messenger),
   PipelineStage(pool_size, number_of_vehicles)
   {
-    control_frame_a = PlannerToControlFrame(number_of_vehicles);
-    control_frame_b = PlannerToControlFrame(number_of_vehicles);
+    control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
+    control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
 
     frame_selector = true;
-    frame_map.insert(std::pair<bool, PlannerToControlFrame*>(true, &control_frame_a));
-    frame_map.insert(std::pair<bool, PlannerToControlFrame*>(false, &control_frame_b));
+    frame_map.insert(std::pair<bool, std::shared_ptr<PlannerToControlFrame>>(true, control_frame_a));
+    frame_map.insert(std::pair<bool, std::shared_ptr<PlannerToControlFrame>>(false, control_frame_b));
+
+    localization_messenger_state = localization_messenger->GetState();
+    control_messenger_state = control_messenger->GetState() - 1;
   }
 
   MotionPlannerStage::~MotionPlannerStage() {}
@@ -105,19 +108,35 @@ namespace traffic_manager {
   }
 
   void MotionPlannerStage::DataReceiver() {
+    std::cout 
+    << "Running planner's receiver"
+    << " with messenger's state "
+    << localization_messenger->GetState()
+    << " previous state "
+    << localization_messenger_state
+    << std::endl;
 
     auto packet = localization_messenger->RecieveData(localization_messenger_state);
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
+
+    std::cout
+    << "Finished planner's receiver"
+    << " with messenger's state "
+    << localization_messenger->GetState()
+    << " previous state "
+    << localization_messenger_state
+    << std::endl;
   }
 
   void MotionPlannerStage::DataSender() {
-
-      DataPacket<PlannerToControlFrame*> data_packet = {
-        control_messenger_state,
-        frame_map.at(frame_selector)
-      };
-      frame_selector = !frame_selector;
-      control_messenger_state = control_messenger->SendData(data_packet);
+    std::cout << "Running planner's sender" << std::endl;
+    DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
+      control_messenger_state,
+      frame_map.at(frame_selector)
+    };
+    frame_selector = !frame_selector;
+    control_messenger_state = control_messenger->SendData(data_packet);
+    std::cout << "Finished planner's sender" << std::endl;
   }
 }

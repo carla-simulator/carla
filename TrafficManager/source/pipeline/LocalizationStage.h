@@ -30,10 +30,10 @@ namespace traffic_manager {
   private:
 
     int planner_messenger_state;
-    LocalizationToPlannerFrame planner_frame_a;
-    LocalizationToPlannerFrame planner_frame_b;
+    std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
+    std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
     bool frame_selector;
-    std::unordered_map<bool, LocalizationToPlannerFrame*> frame_map;
+    std::unordered_map<bool, std::shared_ptr<LocalizationToPlannerFrame>> frame_map;
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
 
     InMemoryMap& local_map;

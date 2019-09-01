@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 #include "carla/client/Vehicle.h"
 
@@ -24,11 +25,11 @@ namespace traffic_manager {
 
     int localization_messenger_state;
     int control_messenger_state;
-    PlannerToControlFrame control_frame_a;
-    PlannerToControlFrame control_frame_b;
+    std::shared_ptr<PlannerToControlFrame> control_frame_a;
+    std::shared_ptr<PlannerToControlFrame> control_frame_b;
     bool frame_selector;
-    std::unordered_map<bool, PlannerToControlFrame*> frame_map;
-    LocalizationToPlannerFrame* localization_frame;
+    std::unordered_map<bool, std::shared_ptr<PlannerToControlFrame>> frame_map;
+    std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
 

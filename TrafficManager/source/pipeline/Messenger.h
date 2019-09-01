@@ -37,7 +37,7 @@ namespace traffic_manager {
                 send_condition.wait(lock, [=] {return state_counter.load() != packet.id;});
             }
             data = packet.data;
-            state_counter++;
+            state_counter.store(state_counter.load() +1);
             int present_state = state_counter.load();
             recieve_condition.notify_one();
 
@@ -50,7 +50,7 @@ namespace traffic_manager {
             if (state_counter.load() == old_state) {
                 recieve_condition.wait(lock, [=] {return state_counter.load() != old_state;});
             }
-            state_counter++;
+            state_counter.store(state_counter.load() +1);
             DataPacket<Data> packet = {state_counter.load(), data};
             send_condition.notify_one();
 

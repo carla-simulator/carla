@@ -28,12 +28,14 @@ namespace traffic_manager {
       // buffer_list_b.push_back(std::deque<std::shared_ptr<SimpleWaypoint>>());
     }
 
-    planner_frame_a = LocalizationToPlannerFrame(actor_list.size());
-    planner_frame_b = LocalizationToPlannerFrame(actor_list.size());
+    planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(actor_list.size());
+    planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(actor_list.size());
 
     frame_selector = true;
-    frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(true, &planner_frame_a));
-    frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(false, &planner_frame_b));
+    frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(true, planner_frame_a));
+    frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(false, planner_frame_b));
+
+    planner_messenger_state = planner_messenger->GetState() -1;
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -163,13 +165,29 @@ namespace traffic_manager {
   void LocalizationStage::DataReceiver() {}
 
   void LocalizationStage::DataSender() {
+    std::cout 
+    << "Running localizer's sender"
+    << " with messenger's state "
+    << planner_messenger->GetState()
+    << " previous state "
+    << planner_messenger_state
+    << std::endl;
 
-    DataPacket<LocalizationToPlannerFrame*> data_packet = {
+    DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> data_packet = {
       planner_messenger_state,
       frame_map.at(frame_selector)
     };
+
     frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(data_packet);
+
+    std::cout 
+    << "Finished localizer's sender"
+    << " with messenger's state "
+    << planner_messenger->GetState()
+    << " previous state "
+    << planner_messenger_state
+    << std::endl;
   }
 
   float LocalizationStage::DeviationDotProduct(
