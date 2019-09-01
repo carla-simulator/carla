@@ -13,19 +13,6 @@
 
 namespace traffic_manager {
 
-  typedef std::chrono::time_point<
-      std::chrono::_V2::system_clock,
-      std::chrono::nanoseconds
-      > TimeInstance;
-
-  struct StateEntry {
-    float deviation;
-    float velocity;
-    TimeInstance time_instance;
-    float deviation_integral;
-    float velocity_integral;
-  };
-
   class MotionPlannerStage : public PipelineStage {
 
     /// The class is responsible for aggregating information from various stages
@@ -37,11 +24,13 @@ namespace traffic_manager {
 
     int localization_messenger_state;
     int control_messenger_state;
+    PlannerToControlFrame control_frame_a;
+    PlannerToControlFrame control_frame_b;
+    bool frame_selector;
+    std::unordered_map<bool, PlannerToControlFrame*> frame_map;
+    LocalizationToPlannerFrame* localization_frame;
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
-    PlannerToControlFrame control_frame_a;
-    // PlannerToControlFrame control_frame_b;
-    LocalizationToPlannerFrame* localization_frame;
 
     std::unordered_map<int, StateEntry> pid_state_map;
     std::vector<float> longitudinal_parameters;
@@ -54,15 +43,15 @@ namespace traffic_manager {
   public:
 
     MotionPlannerStage(
-        float urban_target_velocity,
-        float highway_target_velocity,
-        std::vector<float> longitudinal_parameters,
-        std::vector<float> highway_longitudinal_parameters,
-        std::vector<float> lateral_parameters,
         std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
+        int number_of_vehicles,
+        float urban_target_velocity,
+        float highway_target_velocity,
         int pool_size,
-        int number_of_vehicles
+        std::vector<float> longitudinal_parameters,
+        std::vector<float> highway_longitudinal_parameters,
+        std::vector<float> lateral_parameters
       );
     ~MotionPlannerStage();
 

@@ -7,7 +7,6 @@
 #include "CarlaDataAccessLayer.h"
 #include "carla/client/ActorList.h"
 
-#include "SharedData.h"
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
 
@@ -74,9 +73,9 @@ void test_pipeline_stages(
   local_map.setUp(1.0);
   std::cout << "Map set up !" << std::endl;
 
-  auto motion_control_messenger = std::make_shared<traffic_manager::MessengerType>();
+  auto localization_planner_messenger = std::make_shared<traffic_manager::LocalizationToPlannerMessenger>();
   traffic_manager::LocalizationStage localization_stage(
-    1, motion_control_messenger, registered_actors, local_map
+    registered_actors, local_map, localization_planner_messenger, 1, registered_actors.size()
   );
 
   std::cout << "Starting stages ... " << std::endl;
@@ -85,14 +84,14 @@ void test_pipeline_stages(
 
   std::cout << "All stages started !" << std::endl;
 
-  while (motion_control_messenger->GetState() == 0);
+  while (localization_planner_messenger->GetState() == 0);
 
   std::cout << "Sensed pipeline output !" << std::endl;
   int messenger_state;
   long count = 0;
   auto last_time = std::chrono::system_clock::now();
   while (true) {
-    auto dummy = motion_control_messenger->RecieveData(messenger_state);
+    auto dummy = localization_planner_messenger->RecieveData(messenger_state);
     messenger_state = dummy.id;
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_time;

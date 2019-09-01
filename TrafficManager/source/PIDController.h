@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cmath>
 #include <vector>
+#include <chrono>
 
 namespace traffic_manager {
 
@@ -8,6 +10,19 @@ namespace traffic_manager {
     float throttle;
     float brake;
     float steer;
+  };
+
+  typedef std::chrono::time_point<
+      std::chrono::_V2::system_clock,
+      std::chrono::nanoseconds
+      > TimeInstance;
+
+  struct StateEntry {
+    float deviation;
+    float velocity;
+    TimeInstance time_instance;
+    float deviation_integral;
+    float velocity_integral;
   };
 
   class PIDController {

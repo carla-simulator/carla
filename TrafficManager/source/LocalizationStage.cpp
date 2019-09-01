@@ -29,7 +29,10 @@ namespace traffic_manager {
     }
 
     planner_frame_a = LocalizationToPlannerFrame(actor_list.size());
-    // motion_control_frame_b = LocalizationToPlannerFrame(actor_list.size());
+    planner_frame_b = LocalizationToPlannerFrame(actor_list.size());
+
+    frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(true, &planner_frame_a));
+    frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(false, &planner_frame_b));
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -110,7 +113,7 @@ namespace traffic_manager {
       dot_product *= -1;
     }
 
-    auto& message = planner_frame_a.at(array_index);
+    auto& message = frame_map.at(frame_selector)->at(array_index);
     message.actor = vehicle;
     message.deviation = dot_product;
 
@@ -162,8 +165,9 @@ namespace traffic_manager {
 
     DataPacket<LocalizationToPlannerFrame*> data_packet = {
       planner_messenger_state,
-      &planner_frame_a
+      frame_map.at(frame_selector)
     };
+    frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(data_packet);
   }
 

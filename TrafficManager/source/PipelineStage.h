@@ -9,7 +9,6 @@
 #include <atomic>
 
 #include "Messenger.h"
-#include "StageEnum.h"
 
 namespace traffic_manager {
 
