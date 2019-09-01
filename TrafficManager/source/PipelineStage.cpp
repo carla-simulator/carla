@@ -2,7 +2,10 @@
 
 namespace traffic_manager {
 
-  PipelineStage::PipelineStage(int pool_size): pool_size(pool_size) {
+  PipelineStage::PipelineStage (
+    int pool_size,
+    int number_of_vehicles
+  ): pool_size(pool_size), number_of_vehicles(number_of_vehicles) {
     action_counter = 0;
     run_stage = true;
     run_receiver = true;

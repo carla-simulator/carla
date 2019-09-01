@@ -9,21 +9,15 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/Memory.h"
+#include "carla/client/Vehicle.h"
 
 #include "PipelineStage.h"
 #include "SimpleWaypoint.h"
-#include "Messenger.h"
+#include "MessengerAndDataTypes.h"
 #include "InMemoryMap.h"
 
 namespace traffic_manager {
 
-  struct MotionControlMessage {
-    carla::SharedPtr<carla::client::Actor> actor;
-    float deviation;
-  };
-
-  typedef std::vector<MotionControlMessage> MessageFrame;
-  typedef Messenger<MessageFrame*> MessengerType;
   typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
 
   class LocalizationStage : PipelineStage {
@@ -33,15 +27,14 @@ namespace traffic_manager {
 
   private:
 
-    int motion_control_messenger_state;
+    int planner_messenger_state;
+    LocalizationToPlannerFrame planner_frame_a;
+    LocalizationToPlannerFrame planner_frame_b;
+    std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
 
     InMemoryMap& local_map;
-    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
     BufferList buffer_list_a;
-    // BufferList buffer_list_b;
-    std::shared_ptr<MessengerType> motion_control_messenger;
-    MessageFrame motion_control_frame_a;
-    // std::shared_ptr<MessageFrame> motion_control_frame_b;
+    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
 
     /// Returns the dot product between vehicle's heading vector and
     /// the vector along the direction to the next target waypoint in the
@@ -51,8 +44,7 @@ namespace traffic_manager {
         const carla::geom::Location &) const;
 
     /// Returns the cross product (z component value) between vehicle's heading
-    /// vector and
-    /// the vector along the direction to the next target waypoint in the
+    /// vector and the vector along the direction to the next target waypoint in the
     /// horizon.
     float DeviationCrossProduct(
         carla::SharedPtr<carla::client::Actor>,
@@ -61,10 +53,11 @@ namespace traffic_manager {
   public:
 
     LocalizationStage(
-      int pool_size,
-      std::shared_ptr<MessengerType> motion_control_messenger,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-      InMemoryMap& local_map
+      InMemoryMap& local_map,
+      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+      int pool_size,
+      int number_of_vehicles
     );
 
     ~LocalizationStage();
