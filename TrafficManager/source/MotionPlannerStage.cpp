@@ -8,15 +8,15 @@ namespace traffic_manager {
   const float INTERSECTION_APPROACH_SPEED = 15 / 3.6;
 
   MotionPlannerStage::MotionPlannerStage(
-    float urban_target_velocity,
-    float highway_target_velocity,
-    std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
-    std::vector<float> highway_longitudinal_parameters = {5.0, 0.1, 0.01},
-    std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f},
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
     std::shared_ptr<PlannerToControlMessenger> control_messenger,
-    int pool_size,
-    int number_of_vehicles
+    int number_of_vehicles,
+    float urban_target_velocity = 25/3.6,
+    float highway_target_velocity = 50/3.6,
+    int pool_size = 1,
+    std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
+    std::vector<float> highway_longitudinal_parameters = {5.0, 0.1, 0.01},
+    std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
   ) :
   urban_target_velocity(urban_target_velocity),
   highway_target_velocity(highway_target_velocity),
@@ -28,6 +28,10 @@ namespace traffic_manager {
   PipelineStage(pool_size, number_of_vehicles)
   {
     control_frame_a = PlannerToControlFrame(number_of_vehicles);
+    control_frame_b = PlannerToControlFrame(number_of_vehicles);
+
+    frame_map.insert(std::pair<bool, PlannerToControlFrame*>(true, &control_frame_a));
+    frame_map.insert(std::pair<bool, PlannerToControlFrame*>(false, &control_frame_b));
   }
 
   MotionPlannerStage::~MotionPlannerStage() {}
@@ -92,7 +96,7 @@ namespace traffic_manager {
     pid_state_map[actor_id] = current_state;
 
     /// Constructing actuation signal
-    auto& message = control_frame_a.at(array_index);
+    auto& message = frame_map.at(frame_selector)->at(array_index);
     message.actor = actor;
     message.throttle = actuation_signal.throttle;
     message.brake = actuation_signal.brake;
@@ -110,8 +114,9 @@ namespace traffic_manager {
 
       DataPacket<PlannerToControlFrame*> data_packet = {
         control_messenger_state,
-        &control_frame_a
+        frame_map.at(frame_selector)
       };
+      frame_selector = !frame_selector;
       control_messenger_state = control_messenger->SendData(data_packet);
   }
 }

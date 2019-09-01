@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <deque>
+#include <unordered_map>
 #include <algorithm>
+#include <mutex>
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
@@ -30,6 +32,8 @@ namespace traffic_manager {
     int planner_messenger_state;
     LocalizationToPlannerFrame planner_frame_a;
     LocalizationToPlannerFrame planner_frame_b;
+    bool frame_selector;
+    std::unordered_map<bool, LocalizationToPlannerFrame*> frame_map;
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
 
     InMemoryMap& local_map;
