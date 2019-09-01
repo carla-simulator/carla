@@ -93,7 +93,7 @@ void test_pipeline_stages(
   auto last_time = std::chrono::system_clock::now();
   while (true) {
     auto dummy = motion_control_messenger->RecieveData(messenger_state);
-
+    messenger_state = dummy.id;
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_time;
 
