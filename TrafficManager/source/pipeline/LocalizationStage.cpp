@@ -31,6 +31,7 @@ namespace traffic_manager {
     planner_frame_a = LocalizationToPlannerFrame(actor_list.size());
     planner_frame_b = LocalizationToPlannerFrame(actor_list.size());
 
+    frame_selector = true;
     frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(true, &planner_frame_a));
     frame_map.insert(std::pair<bool, LocalizationToPlannerFrame*>(false, &planner_frame_b));
   }
