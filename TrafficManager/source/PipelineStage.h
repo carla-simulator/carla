@@ -25,6 +25,7 @@ namespace traffic_manager {
   protected:
 
     const int pool_size;
+    const int number_of_vehicles;
     std::atomic<int> action_counter;
     std::atomic<bool> run_stage;
     std::atomic<bool> run_threads;
@@ -53,7 +54,8 @@ namespace traffic_manager {
 
     /// Pass the number of thread pool size.
     PipelineStage (
-      int pool_size
+      int pool_size,
+      int number_of_vehicles
     );
 
     virtual ~PipelineStage();

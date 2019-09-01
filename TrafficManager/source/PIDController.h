@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include "SharedData.h"
-
 namespace traffic_manager {
 
   struct ActuationSignal {
