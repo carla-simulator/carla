@@ -30,6 +30,7 @@ namespace traffic_manager {
     control_frame_a = PlannerToControlFrame(number_of_vehicles);
     control_frame_b = PlannerToControlFrame(number_of_vehicles);
 
+    frame_selector = true;
     frame_map.insert(std::pair<bool, PlannerToControlFrame*>(true, &control_frame_a));
     frame_map.insert(std::pair<bool, PlannerToControlFrame*>(false, &control_frame_b));
   }

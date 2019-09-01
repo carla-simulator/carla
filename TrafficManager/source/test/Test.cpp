@@ -38,7 +38,7 @@ void handler() {
 } 
 
 int main(int argc, char *argv[]) {
-  std::set_terminate(handler);
+  // std::set_terminate(handler);
 
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
