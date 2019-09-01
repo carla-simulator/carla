@@ -31,10 +31,10 @@ namespace traffic_manager {
     std::atomic<bool> run_receiver;
     std::atomic<bool> run_sender;
 
-    std::shared_timed_mutex wait_for_action_mutex;
+    std::mutex wait_for_action_mutex;
     std::mutex wait_receiver_mutex;
     std::mutex wait_sender_mutex;
-    std::condition_variable_any wake_action_notifier;
+    std::condition_variable wake_action_notifier;
     std::condition_variable wake_receiver_notifier;
     std::condition_variable wake_sender_notifier;
 

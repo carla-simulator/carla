@@ -37,8 +37,9 @@ namespace traffic_manager {
     int load_per_thread = std::floor(array_size/pool_size);
 
     while (run_stage.load()) {
-      std::shared_lock<std::shared_timed_mutex> lock(wait_for_action_mutex);
+      std::unique_lock<std::mutex> lock(wait_for_action_mutex);
       wake_action_notifier.wait(lock, [=] {return run_stage.load();});
+      lock.unlock();
 
       int array_start_index = thread_id*load_per_thread;
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;

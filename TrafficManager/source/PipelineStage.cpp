@@ -1,5 +1,3 @@
-// Definition file for members of class PipelineStage
-
 #include "PipelineStage.h"
 
 namespace traffic_manager {
