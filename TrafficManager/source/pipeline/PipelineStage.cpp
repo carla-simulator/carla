@@ -51,9 +51,12 @@ namespace traffic_manager {
     int load_per_thread = std::floor(array_size/pool_size);
 
     while (run_stage.load()) {
-      std::unique_lock<std::mutex> lock(wait_for_action_mutex);
-      wake_action_notifier.wait(lock, [=] {return run_stage.load();});
-      lock.unlock();
+
+      if (!run_threads) {
+        std::unique_lock<std::mutex> lock(wait_for_action_mutex);
+        wake_action_notifier.wait(lock, [=] {return run_threads.load();});
+        lock.unlock();
+      }
 
       int array_start_index = thread_id*load_per_thread;
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
@@ -72,7 +75,7 @@ namespace traffic_manager {
         while (action_counter.load() < pool_size);
         action_counter.store(0);
         run_sender.store(true);
-        wake_sender_notifier.notify_one();
+        wake_sender_notifier.notify_all();
       }
     }
   }
@@ -87,7 +90,7 @@ namespace traffic_manager {
       this->DataSender();
 
       run_receiver.store(true);
-      wake_receiver_notifier.notify_one();
+      wake_receiver_notifier.notify_all();
       run_sender.store(false);
     }
   }

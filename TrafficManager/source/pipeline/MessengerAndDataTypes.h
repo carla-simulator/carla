@@ -33,6 +33,6 @@ namespace traffic_manager {
 
     /// Messenger types
 
-    typedef Messenger<LocalizationToPlannerFrame*> LocalizationToPlannerMessenger;
-    typedef Messenger<PlannerToControlFrame*> PlannerToControlMessenger;
+    typedef Messenger<std::shared_ptr<LocalizationToPlannerFrame>> LocalizationToPlannerMessenger;
+    typedef Messenger<std::shared_ptr<PlannerToControlFrame>> PlannerToControlMessenger;
 }
