@@ -23,7 +23,7 @@ namespace traffic_manager {
   };
 
   typedef std::vector<MotionControlMessage> MessageFrame;
-  typedef Messenger<std::shared_ptr<MessageFrame>> MessengerType;
+  typedef Messenger<MessageFrame*> MessengerType;
   typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
 
   class LocalizationStage : PipelineStage {
@@ -37,9 +37,11 @@ namespace traffic_manager {
 
     InMemoryMap& local_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
-    BufferList buffer_list;
+    BufferList buffer_list_a;
+    // BufferList buffer_list_b;
     std::shared_ptr<MessengerType> motion_control_messenger;
-    std::shared_ptr<MessageFrame> motion_control_frame;
+    MessageFrame motion_control_frame_a;
+    // std::shared_ptr<MessageFrame> motion_control_frame_b;
 
     /// Returns the dot product between vehicle's heading vector and
     /// the vector along the direction to the next target waypoint in the
@@ -55,8 +57,6 @@ namespace traffic_manager {
     float DeviationCrossProduct(
         carla::SharedPtr<carla::client::Actor>,
         const carla::geom::Location &) const;
-
-    std::shared_ptr<BufferList> CopyBufferList();
 
   public:
 
