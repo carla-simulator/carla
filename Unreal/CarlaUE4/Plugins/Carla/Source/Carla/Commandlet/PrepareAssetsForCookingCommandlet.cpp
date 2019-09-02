@@ -5,9 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "PrepareAssetsForCookingCommandlet.h"
+
+#include "Editor/ContentBrowser/Private/ContentBrowserUtils.h"
 #include "GameFramework/WorldSettings.h"
-#include "HAL/PlatformFilemanager.h"
+
 #include "HAL/PlatformFile.h"
+#include "HAL/PlatformFilemanager.h"
 
 #include "UObject/MetaData.h"
 
@@ -35,6 +38,22 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 }
 #if WITH_EDITORONLY_DATA
 
+// NOTE: Assets imported from a map FBX will be classified for semantic
+// segmentation as OTHER, ROAD, ROADLINES AND TERRAIN based on the asset name.
+// Note that if the asset name contains Marking, it will classify it as
+// RoadLines tag in Carla. If it is not possible to classify the asset name,
+// then we will use OTHER tag in Carla.
+namespace Tags {
+  // Semantic Segmentation
+  static const FString OTHER      = TEXT("Other");
+  static const FString ROAD       = TEXT("Roads");
+  static const FString ROADLINES  = TEXT("RoadLines");
+  static const FString TERRAIN    = TEXT("Terrain");
+
+  // RoadRunner Tags
+  static const FString MARKING    = TEXT("Marking");
+}
+
 FPackageParams UPrepareAssetsForCookingCommandlet::ParseParams(const FString &InParams) const
 {
   TArray<FString> Tokens;
@@ -46,6 +65,7 @@ FPackageParams UPrepareAssetsForCookingCommandlet::ParseParams(const FString &In
   FPackageParams PackageParams;
   FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
   FParse::Bool(*InParams, TEXT("OnlyPrepareMaps="), PackageParams.bOnlyPrepareMaps);
+  FParse::Bool(*InParams, TEXT("OnlyMoveMeshes="), PackageParams.bOnlyMoveMeshes);
   return PackageParams;
 }
 
@@ -106,16 +126,16 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       // Set Carla Materials
       FString AssetName;
       MapAsset.AssetName.ToString(AssetName);
-      if (AssetName.Contains("Marking"))
+      if (AssetName.Contains(Tags::MARKING))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
         MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
       }
-      else if (AssetName.Contains("Road"))
+      else if (AssetName.Contains(Tags::ROAD))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
       }
-      else if (AssetName.Contains("Terrain"))
+      else if (AssetName.Contains(Tags::TERRAIN))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
       }
@@ -146,9 +166,9 @@ void UPrepareAssetsForCookingCommandlet::DestroySpawnedActorsInWorld(
 
 bool UPrepareAssetsForCookingCommandlet::SaveWorld(
     FAssetData &AssetData,
-    FString &PackageName,
-    FString &DestPath,
-    FString &WorldName)
+    const FString &PackageName,
+    const FString &DestPath,
+    const FString &WorldName)
 {
   // Create Package to save
   UPackage *Package = AssetData.GetPackage();
@@ -328,52 +348,45 @@ void UPrepareAssetsForCookingCommandlet::GeneratePackagePathFile(const FString &
   SaveStringTextToFile(SaveDirectory, FileName, PackageJsonFilePath, true);
 }
 
-void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
-    FString &PackageName,
+void UPrepareAssetsForCookingCommandlet::MoveMeshes(
+    const FString &PackageName,
     const TArray<FMapData> &MapsPaths)
 {
 
   MoveAssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
   MoveAssetsObjectLibrary->AddToRoot();
 
-  // @TODO: Fix and Refactor Move Meshes inside UE4
-  // for (auto Map : MapsPaths)
-  // {
-  //   FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
-  //   FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
-  //   FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
-  //   FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
+  for (const auto &Map : MapsPaths)
+  {
+    MoveMeshesForSemanticSegmentation(PackageName, Map.Name);
+  }
+}
 
-  //   // First move the meshes inside the Package to the correct place
-  //   // @TODO: Change to Destination Path to {DefaultPath, RoadsPath,
-  //   // MarkingPath, TerrainPath}
-  //   FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
-  //   // MoveMeshes(SrcPath, {DefaultPath, RoadsPath, MarkingPath, TerrainPath});
-  // }
-
+void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
+    const FString &PackageName,
+    const TArray<FMapData> &MapsPaths)
+{
   // Load World
   FAssetData AssetData;
   LoadWorld(AssetData);
   World = CastChecked<UWorld>(AssetData.GetAsset());
 
-  for (auto Map : MapsPaths)
+  FString BasePath = TEXT("/Game/") + PackageName + TEXT("/Static/");
+
+  for (const auto &Map : MapsPaths)
   {
+    FString MapPath = TEXT("/") + Map.Name;
 
-    FString RoadsPath   = TEXT("/Game/") + PackageName + TEXT("/Static/Road/")    + Map.Name;
-    FString MarkingPath = TEXT("/Game/") + PackageName + TEXT("/Static/Marking/") + Map.Name;
-    FString TerrainPath = TEXT("/Game/") + PackageName + TEXT("/Static/Terrain/") + Map.Name;
-    FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Static/Default/") + Map.Name;
+    FString OtherPath     = BasePath + Tags::OTHER      + MapPath;
+    FString RoadsPath     = BasePath + Tags::ROAD       + MapPath;
+    FString RoadLinesPath = BasePath + Tags::ROADLINES  + MapPath;
+    FString TerrainPath   = BasePath + Tags::TERRAIN    + MapPath;
 
-    FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
-
-    // Add Meshes to inside the loaded World
-    // @TODO: Change to DataPath = {DefaultPath, RoadsPath, MarkingPath,
-    // TerrainPath}
-    // when moving assets work.
-    TArray<FString> DataPath = {SrcPath};
+    // Spawn assets located in semantic segmentation fodlers
+    TArray<FString> DataPath = {OtherPath, RoadsPath, RoadLinesPath, TerrainPath};
 
     TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
-    UE_LOG(LogTemp, Log, TEXT("SPAWNED CARLA %d ACTORS"), SpawnedActors.Num());
+
     // Save the World in specified path
     SaveWorld(AssetData, PackageName, Map.Path, Map.Name);
 
@@ -416,9 +429,12 @@ void UPrepareAssetsForCookingCommandlet::PreparePropsForCooking(
   MapObjectLibrary->ClearLoaded();
 }
 
-void UPrepareAssetsForCookingCommandlet::MoveMeshes(const FString &SrcPath, const TArray<FString> &DestPath)
+void UPrepareAssetsForCookingCommandlet::MoveMeshesForSemanticSegmentation(
+    const FString &PackageName,
+    const FString &MapName)
 {
   // Prepare a UObjectLibrary for moving assets
+  const FString SrcPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + MapName;
   MoveAssetsObjectLibrary->LoadAssetDataFromPath(*SrcPath);
   MoveAssetsObjectLibrary->LoadAssetsFromAssetData();
 
@@ -427,68 +443,59 @@ void UPrepareAssetsForCookingCommandlet::MoveMeshes(const FString &SrcPath, cons
   MoveAssetsObjectLibrary->GetAssetDataList(MoveMapContents);
   MoveAssetsObjectLibrary->ClearLoaded();
 
-  if (MoveMapContents.Num() > 0)
+  TArray<FString> DestinationPaths = {Tags::OTHER, Tags::ROAD, Tags::ROADLINES, Tags::TERRAIN};
+
+  // Init Map with keys
+  TMap<FString, TArray<UObject *>> AssetDataMap;
+  for (const auto &Paths : DestinationPaths)
   {
+    AssetDataMap.Add(Paths, {});
+  }
+
+  for (const auto &MapAsset : MoveMapContents)
+  {
+    // Get AssetName
+    UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
+    FString ObjectName = MeshAsset->GetName();
 
     FString AssetName;
+    MapAsset.AssetName.ToString(AssetName);
 
-    for (const auto &MapAsset : MoveMapContents)
+    if (SrcPath.Len())
     {
 
-      // Get AssetName
-      UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
-      FString ObjectName = MeshAsset->GetName();
-      MapAsset.AssetName.ToString(AssetName);
+      const FString CurrentPackageName = MeshAsset->GetOutermost()->GetName();
 
-      if (SrcPath.Len())
+      if (!ensure(CurrentPackageName.StartsWith(SrcPath)))
       {
+        continue;
+      }
 
-        const FString CurrentPackageName = MeshAsset->GetOutermost()->GetName();
-
-        if (!ensure(CurrentPackageName.StartsWith(SrcPath)))
-        {
-          continue;
-        }
-
-        // Classify in different folders according to semantic segmentation
-        EAssetType AssetType = EAssetType::DEFAULT;
-
-        if (AssetName.Contains("Road"))
-        {
-          AssetType = EAssetType::ROAD;
-        }
-        else if (AssetName.Contains("Marking"))
-        {
-          AssetType = EAssetType::MARKING;
-        }
-        else if (AssetName.Contains("Terrain"))
-        {
-          AssetType = EAssetType::TERRAIN;
-        }
-
-        // Save package in destination path
-        FString SemanticDestPath = DestPath[static_cast<int>(AssetType)];
-        FString NewPackageName = SemanticDestPath + "/" + ObjectName;
-
-        MeshAsset->AddToRoot();
-
-        UPackage *AssetPackage = MapAsset.GetPackage();
-        AssetPackage->SetFolderName(*SemanticDestPath);
-        AssetPackage->FullyLoad();
-        AssetPackage->MarkPackageDirty();
-        FAssetRegistryModule::AssetCreated(MeshAsset);
-
-        MeshAsset->MarkPackageDirty();
-        MeshAsset->GetOuter()->MarkPackageDirty();
-
-        FString CompleteFilename = FPackageName::LongPackageNameToFilename(NewPackageName,
-            FPackageName::GetAssetPackageExtension());
-        UPackage::SavePackage(AssetPackage, MeshAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-            *CompleteFilename, GError, nullptr, true, true, SAVE_NoError);
+      // Classify in different folders according to semantic segmentation
+      if (AssetName.Contains(Tags::ROAD))
+      {
+        AssetDataMap[Tags::ROAD].Add(MeshAsset);
+      }
+      else if (AssetName.Contains(Tags::MARKING))
+      {
+        AssetDataMap[Tags::MARKING].Add(MeshAsset);
+      }
+      else if (AssetName.Contains(Tags::TERRAIN))
+      {
+        AssetDataMap[Tags::TERRAIN].Add(MeshAsset);
+      }
+      else
+      {
+        AssetDataMap[Tags::OTHER].Add(MeshAsset);
       }
     }
   }
 
+  for (const auto &Elem : AssetDataMap)
+  {
+    FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;
+    ContentBrowserUtils::MoveAssets(Elem.Value, DestPath);
+  }
 }
 
 int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
@@ -498,26 +505,33 @@ int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
   // Get Props and Maps Path
   FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
 
-  if (PackageParams.bOnlyPrepareMaps)
+  if (PackageParams.bOnlyMoveMeshes)
   {
-    PrepareMapsForCooking(PackageParams.Name, AssetsPaths.MapsPaths);
+    MoveMeshes(PackageParams.Name, AssetsPaths.MapsPaths);
   }
   else
   {
-    FString PropsMapPath("");
-
-    if (AssetsPaths.PropsPaths.Num() > 0)
+    if (PackageParams.bOnlyPrepareMaps)
     {
-      FString MapName("PropsMap");
-      PropsMapPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Maps/") + MapName;
-      PreparePropsForCooking(PackageParams.Name, AssetsPaths.PropsPaths, MapName);
+      PrepareMapsForCooking(PackageParams.Name, AssetsPaths.MapsPaths);
     }
+    else
+    {
+      FString PropsMapPath("");
 
-    // Save Map Path File for further use
-    GenerateMapPathsFile(AssetsPaths, PropsMapPath);
+      if (AssetsPaths.PropsPaths.Num() > 0)
+      {
+        FString MapName("PropsMap");
+        PropsMapPath = TEXT("/Game/") + PackageParams.Name + TEXT("/Maps/") + MapName;
+        PreparePropsForCooking(PackageParams.Name, AssetsPaths.PropsPaths, MapName);
+      }
 
-    // Saves Package path for further use
-    GeneratePackagePathFile(PackageParams.Name);
+      // Save Map Path File for further use
+      GenerateMapPathsFile(AssetsPaths, PropsMapPath);
+
+      // Saves Package path for further use
+      GeneratePackagePathFile(PackageParams.Name);
+    }
   }
 
   return 0;

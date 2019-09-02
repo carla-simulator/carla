@@ -32,6 +32,8 @@ struct CARLA_API FPackageParams
   FString Name;
 
   bool bOnlyPrepareMaps;
+
+  bool bOnlyMoveMeshes;
 };
 
 /// Struct containing map data read from .Package.json file.
@@ -89,7 +91,11 @@ public:
 
   /// Saves the current World, contained in @a AssetData, into @a DestPath
   /// composed of @a PackageName and with @a WorldName.
-  bool SaveWorld(FAssetData &AssetData, FString &PackageName, FString &DestPath, FString &WorldName);
+  bool SaveWorld(
+      FAssetData &AssetData,
+      const FString &PackageName,
+      const FString &DestPath,
+      const FString &WorldName);
 
   /// Destroys all the previously spawned actors stored in @a SpawnedActors
   void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);
@@ -108,15 +114,19 @@ public:
   /// For each Map data contained in @MapsPaths, it creates a World, spawn its
   /// actors inside the world and saves it in .umap format
   /// in a destination path built from @a PackageName.
-  void PrepareMapsForCooking(FString &PackageName, const TArray<FMapData> &MapsPaths);
+  void PrepareMapsForCooking(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
   /// For all the props inside @a PropsPaths, it creates a single World, spawn
   /// all the props inside the world and saves it in .umap format
   /// in a destination path built from @a PackageName and @a MapDestPath.
   void PreparePropsForCooking(FString &PackageName, const TArray<FString> &PropsPaths, FString &MapDestPath);
 
-  // Moves all the assets from @a SrcPath to @a DestPath
-  void MoveMeshes(const FString &SrcPath, const TArray<FString> &DestPath);
+  /// Moves all the assets of a map from @a SrcPath to @a DestPath
+  void MoveMeshesForSemanticSegmentation(const FString &PackageName, const FString &MapName);
+
+  /// Moves the meshes of all maps listed in @MapsPaths and contained in a
+  /// package with @a PackageName
+  void MoveMeshes(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
 public:
 

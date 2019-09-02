@@ -217,7 +217,13 @@ def import_assets_from_json_list(json_list):
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
-            prepare_maps_commandlet_for_cooking(package_name)
+
+            # First we only move the meshes to the tagged folders for semantic
+            # segmentation, since Unreal does move files synchronously
+            prepare_maps_commandlet_for_cooking(package_name, only_move_meshes=True)
+
+            # We prepare the assets for cooking after moving them
+            prepare_maps_commandlet_for_cooking(package_name, only_move_meshes=False)
 
 
 def move_uassets(package_name, maps):
@@ -247,11 +253,15 @@ def move_uassets(package_name, maps):
             if "TerrainNode" in filename:
                 shutil.move(os.path.join(origin_path, filename), os.path.join(terrain_dir, filename))
 
-def prepare_maps_commandlet_for_cooking(package_name):
+
+def prepare_maps_commandlet_for_cooking(package_name, only_move_meshes):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = "-PackageName=%s" % package_name
     commandlet_arguments += " -OnlyPrepareMaps=true"
+    if only_move_meshes:
+        commandlet_arguments += " -OnlyMoveMeshes=true"
     invoke_commandlet(commandlet_name, commandlet_arguments)
+
 
 def main():
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
