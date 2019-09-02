@@ -20,7 +20,7 @@ namespace traffic_manager {
     };
 
     struct PlannerToControlData {
-        carla::SharedPtr<carla::client::Actor> actor;
+        int actor_id;
         float throttle;
         float brake;
         float steer;

@@ -47,7 +47,7 @@ namespace traffic_manager {
     // << localization_messenger_state
     // << std::endl;
 
-    for (int i = start_index; i < start_index; i++) {
+    for (int i = start_index; i < end_index; i++) {
 
       auto& localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
@@ -108,20 +108,21 @@ namespace traffic_manager {
 
       /// Constructing actuation signal
       auto& message = frame_map.at(frame_selector)->at(i);
-      message.actor = actor;
+      message.actor_id = actor_id;
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
 
-      // std::cout 
-      // << "Finished planner's action"
-      // << " with messenger's state "
-      // << localization_messenger->GetState()
-      // << " previous state "
-      // << localization_messenger_state
-      // << std::endl;
     }
-  }
+
+    // std::cout 
+    // << "Finished planner's action"
+    // << " with messenger's state "
+    // << localization_messenger->GetState()
+    // << " previous state "
+    // << localization_messenger_state
+    // << std::endl;
+}
 
   void MotionPlannerStage::DataReceiver() {
     // std::cout 
@@ -146,13 +147,27 @@ namespace traffic_manager {
   }
 
   void MotionPlannerStage::DataSender() {
-    // std::cout << "Running planner's sender" << std::endl;
+    // std::cout 
+    // << "Running planner's sender"
+    // << " with messenger's state "
+    // << control_messenger->GetState()
+    // << " previous state "
+    // << control_messenger_state
+    // << std::endl;
+
     DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
       control_messenger_state,
       frame_map.at(frame_selector)
     };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);
-    // std::cout << "Finished planner's sender" << std::endl;
+    
+    // std::cout 
+    // << "Finished planner's sender"
+    // << " with messenger's state "
+    // << control_messenger->GetState()
+    // << " previous state "
+    // << control_messenger_state
+    // << std::endl;
   }
 }

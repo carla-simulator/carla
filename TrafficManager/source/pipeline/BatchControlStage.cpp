@@ -12,43 +12,95 @@ namespace traffic_manager {
   ):
     messenger(messenger),
     carla_client(carla_client),
-    PipelineStage(pool_size, number_of_vehicles),
-    commands(std::vector<carla::rpc::Command>(number_of_vehicles))
+    PipelineStage(pool_size, number_of_vehicles)
   {
     messenger_state = messenger->GetState();
+    frame_count = 0;
+    last_update_instance = std::chrono::system_clock::now();
+    commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
   }
 
   BatchControlStage::~BatchControlStage() {}
 
   void BatchControlStage::Action(int start_index, int end_index) {
 
+    // std::cout 
+    // << "Running control apply's action"
+    // << " with messenger's state "
+    // << messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl;
+
     for (int i=start_index; i<end_index; i++) {
 
       carla::rpc::VehicleControl vehicle_control;
 
       auto& element = data_frame->at(i);
-      auto actor = element.actor;
-      auto actor_id = actor->GetId();
+      auto actor_id = element.actor_id;
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
 
+      // std::cout << "T " << element.throttle << " B " << element.brake << " S " << element.steer << std::endl;
       carla::rpc::Command::ApplyVehicleControl control_command(actor_id, vehicle_control);
-      auto& command_reference = commands.at(i);
+
+      auto& command_reference = commands->at(i);
       command_reference = control_command;
     }
+
+    // std::cout 
+    // << "Finished control apply's action"
+    // << " with messenger's state "
+    // << messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl;
 
   }
 
   void BatchControlStage::DataReceiver() {
-    auto packet = messenger->RecieveData(messenger_state);
+    // std::cout 
+    // << "Running control apply's receiver"
+    // << " with messenger's state "
+    // << messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl;
 
+    auto packet = messenger->RecieveData(messenger_state);
     data_frame = packet.data;
     messenger_state = packet.id;
+
+    // std::cout 
+    // << "Finished control apply's receiver"
+    // << " with messenger's state "
+    // << messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl;
   }
 
   void BatchControlStage::DataSender() {
-    carla_client.ApplyBatch(commands);
+    // std::cout 
+    // << "Running control apply's sender"
+    // << std::endl;
+
+    carla_client.ApplyBatch(*commands.get());
+
+    auto current_time = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = current_time - last_update_instance;
+
+    frame_count++;
+    if (diff.count() > 1.0) {
+      std::cout << "Processed " << frame_count << " frames per second" << std::endl;
+      last_update_instance = current_time;
+      frame_count = 0;
+    }
+    
+    // std::cout
+    // << "Finished control apply's sender"
+    // << std::endl;
   }
 
 }

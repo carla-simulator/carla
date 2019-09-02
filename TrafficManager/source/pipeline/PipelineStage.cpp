@@ -33,13 +33,15 @@ namespace traffic_manager {
   }
 
   void PipelineStage::ReceiverThreadManager() {
-    while (run_stage.load()) {
 
-      if (!run_receiver.load()) {
-        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+    while (run_stage.load()) {
+      // std::cout << "receiver locked run_receiver " << run_receiver.load() <<std::endl;
+      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      while (!run_receiver.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
-        lock.unlock();
       }
+      lock.unlock();
+      // std::cout << "receiver unlocked run_receiver " << run_receiver.load() << std::endl;
       run_receiver.store(false);
 
       this->DataReceiver();
@@ -50,16 +52,19 @@ namespace traffic_manager {
   }
 
   void PipelineStage::ActionThreadManager(int thread_id) {
+
     int array_size = number_of_vehicles;
-    int load_per_thread = std::floor(array_size/pool_size);
+    int load_per_thread = static_cast<int>(std::floor(array_size/pool_size));
 
     while (run_stage.load()) {
 
-      if (!run_threads.load()) {
-        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      // std::cout << "action locked run_threads " << run_threads.load() << std::endl;
+      while (!run_threads.load()) {
         wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
-        lock.unlock();
       }
+      lock.unlock();
+      // std::cout << "action unlocked run_threads " << run_threads.load() << std::endl;
 
       int array_start_index = thread_id*load_per_thread;
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
@@ -82,17 +87,19 @@ namespace traffic_manager {
   }
 
   void PipelineStage::SenderThreadManager() {
+
     while (run_stage.load()) {
-      if (!run_sender.load()) {
-        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      // std::cout << "sender locked run_sender " << run_sender.load() << std::endl;
+      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      while (!run_sender.load()) {
         wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
-        lock.unlock();
       }
+      lock.unlock();
+      // std::cout << "sender unlocked run_sender " << run_sender.load() << std::endl;
       run_sender.store(false);
 
       this->DataSender();
 
-      while (run_receiver)
       run_receiver.store(true);
       wake_receiver_notifier.notify_one();
     }

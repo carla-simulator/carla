@@ -10,6 +10,7 @@
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
 #include "MotionPlannerStage.h"
+#include "BatchControlStage.h"
 
 void test_dense_topology(const carla::client::World &);
 
@@ -88,20 +89,29 @@ void test_pipeline_stages(
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
+  traffic_manager::BatchControlStage control_stage(
+    planner_control_messenger, client_conn,
+    registered_actors.size(), 1
+  );
+
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();
   planner_stage.Start();
+  control_stage.Start();
 
   std::cout << "All stages started !" << std::endl;
 
-  int messenger_state = planner_control_messenger->GetState() -1;
-  while (planner_control_messenger->GetState() == 0);
-  std::cout << "Sensed pipeline output !" << std::endl;
+  // int messenger_state = planner_control_messenger->GetState() -1;
+  // while (planner_control_messenger->GetState() == 0);
+  // std::cout << "Sensed pipeline output !" << std::endl;
 
-  long count = 0;
-  auto last_time = std::chrono::system_clock::now();
+  // long count = 0;
+  // auto last_time = std::chrono::system_clock::now();
   while (true) {
+
+    sleep(1);
+
     // std::cout 
     // << "===========================================================================" << std::endl
     // << "Running test receiver"
@@ -111,8 +121,8 @@ void test_pipeline_stages(
     // << messenger_state
     // << std::endl;
 
-    auto dummy = planner_control_messenger->RecieveData(messenger_state);
-    messenger_state = dummy.id;
+    // auto dummy = planner_control_messenger->RecieveData(messenger_state);
+    // messenger_state = dummy.id;
 
     // std::cout 
     // << "Finished test receiver"
@@ -123,15 +133,15 @@ void test_pipeline_stages(
     // << std::endl
     // << "===========================================================================" << std::endl;
 
-    auto current_time = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = current_time - last_time;
+    // auto current_time = std::chrono::system_clock::now();
+    // std::chrono::duration<double> diff = current_time - last_time;
 
-    count++;
-    if (diff.count() > 1.0) {
-      last_time = current_time;
-      std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;
-      count = 0;
-    }
+    // count++;
+    // if (diff.count() > 1.0) {
+    //   last_time = current_time;
+    //   std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;
+    //   count = 0;
+    // }
   }
 }
 

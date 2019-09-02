@@ -50,7 +50,7 @@ namespace traffic_manager {
     // << planner_messenger_state
     // << std::endl;
 
-    for (int i = start_index; i < start_index; i++) {
+    for (int i = start_index; i < end_index; i++) {
 
       auto vehicle = actor_list.at(i);
       auto actor_id = vehicle->GetId();
