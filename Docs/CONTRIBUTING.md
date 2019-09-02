@@ -38,8 +38,10 @@ open an issue to let us know. Even better, if you think you can improve it
 yourself, it would be a great contribution to the community!
 
 We build our documentation with [MkDocs](http://www.mkdocs.org/) based on the
-Markdown files inside the "Docs" folder. You can either directly modify them on
+Markdown files inside the `Docs` folder. You can either directly modify them on
 GitHub or locally in your machine.
+
+To update Python API docs, instead of directly modifying the Markdown you need to edit the corresponding YAML files inside `PythonAPI/docs` and run `doc_gen.py` (Python 2) subsequently. This will re-generate the respective Markdown files inside `Docs/`, which can then be fed into `mkdocs`.
 
 Once you are done with your changes, please submit a pull-request.
 
