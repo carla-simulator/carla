@@ -102,8 +102,8 @@ void test_pipeline_stages(
 
   std::cout << "All stages started !" << std::endl;
 
-  // int messenger_state = planner_control_messenger->GetState() -1;
-  // while (planner_control_messenger->GetState() == 0);
+  // int messenger_state = localization_planner_messenger->GetState() -1;
+  // while (localization_planner_messenger->GetState() == 0);
   // std::cout << "Sensed pipeline output !" << std::endl;
 
   // long count = 0;
@@ -121,7 +121,7 @@ void test_pipeline_stages(
     // << messenger_state
     // << std::endl;
 
-    // auto dummy = planner_control_messenger->RecieveData(messenger_state);
+    // auto dummy = localization_planner_messenger->RecieveData(messenger_state);
     // messenger_state = dummy.id;
 
     // std::cout 
