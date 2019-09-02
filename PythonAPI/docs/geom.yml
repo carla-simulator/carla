@@ -356,12 +356,12 @@
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.Geolocation
+        type: carla.GeoLocation
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.Geolocation
+        type: carla.GeoLocation
     # --------------------------------------
     - def_name: __str__
       params:

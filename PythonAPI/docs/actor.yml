@@ -69,6 +69,11 @@
         This function does not call the simulator, it returns the location
         received in the last tick.
     # --------------------------------------
+    - def_name: get_transform
+      return: carla.Transform
+      doc: >
+        Returns the current transform of the actor.
+    # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
       doc: >

@@ -107,6 +107,7 @@
         - [**destroy**(**self**)](#carla.Actor.destroy) <sub>_Method_</sub>
         - [**get_world**(**self**)](#carla.Actor.get_world) <sub>_Method_</sub>
         - [**get_location**(**self**)](#carla.Actor.get_location) <sub>_Method_</sub>
+        - [**get_transform**(**self**)](#carla.Actor.get_transform) <sub>_Method_</sub>
         - [**get_velocity**(**self**)](#carla.Actor.get_velocity) <sub>_Method_</sub>
         - [**get_angular_velocity**(**self**)](#carla.Actor.get_angular_velocity) <sub>_Method_</sub>
         - [**get_acceleration**(**self**)](#carla.Actor.get_acceleration) <sub>_Method_</sub>
@@ -830,6 +831,9 @@ Returns the current location of the actor.
     - **Return:** _[carla.Location](#carla.Location)_  
     - **Note:** <font color="#8E8E8E">_This function does not call the simulator, it returns the location received in the last tick.
 _</font>  
+- <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the current transform of the actor.  
+    - **Return:** _[carla.Transform](#carla.Transform)_  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the current 3D velocity of the actor.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
@@ -1195,10 +1199,10 @@ Height regarding ground level.
         - `altitude` (_float_)  
 - <a name="carla.GeoLocation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
-        - `other` (_[carla.Geolocation](#carla.Geolocation)_)  
+        - `other` (_[carla.GeoLocation](#carla.GeoLocation)_)  
 - <a name="carla.GeoLocation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
-        - `other` (_[carla.Geolocation](#carla.Geolocation)_)  
+        - `other` (_[carla.GeoLocation](#carla.GeoLocation)_)  
 - <a name="carla.GeoLocation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
