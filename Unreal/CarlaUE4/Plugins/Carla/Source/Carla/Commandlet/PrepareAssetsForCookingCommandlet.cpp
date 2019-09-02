@@ -43,14 +43,15 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 // Note that if the asset name contains Marking, it will classify it as
 // RoadLines tag in Carla. If it is not possible to classify the asset name,
 // then we will use OTHER tag in Carla.
-namespace Tags {
-  // Semantic Segmentation
+namespace SSTags {
+  // Carla Tags
   static const FString OTHER      = TEXT("Other");
   static const FString ROAD       = TEXT("Roads");
   static const FString ROADLINES  = TEXT("RoadLines");
-  static const FString TERRAIN    = TEXT("Terrain");
+  static const FString VEGETATION = TEXT("Vegetation");
 
   // RoadRunner Tags
+  static const FString TERRAIN    = TEXT("Terrain");
   static const FString MARKING    = TEXT("Marking");
 }
 
@@ -126,16 +127,16 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       // Set Carla Materials
       FString AssetName;
       MapAsset.AssetName.ToString(AssetName);
-      if (AssetName.Contains(Tags::MARKING))
+      if (AssetName.Contains(SSTags::MARKING))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
         MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
       }
-      else if (AssetName.Contains(Tags::ROAD))
+      else if (AssetName.Contains(SSTags::ROAD))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
       }
-      else if (AssetName.Contains(Tags::TERRAIN))
+      else if (AssetName.Contains(SSTags::TERRAIN))
       {
         MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
       }
@@ -377,13 +378,13 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
   {
     FString MapPath = TEXT("/") + Map.Name;
 
-    FString OtherPath     = BasePath + Tags::OTHER      + MapPath;
-    FString RoadsPath     = BasePath + Tags::ROAD       + MapPath;
-    FString RoadLinesPath = BasePath + Tags::ROADLINES  + MapPath;
-    FString TerrainPath   = BasePath + Tags::TERRAIN    + MapPath;
+    FString OtherPath     = BasePath + SSTags::OTHER      + MapPath;
+    FString RoadsPath     = BasePath + SSTags::ROAD       + MapPath;
+    FString RoadLinesPath = BasePath + SSTags::ROADLINES  + MapPath;
+    FString VegetationPath   = BasePath + SSTags::VEGETATION    + MapPath;
 
     // Spawn assets located in semantic segmentation fodlers
-    TArray<FString> DataPath = {OtherPath, RoadsPath, RoadLinesPath, TerrainPath};
+    TArray<FString> DataPath = {OtherPath, RoadsPath, RoadLinesPath, VegetationPath};
 
     TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
 
@@ -443,7 +444,7 @@ void UPrepareAssetsForCookingCommandlet::MoveMeshesForSemanticSegmentation(
   MoveAssetsObjectLibrary->GetAssetDataList(MoveMapContents);
   MoveAssetsObjectLibrary->ClearLoaded();
 
-  TArray<FString> DestinationPaths = {Tags::OTHER, Tags::ROAD, Tags::ROADLINES, Tags::TERRAIN};
+  TArray<FString> DestinationPaths = {SSTags::OTHER, SSTags::ROAD, SSTags::ROADLINES, SSTags::VEGETATION};
 
   // Init Map with keys
   TMap<FString, TArray<UObject *>> AssetDataMap;
@@ -472,21 +473,21 @@ void UPrepareAssetsForCookingCommandlet::MoveMeshesForSemanticSegmentation(
       }
 
       // Classify in different folders according to semantic segmentation
-      if (AssetName.Contains(Tags::ROAD))
+      if (AssetName.Contains(SSTags::ROAD))
       {
-        AssetDataMap[Tags::ROAD].Add(MeshAsset);
+        AssetDataMap[SSTags::ROAD].Add(MeshAsset);
       }
-      else if (AssetName.Contains(Tags::MARKING))
+      else if (AssetName.Contains(SSTags::MARKING))
       {
-        AssetDataMap[Tags::MARKING].Add(MeshAsset);
+        AssetDataMap[SSTags::ROADLINES].Add(MeshAsset);
       }
-      else if (AssetName.Contains(Tags::TERRAIN))
+      else if (AssetName.Contains(SSTags::TERRAIN))
       {
-        AssetDataMap[Tags::TERRAIN].Add(MeshAsset);
+        AssetDataMap[SSTags::VEGETATION].Add(MeshAsset);
       }
       else
       {
-        AssetDataMap[Tags::OTHER].Add(MeshAsset);
+        AssetDataMap[SSTags::OTHER].Add(MeshAsset);
       }
     }
   }
