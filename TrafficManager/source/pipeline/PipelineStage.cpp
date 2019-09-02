@@ -18,13 +18,14 @@ namespace traffic_manager {
   PipelineStage::~PipelineStage() {}
 
   void PipelineStage::Start() {
-    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);
+    data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
     for (int i=0; i<pool_size; i++) {
       action_threads.push_back(
         std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i)
       );
     }
-    data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
+    std::this_thread::sleep_for(100ms);
+    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);
   }
 
   void PipelineStage::Stop() {
@@ -33,9 +34,11 @@ namespace traffic_manager {
 
   void PipelineStage::ReceiverThreadManager() {
     while (run_stage.load()) {
-      std::unique_lock<std::mutex> lock(wait_receiver_mutex);
+
       if (!run_receiver.load()) {
-        wake_receiver_notifier.wait(lock, [=] {return run_receiver.load();});
+        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+        wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
+        lock.unlock();
       }
       run_receiver.store(false);
 
@@ -52,9 +55,9 @@ namespace traffic_manager {
 
     while (run_stage.load()) {
 
-      if (!run_threads) {
-        std::unique_lock<std::mutex> lock(wait_for_action_mutex);
-        wake_action_notifier.wait(lock, [=] {return run_threads.load();});
+      if (!run_threads.load()) {
+        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+        wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
         lock.unlock();
       }
 
@@ -65,27 +68,31 @@ namespace traffic_manager {
 
       action_counter++;
 
+      if (run_threads.load()) {
+        run_threads.store(false);
+      }
+
       if (thread_id == pool_size-1) {
         while (action_counter.load() < pool_size);
         action_counter.store(0);
         run_sender.store(true);
-        wake_sender_notifier.notify_all();
-      } else if (run_threads.load()) {
-        run_threads.store(false);
+        wake_sender_notifier.notify_one();
       }
     }
   }
 
   void PipelineStage::SenderThreadManager() {
     while (run_stage.load()) {
-      std::unique_lock<std::mutex> lock(wait_sender_mutex);
       if (!run_sender.load()) {
-        wake_sender_notifier.wait(lock, [=] {return run_sender.load();});
+        std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+        wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
+        lock.unlock();
       }
       run_sender.store(false);
 
       this->DataSender();
 
+      while (run_receiver)
       run_receiver.store(true);
       wake_receiver_notifier.notify_one();
     }

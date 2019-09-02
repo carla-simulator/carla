@@ -76,14 +76,15 @@ void test_pipeline_stages(
 
   auto localization_planner_messenger = std::make_shared<traffic_manager::LocalizationToPlannerMessenger>();
   traffic_manager::LocalizationStage localization_stage(
-    registered_actors, local_map, localization_planner_messenger, 1, registered_actors.size()
+    registered_actors, local_map, localization_planner_messenger,
+    registered_actors.size(), 1
   );
 
   auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
   traffic_manager::MotionPlannerStage planner_stage(
     localization_planner_messenger, planner_control_messenger,
-    static_cast<int>(registered_actors.size()),
-    25/3.6, 50/3.6, 1, {0.1f, 0.15f, 0.01f},
+    registered_actors.size(), 1,
+    25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
@@ -101,8 +102,27 @@ void test_pipeline_stages(
   long count = 0;
   auto last_time = std::chrono::system_clock::now();
   while (true) {
+    // std::cout 
+    // << "===========================================================================" << std::endl
+    // << "Running test receiver"
+    // << " with messenger's state "
+    // << localization_planner_messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl;
+
     auto dummy = planner_control_messenger->RecieveData(messenger_state);
     messenger_state = dummy.id;
+
+    // std::cout 
+    // << "Finished test receiver"
+    // << " with messenger's state "
+    // << localization_planner_messenger->GetState()
+    // << " previous state "
+    // << messenger_state
+    // << std::endl
+    // << "===========================================================================" << std::endl;
+
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_time;
 

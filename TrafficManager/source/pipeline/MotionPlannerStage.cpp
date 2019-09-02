@@ -9,9 +9,9 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
     std::shared_ptr<PlannerToControlMessenger> control_messenger,
     int number_of_vehicles,
+    int pool_size = 1,
     float urban_target_velocity = 25/3.6,
     float highway_target_velocity = 50/3.6,
-    int pool_size = 1,
     std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
     std::vector<float> highway_longitudinal_parameters = {10.0f, 0.01f, 0.1f},
     std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
@@ -39,13 +39,13 @@ namespace traffic_manager {
   MotionPlannerStage::~MotionPlannerStage() {}
 
   void MotionPlannerStage::Action(int start_index, int end_index) {
-    std::cout 
-    << "Running planner's action"
-    << " with messenger's state "
-    << localization_messenger->GetState()
-    << " previous state "
-    << localization_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Running planner's action"
+    // << " with messenger's state "
+    // << localization_messenger->GetState()
+    // << " previous state "
+    // << localization_messenger_state
+    // << std::endl;
 
     for (int i = start_index; i < start_index; i++) {
 
@@ -113,36 +113,36 @@ namespace traffic_manager {
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
 
-      std::cout 
-      << "Finished planner's action"
-      << " with messenger's state "
-      << localization_messenger->GetState()
-      << " previous state "
-      << localization_messenger_state
-      << std::endl;
+      // std::cout 
+      // << "Finished planner's action"
+      // << " with messenger's state "
+      // << localization_messenger->GetState()
+      // << " previous state "
+      // << localization_messenger_state
+      // << std::endl;
     }
   }
 
   void MotionPlannerStage::DataReceiver() {
-    std::cout 
-    << "Running planner's receiver"
-    << " with messenger's state "
-    << localization_messenger->GetState()
-    << " previous state "
-    << localization_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Running planner's receiver"
+    // << " with messenger's state "
+    // << localization_messenger->GetState()
+    // << " previous state "
+    // << localization_messenger_state
+    // << std::endl;
 
     auto packet = localization_messenger->RecieveData(localization_messenger_state);
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
 
-    std::cout
-    << "Finished planner's receiver"
-    << " with messenger's state "
-    << localization_messenger->GetState()
-    << " previous state "
-    << localization_messenger_state
-    << std::endl;
+    // std::cout
+    // << "Finished planner's receiver"
+    // << " with messenger's state "
+    // << localization_messenger->GetState()
+    // << " previous state "
+    // << localization_messenger_state
+    // << std::endl;
   }
 
   void MotionPlannerStage::DataSender() {

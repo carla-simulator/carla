@@ -47,9 +47,9 @@ namespace traffic_manager {
         std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
         int number_of_vehicles,
+        int pool_size,
         float urban_target_velocity,
         float highway_target_velocity,
-        int pool_size,
         std::vector<float> longitudinal_parameters,
         std::vector<float> highway_longitudinal_parameters,
         std::vector<float> lateral_parameters
