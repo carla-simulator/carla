@@ -22,8 +22,13 @@ namespace traffic_manager {
     std::shared_ptr<PlannerToControlFrame> data_frame;
     std::shared_ptr<PlannerToControlMessenger> messenger;
 
+    int frame_count;
     carla::client::Client& carla_client;
-    std::vector<carla::rpc::Command> commands;
+    std::shared_ptr<std::vector<carla::rpc::Command>> commands;
+    std::chrono::time_point<
+      std::chrono::_V2::system_clock,
+      std::chrono::nanoseconds
+    > last_update_instance;
 
   public:
 
