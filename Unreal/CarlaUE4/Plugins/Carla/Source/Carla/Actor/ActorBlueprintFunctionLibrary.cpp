@@ -535,6 +535,43 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     Tint.RecommendedValues = { TEXT("0.0") };
     Tint.bRestrictToRecommended = false;
 
+    // Lens parameters
+    FActorVariation LensCircleFalloff;
+    LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+    LensCircleFalloff.Type = EActorAttributeType::Float;
+    LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+    LensCircleFalloff.bRestrictToRecommended = false;
+
+    FActorVariation LensCircleMultiplier;
+    LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+    LensCircleMultiplier.Type = EActorAttributeType::Float;
+    LensCircleMultiplier.RecommendedValues = { TEXT("1.6") };
+    LensCircleMultiplier.bRestrictToRecommended = false;
+
+    FActorVariation LensK;
+    LensK.Id = TEXT("lens_k");
+    LensK.Type = EActorAttributeType::Float;
+    LensK.RecommendedValues = { TEXT("-1.0") };
+    LensK.bRestrictToRecommended = false;
+
+    FActorVariation LensKcube;
+    LensKcube.Id = TEXT("lens_kcube");
+    LensKcube.Type = EActorAttributeType::Float;
+    LensKcube.RecommendedValues = { TEXT("0.0") };
+    LensKcube.bRestrictToRecommended = false;
+
+    FActorVariation LensXSize;
+    LensXSize.Id = TEXT("lens_x_size");
+    LensXSize.Type = EActorAttributeType::Float;
+    LensXSize.RecommendedValues = { TEXT("0.06") };
+    LensXSize.bRestrictToRecommended = false;
+
+    FActorVariation LensYSize;
+    LensYSize.Id = TEXT("lens_y_size");
+    LensYSize.Type = EActorAttributeType::Float;
+    LensYSize.RecommendedValues = { TEXT("0.1") };
+    LensYSize.bRestrictToRecommended = false;
+
     Definition.Variations.Append({
       ExposureMode,
       ExposureCompensation,
@@ -562,7 +599,13 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       FilmBlackClip,
       FilmWhiteClip,
       Temperature,
-      Tint});
+      Tint,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
   }
 
   Success = CheckActorDefinition(Definition);

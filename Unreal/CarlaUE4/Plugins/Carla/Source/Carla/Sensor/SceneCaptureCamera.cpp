@@ -15,6 +15,14 @@ FActorDefinition ASceneCaptureCamera::GetSensorDefinition()
       bEnableModifyingPostProcessEffects);
 }
 
+ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer)
+{
+  LoadPostProcessingMaterial(
+      TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDisortion.PhysicLensDisortion'")
+  );
+}
+
 void ASceneCaptureCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
