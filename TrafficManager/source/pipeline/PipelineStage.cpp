@@ -37,12 +37,12 @@ namespace traffic_manager {
       if (!run_receiver.load()) {
         wake_receiver_notifier.wait(lock, [=] {return run_receiver.load();});
       }
+      run_receiver.store(false);
 
       this->DataReceiver();
 
       run_threads.store(true);
       wake_action_notifier.notify_all();
-      run_receiver.store(false);
     }
   }
 
@@ -61,21 +61,17 @@ namespace traffic_manager {
       int array_start_index = thread_id*load_per_thread;
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
 
-      for (int i = array_start_index; i < array_end_index; i++) {
-        this->Action(i);
-      }
+      this->Action(array_start_index, array_end_index);
 
       action_counter++;
-
-      if (run_threads.load()) {
-        run_threads.store(false);
-      }
 
       if (thread_id == pool_size-1) {
         while (action_counter.load() < pool_size);
         action_counter.store(0);
         run_sender.store(true);
         wake_sender_notifier.notify_all();
+      } else if (run_threads.load()) {
+        run_threads.store(false);
       }
     }
   }
@@ -86,12 +82,12 @@ namespace traffic_manager {
       if (!run_sender.load()) {
         wake_sender_notifier.wait(lock, [=] {return run_sender.load();});
       }
+      run_sender.store(false);
 
       this->DataSender();
 
       run_receiver.store(true);
-      wake_receiver_notifier.notify_all();
-      run_sender.store(false);
+      wake_receiver_notifier.notify_one();
     }
   }
 

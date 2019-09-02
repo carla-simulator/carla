@@ -55,7 +55,7 @@ namespace traffic_manager {
     virtual void DataSender()=0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(int array_index)=0;
+    virtual void Action(int start_index, int end_index)=0;
 
   public:
 

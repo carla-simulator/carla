@@ -57,7 +57,7 @@ namespace traffic_manager {
     ~MotionPlannerStage();
 
     void DataReceiver() override;
-    void Action(int array_index) override;
+    void Action(int start_index, int end_index) override;
     void DataSender() override;
 
     using PipelineStage::Start;
