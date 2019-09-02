@@ -13,8 +13,8 @@ namespace traffic_manager {
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
     InMemoryMap& local_map,
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-    int pool_size,
-    int number_of_vehicles
+    int number_of_vehicles,
+    int pool_size =1
   ) :
   planner_messenger(planner_messenger),
   actor_list(actor_list),
@@ -42,13 +42,13 @@ namespace traffic_manager {
 
   void LocalizationStage::Action(int start_index, int end_index) {
 
-    std::cout 
-    << "Running localizer's action"
-    << " with messenger's state "
-    << planner_messenger->GetState()
-    << " previous state "
-    << planner_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Running localizer's action"
+    // << " with messenger's state "
+    // << planner_messenger->GetState()
+    // << " previous state "
+    // << planner_messenger_state
+    // << std::endl;
 
     for (int i = start_index; i < start_index; i++) {
 
@@ -172,26 +172,34 @@ namespace traffic_manager {
         // std::cout << "=======================================start===============================" << std::endl;
     }
 
-    std::cout 
-    << "Finished localizer's action"
-    << " with messenger's state "
-    << planner_messenger->GetState()
-    << " previous state "
-    << planner_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Finished localizer's action"
+    // << " with messenger's state "
+    // << planner_messenger->GetState()
+    // << " previous state "
+    // << planner_messenger_state
+    // << std::endl;
 
-    }
+  }
 
-  void LocalizationStage::DataReceiver() {}
+  void LocalizationStage::DataReceiver() {
+    // std::cout 
+    // << "Ran localizer's receiver"
+    // << " with messenger's state "
+    // << planner_messenger->GetState()
+    // << " previous state "
+    // << planner_messenger_state
+    // << std::endl;
+  }
 
   void LocalizationStage::DataSender() {
-    std::cout 
-    << "Running localizer's sender"
-    << " with messenger's state "
-    << planner_messenger->GetState()
-    << " previous state "
-    << planner_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Running localizer's sender"
+    // << " with messenger's state "
+    // << planner_messenger->GetState()
+    // << " previous state "
+    // << planner_messenger_state
+    // << std::endl;
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> data_packet = {
       planner_messenger_state,
@@ -201,13 +209,13 @@ namespace traffic_manager {
     frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(data_packet);
 
-    std::cout 
-    << "Finished localizer's sender"
-    << " with messenger's state "
-    << planner_messenger->GetState()
-    << " previous state "
-    << planner_messenger_state
-    << std::endl;
+    // std::cout 
+    // << "Finished localizer's sender"
+    // << " with messenger's state "
+    // << planner_messenger->GetState()
+    // << " previous state "
+    // << planner_messenger_state
+    // << std::endl;
   }
 
   float LocalizationStage::DeviationDotProduct(

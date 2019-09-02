@@ -60,8 +60,8 @@ namespace traffic_manager {
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
       InMemoryMap& local_map,
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-      int pool_size,
-      int number_of_vehicles
+      int number_of_vehicles,
+      int pool_size
     );
 
     ~LocalizationStage();

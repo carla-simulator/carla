@@ -7,8 +7,11 @@
 #include <shared_mutex>
 #include <condition_variable>
 #include <atomic>
+#include <chrono>
 
 #include "Messenger.h"
+
+using namespace std::chrono_literals;
 
 namespace traffic_manager {
 
@@ -31,9 +34,7 @@ namespace traffic_manager {
     std::atomic<bool> run_receiver;
     std::atomic<bool> run_sender;
 
-    std::mutex wait_for_action_mutex;
-    std::mutex wait_receiver_mutex;
-    std::mutex wait_sender_mutex;
+    std::mutex thread_coordination_mutex;
     std::condition_variable wake_action_notifier;
     std::condition_variable wake_receiver_notifier;
     std::condition_variable wake_sender_notifier;
