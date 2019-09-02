@@ -32,7 +32,7 @@ namespace traffic_manager {
     // << messenger_state
     // << std::endl;
 
-    for (int i=start_index; i<end_index; i++) {
+    for (int i=start_index; i<=end_index; i++) {
 
       carla::rpc::VehicleControl vehicle_control;
 
@@ -42,7 +42,6 @@ namespace traffic_manager {
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
 
-      // std::cout << "T " << element.throttle << " B " << element.brake << " S " << element.steer << std::endl;
       carla::rpc::Command::ApplyVehicleControl control_command(actor_id, vehicle_control);
 
       auto& command_reference = commands->at(i);

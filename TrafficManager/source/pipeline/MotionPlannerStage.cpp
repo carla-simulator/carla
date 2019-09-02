@@ -47,7 +47,7 @@ namespace traffic_manager {
     // << localization_messenger_state
     // << std::endl;
 
-    for (int i = start_index; i < end_index; i++) {
+    for (int i = start_index; i <= end_index; i++) {
 
       auto& localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
