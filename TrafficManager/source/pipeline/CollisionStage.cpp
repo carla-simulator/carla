@@ -1,6 +1,4 @@
-// Defination of CollisionCallable calss members
-
-#include "CollisionCallable.h"
+#include "CollisionStage.h"
 
 namespace traffic_manager {
 
@@ -13,61 +11,95 @@ namespace traffic_manager {
   const float HIGHWAY_SPEED = 50 / 3.6;
   const float HIGHWAY_TIME_HORIZON = 5.0;
 
-  CollisionCallable::CollisionCallable(
-      SyncQueue<PipelineMessage> *input_queue,
-      SyncQueue<PipelineMessage> *output_queue,
-      SharedData *shared_data)
-    : PipelineCallable(input_queue, output_queue, shared_data) {}
-  CollisionCallable::~CollisionCallable() {}
+  CollisionStage::CollisionStage(
+    std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
+    std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
+    int number_of_vehicle,
+    int pool_size
+  ):
+    localization_messenger(localization_messenger),
+    planner_messenger(planner_messenger),
+    PipelineStage(pool_size, number_of_vehicle)
+  {
+    frame_selector = true;
 
-  PipelineMessage CollisionCallable::action(PipelineMessage &message) {
+    planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
+    planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
 
-    float collision_hazard = -1;
-    try {
-      auto actor_list = getClosestActors(message.getActor());
-      for (auto it = actor_list.begin(); it != actor_list.end(); it++) {
-        auto actor = it->first;
-        if (
-          actor->GetId() != message.getActorID()
-          and shared_data->buffer_map.contains(actor->GetId())
-          and shared_data->buffer_map.get(actor->GetId()) != nullptr ) {
-          auto ego_actor = message.getActor();
+    planner_frame_map.insert(std::pair<bool, std::shared_ptr<CollisionToPlannerFrame>>(true, planner_frame_a));
+    planner_frame_map.insert(std::pair<bool, std::shared_ptr<CollisionToPlannerFrame>>(false, planner_frame_b));
+
+    localization_messenger_state = localization_messenger->GetState();
+    planner_messenger_state = planner_messenger->GetState() -1;
+
+  }
+
+  CollisionStage::~CollisionStage() {}
+
+  void CollisionStage::Action(int start_index, int end_index) {
+
+    for (int i=start_index; i <=end_index; i++) {
+      break; // Remove this
+
+      auto& data = localization_frame->at(i);
+      auto ego_actor = data.actor;
+      auto ego_actor_id = ego_actor->GetId();
+
+      auto actor_id_list = vicinity_grid.GetActors(ego_actor);
+      // std::cout << "Number of nearby vehicles : " << actor_id_list.size() << std::endl;
+      float collision_hazard = -1;
+      for (auto actor_id: actor_id_list) {
+        if (actor_id != ego_actor_id) {
           auto ego_actor_location = ego_actor->GetLocation();
+          auto actor = localization_frame->at(id_to_index.at(actor_id)).actor;
           float actor_distance = actor->GetLocation().Distance(ego_actor_location);
           if (actor_distance <= SEARCH_RADIUS) {
-            if (negotiateCollision(ego_actor, actor)) {
-              collision_hazard = 1;
-              break;
+            try
+            {
+              if (negotiateCollision(ego_actor, actor)) {
+                collision_hazard = 1;
+                break;
+              }
+            }
+            catch(const std::exception& e)
+            {
+              std::cout << "Unable to detect collision " << e.what() << '\n';
             }
           }
         }
       }
-    }
-    catch(const std::exception& e)
-    {
-      std::cout << "Failed to determine collision for actor : " << message.getActorID() << std::endl;
-      std::cout << e.what() << '\n';
-    }
 
-    PipelineMessage out_message;
-    out_message.setActor(message.getActor());
-    out_message.setAttribute("collision", collision_hazard);
-    out_message.setAttribute("velocity", message.getAttribute("velocity"));
-    out_message.setAttribute("deviation", message.getAttribute("deviation"));
+      auto& message = planner_frame_map.at(frame_selector)->at(i);
+      message.hazard = collision_hazard > 0 ? true: false;
 
-    return out_message;
-  }
-
-  void CollisionCallable::drawBoundary(const std::vector<carla::geom::Location> &boundary) const {
-    for (int i = 0; i < boundary.size(); i++) {
-      shared_data->debug->DrawLine(
-          boundary[i] + carla::geom::Location(0, 0, 1),
-          boundary[(i + 1) % boundary.size()] + carla::geom::Location(0, 0, 1),
-          0.1f, {255U, 0U, 0U}, 0.1f);
     }
   }
 
-  bool CollisionCallable::negotiateCollision(
+  void CollisionStage::DataReceiver() {
+    // std::cout << "Running receiver" << std::endl; 
+    auto packet = localization_messenger->ReceiveData(localization_messenger_state);
+    localization_frame = packet.data;
+    localization_messenger_state = packet.id;
+
+    int index=0;
+    for (auto& element: *localization_frame.get()) {
+      id_to_index.insert(std::pair<int, int>(element.actor->GetId(), index));
+    }
+    // std::cout << "Finished receiver" << std::endl;
+  }
+
+  void CollisionStage::DataSender() {
+    // std::cout << "Running sender" << std::endl;
+    DataPacket<std::shared_ptr<CollisionToPlannerFrame>> packet{
+      planner_messenger_state,
+      planner_frame_map.at(frame_selector)
+    };
+    frame_selector = !frame_selector;
+    planner_messenger_state = planner_messenger->SendData(packet);
+    // std::cout << "Finished receiver" << std::endl;
+  }
+
+  bool CollisionStage::negotiateCollision(
       carla::SharedPtr<carla::client::Actor> ego_vehicle,
       carla::SharedPtr<carla::client::Actor> other_vehicle) const {
 
@@ -98,7 +130,7 @@ namespace traffic_manager {
     return hazard;
   }
 
-  bool CollisionCallable::checkGeodesicCollision(
+  bool CollisionStage::checkGeodesicCollision(
       carla::SharedPtr<carla::client::Actor> reference_vehicle,
       carla::SharedPtr<carla::client::Actor> other_vehicle) const {
     bool overlap = false;
@@ -133,7 +165,7 @@ namespace traffic_manager {
     return overlap;
   }
 
-  traffic_manager::polygon CollisionCallable::getPolygon(const std::vector<carla::geom::Location> &boundary)
+  traffic_manager::polygon CollisionStage::getPolygon(const std::vector<carla::geom::Location> &boundary)
   const {
     std::string wkt_string;
     for (auto location: boundary) {
@@ -147,7 +179,7 @@ namespace traffic_manager {
     return boundary_polygon;
   }
 
-  std::vector<carla::geom::Location> CollisionCallable::getGeodesicBoundary(
+  std::vector<carla::geom::Location> CollisionStage::getGeodesicBoundary(
       carla::SharedPtr<carla::client::Actor> actor,
       const std::vector<carla::geom::Location> &bbox) const {
 
@@ -156,45 +188,39 @@ namespace traffic_manager {
       std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
       std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
       BOUNDARY_EXTENSION_MINIMUM
-      ); // Account for these constants
+    );
 
     std::vector<carla::geom::Location> geodesic_boundary;
-    if (
-      this->shared_data->buffer_map.contains(actor->GetId())
-      and
-      this->shared_data->buffer_map.get(actor->GetId()) != nullptr
-    ) {
 
       bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
-      auto waypoint_buffer = this->shared_data->buffer_map.get(actor->GetId());
-      if (waypoint_buffer != nullptr) {
+      auto waypoint_buffer =  localization_frame->front().buffer_list->at(id_to_index.at(actor->GetId()));
 
-        auto simple_waypoints = waypoint_buffer->getContent(bbox_extension);
-        std::vector<carla::geom::Location> left_boundary;
-        std::vector<carla::geom::Location> right_boundary;
-        auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
-        float width = vehicle->GetBoundingBox().extent.y;
+      std::vector<carla::geom::Location> left_boundary;
+      std::vector<carla::geom::Location> right_boundary;
+      auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
+      float width = vehicle->GetBoundingBox().extent.y;
 
-        for (auto swp: simple_waypoints) {
-          auto vector = swp->getVector();
-          auto location = swp->getLocation();
-          auto perpendicular_vector = carla::geom::Vector3D(-1 * vector.y, vector.x, 0);
-          perpendicular_vector = perpendicular_vector.MakeUnitVector();
-          left_boundary.push_back(location + carla::geom::Location(perpendicular_vector * width));
-          right_boundary.push_back(location - carla::geom::Location(perpendicular_vector * width));
-        }
-
-        std::reverse(left_boundary.begin(), left_boundary.end());
-        geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
-        geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
-        geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
-        std::reverse(geodesic_boundary.begin(), geodesic_boundary.end());
+      for (int i=0; i<bbox_extension; i++) {
+        if (i >= waypoint_buffer.size()) break;
+        auto swp = waypoint_buffer.at(i);
+        auto vector = swp->getVector();
+        auto location = swp->getLocation();
+        auto perpendicular_vector = carla::geom::Vector3D(-1 * vector.y, vector.x, 0);
+        perpendicular_vector = perpendicular_vector.MakeUnitVector();
+        left_boundary.push_back(location + carla::geom::Location(perpendicular_vector * width));
+        right_boundary.push_back(location - carla::geom::Location(perpendicular_vector * width));
       }
-    }
+
+      std::reverse(left_boundary.begin(), left_boundary.end());
+      geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
+      geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
+      geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
+      std::reverse(geodesic_boundary.begin(), geodesic_boundary.end());
+
     return geodesic_boundary;
   }
 
-  std::vector<carla::geom::Location> CollisionCallable::getBoundary(
+  std::vector<carla::geom::Location> CollisionStage::getBoundary(
       carla::SharedPtr<carla::client::Actor> actor) const {
     auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
     auto bbox = vehicle->GetBoundingBox();
@@ -215,29 +241,5 @@ namespace traffic_manager {
              carla::geom::Location(-1 * heading_vector * extent.x - perpendicular_vector * extent.y),
              location + carla::geom::Location(heading_vector * extent.x - perpendicular_vector * extent.y)
     };
-  }
-
-  std::map<carla::SharedPtr<carla::client::Actor>, int> CollisionCallable::getClosestActors(
-      carla::SharedPtr<carla::client::Actor> actor) {
-
-    // getting nearest GridIDs
-    std::map<carla::SharedPtr<carla::client::Actor>, int> _closest_actors;
-    std::pair<int, int> grid_key;
-    auto GridID = shared_data->Grid.GetGridID(actor);
-    for (int iter = -1; iter < 2; iter++) {
-
-      for (int iterator = -1; iterator < 2; iterator++) {
-
-        grid_key.first = GridID.first + iter;
-        grid_key.second = GridID.second + iterator;
-        auto actor_list_grid = shared_data->Grid.GetActor(grid_key);
-        if (actor_list_grid.size() > 0) {
-          // std::cout << "working" << std::endl;
-          _closest_actors.insert(actor_list_grid.begin(), actor_list_grid.end());
-        }
-
-      }
-    }
-    return _closest_actors;
   }
 }

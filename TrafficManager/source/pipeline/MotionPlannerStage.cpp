@@ -7,6 +7,7 @@ namespace traffic_manager {
 
   MotionPlannerStage::MotionPlannerStage(
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+    std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
     std::shared_ptr<PlannerToControlMessenger> control_messenger,
     int number_of_vehicles,
     int pool_size = 1,
@@ -16,14 +17,15 @@ namespace traffic_manager {
     std::vector<float> highway_longitudinal_parameters = {10.0f, 0.01f, 0.1f},
     std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
   ) :
-  urban_target_velocity(urban_target_velocity),
-  highway_target_velocity(highway_target_velocity),
-  longitudinal_parameters(longitudinal_parameters),
-  highway_longitudinal_parameters(highway_longitudinal_parameters),
-  lateral_parameters(lateral_parameters),
-  localization_messenger(localization_messenger),
-  control_messenger(control_messenger),
-  PipelineStage(pool_size, number_of_vehicles)
+    urban_target_velocity(urban_target_velocity),
+    highway_target_velocity(highway_target_velocity),
+    longitudinal_parameters(longitudinal_parameters),
+    highway_longitudinal_parameters(highway_longitudinal_parameters),
+    lateral_parameters(lateral_parameters),
+    localization_messenger(localization_messenger),
+    control_messenger(control_messenger),
+    collision_messenger(collision_messenger),
+    PipelineStage(pool_size, number_of_vehicles)
   {
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for(auto& entry: *pid_state_vector.get()) {
@@ -38,6 +40,7 @@ namespace traffic_manager {
     frame_map.insert(std::pair<bool, std::shared_ptr<PlannerToControlFrame>>(false, control_frame_b));
 
     localization_messenger_state = localization_messenger->GetState();
+    collision_messenger_state = collision_messenger->GetState();
     control_messenger_state = control_messenger->GetState() - 1;
   }
 
@@ -92,17 +95,20 @@ namespace traffic_manager {
           longitudinal_parameters,
           lateral_parameters);
 
-      /// In case of collision or traffic light or approaching a junction
-      // if (
-      //   message.getAttribute("collision") > 0
-      //   or message.getAttribute("traffic_light") > 0
-      //   or (approaching_junction and current_velocity > INTERSECTION_APPROACH_SPEED)
-      //   ) {
-      //   current_state.deviation_integral = 0;
-      //   current_state.velocity_integral = 0;
-      //   actuation_signal.throttle = 0;
-      //   actuation_signal.brake = 1.0;
+      // In case of collision or traffic light or approaching a junction
+      // if (collision_messenger_state !=0 ) {
+      //   std::cout << "Collision hazard : " << (collision_frame->at(i).hazard ? "true": "false") << std::endl;
       // }
+      if (
+        collision_messenger_state != 0
+        and
+        collision_frame->at(i).hazard
+      ) {
+        current_state.deviation_integral = 0;
+        current_state.velocity_integral = 0;
+        actuation_signal.throttle = 0;
+        actuation_signal.brake = 1.0;
+      }
 
       /// Updating state
       auto& state = pid_state_vector->at(i);
@@ -135,9 +141,16 @@ namespace traffic_manager {
     // << localization_messenger_state
     // << std::endl;
 
-    auto packet = localization_messenger->RecieveData(localization_messenger_state);
-    localization_frame = packet.data;
-    localization_messenger_state = packet.id;
+    auto localization_packet = localization_messenger->ReceiveData(localization_messenger_state);
+    localization_frame = localization_packet.data;
+    localization_messenger_state = localization_packet.id;
+
+    auto collision_messenger_current_state = collision_messenger->GetState();
+    if (collision_messenger_current_state != collision_messenger_state) {
+      auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
+      collision_frame = collision_packet.data;
+      collision_messenger_state = collision_packet.id;
+    }
 
     // std::cout
     // << "Finished planner's receiver"

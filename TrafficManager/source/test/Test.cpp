@@ -9,6 +9,7 @@
 
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
+#include "CollisionStage.h"
 #include "MotionPlannerStage.h"
 #include "BatchControlStage.h"
 
@@ -75,15 +76,26 @@ void test_pipeline_stages(
   local_map.setUp(1.0);
   std::cout << "Map set up !" << std::endl;
 
+  auto localization_collision_messenger = std::make_shared<traffic_manager::LocalizationToCollisionMessenger>();
+  auto collision_planner_messenger = std::make_shared<traffic_manager::CollisionToPlannerMessenger>();
   auto localization_planner_messenger = std::make_shared<traffic_manager::LocalizationToPlannerMessenger>();
+  auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
+
   traffic_manager::LocalizationStage localization_stage(
-    registered_actors, local_map, localization_planner_messenger,
+    localization_planner_messenger, localization_collision_messenger,
+    registered_actors.size(), 1,
+    registered_actors, local_map
+  );
+
+  traffic_manager::CollisionStage collision_stage(
+    localization_collision_messenger, collision_planner_messenger,
     registered_actors.size(), 1
   );
 
-  auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
   traffic_manager::MotionPlannerStage planner_stage(
-    localization_planner_messenger, planner_control_messenger,
+    localization_planner_messenger,
+    collision_planner_messenger,
+    planner_control_messenger,
     registered_actors.size(), 1,
     25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
@@ -97,15 +109,18 @@ void test_pipeline_stages(
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();
+  // collision_stage.Start();
   planner_stage.Start();
   control_stage.Start();
 
-  // int messenger_state = localization_planner_messenger->GetState() -1;
-  // while (localization_planner_messenger->GetState() == 0);
+  // int messenger_state = planner_control_messenger->GetState() -1;
+  // int messenger2_state = localization_planner_messenger->GetState() -1;
+
+  // while (planner_control_messenger->GetState() == 0);
   // std::cout << "Sensed pipeline output !" << std::endl;
 
-  long count = 0;
-  auto last_time = std::chrono::system_clock::now();
+  // long count = 0;
+  // auto last_time = std::chrono::system_clock::now();
   while (true) {
 
     sleep(1);
@@ -119,8 +134,11 @@ void test_pipeline_stages(
     // << messenger_state
     // << std::endl;
 
-    // auto dummy = localization_planner_messenger->RecieveData(messenger_state);
-    // messenger_state = dummy.id;
+    // auto dummy_1 = planner_control_messenger->ReceiveData(messenger_state);
+    // messenger_state = dummy_1.id;
+
+    // auto dummy_2 = localization_planner_messenger->ReceiveData(messenger2_state);
+    // messenger2_state = dummy_2.id;
 
     // std::cout 
     // << "Finished test receiver"
