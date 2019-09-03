@@ -30,7 +30,8 @@ namespace traffic_manager {
     std::shared_ptr<std::thread> data_sender;
     std::vector<std::shared_ptr<std::thread>> action_threads;
 
-    std::atomic<int> action_counter;
+    std::atomic<int> action_start_counter;
+    std::atomic<int> action_finished_counter;
     std::atomic<bool> run_stage;
     std::atomic<bool> run_threads;
     std::atomic<bool> run_receiver;
