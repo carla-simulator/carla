@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
@@ -15,20 +16,32 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
 
-#include "PipelineCallable.h"
+#include "PipelineStage.h"
+#include "MessengerAndDataTypes.h"
+#include "VicinityGrid.h"
 
 namespace traffic_manager {
   typedef boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<double>> polygon;
 
-  class CollisionCallable : public PipelineCallable {
+  class CollisionStage : public PipelineStage {
     /// This class is the thread executable for the collission detection stage.
     /// The class is responsible for checking possible collisions with other
     /// vehicles along the vehicle's trajectory.
 
   private:
 
-    /// Draws a polygon connecting the vector of locations passed to it.
-    void drawBoundary(const std::vector<carla::geom::Location> &) const;
+    int localization_messenger_state;
+    int planner_messenger_state;
+    bool frame_selector;
+    std::shared_ptr<LocalizationToCollisionFrame> localization_frame;
+    std::shared_ptr<CollisionToPlannerFrame> planner_frame_a;
+    std::shared_ptr<CollisionToPlannerFrame> planner_frame_b;
+    std::unordered_map<bool, std::shared_ptr<CollisionToPlannerFrame>> planner_frame_map;
+    std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
+    std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
+
+    VicinityGrid vicinity_grid;
+    std::unordered_map<int, int> id_to_index;
 
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
@@ -59,19 +72,21 @@ namespace traffic_manager {
         carla::SharedPtr<carla::client::Actor> ego_vehicle,
         carla::SharedPtr<carla::client::Actor> other_vehicle) const;
 
-    /* Method for getting the nearby vehicles */
-    std::map<carla::SharedPtr<carla::client::Actor>, int> getClosestActors(
-        carla::SharedPtr<carla::client::Actor> actor);
-
   public:
 
-    CollisionCallable(
-        SyncQueue<PipelineMessage> *input_queue,
-        SyncQueue<PipelineMessage> *output_queue,
-        SharedData *shared_data);
-    ~CollisionCallable();
+    CollisionStage(
+      std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
+      std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
+      int number_of_vehicle,
+      int pool_size
+    );
+    ~CollisionStage();
 
-    PipelineMessage action(PipelineMessage &message);
+    void DataReceiver() override;
+    void Action(int start_index, int end_index) override;
+    void DataSender() override;
+
+    using PipelineStage::Start;
 
   };
 

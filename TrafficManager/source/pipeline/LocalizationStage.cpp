@@ -10,32 +10,43 @@ namespace traffic_manager {
   const float HIGHWAY_SPEED = 50 / 3.6;
 
   LocalizationStage::LocalizationStage (
-    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-    InMemoryMap& local_map,
-    std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-    int number_of_vehicles,
-    int pool_size =1
+      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      int number_of_vehicles,
+      int pool_size,
+      std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
+      InMemoryMap& local_map
   ) :
   planner_messenger(planner_messenger),
+  collision_messenger(collision_messenger),
   actor_list(actor_list),
   local_map(local_map),
   PipelineStage(pool_size, number_of_vehicles)
   {
 
-    /// Initializing buffer lists
-    for (int i=0; i < actor_list.size(); i++) {
-      buffer_list_a.push_back(std::deque<std::shared_ptr<SimpleWaypoint>>());
-      // buffer_list_b.push_back(std::deque<std::shared_ptr<SimpleWaypoint>>());
-    }
+    planner_frame_selector = true;
+    collision_frame_selector = true;
 
-    planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(actor_list.size());
-    planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(actor_list.size());
+    buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
+    buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
 
-    frame_selector = true;
-    frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(true, planner_frame_a));
-    frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(false, planner_frame_b));
+    buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(true, buffer_list_a));
+    buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(false, buffer_list_b));
+
+    planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
+    planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
+
+    planner_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(true, planner_frame_a));
+    planner_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToPlannerFrame>>(false, planner_frame_b));
+
+    collision_frame_a = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
+    collision_frame_b = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
+
+    collision_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToCollisionFrame>>(true, collision_frame_a));
+    collision_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToCollisionFrame>>(false, collision_frame_b));
 
     planner_messenger_state = planner_messenger->GetState() -1;
+    collision_messenger_state = collision_messenger->GetState() -1;
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -66,7 +77,7 @@ namespace traffic_manager {
           MINIMUM_HORIZON_LENGTH);
 
 
-      auto& waypoint_buffer = buffer_list_a.at(i);
+      auto& waypoint_buffer = buffer_map.at(collision_frame_selector)->at(i);
       if (!waypoint_buffer.empty()) {
         auto dot_product = DeviationDotProduct(
           vehicle,
@@ -126,9 +137,13 @@ namespace traffic_manager {
         dot_product *= -1;
       }
 
-      auto& message = frame_map.at(frame_selector)->at(i);
-      message.actor = vehicle;
-      message.deviation = dot_product;
+      auto& planner_message = planner_frame_map.at(planner_frame_selector)->at(i);
+      planner_message.actor = vehicle;
+      planner_message.deviation = dot_product;
+
+      auto& collision_message = collision_frame_map.at(collision_frame_selector)->at(i);
+      collision_message.actor = vehicle;
+      collision_message.buffer_list = buffer_map.at(collision_frame_selector);
 
       // auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
       // auto speed_limit = vehicle_reference->GetSpeedLimit();
@@ -201,13 +216,23 @@ namespace traffic_manager {
     // << planner_messenger_state
     // << std::endl;
 
-    DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> data_packet = {
+    DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
       planner_messenger_state,
-      frame_map.at(frame_selector)
+      planner_frame_map.at(planner_frame_selector)
+    };
+    planner_frame_selector = !planner_frame_selector;
+    planner_messenger_state = planner_messenger->SendData(planner_data_packet);
+
+    DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
+      collision_messenger_state,
+      collision_frame_map.at(collision_frame_selector)
     };
 
-    frame_selector = !frame_selector;
-    planner_messenger_state = planner_messenger->SendData(data_packet);
+    auto collision_messenger_current_state = collision_messenger->GetState();
+    if (collision_messenger_current_state != collision_messenger_state) {
+      collision_messenger_state = collision_messenger->SendData(collision_data_packet);
+      collision_frame_selector = !collision_frame_selector;
+    }
 
     // std::cout 
     // << "Finished localizer's sender"

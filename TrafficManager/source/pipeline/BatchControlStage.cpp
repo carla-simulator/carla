@@ -67,7 +67,7 @@ namespace traffic_manager {
     // << messenger_state
     // << std::endl;
 
-    auto packet = messenger->RecieveData(messenger_state);
+    auto packet = messenger->ReceiveData(messenger_state);
     data_frame = packet.data;
     messenger_state = packet.id;
 

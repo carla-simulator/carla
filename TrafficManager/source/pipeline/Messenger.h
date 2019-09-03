@@ -21,7 +21,7 @@ namespace traffic_manager {
 
         std::mutex data_modification_mutex;
         std::condition_variable send_condition;
-        std::condition_variable recieve_condition;
+        std::condition_variable receive_condition;
 
     public:
 
@@ -39,16 +39,16 @@ namespace traffic_manager {
             data = packet.data;
             state_counter.store(state_counter.load() +1);
             int present_state = state_counter.load();
-            recieve_condition.notify_one();
+            receive_condition.notify_one();
 
             return present_state;
         }
 
-        DataPacket<Data> RecieveData(int old_state) {
+        DataPacket<Data> ReceiveData(int old_state) {
 
             std::unique_lock<std::mutex> lock(data_modification_mutex);
             if (state_counter.load() == old_state) {
-                recieve_condition.wait(lock, [=] {return state_counter.load() != old_state;});
+                receive_condition.wait(lock, [=] {return state_counter.load() != old_state;});
             }
             state_counter.store(state_counter.load() +1);
             DataPacket<Data> packet = {state_counter.load(), data};

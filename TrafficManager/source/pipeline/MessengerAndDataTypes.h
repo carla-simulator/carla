@@ -11,6 +11,9 @@
 
 namespace traffic_manager {
 
+    /// Convenience typing
+    typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
+
     /// Data types
 
     struct LocalizationToPlannerData {
@@ -26,13 +29,26 @@ namespace traffic_manager {
         float steer;
     };
 
+    struct LocalizationToCollisionData {
+        carla::SharedPtr<carla::client::Actor> actor;
+        std::shared_ptr<BufferList> buffer_list;
+    };
+
+    struct CollisionToPlannerData {
+        bool hazard;
+    };
+
     /// Data frame types
 
     typedef std::vector<LocalizationToPlannerData> LocalizationToPlannerFrame;
     typedef std::vector<PlannerToControlData> PlannerToControlFrame;
+    typedef std::vector<LocalizationToCollisionData> LocalizationToCollisionFrame;
+    typedef std::vector<CollisionToPlannerData> CollisionToPlannerFrame;
 
     /// Messenger types
 
     typedef Messenger<std::shared_ptr<LocalizationToPlannerFrame>> LocalizationToPlannerMessenger;
     typedef Messenger<std::shared_ptr<PlannerToControlFrame>> PlannerToControlMessenger;
+    typedef Messenger<std::shared_ptr<LocalizationToCollisionFrame>> LocalizationToCollisionMessenger;
+    typedef Messenger<std::shared_ptr<CollisionToPlannerFrame>> CollisionToPlannerMessenger;
 }
