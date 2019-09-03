@@ -151,7 +151,7 @@ That's it! The map is ready!
 
 ### 3.2 Importing from the files
 
-This is the generic way of importing maps into Unreal.
+This is the generic way to import maps into Unreal.
 
 1. Create a new level with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.
 2. Copy the Illumination folder and content from the BaseMap `Content/Carla/Maps/BaseMap`

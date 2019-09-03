@@ -142,9 +142,18 @@ Import
     └── Package2.json
 ```
 
-*Please note that the maps exported from **RoadRunner** are also supported for importing them inside*
-*Carla. So, basically, once created your **RoadRunner** map, you just need to export it, take the*
-*required files and place them following the structure listed above.*
+_Maps exported from **RoadRunner** are also supported for importing them inside_
+_Carla. So, basically, once created your **RoadRunner** map, you just need to export it, take the_
+_required files and place them following the structure listed above._
+
+!!! note
+    **RoadRunner's** imported assets will be classified for **semantic segmentation** based on
+    the asset's name (`RoadNode`, `Terrain`, `MarkingNode`) and moved to `Roads`, `Terrain`
+    and `RoadLines` respectively, under `Content/Carla/PackageName/Static`.<br>
+    _If the process doesn't work due to different names or other issues, you can always move the assets_
+    _manually, check this [`tutorial`][importtutorial]_.
+
+[importtutorial]: /how_to_make_a_new_map/#32-importing-from-the-files
 
 Now we have everything ready for importing assets. To do so, you just need to run the command:
 
