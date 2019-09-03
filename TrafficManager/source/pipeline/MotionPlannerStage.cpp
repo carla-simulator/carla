@@ -25,6 +25,11 @@ namespace traffic_manager {
   control_messenger(control_messenger),
   PipelineStage(pool_size, number_of_vehicles)
   {
+    pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
+    for(auto& entry: *pid_state_vector.get()) {
+      entry.time_instance = std::chrono::system_clock::now();
+    }
+
     control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
     control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
 
@@ -61,11 +66,7 @@ namespace traffic_manager {
 
       /// Retreiving previous state
       traffic_manager::StateEntry previous_state;
-      if (pid_state_map.find(actor_id) != pid_state_map.end()) {
-        previous_state = pid_state_map[actor_id];
-      } else {
-        previous_state.time_instance = current_time;
-      }
+      previous_state = pid_state_vector->at(i);
 
       auto dynamic_target_velocity = urban_target_velocity;
 
@@ -104,7 +105,8 @@ namespace traffic_manager {
       // }
 
       /// Updating state
-      pid_state_map[actor_id] = current_state;
+      auto& state = pid_state_vector->at(i);
+      state = current_state;
 
       /// Constructing actuation signal
       auto& message = frame_map.at(frame_selector)->at(i);
