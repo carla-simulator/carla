@@ -314,6 +314,6 @@ might need some tweaking and testing to fit perfectly into the city.
 
 * To change default materials and use the ones that come with CARLA at:<br>
 `Content/Carla/Static/GenericMaterials`.
-    * Quick shorts to find materials and assets:
+    * Unreal shortcuts to find materials and assets:
         * `Right-click on the Asset > Browse to Asset`
         * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
