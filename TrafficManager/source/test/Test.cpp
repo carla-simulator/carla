@@ -78,20 +78,20 @@ void test_pipeline_stages(
   auto localization_planner_messenger = std::make_shared<traffic_manager::LocalizationToPlannerMessenger>();
   traffic_manager::LocalizationStage localization_stage(
     registered_actors, local_map, localization_planner_messenger,
-    registered_actors.size(), 1
+    registered_actors.size(), 2
   );
 
   auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
   traffic_manager::MotionPlannerStage planner_stage(
     localization_planner_messenger, planner_control_messenger,
-    registered_actors.size(), 1,
+    registered_actors.size(), 2,
     25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
   traffic_manager::BatchControlStage control_stage(
     planner_control_messenger, client_conn,
-    registered_actors.size(), 1
+    registered_actors.size(), 2
   );
 
   std::cout << "Starting stages ... " << std::endl;
@@ -100,14 +100,12 @@ void test_pipeline_stages(
   planner_stage.Start();
   control_stage.Start();
 
-  std::cout << "All stages started !" << std::endl;
-
   // int messenger_state = localization_planner_messenger->GetState() -1;
   // while (localization_planner_messenger->GetState() == 0);
   // std::cout << "Sensed pipeline output !" << std::endl;
 
-  // long count = 0;
-  // auto last_time = std::chrono::system_clock::now();
+  long count = 0;
+  auto last_time = std::chrono::system_clock::now();
   while (true) {
 
     sleep(1);

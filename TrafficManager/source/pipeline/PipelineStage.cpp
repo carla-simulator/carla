@@ -8,24 +8,26 @@ namespace traffic_manager {
   ): pool_size(pool_size), number_of_vehicles(number_of_vehicles) 
   {
 
-    action_counter = 0;
-    run_stage = true;
-    run_receiver = true;
-    run_threads = false;
-    run_sender = false;
+    action_start_counter.store(0);
+    action_finished_counter.store(0);
+    run_stage.store(true);
+    run_receiver.store(true);
+    run_threads.store(false);
+    run_sender.store(false);
   }
 
   PipelineStage::~PipelineStage() {}
 
   void PipelineStage::Start() {
-    data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
+
+    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);    
     for (int i=0; i<pool_size; i++) {
       action_threads.push_back(
         std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i)
       );
     }
-    std::this_thread::sleep_for(100ms);
-    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);
+    data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
+
   }
 
   void PipelineStage::Stop() {
@@ -35,19 +37,26 @@ namespace traffic_manager {
   void PipelineStage::ReceiverThreadManager() {
 
     while (run_stage.load()) {
-      // std::cout << "receiver locked run_receiver " << run_receiver.load() <<std::endl;
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      // std::cout << "receiver locked run_receiver " << run_receiver.load() <<std::endl;
       while (!run_receiver.load()) {
-        wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
+        wake_receiver_notifier.wait_for(lock, 1s, [=] {return run_receiver.load();});
       }
-      lock.unlock();
-      // std::cout << "receiver unlocked run_receiver " << run_receiver.load() << std::endl;
       run_receiver.store(false);
 
       this->DataReceiver();
 
+      while (action_start_counter.load() < pool_size) {
+        wake_receiver_notifier.wait_for(lock, 1s, [=] {return action_start_counter.load() == pool_size;});
+      }
+
       run_threads.store(true);
+      action_start_counter.store(0);
+      action_finished_counter.store(0);
+
       wake_action_notifier.notify_all();
+      lock.unlock();
+      // std::cout << "receiver unlocked run_receiver " << run_receiver.load() << std::endl;
     }
   }
 
@@ -59,27 +68,37 @@ namespace traffic_manager {
     while (run_stage.load()) {
 
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-      // std::cout << "action locked run_threads " << run_threads.load() << std::endl;
-      while (!run_threads.load()) {
-        wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
+
+      action_start_counter++;
+      if (action_start_counter == pool_size) {
+        wake_receiver_notifier.notify_one();
       }
+
+      while (!run_threads.load()) {
+        wake_action_notifier.wait_for(lock, 1s, [=] {return run_threads.load();});
+      }
+
       lock.unlock();
-      // std::cout << "action unlocked run_threads " << run_threads.load() << std::endl;
+
+      // std::cout << "thread id " << thread_id << " running action" << std::endl;
 
       int array_start_index = thread_id*load_per_thread;
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
 
       this->Action(array_start_index, array_end_index);
+      action_finished_counter++;
 
-      action_counter++;
+      while (action_finished_counter.load() < pool_size) {
+        std::this_thread::sleep_for(1us);
+        // std::cout<< "thread_id " << thread_id << " waiting for action_finished_counter " << action_finished_counter.load() << std::endl;
+      }
+      // std::cout << "thread id " << thread_id << " finished action" << std::endl;
 
       if (run_threads.load()) {
         run_threads.store(false);
       }
 
-      if (thread_id == pool_size-1) {
-        while (action_counter.load() < pool_size);
-        action_counter.store(0);
+      if (thread_id == pool_size -1) {
         run_sender.store(true);
         wake_sender_notifier.notify_one();
       }
@@ -89,19 +108,21 @@ namespace traffic_manager {
   void PipelineStage::SenderThreadManager() {
 
     while (run_stage.load()) {
-      // std::cout << "sender locked run_sender " << run_sender.load() << std::endl;
+
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
+      // std::cout << "sender locked run_sender " << run_sender.load() << std::endl;
       while (!run_sender.load()) {
-        wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
+        wake_sender_notifier.wait_for(lock, 1s, [=] {return run_sender.load();});
       }
-      lock.unlock();
-      // std::cout << "sender unlocked run_sender " << run_sender.load() << std::endl;
       run_sender.store(false);
+      // std::cout << "running sender" << std::endl;
 
       this->DataSender();
 
       run_receiver.store(true);
       wake_receiver_notifier.notify_one();
+      lock.unlock();
+      // std::cout << "sender unlocked run_sender " << run_sender.load() << std::endl;
     }
   }
 
