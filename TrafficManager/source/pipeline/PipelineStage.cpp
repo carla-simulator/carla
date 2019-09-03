@@ -40,14 +40,14 @@ namespace traffic_manager {
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
       // std::cout << "receiver locked run_receiver " << run_receiver.load() <<std::endl;
       while (!run_receiver.load()) {
-        wake_receiver_notifier.wait_for(lock, 1s, [=] {return run_receiver.load();});
+        wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
       }
       run_receiver.store(false);
 
       this->DataReceiver();
 
       while (action_start_counter.load() < pool_size) {
-        wake_receiver_notifier.wait_for(lock, 1s, [=] {return action_start_counter.load() == pool_size;});
+        wake_receiver_notifier.wait_for(lock, 1ms, [=] {return action_start_counter.load() == pool_size;});
       }
 
       run_threads.store(true);
@@ -75,7 +75,7 @@ namespace traffic_manager {
       }
 
       while (!run_threads.load()) {
-        wake_action_notifier.wait_for(lock, 1s, [=] {return run_threads.load();});
+        wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
       }
 
       lock.unlock();
@@ -112,7 +112,7 @@ namespace traffic_manager {
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
       // std::cout << "sender locked run_sender " << run_sender.load() << std::endl;
       while (!run_sender.load()) {
-        wake_sender_notifier.wait_for(lock, 1s, [=] {return run_sender.load();});
+        wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
       }
       run_sender.store(false);
       // std::cout << "running sender" << std::endl;

@@ -33,7 +33,7 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
 
-    std::unordered_map<int, StateEntry> pid_state_map;
+    std::shared_ptr<std::vector<StateEntry>> pid_state_vector;
     std::vector<float> longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
     std::vector<float> lateral_parameters;
