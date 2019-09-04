@@ -96,11 +96,20 @@ void FCarlaEngine::OnPreTick(ELevelTick TickType, float DeltaSeconds)
   }
 }
 
-void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float)
+void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float DeltaSeconds)
 {
+  uint32_t RunSomeCount = 0u;
   do
   {
     Server.RunSome(10u);
+    // TODO: fix bug and remove
+    // To solve for bug of Client not receiving new Frame and stuck forever in SyncronizeFrame
+    // We are repeatedly sending same frame, only in SynchronousMode, and waiting for next tick
+    // It only happens in Sync mode and faster than real-time speeds 
+    // and we need to send Frames repeatedly fast enough to maintain average performance 
+    RunSomeCount++;
+    if (bSynchronousMode && RunSomeCount % 100 == 0)
+     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds);
   }
   while (bSynchronousMode && !Server.TickCueReceived());
 }
