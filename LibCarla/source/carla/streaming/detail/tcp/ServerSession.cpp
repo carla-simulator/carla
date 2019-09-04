@@ -37,6 +37,11 @@ namespace tcp {
       callback_function_type on_closed) {
     DEBUG_ASSERT(on_opened && on_closed);
     _on_closed = std::move(on_closed);
+
+    // Configure socket options
+    log_debug("streaming client: configuring socket");
+    _socket.set_option( boost::asio::ip::tcp::no_delay( true) );    
+
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
     _strand.post([=]() {
@@ -71,7 +76,7 @@ namespace tcp {
       if (!_socket.is_open()) {
         return;
       }
-      if (_is_writing) {
+      if (_is_writing) { //TODO: need to queue and send, dopped frames causes deadlock in synchronous mode
         log_debug("session", _session_id, ": connection too slow: message discarded");
         return;
       }
