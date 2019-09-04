@@ -58,7 +58,6 @@ namespace detail {
         auto prev = self->GetState();
         do {
           if (prev->GetFrame() >= next->GetFrame()) {
-            self->_on_tick_callbacks.Call(next);
             return;
           }
         } while (!self->_state.compare_exchange(&prev, next));
