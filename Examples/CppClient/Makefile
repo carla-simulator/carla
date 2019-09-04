@@ -21,8 +21,9 @@ clean:
 run: build
 	$(call log,Running C++ Client...)
 	@$(BINDIR)/cpp_client $(ARGS)
+	@$(BINDIR)/benchmark_max_fps $(ARGS)
 
-build: $(BINDIR)/cpp_client
+build: $(BINDIR)/cpp_client $(BINDIR)/benchmark_max_fps
 
 $(BINDIR)/cpp_client: build_libcarla
 	$(call log,Compiling C++ Client...)
@@ -31,6 +32,14 @@ $(BINDIR)/cpp_client: build_libcarla
 		-o $(BINDIR)/cpp_client main.cpp \
 		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
 		-lpng -ltiff -ljpeg -lRecast -lDetour -lDetourCrowd
+
+$(BINDIR)/benchmark_max_fps: build_libcarla
+	$(call log,Compiling C++ Client...)
+	@mkdir -p $(BINDIR)
+	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -isystem $(INSTALLDIR)/include/system -L$(INSTALLDIR)/lib \
+		-o $(BINDIR)/benchmark_max_fps benchmark_max_fps.cpp \
+		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
+		-lRecast -lDetour -lDetourCrowd
 
 build_libcarla: $(TOOLCHAIN)
 	@cd $(CARLADIR); make setup
