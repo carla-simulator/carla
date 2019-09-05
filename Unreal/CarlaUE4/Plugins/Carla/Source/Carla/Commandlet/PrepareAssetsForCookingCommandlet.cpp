@@ -6,7 +6,6 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 
-#include "Editor/ContentBrowser/Private/ContentBrowserUtils.h"
 #include "GameFramework/WorldSettings.h"
 
 #include "HAL/PlatformFile.h"

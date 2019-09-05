@@ -58,8 +58,7 @@ public class Carla : ModuleRules
         "PhysXVehicles",
         "PhysXVehicleLib",
         "Slate",
-        "SlateCore",
-        "ContentBrowser"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );

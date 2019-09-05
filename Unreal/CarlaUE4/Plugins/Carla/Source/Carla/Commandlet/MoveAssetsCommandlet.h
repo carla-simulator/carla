@@ -49,10 +49,10 @@ public:
   FMovePackageParams ParseParams(const FString &InParams) const;
 
   /// Moves all the assets of a map from @a SrcPath to @a DestPath
-  void MoveMeshesForSemanticSegmentation(const FString &PackageName, const FString &MapName);
+  void MoveAssetsFromMapForSemanticSegmentation(const FString &PackageName, const FString &MapName);
 
   /// Moves the meshes of all maps listed in a @PackageParams
-  void MoveMeshes(const FMovePackageParams &PackageParams);
+  void MoveAssets(const FMovePackageParams &PackageParams);
 
 public:
 

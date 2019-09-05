@@ -6,7 +6,6 @@
 
 #include "MoveAssetsCommandlet.h"
 
-#include "Editor/ContentBrowser/Private/ContentBrowserUtils.h"
 #include "GameFramework/WorldSettings.h"
 
 #include "HAL/PlatformFile.h"
@@ -59,7 +58,7 @@ FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) c
   return PackageParams;
 }
 
-void UMoveAssetsCommandlet::MoveMeshes(const FMovePackageParams &PackageParams)
+void UMoveAssetsCommandlet::MoveAssets(const FMovePackageParams &PackageParams)
 {
 
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
@@ -67,11 +66,35 @@ void UMoveAssetsCommandlet::MoveMeshes(const FMovePackageParams &PackageParams)
 
   for (const auto &Map : PackageParams.MapNames)
   {
-    MoveMeshesForSemanticSegmentation(PackageParams.Name, Map);
+    MoveAssetsFromMapForSemanticSegmentation(PackageParams.Name, Map);
   }
 }
 
-void UMoveAssetsCommandlet::MoveMeshesForSemanticSegmentation(
+void MoveFiles(const TArray<UObject *> &Assets, const FString &DestPath)
+{
+  check(DestPath.Len() > 0);
+
+  FAssetToolsModule &AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+  TArray<FAssetRenameData> AssetsAndNames;
+  for (auto AssetIt = Assets.CreateConstIterator(); AssetIt; ++AssetIt)
+  {
+    UObject *Asset = *AssetIt;
+
+    if (!ensure(Asset))
+    {
+      continue;
+    }
+
+    new(AssetsAndNames) FAssetRenameData(Asset, DestPath, Asset->GetName());
+  }
+
+  if (AssetsAndNames.Num() > 0)
+  {
+    AssetToolsModule.Get().RenameAssetsWithDialog(AssetsAndNames);
+  }
+}
+
+void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     const FString &PackageName,
     const FString &MapName)
 {
@@ -133,7 +156,7 @@ void UMoveAssetsCommandlet::MoveMeshesForSemanticSegmentation(
   for (const auto &Elem : AssetDataMap)
   {
     FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;
-    ContentBrowserUtils::MoveAssets(Elem.Value, DestPath);
+    MoveFiles(Elem.Value, DestPath);
   }
 }
 
@@ -141,7 +164,7 @@ int32 UMoveAssetsCommandlet::Main(const FString &Params)
 {
   FMovePackageParams PackageParams = ParseParams(Params);
 
-  MoveMeshes(PackageParams);
+  MoveAssets(PackageParams);
 
   return 0;
 }
