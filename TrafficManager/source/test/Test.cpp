@@ -41,7 +41,7 @@ void handler() {
 } 
 
 int main(int argc, char *argv[]) {
-  std::set_terminate(handler);
+  // std::set_terminate(handler);
 
   auto client_conn = carla::client::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
@@ -85,13 +85,14 @@ void test_pipeline_stages(
 
   traffic_manager::LocalizationStage localization_stage(
     localization_planner_messenger, localization_collision_messenger,
-    registered_actors.size(), 1,
-    registered_actors, local_map
+    registered_actors.size(), 3,
+    registered_actors, local_map,
+    &debug_helper
   );
 
   traffic_manager::CollisionStage collision_stage(
     localization_collision_messenger, collision_planner_messenger,
-    registered_actors.size(), 1,
+    registered_actors.size(), 3,
     &debug_helper
   );
 
@@ -99,14 +100,14 @@ void test_pipeline_stages(
     localization_planner_messenger,
     collision_planner_messenger,
     planner_control_messenger,
-    registered_actors.size(), 1,
+    registered_actors.size(), 3,
     25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
   traffic_manager::BatchControlStage control_stage(
     planner_control_messenger, client_conn,
-    registered_actors.size(), 1
+    registered_actors.size(), 3
   );
 
   std::cout << "Starting stages ... " << std::endl;

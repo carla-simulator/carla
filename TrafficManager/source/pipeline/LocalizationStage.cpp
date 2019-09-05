@@ -15,13 +15,16 @@ namespace traffic_manager {
       int number_of_vehicles,
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-      InMemoryMap& local_map
+      InMemoryMap& local_map,
+      carla::client::DebugHelper* debug
   ) :
   planner_messenger(planner_messenger),
   collision_messenger(collision_messenger),
   actor_list(actor_list),
   local_map(local_map),
-  PipelineStage(pool_size, number_of_vehicles)
+  PipelineStage(pool_size, number_of_vehicles),
+  divergence_choice(std::vector<int>(number_of_vehicles, -1)),
+  debug(debug)
   {
 
     planner_frame_selector = true;
@@ -106,7 +109,6 @@ namespace traffic_manager {
       }
 
       /// Populate buffer
-      int populate_count=0;
       while (
         waypoint_buffer.back()->distance(
         waypoint_buffer.front()->getLocation()) <= horizon_size
@@ -114,15 +116,22 @@ namespace traffic_manager {
 
         auto way_front = waypoint_buffer.back();
         auto next_waypoints = way_front->getNextWaypoint();
-        auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
-        way_front = next_waypoints[selection_index];
+        auto selection_index = next_waypoints.size() > 1? rand() % next_waypoints.size(): 0;
+        if (next_waypoints.size() >1) {
+          if (divergence_choice.at(i) >=0) {
+            selection_index = divergence_choice.at(i);
+            divergence_choice[i] = -1;
+          } else {
+            divergence_choice[i] = selection_index;
+          }
+        }
+        way_front = next_waypoints.at(selection_index);
         waypoint_buffer.push_back(way_front);
-        populate_count++;
       }
       // if (thread_id ==0 and actor_id==first_actor_id)
       //   std::cout << "Populated buffer with " << populate_count << " entries" << std::endl;
 
-      /// Generate output
+      /// Generate output        std::cout << "stuck " << rand() << std::endl;
       auto horizon_index = static_cast<int>(
         std::max(
           std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -136,6 +145,8 @@ namespace traffic_manager {
       if (cross_product < 0) {
         dot_product *= -1;
       }
+
+      drawBuffer(waypoint_buffer);
 
       auto& planner_message = planner_frame_map.at(planner_frame_selector)->at(i);
       planner_message.actor = vehicle;
@@ -262,5 +273,12 @@ namespace traffic_manager {
     next_vector = next_vector.MakeUnitVector();
     float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
     return cross_z;
+  }
+
+  void LocalizationStage::drawBuffer(Buffer& buffer) {
+
+    for (int i = buffer.size() -5; i<buffer.size(); i++) {
+      debug->DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
+    }
   }
 }

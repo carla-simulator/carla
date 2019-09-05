@@ -8,8 +8,8 @@ namespace traffic_manager {
 
   long VicinityGrid::MakeKey (std::pair<int, int> grid_numbers) {
     return std::stol(
-      std::to_string(static_cast<uint>(grid_numbers.first))
-      + std::to_string(static_cast<uint>(grid_numbers.second))
+      std::to_string(abs(grid_numbers.first))
+      + std::to_string(abs(grid_numbers.second))
     );
   }
 
