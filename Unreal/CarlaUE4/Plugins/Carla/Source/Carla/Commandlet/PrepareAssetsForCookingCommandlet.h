@@ -121,13 +121,6 @@ public:
   /// in a destination path built from @a PackageName and @a MapDestPath.
   void PreparePropsForCooking(FString &PackageName, const TArray<FString> &PropsPaths, FString &MapDestPath);
 
-  /// Moves all the assets of a map from @a SrcPath to @a DestPath
-  void MoveMeshesForSemanticSegmentation(const FString &PackageName, const FString &MapName);
-
-  /// Moves the meshes of all maps listed in @MapsPaths and contained in a
-  /// package with @a PackageName
-  void MoveMeshes(const FString &PackageName, const TArray<FMapData> &MapsPaths);
-
 public:
 
   /// Main method and entry of the commandlet, taking as input parameters @a
@@ -146,10 +139,6 @@ private:
   UPROPERTY()
   TArray<FAssetData> MapContents;
 
-  /// Loaded assets from map from any object library, used for moving
-  UPROPERTY()
-  TArray<FAssetData> MoveMapContents;
-
   /// Used for loading maps in object library. Loaded Data is stored in
   /// AssetDatas.
   UPROPERTY()
@@ -159,11 +148,6 @@ private:
   /// AssetDatas.
   UPROPERTY()
   UObjectLibrary *AssetsObjectLibrary;
-
-  /// Used for loading assets in object library and moving them in a destination
-  /// folder.
-  UPROPERTY()
-  UObjectLibrary *MoveAssetsObjectLibrary;
 
   /// Base map world loaded from Carla Content
   UPROPERTY()
@@ -184,15 +168,6 @@ private:
   /// Workaround material for the TerrainNodes
   UPROPERTY()
   UMaterial *TerrainNodeMaterial;
-
-  /// Enum for asset classification for semantic segmentation
-  enum EAssetType
-  {
-    DEFAULT = 0,
-    ROAD,
-    MARKING,
-    TERRAIN
-  };
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

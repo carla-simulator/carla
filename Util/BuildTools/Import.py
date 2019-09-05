@@ -207,59 +207,44 @@ def import_assets_from_json_list(json_list):
             data = json.load(json_file)
             # Take all the fbx registered in the provided json files
             # and place it inside unreal in the provided path (by the json file)
-            maps = data["maps"]
-            props = data["props"]
+            maps = []
+            props = []
+            if "maps" in data:
+                maps = data["maps"]
+            if "props" in data:
+                props = data["props"]
+
             package_name = filename.replace(".json", "")
 
             import_assets(package_name, dirname, props, maps)
-            # move_uassets(package_name, maps)
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
 
             # First we only move the meshes to the tagged folders for semantic
-            # segmentation, since Unreal does move files synchronously
-            prepare_maps_commandlet_for_cooking(package_name, only_move_meshes=True)
+            # segmentation
+            move_assets_commandlet(package_name, maps)
 
             # We prepare the assets for cooking after moving them
-            prepare_maps_commandlet_for_cooking(package_name, only_move_meshes=False)
+            prepare_maps_commandlet_for_cooking(package_name)
 
 
-def move_uassets(package_name, maps):
-    for umap in maps:
-        origin_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Maps", umap["name"])
-        dest_base_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Static")
-
-        # Create the 3 posible destination folder path
-        marking_dir = os.path.join(dest_base_path, "MarkingNode", umap["name"])
-        road_dir = os.path.join(dest_base_path, "RoadNode", umap["name"])
-        terrain_dir = os.path.join(dest_base_path, "TerrainNode", umap["name"])
-
-        # Create folders if they do not exist
-        if not os.path.exists(marking_dir):
-            os.makedirs(marking_dir)
-        if not os.path.exists(road_dir):
-            os.makedirs(road_dir)
-        if not os.path.exists(terrain_dir):
-            os.makedirs(terrain_dir)
-
-        # Move uassets to corresponding folder
-        for filename in os.listdir(origin_path):
-            if "MarkingNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), os.path.join(marking_dir, filename))
-            if "RoadNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), os.path.join(road_dir, filename))
-            if "TerrainNode" in filename:
-                shutil.move(os.path.join(origin_path, filename), os.path.join(terrain_dir, filename))
-
-
-def prepare_maps_commandlet_for_cooking(package_name, only_move_meshes):
+def prepare_maps_commandlet_for_cooking(package_name):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = "-PackageName=%s" % package_name
-    commandlet_arguments += " -OnlyPrepareMaps=true"
-    if only_move_meshes:
-        commandlet_arguments += " -OnlyMoveMeshes=true"
+    invoke_commandlet(commandlet_name, commandlet_arguments)
+
+
+def move_assets_commandlet(package_name, maps):
+    commandlet_name = "MoveAssets"
+    commandlet_arguments = "-PackageName=%s" % package_name
+
+    umap_names = ""
+    for umap in maps:
+        umap_names += umap["name"] + " "
+    commandlet_arguments += " -Maps=%s" % umap_names
+
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
