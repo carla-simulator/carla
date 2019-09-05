@@ -20,8 +20,6 @@
 
 namespace traffic_manager {
 
-  typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
-
   class LocalizationStage : PipelineStage {
 
     /// This class is responsible of maintaining a horizon of waypoints ahead
