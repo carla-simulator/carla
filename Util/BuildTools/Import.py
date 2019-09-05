@@ -226,13 +226,14 @@ def import_assets_from_json_list(json_list):
             # segmentation
             move_assets_commandlet(package_name, maps)
 
-            # We prepare the assets for cooking after moving them
-            prepare_maps_commandlet_for_cooking(package_name)
+            # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
+            prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
 
-def prepare_maps_commandlet_for_cooking(package_name):
+def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = "-PackageName=%s" % package_name
+    commandlet_arguments += " -OnlyPrepareMaps=%d" % only_prepare_maps
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
