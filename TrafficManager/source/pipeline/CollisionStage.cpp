@@ -16,7 +16,7 @@ namespace traffic_manager {
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
     int number_of_vehicle,
     int pool_size,
-    carla::client::DebugHelper* debug = nullptr
+    carla::client::DebugHelper* debug
   ):
     localization_messenger(localization_messenger),
     planner_messenger(planner_messenger),
@@ -182,7 +182,7 @@ namespace traffic_manager {
     std::vector<carla::geom::Location> geodesic_boundary;
 
       bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
-      auto waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
+      auto& waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
 
       std::vector<carla::geom::Location> left_boundary;
       std::vector<carla::geom::Location> right_boundary;

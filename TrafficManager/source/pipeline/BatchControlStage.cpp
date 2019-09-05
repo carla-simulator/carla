@@ -96,7 +96,9 @@ namespace traffic_manager {
       last_update_instance = current_time;
       frame_count = 0;
     }
-    
+
+    std::this_thread::sleep_for(10ms);
+
     // std::cout
     // << "Finished control apply's sender"
     // << std::endl;
