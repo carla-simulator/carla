@@ -319,7 +319,7 @@ Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to bu
 
 **Back to Unreal Engine**
 
-1. Select the meshes you want the pedestrians to be able to spawn and walk over.
+1. Select the meshes you want the pedestrians to be able to spawn and walk on.
 
     ![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
 
