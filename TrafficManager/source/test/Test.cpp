@@ -64,6 +64,8 @@ void test_pipeline_stages(
     carla::SharedPtr<carla::client::Map> world_map,
     carla::client::Client &client_conn) {
 
+  auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
+
   std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
   for (auto it = actor_list->begin(); it != actor_list->end(); it++) {
     registered_actors.push_back(*it);
@@ -89,7 +91,8 @@ void test_pipeline_stages(
 
   traffic_manager::CollisionStage collision_stage(
     localization_collision_messenger, collision_planner_messenger,
-    registered_actors.size(), 1
+    registered_actors.size(), 1,
+    &debug_helper
   );
 
   traffic_manager::MotionPlannerStage planner_stage(
@@ -109,7 +112,7 @@ void test_pipeline_stages(
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();
-  // collision_stage.Start();
+  collision_stage.Start();
   planner_stage.Start();
   control_stage.Start();
 

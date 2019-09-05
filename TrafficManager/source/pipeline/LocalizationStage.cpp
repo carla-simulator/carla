@@ -143,7 +143,7 @@ namespace traffic_manager {
 
       auto& collision_message = collision_frame_map.at(collision_frame_selector)->at(i);
       collision_message.actor = vehicle;
-      collision_message.buffer_list = buffer_map.at(collision_frame_selector);
+      collision_message.buffer = &waypoint_buffer;
 
       // auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
       // auto speed_limit = vehicle_reference->GetSpeedLimit();
@@ -223,13 +223,13 @@ namespace traffic_manager {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-    DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
-      collision_messenger_state,
-      collision_frame_map.at(collision_frame_selector)
-    };
-
     auto collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
+      DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
+        collision_messenger_state,
+        collision_frame_map.at(collision_frame_selector)
+      };
+
       collision_messenger_state = collision_messenger->SendData(collision_data_packet);
       collision_frame_selector = !collision_frame_selector;
     }

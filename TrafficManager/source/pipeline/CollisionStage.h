@@ -30,6 +30,8 @@ namespace traffic_manager {
 
   private:
 
+    carla::client::DebugHelper* debug;
+
     int localization_messenger_state;
     int planner_messenger_state;
     bool frame_selector;
@@ -41,7 +43,7 @@ namespace traffic_manager {
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
 
     VicinityGrid vicinity_grid;
-    std::unordered_map<int, int> id_to_index;
+    std::unordered_map<uint, int> id_to_index;
 
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
@@ -60,8 +62,7 @@ namespace traffic_manager {
     /// Returns the extrapolated bounding box of the vehicle along it's
     /// trajectory.
     std::vector<carla::geom::Location> getGeodesicBoundary(
-        carla::SharedPtr<carla::client::Actor> actor,
-        const std::vector<carla::geom::Location> &bbox) const;
+        carla::SharedPtr<carla::client::Actor> actor) const;
 
     /// Method to construct a boost polygon object
     polygon getPolygon(const std::vector<carla::geom::Location> &boundary) const;
@@ -72,13 +73,17 @@ namespace traffic_manager {
         carla::SharedPtr<carla::client::Actor> ego_vehicle,
         carla::SharedPtr<carla::client::Actor> other_vehicle) const;
 
+
+    void drawBoundary(const std::vector<carla::geom::Location> &boundary) const;
+
   public:
 
     CollisionStage(
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       int number_of_vehicle,
-      int pool_size
+      int pool_size,
+      carla::client::DebugHelper* debug
     );
     ~CollisionStage();
 

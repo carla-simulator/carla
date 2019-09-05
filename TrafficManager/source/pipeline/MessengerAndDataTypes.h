@@ -12,7 +12,8 @@
 namespace traffic_manager {
 
     /// Convenience typing
-    typedef std::vector<std::deque<std::shared_ptr<SimpleWaypoint>>> BufferList;
+    typedef std::deque<std::shared_ptr<SimpleWaypoint>> Buffer;
+    typedef std::vector<Buffer> BufferList;
 
     /// Data types
 
@@ -31,7 +32,7 @@ namespace traffic_manager {
 
     struct LocalizationToCollisionData {
         carla::SharedPtr<carla::client::Actor> actor;
-        std::shared_ptr<BufferList> buffer_list;
+        Buffer* buffer;
     };
 
     struct CollisionToPlannerData {

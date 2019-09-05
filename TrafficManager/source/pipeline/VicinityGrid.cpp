@@ -6,11 +6,14 @@ namespace traffic_manager {
 
   VicinityGrid::~VicinityGrid() {}
 
-  int VicinityGrid::MakeKey (std::pair<int, int> grid_numbers) {
-    return std::stoi(std::to_string(abs(grid_numbers.first)) + std::to_string(abs(grid_numbers.second)));
+  long VicinityGrid::MakeKey (std::pair<int, int> grid_numbers) {
+    return std::stol(
+      std::to_string(static_cast<uint>(grid_numbers.first))
+      + std::to_string(static_cast<uint>(grid_numbers.second))
+    );
   }
 
-  std::unordered_set<int> VicinityGrid::GetActors(carla::SharedPtr<carla::client::Actor> actor) {
+  std::unordered_set<uint> VicinityGrid::GetActors(carla::SharedPtr<carla::client::Actor> actor) {
 
     auto actor_id = actor->GetId();
     auto location = actor->GetLocation();
@@ -24,21 +27,21 @@ namespace traffic_manager {
       if (old_grid_id != new_grid_id) {
         std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
         grid_to_actor_id.at(old_grid_id).erase(actor_id);
-        actor_to_grid_id.insert(std::pair<int, int>(actor_id, new_grid_id));
+        actor_to_grid_id.insert(std::pair<uint, long>(actor_id, new_grid_id));
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
           grid_to_actor_id.at(new_grid_id).insert(actor_id);
         } else {
-          grid_to_actor_id.insert(std::pair<int, std::unordered_set<uint>>(new_grid_id, {actor_id}));
+          grid_to_actor_id.insert(std::pair<long, std::unordered_set<uint>>(new_grid_id, {actor_id}));
         }
       }
     } else {
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
-      actor_to_grid_id.insert(std::pair<int, int>(actor_id, new_grid_id));
-      grid_to_actor_id.insert(std::pair<int, std::unordered_set<uint>>(new_grid_id, {actor_id}));
+      actor_to_grid_id.insert(std::pair<uint, long>(actor_id, new_grid_id));
+      grid_to_actor_id.insert(std::pair<long, std::unordered_set<uint>>(new_grid_id, {actor_id}));
     }
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
-    std::unordered_set<int> actors;
+    std::unordered_set<uint> actors;
     for (int i=-1; i<=1; i++) {
       for (int j=-1; j<=1; j++) {
 
