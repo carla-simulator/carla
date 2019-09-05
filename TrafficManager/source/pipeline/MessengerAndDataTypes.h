@@ -39,17 +39,31 @@ namespace traffic_manager {
         bool hazard;
     };
 
+    struct LocalizationToTrafficLightData {
+        carla::SharedPtr<carla::client::Actor> actor;
+        std::shared_ptr<SimpleWaypoint> closest_geodesic_waypoint;
+        std::shared_ptr<SimpleWaypoint> fifth_geodesic_waypoint;
+    };
+
+    struct TrafficLightToPlannerData {
+        float traffic_light_hazard;
+    };
+
     /// Data frame types
 
     typedef std::vector<LocalizationToPlannerData> LocalizationToPlannerFrame;
     typedef std::vector<PlannerToControlData> PlannerToControlFrame;
     typedef std::vector<LocalizationToCollisionData> LocalizationToCollisionFrame;
+    typedef std::vector<LocalizationToTrafficLightData> LocalizationToTrafficLightFrame;
     typedef std::vector<CollisionToPlannerData> CollisionToPlannerFrame;
+    typedef std::vector<TrafficLightToPlannerData> TrafficLightToPlannerFrame;
 
     /// Messenger types
 
     typedef Messenger<std::shared_ptr<LocalizationToPlannerFrame>> LocalizationToPlannerMessenger;
     typedef Messenger<std::shared_ptr<PlannerToControlFrame>> PlannerToControlMessenger;
     typedef Messenger<std::shared_ptr<LocalizationToCollisionFrame>> LocalizationToCollisionMessenger;
+    typedef Messenger<std::shared_ptr<LocalizationToTrafficLightFrame>> LocalizationToTrafficLightMessenger;
     typedef Messenger<std::shared_ptr<CollisionToPlannerFrame>> CollisionToPlannerMessenger;
+    typedef Messenger<std::shared_ptr<TrafficLightToPlannerFrame>> TrafficLightToPlannerMessenger;
 }

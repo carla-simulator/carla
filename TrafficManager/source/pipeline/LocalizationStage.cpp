@@ -12,6 +12,7 @@ namespace traffic_manager {
   LocalizationStage::LocalizationStage (
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
       std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
       int number_of_vehicles,
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
@@ -19,6 +20,7 @@ namespace traffic_manager {
   ) :
   planner_messenger(planner_messenger),
   collision_messenger(collision_messenger),
+  traffic_light_messenger(traffic_light_messenger),
   actor_list(actor_list),
   local_map(local_map),
   PipelineStage(pool_size, number_of_vehicles)
@@ -26,6 +28,7 @@ namespace traffic_manager {
 
     planner_frame_selector = true;
     collision_frame_selector = true;
+    traffic_light_frame_selector = true;
 
     buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
     buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
@@ -45,8 +48,16 @@ namespace traffic_manager {
     collision_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToCollisionFrame>>(true, collision_frame_a));
     collision_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToCollisionFrame>>(false, collision_frame_b));
 
+    traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
+    traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
+
+    traffic_light_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToTrafficLightFrame>>(true, traffic_light_frame_a));
+    traffic_light_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToTrafficLightFrame>>(false, traffic_light_frame_b));
+
+
     planner_messenger_state = planner_messenger->GetState() -1;
     collision_messenger_state = collision_messenger->GetState() -1;
+    traffic_light_messenger_state = traffic_light_messenger->GetState() -1;
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -145,6 +156,12 @@ namespace traffic_manager {
       collision_message.actor = vehicle;
       collision_message.buffer = &waypoint_buffer;
 
+      auto& traffic_light_message = traffic_light_frame_map.at(traffic_light_frame_selector)->at(i);
+      traffic_light_message.actor = vehicle;
+      auto traffic_light_buffer_list = buffer_map.at(traffic_light_frame_selector)->at(i);
+      traffic_light_message.closest_geodesic_waypoint = traffic_light_buffer_list.at(0);
+      traffic_light_message.fifth_geodesic_waypoint = traffic_light_buffer_list.at(4);
+
       // auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
       // auto speed_limit = vehicle_reference->GetSpeedLimit();
       // int look_ahead_index = std::max(
@@ -232,6 +249,16 @@ namespace traffic_manager {
 
       collision_messenger_state = collision_messenger->SendData(collision_data_packet);
       collision_frame_selector = !collision_frame_selector;
+    }
+
+    DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
+      traffic_light_messenger_state,
+      traffic_light_frame_map.at(traffic_light_frame_selector)
+    };
+    auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
+    if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
+      traffic_light_messenger_state = traffic_light_messenger->SendData(traffic_light_data_packet);
+      traffic_light_frame_selector = !traffic_light_frame_selector;
     }
 
     // std::cout 

@@ -27,14 +27,17 @@ namespace traffic_manager {
     int localization_messenger_state;
     int control_messenger_state;
     int collision_messenger_state;
+    int traffic_light_messenger_state;
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;
     std::unordered_map<bool, std::shared_ptr<PlannerToControlFrame>> frame_map;
     std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<CollisionToPlannerFrame> collision_frame;
+    std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger;
+    std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger;
 
     std::shared_ptr<std::vector<StateEntry>> pid_state_vector;
     std::vector<float> longitudinal_parameters;
@@ -49,6 +52,7 @@ namespace traffic_manager {
     MotionPlannerStage(
         std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+        std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
         int number_of_vehicles,
         int pool_size,
