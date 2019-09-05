@@ -82,11 +82,11 @@ _check VectorZeros's [documentation][exportlink]._
 
 ## 3 Importing into Unreal
 
-This section is divided into two. The first part introduces how to import a map from RoadRunner
-and the second part how to import a map from other software that generates `.fbx` and `.xodr` files.
+This section is divided into two. The first part shows how to import a map from RoadRunner
+and the second part shows how to import a map from other software that generates `.fbx` and `.xodr` files.
 
 !!! important
-    OpenDRIVE file `.xodr` should have the same name as the binary file `.fbx`
+    The `.xodr` OpenDRIVE file should have the same name as the binary file `.fbx`
     i.e. `mapname.fbx` `mapname.xodr`.
 
 We have also created a new way to import assets into Unreal,
@@ -147,14 +147,14 @@ The new map should now appear next to the others in the Unreal Engine _Content B
 
 ![ue_level_content](img/ue_level_content.png)
 
-That's it! The map is ready!
+And that's it! The map is ready!
 
 ### 3.2 Importing from the files
 
 This is the generic way to import maps into Unreal.
 
 1. Create a new level with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.
-2. Copy the Illumination folder and content from the BaseMap `Content/Carla/Maps/BaseMap`
+2. Copy the Illumination folder and its content from the BaseMap `Content/Carla/Maps/BaseMap`
 and paste it in the new level, otherwise, the map will be in the dark.
 
 ![ue_illumination](img/ue_illumination.png)
@@ -191,14 +191,28 @@ and paste it in the new level, otherwise, the map will be in the dark.
 
     <br>
 
-4. When unreal finishes loading, center the meshes at point (0, 0, 0) and you will have
+4. When Unreal Engine finishes loading, center the meshes at point (0, 0, 0) and you will have
   your map in Unreal! Congratulations!
 
     ![Transform_Map](img/transform.jpg)
 
     <br>
 
-5. Lastly, for the **semantic segmentation ground truth**, move the static meshes imported
+5. Generate collisions, so pedestrians and vehicles don't fall into the abyss.
+
+    * Select the meshes that will have collision.
+    * Right-click `Asset Actions > Bulk Edit via Property Matrix...`.
+
+      ![ue_selectmesh_collision](img/ue_selectmesh_collision.png)
+
+    * Search for _collision_ in Property's Matrix search box.
+    * Change `Collision complexity` from `Project Default` to `Use Complex Collision As Simple`.
+
+      ![ue_collision_complexity](img/ue_collision_complexity.png)
+
+    * Go to `File > Save All`.
+
+6. Lastly, for the **semantic segmentation ground truth**, move the static meshes imported
  under `Content/Carla/Maps/mapfolder` to `Carla/Static` subsequent folders:
 
     * `Terrain/mapname`
@@ -231,7 +245,7 @@ Content
 
 #### 3.2.2 OpenDRIVE (.xodr)
 
-1. Copy the (.xodr) file inside the `Content/Carla/Maps/OpenDrive` folder.
+1. Copy the `.xodr` file inside the `Content/Carla/Maps/OpenDrive` folder.
 2. Open the Unreal level and drag the _Open Drive Actor_ inside the level.
 It will read the level's name, search the Opendrive file with the same name and load it.
 
@@ -278,14 +292,62 @@ might need some tweaking and testing to fit perfectly into the city.
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
+## 5 Adding pedestrian navigation zones
+
+To make a navigable mesh for pedestrians, we use the _Recast & Detour_ library.<br>
+<https://github.com/recastnavigation/recastnavigation>.
+
+1. Clone or download _Recast & Detour_.
+
+2. Before building RecastDemo you need to change `m_scale` variable from `1.0f` to `0.01f` in the
+ _MeshLoaderObj contructor_ in `RecastDemo/Source/MeshLoaderObj.cpp`.
+
+```cpp
+rcMeshLoaderObj::rcMeshLoaderObj() :
+	m_scale(0.01f),
+	m_verts(0),
+	m_tris(0),
+	m_normals(0),
+	m_vertCount(0),
+	m_triCount(0)
+{
+}
+```
+Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to build it.
+
+[buildrecastlink]: https://github.com/recastnavigation/recastnavigation#building-recastdemo
+
+**Back to Unreal Engine**
+
+1. Select the meshes you want the pedestrians to be able to spawn and walk over.
+2. Export and save them as a `mapname.obj` file. `File > Export Selected...`.
+3. Run RecastDemo `./RecastDemo`.
+
+    ![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
+
+    <br>
+
+      * Select `Solo Mesh` from the `Sample` parameter's box.
+      * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
+
+        ![recast_example](img/recast_example.png)
+
+      <br>
+
+4. First click on the `Build` button, then once the built has finished, click on the `Save` button.
+5. Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.
+6. Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.
+
+Now pedestrians will be able to spawn randomly and walk on the selected meshes!
+
 ## Tips and Tricks
 
-* Traffic light group works by Rotating which of the involved traffic light is green each moment.
- You can configure the timing the Lights stays in green `GreenTime`, the time it stays yellow
+* Traffic light group controls wich traffic light is active (green state) at each moment.
+ You can configure the timing that the lights stay in green `GreenTime`, the time it stays yellow
  `YellowTime`, and the time it takes between one traffic light goes red and the next one
  goes green `ChangeTime`.
 
-<div style="text-align:center"><img src="../img/ue_tl_group_times.png" /></div>
+<div style="text-align:center"><img src="../img/ue_tl_group_times.png"/></div>
 <br>
 
 * You can add a vehicle spawn point. This should be placed 2 to 3 meters above a Route Planner's
@@ -295,10 +357,10 @@ might need some tweaking and testing to fit perfectly into the city.
   ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
 
 * When you check `Generate Routes` in Open Drive Actor, it generates the road network but it won't
-  show individual planners. In order to show those points, do the following:
+  show individual planners. In order to show those points, please do the following:
 
-    1. Select all `RoutePlanner` actors
-    2. Move them
+    1. Select all `RoutePlanner` actors.
+    2. Move them.
     3. Press `ctr + z` and they will show up on the map.
     ![ue_route_points](img/ue_route_points.png)
 
@@ -306,7 +368,7 @@ might need some tweaking and testing to fit perfectly into the city.
 
   ![ue_routeplanner_mod](img/ue_routeplanner_mod.png)
 
-* In order to add the map to the Unreal packaging system, go to:  
+* In order to add the map to the Unreal packaging system, go to:<br>
   `Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
   Then add the level to the array.
 
