@@ -320,13 +320,13 @@ Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to bu
 **Back to Unreal Engine**
 
 1. Select the meshes you want the pedestrians to be able to spawn and walk over.
-2. Export and save them as a `mapname.obj` file. `File > Export Selected...`.
-3. Run RecastDemo `./RecastDemo`.
 
     ![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
 
     <br>
 
+2. Export and save them as a `mapname.obj` file. `File > Export Selected...`.
+3. Run RecastDemo `./RecastDemo`.
       * Select `Solo Mesh` from the `Sample` parameter's box.
       * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
 
