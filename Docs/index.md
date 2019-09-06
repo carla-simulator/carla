@@ -26,7 +26,7 @@
   * [Blueprint Library](bp_library.md)
   * [Running without display and selecting GPUs](carla_headless.md)
   * [Running in a Docker](carla_docker.md)
-  * [How to make a new map with RoadRunner](how_to_make_a_new_map.md)
+  * [How to create and import a new map](how_to_make_a_new_map.md)
   * [How to link Epic's Automotive Materials](epic_automotive_materials.md)
   * [Creating standalone asset packages for distribution](asset_packages_for_dist.md)
   * [How to add friction triggers](how_to_add_friction_triggers.md)
@@ -39,6 +39,7 @@
 
   * [Contribution guidelines](CONTRIBUTING.md)
   * [Coding standard](coding_standard.md)
+  * [Documentation standard](doc_standard.md)
   * [Code of conduct](CODE_OF_CONDUCT.md)
 
 <h3>Development</h3>

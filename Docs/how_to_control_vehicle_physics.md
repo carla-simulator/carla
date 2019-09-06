@@ -1,10 +1,15 @@
 <h1>How to control vehicle physics</h1>
 
-Physics properties can be tuned for vehicles and its wheels. These changes are applied **only** on runtime, and values are set back to default ones when the execution ends.
+Physics properties can be tuned for vehicles and its wheels.
+These changes are applied **only** on runtime, and values are set back to default ones when
+the execution ends.
 
-These properties are controlled through a [carla.VehiclePhysicsControl](/python_api/#carla.VehiclePhysicsControl) object, which also provides the control of each wheel's physics through a [carla.WheelPhysicsControl](/python_api/#carla.WheelPhysicsControl) object.
+These properties are controlled through a
+[carla.VehiclePhysicsControl](/python_api/#carla.VehiclePhysicsControl) object,
+which also provides the control of each wheel's physics through a
+[carla.WheelPhysicsControl](/python_api/#carla.WheelPhysicsControl) object.
 
-##### Example
+## Example
 
 ```py
 import carla

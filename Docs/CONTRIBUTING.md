@@ -5,10 +5,10 @@ We are more than happy to accept contributions!
 
 How can I contribute?
 
-  * Reporting bugs
-  * Feature requests
-  * Improving documentation
-  * Code contributions
+* Reporting bugs
+* Feature requests
+* Improving documentation
+* Code contributions
 
 Reporting bugs
 --------------
@@ -41,13 +41,20 @@ We build our documentation with [MkDocs](http://www.mkdocs.org/) based on the
 Markdown files inside the `Docs` folder. You can either directly modify them on
 GitHub or locally in your machine.
 
-To update Python API docs, instead of directly modifying the Markdown you need to edit the corresponding YAML files inside `PythonAPI/docs` and run `doc_gen.py` (Python 2) subsequently. This will re-generate the respective Markdown files inside `Docs/`, which can then be fed into `mkdocs`.
+To update Python API docs, instead of directly modifying the Markdown you need to edit the
+corresponding YAML files inside [`carla/PythonAPI/docs/`][fileslink] and run [`doc_gen.py`][scriptlink]
+or `make PythonAPI.docs`.
+This will re-generate the respective Markdown files inside `carla/Docs/`,
+which can then be fed into `mkdocs`.
+
+[fileslink]: https://github.com/carla-simulator/carla/tree/master/PythonAPI/docs
+[scriptlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/docs/doc_gen.py
 
 Once you are done with your changes, please submit a pull-request.
 
 !!! tip
-    You can build and serve it locally by running `mkdocs` in the project's
-    main folder
+    You can build and serve it locally (at <http://127.0.0.1:8000>) by running `mkdocs`
+    in the project's main folder.
 
 ```sh
   > sudo pip install mkdocs
@@ -57,7 +64,7 @@ Once you are done with your changes, please submit a pull-request.
 Code contributions
 ------------------
 
-So you are considering making a code contribution, great! we love to have
+So you are considering making a code contribution, great! We love to have
 contributions from the community.
 
 Before starting hands-on on coding, please check out our
