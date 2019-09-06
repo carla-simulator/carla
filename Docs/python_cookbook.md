@@ -1,11 +1,11 @@
 
 <h1> Python Cookbook </h1>
 
-This section contains a list of recipes that complement the [tutorial](../python_api_tutorial/) and are used to
-illustrate the use of Python API methods.
+This section contains a list of recipes that complement the [tutorial](../python_api_tutorial/)
+and are used to illustrate the use of Python API methods.
 
-Each recipe has a list of [python API classes](../python_api/), which is divided into those in which the recipe is centered,
-and those that need to be used.
+Each recipe has a list of [python API classes](../python_api/),
+which is divided into those in which the recipe is centered, and those that need to be used.
 
 There are more recipes to come!
 
@@ -95,8 +95,8 @@ camera_bp.set_attribute('image_size_y', 600)
 
 ## Converted Image Recipe
 
-This recipe applies a color conversion to the image taken by a camera sensor, so it is converted to a
-semantic segmentation image.
+This recipe applies a color conversion to the image taken by a camera sensor,
+so it is converted to a semantic segmentation image.
 
 Focused on:<br>
 [`carla.ColorConverter`](../python_api/#carla.ColorConverter)<br>
@@ -172,7 +172,8 @@ for actor_snapshot in world_snapshot:
 
 ## Debug Vehicle Trail Recipe
 
-This recipe is a modification of [`lane_explorer.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/lane_explorer.py) example.
+This recipe is a modification of
+[`lane_explorer.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/lane_explorer.py) example.
 It draws the path of an actor through the world, printing information at each waypoint.
 
 Focused on:<br>
@@ -183,6 +184,7 @@ Focused on:<br>
 Used:<br>
 [`carla.ActorSnapshot`](../python_api/#carla.ActorSnapshot)<br>
 [`carla.Vector3D`](../python_api/#carla.Vector3D)<br>
+[`carla.LaneType`](../python_api/#carla.LaneType)<br>
 [`carla.Color`](../python_api/#carla.Color)<br>
 [`carla.Map`](../python_api/#carla.Map)
 
@@ -192,7 +194,7 @@ current_w = map.get_waypoint(vehicle.get_location())
 while True:
 
     next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
-    # Check if vehicle is moving
+    # Check if the vehicle is moving
     if next_w.id != current_w.id:
         vector = vehicle.get_velocity()
         # Check if the vehicle is on a sidewalk
@@ -209,7 +211,8 @@ while True:
 # ...
 ```
 
-The image below shows how a vehicle loses control and drives on a sidewalk. The trail shows the path it was following and the speed at each waypoint.
+The image below shows how a vehicle loses control and drives on a sidewalk. The trail shows the
+path it was following and the speed at each waypoint.
 
 ![debug_trail_recipe](img/debug_trail_recipe.png)
 

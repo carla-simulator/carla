@@ -1,13 +1,18 @@
 <h1>Creating standalone asset packages for distribution</h1>
 
-*Please note that we will use the term *assets* for referring to **props** and also **maps**.* 
+*Please note that we will use the term *assets* for referring to **props** and also **maps**.*
 
-The main objective for importing and exporting assets is to reduce the size of the distribution build. This is possible since these assets will be imported as independent packages that can be plugged in anytime inside Carla and also exported. 
+The main objective for importing and exporting assets is to reduce the size of
+the distribution build. This is possible since these assets will be imported as
+independent packages that can be plugged in anytime inside Carla and also exported.
 
 How to import assets inside Unreal Engine
 -----------------------------------------
 
-The first step is to create an empty folder inside the Carla `Import` folder and rename it with any folder name desired. For simplifying this newly created folder structure, we recommend having as many subfolders as maps to import and one single subfolder containing all the props to import. Inside each subfolder, we will place all the files needed for importing. 
+The first step is to create an empty folder inside the Carla `Import` folder and rename it with any
+folder name desired. For simplifying this newly created folder structure, we recommend having
+as many subfolders as maps to import and one single subfolder containing all the props to import.
+Inside each subfolder, we will place all the files needed for importing.<br>
 So basically, for a **map** subfolder, we will need to place the following files:
 
 * The map itself in `.FBX` format.
@@ -19,7 +24,10 @@ And for the **props** folder, we will need the following files:
 * The prop itself in `.FBX` format.
 * Optionally, the textures required by the prop.
 
-Additionally, we have to create a **JSON file inside the package** that will contain information about its assets. The file extension must be `.json`. We recommend the JSON file to have the same name as the package name in order to keep it organized. **Please, keep in mind that the name of this file will used as the name of the distribution package**.
+Additionally, we have to create a **JSON file inside the package** that will contain information
+about its assets. The file extension must be `.json`. We recommend the JSON file to have the same
+name as the package name in order to keep it organized. 
+**Please, keep in mind that the name of this file will used as the name of the distribution package**.
 
 The content of this JSON file should be similar to the following:
 
@@ -58,14 +66,16 @@ As you can observe in the JSON file content, we have defined a JSON array of **m
 
 Each item inside the **maps** array has the following parameters:
 
-* **name**: The name of the map. It is possible to import the same map mesh but with a different name and, if so, it will create separate mesh files inside Unreal for each different name.
+* **name**: The name of the map. It is possible to import the same map mesh but with a different
+name and, if so, it will create separate mesh files inside Unreal for each different name.
 * **source**: Source path of the map inside the package folder.
 * **use_carla_materials**: If true, we will use Carla materials, otherwise, we will use RoadRunner materials.
 * **xodr**: Path to the `.xodr` Opendrive file for that map.
 
 And each item inside the **props** array has the following parameters:
 
-* **name**: The name of the prop. It is possible to import the same prop mesh but with different name and, if so, it will create separate mesh files inside Unreal for each different name.
+* **name**: The name of the prop. It is possible to import the same prop mesh but with different
+name and, if so, it will create separate mesh files inside Unreal for each different name.
 * **source**: Source path of the prop inside the package folder.
 * **size**: Size of the prop, possible values are:
 
@@ -93,8 +103,8 @@ And each item inside the **props** array has the following parameters:
     
     Note that if the tag is not spelled correctly, it will interpret it as `None` value by default.
 
-
 To sum up, the `Import` folder should have this similar structure:
+
 ```
 Import
 |
@@ -132,7 +142,18 @@ Import
     └── Package2.json
 ```
 
-*Please note that the maps exported from **RoadRunner** are also supported for importing them inside Carla. So, basically, once created your **RoadRunner** map, you just need to export it, take the required files and place them following the structure listed above.*
+_Maps exported from **RoadRunner** are also supported for importing them inside_
+_Carla. So, basically, once created your **RoadRunner** map, you just need to export it, take the_
+_required files and place them following the structure listed above._
+
+!!! note
+    **RoadRunner's** imported assets will be classified for **semantic segmentation** based on
+    the asset's name (`RoadNode`, `Terrain`, `MarkingNode`) and moved to `Roads`, `Terrain`
+    and `RoadLines` respectively, under `Content/Carla/PackageName/Static`.<br>
+    _If the process doesn't work due to different names or other issues, you can always move the assets_
+    _manually, check this [`tutorial`][importtutorial]_.
+
+[importtutorial]: /how_to_make_a_new_map/#32-importing-from-the-files
 
 Now we have everything ready for importing assets. To do so, you just need to run the command:
 
@@ -140,15 +161,25 @@ Now we have everything ready for importing assets. To do so, you just need to ru
 make import
 ```
 
-This command will read the JSON file and take each asset and place it inside the Content in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's `Config` folder that will be used for **defining** its props in the Carla blueprint library, **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed. If a package was already imported before, it will overwrite it.
+This command will read the JSON file and take each asset and place it inside the Content
+in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
+`Config` folder that will be used for **defining** its props in the Carla blueprint library,
+**exposing** them in the `PythonAPI` and also for **exporting** those assets if needed.
+If a package was already imported before, it will overwrite it.
 
 How to export assets
 --------------------
 
-Once imported all the packages inside Unreal, users could also generate a **cooked package** for each of them. This last step is important in order to have all packages ready to add for distribution versions of Carla and for any supported platform. To export the packages, simply run the command:
+Once imported all the packages inside Unreal, users could also generate a **cooked package** 
+for each of them. This last step is important in order to have all packages ready to add for
+distribution versions of Carla and for any supported platform. To export the packages,
+simply run the command:
 
 ```sh
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This command will create the distribution package compressed in a `.tar.gz` file for **each** cooked package and place it in the Carla `Dist` folder. Finally, you could import these packages in a Carla distribution by simply moving them in the Carla `Import` folder and executing the `ImportAssets.sh` script.
+This command will create the distribution package compressed in a `.tar.gz` file for **each**
+cooked package and place it in the Carla `Dist` folder. Finally, you could import these packages
+in a Carla distribution by simply moving them in the Carla `Import` folder and executing
+the `ImportAssets.sh` script.

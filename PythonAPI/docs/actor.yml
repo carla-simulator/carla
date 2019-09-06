@@ -64,7 +64,7 @@
     - def_name: get_location
       return: carla.Location
       doc: >
-        Returns the current location of the actor.
+        Returns the actor's current location.
       note: >
         This function does not call the simulator, it returns the location
         received in the last tick.
@@ -72,12 +72,15 @@
     - def_name: get_transform
       return: carla.Transform
       doc: >
-        Returns the current transform of the actor.
+        Returns the actor's current transform.
+      note: >
+        This function does not call the simulator, it returns the
+        transform received in the last tick.
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
       doc: >
-        Returns the current 3D velocity of the actor.
+        Returns the actor's current 3D velocity.
       note: >
         This function does not call the simulator, it returns the velocity
         received in the last tick.
@@ -85,7 +88,7 @@
     - def_name: get_angular_velocity
       return: carla.Vector3D
       doc: >
-        Returns the current 3D angular velocity of the actor.
+        Returns the actor's current 3D angular velocity.
       note: >
         This function does not call the simulator, it returns the angular
         velocity received in the last tick.
@@ -93,7 +96,7 @@
     - def_name: get_acceleration
       return: carla.Vector3D
       doc: >
-        Returns the current 3D acceleration of the actor.
+        Returns the actor's current 3D acceleration.
       note: >
         This function does not call the simulator, it returns the acceleration
         received in the last tick.
@@ -155,7 +158,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The bounding box of the vehicle.
+        The vehicle's bounding box
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -243,7 +246,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The bounding box of the walker.
+        The walker's bounding box.
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control

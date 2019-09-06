@@ -1,0 +1,13 @@
+.build-buttons{
+    text-align: center;
+}
+
+.build-buttons > p {
+    display: inline-block;
+    vertical-align: top;
+    padding: 5px;
+}
+
+.vector-zero {
+    text-align: center;
+}

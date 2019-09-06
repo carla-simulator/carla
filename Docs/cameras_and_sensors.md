@@ -3,10 +3,10 @@
 ![Client window](img/client_window.png)
 
 Sensors are a special type of actor able to measure and stream data. All the
-sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the callback function that will
-be called each time the sensor produces a new measurement. Sensors are typically
-attached to vehicles and produce data either each simulation update, or when a
-certain event is registered.
+sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the
+callback function that will be called each time the sensor produces a new measurement.
+Sensors are typically attached to vehicles and produce data either each simulation update,
+or when a certain event is registered.
 
 The following Python excerpt shows how you would typically attach a sensor to a
 vehicle, in this case we are adding a dashboard HD camera to a vehicle.
@@ -51,7 +51,8 @@ This is the list of sensors currently available
   * [sensor.other.lane_invasion](#sensorotherlane_invasion)
   * [sensor.other.obstacle](#sensorotherobstacle)
 
-Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to convert the pixels of the original image.
+Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to
+convert the pixels of the original image.
 
 sensor.camera.rgb
 -----------------
@@ -66,13 +67,53 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
-| `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
+| `enable_postprocess_effects` | bool   | True | Whether the post-process effect in the scene affect the image |
 | `gamma`             | float | 2.2     | Target gamma value of the camera |
 | `motion_blur_intensity`       | float | 0.45 | Strength of motion blur. 1 is max and 0 is off |
 | `motion_blur_max_distortion`  | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
-| `motion_blur_min_object_screen_size`  | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
+| `motion_blur_min_object_screen_size`  | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls |
 
-`sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
+Other handy attributes:
+
+| Blueprint attribute | Type  | Default | Description |
+| ------------------- | ----  | ------- | ----------- |
+| `shutter_speed`     | float | 60.0    | The camera shutter speed in seconds |
+| `iso`               | float | 1200.0  | The camera sensor sensitivity |
+| `fstop`             | float | 1.4     | Defines the size of the opening for the camera lens. Aperture is 1.0 / fstop |
+| `min_fstop`         | float | 1.2     | Defines the maximum opening of the camera lens to control the curvature of the diaphragm. Set this to 0 to get straight blades |
+| `blade_count`       | int   | 5       | Defines the number of blades of the diaphragm within the lens. Values between 4 and 16 can be used |
+| `exposure_mode`     | str   | manual  | Mode of exposure. Manual by default or histogram (under construction) |
+| `exposure_compensation` | float | 3.0 | Logarithmic adjustment for the exposure |
+| `exposure_min_bright` | float | 0.1   | The minimum brightness for auto exposure that limits the lower brightness the eye can adapt within |
+| `exposure_max_bright` | float | 2.0   | The maximum brightness for auto exposure that limits the upper brightness the eye can adapt within |
+| `exposure_speed_up` | float   | 3.0   | The speed at which the adaptation occurs from a dark environment to a bright environment |
+| `exposure_speed_down` | float | 1.0   | The speed at which the adaptation occurs from a bright environment to a dark environment |
+| `calibration_constant` | float | 16.0 | Calibration constant for 18% Albedo |
+| `focal_distance`    | float   | 1000.0 | The distance in which the depth of field effect should be sharp |
+| `blur_amount`       | float   | 1.0   | Strength/intensity of motion blur |
+| `blur_radius`       | float   | 0.0   | Radius in pixels at 1080p resolution to apply according to distance from camera to emulate atmospheric scattering |
+| `slope`             | float   | 0.88  | This will adjust the steepness of the S-curve used for the tonemapper |
+| `toe`               | float   | 0.55  | This will adjust the dark color in the tonemapper|
+| `shoulder`          | float   | 0.26  | This will adjust the bright color in the tonemapper|
+| `back_clip`         | float   | 0.0   | This will set where the crossover happens where black's start to cut off their value. In general, this value should NOT be adjusted |
+| `white_clip`        | float   | 0.04  | This will set where the crossover happens where white's start to cut off their values |
+| `temp`              | float   | 6500.0 | This will adjust the white balance in relation to the temperature of the light in the scene |
+| `tint`              | float   | 0.0   | This will adjust the white balance temperature tint for the scene by adjusting the cyan and magenta color ranges |
+
+!!! note
+    Using histogram exposure mode will enable the exposure's and calibration parameters.
+
+More information about these attributes can be found in the UE4 official docs:<br>
+[Automatic Exposure][autoexplink]<br>
+[Cinematic DOF Methods][cinematiclink]<br>
+[Color Grading][gradinglink]
+[autoexplink]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
+[cinematiclink]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
+[gradinglink]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
+
+The `sensor_tick` tells how fast we want the sensor to capture the data.
+A value of 1.5 means that we want the sensor to capture data each second and a half.
+By default a value of 0.0 means as fast as possible.
 
 If `enable_postprocess_effects` is enabled, a set of post-process effects is
 applied to the image to create a more realistic feel
@@ -259,7 +300,8 @@ actor collisions against something in the world. This sensor does not have any
 configurable attribute.
 
 !!! note
-    This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it collides with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
 
 This sensor produces a
 [`carla.CollisionEvent`](python_api.md#carla.CollisionEvent)
@@ -331,7 +373,8 @@ sensor.other.obstacle
 This sensor, when attached to an actor, reports if there is obstacles ahead.
 
 !!! note
-    This sensor creates "fake" actors when it detects obstacles with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it detects obstacles with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
