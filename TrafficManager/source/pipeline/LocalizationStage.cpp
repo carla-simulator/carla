@@ -23,7 +23,6 @@ namespace traffic_manager {
   actor_list(actor_list),
   local_map(local_map),
   PipelineStage(pool_size, number_of_vehicles),
-  divergence_choice(std::vector<int>(number_of_vehicles, -1)),
   debug(debug)
   {
 
@@ -50,6 +49,11 @@ namespace traffic_manager {
 
     planner_messenger_state = planner_messenger->GetState() -1;
     collision_messenger_state = collision_messenger->GetState() -1;
+
+    for (int i=0; i <number_of_vehicles; i++) {
+      divergence_choice.push_back(rand());
+    }
+
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -115,16 +119,13 @@ namespace traffic_manager {
       ) {
 
         auto way_front = waypoint_buffer.back();
+        auto pre_selection_id = way_front->getWaypoint()->GetId();
         auto next_waypoints = way_front->getNextWaypoint();
-        auto selection_index = next_waypoints.size() > 1? rand() % next_waypoints.size(): 0;
-        if (next_waypoints.size() >1) {
-          if (divergence_choice.at(i) >=0) {
-            selection_index = divergence_choice.at(i);
-            divergence_choice[i] = -1;
-          } else {
-            divergence_choice[i] = selection_index;
-          }
+        auto selection_index = 0;
+        if (next_waypoints.size() > 1) {
+          selection_index = divergence_choice.at(i) * pre_selection_id % next_waypoints.size();
         }
+
         way_front = next_waypoints.at(selection_index);
         waypoint_buffer.push_back(way_front);
       }
@@ -146,7 +147,7 @@ namespace traffic_manager {
         dot_product *= -1;
       }
 
-      drawBuffer(waypoint_buffer);
+      // drawBuffer(waypoint_buffer);
 
       auto& planner_message = planner_frame_map.at(planner_frame_selector)->at(i);
       planner_message.actor = vehicle;
