@@ -8,6 +8,7 @@ namespace traffic_manager {
   MotionPlannerStage::MotionPlannerStage(
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+    std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
     std::shared_ptr<PlannerToControlMessenger> control_messenger,
     int number_of_vehicles,
     int pool_size = 1,
@@ -25,6 +26,7 @@ namespace traffic_manager {
     localization_messenger(localization_messenger),
     control_messenger(control_messenger),
     collision_messenger(collision_messenger),
+    traffic_light_messenger(traffic_light_messenger),
     PipelineStage(pool_size, number_of_vehicles)
   {
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
@@ -41,6 +43,7 @@ namespace traffic_manager {
 
     localization_messenger_state = localization_messenger->GetState();
     collision_messenger_state = collision_messenger->GetState();
+    traffic_light_messenger_state = traffic_light_messenger->GetState();
     control_messenger_state = control_messenger->GetState() - 1;
   }
 
@@ -100,9 +103,17 @@ namespace traffic_manager {
       //   std::cout << "Collision hazard : " << (collision_frame->at(i).hazard ? "true": "false") << std::endl;
       // }
       if (
-        collision_messenger_state != 0
-        and
-        collision_frame->at(i).hazard
+          (
+          collision_messenger_state != 0
+          and
+          collision_frame->at(i).hazard
+          )
+          or
+          (
+          traffic_light_messenger_state != 0
+          and
+          traffic_light_frame->at(i).traffic_light_hazard > 0
+          )
       ) {
         current_state.deviation_integral = 0;
         current_state.velocity_integral = 0;
@@ -151,6 +162,14 @@ namespace traffic_manager {
       collision_frame = collision_packet.data;
       collision_messenger_state = collision_packet.id;
     }
+
+    auto traafic_light_messenger_current_state = traffic_light_messenger->GetState();
+    if (traafic_light_messenger_current_state != traffic_light_messenger_state) {
+      auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);
+      traffic_light_frame = traffic_light_packet.data;
+      traffic_light_messenger_state = traffic_light_packet.id;
+    }
+
 
     // std::cout
     // << "Finished planner's receiver"

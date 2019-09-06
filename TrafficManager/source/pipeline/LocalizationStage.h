@@ -31,16 +31,22 @@ namespace traffic_manager {
 
     int planner_messenger_state;
     int collision_messenger_state;
+    int traffic_light_messenger_state;
     bool planner_frame_selector;
     bool collision_frame_selector;
+    bool traffic_light_frame_selector;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_a;
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_b;
+    std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_a;
+    std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_b;
     std::unordered_map<bool, std::shared_ptr<LocalizationToPlannerFrame>> planner_frame_map;
     std::unordered_map<bool, std::shared_ptr<LocalizationToCollisionFrame>> collision_frame_map;
+    std::unordered_map<bool, std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_frame_map;
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
+    std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
 
     InMemoryMap& local_map;
     std::vector<int> divergence_choice;
@@ -70,6 +76,7 @@ namespace traffic_manager {
     LocalizationStage(
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
       std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
       int number_of_vehicles,
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,

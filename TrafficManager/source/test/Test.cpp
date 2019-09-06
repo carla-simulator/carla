@@ -12,6 +12,7 @@
 #include "CollisionStage.h"
 #include "MotionPlannerStage.h"
 #include "BatchControlStage.h"
+#include "TrafficLightStage.h"
 
 void test_dense_topology(const carla::client::World &);
 
@@ -79,13 +80,15 @@ void test_pipeline_stages(
   std::cout << "Map set up !" << std::endl;
 
   auto localization_collision_messenger = std::make_shared<traffic_manager::LocalizationToCollisionMessenger>();
+  auto localization_traffic_light_messenger = std::make_shared<traffic_manager::LocalizationToTrafficLightMessenger>();
   auto collision_planner_messenger = std::make_shared<traffic_manager::CollisionToPlannerMessenger>();
   auto localization_planner_messenger = std::make_shared<traffic_manager::LocalizationToPlannerMessenger>();
+  auto traffic_light_planner_messenger = std::make_shared<traffic_manager::TrafficLightToPlannerMessenger>();
   auto planner_control_messenger = std::make_shared<traffic_manager::PlannerToControlMessenger>();
 
   traffic_manager::LocalizationStage localization_stage(
     localization_planner_messenger, localization_collision_messenger,
-    registered_actors.size(), 3,
+    localization_traffic_light_messenger, registered_actors.size(), 3,
     registered_actors, local_map,
     &debug_helper
   );
@@ -96,9 +99,15 @@ void test_pipeline_stages(
     &debug_helper
   );
 
+  traffic_manager::TrafficLightStage traffic_light_stage(
+    localization_traffic_light_messenger, traffic_light_planner_messenger,
+    registered_actors.size(), 1
+  );
+
   traffic_manager::MotionPlannerStage planner_stage(
     localization_planner_messenger,
     collision_planner_messenger,
+    traffic_light_planner_messenger,
     planner_control_messenger,
     registered_actors.size(), 3,
     25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
@@ -114,6 +123,7 @@ void test_pipeline_stages(
 
   localization_stage.Start();
   collision_stage.Start();
+  traffic_light_stage.Start();
   planner_stage.Start();
   control_stage.Start();
 
