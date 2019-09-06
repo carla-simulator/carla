@@ -15,8 +15,8 @@ namespace traffic_manager {
     float urban_target_velocity = 25/3.6,
     float highway_target_velocity = 50/3.6,
     std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
-    std::vector<float> highway_longitudinal_parameters = {10.0f, 0.01f, 0.1f},
-    std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.01f}
+    std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
+    std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
   ) :
     urban_target_velocity(urban_target_velocity),
     highway_target_velocity(highway_target_velocity),

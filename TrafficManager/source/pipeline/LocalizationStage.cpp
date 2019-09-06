@@ -16,14 +16,16 @@ namespace traffic_manager {
       int number_of_vehicles,
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-      InMemoryMap& local_map
+      InMemoryMap& local_map,
+      carla::client::DebugHelper* debug
   ) :
   planner_messenger(planner_messenger),
   collision_messenger(collision_messenger),
   traffic_light_messenger(traffic_light_messenger),
   actor_list(actor_list),
   local_map(local_map),
-  PipelineStage(pool_size, number_of_vehicles)
+  PipelineStage(pool_size, number_of_vehicles),
+    debug(debug)
   {
 
     planner_frame_selector = true;
@@ -58,13 +60,19 @@ namespace traffic_manager {
     planner_messenger_state = planner_messenger->GetState() -1;
     collision_messenger_state = collision_messenger->GetState() -1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() -1;
+
+    for (int i=0; i <number_of_vehicles; i++) {
+      divergence_choice.push_back(rand());
+    }
+    
+    
   }
 
   LocalizationStage::~LocalizationStage() {}
 
   void LocalizationStage::Action(int start_index, int end_index) {
 
-    // std::cout 
+    // std::cout
     // << "Running localizer's action"
     // << " with messenger's state "
     // << planner_messenger->GetState()
@@ -117,23 +125,26 @@ namespace traffic_manager {
       }
 
       /// Populate buffer
-      int populate_count=0;
       while (
         waypoint_buffer.back()->distance(
         waypoint_buffer.front()->getLocation()) <= horizon_size
       ) {
 
         auto way_front = waypoint_buffer.back();
+        auto pre_selection_id = way_front->getWaypoint()->GetId();
         auto next_waypoints = way_front->getNextWaypoint();
-        auto selection_index = next_waypoints.size() > 1 ? rand() % next_waypoints.size() : 0;
-        way_front = next_waypoints[selection_index];
+        auto selection_index = 0;
+        if (next_waypoints.size() > 1) {
+          selection_index = divergence_choice.at(i) * pre_selection_id % next_waypoints.size();
+        }
+
+        way_front = next_waypoints.at(selection_index);
         waypoint_buffer.push_back(way_front);
-        populate_count++;
       }
       // if (thread_id ==0 and actor_id==first_actor_id)
       //   std::cout << "Populated buffer with " << populate_count << " entries" << std::endl;
 
-      /// Generate output
+      /// Generate output        std::cout << "stuck " << rand() << std::endl;
       auto horizon_index = static_cast<int>(
         std::max(
           std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -147,6 +158,8 @@ namespace traffic_manager {
       if (cross_product < 0) {
         dot_product *= -1;
       }
+      
+      // drawBuffer(waypoint_buffer);
 
       auto& planner_message = planner_frame_map.at(planner_frame_selector)->at(i);
       planner_message.actor = vehicle;
@@ -289,5 +302,12 @@ namespace traffic_manager {
     next_vector = next_vector.MakeUnitVector();
     float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
     return cross_z;
+  }
+
+   void LocalizationStage::drawBuffer(Buffer& buffer) {
+
+    for (int i = buffer.size() -5; i<buffer.size(); i++) {
+      debug->DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
+    }
   }
 }

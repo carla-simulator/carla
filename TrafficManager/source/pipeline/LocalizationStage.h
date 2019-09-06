@@ -27,6 +27,8 @@ namespace traffic_manager {
 
   private:
 
+    carla::client::DebugHelper* debug;
+
     int planner_messenger_state;
     int collision_messenger_state;
     int traffic_light_messenger_state;
@@ -47,6 +49,7 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
 
     InMemoryMap& local_map;
+    std::vector<int> divergence_choice;
     std::shared_ptr<BufferList> buffer_list_a;
     std::shared_ptr<BufferList> buffer_list_b;
     std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
@@ -66,6 +69,8 @@ namespace traffic_manager {
         carla::SharedPtr<carla::client::Actor>,
         const carla::geom::Location &) const;
 
+    void drawBuffer(Buffer& buffer);
+
   public:
 
     LocalizationStage(
@@ -75,7 +80,8 @@ namespace traffic_manager {
       int number_of_vehicles,
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-      InMemoryMap& local_map
+      InMemoryMap& local_map,
+      carla::client::DebugHelper* debug
     );
 
     ~LocalizationStage();
