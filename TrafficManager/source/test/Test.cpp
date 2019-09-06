@@ -88,7 +88,7 @@ void test_pipeline_stages(
 
   traffic_manager::LocalizationStage localization_stage(
     localization_planner_messenger, localization_collision_messenger,
-    registered_actors.size(), 3,
+    localization_traffic_light_messenger, registered_actors.size(), 3,
     registered_actors, local_map,
     &debug_helper
   );

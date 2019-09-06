@@ -8,6 +8,8 @@ namespace traffic_manager {
   const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0;
   const int MINIMUM_JUNCTION_LOOK_AHEAD = 5;
   const float HIGHWAY_SPEED = 50 / 3.6;
+  const int  JUNCTION_CHECK_END = 5;
+  const int JUNCTION_CHECK_START = 2;
 
   LocalizationStage::LocalizationStage (
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
@@ -135,7 +137,7 @@ namespace traffic_manager {
         auto next_waypoints = way_front->getNextWaypoint();
         auto selection_index = 0;
         if (next_waypoints.size() > 1) {
-          selection_index = divergence_choice.at(i) * pre_selection_id % next_waypoints.size();
+          selection_index = divergence_choice.at(i) * (1+ pre_selection_id)% next_waypoints.size();
         }
 
         way_front = next_waypoints.at(selection_index);
@@ -172,8 +174,8 @@ namespace traffic_manager {
       auto& traffic_light_message = traffic_light_frame_map.at(traffic_light_frame_selector)->at(i);
       traffic_light_message.actor = vehicle;
       auto traffic_light_buffer_list = buffer_map.at(traffic_light_frame_selector)->at(i);
-      traffic_light_message.closest_geodesic_waypoint = traffic_light_buffer_list.at(0);
-      traffic_light_message.fifth_geodesic_waypoint = traffic_light_buffer_list.at(4);
+      traffic_light_message.closest_geodesic_waypoint = traffic_light_buffer_list.at(JUNCTION_CHECK_START);
+      traffic_light_message.fifth_geodesic_waypoint = traffic_light_buffer_list.at(JUNCTION_CHECK_END);
 
       // auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
       // auto speed_limit = vehicle_reference->GetSpeedLimit();
