@@ -51,7 +51,7 @@ def main():
         type=float,
         help='duration (default: 0.0)')
     argparser.add_argument(
-        '-f', '--recorder_filename',
+        '-f', '--recorder-filename',
         metavar='F',
         default="test1.log",
         help='recorder filename (test1.log)')
@@ -62,13 +62,13 @@ def main():
         type=int,
         help='camera follows an actor (ex: 82)')
     argparser.add_argument(
-        '-x', '--time_factor',
+        '-x', '--time-factor',
         metavar='X',
         default=1.0,
         type=float,
         help='time factor (default 1.0)')
     argparser.add_argument(
-        '-i', '--ignore_hero',
+        '-i', '--ignore-hero',
         action='store_true',
         help='ignore hero vehicles')
     args = argparser.parse_args()
