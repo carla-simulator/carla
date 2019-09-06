@@ -88,14 +88,14 @@ void test_pipeline_stages(
 
   traffic_manager::LocalizationStage localization_stage(
     localization_planner_messenger, localization_collision_messenger,
-    localization_traffic_light_messenger, registered_actors.size(), 3,
+    localization_traffic_light_messenger, registered_actors.size(), 1,
     registered_actors, local_map,
     &debug_helper
   );
 
   traffic_manager::CollisionStage collision_stage(
     localization_collision_messenger, collision_planner_messenger,
-    registered_actors.size(), 3,
+    registered_actors.size(), 1,
     &debug_helper
   );
 
@@ -109,14 +109,14 @@ void test_pipeline_stages(
     collision_planner_messenger,
     traffic_light_planner_messenger,
     planner_control_messenger,
-    registered_actors.size(), 3,
+    registered_actors.size(), 1,
     25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
   traffic_manager::BatchControlStage control_stage(
     planner_control_messenger, client_conn,
-    registered_actors.size(), 3
+    registered_actors.size(), 1
   );
 
   std::cout << "Starting stages ... " << std::endl;

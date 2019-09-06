@@ -83,6 +83,11 @@ namespace traffic_manager {
         longitudinal_parameters = highway_longitudinal_parameters;
       }
 
+      /// Decrease speed approaching intersection
+      if (localization_data.approaching_true_junction) {
+        dynamic_target_velocity = INTERSECTION_APPROACH_SPEED;
+      }
+
       /// State update for vehicle
       auto current_state = controller.stateUpdate(
           previous_state,
@@ -104,15 +109,21 @@ namespace traffic_manager {
       // }
       if (
           (
-          collision_messenger_state != 0
-          and
-          collision_frame->at(i).hazard
+            collision_messenger_state != 0
+            and
+            collision_frame->at(i).hazard
           )
           or
           (
-          traffic_light_messenger_state != 0
-          and
-          traffic_light_frame->at(i).traffic_light_hazard > 0
+            traffic_light_messenger_state != 0
+            and
+            traffic_light_frame->at(i).traffic_light_hazard > 0
+          )
+          or
+          (
+            localization_data.approaching_true_junction
+            and
+            current_velocity > INTERSECTION_APPROACH_SPEED
           )
       ) {
         current_state.deviation_integral = 0;

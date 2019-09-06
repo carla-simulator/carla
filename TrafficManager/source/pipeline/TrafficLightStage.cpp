@@ -34,8 +34,8 @@ namespace traffic_manager {
             auto& data = localization_frame->at(i);
             auto ego_actor = data.actor;
             auto ego_actor_id = ego_actor->GetId();
-            auto closest_waypoint = data.closest_geodesic_waypoint;
-            auto next_fifth_waypoint = data.fifth_geodesic_waypoint;
+            auto closest_waypoint = data.closest_waypoint;
+            auto next_fifth_waypoint = data.junction_look_ahead_waypoint;
 
             auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(ego_actor);
             auto traffic_light_state = vehicle->GetTrafficLightState();

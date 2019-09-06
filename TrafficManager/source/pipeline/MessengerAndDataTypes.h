@@ -20,7 +20,7 @@ namespace traffic_manager {
     struct LocalizationToPlannerData {
         carla::SharedPtr<carla::client::Actor> actor;
         float deviation;
-        // bool approaching_true_junction;
+        bool approaching_true_junction;
     };
 
     struct PlannerToControlData {
@@ -41,8 +41,8 @@ namespace traffic_manager {
 
     struct LocalizationToTrafficLightData {
         carla::SharedPtr<carla::client::Actor> actor;
-        std::shared_ptr<SimpleWaypoint> closest_geodesic_waypoint;
-        std::shared_ptr<SimpleWaypoint> fifth_geodesic_waypoint;
+        std::shared_ptr<SimpleWaypoint> closest_waypoint;
+        std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
     };
 
     struct TrafficLightToPlannerData {

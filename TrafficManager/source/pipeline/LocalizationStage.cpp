@@ -8,8 +8,6 @@ namespace traffic_manager {
   const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0;
   const int MINIMUM_JUNCTION_LOOK_AHEAD = 5;
   const float HIGHWAY_SPEED = 50 / 3.6;
-  const int  JUNCTION_CHECK_END = 5;
-  const int JUNCTION_CHECK_START = 2;
 
   LocalizationStage::LocalizationStage (
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
@@ -160,12 +158,47 @@ namespace traffic_manager {
       if (cross_product < 0) {
         dot_product *= -1;
       }
-      
-      // drawBuffer(waypoint_buffer);
+
+      // Filtering out false junctions on highways
+      auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
+      auto speed_limit = vehicle_reference->GetSpeedLimit();
+      int look_ahead_index = std::max(
+        static_cast<int>(std::floor(2*vehicle_velocity)),
+        MINIMUM_JUNCTION_LOOK_AHEAD
+      );
+
+      std::shared_ptr<SimpleWaypoint> look_ahead_point;
+      if (waypoint_buffer.size() > look_ahead_index) {
+        look_ahead_point = waypoint_buffer.at(look_ahead_index);
+      } else {
+        look_ahead_point =  waypoint_buffer.back();
+      }
+
+      bool approaching_junction = false;
+      if (
+        look_ahead_point->checkJunction()
+        and
+        !(waypoint_buffer.front()->checkJunction())
+      ) {
+        if (speed_limit > HIGHWAY_SPEED) {
+          for (int i=0; i<look_ahead_index; i++) {
+            auto swp = waypoint_buffer.at(i);
+            if (swp->getNextWaypoint().size() > 1) {
+              approaching_junction = true;
+              break;
+            }
+          }
+        } else {
+          approaching_junction = true;
+        }
+      }
+
+      // Editing output frames
 
       auto& planner_message = planner_frame_map.at(planner_frame_selector)->at(i);
       planner_message.actor = vehicle;
       planner_message.deviation = dot_product;
+      planner_message.approaching_true_junction = approaching_junction;
 
       auto& collision_message = collision_frame_map.at(collision_frame_selector)->at(i);
       collision_message.actor = vehicle;
@@ -173,44 +206,8 @@ namespace traffic_manager {
 
       auto& traffic_light_message = traffic_light_frame_map.at(traffic_light_frame_selector)->at(i);
       traffic_light_message.actor = vehicle;
-      auto traffic_light_buffer_list = buffer_map.at(traffic_light_frame_selector)->at(i);
-      traffic_light_message.closest_geodesic_waypoint = traffic_light_buffer_list.at(JUNCTION_CHECK_START);
-      traffic_light_message.fifth_geodesic_waypoint = traffic_light_buffer_list.at(JUNCTION_CHECK_END);
-
-      // auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
-      // auto speed_limit = vehicle_reference->GetSpeedLimit();
-      // int look_ahead_index = std::max(
-      //   static_cast<int>(std::floor(vehicle_velocity)),
-      //   MINIMUM_JUNCTION_LOOK_AHEAD
-      // );
-      // std::shared_ptr<SimpleWaypoint> look_ahead_point;
-      // if (waypoint_buffer.size() > look_ahead_index) {
-      //   look_ahead_point = waypoint_buffer.at(look_ahead_index);
-      // } else {
-      //   look_ahead_point =  waypoint_buffer.back();
-      // }
-      // auto closest_point = waypoint_buffer.at(1);
-
-      // bool approaching_junction = false;
-      // if (
-      //   look_ahead_point->checkJunction()
-      //   and
-      //   !(closest_point->checkJunction())
-      // ) {
-      //   bool found_true_junction = false;
-      //   if (speed_limit > HIGHWAY_SPEED) {
-      //     for (int i=0; i<look_ahead_index; i++) {
-      //       auto swp = waypoint_buffer.at(i);
-      //       if (swp->getNextWaypoint().size() > 1) {
-      //         found_true_junction = true;
-      //         break;
-      //       }
-      //     }
-      //   } else {
-      //     found_true_junction = true;
-      //   }
-      // }
-      // message.approaching_true_junction = approaching_junction;
+      traffic_light_message.closest_waypoint = waypoint_buffer.front();
+      traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
 
       // auto current_time = std::chrono::system_clock::now();
       // if (thread_id ==0 and actor_id==first_actor_id) {
