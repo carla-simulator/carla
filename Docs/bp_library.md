@@ -483,15 +483,37 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `role_name` (String) – Modifiable
 - **<font color="#498efc">sensor.camera.rgb</font>**  
     - **Attributes:**
+        - `tint` (Float) – Modifiable
+        - `white_clip` (Float) – Modifiable
+        - `shoulder` (Float) – Modifiable
+        - `toe` (Float) – Modifiable
+        - `slope` (Float) – Modifiable
+        - `focal_distance` (Float) – Modifiable
+        - `calibration_constant` (Float) – Modifiable
+        - `exposure_min_bright` (Float) – Modifiable
         - `motion_blur_max_distortion` (Float) – Modifiable
         - `motion_blur_intensity` (Float) – Modifiable
         - `gamma` (Float) – Modifiable
-        - `enable_postprocess_effects` (Bool) – Modifiable
-        - `fov` (Float) – Modifiable
-        - `image_size_y` (Int) – Modifiable
-        - `image_size_x` (Int) – Modifiable
         - `motion_blur_min_object_screen_size` (Float) – Modifiable
+        - `enable_postprocess_effects` (Bool) – Modifiable
+        - `blur_radius` (Float) – Modifiable
+        - `fstop` (Float) – Modifiable
+        - `iso` (Float) – Modifiable
+        - `shutter_speed` (Float) – Modifiable
+        - `exposure_speed_down` (Float) – Modifiable
+        - `exposure_compensation` (Float) – Modifiable
+        - `min_fstop` (Float) – Modifiable
+        - `exposure_speed_up` (Float) – Modifiable
+        - `exposure_mode` (String) – Modifiable
+        - `blade_count` (Int) – Modifiable
+        - `fov` (Float) – Modifiable
+        - `temp` (Float) – Modifiable
+        - `image_size_x` (Int) – Modifiable
+        - `black_clip` (Float) – Modifiable
+        - `blur_amount` (Float) – Modifiable
+        - `image_size_y` (Int) – Modifiable
         - `sensor_tick` (Float) – Modifiable
+        - `exposure_max_bright` (Float) – Modifiable
         - `role_name` (String) – Modifiable
 - **<font color="#498efc">sensor.camera.semantic_segmentation</font>**  
     - **Attributes:**

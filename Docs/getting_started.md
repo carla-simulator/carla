@@ -27,11 +27,19 @@ accessible from our Python API, and more will be in future releases.
 First of all, download the latest release from our GitHub page and extract all
 the contents of the package in a folder of your choice.
 
+<div class="build-buttons">
 <!-- Latest release button -->
-<p align="middle"><a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release"><span class="icon icon-github"></span> Get the latest release</a></p>
+<p>
+<a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<span class="icon icon-github"></span> Get the latest release</a>
+</p>
 
 <!-- Nightly build button -->
-<p align="middle"><a href="http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz" target="_blank" class="btn btn-neutral" title="Go to the nightly CARLA release"><span class="icon icon-github"></span> Get the nightly build</a></p>
+<p>
+<a href="http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz" target="_blank" class="btn btn-neutral" title="Go to the nightly CARLA build">
+<span class="icon fa-cloud-download"></span> Get the nightly build</a>
+</p>
+</div>
 
 The release package contains a precompiled version of the simulator, the Python
 API module, and some Python scripts with usage examples. In order to run our
