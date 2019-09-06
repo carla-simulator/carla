@@ -65,7 +65,7 @@ namespace s11n {
     }
 
     void SetHorizontalAngle(float angle) {
-      _header[Index::HorizontalAngle] = reinterpret_cast<const uint32_t &>(angle);
+      std::memcpy(&_header[Index::HorizontalAngle], &angle, sizeof(uint32_t));
     }
 
     uint32_t GetChannelCount() const {
