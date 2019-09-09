@@ -49,8 +49,9 @@ Follow this tutorial and install vgl:
 Follow the tutorial below to install TurboVNC 2.11:
 [Installing TurboVNC](https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001)
 
-WARNING: Take care on which VNC you install as it may not be compatible with
-Unreal. The one above was the only one that worked for me.
+!!! warning
+    Take care on which VNC you install as it may not be compatible with
+    Unreal. The one above was the only one that worked for me.
 
 <h4>Extra Packages</h4>
 
@@ -85,7 +86,7 @@ the GPU 0 on your machine. To run on other GPU, such as GPU 1 run:
 
     DISPLAY=:8 vglrun -d :7.1 glxinfo
 
-<h4>Extra</h4>
+<h3> Extra </h3>
 
 If you want disable the need of sudo when creating the 'nohup Xorg' go to the
 '/etc/X11/Xwrapper.config' file and change 'allowed_users=console' to

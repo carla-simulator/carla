@@ -46,7 +46,9 @@ OpenGL API can be selected with the flag `-opengl`.
 
 <h4>Quality levels</h4>
 
-Currently, there are two levels of quality, `Low` and `Epic` _(default)_. The image below shows how the simulator has to be started with the appropiate flag in order to set a quality level and the difference between qualities.
+Currently, there are two levels of quality, `Low` and `Epic` _(default)_. The image below shows
+how the simulator has to be started with the appropiate flag in order to set a quality level
+and the difference between qualities.
 
 ![](img/epic_quality_capture.png)  |  ![](img/low_quality_capture.png)
 :-------------------------:|:-------------------------:
@@ -187,8 +189,8 @@ Command-line options
 --------------------------
 
 !!! important
-    Some of the command-line options are not available in `Linux` due to the "Shipping" build. Therefore, the use of
-    [`config.py`][configlink] script is needed to configure the simulation.
+    Some of the command-line options are not available in `Linux` due to the "Shipping" build.
+    Therefore, the use of [`config.py`][configlink] script is needed to configure the simulation.
 
 [configlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
 
