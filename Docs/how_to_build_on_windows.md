@@ -2,16 +2,20 @@
 ---
 
 <h3>Necessary software</h3>
+
 - [Git](https://git-scm.com/downloads)
 - [Make](http://gnuwin32.sourceforge.net/packages/make.htm)
 - [CMake](https://cmake.org/download/)
 - [Python3 x64](https://www.python.org/downloads/)
 
 !!! important
-    Be sure that these programs are added to your environment path, so you can use them from your command prompt.
+    Be sure that these programs are added to your environment path, so you can use them from
+    your command prompt.
 
 !!! important
-    If make complains about missing libintl3.dll or/and libiconv2.dll please donwload the [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the bin contento into the make installation path.
+    If make complains about missing libintl3.dll or/and libiconv2.dll please donwload the
+    [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the
+    bin contento into the make installation path.
 
 Also:
 
@@ -21,15 +25,26 @@ Also:
 Make sure all the modules of the **requirements.txt** files are installed.
 
 <h3>Environment Setup</h3>
-In order to build CARLA you must **enable the x64 Visual C++ Toolset**.  The Windows 8.1 SDK is also required for installation.
-I recommend to use this environment for everything you do in this tutorial.
+
+In order to build CARLA you must **enable the x64 Visual C++ Toolset**.
+The Windows 8.1 SDK is also required for installation.
+We recommend to use this environment for everything you do in this tutorial.
 You have different options:
 
-- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs). Just press the `Win` button and search for `x64` (be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this Command Prompt can change depending on the lenguage you have Visual Studio installed.
-- [Enable a 64-Bit Visual C++ Toolset on the Command Line](https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx) (the instructions will depend on the version of VS that you have).
+- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`][recommendedlink].
+Just press the `Win` button and search for `x64`
+(be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this
+Command Prompt can change depending on the lenguage you have Visual Studio installed.
+- [Enable a 64-Bit Visual C++ Toolset on the Command Line][toolsetlink] 
+(the instructions will depend on the version of VS that you have).
+
+[recommendedlink]: https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs
+[toolsetlink]: https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
 
 <h3>Clone the repository</h3>
-Go to the path you want to install CARLA and use git to download the project using the following command:
+
+Go to the path you want to install CARLA and use git to download the project
+using the following command:
 
 ```cmd
 git clone https://github.com/carla-simulator/carla.git
@@ -42,12 +57,20 @@ cd carla
 ```
 
 <h3>Download CARLA contents</h3>
-Depending on the Carla version that you are unsing download one of the links that you can find in `\Util\ContentVersions.txt` and extract the content to `Unreal\CarlaUE4\Content\Carla`, if the path doesn't exist, create it.
+
+Depending on the Carla version that you are unsing download one of the links that you can find
+in `\Util\ContentVersions.txt` and extract the content to `Unreal\CarlaUE4\Content\Carla`,
+if the path doesn't exist, create it.
 
 # Build CARLA
 ---
 
-Once you have downloaded the repo and extract the Carla contents you can start with the automatic build. The process may take a while, it will download and install the necessary libraries (Boost, RPCLib and googletest). Expect 20-40 minutes, depending on your hardware and internet connection. If you get any error comment on [GitHub #647](https://github.com/carla-simulator/carla/issues/647) issue or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
+Once you have downloaded the repo and extract the Carla contents you can start with
+the automatic build. The process may take a while, it will download and install the
+necessary libraries (Boost, RPCLib and googletest). Expect 20-40 minutes,
+depending on your hardware and internet connection.
+If you get any error comment on [GitHub #647](https://github.com/carla-simulator/carla/issues/647)
+issue or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
 
 <h3>Build commands</h3>
 
@@ -60,9 +83,12 @@ Once you have downloaded the repo and extract the Carla contents you can start w
 | `make rebuild` | Rebuilds Carla project, dependencies not build |
 
 
-If you build Carla for the first time or after you clean the project it will probably ask you to build the `UE4Editor-CarlaUE4.dll` and `UE4Editor-Carla.dll` also (as is needed for coocking the content for launch Carla), agree and the project will be opened in the Unreal Engine in a few minutes.
+If you build Carla for the first time or after you clean the project it will probably ask you to
+build the `UE4Editor-CarlaUE4.dll` and `UE4Editor-Carla.dll` also (as is needed for coocking the
+content for launch Carla), agree and the project will be opened in the Unreal Engine in a few minutes.
 
 Example of building Carla 0.9.0 for first time:
+
 ```cmd
 1) git clone https://github.com/carla-simulator/carla.git
 2) Download https://drive.google.com/uc?id=1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx&export=download
@@ -73,7 +99,8 @@ Example of building Carla 0.9.0 for first time:
 # Update CARLA
 ---
 
-Every new release of CARLA we release a new package with the latest changes in the CARLA assets. To download the latest version and recompile CARLA, run:
+Every new release of CARLA we release a new package with the latest changes in the CARLA assets.
+To download the latest version and recompile CARLA, run:
 
 ```cmd
 1) make clean  # Deletes all the binaries and temporals generated by the build system
@@ -85,11 +112,14 @@ Every new release of CARLA we release a new package with the latest changes in t
 # Possible build errors
 ---
 
-If you also have installed other version of Visual Studio or Microsoft Compiler and get any error during the build as C2440 or C2672 this is probably because is not using the 2017 compiler, so try first to uninstall the other ones and rebuild again.
+If you also have installed other version of Visual Studio or Microsoft Compiler and get any error
+during the build as C2440 or C2672 this is probably because is not using the 2017 compiler,
+so try first to uninstall the other ones and rebuild again.
 
-If you would like to keep the other version of Visual Studio edit ```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` adding the following lines:
+If you would like to keep the other version of Visual Studio edit
+```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` adding the following lines:
 
-```
+```xml
 <VCProjectFileGenerator>
     <Version>VisualStudio2017</Version>
 </VCProjectFileGenerator>

@@ -1,185 +1,381 @@
-<h1>How to make a new map with RoadRunner</h1>
+<h1>How to create and import a new map</h1>
 
 ![Town03](img/create_map_01.jpg)
 
-<h2>RoadRunner</h2>
+## 1 Create a new map
 
-RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy, in a few steps you will be able to create an impressive scene. You can download
-a trial of RoadRunner at:
+Files needed:
 
-![vectorzero](img/logo_vectorzero.jpg) [https://www.vectorzero.io/](https://www.vectorzero.io/)
+* Binaries `.fbx` - All meshes you need to build the map, i.e., roads, lanemarking, sidewalk, ect.
+* OpenDRIVE `.xodr` - Road network information that cars need to circulate on the map.
 
-<h2>Step 1 - Create your map in RoadRunner:</h2>
+It is possible to modify an existing CARLA map, check out the [map customization][custommaplink]
+tutorial.
 
-* Start by becoming familiar with the RoadRunner editor. Play with the controllers to define roads, sidewalks, etc. Please, keep in mind the following rules:
-  * Create your maps centered arround (0,0). This is required to maintain compatibility with CARLA maps.
-  * At the beginning of the map creation select Tools/TransformScene and aply a 180º rotation.
-    Currently OpenDrive appears rotated 180 degrees by default --We are working on fixing that.
+[custommaplink]: /dev/map_customization
 
-  ![Roadrunner180](img/roadrunner180.jpg)
+The following steps will introduce the RoadRunner software for map creation. If the map is
+created by other software, go to this [section](#3-importing-into-unreal).
 
-  * Check that all conections and geometries seem correct.
+## 2 Create a new map with RoadRunner
 
-  ![CheckGeometry](img/check_geometry.jpg)
+RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy,
+in a few steps you will be able to create an impressive scene. You can download
+a trial of RoadRunner at VectorZero's web page.
 
-  * Visualize the OpenDrive road network by clicking on the "OpenDrivePrevewTool" button.
+<div class="vector-zero">
+  <a href="https://www.vectorzero.io/"><img src="/img/VectorZeroAndIcon.webp"/></a>
+</div> <br>
 
-  ![checkopen](img/check_open.jpg)
+Read VectorZero's RoadRunner [documentation][rr_docs] to install it and get started.
 
-!!! note
-    During the creation of the map, junctions (the union between two roads) might yield
-    some errors when building the OpenDrive file. Clicking on the
-    "OpenDrivePreviewTool" button lets you test the integrity of the current map. If
-    errors happen you shoud click on the "ManouverRoadsTool" button and then within the
-    details window, under junction, click on the "RebuildManouverRoads" button.
-    Even if nothing seems to happen the road should be fixed.
+They also have very useful [tutorials][rr_tutorials] on how to use RoadRunner, check them out!
 
-   ![maneuverroad](img/maneuver_road.jpg)
+[rr_docs]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/740622413/Getting+Started
 
-<h3>Exporting:</h3>
+[rr_tutorials]: https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists
 
-After verifying that everything is correct it is time to export the map to Unreal. You need export two files to create a map in Unreal.
+!!! important
+    Create the map centered arround (0, 0).
 
-* OpendDrive (.xodr) Information that cars need to circulate on the
-map.
+## 2.1 Validate the map
 
-* Binaries (.fbx) All meshes you need to build the map, i.e., roads, lanemarking,
-sidewalk, ect.
+* Check that all connections and geometries seem correct.
 
-In order to export these files you need to follow these steps:
+![CheckGeometry](img/check_geometry.jpg)
 
-1.  Select File - Export - OpenDrive (.xodr)
-* Select File - Export - Filmbox (.fbx)
-* Choose your export folder and Keep Merge Roads, Merge Marking and Merge
-  Terrain _Unchecked_.
-* Under Options Check "ExportToTiles" to divide the map into chunks, this keeps
-  the render process a bit lighter. Be carefull though, subdividing the map too much
-  will also be inefficient. Some experimentation is needed here to get the
-  perfect point and it will depend on the map beeing created.
+* Visualize the OpenDRIVE road network by clicking on the `OpenDRIVE Preview Tool`
+button and export.
 
-* Leave "Export individual Tiles" _Unchecked_, this will give you only one fbx
-  file with all the pieces, making easier to keep track of the map.
-
-![Tutorial_RoadRunner](img/tutorial_roadrunner.jpg)
-
-<h2>Step 2 - Unreal</h2>
-
-<h2>Importing into Unreal:</h2>
-
-* Start dragging your file from where it is saved to the "content browser" in
-  your unreal's project as you would do with any other asset.
-* In the Import window make sure the following options are _unchecked_:
-  ForcefrontXAxis, Autogenerate collission, combine meshes.
-* Make sure that ConvertSceneUnit is _checked_.
-* You should Also _check_ "Import Materials" and "Import Textures" if you want
-  to use RoadRunner materials or use the method described at the end of the
-  next step to change them in batches.
-
-  ![Tutorial_Roadrunner_UE4](img/tutorial_roadrunner_ue4.jpg)
-
-<h2>Working with maps in Unreal:</h2>
-
-First of all create a level with the Map name (this will be important later)
-and save it inside Game/Carla/Maps/
-
-Once everything is loaded up you should end with several staticMeshes in the folder
-you have selected. Drag them all to the level and you will have
-your map in Unreal! Congratulations!.
-
-The time taken by the loading process will depend on how many pieces you cut the map into. Be patient! All the pieces share the same center pivot, so if they are positioned
-in the same place they should fit as they did in the RoadRunner Editor. When
-unreal finish loading the meshes must be centered at point (0, 0, 0).
-
-![Transform_Map](img/transform.jpg)
-
-<h3>Semantic Segmentation Ground Truth</h3>
-
-Once you have loaded the correct map and materials, we will prepare the semantic
-segmantation ground truth. In order for the semantic segmentation to work, you will need to  save the different pieces of the map in their corresponding folder. This
-is a bit difficult today as with the current version there is no name
-identification for the different pieces but this is a just temporal issue from
-Roadrunner side. Typically you will need only 3 Folders: ../Content/Static/
-1- Road, 2-Terrain, 3- RoadLines.
-
-<h3>How to put meshes in the right folder</h3>
-
-Select the material of the items you want to change into a new folder. Importing the
-assets creates a road material, a sidewalk material and so on.
-
-1.  Once selected rightclick and select "Asset Actions/Select actors Using this
-    asset". All actors using that material should be highlighted in the viewport.
-
-2.  Rightclick on them in the world and select "Browse to asset". All assets
-    using the first material you have chosen should be selected in the Content
-    browser.
-
-3.  Move them all to the corresponding folder and repeat for each category until
-    every road asset is clasified.
-
-Roadrunner roads come with premade materials, but for CARLA weather to work
-properly you will need to change the pavement materials to some of our own (Stored
-under Carla/Static/GenericMaterials/WetPavement). To this end you can change the
-materials one by one or you could remove the Roadrunner materials. This action will trigger the replace references window in which you can select and change the new material
-for the meshes the last one was referencing.
-
-<h2>Step 3 - Loading OpenDrive into CARLA</h2>
-
-- In RoadRunner go into File/Export and choose OpenDrive(.xodr). In the Export
-  window choose the save folder and name the file with the same name as the map. Let everything else with the default values and press export.
-
-- Copy the .xodr file inside the Content/Carla/Maps/OpenDrive folder.
-
-- Open Your Unreal level and drag the OpenDriveActor inside the scene. This will
-  read the level name, search the Opendrive file with the same name and load
-  it.
-
-- If everything goes right you should have your road information loaded into
-  your map. Congratulations!
+![checkopen](img/check_open.jpg)
 
 !!! note
-    It is possible that the map that Opendrive generates is rotated. Maybe you did not rotate it in RoadRunner when you told you so? If this happens you only need to select all
-    map import from RoadRunner and rotate Z: by 180 degrees.
+    The _OpenDrive Preview Tool_ button lets you test the integrity of the current map.
+    If there is any error with map junctions, click on `Maneuver Tool`
+    and `Rebuild Maneuver Roads` buttons.
 
-<h2>Setting up the traffic based on OpenDrive:</h2>
+!!! important
+    Apply a 180 degree rotation before exporting `Tools > Transform Scene ... > Rotation`
 
-!!! Note
-    the current version of CARLA needs a CarlaMapGenerator spawned in order to use the server autopilot functionality. From the current version it is also to drive all vehicles using the new client nvaigation stack. However, if you still want to use the server autopilot you will need to create a CarlaMapGenerator for your city --never above or under it.
+## 2.2 Export the map
 
-* You will need to place points for the vehicles to spawn. The actor that sets the
-  spawn position of the vehicles is called VehicleSpawnPoint. CARLA vehicles
-  must overlap with one of the RoutePlanner's trigger box for them to be
-  directed, otherwise they would drive straight until they find an obstacle. We
-  suggest placing the spawners 2 to 3 meters avobe each trigger box, not much
-  higher as if the spawn is too high it is not able to measure if there is any
-  vehicle under it before spawning and they would end up spawning on top of each
-  other. Spawning the vehicles a few meters behind the trigger boxes would also
-  work but that is a bit trickier.
+After verifying that everything is correct, it is time to export the map to CARLA.
 
-* Spawners must always be oriented as the road dictates. This must be done by
-  hand but we will make some form of automation in the future.
+  1. Export the scene using the CARLA option in the main menu:<br>
+  `File > Export > CARLA (.fbx + .xml + .xodr)`.
 
-* Traffic lights must be placed in every crossing in which vehicles might
-  conflict. These are the childs of "TrafficLightBase" and are stored inside
-  Game/Carla/Static/TrafficSigns/Streetlights_01.
+  2. Leave `Export individual Tiles` _unchecked_, this will generate only one fbx
+  file with all the pieces making it easier to keep track of the map.
 
-Again, remember this is just needed to use the server autopilot. We recommend to start using new the client driving stack provided from 0.9.2 version.
+      ![rr_export](img/rr_export_view.png)
 
-<h2>Working with BP_TrafficLight and BP_TrafficLightGroups:</h2>
+      <br>
 
-* One trafficlight must be placed at every entrance that needs regulation.
-  One TrafficLightGroup must be placed in every crossing that has street
-  lights. Adjust The triggerbox of each traffic light until it covers the roads
-  it affects.
+  3. Click `Export`.
 
-* Once the actors of an Intersection are placed, open the corresponding group
-  and under TrafficLights store all TrafficLight actors involved.
+This will generate a `mapname.fbx` and `mapname.xodr` files within others.
 
-* Trafficlight group works by Rotating whitch of the involved traffic light is
-  green each moment. You can configure the timing the Lights stays in green
-  (GreenTime), the time it stays yellow (YellowTime), and the time it takes
-  between one trafficlight goes red and the next one goes green (ChangeTime).
+_For a more in-depth guide on how to use the exportation option,_
+_check VectorZeros's [documentation][exportlink]._
 
-* These last steps are in an early stage and may require a some trial and
-  error from users. VehicleSpawner placement, Street light timing and
-  Traffic light StopperBoxes might need some tweaking and testing to fit
-  perfectly into the built city.
+[exportlink]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/752779356/Exporting+to+CARLA
+
+## 3 Importing into Unreal
+
+This section is divided into two. The first part shows how to import a map from RoadRunner
+and the second part shows how to import a map from other software that generates `.fbx` and `.xodr` files.
+
+!!! important
+    The `.xodr` OpenDRIVE file should have the same name as the binary file `.fbx`
+    i.e. `mapname.fbx` `mapname.xodr`.
+
+We have also created a new way to import assets into Unreal,
+check this [`guide`](../asset_packages_for_dist/)!
+
+### 3.1 Importing from RoadRunner
+
+#### 3.1.1 Plugin Installation
+
+RoadRunner provides a series of plugins that make the importing simpler.
+
+1. Locate the plugins under RoadRunner's installation folder:<br>
+   `/usr/bin/VectorZero/Tools/Unreal/Plugins`.
+
+2. Copy those folders to the CarlaUE4 plugins directory: `/carla/Unreal/CarlaUE4/Plugins/`.
+
+3. Rebuild the plugin.
+
+##### Rebuild on Windows
+
+1. Generate project files.
+
+    * Right-click the `.uproject` file and `Generate Visual Studio project files`.
+
+2. Open the project and build the plugins.
+
+##### Rebuild on Linux
+
+```sh
+> UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
+```
+
+Finally, restart Unreal Engine and make sure the checkbox is on for both plugins `Edit > Plugins`.
+
+![rr_ue_plugins](img/rr-ue4_plugins.png)
+
+#### 3.1.2 Importing
+
+  1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
+   with the `Import` button.
+
+      ![ue_import](img/ue_import_mapname.png)
+
+      <br>
+
+  2. Set `Scene > Hierarchy Type` to _Create One Blueprint Asset_ (selected by default).
+  3. Set `Static Meshes > Normal Import Method` to _Import Normals_.
+
+      ![ue_import_options](img/ue_import_options.png)
+
+      <br>
+
+  4. Click `Import`.
+
+  5. Save the current level `File > Save Current As...` > _mapname_.
+
+The new map should now appear next to the others in the Unreal Engine _Content Browser_.
+
+![ue_level_content](img/ue_level_content.png)
+
+And that's it! The map is ready!
+
+### 3.2 Importing from the files
+
+This is the generic way to import maps into Unreal.
+
+1. Create a new level with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.
+2. Copy the Illumination folder and its content from the BaseMap `Content/Carla/Maps/BaseMap`
+and paste it in the new level, otherwise, the map will be in the dark.
+
+![ue_illumination](img/ue_illumination.png)
+
+#### 3.2.1 Binaries (.fbx)
+
+1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
+  with the `Import` button. Make sure the following options are unchecked:
+
+    * Auto Generate Collision
+    * Combine Meshes
+    * Force Front xAxis
+    * Normal Import Method - _Import Normals_
+
+    <br>
+
+2. Check the following options:
+
+    * Convert Scene Unit
+    * _If you want to import materials and textures:_
+        * Material Import Method - _Create new materials_
+        * Import Textures
+
+    ![ue_import_file](img/ue_import_file.png)
+
+    <br>
+
+    Once everything is loaded up, you should end with several static Meshes in the folder
+    you have selected.
+
+3. Drag them all into the level.
+
+    ![ue_meshes](img/ue_drag_meshes.png)
+
+    <br>
+
+4. When Unreal Engine finishes loading, center the meshes at point (0, 0, 0) and you will have
+  your map in Unreal! Congratulations!
+
+    ![Transform_Map](img/transform.jpg)
+
+    <br>
+
+5. Generate collisions, so pedestrians and vehicles don't fall into the abyss.
+
+    * Select the meshes that will have collision.
+    * Right-click `Asset Actions > Bulk Edit via Property Matrix...`.
+
+      ![ue_selectmesh_collision](img/ue_selectmesh_collision.png)
+
+    * Search for _collision_ in Property's Matrix search box.
+    * Change `Collision complexity` from `Project Default` to `Use Complex Collision As Simple`.
+
+      ![ue_collision_complexity](img/ue_collision_complexity.png)
+
+    * Go to `File > Save All`.
+
+6. Lastly, for the **semantic segmentation ground truth**, move the static meshes imported
+ under `Content/Carla/Maps/mapfolder` to `Carla/Static` subsequent folders:
+
+    * `Terrain/mapname`
+    * `Road/mapname`
+    * `RoadLines/mapname`
+
+```sh
+Content
+└── Carla
+    ├── Blueprints
+    ├── Config
+    ├── Exported Maps
+    ├── HDMaps
+    ├── Maps
+    └── Static
+        ├── Terrain
+        │   └── mapname
+        │       └── Static Meshes
+        │
+        ├── Road
+        │   └── mapname
+        │       └── Static Meshes
+        │
+        └── RoadLines  
+            └── mapname
+                └── Static Meshes
+```
+
+![ue__semantic_segmentation](img/ue_ssgt.png)
+
+#### 3.2.2 OpenDRIVE (.xodr)
+
+1. Copy the `.xodr` file inside the `Content/Carla/Maps/OpenDrive` folder.
+2. Open the Unreal level and drag the _Open Drive Actor_ inside the level.
+It will read the level's name, search the Opendrive file with the same name and load it.
+
+![ue_opendrive_actor](img/ue_opendrive_actor.png)
+
+And that's it! Now the road network information is loaded into the map.
+
+## 4. Setting up traffic behavior
+
+Once everything is loaded into the level, it is time to create traffic behavior.
+
+1. Click on the _Open Drive Actor_.
+2. Check the following boxes in the same order:
+    * Add Spawners
+    * (Optional) On Intersections (For more spawn points)
+    * Generate Routes
+
+This will generate a bunch of _RoutePlanner_ and _VehicleSpawnPoint_ actors that make
+it possible for vehicles to spawn and go in autopilot mode.
+
+## 4.1 Traffic lights and signs
+
+To regulate the traffic, traffic lights and signs must be placed all over the map.
+
+1. Drag _traffic light / sign actors_ into the level and place them.
+
+2. Adjust the _[`trigger box`][triggerlink]_ of each traffic light / sign
+ until it covers the road it affects.
+  [triggerlink]: ../python_api/#carla.TrafficSign.trigger_volume
+
+    ![ue_trafficlight](img/ue_trafficlight.png)
+
+    <br>
+
+3. For traffic lights in junctions, drag a _traffic light group actor_ into the level and assign
+  all traffic lights involved.
+
+    ![ue_tl_group](img/ue_tl_group.png)
+
+These last steps may require some trial and error. _Traffic light timing_ and _traffic trigger boxes_
+might need some tweaking and testing to fit perfectly into the city.
+
+![ue_tlsigns_example](img/ue_tlsigns_example.png)
+
+> _Example: Traffic Signs, Traffic lights and Turn based stop._
+
+## 5 Adding pedestrian navigation zones
+
+To make a navigable mesh for pedestrians, we use the _Recast & Detour_ library.<br>
+<https://github.com/recastnavigation/recastnavigation>.
+
+1. Clone or download _Recast & Detour_.
+
+2. Before building RecastDemo you need to change `m_scale` variable from `1.0f` to `0.01f` in the
+ _MeshLoaderObj contructor_ in `RecastDemo/Source/MeshLoaderObj.cpp`.
+
+```cpp
+rcMeshLoaderObj::rcMeshLoaderObj() :
+	m_scale(0.01f),
+	m_verts(0),
+	m_tris(0),
+	m_normals(0),
+	m_vertCount(0),
+	m_triCount(0)
+{
+}
+```
+Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to build it.
+
+[buildrecastlink]: https://github.com/recastnavigation/recastnavigation#building-recastdemo
+
+**Back to Unreal Engine**
+
+1. Select the meshes you want the pedestrians to be able to spawn and walk on.
+
+    ![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
+
+    <br>
+
+2. Export and save them as a `mapname.obj` file. `File > Export Selected...`.
+3. Run RecastDemo `./RecastDemo`.
+      * Select `Solo Mesh` from the `Sample` parameter's box.
+      * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
+
+        ![recast_example](img/recast_example.png)
+
+      <br>
+
+4. First click on the `Build` button, then once the built has finished, click on the `Save` button.
+5. Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.
+6. Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.
+
+Now pedestrians will be able to spawn randomly and walk on the selected meshes!
+
+## Tips and Tricks
+
+* Traffic light group controls wich traffic light is active (green state) at each moment.
+ You can configure the timing that the lights stay in green `GreenTime`, the time it stays yellow
+ `YellowTime`, and the time it takes between one traffic light goes red and the next one
+ goes green `ChangeTime`.
+
+<div style="text-align:center"><img src="../img/ue_tl_group_times.png"/></div>
+<br>
+
+* You can add a vehicle spawn point. This should be placed 2 to 3 meters above a Route Planner's
+ trigger box and oriented as the route shows. When the vehicle falls, it will hit the trigger box
+ and the autopilot will take control of the vehicle.
+
+  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
+
+* When you check `Generate Routes` in Open Drive Actor, it generates the road network but it won't
+  show individual planners. In order to show those points, please do the following:
+
+    1. Select all `RoutePlanner` actors.
+    2. Move them.
+    3. Press `ctr + z` and they will show up on the map.
+    ![ue_route_points](img/ue_route_points.png)
+
+* OpenDRIVE routes can be manually modified.
+
+  ![ue_routeplanner_mod](img/ue_routeplanner_mod.png)
+
+* In order to add the map to the Unreal packaging system, go to:<br>
+  `Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
+  Then add the level to the array.
+
+  ![ue_maps_to_include](img/ue_maps_to_include.png)
+
+* To change default materials and use the ones that come with CARLA at:<br>
+`Content/Carla/Static/GenericMaterials`.
+    * Unreal shortcuts to find materials and assets:
+        * `Right-click on the Asset > Browse to Asset`
+        * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
