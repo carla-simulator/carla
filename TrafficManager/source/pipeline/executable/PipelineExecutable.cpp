@@ -22,33 +22,21 @@ void got_signal(int) {
   quit.store(true);
 }
 
-std::vector<carla::SharedPtr<carla::client::Actor>>* actors_to_be_destroyed;
-bool exiting_normal = false;
-
+std::vector<carla::SharedPtr<carla::client::Actor>>* global_actor_list;
 void handler() {
 
-  if (exiting_normal) {
-
-    std::cout << "TrafficManager stopped by user" << std::endl;
-    exit(0);
-
-  } else {
-
-    std::cout << "TrafficManager encountered a problem" << std::endl;
-    std::cout << "Destroying spawned actors" << std::endl;
-    if (actors_to_be_destroyed != nullptr) {
-      for (auto actor: *actors_to_be_destroyed) {
-        if (actor != nullptr and actor->IsAlive()) {
-          actor->Destroy();
-        }
+  if (!quit.load()) {
+    std::cout << "\nTrafficManager encountered a problem!" << std::endl;
+    std::cout << "Destorying all actors spawned" << std::endl;
+    for (auto actor: *global_actor_list) {
+      if (actor != nullptr and actor->IsAlive()) {
+        actor->Destroy();
       }
     }
-
     std::cout << boost::stacktrace::stacktrace() << std::endl;
-
     exit(1);
   }
-}  
+} 
 
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
@@ -82,30 +70,30 @@ void run_pipeline(
   sigfillset(&sa.sa_mask);
   sigaction(SIGINT, &sa, NULL);
 
-  traffic_manager::SharedData shared_data;
   auto world_map = world.GetMap();
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.getTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
   local_map->setUp(1.0);
-  shared_data.local_map = local_map;
-  shared_data.client = &client_conn;
-  shared_data.debug = &debug_helper;
 
   auto core_count = traffic_manager::read_core_count();
   std::cout << "Found " << core_count << " CPU cores" << std::endl;
-  shared_data.registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
-  actors_to_be_destroyed = &(shared_data.registered_actors);
+  auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
+  global_actor_list = &registered_actors;
 
   traffic_manager::Pipeline pipeline(
-      {0.1f, 0.15f, 0.01f},
-      {10.0f, 0.0f, 0.1f},
-      7.0f,
-      std::ceil(core_count / 4),
-      shared_data
-      );
-  pipeline.setup();
+    {0.1f, 0.15f, 0.01f},
+    {5.0f, 0.0f, 0.1f},
+    {10.0f, 0.01f, 0.1f},
+    25/3.6,
+    50/3.6,
+    registered_actors,
+    *local_map.get(),
+    client_conn,
+    debug_helper,
+    std::ceil(core_count / 5)
+  );
   pipeline.start();
 
   std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
@@ -113,14 +101,17 @@ void run_pipeline(
   while (true) {
     sleep(1);
     if (quit.load()) {
-      exiting_normal = true;
       break;
     }
   }
 
   pipeline.stop();
-  sleep(1);
-  shared_data.destroy();
 
-  std::terminate();
+  for (auto actor: registered_actors) {
+    if (actor != nullptr and actor->IsAlive()) {
+      actor->Destroy();
+    }
+  }
+
+  std::cout << "\nTrafficManager stopped by user" << std::endl;
 }
