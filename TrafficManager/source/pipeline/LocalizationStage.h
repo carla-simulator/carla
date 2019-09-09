@@ -17,6 +17,7 @@
 #include "SimpleWaypoint.h"
 #include "MessengerAndDataTypes.h"
 #include "InMemoryMap.h"
+#include "TrafficDistributor.h"
 
 namespace traffic_manager {
 
@@ -38,13 +39,17 @@ namespace traffic_manager {
 
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
+
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_a;
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_b;
+
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_a;
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_b;
+
     std::unordered_map<bool, std::shared_ptr<LocalizationToPlannerFrame>> planner_frame_map;
     std::unordered_map<bool, std::shared_ptr<LocalizationToCollisionFrame>> collision_frame_map;
     std::unordered_map<bool, std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_frame_map;
+
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
@@ -54,6 +59,9 @@ namespace traffic_manager {
     std::shared_ptr<BufferList> buffer_list_a;
     std::shared_ptr<BufferList> buffer_list_b;
     std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
+    TrafficDistributor traffic_distributor_a;
+    TrafficDistributor traffic_distributor_b;
+    std::unordered_map<bool, TrafficDistributor*> traffic_distributor_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
 
     /// Returns the dot product between vehicle's heading vector and

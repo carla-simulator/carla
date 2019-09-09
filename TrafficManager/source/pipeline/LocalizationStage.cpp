@@ -38,6 +38,9 @@ namespace traffic_manager {
     buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(true, buffer_list_a));
     buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(false, buffer_list_b));
 
+    traffic_distributor_map.insert(std::pair<bool, TrafficDistributor*>(true, &traffic_distributor_a));
+    traffic_distributor_map.insert(std::pair<bool, TrafficDistributor*>(false, &traffic_distributor_b));
+
     planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
     planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
 
@@ -56,7 +59,6 @@ namespace traffic_manager {
     traffic_light_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToTrafficLightFrame>>(true, traffic_light_frame_a));
     traffic_light_frame_map.insert(std::pair<bool, std::shared_ptr<LocalizationToTrafficLightFrame>>(false, traffic_light_frame_b));
 
-
     planner_messenger_state = planner_messenger->GetState() -1;
     collision_messenger_state = collision_messenger->GetState() -1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() -1;
@@ -64,29 +66,16 @@ namespace traffic_manager {
     for (int i=0; i <number_of_vehicles; i++) {
       divergence_choice.push_back(rand());
     }
-    
-    
   }
 
   LocalizationStage::~LocalizationStage() {}
 
   void LocalizationStage::Action(int start_index, int end_index) {
 
-    // std::cout
-    // << "Running localizer's action"
-    // << " with messenger's state "
-    // << planner_messenger->GetState()
-    // << " previous state "
-    // << planner_messenger_state
-    // << std::endl;
-
     for (int i = start_index; i <= end_index; i++) {
 
       auto vehicle = actor_list.at(i);
       auto actor_id = vehicle->GetId();
-
-      // if (thread_id ==0 and actor_id==first_actor_id)
-      //   std::cout << "=======================================start===============================" << std::endl;
 
       auto vehicle_location = vehicle->GetLocation();
       auto vehicle_velocity = vehicle->GetVelocity().Length();
@@ -95,8 +84,9 @@ namespace traffic_manager {
           WAYPOINT_TIME_HORIZON * vehicle_velocity,
           MINIMUM_HORIZON_LENGTH);
 
-
       auto& waypoint_buffer = buffer_map.at(collision_frame_selector)->at(i);
+
+      /// Purge passed waypoints
       if (!waypoint_buffer.empty()) {
         auto dot_product = DeviationDotProduct(
           vehicle,
@@ -111,18 +101,29 @@ namespace traffic_manager {
             break;
           }
         }
-      } else {
-        // if (thread_id ==0 and actor_id==first_actor_id)
-        //   std::cout << "Buffer empty !" << std::endl;
       }
 
       /// Initialize buffer if empty
       if (waypoint_buffer.empty()) {
-        // if (thread_id ==0 and actor_id==first_actor_id)
-        //   std::cout << "Initializing buffer!" << std::endl;
         auto closest_waypoint = local_map.getWaypoint(vehicle_location);
         waypoint_buffer.push_back(closest_waypoint);
       }
+
+      /// Assign lane change
+      // auto& distributor = traffic_distributor_map.at(collision_frame_selector);
+      // auto lane_change_points = distributor->assignDistribution(
+      //   vehicle->GetId(),
+      //   waypoint_buffer.front()->getWaypoint()->GetRoadId(),
+      //   waypoint_buffer.front()->getWaypoint()->GetSectionId(),
+      //   waypoint_buffer.front()->getWaypoint()->GetLaneId(),
+      //   waypoint_buffer.front()
+      // );
+      // if (lane_change_points.size() > 0) {
+      //   waypoint_buffer.clear();
+      //   for (auto point: lane_change_points) {
+      //     waypoint_buffer.push_back(point);
+      //   }
+      // }
 
       /// Populate buffer
       while (
@@ -141,10 +142,10 @@ namespace traffic_manager {
         way_front = next_waypoints.at(selection_index);
         waypoint_buffer.push_back(way_front);
       }
-      // if (thread_id ==0 and actor_id==first_actor_id)
-      //   std::cout << "Populated buffer with " << populate_count << " entries" << std::endl;
 
-      /// Generate output        std::cout << "stuck " << rand() << std::endl;
+      // drawBuffer(waypoint_buffer);
+
+      /// Generate output
       auto horizon_index = static_cast<int>(
         std::max(
           std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -209,41 +210,13 @@ namespace traffic_manager {
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
 
-      // auto current_time = std::chrono::system_clock::now();
-      // if (thread_id ==0 and actor_id==first_actor_id) {
-      //   std::chrono::duration<double> diff = current_time - last_time;
-        // std::cout << "Time for one update : " << diff.count() << std::endl;
-        // std::cout << "=======================================start===============================" << std::endl;
     }
-
-    // std::cout 
-    // << "Finished localizer's action"
-    // << " with messenger's state "
-    // << planner_messenger->GetState()
-    // << " previous state "
-    // << planner_messenger_state
-    // << std::endl;
-
   }
 
   void LocalizationStage::DataReceiver() {
-    // std::cout 
-    // << "Ran localizer's receiver"
-    // << " with messenger's state "
-    // << planner_messenger->GetState()
-    // << " previous state "
-    // << planner_messenger_state
-    // << std::endl;
   }
 
   void LocalizationStage::DataSender() {
-    // std::cout 
-    // << "Running localizer's sender"
-    // << " with messenger's state "
-    // << planner_messenger->GetState()
-    // << " previous state "
-    // << planner_messenger_state
-    // << std::endl;
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
       planner_messenger_state,
@@ -272,14 +245,6 @@ namespace traffic_manager {
       traffic_light_messenger_state = traffic_light_messenger->SendData(traffic_light_data_packet);
       traffic_light_frame_selector = !traffic_light_frame_selector;
     }
-
-    // std::cout 
-    // << "Finished localizer's sender"
-    // << " with messenger's state "
-    // << planner_messenger->GetState()
-    // << " previous state "
-    // << planner_messenger_state
-    // << std::endl;
   }
 
   float LocalizationStage::DeviationDotProduct(

@@ -50,20 +50,12 @@ namespace traffic_manager {
   MotionPlannerStage::~MotionPlannerStage() {}
 
   void MotionPlannerStage::Action(int start_index, int end_index) {
-    // std::cout 
-    // << "Running planner's action"
-    // << " with messenger's state "
-    // << localization_messenger->GetState()
-    // << " previous state "
-    // << localization_messenger_state
-    // << std::endl;
 
     for (int i = start_index; i <= end_index; i++) {
 
       auto& localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
       float current_deviation = localization_data.deviation;
-      // bool approaching_true_junction = localization_data.approaching_true_junction;
       int actor_id = actor->GetId();
 
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
@@ -104,9 +96,6 @@ namespace traffic_manager {
           lateral_parameters);
 
       // In case of collision or traffic light or approaching a junction
-      // if (collision_messenger_state !=0 ) {
-      //   std::cout << "Collision hazard : " << (collision_frame->at(i).hazard ? "true": "false") << std::endl;
-      // }
       if (
           (
             collision_messenger_state != 0
@@ -144,24 +133,9 @@ namespace traffic_manager {
       message.steer = actuation_signal.steer;
 
     }
-
-    // std::cout 
-    // << "Finished planner's action"
-    // << " with messenger's state "
-    // << localization_messenger->GetState()
-    // << " previous state "
-    // << localization_messenger_state
-    // << std::endl;
 }
 
   void MotionPlannerStage::DataReceiver() {
-    // std::cout 
-    // << "Running planner's receiver"
-    // << " with messenger's state "
-    // << localization_messenger->GetState()
-    // << " previous state "
-    // << localization_messenger_state
-    // << std::endl;
 
     auto localization_packet = localization_messenger->ReceiveData(localization_messenger_state);
     localization_frame = localization_packet.data;
@@ -180,25 +154,9 @@ namespace traffic_manager {
       traffic_light_frame = traffic_light_packet.data;
       traffic_light_messenger_state = traffic_light_packet.id;
     }
-
-
-    // std::cout
-    // << "Finished planner's receiver"
-    // << " with messenger's state "
-    // << localization_messenger->GetState()
-    // << " previous state "
-    // << localization_messenger_state
-    // << std::endl;
   }
 
   void MotionPlannerStage::DataSender() {
-    // std::cout 
-    // << "Running planner's sender"
-    // << " with messenger's state "
-    // << control_messenger->GetState()
-    // << " previous state "
-    // << control_messenger_state
-    // << std::endl;
 
     DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
       control_messenger_state,
@@ -206,13 +164,5 @@ namespace traffic_manager {
     };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);
-    
-    // std::cout 
-    // << "Finished planner's sender"
-    // << " with messenger's state "
-    // << control_messenger->GetState()
-    // << " previous state "
-    // << control_messenger_state
-    // << std::endl;
   }
 }

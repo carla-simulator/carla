@@ -52,21 +52,17 @@ namespace traffic_manager {
 
     }
     void TrafficLightStage::DataReceiver() {
-        // std::cout << "Running receiver" << std::endl;
         auto packet = localization_messenger->ReceiveData(localization_messenger_state);
         localization_frame = packet.data;
         localization_messenger_state = packet.id;
-        // std::cout << "Finished receiver" << std::endl;
     }
 
     void TrafficLightStage::DataSender() {
-        // std::cout << "Running sender" << std::endl;
         DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
         planner_messenger_state,
         planner_frame_map.at(frame_selector)
         };
         frame_selector = !frame_selector;
         planner_messenger_state = planner_messenger->SendData(packet);
-        // std::cout << "Finished receiver" << std::endl;
     }
 }

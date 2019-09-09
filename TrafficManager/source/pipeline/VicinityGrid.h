@@ -3,7 +3,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <cmath>
+#include <mutex>
 #include <shared_mutex>
+
 #include "carla/geom/Location.h"
 #include "carla/client/Actor.h"
 

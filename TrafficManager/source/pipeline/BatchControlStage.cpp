@@ -24,14 +24,6 @@ namespace traffic_manager {
 
   void BatchControlStage::Action(int start_index, int end_index) {
 
-    // std::cout 
-    // << "Running control apply's action"
-    // << " with messenger's state "
-    // << messenger->GetState()
-    // << " previous state "
-    // << messenger_state
-    // << std::endl;
-
     for (int i=start_index; i<=end_index; i++) {
 
       carla::rpc::VehicleControl vehicle_control;
@@ -47,43 +39,16 @@ namespace traffic_manager {
       auto& command_reference = commands->at(i);
       command_reference = control_command;
     }
-
-    // std::cout 
-    // << "Finished control apply's action"
-    // << " with messenger's state "
-    // << messenger->GetState()
-    // << " previous state "
-    // << messenger_state
-    // << std::endl;
-
   }
 
   void BatchControlStage::DataReceiver() {
-    // std::cout 
-    // << "Running control apply's receiver"
-    // << " with messenger's state "
-    // << messenger->GetState()
-    // << " previous state "
-    // << messenger_state
-    // << std::endl;
 
     auto packet = messenger->ReceiveData(messenger_state);
     data_frame = packet.data;
     messenger_state = packet.id;
-
-    // std::cout 
-    // << "Finished control apply's receiver"
-    // << " with messenger's state "
-    // << messenger->GetState()
-    // << " previous state "
-    // << messenger_state
-    // << std::endl;
   }
 
   void BatchControlStage::DataSender() {
-    // std::cout 
-    // << "Running control apply's sender"
-    // << std::endl;
 
     carla_client.ApplyBatch(*commands.get());
 
@@ -98,10 +63,5 @@ namespace traffic_manager {
     }
 
     // std::this_thread::sleep_for(10ms);
-
-    // std::cout
-    // << "Finished control apply's sender"
-    // << std::endl;
   }
-
 }

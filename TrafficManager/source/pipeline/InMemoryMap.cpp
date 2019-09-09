@@ -141,19 +141,11 @@ namespace traffic_manager {
             waypoint_structure[road_id][section_id].end()) {
 
           waypoint_structure[road_id][section_id][lane_id].push_back(waypoint);
-          // std::cout << "Road id : " << road_id << "\tSection Id : " <<
-          // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
-          //   waypoint_structure[road_id][section_id][lane_id].size() <<
-          // std::endl;
         } else {
           std::vector<std::shared_ptr<SimpleWaypoint>> lane_wp;
           lane_wp.push_back(waypoint);
           waypoint_structure[road_id][section_id].insert(
               std::pair<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>(lane_id, lane_wp));
-          // std::cout << "Road id : " << road_id << "\tSection Id : " <<
-          // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
-          //   waypoint_structure[road_id][section_id][lane_id].size() <<
-          // std::endl;
         }
       } else {
         std::vector<std::shared_ptr<SimpleWaypoint>> lane_wp;
@@ -164,10 +156,6 @@ namespace traffic_manager {
         waypoint_structure[road_id].insert(
             std::pair<uint32_t, std::map<int32_t, std::vector<std::shared_ptr<SimpleWaypoint>>>>(section_id,
             lane_map));
-        // std::cout << "Road id : " << road_id << "\tSection Id : " <<
-        // section_id << "\tLane id : " << lane_id << "\t#Waypoints : " <<
-        //       waypoint_structure[road_id][section_id][lane_id].size() <<
-        // std::endl;
       }
     } else {
 
@@ -183,9 +171,6 @@ namespace traffic_manager {
       waypoint_structure.insert(
           std::pair<uint32_t, std::map<uint32_t, std::map<int32_t,
           std::vector<std::shared_ptr<SimpleWaypoint>>>>>(road_id, section_map));
-      // std::cout << "Road id : " << road_id << "\tSection Id : " << section_id
-      // << "\tLane id : " << lane_id << "\t#Waypoints : " <<
-      //   waypoint_structure[road_id][section_id][lane_id].size() << std::endl;
     }
   }
 

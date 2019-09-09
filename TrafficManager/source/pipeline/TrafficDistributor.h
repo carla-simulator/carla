@@ -2,47 +2,41 @@
 
 #include <vector>
 #include <memory>
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <mutex>
+#include <shared_mutex>
 
 #include "SimpleWaypoint.h"
 
 namespace traffic_manager {
 
   struct GeoIds {
-    uint32_t road_id = 0;
-    uint32_t section_id = 0;
+    uint road_id = 0;
+    uint section_id = 0;
     int lane_id = 0;
   };
+
+  typedef std::unordered_map<int, std::unordered_set<uint>> LaneMap;
+  typedef std::unordered_map<uint, LaneMap> SectionMap;
+  typedef std::unordered_map<uint, SectionMap> RoadMap;
 
   class TrafficDistributor {
 
   private:
 
-    std::mutex vehicle_add_mutex;
+    mutable std::shared_timed_mutex distributor_mutex;
 
-    std::map<
-        int, std::map<
-        int, std::map<
-        int, std::map<int, int>
-        >
-        >
-        > road_to_vehicle_id_map;
+    RoadMap road_to_vehicle_id_map;
 
-    std::map<
-        int, std::map<
-        int, std::map<int, int>
-        >
-        > co_lane_vehicle_count;
+    std::unordered_map<uint, GeoIds> vehicle_id_to_road_map;
 
-    std::map<int, GeoIds> vehicle_id_to_road_map;
+    void setVehicleId(uint, GeoIds);
+    void eraseVehicleId(uint, GeoIds);
+    void setRoadIds(uint, GeoIds);
 
-    void setVehicleId(int, GeoIds);
-    void eraseVehicleId(int, GeoIds);
-    void setRoadIds(int, GeoIds);
-
-    std::map<int, std::map<int, int>> getVehicleIds(GeoIds) const;
-    GeoIds getRoadIds(int) const;
+    LaneMap getVehicleIds(GeoIds) const;
+    GeoIds getRoadIds(uint) const;
 
   public:
 
@@ -52,9 +46,9 @@ namespace traffic_manager {
     std::vector<
         std::shared_ptr<SimpleWaypoint>
         > assignDistribution(
-        int actor_id,
-        uint32_t road_id,
-        uint32_t section_id,
+        uint actor_id,
+        uint road_id,
+        uint section_id,
         int lane_id,
         std::shared_ptr<traffic_manager::SimpleWaypoint> waypoint);
 

@@ -96,7 +96,7 @@ void run_pipeline(
   );
   pipeline.start();
 
-  std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
+  std::cout << "Started " << 5 * std::ceil(core_count / 5) << " pipeline threads" << std::endl;
 
   while (true) {
     sleep(1);
