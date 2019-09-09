@@ -32,6 +32,11 @@ namespace traffic_manager {
 
   void PipelineStage::Stop() {
     run_stage.store(false);
+    // data_receiver->join();
+    // for (auto action: action_threads) {
+    //   action->join();
+    // }
+    // data_sender->join();
   }
 
   void PipelineStage::ReceiverThreadManager() {
@@ -41,13 +46,19 @@ namespace traffic_manager {
       // std::cout << "receiver locked run_receiver " << run_receiver.load() <<std::endl;
       while (!run_receiver.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
+        if (!run_stage.load()) {
+          break;
+        }
       }
       run_receiver.store(false);
 
       this->DataReceiver();
 
-      while (action_start_counter.load() < pool_size) {
+      while (action_start_counter.load() < pool_size and run_stage.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return action_start_counter.load() == pool_size;});
+        if (!run_stage.load()) {
+          break;
+        }
       }
 
       run_threads.store(true);
@@ -76,6 +87,9 @@ namespace traffic_manager {
 
       while (!run_threads.load()) {
         wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
+        if (!run_stage.load()) {
+          break;
+        }
       }
 
       lock.unlock();
@@ -91,6 +105,9 @@ namespace traffic_manager {
       while (action_finished_counter.load() < pool_size) {
         std::this_thread::sleep_for(1us);
         // std::cout<< "thread_id " << thread_id << " waiting for action_finished_counter " << action_finished_counter.load() << std::endl;
+        if (!run_stage.load()) {
+          break;
+        }
       }
       // std::cout << "thread id " << thread_id << " finished action" << std::endl;
 
@@ -113,6 +130,9 @@ namespace traffic_manager {
       // std::cout << "sender locked run_sender " << run_sender.load() << std::endl;
       while (!run_sender.load()) {
         wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
+        if (!run_stage.load()) {
+          break;
+        }
       }
       run_sender.store(false);
       // std::cout << "running sender" << std::endl;

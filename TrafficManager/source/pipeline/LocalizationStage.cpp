@@ -17,15 +17,15 @@ namespace traffic_manager {
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
       InMemoryMap& local_map,
-      carla::client::DebugHelper* debug
+      carla::client::DebugHelper& debug_helper
   ) :
   planner_messenger(planner_messenger),
   collision_messenger(collision_messenger),
   traffic_light_messenger(traffic_light_messenger),
   actor_list(actor_list),
   local_map(local_map),
-  PipelineStage(pool_size, number_of_vehicles),
-    debug(debug)
+  debug_helper(debug_helper),
+  PipelineStage(pool_size, number_of_vehicles)
   {
 
     planner_frame_selector = true;
@@ -306,7 +306,7 @@ namespace traffic_manager {
    void LocalizationStage::drawBuffer(Buffer& buffer) {
 
     for (int i = buffer.size() -5; i<buffer.size(); i++) {
-      debug->DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
+      debug_helper.DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
     }
   }
 }

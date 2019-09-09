@@ -30,7 +30,7 @@ namespace traffic_manager {
 
   private:
 
-    carla::client::DebugHelper* debug;
+    carla::client::DebugHelper& debug_helper;
 
     int localization_messenger_state;
     int planner_messenger_state;
@@ -83,7 +83,7 @@ namespace traffic_manager {
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       int number_of_vehicle,
       int pool_size,
-      carla::client::DebugHelper* debug
+      carla::client::DebugHelper& debug_helper
     );
     ~CollisionStage();
 
@@ -92,6 +92,7 @@ namespace traffic_manager {
     void DataSender() override;
 
     using PipelineStage::Start;
+    using PipelineStage::Stop;
 
   };
 

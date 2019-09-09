@@ -13,6 +13,7 @@
 #include "MotionPlannerStage.h"
 #include "BatchControlStage.h"
 #include "TrafficLightStage.h"
+#include "Pipeline.h"
 
 void test_dense_topology(const carla::client::World &);
 
@@ -35,10 +36,20 @@ void got_signal(int) {
   quit.store(true);
 }
 
+std::vector<carla::SharedPtr<carla::client::Actor>>* global_actor_list;
 void handler() {
 
-  std::cout << boost::stacktrace::stacktrace() << std::endl;
-  exit(1);
+  if (!quit.load()) {
+    std::cout << "TrafficManager encountered a problem!" << std::endl;
+    std::cout << "Destorying all actors spawned" << std::endl;
+    for (auto actor: *global_actor_list) {
+      if (actor != nullptr and actor->IsAlive()) {
+        actor->Destroy();
+      }
+    }
+    std::cout << boost::stacktrace::stacktrace() << std::endl;
+    exit(1);
+  }
 } 
 
 int main(int argc, char *argv[]) {
@@ -53,11 +64,68 @@ int main(int argc, char *argv[]) {
 
   // test_dense_topology(world);
   // test_in_memory_map(world_map);
-  test_pipeline_stages(vehicle_list, world_map, client_conn);
+  // test_pipeline_stages(vehicle_list, world_map, client_conn);
   // test_lane_change(world);
-  // test_pipeline(world, client_conn, 0);
+  test_pipeline(world, client_conn, 0);
 
   return 0;
+}
+
+void test_pipeline(
+    carla::client::World &world,
+    carla::client::Client &client_conn,
+    int target_traffic_amount) {
+
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = got_signal;
+  sigfillset(&sa.sa_mask);
+  sigaction(SIGINT, &sa, NULL);
+
+  auto world_map = world.GetMap();
+  auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
+  auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
+  auto topology = dao.getTopology();
+  auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
+  local_map->setUp(1.0);
+
+  auto core_count = traffic_manager::read_core_count();
+  std::cout << "Found " << core_count << " CPU cores" << std::endl;
+  auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
+  global_actor_list = &registered_actors;
+
+  traffic_manager::Pipeline pipeline(
+    {0.1f, 0.15f, 0.01f},
+    {5.0f, 0.0f, 0.1f},
+    {10.0f, 0.01f, 0.1f},
+    25/3.6,
+    50/3.6,
+    registered_actors,
+    *local_map.get(),
+    client_conn,
+    debug_helper,
+    std::ceil(core_count / 5)
+  );
+  pipeline.start();
+
+  std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
+
+  while (true) {
+    sleep(1);
+    if (quit.load()) {
+      break;
+    }
+  }
+
+  pipeline.stop();
+
+  for (auto actor: registered_actors) {
+    if (actor != nullptr and actor->IsAlive()) {
+      actor->Destroy();
+    }
+  }
+
+  std::cout << "TrafficManager stopped by user" << std::endl;
 }
 
 void test_pipeline_stages(
@@ -90,13 +158,13 @@ void test_pipeline_stages(
     localization_planner_messenger, localization_collision_messenger,
     localization_traffic_light_messenger, registered_actors.size(), 1,
     registered_actors, local_map,
-    &debug_helper
+    debug_helper
   );
 
   traffic_manager::CollisionStage collision_stage(
     localization_collision_messenger, collision_planner_messenger,
     registered_actors.size(), 1,
-    &debug_helper
+    debug_helper
   );
 
   traffic_manager::TrafficLightStage traffic_light_stage(
@@ -174,58 +242,6 @@ void test_pipeline_stages(
     // }
   }
 }
-
-// void test_pipeline(
-//     carla::client::World &world,
-//     carla::client::Client &client_conn,
-//     int target_traffic_amount) {
-
-//   struct sigaction sa;
-//   memset(&sa, 0, sizeof(sa));
-//   sa.sa_handler = got_signal;
-//   sigfillset(&sa.sa_mask);
-//   sigaction(SIGINT, &sa, NULL);
-
-//   traffic_manager::SharedData shared_data;
-//   auto world_map = world.GetMap();
-//   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
-//   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-//   auto topology = dao.getTopology();
-//   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-//   local_map->setUp(1.0);
-//   shared_data.local_map = local_map;
-//   shared_data.client = &client_conn;
-//   shared_data.debug = &debug_helper;
-
-//   auto core_count = traffic_manager::read_core_count();
-//   std::cout << "Found " << core_count << " CPU cores" << std::endl;
-//   shared_data.registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
-
-//   traffic_manager::Pipeline pipeline(
-//       {0.1f, 0.15f, 0.01f},
-//       {10.0f, 0.01f, 0.1f},
-//       7.0f,
-//       std::ceil(core_count / 4),
-//       shared_data
-//       );
-//   pipeline.setup();
-//   pipeline.start();
-
-//   std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
-
-//   while (true) {
-//     sleep(1);
-//     if (quit.load()) {
-//       break;
-//     }
-//   }
-
-//   pipeline.stop();
-//   sleep(1);
-//   shared_data.destroy();
-
-//   std::terminate();
-// }
 
 void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);

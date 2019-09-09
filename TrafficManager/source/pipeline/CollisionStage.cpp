@@ -16,12 +16,12 @@ namespace traffic_manager {
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
     int number_of_vehicle,
     int pool_size,
-    carla::client::DebugHelper* debug
+    carla::client::DebugHelper& debug_helper
   ):
     localization_messenger(localization_messenger),
     planner_messenger(planner_messenger),
-    PipelineStage(pool_size, number_of_vehicle),
-    debug(debug)
+    debug_helper(debug_helper),
+    PipelineStage(pool_size, number_of_vehicle)
   {
     frame_selector = true;
 
@@ -234,7 +234,7 @@ namespace traffic_manager {
 
   void CollisionStage::drawBoundary(const std::vector<carla::geom::Location> &boundary) const {
     for (int i = 0; i < boundary.size(); i++) {
-      debug->DrawLine(
+      debug_helper.DrawLine(
         boundary[i] + carla::geom::Location(0, 0, 1),
         boundary[(i + 1) % boundary.size()] + carla::geom::Location(0, 0, 1),
         0.1f, {255U, 0U, 0U}, 0.1f);

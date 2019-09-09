@@ -27,7 +27,7 @@ namespace traffic_manager {
 
   private:
 
-    carla::client::DebugHelper* debug;
+    carla::client::DebugHelper& debug_helper;
 
     int planner_messenger_state;
     int collision_messenger_state;
@@ -35,6 +35,7 @@ namespace traffic_manager {
     bool planner_frame_selector;
     bool collision_frame_selector;
     bool traffic_light_frame_selector;
+
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_a;
@@ -81,7 +82,7 @@ namespace traffic_manager {
       int pool_size,
       std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
       InMemoryMap& local_map,
-      carla::client::DebugHelper* debug
+      carla::client::DebugHelper& debug_helper
     );
 
     ~LocalizationStage();
@@ -91,6 +92,7 @@ namespace traffic_manager {
     void DataSender() override;
 
     using PipelineStage::Start;
+    using PipelineStage::Stop;
 
   };
 

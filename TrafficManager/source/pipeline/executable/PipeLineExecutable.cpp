@@ -9,9 +9,7 @@
 #include "carla/client/Client.h"
 #include "CarlaDataAccessLayer.h"
 
-#include "SharedData.h"
 #include "InMemoryMap.h"
-#include "SyncQueue.h"
 #include "Pipeline.h"
 
 void run_pipeline(
