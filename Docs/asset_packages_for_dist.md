@@ -151,9 +151,9 @@ _required files and place them following the structure listed above._
     the asset's name (`RoadNode`, `Terrain`, `MarkingNode`) and moved to `Roads`, `Terrain`
     and `RoadLines` respectively, under `Content/Carla/PackageName/Static`.<br>
     _If the process doesn't work due to different names or other issues, you can always move the assets_
-    _manually, check this [`tutorial`][importtutorial]_.
+    _manually, check this [`tutorial`][importtutorial]_ (_Section 3.2.1 - 6_).
 
-[importtutorial]: /how_to_make_a_new_map/#32-importing-from-the-files
+[importtutorial]: ../how_to_make_a_new_map/#32-importing-from-the-files
 
 Now we have everything ready for importing assets. To do so, you just need to run the command:
 
@@ -165,12 +165,20 @@ This command will read the JSON file and take each asset and place it inside the
 in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
 `Config` folder that will be used for **defining** its props in the Carla blueprint library,
 **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed.
-If a package was already imported before, it will overwrite it.
+
+_Packages with the same name will produce an error. Delete or rename the package before importing_
+_a new one with the same name._
+
+!!! note
+    The imported map won't have collisions, so they should be generated manually. This
+    [tutorial][collisionlink] (_Section 3.2.1 - 5_) shows how to do it.
+
+[collisionlink]: ../how_to_make_a_new_map/#32-importing-from-the-files
 
 How to export assets
 --------------------
 
-Once imported all the packages inside Unreal, users could also generate a **cooked package** 
+Once imported all the packages inside Unreal, users could also generate a **cooked package**
 for each of them. This last step is important in order to have all packages ready to add for
 distribution versions of Carla and for any supported platform. To export the packages,
 simply run the command:
