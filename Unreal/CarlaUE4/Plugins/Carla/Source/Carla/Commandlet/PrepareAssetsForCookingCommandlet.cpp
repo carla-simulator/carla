@@ -88,8 +88,6 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
 
   // Create default Transform for all assets to spawn
   const FTransform zeroTransform = FTransform();
-  FVector initialVector = FVector(0, 0, 0);
-  FRotator initialRotator = FRotator(0, 180, 0);
 
   UStaticMesh *MeshAsset;
   AStaticMeshActor *MeshActor;
@@ -101,8 +99,8 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
     if (MeshAsset)
     {
       MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
-          initialVector,
-          initialRotator);
+          FVector::ZeroVector,
+          FRotator::ZeroRotator);
       MeshActor->GetStaticMeshComponent()->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
       SpawnedMeshes.Add(MeshActor);
       if (bUseCarlaMaterials)
