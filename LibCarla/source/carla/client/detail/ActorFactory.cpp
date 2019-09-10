@@ -48,12 +48,12 @@ namespace detail {
               "exception thrown while trying to garbage collect Actor",
               ptr->GetDisplayId(),
               e.what());
-          throw; // calls terminate.
+          std::terminate();
         } catch (...) {
           log_critical(
               "unknown exception thrown while trying to garbage collect an Actor :",
               ptr->GetDisplayId());
-          throw; // calls terminate.
+          std::terminate();
         }
       }
     }
