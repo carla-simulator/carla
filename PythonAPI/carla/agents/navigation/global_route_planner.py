@@ -6,7 +6,6 @@ This module provides GlobalRoutePlanner implementation.
 """
 
 import math
-
 import numpy as np
 import networkx as nx
 
@@ -46,7 +45,7 @@ class GlobalRoutePlanner(object):
 
     def _build_graph(self):
         """
-        This function builds a networkx  graph representation of topology.
+        This function builds a networkx graph representation of topology.
         The topology is read from self._topology.
         graph node properties:
             vertex   -   (x,y,z) position in world map
@@ -88,6 +87,7 @@ class GlobalRoutePlanner(object):
 
             entry_carla_vector = entry_wp.transform.rotation.get_forward_vector()
             exit_carla_vector = exit_wp.transform.rotation.get_forward_vector()
+
             # Adding edge with attributes
             graph.add_edge(
                 n1, n2,
@@ -144,7 +144,7 @@ class GlobalRoutePlanner(object):
                         length=len(path) + 1, path=path,
                         entry_waypoint=end_wp, exit_waypoint=path[-1],
                         entry_vector=None, exit_vector=None, net_vector=None,
-                        intersection=end_wp.is_intersection, type=RoadOption.LANEFOLLOW)
+                        intersection=end_wp.is_junction, type=RoadOption.LANEFOLLOW)
 
     def _localize(self, location):
         """
@@ -190,7 +190,7 @@ class GlobalRoutePlanner(object):
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
                                     exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                                    path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                                    path=[], length=0, type=next_road_option, change_waypoint=waypoint)
                                 right_found = True
 
                     if bool(waypoint.lane_change & carla.LaneChange.Left) and not left_found:
@@ -203,11 +203,12 @@ class GlobalRoutePlanner(object):
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=segment['entry'],
                                     exit_waypoint=self._graph.edges[next_segment[0], next_segment[1]]['entry_waypoint'],
-                                    path=[], length=0, type=next_road_option, change_waypoint = waypoint)
+                                    path=[], length=0, type=next_road_option, change_waypoint=waypoint)
                                 left_found = True
 
                 if left_found and right_found:
                     break
+
 
     def _distance_heuristic(self, n1, n2):
         """
@@ -240,7 +241,6 @@ class GlobalRoutePlanner(object):
         """
         This method returns the last successive intersection edge
         from a starting index on the route.
-
         This helps moving past tiny intersection edges to calculate
         proper turn decisions.
         """
@@ -315,10 +315,8 @@ class GlobalRoutePlanner(object):
                         decision = RoadOption.RIGHT
                 else:
                     decision = next_edge['type']
-        else:
-            decision = next_edge['type']
-        self._previous_decision = decision
 
+        self._previous_decision = decision
         return decision
 
     def abstract_route_plan(self, origin, destination):
@@ -355,8 +353,7 @@ class GlobalRoutePlanner(object):
 
     def trace_route(self, origin, destination):
         """
-        This method returns list of (carla.Waypoint, RoadOption)
-        from origin (carla.Location) to destination (carla.Location)
+        This method returns list of (carla.Waypoint, RoadOption) from origin to destination
         """
 
         route_trace = []
@@ -402,3 +399,4 @@ class GlobalRoutePlanner(object):
                             break
 
         return route_trace
+    

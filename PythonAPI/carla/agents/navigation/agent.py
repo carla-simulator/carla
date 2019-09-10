@@ -10,20 +10,8 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-from enum import Enum
-
 import carla
-from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
-
-
-class AgentState(Enum):
-    """
-    AGENT_STATE represents the possible states of a roaming agent
-    """
-    NAVIGATING = 1
-    BLOCKED_BY_VEHICLE = 2
-    BLOCKED_RED_LIGHT = 3
-
+from agents.tools.misc import is_within_distance, compute_distance
 
 class Agent(object):
     """
@@ -32,11 +20,9 @@ class Agent(object):
 
     def __init__(self, vehicle):
         """
-
         :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
-        self._proximity_threshold = 10.0  # meters
         self._local_planner = None
         self._world = self._vehicle.get_world()
         self._map = self._vehicle.get_world().get_map()
@@ -58,101 +44,7 @@ class Agent(object):
 
         return control
 
-    def _is_light_red(self, lights_list):
-        """
-        Method to check if there is a red light affecting us. This version of
-        the method is compatible with both European and US style traffic lights.
-
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                   affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
-        """
-        if self._map.name == 'Town01' or self._map.name == 'Town02':
-            return self._is_light_red_europe_style(lights_list)
-        else:
-            return self._is_light_red_us_style(lights_list)
-
-    def _is_light_red_europe_style(self, lights_list):
-        """
-        This method is specialized to check European style traffic lights.
-
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                  affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
-        """
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-
-        for traffic_light in lights_list:
-            object_waypoint = self._map.get_waypoint(traffic_light.get_location())
-            if object_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
-                continue
-
-            loc = traffic_light.get_location()
-            if is_within_distance_ahead(loc, ego_vehicle_location,
-                                        self._vehicle.get_transform().rotation.yaw,
-                                        self._proximity_threshold):
-                if traffic_light.state == carla.TrafficLightState.Red:
-                    return (True, traffic_light)
-
-        return (False, None)
-
-    def _is_light_red_us_style(self, lights_list, debug=False):
-        """
-        This method is specialized to check US style traffic lights.
-
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                   affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
-        """
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-
-        if ego_vehicle_waypoint.is_junction:
-            # It is too late. Do not block the intersection! Keep going!
-            return (False, None)
-
-        if self._local_planner.target_waypoint is not None:
-            if self._local_planner.target_waypoint.is_junction:
-                min_angle = 180.0
-                sel_magnitude = 0.0
-                sel_traffic_light = None
-                for traffic_light in lights_list:
-                    loc = traffic_light.get_location()
-                    magnitude, angle = compute_magnitude_angle(loc,
-                                                               ego_vehicle_location,
-                                                               self._vehicle.get_transform().rotation.yaw)
-                    if magnitude < 60.0 and angle < min(25.0, min_angle):
-                        sel_magnitude = magnitude
-                        sel_traffic_light = traffic_light
-                        min_angle = angle
-
-                if sel_traffic_light is not None:
-                    if debug:
-                        print('=== Magnitude = {} | Angle = {} | ID = {}'.format(
-                            sel_magnitude, min_angle, sel_traffic_light.id))
-
-                    if self._last_traffic_light is None:
-                        self._last_traffic_light = sel_traffic_light
-
-                    if self._last_traffic_light.state == carla.TrafficLightState.Red:
-                        return (True, self._last_traffic_light)
-                else:
-                    self._last_traffic_light = None
-
-        return (False, None)
-
-    def _is_vehicle_hazard(self, vehicle_list):
+    def _is_vehicle_hazard(self, vehicle_list, proximity_threshold):
         """
         Check if a given vehicle is an obstacle in our way. To this end we take
         into account the road and lane the target vehicle is on and run a
@@ -160,8 +52,8 @@ class Agent(object):
         in front of our ego vehicle.
 
         WARNING: This method is an approximation that could fail for very large
-         vehicles, which center is actually on a different lane but their
-         extension falls within the ego vehicle lane.
+        vehicles, which center is actually on a different lane but their
+        extension falls within the ego vehicle lane.
 
         :param vehicle_list: list of potential obstacle to check
         :return: a tuple given by (bool_flag, vehicle), where
@@ -174,23 +66,106 @@ class Agent(object):
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
 
         for target_vehicle in vehicle_list:
-            # do not account for the ego vehicle
+            # Do not account for the ego vehicle
             if target_vehicle.id == self._vehicle.id:
                 continue
 
-            # if the object is not in our lane it's not an obstacle
+            # If the object is not in our lane it's not an obstacle
             target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
             if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
                     target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
             loc = target_vehicle.get_location()
-            if is_within_distance_ahead(loc, ego_vehicle_location,
-                                        self._vehicle.get_transform().rotation.yaw,
-                                        self._proximity_threshold):
-                return (True, target_vehicle)
+            if is_within_distance(loc, ego_vehicle_location,
+                                  self._vehicle.get_transform().rotation.yaw,
+                                  proximity_threshold, d_angle_th=60.0):
+                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
 
-        return (False, None)
+        return (False, None, -1)
+
+    def _is_vehicle_on_right_lane_hazard(self, vehicle_list, proximity_threshold):
+        """
+        Check if a given vehicle is an obstacle in our way to change lane to the right.
+        """
+
+        ego_vehicle_location = self._vehicle.get_location()
+        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+
+        for target_vehicle in vehicle_list:
+            # Do not account for the ego vehicle
+            if target_vehicle.id == self._vehicle.id:
+                continue
+
+            # If the object is not in our road it's not an obstacle,
+            # However this time we are also checking for nearby lanes
+            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
+            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
+                    abs(target_vehicle_waypoint.lane_id) != abs(ego_vehicle_waypoint.lane_id)+1:
+                continue
+
+            loc = target_vehicle.get_location()
+            if is_within_distance(loc, ego_vehicle_location,
+                                  self._vehicle.get_transform().rotation.yaw,
+                                  proximity_threshold, d_angle_th=180.0):
+                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
+
+        return (False, None, -1)
+
+    def _is_vehicle_on_left_lane_hazard(self, vehicle_list, proximity_threshold):
+        """
+        Check if a given vehicle is an obstacle in our way to change lane to the left.
+        """
+
+        ego_vehicle_location = self._vehicle.get_location()
+        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+        
+        for target_vehicle in vehicle_list:
+            # Do not account for the ego vehicle
+            if target_vehicle.id == self._vehicle.id:
+                continue
+
+            # If the object is not in our road it's not an obstacle,
+            # However this time we are also checking for nearby lanes
+            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
+            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
+                    abs(target_vehicle_waypoint.lane_id) != abs(ego_vehicle_waypoint.lane_id)-1:
+                continue
+            loc = target_vehicle.get_location()
+            if is_within_distance(loc, ego_vehicle_location,
+                                  self._vehicle.get_transform().rotation.yaw,
+                                  proximity_threshold, d_angle_th=180.0):
+                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
+
+        return (False, None, -1)
+
+
+    def _is_vehicle_behind_hazard(self, vehicle_list, proximity_threshold):
+        """
+        Check if a given vehicle is an obstacle in our way to change lane based on vehicles behind it.
+        """
+
+        ego_vehicle_location = self._vehicle.get_location()
+        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+
+        for target_vehicle in vehicle_list:
+            # Do not account for the ego vehicle
+            if target_vehicle.id == self._vehicle.id:
+                continue
+
+            # If the object is not in our lane it's not an obstacle
+            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
+            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
+                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+                continue
+
+            loc = target_vehicle.get_location()
+            if is_within_distance(loc, ego_vehicle_location,
+                                  self._vehicle.get_transform().rotation.yaw,
+                                  proximity_threshold, d_angle_th=180.0, d_angle_th_low=170.0):
+                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
+
+        return (False, None, -1)
 
     def emergency_stop(self):
         """

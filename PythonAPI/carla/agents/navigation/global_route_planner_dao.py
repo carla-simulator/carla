@@ -4,7 +4,6 @@
 """
 This module provides implementation for GlobalRoutePlannerDAO
 """
-
 import numpy as np
 
 
@@ -14,7 +13,7 @@ class GlobalRoutePlannerDAO(object):
     from the carla server instance for GlobalRoutePlanner
     """
 
-    def __init__(self, wmap, sampling_resolution=1):
+    def __init__(self, wmap, sampling_resolution=1, world=None):
         """get_topology
         Constructor
 
