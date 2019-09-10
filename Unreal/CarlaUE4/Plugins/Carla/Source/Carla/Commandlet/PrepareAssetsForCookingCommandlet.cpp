@@ -98,10 +98,9 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
     MeshAsset = Cast<UStaticMesh>(MapAsset.GetAsset());
     if (MeshAsset)
     {
-      MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
-          FVector::ZeroVector,
-          FRotator::ZeroRotator);
+      MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
       MeshActor->GetStaticMeshComponent()->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
+
       SpawnedMeshes.Add(MeshActor);
       if (bUseCarlaMaterials)
       {
