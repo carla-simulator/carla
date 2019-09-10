@@ -165,7 +165,9 @@ This command will read the JSON file and take each asset and place it inside the
 in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
 `Config` folder that will be used for **defining** its props in the Carla blueprint library,
 **exposing** them in the `PythonAPI` and also for **exporting** those assets if needed.
-If a package was already imported before, it will overwrite it.
+
+_Packages with the same name will produce an error. Delete or rename the package before importing_
+_a new one with the same name._
 
 !!! note
     The imported map won't have collisions, so they should be generated manually. This

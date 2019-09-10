@@ -54,9 +54,6 @@ button and export.
     If there is any error with map junctions, click on `Maneuver Tool`
     and `Rebuild Maneuver Roads` buttons.
 
-!!! important
-    Apply a 180 degree rotation before exporting `Tools > Transform Scene ... > Rotation`
-
 ## 2.2 Export the map
 
 After verifying that everything is correct, it is time to export the map to CARLA.
