@@ -24,7 +24,7 @@ in a few steps you will be able to create an impressive scene. You can download
 a trial of RoadRunner at VectorZero's web page.
 
 <div class="vector-zero">
-  <a href="https://www.vectorzero.io/"><img src="/img/VectorZeroAndIcon.webp"/></a>
+  <a href="https://www.vectorzero.io/"><img src="../img/VectorZeroAndIcon.webp"/></a>
 </div> <br>
 
 Read VectorZero's RoadRunner [documentation][rr_docs] to install it and get started.
@@ -292,7 +292,7 @@ might need some tweaking and testing to fit perfectly into the city.
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
-## 5 Adding pedestrian navigation zones
+## 5 Adding pedestrian navigation areas
 
 To make a navigable mesh for pedestrians, we use the _Recast & Detour_ library.<br>
 <https://github.com/recastnavigation/recastnavigation>.
