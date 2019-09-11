@@ -38,9 +38,6 @@ namespace traffic_manager {
     buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(true, buffer_list_a));
     buffer_map.insert(std::pair<bool, std::shared_ptr<BufferList>>(false, buffer_list_b));
 
-    traffic_distributor_map.insert(std::pair<bool, TrafficDistributor*>(true, &traffic_distributor_a));
-    traffic_distributor_map.insert(std::pair<bool, TrafficDistributor*>(false, &traffic_distributor_b));
-
     planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
     planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
 
