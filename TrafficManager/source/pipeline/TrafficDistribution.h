@@ -21,7 +21,7 @@ namespace traffic_manager {
   typedef std::unordered_map<uint, LaneMap> SectionMap;
   typedef std::unordered_map<uint, SectionMap> RoadMap;
 
-  class TrafficDistributor {
+  class TrafficDistribution {
 
   private:
 
@@ -31,26 +31,24 @@ namespace traffic_manager {
 
     std::unordered_map<uint, GeoIds> vehicle_id_to_road_map;
 
-    void setVehicleId(uint, GeoIds);
-    void eraseVehicleId(uint, GeoIds);
-    void setRoadIds(uint, GeoIds);
-
-    LaneMap getVehicleIds(GeoIds) const;
-    GeoIds getRoadIds(uint) const;
+    void SetVehicleId(uint, GeoIds);
+    void EraseVehicleId(uint, GeoIds);
+    void SetRoadIds(uint, GeoIds);
 
   public:
 
-    TrafficDistributor();
-    ~TrafficDistributor();
+    TrafficDistribution();
+    ~TrafficDistribution();
 
-    std::vector<
-        std::shared_ptr<SimpleWaypoint>
-        > assignDistribution(
-        uint actor_id,
-        uint road_id,
-        uint section_id,
-        int lane_id,
-        std::shared_ptr<traffic_manager::SimpleWaypoint> waypoint);
+    void UpdateVehicleRoadPosition(
+      uint actor_id,
+      uint road_id,
+      uint section_id,
+      int lane_id
+    );
+
+    LaneMap GetVehicleIds(GeoIds) const;
+    GeoIds GetRoadIds(uint) const;
 
   };
 
