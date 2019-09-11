@@ -6,6 +6,8 @@ namespace traffic_manager {
 
   SimpleWaypoint::SimpleWaypoint(carla::SharedPtr<carla::client::Waypoint> waypoint) {
     this->waypoint = waypoint;
+    this->next_left_waypoint = nullptr;
+    this->next_right_waypoint = nullptr;
   }
   SimpleWaypoint::~SimpleWaypoint() {}
 

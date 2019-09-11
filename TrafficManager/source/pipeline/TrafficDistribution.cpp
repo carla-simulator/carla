@@ -132,8 +132,6 @@ namespace traffic_manager {
     int lane_id
   ) {
 
-    int LANE_CHANGE_DISTANCE = 5;
-    std::vector<std::shared_ptr<SimpleWaypoint>> lane_change_waypoints;
     GeoIds new_ids = {road_id, section_id, lane_id};
     auto old_ids = GetRoadIds(actor_id);
 

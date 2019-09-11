@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <mutex>
+#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
@@ -20,6 +21,11 @@
 #include "TrafficDistribution.h"
 
 namespace traffic_manager {
+
+  typedef std::chrono::time_point<
+    std::chrono::_V2::system_clock,
+    std::chrono::nanoseconds
+    > TimeInstance;
 
   class LocalizationStage : PipelineStage {
 
@@ -60,6 +66,10 @@ namespace traffic_manager {
     std::shared_ptr<BufferList> buffer_list_b;
     std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
     TrafficDistribution traffic_distribution;
+    std::unordered_map<uint, int> vehicle_id_to_index;
+    std::vector<carla::geom::Location> last_lane_change_location_a;
+    std::vector<carla::geom::Location> last_lane_change_location_b;
+    std::unordered_map<bool, std::vector<carla::geom::Location>*> last_lane_change_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
 
     /// Returns the dot product between vehicle's heading vector and

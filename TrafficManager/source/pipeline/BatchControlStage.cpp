@@ -62,6 +62,6 @@ namespace traffic_manager {
       frame_count = 0;
     }
 
-    // std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(10ms);
   }
 }
