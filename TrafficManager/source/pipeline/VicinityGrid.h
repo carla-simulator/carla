@@ -5,6 +5,7 @@
 #include <cmath>
 #include <mutex>
 #include <shared_mutex>
+#include <string>
 
 #include "carla/geom/Location.h"
 #include "carla/client/Actor.h"
@@ -17,12 +18,12 @@ namespace traffic_manager {
     std::shared_timed_mutex modification_mutex;
 
     std::unordered_map<
-      long, std::unordered_set<uint>
+      std::string, std::unordered_set<uint>
     > grid_to_actor_id;
 
-    std::unordered_map<uint, long> actor_to_grid_id;
+    std::unordered_map<uint, std::string> actor_to_grid_id;
 
-    long MakeKey(std::pair<int, int> gird_numbers);
+    std::string MakeKey(std::pair<int, int> gird_numbers);
 
     public:
 

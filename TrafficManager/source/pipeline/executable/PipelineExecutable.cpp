@@ -78,7 +78,6 @@ void run_pipeline(
   local_map->setUp(1.0);
 
   auto core_count = traffic_manager::read_core_count();
-  std::cout << "Found " << core_count << " CPU cores" << std::endl;
   auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 
@@ -92,12 +91,11 @@ void run_pipeline(
     *local_map.get(),
     client_conn,
     debug_helper,
-    std::ceil(core_count / 5)
+    1
   );
   pipeline.start();
 
-  std::cout << "Started " << 5 * std::ceil(core_count / 5) << " pipeline threads" << std::endl;
-
+  std::cout << "TrafficManager started" << std::endl;
   while (true) {
     sleep(1);
     if (quit.load()) {

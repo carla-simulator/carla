@@ -6,11 +6,8 @@ namespace traffic_manager {
 
   VicinityGrid::~VicinityGrid() {}
 
-  long VicinityGrid::MakeKey (std::pair<int, int> grid_numbers) {
-    return std::stol(
-      std::to_string(abs(grid_numbers.first))
-      + std::to_string(abs(grid_numbers.second))
-    );
+  std::string VicinityGrid::MakeKey (std::pair<int, int> grid_numbers) {
+    return std::to_string(grid_numbers.first) + std::to_string(grid_numbers.second);
   }
 
   std::unordered_set<uint> VicinityGrid::GetActors(carla::SharedPtr<carla::client::Actor> actor) {
@@ -27,17 +24,17 @@ namespace traffic_manager {
       if (old_grid_id != new_grid_id) {
         std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
         grid_to_actor_id.at(old_grid_id).erase(actor_id);
-        actor_to_grid_id.insert(std::pair<uint, long>(actor_id, new_grid_id));
+        actor_to_grid_id.insert(std::pair<uint, std::string>(actor_id, new_grid_id));
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
           grid_to_actor_id.at(new_grid_id).insert(actor_id);
         } else {
-          grid_to_actor_id.insert(std::pair<long, std::unordered_set<uint>>(new_grid_id, {actor_id}));
+          grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<uint>>(new_grid_id, {actor_id}));
         }
       }
     } else {
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
-      actor_to_grid_id.insert(std::pair<uint, long>(actor_id, new_grid_id));
-      grid_to_actor_id.insert(std::pair<long, std::unordered_set<uint>>(new_grid_id, {actor_id}));
+      actor_to_grid_id.insert(std::pair<uint, std::string>(actor_id, new_grid_id));
+      grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<uint>>(new_grid_id, {actor_id}));
     }
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
