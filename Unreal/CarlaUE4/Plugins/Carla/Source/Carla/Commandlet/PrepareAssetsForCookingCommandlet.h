@@ -23,7 +23,10 @@
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
-/// Struct containing Package Params
+/// Struct containing Package with @a Name and @a bOnlyPrepareMaps flag used to
+/// separate the cooking of maps and props across the different stages (Maps
+/// will be imported during make import command and Props will be imported
+/// during make package command)
 USTRUCT()
 struct CARLA_API FPackageParams
 {
@@ -32,8 +35,6 @@ struct CARLA_API FPackageParams
   FString Name;
 
   bool bOnlyPrepareMaps;
-
-  bool bOnlyMoveMeshes;
 };
 
 /// Struct containing map data read from .Package.json file.
@@ -135,7 +136,7 @@ private:
   UPROPERTY()
   TArray<FAssetData> AssetDatas;
 
-  /// Loaded maps from any object library
+  /// Loaded map content from any object library
   UPROPERTY()
   TArray<FAssetData> MapContents;
 

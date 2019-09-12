@@ -23,7 +23,8 @@
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "MoveAssetsCommandlet.generated.h"
 
-/// Struct containing Package Params
+/// Struct containing Package Params, used for storing the parsed arguments when
+/// invoking this commandlet
 USTRUCT()
 struct CARLA_API FMovePackageParams
 {
@@ -45,10 +46,12 @@ public:
   UMoveAssetsCommandlet();
 #if WITH_EDITORONLY_DATA
 
-  /// Parses the command line parameters provided through @a InParams
+  /// Parses the command line parameters provided through @a InParams The
+  /// arguments to parse are the package name and a list of map names
+  /// concatenated in a string.
   FMovePackageParams ParseParams(const FString &InParams) const;
 
-  /// Moves all the assets of a map from @a SrcPath to @a DestPath
+  /// Moves all the assets contained in a map from @a SrcPath to @a DestPath
   void MoveAssetsFromMapForSemanticSegmentation(const FString &PackageName, const FString &MapName);
 
   /// Moves the meshes of all maps listed in a @PackageParams
@@ -63,6 +66,9 @@ public:
 #endif // WITH_EDITORONLY_DATA
 
 private:
+
+  /// The following data structures are declared as class members and with
+  /// UPROPERTY macro to avoid UE4 to garbage collect them.
 
   /// Loaded assets from any object library
   UPROPERTY()

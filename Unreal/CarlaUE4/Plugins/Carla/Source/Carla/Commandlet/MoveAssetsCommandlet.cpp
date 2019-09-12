@@ -45,9 +45,11 @@ FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) c
 
   ParseCommandLine(*InParams, Tokens, Params);
 
+  // Parse and store package name
   FMovePackageParams PackageParams;
   FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
 
+  // Parse and store maps name in an array
   FString Maps;
   FParse::Value(*InParams, TEXT("Maps="), Maps);
 
@@ -55,15 +57,18 @@ FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) c
   Maps.ParseIntoArray(MapNames, TEXT(" "), true);
 
   PackageParams.MapNames = MapNames;
+
   return PackageParams;
 }
 
 void UMoveAssetsCommandlet::MoveAssets(const FMovePackageParams &PackageParams)
 {
-
+  // Create a library instance for loading all the assets
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
   AssetsObjectLibrary->AddToRoot();
 
+  // Start loading all the assets in the library and classify them for semantic
+  // segmentation
   for (const auto &Map : PackageParams.MapNames)
   {
     MoveAssetsFromMapForSemanticSegmentation(PackageParams.Name, Map);
@@ -136,8 +141,8 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
         continue;
       }
 
-      // Bind between tags and classify tags in different folders according to
-      // semantic segmentation
+      // Bind between tags and classify assets according to semantic
+      // segmentation
       if (AssetName.Contains(SSTags::R_ROAD))
       {
         AssetDataMap[SSTags::ROAD].Add(MeshAsset);
@@ -153,6 +158,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     }
   }
 
+  // Move assets to correspoding semantic segmentation folders
   for (const auto &Elem : AssetDataMap)
   {
     FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;

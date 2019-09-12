@@ -15,12 +15,15 @@
 
 UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 {
+  // Set necessary flags to run commandlet
   IsClient = false;
   IsEditor = true;
   IsServer = false;
   LogToConsole = true;
 
 #if WITH_EDITORONLY_DATA
+  // Get Carla Default materials, these will be used for maps that need to use
+  // Carla materials
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
@@ -46,7 +49,11 @@ FPackageParams UPrepareAssetsForCookingCommandlet::ParseParams(const FString &In
   ParseCommandLine(*InParams, Tokens, Params);
 
   FPackageParams PackageParams;
+
+  // Parse and store Package name
   FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
+
+  // Parse and store flag for only preparing maps
   FParse::Bool(*InParams, TEXT("OnlyPrepareMaps="), PackageParams.bOnlyPrepareMaps);
   return PackageParams;
 }
@@ -104,7 +111,8 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       SpawnedMeshes.Add(MeshActor);
       if (bUseCarlaMaterials)
       {
-        // Set Carla Materials
+        // Set Carla Materials depending on RoadRunner's Semantic Segmentation
+        // tag
         FString AssetName;
         MapAsset.AssetName.ToString(AssetName);
         if (AssetName.Contains(SSTags::R_MARKING))
@@ -379,12 +387,7 @@ void UPrepareAssetsForCookingCommandlet::PreparePropsForCooking(
 
   for (auto &PropPath : PropPathDirs)
   {
-    PropPath.Split(
-        TEXT("/"),
-        &PropPath,
-        nullptr,
-        ESearchCase::Type::IgnoreCase,
-        ESearchDir::Type::FromEnd);
+    PropPath.Split(TEXT("/"), &PropPath, nullptr, ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd);
   }
 
   // Add props in a single Base Map
