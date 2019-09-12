@@ -116,7 +116,7 @@ rem
 if %BUILD_CLIENT% == true (
     cmake -G "Visual Studio 15 2017 Win64"^
       -DCMAKE_BUILD_TYPE=Client^
-      -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
+      -DCMAKE_CXX_FLAGS_RELEASE="/MT /MP"^
       -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH%^
       %ROOT_PATH%
     if %errorlevel% neq 0 goto error_cmake

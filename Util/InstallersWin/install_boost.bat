@@ -119,7 +119,7 @@ b2 -j%NUMBER_OF_ASYNC_JOBS%^
     toolset=%TOOLSET%^
     variant=release^
     link=static^
-    runtime-link=shared^
+    runtime-link=static^
     threading=multi^
     --prefix="%BOOST_INSTALL_DIR%"^
     --libdir="%BOOST_LIB_DIR%"^

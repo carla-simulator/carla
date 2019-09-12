@@ -81,6 +81,7 @@ def get_libcarla_extensions():
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
+        os.chdir(pwd)
         libs = [x for x in os.listdir('dependencies/lib') if any(d in x for d in required_libs)]
 
         for lib in libs:
