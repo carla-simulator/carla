@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
 
   // test_dense_topology(world);
   // test_in_memory_map(world_map);
-  // test_pipeline_stages(vehicle_list, world_map, client_conn);
+  test_pipeline_stages(vehicle_list, world_map, client_conn);
   // test_lane_change(world);
-  test_pipeline(world, client_conn, 0);
+  // test_pipeline(world, client_conn, 0);
 
   return 0;
 }
@@ -186,7 +186,7 @@ void test_pipeline_stages(
     planner_control_messenger, client_conn,
     registered_actors.size(), 1
   );
-
+ 
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();

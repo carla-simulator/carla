@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <shared_mutex>
+#include <string>
 
 #include "SimpleWaypoint.h"
 
@@ -19,7 +20,6 @@ namespace traffic_manager {
 
   typedef std::unordered_map<int, std::unordered_set<uint>> LaneMap;
   typedef std::unordered_map<uint, LaneMap> SectionMap;
-  typedef std::unordered_map<uint, SectionMap> RoadMap;
 
   class TrafficDistribution {
 
@@ -27,7 +27,7 @@ namespace traffic_manager {
 
     mutable std::shared_timed_mutex distributor_mutex;
 
-    RoadMap road_to_vehicle_id_map;
+    std::unordered_map<std::string, std::unordered_set<uint>> road_to_vehicle_id_map;
 
     std::unordered_map<uint, GeoIds> vehicle_id_to_road_map;
 
@@ -40,14 +40,14 @@ namespace traffic_manager {
     TrafficDistribution();
     ~TrafficDistribution();
 
+    std::string MakeRoadKey (GeoIds);
+
     void UpdateVehicleRoadPosition(
       uint actor_id,
-      uint road_id,
-      uint section_id,
-      int lane_id
+      GeoIds road_ids
     );
 
-    LaneMap GetVehicleIds(GeoIds) const;
+    std::unordered_set<uint> GetVehicleIds(std::string) const;
     GeoIds GetRoadIds(uint) const;
 
   };

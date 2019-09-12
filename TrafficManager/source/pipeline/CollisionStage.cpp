@@ -45,7 +45,7 @@ namespace traffic_manager {
       auto& data = localization_frame->at(i);
       auto ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
-
+      // drawBoundary(getGeodesicBoundary(ego_actor));
       auto actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
       for (auto actor_id: actor_id_list) {

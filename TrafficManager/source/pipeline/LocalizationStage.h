@@ -67,8 +67,7 @@ namespace traffic_manager {
     std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
     TrafficDistribution traffic_distribution;
     std::unordered_map<uint, int> vehicle_id_to_index;
-    std::vector<carla::geom::Location> last_lane_change_location_a;
-    std::vector<carla::geom::Location> last_lane_change_location_b;
+    std::vector<carla::geom::Location> last_lane_change_location;
     std::unordered_map<bool, std::vector<carla::geom::Location>*> last_lane_change_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
 
