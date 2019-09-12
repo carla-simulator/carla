@@ -64,7 +64,7 @@ class BehaviorAgent(Agent):
 
         # Parameters for agent behavior
         if behavior == 'Cautious':
-            self.max_speed = 40
+            self.max_speed = 30
             self.speed_increase_perc = 10
             self.safety_time = 3
             self.min_proximity_threshold = 7
@@ -78,7 +78,7 @@ class BehaviorAgent(Agent):
             self.speed_increase_perc = 15
             self.safety_time = 3
             self.min_proximity_threshold = 6
-            self.braking_distance = 6
+            self.braking_distance = 7
             self.overtake_counter = 0
             self.tailgate_counter = 0
             self.speed_lim_dist = 6
@@ -88,7 +88,7 @@ class BehaviorAgent(Agent):
             self.speed_increase_perc = 20
             self.safety_time = 3
             self.min_proximity_threshold = 6
-            self.braking_distance = 5
+            self.braking_distance = 7
             self.overtake_counter = 0
             self.tailgate_counter = -1
             self.speed_lim_dist = 3
@@ -356,7 +356,8 @@ class BehaviorAgent(Agent):
 
         # Checking if there's a junction nearby to slow down
         elif self.incoming_waypoint.is_junction:
-            control = self._local_planner.run_step(target_speed=self.speed_limit-10, debug=debug)
+            control = self._local_planner.run_step(
+                target_speed=min(self.max_speed, self.speed_limit-10), debug=debug)
 
         #5: Normal behavior
 
