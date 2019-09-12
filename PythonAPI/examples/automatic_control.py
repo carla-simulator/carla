@@ -739,7 +739,7 @@ def game_loop(args):
     world = None
     tot_target_reached = 0
     stop = False
-    car_model = args.filter if args.filter != "vehicle.*" else "vehicle.audi.*"
+    car_model = args.filter if args.filter != "vehicle.*" else "vehicle.*"
 
     try:
         client = carla.Client(args.host, args.port)
