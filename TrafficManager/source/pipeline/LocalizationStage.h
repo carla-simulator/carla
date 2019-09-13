@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <mutex>
 #include <chrono>
+#include <cmath>
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"

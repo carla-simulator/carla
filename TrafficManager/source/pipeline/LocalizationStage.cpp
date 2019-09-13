@@ -150,6 +150,7 @@ namespace traffic_manager {
       );
 
       auto current_road_key = traffic_distribution.MakeRoadKey(current_road_ids);
+
       // debug_helper.DrawString(
       //   vehicle_location+carla::geom::Location(0, 0, 2),
       //   std::to_string(traffic_distribution.GetVehicleIds(current_road_key).size()),
@@ -158,13 +159,17 @@ namespace traffic_manager {
 
       if (
         last_lane_change_location.at(i).Distance(vehicle_location) > 15
-        and 
+        and
         !front_waypoint->checkJunction()
       ) {
 
         auto co_lane_vehicles = traffic_distribution.GetVehicleIds(current_road_key);
-
         bool need_to_change_lane = false;
+        bool lane_change_direction; // true -> left, false -> right
+
+        auto left_waypoint = front_waypoint->getLeftWaypoint();
+        auto right_waypoint = front_waypoint->getRightWaypoint();
+
         if (co_lane_vehicles.size() >= 2) {
           for (auto& same_lane_vehicle_id: co_lane_vehicles) {
 
@@ -189,78 +194,154 @@ namespace traffic_manager {
               and
               same_lane_vehicle_waypoint->getLocation().Distance(vehicle_location) < 20   // meters
             ) {
-              need_to_change_lane = true;
-              break;
-            }
-          }
-        }
 
-        // need_to_change_lane = true;
-        bool possible_to_lane_change = true;
-        std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
-        if (need_to_change_lane) {
-          auto left_waypoint = front_waypoint->getLeftWaypoint();
-          auto right_waypoint = front_waypoint->getRightWaypoint();
-
-          if (left_waypoint == nullptr and right_waypoint == nullptr) {
-            possible_to_lane_change = false;
-          } else {
-
-            for (auto lane_change_point: {left_waypoint, right_waypoint}) {
-              if (lane_change_point != nullptr) {
-
-                change_over_point = lane_change_point;
-                auto lane_change_id = lane_change_point->getWaypoint()->GetLaneId();
-                auto target_lane_key = traffic_distribution.MakeRoadKey({
-                  current_road_ids.road_id,
-                  current_road_ids.section_id,
-                  lane_change_id
-                });
-                auto target_lane_vehicles = traffic_distribution.GetVehicleIds(target_lane_key);
-
-                if (target_lane_vehicles.size() > 0) {
-
-                  for (auto other_vehicle_id: target_lane_vehicles) {
-                    
-                    auto& other_vehicle_buffer = buffer_map.at(collision_frame_selector)
-                      ->at(vehicle_id_to_index.at(other_vehicle_id));
-                    
-                    if (
-                      !other_vehicle_buffer.empty()
-                      and 
-                      other_vehicle_buffer.front()->getWaypoint()->GetLaneId()
-                      == lane_change_id
-                    ) {
-                      if (
-                        abs(DeviationDotProduct(
-                          vehicle, other_vehicle_buffer.front()->getLocation())
-                        ) < 0.71
-                      ) {
-                        possible_to_lane_change = false;
-                        break;
-                      }
-                    } else {
-                      possible_to_lane_change = false;
-                    }
-                  }
+              if (left_waypoint != nullptr) {
+                auto left_lane_vehicles = traffic_distribution.GetVehicleIds(
+                  traffic_distribution.MakeRoadKey(
+                    {current_road_ids.road_id,
+                    current_road_ids.section_id,
+                    left_waypoint->getWaypoint()->GetLaneId()}
+                  )
+                );
+                if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
+                  need_to_change_lane = true;
+                  lane_change_direction = true;
+                  break;
                 }
-                if (possible_to_lane_change) {
+              } else if (right_waypoint != nullptr) {
+                auto right_lane_vehicles = traffic_distribution.GetVehicleIds(
+                  traffic_distribution.MakeRoadKey(
+                    {current_road_ids.road_id,
+                    current_road_ids.section_id,
+                    right_waypoint->getWaypoint()->GetLaneId()}
+                  )
+                );
+                if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
+                  need_to_change_lane = true;
+                  lane_change_direction = false;
                   break;
                 }
               }
             }
           }
-        } else {
-          possible_to_lane_change = false;
         }
 
+        // carla::client::DebugHelper::Color display_color_need;
+        // if (need_to_change_lane) {
+        //   display_color_need = {0U, 255U, 0U};          
+        // } else {
+        //   display_color_need = {255U, 0U, 0U};
+        // }
+
+        // debug_helper.DrawString(
+        //   vehicle_location+carla::geom::Location(0, 0, 3),
+        //   "Need",
+        //   false, display_color_need, 0.1f
+        // );
+
+        int change_over_distance = static_cast<int>(
+          std::max(std::ceil(0.5 * vehicle_velocity), 5.0)  // Account for constants
+        );
+
+        // need_to_change_lane = true;
+        bool possible_to_lane_change = false;
+        std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
+        if (need_to_change_lane) {
+
+          if (lane_change_direction) {
+            change_over_point = left_waypoint;
+          } else {
+            change_over_point = right_waypoint;
+          }
+
+          if (change_over_point != nullptr) {
+            auto lane_change_id = change_over_point->getWaypoint()->GetLaneId();
+            auto target_lane_key = traffic_distribution.MakeRoadKey({
+              current_road_ids.road_id,
+              current_road_ids.section_id,
+              lane_change_id
+            });
+            auto target_lane_vehicles = traffic_distribution.GetVehicleIds(target_lane_key);
+
+            if (target_lane_vehicles.size() > 0) {
+              bool found_hazard = false;
+              for (auto other_vehicle_id: target_lane_vehicles) {
+                
+                auto& other_vehicle_buffer = buffer_map.at(collision_frame_selector)
+                  ->at(vehicle_id_to_index.at(other_vehicle_id));
+                
+                if (
+                  !other_vehicle_buffer.empty()
+                  and 
+                  other_vehicle_buffer.front()->getWaypoint()->GetLaneId()
+                  == lane_change_id
+                ) {
+
+                  auto other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
+                  auto other_vehicle_location = other_vehicle_buffer.front()->getLocation();
+                  auto relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
+
+                  if (relative_deviation < 0) {
+
+                    auto time_to_reach_other = (change_over_point->distance(other_vehicle_location) + change_over_distance)
+                      / other_vehicle->GetVelocity().Length();
+
+                    auto time_to_reach_reference = (change_over_point->distance(vehicle_location) + change_over_distance)
+                      / vehicle->GetVelocity().Length();
+
+                    if (
+                      relative_deviation > std::cos(M_PI * 135 / 180)
+                      or time_to_reach_other > time_to_reach_reference
+                    ) {
+                      found_hazard = true;
+                      break;
+                    }
+
+                  } else {
+
+                    auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
+                    if (
+                      change_over_point->distance(other_vehicle_location)
+                      < (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x*2)
+                    ) {
+                      found_hazard = true;
+                      break;
+                    }
+
+                  }
+                }
+              }
+
+              if (!found_hazard) {
+                possible_to_lane_change = true;
+              }
+
+            } else {
+              possible_to_lane_change = true;
+            }
+          }
+        }
+        
+        // carla::client::DebugHelper::Color display_color_possible;
+        // if (possible_to_lane_change) {
+        //   display_color_possible = {0U, 255U, 0U};
+        // } else {
+        //   display_color_possible = {255U, 0U, 0U};
+        // }
+
+        // if (need_to_change_lane)
+        //   debug_helper.DrawString(
+        //     vehicle_location+carla::geom::Location(0, 0, 4),
+        //     "Possible",
+        //     false, display_color_possible, 0.1f
+        //   );
+
         if (need_to_change_lane and possible_to_lane_change) {
-          int change_over_distance = static_cast<int>(
-            std::max(std::ceil(0.5 * vehicle_velocity), 5.0)  // Account for constants
-          );
-          for (int i = change_over_distance; i >=0; i--) {
+          
+          for (int i= change_over_distance; i >= 0; i--) {
             change_over_point = change_over_point->getNextWaypoint()[0];
           }
+
           waypoint_buffer.clear();
           waypoint_buffer.push_back(change_over_point);
           last_lane_change_location.at(i) = vehicle_location;
