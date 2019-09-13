@@ -64,34 +64,37 @@ class BehaviorAgent(Agent):
 
         # Parameters for agent behavior
         if behavior == 'Cautious':
-            self.max_speed = 30
+            self.max_speed = 40
             self.speed_increase_perc = 10
+            self.speed_lim_dist = 12
+            self.speed_decrease = 12
             self.safety_time = 3
-            self.min_proximity_threshold = 7
+            self.min_proximity_threshold = 12
             self.braking_distance = 7
             self.overtake_counter = -1
             self.tailgate_counter = 0
-            self.speed_lim_dist = 12
 
         elif behavior == 'Normal':
             self.max_speed = 60
             self.speed_increase_perc = 15
+            self.speed_lim_dist = 6
+            self.speed_decrease = 10
             self.safety_time = 3
-            self.min_proximity_threshold = 6
-            self.braking_distance = 7
+            self.min_proximity_threshold = 10
+            self.braking_distance = 6
             self.overtake_counter = 0
             self.tailgate_counter = 0
-            self.speed_lim_dist = 6
 
         elif behavior == 'Aggressive':
             self.max_speed = 70
             self.speed_increase_perc = 20
+            self.speed_lim_dist = 3
+            self.speed_decrease = 8
             self.safety_time = 3
-            self.min_proximity_threshold = 6
-            self.braking_distance = 7
+            self.min_proximity_threshold = 8
+            self.braking_distance = 5
             self.overtake_counter = 0
             self.tailgate_counter = -1
-            self.speed_lim_dist = 3
 
     def update_information(self, world):
         """
@@ -186,7 +189,7 @@ class BehaviorAgent(Agent):
 
         if self.light_state == "Red":
             if not waypoint.is_junction and \
-            self.light_id_to_ignore != light_id:
+            (self.light_id_to_ignore != light_id or light_id == 0):
                 return 1
             elif waypoint.is_junction and light_id != 0:
                 self.light_id_to_ignore = light_id
@@ -262,6 +265,8 @@ class BehaviorAgent(Agent):
         """
 
         vehicle_list = self._world.get_actors().filter("*vehicle*")
+        dist = lambda v: v.get_location().distance(waypoint.transform.location)
+        vehicle_list = [v for v in vehicle_list if dist(v) < 50]
         if self.direction == RoadOption.CHANGELANELEFT:
             vehicle_state, vehicle, distance = self._is_vehicle_on_left_lane_hazard(vehicle_list, \
             max(self.min_proximity_threshold, self.speed_limit/2))
@@ -270,7 +275,7 @@ class BehaviorAgent(Agent):
             max(self.min_proximity_threshold, self.speed_limit/2))
         else:
             vehicle_state, vehicle, distance = self._is_vehicle_hazard(vehicle_list, \
-            max(self.min_proximity_threshold, self.speed/2))
+            max(self.min_proximity_threshold, self.speed_limit/3))
 
             # Check for overtaking
 
@@ -281,7 +286,7 @@ class BehaviorAgent(Agent):
 
             # Check for tailgating
 
-            if not vehicle_state and self.direction == RoadOption.LANEFOLLOW and \
+            elif not vehicle_state and self.direction == RoadOption.LANEFOLLOW and \
                 not waypoint.is_junction and self.speed > 10 and \
                 self.tailgate_counter == 0:
                 self._tailgating(waypoint, vehicle_list)
@@ -303,12 +308,12 @@ class BehaviorAgent(Agent):
         # Under safety time distance, slow down.
         if self.safety_time > ttc > 0.0:
             control = self._local_planner.run_step(
-                target_speed=min(positive(vehicle_speed-self.speed_lim_dist), \
+                target_speed=min(positive(vehicle_speed-self.speed_decrease), \
                 min(self.max_speed, self.speed_limit-self.speed_lim_dist)), debug=debug)
         # Actual safety distance area, try to follow the speed of the vehicle in front.
         elif 2*self.safety_time > ttc >= self.safety_time:
             control = self._local_planner.run_step(
-                target_speed=min(max(5, vehicle_speed-self.speed_lim_dist), \
+                target_speed=min(max(5, vehicle_speed-self.speed_decrease/2), \
                 min(self.max_speed, self.speed_limit-self.speed_lim_dist)), debug=debug)
         # Normal behavior.
         else:
@@ -349,8 +354,8 @@ class BehaviorAgent(Agent):
             # Emergency brake if the car is very close.
             if distance < self.braking_distance:
                 return self.emergency_stop()
-
-            control = self.car_following_manager(vehicle, distance)
+            else:
+                control = self.car_following_manager(vehicle, distance)
 
         #4: Intersection behavior
 
