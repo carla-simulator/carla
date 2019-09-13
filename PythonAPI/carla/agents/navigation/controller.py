@@ -65,6 +65,10 @@ class VehiclePIDController():
             control.throttle = 0.0
             control.brake = abs(acceleration)
 
+        if steering > 0.5:
+            steering = 0.5
+        elif steering < -0.5:
+            steering = -0.5
         control.steer = steering
         control.hand_brake = False
         control.manual_gear_shift = False
