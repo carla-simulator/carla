@@ -19,8 +19,8 @@ namespace detail {
     MoveWrapper(MoveWrapper &&) = default;
     MoveWrapper& operator=(MoveWrapper &&) = default;
 
-    MoveWrapper(const MoveWrapper &);
-    MoveWrapper& operator=(const MoveWrapper &);
+    MoveWrapper(const MoveWrapper &) = delete;
+    MoveWrapper& operator=(const MoveWrapper &) = delete;
   };
 
 } // namespace detail
