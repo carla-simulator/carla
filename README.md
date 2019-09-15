@@ -68,7 +68,8 @@ branch contains the latest fixes and features, for the latest stable code may be
 best to switch to the `stable` branch.
 
 Then follow the instruction at [How to build on Linux][buildlinuxlink] or
-[How to build on Windows][buildwindowslink].
+[How to build on Windows][buildwindowslink](experimenta; Build for windows exist V_0.9.6).
+Some tips for build on windows exist [here][https://github.com/carla-simulator/carla/issues/2098].
 
 Unfortunately we don't have official instructions to build on Mac yet, please
 check the progress at [issue #150][issue150].
