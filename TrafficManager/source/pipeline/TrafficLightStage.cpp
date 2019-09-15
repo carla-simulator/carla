@@ -26,9 +26,9 @@ namespace traffic_manager {
 
     TrafficLightStage::~TrafficLightStage(){}
 
-    void TrafficLightStage::Action(int start_index, int end_index) {
+    void TrafficLightStage::Action(const int start_index, const int end_index) {
 
-        for (int i = start_index; i <= end_index; i++) {
+        for (int i = start_index; i <= end_index; ++i) {
 
             float traffic_light_hazard = -1;
             auto& data = localization_frame->at(i);

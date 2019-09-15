@@ -21,7 +21,7 @@ namespace traffic_manager {
   void PipelineStage::Start() {
 
     data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);    
-    for (int i=0; i<pool_size; i++) {
+    for (int i=0; i<pool_size; ++i) {
       action_threads.push_back(
         std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i)
       );
@@ -69,7 +69,7 @@ namespace traffic_manager {
     }
   }
 
-  void PipelineStage::ActionThreadManager(int thread_id) {
+  void PipelineStage::ActionThreadManager(const int thread_id) {
 
     int array_size = number_of_vehicles;
     int load_per_thread = static_cast<int>(std::floor(array_size/pool_size));
@@ -78,7 +78,7 @@ namespace traffic_manager {
 
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
 
-      action_start_counter++;
+      ++action_start_counter;
       if (action_start_counter == pool_size) {
         wake_receiver_notifier.notify_one();
       }
@@ -95,7 +95,7 @@ namespace traffic_manager {
       int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
 
       this->Action(array_start_index, array_end_index);
-      action_finished_counter++;
+      ++action_finished_counter;
 
       while (action_finished_counter.load() < pool_size) {
         std::this_thread::sleep_for(1us);

@@ -61,27 +61,27 @@ namespace traffic_manager {
     collision_messenger_state = collision_messenger->GetState() -1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() -1;
 
-    for (int i=0; i <number_of_vehicles; i++) {
+    for (int i=0; i <number_of_vehicles; ++i) {
       divergence_choice.push_back(rand());
     }
 
     int index=0;
     for (auto& actor: actor_list) {
       vehicle_id_to_index.insert({actor->GetId(), index});
-      index++;
+      ++index;
     }
 
-    for (int i=0; i < actor_list.size(); i++) {
+    for (int i=0; i < actor_list.size(); ++i) {
       last_lane_change_location.at(i) = actor_list.at(i)->GetLocation();
-      index++;
+      ++index;
     }
   }
 
   LocalizationStage::~LocalizationStage() {}
 
-  void LocalizationStage::Action(int start_index, int end_index) {
+  void LocalizationStage::Action(const int start_index, const int end_index) {
 
-    for (int i = start_index; i <= end_index; i++) {
+    for (int i = start_index; i <= end_index; ++i) {
       // std::this_thread::sleep_for(1s);
 
       auto vehicle = actor_list.at(i);
@@ -405,7 +405,7 @@ namespace traffic_manager {
         !(waypoint_buffer.front()->checkJunction())
       ) {
         if (speed_limit > HIGHWAY_SPEED) {
-          for (int i=0; i<look_ahead_index; i++) {
+          for (int i=0; i<look_ahead_index; ++i) {
             auto swp = waypoint_buffer.at(i);
             if (swp->getNextWaypoint().size() > 1) {
               approaching_junction = true;
@@ -493,7 +493,7 @@ namespace traffic_manager {
 
    void LocalizationStage::drawBuffer(Buffer& buffer) {
 
-    for (int i = 0; i<buffer.size(); i++) {
+    for (int i = 0; i<buffer.size(); ++i) {
       debug_helper.DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
     }
   }

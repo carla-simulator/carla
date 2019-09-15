@@ -39,8 +39,8 @@ namespace traffic_manager {
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
     std::unordered_set<uint> actors;
-    for (int i=-1; i<=1; i++) {
-      for (int j=-1; j<=1; j++) {
+    for (int i=-1; i<=1; ++i) {
+      for (int j=-1; j<=1; ++j) {
 
         auto grid_key = MakeKey({first+i, second+j});
         if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {

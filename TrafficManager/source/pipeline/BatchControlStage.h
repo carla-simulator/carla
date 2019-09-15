@@ -41,7 +41,7 @@ namespace traffic_manager {
     ~BatchControlStage();
 
     void DataReceiver() override;
-    void Action(int start_index, int end_index) override;
+    void Action(const int start_index, const int end_index) override;
     void DataSender() override;
 
     using PipelineStage::Start;

@@ -38,9 +38,9 @@ namespace traffic_manager {
 
   CollisionStage::~CollisionStage() {}
 
-  void CollisionStage::Action(int start_index, int end_index) {
+  void CollisionStage::Action(const int start_index, const int end_index) {
 
-    for (int i=start_index; i <=end_index; i++) {
+    for (int i=start_index; i <=end_index; ++i) {
 
       auto& data = localization_frame->at(i);
       auto ego_actor = data.actor;
@@ -189,7 +189,7 @@ namespace traffic_manager {
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
       float width = vehicle->GetBoundingBox().extent.y;
 
-      for (int i=0; i<bbox_extension; i++) {
+      for (int i=0; i<bbox_extension; ++i) {
         if (i >= waypoint_buffer->size()) break;
         auto swp = waypoint_buffer->at(i);
         auto vector = swp->getVector();
@@ -233,7 +233,7 @@ namespace traffic_manager {
   }
 
   void CollisionStage::drawBoundary(const std::vector<carla::geom::Location> &boundary) const {
-    for (int i = 0; i < boundary.size(); i++) {
+    for (int i = 0; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
         boundary[i] + carla::geom::Location(0, 0, 1),
         boundary[(i + 1) % boundary.size()] + carla::geom::Location(0, 0, 1),

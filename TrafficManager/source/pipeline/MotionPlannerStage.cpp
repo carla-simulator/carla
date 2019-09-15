@@ -49,9 +49,9 @@ namespace traffic_manager {
 
   MotionPlannerStage::~MotionPlannerStage() {}
 
-  void MotionPlannerStage::Action(int start_index, int end_index) {
+  void MotionPlannerStage::Action(const int start_index, const int end_index) {
 
-    for (int i = start_index; i <= end_index; i++) {
+    for (int i = start_index; i <= end_index; ++i) {
 
       auto& localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;

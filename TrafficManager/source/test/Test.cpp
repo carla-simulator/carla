@@ -136,7 +136,7 @@ void test_pipeline_stages(
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
 
   std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
-  for (auto it = actor_list->begin(); it != actor_list->end(); it++) {
+  for (auto it = actor_list->begin(); it != actor_list->end(); ++it) {
     registered_actors.push_back(*it);
   }
 
@@ -234,7 +234,7 @@ void test_pipeline_stages(
     // auto current_time = std::chrono::system_clock::now();
     // std::chrono::duration<double> diff = current_time - last_time;
 
-    // count++;
+    // ++count;
     // if (diff.count() > 1.0) {
     //   last_time = current_time;
     //   std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;
@@ -298,16 +298,16 @@ void test_lane_change(const carla::client::World &world) {
     uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
 
     if ((lane_change & change_right) > 0 and !(point->checkJunction())) {
-      total_right_lane_links++;
+      ++total_right_lane_links;
       if (point->getRightWaypoint() == nullptr) {
-        missing_right_lane_links++;
+        ++missing_right_lane_links;
       }
     }
 
     if ((lane_change & change_left) > 0 and !(point->checkJunction())) {
-      total_left_lane_links++;
+      ++total_left_lane_links;
       if (point->getLeftWaypoint() == nullptr) {
-        missing_left_lane_links++;
+        ++missing_left_lane_links;
       }
     }
   }

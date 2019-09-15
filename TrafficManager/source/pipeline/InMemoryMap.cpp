@@ -65,9 +65,9 @@ namespace traffic_manager {
         if (end_point->distance(begin_point->getLocation()) < ZERO_LENGTH and i != j) {
           end_point->setNextWaypoint({begin_point});
         }
-        j++;
+        ++j;
       }
-      i++;
+      ++i;
     }
 
     /// Tying up loose ends
@@ -83,7 +83,7 @@ namespace traffic_manager {
             min_distance = new_distance;
             closest_connection = begin_point;
           }
-          j++;
+          ++j;
         }
         auto end_point_vector = end_point->getVector();
         auto relative_vector = closest_connection->getLocation() - end_point->getLocation();
@@ -100,7 +100,7 @@ namespace traffic_manager {
         }
         end_point->setNextWaypoint({closest_connection});
       }
-      i++;
+      ++i;
     }
 
     // Linking lane change connections

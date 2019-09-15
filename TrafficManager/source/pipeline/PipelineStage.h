@@ -44,7 +44,7 @@ namespace traffic_manager {
 
     void ReceiverThreadManager();
 
-    void ActionThreadManager(int thread_id);
+    void ActionThreadManager(const int thread_id);
 
     void SenderThreadManager();
 
@@ -59,7 +59,7 @@ namespace traffic_manager {
     virtual void DataSender()=0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(int start_index, int end_index)=0;
+    virtual void Action(const int start_index, const int end_index)=0;
 
   public:
 

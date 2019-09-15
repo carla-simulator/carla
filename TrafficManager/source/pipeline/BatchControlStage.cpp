@@ -22,9 +22,9 @@ namespace traffic_manager {
 
   BatchControlStage::~BatchControlStage() {}
 
-  void BatchControlStage::Action(int start_index, int end_index) {
+  void BatchControlStage::Action(const int start_index, const int end_index) {
 
-    for (int i=start_index; i<=end_index; i++) {
+    for (int i=start_index; i<=end_index; ++i) {
 
       carla::rpc::VehicleControl vehicle_control;
 
@@ -55,7 +55,7 @@ namespace traffic_manager {
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_update_instance;
 
-    frame_count++;
+    ++frame_count;
     if (diff.count() > 1.0) {
       std::cout << "Processed " << frame_count << " frames per second" << std::endl;
       last_update_instance = current_time;
