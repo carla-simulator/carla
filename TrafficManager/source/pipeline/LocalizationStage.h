@@ -14,6 +14,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/client/Vehicle.h"
+#include "carla/geom/Math.h"
 
 #include "PipelineStage.h"
 #include "SimpleWaypoint.h"

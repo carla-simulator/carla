@@ -75,7 +75,7 @@ void run_pipeline(
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.getTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-  local_map->setUp(1.0);
+  local_map->SetUp(1.0);
 
   auto core_count = traffic_manager::read_core_count();
   auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);

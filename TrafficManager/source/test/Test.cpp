@@ -87,7 +87,7 @@ void test_pipeline(
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.getTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-  local_map->setUp(1.0);
+  local_map->SetUp(1.0);
 
   auto core_count = traffic_manager::read_core_count();
   std::cout << "Found " << core_count << " CPU cores" << std::endl;
@@ -144,7 +144,7 @@ void test_pipeline_stages(
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.getTopology();
   auto local_map = traffic_manager::InMemoryMap(topology);
-  local_map.setUp(1.0);
+  local_map.SetUp(1.0);
   std::cout << "Map set up !" << std::endl;
 
   auto localization_collision_messenger = std::make_shared<traffic_manager::LocalizationToCollisionMessenger>();
@@ -249,10 +249,10 @@ void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   traffic_manager::InMemoryMap local_map(topology);
 
   std::cout << "setup starting" << std::endl;
-  local_map.setUp(1.0);
+  local_map.SetUp(1.0);
   std::cout << "setup complete" << std::endl;
   int loose_ends_count = 0;
-  auto dense_topology = local_map.get_dense_topology();
+  auto dense_topology = local_map.GetDenseTopology();
   for (auto &swp : dense_topology) {
     if (swp->getNextWaypoint().size() < 1 || swp->getNextWaypoint()[0] == 0) {
       loose_ends_count += 1;
@@ -268,8 +268,8 @@ void test_dense_topology(const carla::client::World &world) {
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
   auto topology = dao.getTopology();
   traffic_manager::InMemoryMap local_map(topology);
-  local_map.setUp(1.0);
-  for (auto point : local_map.get_dense_topology()) {
+  local_map.SetUp(1.0);
+  for (auto point : local_map.GetDenseTopology()) {
     auto location = point->getLocation();
     debug.DrawPoint(location + carla::geom::Location(0,
         0,
@@ -283,14 +283,14 @@ void test_lane_change(const carla::client::World &world) {
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
   auto topology = dao.getTopology();
   traffic_manager::InMemoryMap local_map(topology);
-  local_map.setUp(1.0);
+  local_map.SetUp(1.0);
 
   int missing_left_lane_links = 0;
   int missing_right_lane_links = 0;
   int total_left_lane_links = 0;
   int total_right_lane_links = 0;
 
-  for (auto point : local_map.get_dense_topology()) {
+  for (auto point : local_map.GetDenseTopology()) {
 
     auto raw_waypoint = point->getWaypoint();
     uint8_t lane_change = static_cast<uint8_t>(raw_waypoint->GetLaneChange());

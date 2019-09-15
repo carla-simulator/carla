@@ -15,7 +15,7 @@ namespace traffic_manager {
       float target_velocity,
       float angular_deviation,
       TimeInstance current_time) {
-    /// Initializing present state
+    // Initializing present state
     traffic_manager::StateEntry current_state = {
       angular_deviation,
       (current_velocity - target_velocity) / target_velocity,
@@ -24,11 +24,11 @@ namespace traffic_manager {
       0
     };
 
-    /// Calculating dt for 'D' and 'I' controller components
+    // Calculating dt for 'D' and 'I' controller components
     std::chrono::duration<double> duration = current_state.time_instance - previous_state.time_instance;
     auto dt = duration.count();
 
-    /// Calculating integrals
+    // Calculating integrals
     current_state.deviation_integral =
         angular_deviation * dt +
         previous_state.deviation_integral;
@@ -44,11 +44,11 @@ namespace traffic_manager {
       StateEntry previous_state,
       const std::vector<float> &longitudinal_parameters,
       const std::vector<float> &lateral_parameters) const {
-    /// Calculating dt for updating integral component
+    // Calculating dt for updating integral component
     std::chrono::duration<double> duration = present_state.time_instance - previous_state.time_instance;
     auto dt = duration.count();
 
-    /// Longitudinal PID calculation
+    // Longitudinal PID calculation
     float expr_v =
         longitudinal_parameters[0] * present_state.velocity +
         longitudinal_parameters[1] * present_state.velocity_integral +
@@ -65,7 +65,7 @@ namespace traffic_manager {
       brake = MAX_BRAKE;
     }
 
-    /// Lateral PID calculation
+    // Lateral PID calculation
     float steer;
     steer =
         lateral_parameters[0] * present_state.deviation +

@@ -62,25 +62,25 @@ namespace traffic_manager {
       float current_velocity = vehicle->GetVelocity().Length();
       auto current_time = std::chrono::system_clock::now();
 
-      /// Retreiving previous state
+      // Retreiving previous state
       traffic_manager::StateEntry previous_state;
       previous_state = pid_state_vector->at(i);
 
       auto dynamic_target_velocity = urban_target_velocity;
 
-      /// Increase speed if on highway
+      // Increase speed if on highway
       auto speed_limit = vehicle->GetSpeedLimit() / 3.6;
       if (speed_limit > HIGHWAY_SPEED) {
         dynamic_target_velocity = highway_target_velocity;
         longitudinal_parameters = highway_longitudinal_parameters;
       }
 
-      /// Decrease speed approaching intersection
+      // Decrease speed approaching intersection
       if (localization_data.approaching_true_junction) {
         dynamic_target_velocity = INTERSECTION_APPROACH_SPEED;
       }
 
-      /// State update for vehicle
+      // State update for vehicle
       auto current_state = controller.stateUpdate(
           previous_state,
           current_velocity,
@@ -88,7 +88,7 @@ namespace traffic_manager {
           current_deviation,
           current_time);
 
-      /// Controller actuation
+      // Controller actuation
       auto actuation_signal = controller.runStep(
           current_state,
           previous_state,
@@ -121,11 +121,11 @@ namespace traffic_manager {
         actuation_signal.brake = 1.0;
       }
 
-      /// Updating state
+      // Updating state
       auto& state = pid_state_vector->at(i);
       state = current_state;
 
-      /// Constructing actuation signal
+      // Constructing actuation signal
       auto& message = frame_map.at(frame_selector)->at(i);
       message.actor_id = actor_id;
       message.throttle = actuation_signal.throttle;

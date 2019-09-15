@@ -15,6 +15,7 @@
 #include "carla/client/Vehicle.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Math.h"
 
 #include "PipelineStage.h"
 #include "MessengerAndDataTypes.h"

@@ -1,13 +1,15 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <cmath>
 #include <memory>
 #include <string>
+#include <limits>
 
 #include "carla/Memory.h"
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
+#include "carla/geom/Math.h"
 
 #include "SimpleWaypoint.h"
 
@@ -20,6 +22,10 @@ namespace traffic_manager {
       >
       > TopologyList;
   typedef std::vector<std::shared_ptr<SimpleWaypoint>> NodeList;
+  typedef std::unordered_map<int, std::vector<std::shared_ptr<SimpleWaypoint>>> LaneWaypointMap;
+  typedef std::unordered_map<uint, LaneWaypointMap> SectionWaypointMap;
+  typedef std::unordered_map<uint, SectionWaypointMap> RoadWaypointMap;
+
 
   class InMemoryMap {
 
@@ -31,19 +37,7 @@ namespace traffic_manager {
 
     TopologyList topology;
     std::vector<std::shared_ptr<SimpleWaypoint>> dense_topology;
-    NodeList entry_node_list;
-    NodeList exit_node_list;
-
-    std::map<
-        uint32_t,
-        std::map<
-        uint32_t,
-        std::map<
-        int32_t,
-        std::vector<std::shared_ptr<SimpleWaypoint>>
-        >
-        >
-        > waypoint_structure;
+    RoadWaypointMap road_to_waypoint;
 
   public:
 
@@ -51,15 +45,15 @@ namespace traffic_manager {
     ~InMemoryMap();
 
     /// Constructs the local map with a resolution of sampling_resolution.
-    void setUp(int sampling_resolution);
+    void SetUp(int sampling_resolution);
 
     /// Returns the closest waypoint to a given location on the map.
-    std::shared_ptr<SimpleWaypoint> getWaypoint(const carla::geom::Location &location) const;
+    std::shared_ptr<SimpleWaypoint> GetWaypoint(const carla::geom::Location &location) const;
 
     /// Returns the full list of descrete samples of the map in local cache.
-    std::vector<std::shared_ptr<SimpleWaypoint>> get_dense_topology() const;
+    std::vector<std::shared_ptr<SimpleWaypoint>> GetDenseTopology() const;
 
-    void structuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint);
+    void StructuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint);
 
     void LinkLaneChangePoint(
         std::shared_ptr<SimpleWaypoint> reference_waypoint,

@@ -97,7 +97,7 @@ namespace traffic_manager {
       auto& waypoint_buffer = buffer_map.at(collision_frame_selector)->at(i);
       auto& copy_waypoint_buffer = buffer_map.at(!collision_frame_selector)->at(i);
 
-      /// Sync lane change from buffer copy
+      // Sync lane change from buffer copy
       if (
         !waypoint_buffer.empty() and !copy_waypoint_buffer.empty()
         and
@@ -113,7 +113,7 @@ namespace traffic_manager {
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
       }
 
-      /// Purge passed waypoints
+      // Purge passed waypoints
       if (!waypoint_buffer.empty()) {
         auto dot_product = DeviationDotProduct(
           vehicle,
@@ -130,9 +130,9 @@ namespace traffic_manager {
         }
       }
 
-      /// Initialize buffer if empty
+      // Initialize buffer if empty
       if (waypoint_buffer.empty()) {
-        auto closest_waypoint = local_map.getWaypoint(vehicle_location);
+        auto closest_waypoint = local_map.GetWaypoint(vehicle_location);
         waypoint_buffer.push_back(closest_waypoint);
       }
 
@@ -348,7 +348,7 @@ namespace traffic_manager {
         }
       }
 
-      /// Populate buffer
+      // Populate buffer
       while (
         waypoint_buffer.back()->distance(
         waypoint_buffer.front()->getLocation()) <= horizon_size
@@ -368,7 +368,7 @@ namespace traffic_manager {
 
       // drawBuffer(waypoint_buffer);
 
-      /// Generate output
+      // Generate output
       auto horizon_index = static_cast<int>(
         std::max(
           std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -476,8 +476,7 @@ namespace traffic_manager {
     auto heading_vector = actor->GetTransform().GetForwardVector();
     auto next_vector = target_location - actor->GetLocation();
     next_vector = next_vector.MakeUnitVector();
-    auto dot_product = next_vector.x * heading_vector.x +
-        next_vector.y * heading_vector.y + next_vector.z * heading_vector.z;
+    auto dot_product = carla::geom::Math::Dot(next_vector, heading_vector);
     return dot_product;
   }
 

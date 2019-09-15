@@ -5,7 +5,7 @@ namespace traffic_manager {
   int MINIMUM_CORE_COUNT = 4;
   int MINIMUM_NUMBER_OF_VEHICLES = 100;
 
-  /// Pick a random element from @a range.
+  // Pick a random element from @a range.
   template <typename RangeT, typename RNG>
   static auto &RandomChoice(const RangeT &range, RNG &&generator) {
     EXPECT_TRUE(range.size() > 0u);

@@ -100,14 +100,12 @@ namespace traffic_manager {
     auto reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
     auto relative_other_vector = other_vehicle->GetLocation() - ego_vehicle->GetLocation();
     relative_other_vector = relative_other_vector.MakeUnitVector();
-    auto reference_relative_dot = reference_heading_vector.x * relative_other_vector.x +
-        reference_heading_vector.y * relative_other_vector.y;
+    auto reference_relative_dot = carla::geom::Math::Dot(reference_heading_vector, relative_other_vector);
 
     auto other_heading_vector = other_vehicle->GetTransform().GetForwardVector();
     auto relative_reference_vector = ego_vehicle->GetLocation() - other_vehicle->GetLocation();
     relative_reference_vector = relative_reference_vector.MakeUnitVector();
-    auto other_relative_dot = other_heading_vector.x * relative_reference_vector.x +
-        other_heading_vector.y * relative_reference_vector.y;
+    auto other_relative_dot = carla::geom::Math::Dot(other_heading_vector, relative_reference_vector);
 
     bool hazard = false;
     if (
