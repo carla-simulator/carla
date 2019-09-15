@@ -53,29 +53,28 @@ namespace traffic_manager {
     /// and checking if it overlaps with the extrapolated boundary of the other
     /// vehicle.
 
-    bool checkGeodesicCollision(
+    bool CheckGeodesicCollision(
         carla::SharedPtr<carla::client::Actor> vehicle,
         carla::SharedPtr<carla::client::Actor> ego_vehicle) const;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    std::vector<carla::geom::Location> getBoundary(carla::SharedPtr<carla::client::Actor> actor) const;
+    std::vector<carla::geom::Location> GetBoundary(carla::SharedPtr<carla::client::Actor> actor) const;
 
     /// Returns the extrapolated bounding box of the vehicle along it's
     /// trajectory.
-    std::vector<carla::geom::Location> getGeodesicBoundary(
+    std::vector<carla::geom::Location> GetGeodesicBoundary(
         carla::SharedPtr<carla::client::Actor> actor) const;
 
     /// Method to construct a boost polygon object
-    polygon getPolygon(const std::vector<carla::geom::Location> &boundary) const;
+    polygon GetPolygon(const std::vector<carla::geom::Location> &boundary) const;
 
     /// Method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool negotiateCollision(
+    bool NegotiateCollision(
         carla::SharedPtr<carla::client::Actor> ego_vehicle,
         carla::SharedPtr<carla::client::Actor> other_vehicle) const;
 
-
-    void drawBoundary(const std::vector<carla::geom::Location> &boundary) const;
+    void DrawBoundary(const std::vector<carla::geom::Location> &boundary) const;
 
   public:
 
