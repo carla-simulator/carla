@@ -32,7 +32,7 @@ namespace detail {
     size_t Push(CallbackType &&callback) {
       auto id = ++_counter;
       DEBUG_ASSERT(id != 0u);
-      _list.Push(Item{id, std::move(callback)});
+      _list.Push(Item{id, callback});
       return id;
     }
 

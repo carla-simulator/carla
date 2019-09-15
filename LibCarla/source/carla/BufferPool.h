@@ -51,7 +51,7 @@ namespace carla {
     friend class Buffer;
 
     void Push(Buffer &&buffer) {
-      _queue.enqueue(std::move(buffer));
+      _queue.enqueue(buffer);
     }
 
     moodycamel::ConcurrentQueue<Buffer> _queue;

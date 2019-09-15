@@ -7,20 +7,19 @@
 #pragma once
 
 #include <type_traits>
-#include <utility>
 
 namespace carla {
 namespace detail {
 
   template <typename FunctorT>
   struct MoveWrapper : FunctorT {
-    MoveWrapper(FunctorT &&f) : FunctorT(std::move(f)) {}
+    MoveWrapper(FunctorT &&f) : FunctorT(f) {}
 
     MoveWrapper(MoveWrapper &&) = default;
     MoveWrapper& operator=(MoveWrapper &&) = default;
 
-    MoveWrapper(const MoveWrapper &);
-    MoveWrapper& operator=(const MoveWrapper &);
+    MoveWrapper(const MoveWrapper &) = delete;
+    MoveWrapper& operator=(const MoveWrapper &) = delete;
   };
 
 } // namespace detail
@@ -32,7 +31,7 @@ namespace detail {
   template <typename FunctorT>
   auto MoveHandler(FunctorT &&func) {
     using F = typename std::decay<FunctorT>::type;
-    return detail::MoveWrapper<F>{std::move(func)};
+    return detail::MoveWrapper<F>{func};
   }
 
 } // namespace carla
