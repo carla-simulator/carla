@@ -14,7 +14,7 @@ namespace s11n {
 
   static_assert(
       SensorHeaderSerializer::header_offset == 3u * 8u + 6u * 4u,
-      "Header size missmatch");
+      "Header size mismatch");
 
   static Buffer PopBufferFromPool() {
     static auto pool = std::make_shared<BufferPool>();

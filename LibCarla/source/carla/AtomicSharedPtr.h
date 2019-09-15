@@ -25,11 +25,11 @@ namespace carla {
     AtomicSharedPtr(AtomicSharedPtr &&) = delete;
 
     void store(std::shared_ptr<T> ptr) noexcept {
-      std::atomic_store_explicit(&_ptr, ptr, std::memory_order_release);
+      std::atomic_store_explicit(&_ptr, std::move(ptr), std::memory_order_release);
     }
 
     void reset(std::shared_ptr<T> ptr = nullptr) noexcept {
-      store(ptr);
+      store(std::move(ptr));
     }
 
     std::shared_ptr<T> load() const noexcept {
