@@ -32,11 +32,11 @@ namespace traffic_manager {
 
   void PipelineStage::Stop() {
     run_stage.store(false);
-    // data_receiver->join();
-    // for (auto action: action_threads) {
-    //   action->join();
-    // }
-    // data_sender->join();
+    data_receiver->join();
+    for (auto action: action_threads) {
+      action->join();
+    }
+    data_sender->join();
   }
 
   void PipelineStage::ReceiverThreadManager() {
@@ -51,7 +51,9 @@ namespace traffic_manager {
       }
       run_receiver.store(false);
 
-      this->DataReceiver();
+      if (run_stage.load()) {
+        this->DataReceiver();
+      }
 
       while (action_start_counter.load() < pool_size and run_stage.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return action_start_counter.load() == pool_size;});
@@ -128,7 +130,9 @@ namespace traffic_manager {
       }
       run_sender.store(false);
 
-      this->DataSender();
+      if (run_stage.load()) {
+       this->DataSender();
+      }
 
       run_receiver.store(true);
       wake_receiver_notifier.notify_one();

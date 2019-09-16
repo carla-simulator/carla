@@ -3,6 +3,9 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 namespace traffic_manager {
 
@@ -16,6 +19,7 @@ namespace traffic_manager {
     class Messenger {
 
     private:
+        std::atomic<bool> stop_messenger;
         std::atomic<int> state_counter;
         Data data;
 
@@ -27,14 +31,18 @@ namespace traffic_manager {
 
         Messenger() {
             state_counter = 0;
+            stop_messenger.store(false);
         }
         ~Messenger() {}
 
         int SendData(DataPacket<Data> packet) {
 
             std::unique_lock<std::mutex> lock(data_modification_mutex);
-            if (state_counter.load() == packet.id) {
-                send_condition.wait(lock, [=] {return state_counter.load() != packet.id;});
+            while (state_counter.load() == packet.id) {
+                send_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != packet.id;});
+                if (stop_messenger.load()) {
+                    break;
+                }
             }
             data = packet.data;
             state_counter.store(state_counter.load() +1);
@@ -47,8 +55,11 @@ namespace traffic_manager {
         DataPacket<Data> ReceiveData(int old_state) {
 
             std::unique_lock<std::mutex> lock(data_modification_mutex);
-            if (state_counter.load() == old_state) {
-                receive_condition.wait(lock, [=] {return state_counter.load() != old_state;});
+            while (state_counter.load() == old_state) {
+                receive_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != old_state;});
+                if(stop_messenger.load()) {
+                    break;
+                }
             }
             state_counter.store(state_counter.load() +1);
             DataPacket<Data> packet = {state_counter.load(), data};
@@ -59,6 +70,10 @@ namespace traffic_manager {
 
         int GetState() {
             return state_counter.load();
+        }
+
+        void Stop() {
+            stop_messenger.store(true);
         }
 
     };

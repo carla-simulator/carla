@@ -6,10 +6,10 @@ set(CMAKE_C_COMPILER /usr/bin/clang-7)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++-7)
 
 ## Debug options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -O3 -g -fsanitize=address" CACHE STRING "" FORCE)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -O3 -g -fsanitize=address" CACHE STRING "" FORCE)
 
 ## Release options
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -DNDEBUG" CACHE STRING "" FORCE)
 
 set(LIBCARLA_LOCATION $ENV{LIBCARLA_LOCATION})
 

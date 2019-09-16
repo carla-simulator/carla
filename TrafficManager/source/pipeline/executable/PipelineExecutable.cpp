@@ -33,7 +33,7 @@ void handler() {
         actor->Destroy();
       }
     }
-    std::cout << boost::stacktrace::stacktrace() << std::endl;
+    // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
 } 
