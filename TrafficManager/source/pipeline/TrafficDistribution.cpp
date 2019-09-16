@@ -6,22 +6,17 @@ namespace traffic_manager {
 
   TrafficDistribution::~TrafficDistribution() {}
 
-  std::string TrafficDistribution::MakeRoadKey(GeoIds ids) {
-    return std::to_string(ids.road_id) + std::to_string(ids.section_id) + std::to_string(ids.lane_id);
-  }
-
   void TrafficDistribution::SetVehicleId(
-      uint vehicle_id,
-      GeoIds ids
-    ) {
+    uint vehicle_id,
+    GeoIds ids
+  ) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
-    auto road_key = MakeRoadKey(ids);
-    if (road_to_vehicle_id_map.find(road_key) != road_to_vehicle_id_map.end()) {
-      road_to_vehicle_id_map.at(road_key).insert(vehicle_id);
+    if (road_to_vehicle_id_map.find(ids) != road_to_vehicle_id_map.end()) {
+      road_to_vehicle_id_map.at(ids).insert(vehicle_id);
     } else {
-      road_to_vehicle_id_map.insert({road_key, std::unordered_set<uint>()});
-      road_to_vehicle_id_map.at(road_key).insert(vehicle_id);
+      road_to_vehicle_id_map.insert({ids, std::unordered_set<uint>()});
+      road_to_vehicle_id_map.at(ids).insert(vehicle_id);
     }
   }
 
@@ -31,9 +26,8 @@ namespace traffic_manager {
   ) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
-    auto road_key = MakeRoadKey(ids);
-    if (road_to_vehicle_id_map.find(road_key) != road_to_vehicle_id_map.end()) {
-      road_to_vehicle_id_map.at(road_key).erase(vehicle_id);
+    if (road_to_vehicle_id_map.find(ids) != road_to_vehicle_id_map.end()) {
+      road_to_vehicle_id_map.at(ids).erase(vehicle_id);
     }
   }
 
@@ -43,7 +37,11 @@ namespace traffic_manager {
   ) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
-    vehicle_id_to_road_map.insert({vehicle_id, ids});
+    if (vehicle_id_to_road_map.find(vehicle_id) != vehicle_id_to_road_map.end()) {
+      vehicle_id_to_road_map.at(vehicle_id) = ids;
+    } else {
+      vehicle_id_to_road_map.insert({vehicle_id, ids});
+    }
   }
 
   GeoIds TrafficDistribution::GetRoadIds(uint vehicle_id) const {
@@ -56,11 +54,11 @@ namespace traffic_manager {
     }
   }
 
-  std::unordered_set<uint> TrafficDistribution::GetVehicleIds(std::string road_key) const {
+  std::unordered_set<uint> TrafficDistribution::GetVehicleIds(GeoIds ids) const {
 
     std::shared_lock<std::shared_timed_mutex> lock(distributor_mutex);
-    if (road_to_vehicle_id_map.find(road_key) != road_to_vehicle_id_map.end()) {
-      return road_to_vehicle_id_map.at(road_key);
+    if (road_to_vehicle_id_map.find(ids) != road_to_vehicle_id_map.end()) {
+      return road_to_vehicle_id_map.at(ids);
     } else {
       return std::unordered_set<uint>();
     }

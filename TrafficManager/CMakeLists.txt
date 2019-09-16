@@ -20,7 +20,10 @@ include_directories(${LIBCARLA_LOCATION}/include/system/)
 link_directories(${LIBCARLA_LOCATION}/lib/)
 
 file(GLOB SOURCES source/pipeline/*.cpp)
+
+## Release executable
 file(GLOB SOURCES_EXE source/pipeline/executable/PipelineExecutable.cpp)
+## Debug executable
 # file(GLOB SOURCES_EXE source/test/Test.cpp)
 
 add_library(pipeline ${SOURCES})

@@ -193,19 +193,19 @@ void test_pipeline_stages(
   collision_stage.Start();
   traffic_light_stage.Start();
   planner_stage.Start();
-  control_stage.Start();
+  // control_stage.Start();
 
-  // int messenger_state = planner_control_messenger->GetState() -1;
+  int messenger_state = planner_control_messenger->GetState() -1;
   // int messenger2_state = localization_planner_messenger->GetState() -1;
 
-  // while (planner_control_messenger->GetState() == 0);
-  // std::cout << "Sensed pipeline output !" << std::endl;
+  while (planner_control_messenger->GetState() == 0);
+  std::cout << "Sensed pipeline output !" << std::endl;
 
-  // long count = 0;
-  // auto last_time = std::chrono::system_clock::now();
+  long count = 0;
+  auto last_time = std::chrono::system_clock::now();
   while (true) {
-
-    sleep(1);
+    std::this_thread::sleep_for(10ms);
+    // sleep(1);
 
     // std::cout 
     // << "===========================================================================" << std::endl
@@ -216,8 +216,8 @@ void test_pipeline_stages(
     // << messenger_state
     // << std::endl;
 
-    // auto dummy_1 = planner_control_messenger->ReceiveData(messenger_state);
-    // messenger_state = dummy_1.id;
+    auto dummy_1 = planner_control_messenger->ReceiveData(messenger_state);
+    messenger_state = dummy_1.id;
 
     // auto dummy_2 = localization_planner_messenger->ReceiveData(messenger2_state);
     // messenger2_state = dummy_2.id;
@@ -231,15 +231,15 @@ void test_pipeline_stages(
     // << std::endl
     // << "===========================================================================" << std::endl;
 
-    // auto current_time = std::chrono::system_clock::now();
-    // std::chrono::duration<double> diff = current_time - last_time;
+    auto current_time = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = current_time - last_time;
 
-    // ++count;
-    // if (diff.count() > 1.0) {
-    //   last_time = current_time;
-    //   std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;
-    //   count = 0;
-    // }
+    ++count;
+    if (diff.count() > 1.0) {
+      last_time = current_time;
+      std::cout << "Updates processed per second " << count * registered_actors.size() << std::endl;
+      count = 0;
+    }
   }
 }
 

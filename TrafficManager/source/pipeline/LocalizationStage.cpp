@@ -111,6 +111,7 @@ namespace traffic_manager {
       ) {
         waypoint_buffer.clear();
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
+        last_lane_change_location.at(i) = vehicle_location;
       }
 
       // Purge passed waypoints
@@ -149,21 +150,44 @@ namespace traffic_manager {
         current_road_ids
       );
 
-      auto current_road_key = traffic_distribution.MakeRoadKey(current_road_ids);
-
       // debug_helper.DrawString(
       //   vehicle_location+carla::geom::Location(0, 0, 2),
-      //   std::to_string(traffic_distribution.GetVehicleIds(current_road_key).size()),
+      //   std::to_string(traffic_distribution.GetVehicleIds(current_road_ids).size()),
       //   false, {0, 0, 255}, 0.1f
       // );
 
+      // debug_helper.DrawString(
+      //   vehicle_location+carla::geom::Location(0, 0, 5),
+      //   std::to_string(front_waypoint->getWaypoint()->GetRoadId())
+      //   + " " + std::to_string(front_waypoint->getWaypoint()->GetSectionId())
+      //   + " " + std::to_string(front_waypoint->getWaypoint()->GetLaneId()),
+      //   false, {0, 0, 255}, 0.1f
+      // );
+
+      // std::hash<GeoIds> custom_hash;
+      // debug_helper.DrawString(
+      //   vehicle_location+carla::geom::Location(0, 0, 10),
+      //   std::to_string(custom_hash(current_road_ids) % 100000),
+      //   false, {0, 255, 0}, 0.1f
+      // );
+
       if (
-        last_lane_change_location.at(i).Distance(vehicle_location) > 15
-        and
+        // last_lane_change_location.at(i).Distance(vehicle_location) > 2.0
+        // and
         !front_waypoint->checkJunction()
       ) {
 
-        auto co_lane_vehicles = traffic_distribution.GetVehicleIds(current_road_key);
+        auto co_lane_vehicles = traffic_distribution.GetVehicleIds(current_road_ids);
+
+        // for (auto co_lane_id: co_lane_vehicles) {
+        //   debug_helper.DrawLine(
+        //     vehicle_location + carla::geom::Location(0, 0, 2),
+        //     actor_list.at(vehicle_id_to_index.at(co_lane_id))->GetLocation()
+        //       + carla::geom::Location(0, 0, 2),
+        //     0.2f, {255, 0, 0}, 0.1f
+        //   );
+        // }
+
         bool need_to_change_lane = false;
         bool lane_change_direction; // true -> left, false -> right
 
@@ -197,11 +221,9 @@ namespace traffic_manager {
 
               if (left_waypoint != nullptr) {
                 auto left_lane_vehicles = traffic_distribution.GetVehicleIds(
-                  traffic_distribution.MakeRoadKey(
                     {current_road_ids.road_id,
                     current_road_ids.section_id,
                     left_waypoint->getWaypoint()->GetLaneId()}
-                  )
                 );
                 if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
                   need_to_change_lane = true;
@@ -210,11 +232,9 @@ namespace traffic_manager {
                 }
               } else if (right_waypoint != nullptr) {
                 auto right_lane_vehicles = traffic_distribution.GetVehicleIds(
-                  traffic_distribution.MakeRoadKey(
                     {current_road_ids.road_id,
                     current_road_ids.section_id,
                     right_waypoint->getWaypoint()->GetLaneId()}
-                  )
                 );
                 if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
                   need_to_change_lane = true;
@@ -234,7 +254,7 @@ namespace traffic_manager {
         // }
 
         // debug_helper.DrawString(
-        //   vehicle_location+carla::geom::Location(0, 0, 3),
+        //   vehicle_location+carla::geom::Location(0, 0, 4),
         //   "Need",
         //   false, display_color_need, 0.1f
         // );
@@ -243,7 +263,7 @@ namespace traffic_manager {
           std::max(std::ceil(0.5 * vehicle_velocity), 5.0)  // Account for constants
         );
 
-        // need_to_change_lane = true;
+        // need_to_change_lane = true; // Comment this line if not debugging
         bool possible_to_lane_change = false;
         std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
         if (need_to_change_lane) {
@@ -256,12 +276,11 @@ namespace traffic_manager {
 
           if (change_over_point != nullptr) {
             auto lane_change_id = change_over_point->getWaypoint()->GetLaneId();
-            auto target_lane_key = traffic_distribution.MakeRoadKey({
-              current_road_ids.road_id,
+            auto target_lane_vehicles = traffic_distribution.GetVehicleIds(
+              {current_road_ids.road_id,
               current_road_ids.section_id,
-              lane_change_id
-            });
-            auto target_lane_vehicles = traffic_distribution.GetVehicleIds(target_lane_key);
+              lane_change_id}
+            );
 
             if (target_lane_vehicles.size() > 0) {
               bool found_hazard = false;
@@ -331,7 +350,7 @@ namespace traffic_manager {
 
         // if (need_to_change_lane)
         //   debug_helper.DrawString(
-        //     vehicle_location+carla::geom::Location(0, 0, 4),
+        //     vehicle_location+carla::geom::Location(0, 0, 6),
         //     "Possible",
         //     false, display_color_possible, 0.1f
         //   );
@@ -344,7 +363,7 @@ namespace traffic_manager {
 
           waypoint_buffer.clear();
           waypoint_buffer.push_back(change_over_point);
-          last_lane_change_location.at(i) = vehicle_location;
+          // debug_helper.DrawPoint(change_over_point->getLocation(), 0.2f, {255, 0, 255}, 1.0f);
         }
       }
 
@@ -473,18 +492,30 @@ namespace traffic_manager {
   float LocalizationStage::DeviationDotProduct(
       carla::SharedPtr<carla::client::Actor> actor,
       const carla::geom::Location &target_location) const {
+
     auto heading_vector = actor->GetTransform().GetForwardVector();
+    heading_vector.z = 0;
+    heading_vector = heading_vector.MakeUnitVector();
     auto next_vector = target_location - actor->GetLocation();
-    next_vector = next_vector.MakeUnitVector();
-    auto dot_product = carla::geom::Math::Dot(next_vector, heading_vector);
-    return dot_product;
+    next_vector.z = 0;
+    if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
+      next_vector = next_vector.MakeUnitVector();
+      auto dot_product = carla::geom::Math::Dot(next_vector, heading_vector);
+      return dot_product;
+    } else {
+      return 0;
+    }
   }
 
   float LocalizationStage::DeviationCrossProduct(
       carla::SharedPtr<carla::client::Actor> actor,
       const carla::geom::Location &target_location) const {
+
     auto heading_vector = actor->GetTransform().GetForwardVector();
+    heading_vector.z = 0;
+    heading_vector = heading_vector.MakeUnitVector();
     auto next_vector = target_location - actor->GetLocation();
+    next_vector.z = 0;
     next_vector = next_vector.MakeUnitVector();
     float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
     return cross_z;
@@ -492,8 +523,8 @@ namespace traffic_manager {
 
    void LocalizationStage::drawBuffer(Buffer& buffer) {
 
-    for (int i = 0; i<buffer.size(); ++i) {
-      debug_helper.DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.1f);
+    for (int i = 0; i<buffer.size() and i<5; ++i) {
+      debug_helper.DrawPoint(buffer.at(i)->getLocation(), 0.1f, {255U, 0U, 0U}, 0.5f);
     }
   }
 }
