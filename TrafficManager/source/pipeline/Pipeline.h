@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include <algorithm>
 
 #include "carla/Memory.h"
 #include "carla/client/Actor.h"
@@ -43,6 +44,7 @@ namespace traffic_manager {
     InMemoryMap& local_map;
     carla::client::DebugHelper& debug_helper;
     carla::client::Client& client_connection;
+    carla::client::World& world;
 
     std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_traffic_light_messenger;
@@ -68,6 +70,7 @@ namespace traffic_manager {
         std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
         InMemoryMap& local_map,
         carla::client::Client& client_connection,
+        carla::client::World& world,
         carla::client::DebugHelper& debug_helper,
         int pipeline_width
       );

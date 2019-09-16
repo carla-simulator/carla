@@ -16,6 +16,8 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/geom/Math.h"
+#include "carla/client/World.h"
+#include "carla/client/ActorList.h"
 
 #include "PipelineStage.h"
 #include "MessengerAndDataTypes.h"
@@ -31,6 +33,7 @@ namespace traffic_manager {
 
   private:
 
+    carla::client::World& world;
     carla::client::DebugHelper& debug_helper;
 
     int localization_messenger_state;
@@ -45,6 +48,9 @@ namespace traffic_manager {
 
     VicinityGrid vicinity_grid;
     std::unordered_map<uint, int> id_to_index;
+    std::unordered_map<uint, carla::SharedPtr<carla::client::Actor>> unregistered_actors;
+    std::chrono::time_point<std::chrono::_V2::system_clock, std::chrono::nanoseconds>
+    last_world_actors_pass_instance;
 
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
@@ -83,6 +89,7 @@ namespace traffic_manager {
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       int number_of_vehicle,
       int pool_size,
+      carla::client::World& world,
       carla::client::DebugHelper& debug_helper
     );
     ~CollisionStage();

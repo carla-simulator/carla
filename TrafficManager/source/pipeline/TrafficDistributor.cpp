@@ -257,9 +257,13 @@ namespace traffic_manager {
     heading_vector = heading_vector.MakeUnitVector();
     auto next_vector = target_location - actor->GetLocation();
     next_vector.z = 0;
-    next_vector = next_vector.MakeUnitVector();
-    float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
-    return cross_z;
+    if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
+      next_vector = next_vector.MakeUnitVector();
+      float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
+      return cross_z;
+    } else {
+      return 0;
+    }
   }
 
   float DeviationDotProduct(

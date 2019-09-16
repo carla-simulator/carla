@@ -23,7 +23,7 @@ namespace traffic_manager {
 
     std::unordered_map<uint, std::string> actor_to_grid_id;
 
-    std::string MakeKey(std::pair<int, int> gird_numbers);
+    std::string MakeKey(std::pair<int, int> grid_ids);
 
     public:
 
@@ -31,6 +31,7 @@ namespace traffic_manager {
     ~VicinityGrid();
 
     std::unordered_set<uint> GetActors(carla::SharedPtr<carla::client::Actor> actor);
-
+    std::pair<int, int> UpdateGrid(carla::SharedPtr<carla::client::Actor> actor);
+    void EraseActor(uint actor_id);
   };
 }

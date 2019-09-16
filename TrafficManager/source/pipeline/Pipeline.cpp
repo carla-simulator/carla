@@ -28,6 +28,7 @@ namespace traffic_manager {
     std::vector<carla::SharedPtr<carla::client::Actor>> actor_list;
     auto world_map = world.GetMap();
     auto spawn_points = world_map->GetRecommendedSpawnPoints();
+    std::random_shuffle(spawn_points.begin(), spawn_points.end());
     auto blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
     std::mt19937_64 rng((std::random_device())());
 
@@ -75,6 +76,7 @@ namespace traffic_manager {
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
     InMemoryMap& local_map,
     carla::client::Client& client_connection,
+    carla::client::World& world,
     carla::client::DebugHelper& debug_helper,
     int pipeline_width
   ):
@@ -85,6 +87,7 @@ namespace traffic_manager {
     actor_list(actor_list),
     local_map(local_map),
     client_connection(client_connection),
+    world(world),
     debug_helper(debug_helper),
     pipeline_width(pipeline_width)
   {
@@ -106,7 +109,7 @@ namespace traffic_manager {
     collision_stage = std::make_unique<CollisionStage>(
       localization_collision_messenger, collision_planner_messenger,
       actor_list.size(), pipeline_width,
-      debug_helper
+      world, debug_helper
     );
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(

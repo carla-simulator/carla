@@ -90,6 +90,7 @@ void run_pipeline(
     registered_actors,
     *local_map.get(),
     client_conn,
+    world,
     debug_helper,
     1
   );
