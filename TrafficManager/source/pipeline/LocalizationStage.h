@@ -20,7 +20,7 @@
 #include "SimpleWaypoint.h"
 #include "MessengerAndDataTypes.h"
 #include "InMemoryMap.h"
-#include "TrafficDistribution.h"
+#include "TrafficDistributor.h"
 
 namespace traffic_manager {
 
@@ -67,25 +67,11 @@ namespace traffic_manager {
     std::shared_ptr<BufferList> buffer_list_a;
     std::shared_ptr<BufferList> buffer_list_b;
     std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
-    TrafficDistribution traffic_distribution;
+    TrafficDistributor traffic_distributor;
     std::unordered_map<uint, int> vehicle_id_to_index;
     std::vector<carla::geom::Location> last_lane_change_location;
     std::unordered_map<bool, std::vector<carla::geom::Location>*> last_lane_change_map;
     std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list;
-
-    /// Returns the dot product between vehicle's heading vector and
-    /// the vector along the direction to the next target waypoint in the
-    /// horizon.
-    float DeviationDotProduct(
-        carla::SharedPtr<carla::client::Actor>,
-        const carla::geom::Location &) const;
-
-    /// Returns the cross product (z component value) between vehicle's heading
-    /// vector and the vector along the direction to the next target waypoint in the
-    /// horizon.
-    float DeviationCrossProduct(
-        carla::SharedPtr<carla::client::Actor>,
-        const carla::geom::Location &) const;
 
     void drawBuffer(Buffer& buffer);
 

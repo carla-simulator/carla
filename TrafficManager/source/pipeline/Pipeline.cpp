@@ -56,8 +56,11 @@ namespace traffic_manager {
         ) {
         blueprint = RandomChoice(*blueprint_library, rng);
       }
+
       auto actor = world.TrySpawnActor(blueprint, spawn_point);
-      actor_list.push_back(actor);
+      if (actor != nullptr) {
+        actor_list.push_back(actor);
+      }
     }
 
     return actor_list;

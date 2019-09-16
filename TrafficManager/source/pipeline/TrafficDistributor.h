@@ -8,7 +8,10 @@
 #include <shared_mutex>
 #include <string>
 
+#include "carla/client/Vehicle.h"
+
 #include "SimpleWaypoint.h"
+#include "MessengerAndDataTypes.h"
 
 namespace traffic_manager {
   struct GeoIds {
@@ -47,7 +50,23 @@ namespace traffic_manager {
   typedef std::unordered_map<int, std::unordered_set<uint>> LaneMap;
   typedef std::unordered_map<uint, LaneMap> SectionMap;
 
-  class TrafficDistribution {
+  /// Returns the cross product (z component value) between vehicle's heading
+  /// vector and the vector along the direction to the next target waypoint in the
+  /// horizon.
+  float DeviationCrossProduct(
+    carla::SharedPtr<carla::client::Actor> actor,
+    const carla::geom::Location &target_location
+  );
+
+  /// Returns the dot product between vehicle's heading vector and
+  /// the vector along the direction to the next target waypoint in the
+  /// horizon.
+  float DeviationDotProduct(
+    carla::SharedPtr<carla::client::Actor> actor,
+    const carla::geom::Location &target_location
+  );
+
+  class TrafficDistributor {
 
   private:
 
@@ -61,19 +80,28 @@ namespace traffic_manager {
     void EraseVehicleId(uint, GeoIds);
     void SetRoadIds(uint, GeoIds);
 
+    std::unordered_set<uint> GetVehicleIds(GeoIds ids) const;
+    GeoIds GetRoadIds(uint vehicle_id) const;
+
   public:
 
-    TrafficDistribution();
-    ~TrafficDistribution();
+    TrafficDistributor();
+    ~TrafficDistributor();
 
     void UpdateVehicleRoadPosition(
       uint actor_id,
       GeoIds road_ids
     );
 
-    std::unordered_set<uint> GetVehicleIds(GeoIds ids) const;
-    GeoIds GetRoadIds(uint vehicle_id) const;
-
+    std::shared_ptr<SimpleWaypoint>
+    AssignLaneChange(
+      carla::SharedPtr<carla::client::Actor> vehicle,
+      std::shared_ptr<SimpleWaypoint> current_waypoint,
+      GeoIds current_road_ids,
+      std::shared_ptr<BufferList> buffer_list,
+      std::unordered_map<uint, int>& vehicle_id_to_index,
+      std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list
+    );
   };
 
 }
