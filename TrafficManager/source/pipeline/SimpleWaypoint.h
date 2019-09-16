@@ -27,41 +27,41 @@ namespace traffic_manager {
     ~SimpleWaypoint();
 
     /// Returns the location object for this waypoint.
-    carla::geom::Location getLocation() const;
+    carla::geom::Location GetLocation() const;
 
     /// Returns a carla::shared_ptr to carla::waypoint
-    carla::SharedPtr<carla::client::Waypoint> getWaypoint() const;
+    carla::SharedPtr<carla::client::Waypoint> GetWaypoint() const;
 
     /// Returns the list of next waypoints.
-    std::vector<std::shared_ptr<SimpleWaypoint>> getNextWaypoint() const;
+    std::vector<std::shared_ptr<SimpleWaypoint>> GetNextWaypoint() const;
 
     /// Returns the vector along the waypoint's direction.
-    carla::geom::Vector3D getVector() const;
+    carla::geom::Vector3D GetVector() const;
 
     /// Returns the location of the waypoint as a list of x,y,z float values.
-    std::vector<float> getXYZ() const;
+    std::vector<float> GetXYZ() const;
 
     /// This method is used to set the next waypoints.
-    int setNextWaypoint(std::vector<std::shared_ptr<SimpleWaypoint>> next_waypoints);
+    int SetNextWaypoint(std::vector<std::shared_ptr<SimpleWaypoint>> next_waypoints);
 
     /// This method is used to set the closest left waypoint for lane change
-    void setLeftWaypoint(std::shared_ptr<SimpleWaypoint> waypoint);
+    void SetLeftWaypoint(std::shared_ptr<SimpleWaypoint> waypoint);
 
     /// This method is used to set the closest right waypoint for lane change
-    void setRightWaypoint(std::shared_ptr<SimpleWaypoint> waypoint);
+    void SetRightWaypoint(std::shared_ptr<SimpleWaypoint> waypoint);
 
     /// This method is used to get the closest left waypoint for lane change
-    std::shared_ptr<SimpleWaypoint> getLeftWaypoint();
+    std::shared_ptr<SimpleWaypoint> GetLeftWaypoint();
 
     /// This method is used to get the closest right waypoint for lane change
-    std::shared_ptr<SimpleWaypoint> getRightWaypoint();
+    std::shared_ptr<SimpleWaypoint> GetRightWaypoint();
 
     /// Calculates the distance from the object's waypoint to the passed
     /// location.
-    float distance(const carla::geom::Location &location) const;
+    float Distance(const carla::geom::Location &location) const;
 
     /// Returns true if the object's waypoint belongs to an intersection.
-    bool checkJunction() const;
+    bool CheckJunction() const;
 
   };
 

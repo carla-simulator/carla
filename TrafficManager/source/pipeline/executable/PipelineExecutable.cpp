@@ -22,21 +22,21 @@ void got_signal(int) {
   quit.store(true);
 }
 
-std::vector<carla::SharedPtr<carla::client::Actor>>* global_actor_list;
+std::vector<carla::SharedPtr<carla::client::Actor>> *global_actor_list;
 void handler() {
 
   if (!quit.load()) {
     std::cout << "\nTrafficManager encountered a problem!" << std::endl;
     std::cout << "Destorying all actors spawned" << std::endl;
     for (auto actor: *global_actor_list) {
-      if (actor != nullptr and actor->IsAlive()) {
+      if (actor != nullptr && actor->IsAlive()) {
         actor->Destroy();
       }
     }
     // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
-} 
+}
 
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   auto world = client_conn.GetWorld();
 
   int target_traffic_amount = 0;
-  if (argc == 3 and std::string(argv[1]) == "-n") {
+  if (argc == 3 && std::string(argv[1]) == "-n") {
     try {
       target_traffic_amount = std::stoi(argv[2]);
     } catch (const std::exception &e) {
@@ -73,7 +73,7 @@ void run_pipeline(
   auto world_map = world.GetMap();
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
   local_map->SetUp(1.0);
 
@@ -82,19 +82,19 @@ void run_pipeline(
   global_actor_list = &registered_actors;
 
   traffic_manager::Pipeline pipeline(
-    {0.1f, 0.15f, 0.01f},
-    {5.0f, 0.0f, 0.1f},
-    {10.0f, 0.01f, 0.1f},
-    25/3.6,
-    50/3.6,
-    registered_actors,
-    *local_map.get(),
-    client_conn,
-    world,
-    debug_helper,
-    1
-  );
-  pipeline.start();
+      {0.1f, 0.15f, 0.01f},
+      {5.0f, 0.0f, 0.1f},
+      {10.0f, 0.01f, 0.1f},
+      25 / 3.6,
+      50 / 3.6,
+      registered_actors,
+      *local_map.get(),
+      client_conn,
+      world,
+      debug_helper,
+      1
+      );
+  pipeline.Start();
 
   std::cout << "TrafficManager started" << std::endl;
   while (true) {
@@ -104,10 +104,10 @@ void run_pipeline(
     }
   }
 
-  pipeline.stop();
+  pipeline.Stop();
 
   for (auto actor: registered_actors) {
-    if (actor != nullptr and actor->IsAlive()) {
+    if (actor != nullptr && actor->IsAlive()) {
       actor->Destroy();
     }
   }

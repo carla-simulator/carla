@@ -27,8 +27,9 @@ namespace traffic_manager {
         carla::SharedPtr<carla::client::Waypoint
         >
         >
-        > getTopology () const; /// Retrieves list of topology segments from the
-                         /// simulator
+        > GetTopology() const; /// Retrieves list of topology segments from the
+
+    /// simulator
 
   };
 

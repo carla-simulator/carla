@@ -22,8 +22,7 @@ namespace traffic_manager {
   std::vector<carla::SharedPtr<carla::client::Actor>> spawn_traffic(
       carla::client::World &world,
       int core_count,
-      int target_amount = 0
-    ) {
+      int target_amount = 0) {
 
     std::vector<carla::SharedPtr<carla::client::Actor>> actor_list;
     auto world_map = world.GetMap();
@@ -51,9 +50,9 @@ namespace traffic_manager {
       auto spawn_point = spawn_points[i];
       auto blueprint = RandomChoice(*blueprint_library, rng);
       while (
-        blueprint.GetAttribute("number_of_wheels") != 4
-        or blueprint.GetId().compare("vehicle.carlamotors.carlacola") == 0
-        or blueprint.GetId().compare("vehicle.bmw.isetta") == 0
+        blueprint.GetAttribute("number_of_wheels") != 4 ||
+        blueprint.GetId().compare("vehicle.carlamotors.carlacola") == 0 ||
+        blueprint.GetId().compare("vehicle.bmw.isetta") == 0
         ) {
         blueprint = RandomChoice(*blueprint_library, rng);
       }
@@ -68,29 +67,27 @@ namespace traffic_manager {
   }
 
   Pipeline::Pipeline(
-    std::vector<float> longitudinal_PID_parameters,
-    std::vector<float> longitudinal_highway_PID_parameters,
-    std::vector<float> lateral_PID_parameters,
-    float urban_target_velocity,
-    float highway_target_velocity,
-    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
-    InMemoryMap& local_map,
-    carla::client::Client& client_connection,
-    carla::client::World& world,
-    carla::client::DebugHelper& debug_helper,
-    int pipeline_width
-  ):
-    longitudinal_PID_parameters(longitudinal_PID_parameters),
-    longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
-    lateral_PID_parameters(lateral_PID_parameters),
-    urban_target_velocity(urban_target_velocity),
-    actor_list(actor_list),
-    local_map(local_map),
-    client_connection(client_connection),
-    world(world),
-    debug_helper(debug_helper),
-    pipeline_width(pipeline_width)
-  {
+      std::vector<float> longitudinal_PID_parameters,
+      std::vector<float> longitudinal_highway_PID_parameters,
+      std::vector<float> lateral_PID_parameters,
+      float urban_target_velocity,
+      float highway_target_velocity,
+      std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
+      InMemoryMap &local_map,
+      carla::client::Client &client_connection,
+      carla::client::World &world,
+      carla::client::DebugHelper &debug_helper,
+      int pipeline_width)
+    : longitudinal_PID_parameters(longitudinal_PID_parameters),
+      longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
+      lateral_PID_parameters(lateral_PID_parameters),
+      urban_target_velocity(urban_target_velocity),
+      actor_list(actor_list),
+      local_map(local_map),
+      client_connection(client_connection),
+      world(world),
+      debug_helper(debug_helper),
+      pipeline_width(pipeline_width) {
 
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
     localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
@@ -100,44 +97,39 @@ namespace traffic_manager {
     planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
 
     localization_stage = std::make_unique<LocalizationStage>(
-      localization_planner_messenger, localization_collision_messenger,
-      localization_traffic_light_messenger, actor_list.size(), pipeline_width,
-      actor_list, local_map,
-      debug_helper
-    );
+        localization_planner_messenger, localization_collision_messenger,
+        localization_traffic_light_messenger, actor_list.size(), pipeline_width,
+        actor_list, local_map,
+        debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
-      localization_collision_messenger, collision_planner_messenger,
-      actor_list.size(), pipeline_width,
-      world, debug_helper
-    );
+        localization_collision_messenger, collision_planner_messenger,
+        actor_list.size(), pipeline_width,
+        world, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
-      localization_traffic_light_messenger, traffic_light_planner_messenger,
-      actor_list.size(), pipeline_width
-    );
+        localization_traffic_light_messenger, traffic_light_planner_messenger,
+        actor_list.size(), pipeline_width);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
-      localization_planner_messenger,
-      collision_planner_messenger,
-      traffic_light_planner_messenger,
-      planner_control_messenger,
-      actor_list.size(), pipeline_width,
-      urban_target_velocity,
-      highway_target_velocity, 
-      longitudinal_PID_parameters,
-      longitudinal_highway_PID_parameters,
-      lateral_PID_parameters
-    );
+        localization_planner_messenger,
+        collision_planner_messenger,
+        traffic_light_planner_messenger,
+        planner_control_messenger,
+        actor_list.size(), pipeline_width,
+        urban_target_velocity,
+        highway_target_velocity,
+        longitudinal_PID_parameters,
+        longitudinal_highway_PID_parameters,
+        lateral_PID_parameters);
 
     control_stage = std::make_unique<BatchControlStage>(
-      planner_control_messenger, client_connection,
-      actor_list.size(), pipeline_width
-    );
+        planner_control_messenger, client_connection,
+        actor_list.size(), pipeline_width);
 
   }
 
-  void Pipeline::start() {
+  void Pipeline::Start() {
     localization_stage->Start();
     collision_stage->Start();
     traffic_light_stage->Start();
@@ -145,7 +137,7 @@ namespace traffic_manager {
     control_stage->Start();
   }
 
-  void Pipeline::stop() {
+  void Pipeline::Stop() {
 
     localization_collision_messenger->Stop();
     localization_traffic_light_messenger->Stop();

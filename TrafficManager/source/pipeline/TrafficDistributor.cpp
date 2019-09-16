@@ -7,9 +7,8 @@ namespace traffic_manager {
   TrafficDistributor::~TrafficDistributor() {}
 
   void TrafficDistributor::SetVehicleId(
-    uint vehicle_id,
-    GeoIds ids
-  ) {
+      uint vehicle_id,
+      GeoIds ids) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
     if (road_to_vehicle_id_map.find(ids) != road_to_vehicle_id_map.end()) {
@@ -21,9 +20,8 @@ namespace traffic_manager {
   }
 
   void TrafficDistributor::EraseVehicleId(
-    uint vehicle_id,
-    GeoIds ids
-  ) {
+      uint vehicle_id,
+      GeoIds ids) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
     if (road_to_vehicle_id_map.find(ids) != road_to_vehicle_id_map.end()) {
@@ -32,9 +30,8 @@ namespace traffic_manager {
   }
 
   void TrafficDistributor::SetRoadIds(
-    uint vehicle_id,
-    GeoIds ids
-  ) {
+      uint vehicle_id,
+      GeoIds ids) {
 
     std::unique_lock<std::shared_timed_mutex> lock(distributor_mutex);
     if (vehicle_id_to_road_map.find(vehicle_id) != vehicle_id_to_road_map.end()) {
@@ -66,17 +63,15 @@ namespace traffic_manager {
   }
 
   void TrafficDistributor::UpdateVehicleRoadPosition(
-    uint actor_id,
-    GeoIds road_ids
-  ) {
+      uint actor_id,
+      GeoIds road_ids) {
 
     auto old_ids = GetRoadIds(actor_id);
 
     if (
-      road_ids.road_id != old_ids.road_id
-      or road_ids.section_id != old_ids.section_id
-      or road_ids.lane_id != old_ids.lane_id
-    ) {
+      road_ids.road_id != old_ids.road_id ||
+      road_ids.section_id != old_ids.section_id ||
+      road_ids.lane_id != old_ids.lane_id) {
 
       EraseVehicleId(actor_id, old_ids);
       SetVehicleId(actor_id, road_ids);
@@ -86,13 +81,12 @@ namespace traffic_manager {
 
   std::shared_ptr<SimpleWaypoint>
   TrafficDistributor::AssignLaneChange(
-    carla::SharedPtr<carla::client::Actor> vehicle,
-    std::shared_ptr<SimpleWaypoint> current_waypoint,
-    GeoIds current_road_ids,
-    std::shared_ptr<BufferList> buffer_list,
-    std::unordered_map<uint, int>& vehicle_id_to_index,
-    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list
-  ) {
+      carla::SharedPtr<carla::client::Actor> vehicle,
+      std::shared_ptr<SimpleWaypoint> current_waypoint,
+      GeoIds current_road_ids,
+      std::shared_ptr<BufferList> buffer_list,
+      std::unordered_map<uint, int> &vehicle_id_to_index,
+      std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list) {
 
     auto actor_id = vehicle->GetId();
     auto vehicle_location = vehicle->GetLocation();
@@ -102,40 +96,40 @@ namespace traffic_manager {
     bool need_to_change_lane = false;
     bool lane_change_direction; // true -> left, false -> right
 
-    auto left_waypoint = current_waypoint->getLeftWaypoint();
-    auto right_waypoint = current_waypoint->getRightWaypoint();
+    auto left_waypoint = current_waypoint->GetLeftWaypoint();
+    auto right_waypoint = current_waypoint->GetRightWaypoint();
 
     if (co_lane_vehicles.size() >= 2) {
-      for (auto& same_lane_vehicle_id: co_lane_vehicles) {
+      for (auto &same_lane_vehicle_id: co_lane_vehicles) {
 
-        auto& other_vehicle_buffer = buffer_list->at(
-          vehicle_id_to_index.at(same_lane_vehicle_id));
+        auto &other_vehicle_buffer = buffer_list->at(
+            vehicle_id_to_index.at(same_lane_vehicle_id));
 
         std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint;
         if (!other_vehicle_buffer.empty()) {
           same_lane_vehicle_waypoint = buffer_list->at(
-            vehicle_id_to_index.at(same_lane_vehicle_id)).front();
+              vehicle_id_to_index.at(same_lane_vehicle_id)).front();
         }
 
         if (
           same_lane_vehicle_id != actor_id
-          and
+          &&
           !other_vehicle_buffer.empty()
-          and
+          &&
           DeviationDotProduct(
-            vehicle, 
-            same_lane_vehicle_waypoint->getLocation()
-          ) > 0   // check other vehicle is ahead
-          and
-          same_lane_vehicle_waypoint->getLocation().Distance(vehicle_location) < 20   // meters
-        ) {
+          vehicle,
+          same_lane_vehicle_waypoint->GetLocation()) > 0 // check other vehicle
+                                                         // is ahead
+          &&
+          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location) < 20   //
+                                                                                      // meters
+          ) {
 
           if (left_waypoint != nullptr) {
             auto left_lane_vehicles = GetVehicleIds(
                 {current_road_ids.road_id,
-                current_road_ids.section_id,
-                left_waypoint->getWaypoint()->GetLaneId()}
-            );
+                 current_road_ids.section_id,
+                 left_waypoint->GetWaypoint()->GetLaneId()});
             if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = true;
@@ -144,9 +138,8 @@ namespace traffic_manager {
           } else if (right_waypoint != nullptr) {
             auto right_lane_vehicles = GetVehicleIds(
                 {current_road_ids.road_id,
-                current_road_ids.section_id,
-                right_waypoint->getWaypoint()->GetLaneId()}
-            );
+                 current_road_ids.section_id,
+                 right_waypoint->GetWaypoint()->GetLaneId()});
             if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = false;
@@ -159,7 +152,7 @@ namespace traffic_manager {
 
     int change_over_distance = static_cast<int>(
       std::max(std::ceil(0.5 * vehicle_velocity), 5.0)  // Account for constants
-    );
+      );
 
     bool possible_to_lane_change = false;
     std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
@@ -172,43 +165,42 @@ namespace traffic_manager {
       }
 
       if (change_over_point != nullptr) {
-        auto lane_change_id = change_over_point->getWaypoint()->GetLaneId();
+        auto lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
         auto target_lane_vehicles = GetVehicleIds(
-          {current_road_ids.road_id,
-          current_road_ids.section_id,
-          lane_change_id}
-        );
+            {current_road_ids.road_id,
+             current_road_ids.section_id,
+             lane_change_id});
 
         if (target_lane_vehicles.size() > 0) {
           bool found_hazard = false;
           for (auto other_vehicle_id: target_lane_vehicles) {
-            
-            auto& other_vehicle_buffer = buffer_list->at(
-              vehicle_id_to_index.at(other_vehicle_id));
-            
+
+            auto &other_vehicle_buffer = buffer_list->at(
+                vehicle_id_to_index.at(other_vehicle_id));
+
             if (
               !other_vehicle_buffer.empty()
-              and 
-              other_vehicle_buffer.front()->getWaypoint()->GetLaneId()
-              == lane_change_id
-            ) {
+              &&
+              other_vehicle_buffer.front()->GetWaypoint()->GetLaneId()
+              == lane_change_id) {
 
               auto other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
-              auto other_vehicle_location = other_vehicle_buffer.front()->getLocation();
+              auto other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
               auto relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
 
               if (relative_deviation < 0) {
 
-                auto time_to_reach_other = (change_over_point->distance(other_vehicle_location) + change_over_distance)
-                  / other_vehicle->GetVelocity().Length();
+                auto time_to_reach_other =
+                    (change_over_point->Distance(other_vehicle_location) + change_over_distance) /
+                    other_vehicle->GetVelocity().Length();
 
-                auto time_to_reach_reference = (change_over_point->distance(vehicle_location) + change_over_distance)
-                  / vehicle->GetVelocity().Length();
+                auto time_to_reach_reference =
+                    (change_over_point->Distance(vehicle_location) + change_over_distance) /
+                    vehicle->GetVelocity().Length();
 
                 if (
-                  relative_deviation > std::cos(M_PI * 135 / 180)
-                  or time_to_reach_other > time_to_reach_reference
-                ) {
+                  relative_deviation > std::cos(M_PI * 135 / 180) ||
+                  time_to_reach_other > time_to_reach_reference) {
                   found_hazard = true;
                   break;
                 }
@@ -217,9 +209,8 @@ namespace traffic_manager {
 
                 auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
                 if (
-                  change_over_point->distance(other_vehicle_location)
-                  < (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x*2)
-                ) {
+                  change_over_point->Distance(other_vehicle_location)
+                  < (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
                   found_hazard = true;
                   break;
                 }
@@ -238,9 +229,9 @@ namespace traffic_manager {
       }
     }
 
-    if (need_to_change_lane and possible_to_lane_change) {
-      for (int i= change_over_distance; i >= 0; i--) {
-        change_over_point = change_over_point->getNextWaypoint()[0];
+    if (need_to_change_lane && possible_to_lane_change) {
+      for (int i = change_over_distance; i >= 0; i--) {
+        change_over_point = change_over_point->GetNextWaypoint()[0];
       }
       return change_over_point;
     } else {
@@ -249,8 +240,8 @@ namespace traffic_manager {
   }
 
   float DeviationCrossProduct(
-    carla::SharedPtr<carla::client::Actor> actor,
-    const carla::geom::Location &target_location) {
+      carla::SharedPtr<carla::client::Actor> actor,
+      const carla::geom::Location &target_location) {
 
     auto heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0;
@@ -267,8 +258,8 @@ namespace traffic_manager {
   }
 
   float DeviationDotProduct(
-    carla::SharedPtr<carla::client::Actor> actor,
-    const carla::geom::Location &target_location) {
+      carla::SharedPtr<carla::client::Actor> actor,
+      const carla::geom::Location &target_location) {
 
     auto heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0;

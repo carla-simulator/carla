@@ -43,7 +43,7 @@ void handler() {
     std::cout << "TrafficManager encountered a problem!" << std::endl;
     std::cout << "Destorying all actors spawned" << std::endl;
     for (auto actor: *global_actor_list) {
-      if (actor != nullptr and actor->IsAlive()) {
+      if (actor != nullptr && actor->IsAlive()) {
         actor->Destroy();
       }
     }
@@ -85,7 +85,7 @@ void test_pipeline(
   auto world_map = world.GetMap();
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
   local_map->SetUp(1.0);
 
@@ -106,7 +106,7 @@ void test_pipeline(
     debug_helper,
     std::ceil(core_count / 5)
   );
-  pipeline.start();
+  pipeline.Start();
 
   std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
 
@@ -117,10 +117,10 @@ void test_pipeline(
     }
   }
 
-  pipeline.stop();
+  pipeline.Stop();
 
   for (auto actor: registered_actors) {
-    if (actor != nullptr and actor->IsAlive()) {
+    if (actor != nullptr && actor->IsAlive()) {
       actor->Destroy();
     }
   }
@@ -142,7 +142,7 @@ void test_pipeline_stages(
 
   std::cout << "Setting up local map cache ... " << std::endl;
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   auto local_map = traffic_manager::InMemoryMap(topology);
   local_map.SetUp(1.0);
   std::cout << "Map set up !" << std::endl;
@@ -245,7 +245,7 @@ void test_pipeline_stages(
 
 void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   traffic_manager::InMemoryMap local_map(topology);
 
   std::cout << "setup starting" << std::endl;
@@ -254,9 +254,9 @@ void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   int loose_ends_count = 0;
   auto dense_topology = local_map.GetDenseTopology();
   for (auto &swp : dense_topology) {
-    if (swp->getNextWaypoint().size() < 1 || swp->getNextWaypoint()[0] == 0) {
+    if (swp->GetNextWaypoint().size() < 1 || swp->GetNextWaypoint()[0] == 0) {
       loose_ends_count += 1;
-      auto loc = swp->getLocation();
+      auto loc = swp->GetLocation();
       std::cout << "Loose end at : " << loc.x << " " << loc.y << std::endl;
     }
   }
@@ -266,11 +266,11 @@ void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
 void test_dense_topology(const carla::client::World &world) {
   auto debug = world.MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   traffic_manager::InMemoryMap local_map(topology);
   local_map.SetUp(1.0);
   for (auto point : local_map.GetDenseTopology()) {
-    auto location = point->getLocation();
+    auto location = point->GetLocation();
     debug.DrawPoint(location + carla::geom::Location(0,
         0,
         1), 0.2, carla::client::DebugHelper::Color{225U, 0U, 0U}, 30.0F);
@@ -281,7 +281,7 @@ void test_lane_change(const carla::client::World &world) {
 
   auto debug = world.MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
-  auto topology = dao.getTopology();
+  auto topology = dao.GetTopology();
   traffic_manager::InMemoryMap local_map(topology);
   local_map.SetUp(1.0);
 
@@ -292,21 +292,21 @@ void test_lane_change(const carla::client::World &world) {
 
   for (auto point : local_map.GetDenseTopology()) {
 
-    auto raw_waypoint = point->getWaypoint();
+    auto raw_waypoint = point->GetWaypoint();
     uint8_t lane_change = static_cast<uint8_t>(raw_waypoint->GetLaneChange());
     uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
     uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
 
-    if ((lane_change & change_right) > 0 and !(point->checkJunction())) {
+    if ((lane_change & change_right) > 0 && !(point->CheckJunction())) {
       ++total_right_lane_links;
-      if (point->getRightWaypoint() == nullptr) {
+      if (point->GetRightWaypoint() == nullptr) {
         ++missing_right_lane_links;
       }
     }
 
-    if ((lane_change & change_left) > 0 and !(point->checkJunction())) {
+    if ((lane_change & change_left) > 0 && !(point->CheckJunction())) {
       ++total_left_lane_links;
-      if (point->getLeftWaypoint() == nullptr) {
+      if (point->GetLeftWaypoint() == nullptr) {
         ++missing_left_lane_links;
       }
     }

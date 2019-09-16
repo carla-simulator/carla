@@ -4,7 +4,8 @@
 
 namespace traffic_manager {
 
-  static const float ZERO_LENGTH = 0.0001;   // Very important that this is less than 10^-4
+  static const float ZERO_LENGTH = 0.0001;   // Very important that this is less
+                                             // than 10^-4
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
   static const int LANE_CHANGE_LOOK_AHEAD = 5;
   static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5;   // cos of the angle
@@ -47,7 +48,7 @@ namespace traffic_manager {
 
           StructuredWaypoints(dense_topology.back());
 
-          previous_wp->setNextWaypoint({this->dense_topology.back()});
+          previous_wp->SetNextWaypoint({this->dense_topology.back()});
         }
 
         // Adding exit waypoint
@@ -56,7 +57,7 @@ namespace traffic_manager {
 
         StructuredWaypoints(dense_topology.back());
 
-        previous_wp->setNextWaypoint({this->dense_topology.back()});
+        previous_wp->SetNextWaypoint({this->dense_topology.back()});
         exit_node_list.push_back(this->dense_topology.back());
       }
     }
@@ -65,8 +66,8 @@ namespace traffic_manager {
     int i = 0, j = 0;
     for (auto end_point : exit_node_list) {
       for (auto begin_point : entry_node_list) {
-        if (end_point->distance(begin_point->getLocation()) < ZERO_LENGTH and i != j) {
-          end_point->setNextWaypoint({begin_point});
+        if (end_point->Distance(begin_point->GetLocation()) < ZERO_LENGTH and i != j) {
+          end_point->SetNextWaypoint({begin_point});
         }
         ++j;
       }
@@ -76,30 +77,30 @@ namespace traffic_manager {
     // Tying up loose ends
     i = 0;
     for (auto end_point : exit_node_list) {
-      if (end_point->getNextWaypoint().size() == 0) {
+      if (end_point->GetNextWaypoint().size() == 0) {
         j = 0;
         float min_distance = INFINITE_DISTANCE;
         std::shared_ptr<traffic_manager::SimpleWaypoint> closest_connection;
         for (auto begin_point : entry_node_list) {
-          auto new_distance = end_point->distance(begin_point->getLocation());
+          auto new_distance = end_point->Distance(begin_point->GetLocation());
           if (new_distance < min_distance and i != j) {
             min_distance = new_distance;
             closest_connection = begin_point;
           }
           ++j;
         }
-        auto end_point_vector = end_point->getVector();
-        auto relative_vector = closest_connection->getLocation() - end_point->getLocation();
+        auto end_point_vector = end_point->GetVector();
+        auto relative_vector = closest_connection->GetLocation() - end_point->GetLocation();
         relative_vector = relative_vector.MakeUnitVector();
         auto relative_dot = carla::geom::Math::Dot(end_point_vector, relative_vector);
         if (relative_dot < LANE_CHANGE_ANGULAR_THRESHOLD) {
           int count = LANE_CHANGE_LOOK_AHEAD;
           while (count > 0) {
-            closest_connection = closest_connection->getNextWaypoint()[0];
+            closest_connection = closest_connection->GetNextWaypoint()[0];
             count--;
           }
         }
-        end_point->setNextWaypoint({closest_connection});
+        end_point->SetNextWaypoint({closest_connection});
       }
       ++i;
     }
@@ -116,7 +117,7 @@ namespace traffic_manager {
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     float min_distance = std::numeric_limits<float>::max();
     for (auto simple_waypoint : this->dense_topology) {
-      float current_distance = simple_waypoint->distance(location);
+      float current_distance = simple_waypoint->Distance(location);
       if (current_distance < min_distance) {
         min_distance = current_distance;
         closest_waypoint = simple_waypoint;
@@ -130,7 +131,7 @@ namespace traffic_manager {
   }
 
   void InMemoryMap::StructuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint) {
-    auto current_waypoint = waypoint->getWaypoint();
+    auto current_waypoint = waypoint->GetWaypoint();
     auto section_id = current_waypoint->GetSectionId();
     auto road_id = current_waypoint->GetRoadId();
     auto lane_id = current_waypoint->GetLaneId();
@@ -151,7 +152,7 @@ namespace traffic_manager {
         lane_wp.push_back(waypoint);
         LaneWaypointMap lane_map;
         lane_map.insert({lane_id, lane_wp});
-        road_to_waypoint[road_id].insert({section_id,lane_map});
+        road_to_waypoint[road_id].insert({section_id, lane_map});
       }
     } else {
 
@@ -177,32 +178,32 @@ namespace traffic_manager {
 
       if (
         road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end()
-        and
+        &&
         road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
         != road_to_waypoint[neighbour_road_id].end()
-        and
+        &&
         road_to_waypoint[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
-        != road_to_waypoint[neighbour_road_id][neighbour_section_id].end()
-      ) {
+        != road_to_waypoint[neighbour_road_id][neighbour_section_id].end()) {
 
         std::vector<std::shared_ptr<SimpleWaypoint>>
         waypoints_to_left =
-        road_to_waypoint[neighbor_waypoint->GetRoadId()][neighbor_waypoint->GetSectionId()][neighbor_waypoint->GetLaneId()];
+            road_to_waypoint[neighbor_waypoint->GetRoadId()][neighbor_waypoint->GetSectionId()][
+          neighbor_waypoint->GetLaneId()];
 
         if (waypoints_to_left.size() > 0) {
           auto nearest_waypoint = waypoints_to_left[0];
           auto smallest_left_distance = INFINITE_DISTANCE;
           for (auto left_wp : waypoints_to_left) {
-            if (reference_waypoint->distance(left_wp->getLocation()) < smallest_left_distance) {
-              smallest_left_distance = reference_waypoint->distance(left_wp->getLocation());
+            if (reference_waypoint->Distance(left_wp->GetLocation()) < smallest_left_distance) {
+              smallest_left_distance = reference_waypoint->Distance(left_wp->GetLocation());
               nearest_waypoint = left_wp;
             }
           }
 
           if (side < 0) {
-            reference_waypoint->setLeftWaypoint(nearest_waypoint);
+            reference_waypoint->SetLeftWaypoint(nearest_waypoint);
           } else if (side > 0) {
-            reference_waypoint->setRightWaypoint(nearest_waypoint);
+            reference_waypoint->SetRightWaypoint(nearest_waypoint);
           }
         }
       }
@@ -210,7 +211,7 @@ namespace traffic_manager {
   }
 
   void InMemoryMap::FindAndLinkLaneChange(std::shared_ptr<SimpleWaypoint> reference_waypoint) {
-    auto raw_waypoint = reference_waypoint->getWaypoint();
+    auto raw_waypoint = reference_waypoint->GetWaypoint();
     uint8_t lane_change = static_cast<uint8_t>(raw_waypoint->GetLaneChange());
     uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
     uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);

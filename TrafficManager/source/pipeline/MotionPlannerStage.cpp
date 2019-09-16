@@ -6,31 +6,31 @@ namespace traffic_manager {
   const float INTERSECTION_APPROACH_SPEED = 15 / 3.6;
 
   MotionPlannerStage::MotionPlannerStage(
-    std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
-    std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
-    std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
-    std::shared_ptr<PlannerToControlMessenger> control_messenger,
-    int number_of_vehicles,
-    int pool_size = 1,
-    float urban_target_velocity = 25/3.6,
-    float highway_target_velocity = 50/3.6,
-    std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
-    std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
-    std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f}
-  ) :
-    urban_target_velocity(urban_target_velocity),
-    highway_target_velocity(highway_target_velocity),
-    longitudinal_parameters(longitudinal_parameters),
-    highway_longitudinal_parameters(highway_longitudinal_parameters),
-    lateral_parameters(lateral_parameters),
-    localization_messenger(localization_messenger),
-    control_messenger(control_messenger),
-    collision_messenger(collision_messenger),
-    traffic_light_messenger(traffic_light_messenger),
-    PipelineStage(pool_size, number_of_vehicles)
-  {
+      std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+      std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+      std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
+      std::shared_ptr<PlannerToControlMessenger> control_messenger,
+      int number_of_vehicles,
+      int pool_size = 1,
+      float urban_target_velocity = 25 / 3.6,
+      float highway_target_velocity = 50 / 3.6,
+      std::vector<float> longitudinal_parameters = {
+    0.1f, 0.15f, 0.01f
+  },
+      std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
+      std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
+    : urban_target_velocity(urban_target_velocity),
+      highway_target_velocity(highway_target_velocity),
+      longitudinal_parameters(longitudinal_parameters),
+      highway_longitudinal_parameters(highway_longitudinal_parameters),
+      lateral_parameters(lateral_parameters),
+      localization_messenger(localization_messenger),
+      control_messenger(control_messenger),
+      collision_messenger(collision_messenger),
+      traffic_light_messenger(traffic_light_messenger),
+      PipelineStage(pool_size, number_of_vehicles) {
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
-    for(auto& entry: *pid_state_vector.get()) {
+    for (auto &entry: *pid_state_vector.get()) {
       entry.time_instance = std::chrono::system_clock::now();
     }
 
@@ -53,7 +53,7 @@ namespace traffic_manager {
 
     for (int i = start_index; i <= end_index; ++i) {
 
-      auto& localization_data = localization_frame->at(i);
+      auto &localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
       float current_deviation = localization_data.deviation;
       int actor_id = actor->GetId();
@@ -81,7 +81,7 @@ namespace traffic_manager {
       }
 
       // State update for vehicle
-      auto current_state = controller.stateUpdate(
+      auto current_state = controller.StateUpdate(
           previous_state,
           current_velocity,
           dynamic_target_velocity,
@@ -89,7 +89,7 @@ namespace traffic_manager {
           current_time);
 
       // Controller actuation
-      auto actuation_signal = controller.runStep(
+      auto actuation_signal = controller.RunStep(
           current_state,
           previous_state,
           longitudinal_parameters,
@@ -97,24 +97,23 @@ namespace traffic_manager {
 
       // In case of collision or traffic light or approaching a junction
       if (
-          (
-            collision_messenger_state != 0
-            and
-            collision_frame->at(i).hazard
-          )
-          or
-          (
-            traffic_light_messenger_state != 0
-            and
-            traffic_light_frame->at(i).traffic_light_hazard > 0
-          )
-          or
-          (
-            localization_data.approaching_true_junction
-            and
-            current_velocity > INTERSECTION_APPROACH_SPEED
-          )
-      ) {
+        (
+          collision_messenger_state != 0
+          &&
+          collision_frame->at(i).hazard
+        )
+        ||
+        (
+          traffic_light_messenger_state != 0
+          &&
+          traffic_light_frame->at(i).traffic_light_hazard > 0
+        )
+        ||
+        (
+          localization_data.approaching_true_junction
+          &&
+          current_velocity > INTERSECTION_APPROACH_SPEED
+        )) {
         current_state.deviation_integral = 0;
         current_state.velocity_integral = 0;
         actuation_signal.throttle = 0;
@@ -122,18 +121,18 @@ namespace traffic_manager {
       }
 
       // Updating state
-      auto& state = pid_state_vector->at(i);
+      auto &state = pid_state_vector->at(i);
       state = current_state;
 
       // Constructing actuation signal
-      auto& message = frame_map.at(frame_selector)->at(i);
+      auto &message = frame_map.at(frame_selector)->at(i);
       message.actor_id = actor_id;
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
 
     }
-}
+  }
 
   void MotionPlannerStage::DataReceiver() {
 

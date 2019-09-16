@@ -37,7 +37,7 @@ namespace traffic_manager {
 
     /// This method calculates the present state of the vehicle including
     /// the accumulated integral component of the PID system.
-    StateEntry stateUpdate(
+    StateEntry StateUpdate(
         StateEntry previous_state,
         float current_velocity,
         float target_velocity,
@@ -46,7 +46,7 @@ namespace traffic_manager {
 
     /// This method calculates the actuation signals based on the resent state
     /// change of the vehicle to minimize PID error.
-    ActuationSignal runStep(
+    ActuationSignal RunStep(
         StateEntry present_state,
         StateEntry previous_state,
         const std::vector<float> &longitudinal_parameters,

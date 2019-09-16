@@ -5,15 +5,13 @@
 namespace traffic_manager {
 
   BatchControlStage::BatchControlStage(
-    std::shared_ptr<PlannerToControlMessenger> messenger,
-    carla::client::Client& carla_client,
-    int number_of_vehicles,
-    int pool_size
-  ):
-    messenger(messenger),
-    carla_client(carla_client),
-    PipelineStage(pool_size, number_of_vehicles)
-  {
+      std::shared_ptr<PlannerToControlMessenger> messenger,
+      carla::client::Client &carla_client,
+      int number_of_vehicles,
+      int pool_size)
+    : messenger(messenger),
+      carla_client(carla_client),
+      PipelineStage(pool_size, number_of_vehicles) {
     messenger_state = messenger->GetState();
     frame_count = 0;
     last_update_instance = std::chrono::system_clock::now();
@@ -24,11 +22,11 @@ namespace traffic_manager {
 
   void BatchControlStage::Action(const int start_index, const int end_index) {
 
-    for (int i=start_index; i<=end_index; ++i) {
+    for (int i = start_index; i <= end_index; ++i) {
 
       carla::rpc::VehicleControl vehicle_control;
 
-      auto& element = data_frame->at(i);
+      auto &element = data_frame->at(i);
       auto actor_id = element.actor_id;
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;
@@ -36,7 +34,7 @@ namespace traffic_manager {
 
       carla::rpc::Command::ApplyVehicleControl control_command(actor_id, vehicle_control);
 
-      auto& command_reference = commands->at(i);
+      auto &command_reference = commands->at(i);
       command_reference = control_command;
     }
   }
@@ -62,6 +60,7 @@ namespace traffic_manager {
       frame_count = 0;
     }
 
-    std::this_thread::sleep_for(10ms);  // limit updates to 100 frames per second
+    std::this_thread::sleep_for(10ms);  // limit updates to 100 frames per
+                                        // second
   }
 }

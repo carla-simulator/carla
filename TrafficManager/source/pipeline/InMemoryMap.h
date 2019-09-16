@@ -26,7 +26,6 @@ namespace traffic_manager {
   typedef std::unordered_map<uint, LaneWaypointMap> SectionWaypointMap;
   typedef std::unordered_map<uint, SectionWaypointMap> RoadWaypointMap;
 
-
   class InMemoryMap {
 
     /// This class constructs a descretised local map cache.

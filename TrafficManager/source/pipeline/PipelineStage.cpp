@@ -2,11 +2,10 @@
 
 namespace traffic_manager {
 
-  PipelineStage::PipelineStage (
-    int pool_size,
-    int number_of_vehicles
-  ): pool_size(pool_size), number_of_vehicles(number_of_vehicles) 
-  {
+  PipelineStage::PipelineStage(
+      int pool_size,
+      int number_of_vehicles) : pool_size(pool_size),
+                                number_of_vehicles(number_of_vehicles) {
 
     action_start_counter.store(0);
     action_finished_counter.store(0);
@@ -20,11 +19,10 @@ namespace traffic_manager {
 
   void PipelineStage::Start() {
 
-    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);    
-    for (int i=0; i<pool_size; ++i) {
+    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);
+    for (int i = 0; i < pool_size; ++i) {
       action_threads.push_back(
-        std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i)
-      );
+          std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i));
     }
     data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
 
@@ -55,7 +53,7 @@ namespace traffic_manager {
         this->DataReceiver();
       }
 
-      while (action_start_counter.load() < pool_size and run_stage.load()) {
+      while (action_start_counter.load() < pool_size && run_stage.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return action_start_counter.load() == pool_size;});
         if (!run_stage.load()) {
           break;
@@ -74,7 +72,7 @@ namespace traffic_manager {
   void PipelineStage::ActionThreadManager(const int thread_id) {
 
     int array_size = number_of_vehicles;
-    int load_per_thread = static_cast<int>(std::floor(array_size/pool_size));
+    int load_per_thread = static_cast<int>(std::floor(array_size / pool_size));
 
     while (run_stage.load()) {
 
@@ -93,8 +91,9 @@ namespace traffic_manager {
       }
       lock.unlock();
 
-      int array_start_index = thread_id*load_per_thread;
-      int array_end_index = thread_id == pool_size-1 ? array_size-1 : (thread_id+1)*load_per_thread-1;
+      int array_start_index = thread_id * load_per_thread;
+      int array_end_index = thread_id ==
+          pool_size - 1 ? array_size - 1 : (thread_id + 1) * load_per_thread - 1;
 
       this->Action(array_start_index, array_end_index);
       ++action_finished_counter;
@@ -110,7 +109,7 @@ namespace traffic_manager {
         run_threads.store(false);
       }
 
-      if (thread_id == pool_size -1) {
+      if (thread_id == pool_size - 1) {
         run_sender.store(true);
         wake_sender_notifier.notify_one();
       }
@@ -131,7 +130,7 @@ namespace traffic_manager {
       run_sender.store(false);
 
       if (run_stage.load()) {
-       this->DataSender();
+        this->DataSender();
       }
 
       run_receiver.store(true);

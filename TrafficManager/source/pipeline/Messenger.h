@@ -9,72 +9,74 @@ using namespace std::chrono_literals;
 
 namespace traffic_manager {
 
-    template<typename Data>
-    struct DataPacket {
-        int id;
-        Data data;
-    };
+  template <typename Data>
+  struct DataPacket {
+    int id;
+    Data data;
+  };
 
-    template<typename Data>
-    class Messenger {
+  template <typename Data>
+  class Messenger {
 
-    private:
-        std::atomic<bool> stop_messenger;
-        std::atomic<int> state_counter;
-        Data data;
+  private:
 
-        std::mutex data_modification_mutex;
-        std::condition_variable send_condition;
-        std::condition_variable receive_condition;
+    std::atomic<bool> stop_messenger;
+    std::atomic<int> state_counter;
+    Data data;
 
-    public:
+    std::mutex data_modification_mutex;
+    std::condition_variable send_condition;
+    std::condition_variable receive_condition;
 
-        Messenger() {
-            state_counter = 0;
-            stop_messenger.store(false);
+  public:
+
+    Messenger() {
+      state_counter = 0;
+      stop_messenger.store(false);
+    }
+    ~Messenger() {}
+
+    int SendData(DataPacket<Data> packet) {
+
+      std::unique_lock<std::mutex> lock(data_modification_mutex);
+      while (state_counter.load() == packet.id) {
+        send_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != packet.id;});
+        if (stop_messenger.load()) {
+          break;
         }
-        ~Messenger() {}
+      }
+      data = packet.data;
+      state_counter.store(state_counter.load() + 1);
+      int present_state = state_counter.load();
+      receive_condition.notify_one();
 
-        int SendData(DataPacket<Data> packet) {
+      return present_state;
+    }
 
-            std::unique_lock<std::mutex> lock(data_modification_mutex);
-            while (state_counter.load() == packet.id) {
-                send_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != packet.id;});
-                if (stop_messenger.load()) {
-                    break;
-                }
-            }
-            data = packet.data;
-            state_counter.store(state_counter.load() +1);
-            int present_state = state_counter.load();
-            receive_condition.notify_one();
+    DataPacket<Data> ReceiveData(int old_state) {
 
-            return present_state;
+      std::unique_lock<std::mutex> lock(data_modification_mutex);
+      while (state_counter.load() == old_state) {
+        receive_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != old_state;});
+        if (stop_messenger.load()) {
+          break;
         }
+      }
+      state_counter.store(state_counter.load() + 1);
+      DataPacket<Data> packet = {state_counter.load(), data};
+      send_condition.notify_one();
 
-        DataPacket<Data> ReceiveData(int old_state) {
+      return packet;
+    }
 
-            std::unique_lock<std::mutex> lock(data_modification_mutex);
-            while (state_counter.load() == old_state) {
-                receive_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != old_state;});
-                if(stop_messenger.load()) {
-                    break;
-                }
-            }
-            state_counter.store(state_counter.load() +1);
-            DataPacket<Data> packet = {state_counter.load(), data};
-            send_condition.notify_one();
+    int GetState() {
+      return state_counter.load();
+    }
 
-            return packet;
-        }
+    void Stop() {
+      stop_messenger.store(true);
+    }
 
-        int GetState() {
-            return state_counter.load();
-        }
+  };
 
-        void Stop() {
-            stop_messenger.store(true);
-        }
-
-    };
 }

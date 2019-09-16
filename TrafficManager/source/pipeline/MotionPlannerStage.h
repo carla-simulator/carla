@@ -18,7 +18,8 @@ namespace traffic_manager {
 
     /// The class is responsible for aggregating information from various stages
     /// like traffic like state stage, collision detection stage and actuation
-    /// signals from PID controller and makes decisions on how to move the vehicle to
+    /// signals from PID controller and makes decisions on how to move the
+    /// vehicle to
     /// follow it's trajectory safely.
 
   private:
@@ -60,12 +61,13 @@ namespace traffic_manager {
         float highway_target_velocity,
         std::vector<float> longitudinal_parameters,
         std::vector<float> highway_longitudinal_parameters,
-        std::vector<float> lateral_parameters
-      );
+        std::vector<float> lateral_parameters);
     ~MotionPlannerStage();
 
     void DataReceiver() override;
+
     void Action(const int start_index, const int end_index) override;
+
     void DataSender() override;
 
     using PipelineStage::Start;

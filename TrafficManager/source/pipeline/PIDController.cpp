@@ -9,7 +9,7 @@ namespace traffic_manager {
 
   PIDController::PIDController() {}
 
-  StateEntry PIDController::stateUpdate(
+  StateEntry PIDController::StateUpdate(
       StateEntry previous_state,
       float current_velocity,
       float target_velocity,
@@ -39,7 +39,7 @@ namespace traffic_manager {
     return current_state;
   }
 
-  ActuationSignal PIDController::runStep(
+  ActuationSignal PIDController::RunStep(
       StateEntry present_state,
       StateEntry previous_state,
       const std::vector<float> &longitudinal_parameters,

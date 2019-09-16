@@ -52,22 +52,21 @@ namespace traffic_manager {
 
     /// Implement this method with the logic to recieve data from
     /// Previous stage(s) and distribute to Action() threads
-    virtual void DataReceiver()=0;
+    virtual void DataReceiver() = 0;
 
     /// Implement this method with logic to gather results from action
     /// Threads and send to next stage(s)
-    virtual void DataSender()=0;
+    virtual void DataSender() = 0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(const int start_index, const int end_index)=0;
+    virtual void Action(const int start_index, const int end_index) = 0;
 
   public:
 
     /// Pass the number of thread pool size.
-    PipelineStage (
-      int pool_size,
-      int number_of_vehicles
-    );
+    PipelineStage(
+        int pool_size,
+        int number_of_vehicles);
 
     virtual ~PipelineStage();
 
