@@ -82,12 +82,12 @@ protected:
 
 private:
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY()
   TArray<UMaterial*> MaterialsFound;
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY()
   TArray<FSensorShader> Shaders;
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY()
   TArray<FShaderFloatParameterValue> FloatShaderParams;
 };

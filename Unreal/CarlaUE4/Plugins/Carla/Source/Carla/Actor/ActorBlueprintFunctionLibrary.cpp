@@ -351,13 +351,13 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   FActorVariation LensXSize;
   LensXSize.Id = TEXT("lens_x_size");
   LensXSize.Type = EActorAttributeType::Float;
-  LensXSize.RecommendedValues = { TEXT("0.06") };
+  LensXSize.RecommendedValues = { TEXT("0.08") };
   LensXSize.bRestrictToRecommended = false;
 
   FActorVariation LensYSize;
   LensYSize.Id = TEXT("lens_y_size");
   LensYSize.Type = EActorAttributeType::Float;
-  LensYSize.RecommendedValues = { TEXT("0.1") };
+  LensYSize.RecommendedValues = { TEXT("0.08") };
   LensYSize.bRestrictToRecommended = false;
 
   Definition.Variations.Append({
@@ -583,6 +583,18 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     Tint.RecommendedValues = { TEXT("0.0") };
     Tint.bRestrictToRecommended = false;
 
+    FActorVariation ChromaticIntensity;
+    ChromaticIntensity.Id = TEXT("chromatic_aberration_intensity");
+    ChromaticIntensity.Type = EActorAttributeType::Float;
+    ChromaticIntensity.RecommendedValues = { TEXT("0.0") };
+    ChromaticIntensity.bRestrictToRecommended = false;
+
+    FActorVariation ChromaticOffset;
+    ChromaticOffset.Id = TEXT("chromatic_aberration_offset");
+    ChromaticOffset.Type = EActorAttributeType::Float;
+    ChromaticOffset.RecommendedValues = { TEXT("0.0") };
+    ChromaticOffset.bRestrictToRecommended = false;
+
     Definition.Variations.Append({
       ExposureMode,
       ExposureCompensation,
@@ -610,7 +622,9 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       FilmBlackClip,
       FilmWhiteClip,
       Temperature,
-      Tint});
+      Tint,
+      ChromaticIntensity,
+      ChromaticOffset});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -1143,6 +1157,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("temp", Description.Variations, 6500.0f));
     Camera->SetWhiteTint(
         RetrieveActorAttributeToFloat("tint", Description.Variations, 0.0f));
+
+    Camera->SetChromAberrIntensity(
+        RetrieveActorAttributeToFloat("chromatic_aberration_intensity", Description.Variations, 0.0f));
+    Camera->SetChromAberrOffset(
+        RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
   }
 }
 
@@ -1160,9 +1179,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
   Camera->SetFloatShaderParameter(0, TEXT("kcube"),
       RetrieveActorAttributeToFloat("lens_kcube", Description.Variations, 0.0f));
   Camera->SetFloatShaderParameter(0, TEXT("XSize_NState"),
-      RetrieveActorAttributeToFloat("lens_x_size", Description.Variations, 0.06f));
+      RetrieveActorAttributeToFloat("lens_x_size", Description.Variations, 0.08f));
   Camera->SetFloatShaderParameter(0, TEXT("YSize_NState"),
-      RetrieveActorAttributeToFloat("lens_y_size", Description.Variations, 0.1f));
+      RetrieveActorAttributeToFloat("lens_y_size", Description.Variations, 0.08f));
 }
 
 void UActorBlueprintFunctionLibrary::SetLidar(

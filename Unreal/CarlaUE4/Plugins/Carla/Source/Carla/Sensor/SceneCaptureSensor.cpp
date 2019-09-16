@@ -389,6 +389,30 @@ float ASceneCaptureSensor::GetWhiteTint() const
   return CaptureComponent2D->PostProcessSettings.WhiteTint;
 }
 
+void ASceneCaptureSensor::SetChromAberrIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.SceneFringeIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetChromAberrIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.SceneFringeIntensity;
+}
+
+void ASceneCaptureSensor::SetChromAberrOffset(float Offset)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset = Offset;
+}
+
+float ASceneCaptureSensor::GetChromAberrOffset() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
@@ -508,6 +532,10 @@ namespace SceneCaptureSensor_local_ns {
     // Color Grading
     PostProcessSettings.bOverride_WhiteTemp = true;
     PostProcessSettings.bOverride_WhiteTint = true;
+
+    // Chromatic Aberration
+    PostProcessSettings.bOverride_SceneFringeIntensity = true;
+    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
   }
 
   // Remove the show flags that might interfere with post-processing effects
