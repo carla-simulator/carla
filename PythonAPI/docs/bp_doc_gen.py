@@ -118,7 +118,7 @@ def main():
     blueprints = [bp for bp in world.get_blueprint_library().filter('*')] # Returns list of all blueprints
     blueprint_ids = [bp.id for bp in world.get_blueprint_library().filter('*')] # Returns list of all blueprint ids
 
-    # Creates a dict key = walker,static,prop, vehicle, sensor, controller; value = [bp_id, blueprint]
+    # Creates a dict key = walker, static, prop, vehicle, sensor, controller; value = [bp_id, blueprint]
     for bp_id in sorted(blueprint_ids):
         bp_type = bp_id.split('.')[0]
         value = []
@@ -149,11 +149,10 @@ def main():
 
     for key, value in bp_dict.items(): # bp types, bp's
         md.title(3, key) # Key = walker, static, controller, sensor, vehicle
-        for bp in sorted(value): #Value = bp[0]= name bp[1]= blueprint
-            # print(bp[0])
-            md.list_pushn(bold(color(COLOR_LIST, bp[0])))# bp name
+        for bp in sorted(value): # Value = bp[0]= name bp[1]= blueprint
+            md.list_pushn(bold(color(COLOR_LIST, bp[0]))) # bp name
             md.list_push(bold('Attributes:') + '\n')
-            for attr in bp[1]:#for attribute in blueprint
+            for attr in sorted(bp[1], key=lambda x: x.id): # for attribute in blueprint
                 md.list_push(code(attr.id))
                 md.text(' ' + parentheses(italic(str(attr.type))))
                 if attr.is_modifiable:
