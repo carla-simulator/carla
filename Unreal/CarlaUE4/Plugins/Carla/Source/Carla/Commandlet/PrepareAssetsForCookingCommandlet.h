@@ -8,18 +8,8 @@
 
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Commandlets/Commandlet.h"
-#include "Containers/Map.h"
-#include "CoreMinimal.h"
-#include "Engine/World.h"
-#include "Misc/PackageName.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "UObject/Package.h"
 
-#if WITH_EDITORONLY_DATA
-#include "AssetRegistry/Public/AssetRegistryModule.h"
-#include "Developer/AssetTools/Public/AssetToolsModule.h"
-#include "Developer/AssetTools/Public/IAssetTools.h"
-#endif // WITH_EDITORONLY_DATA
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
