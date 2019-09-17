@@ -86,7 +86,8 @@ namespace traffic_manager {
       GeoIds current_road_ids,
       std::shared_ptr<BufferList> buffer_list,
       std::unordered_map<uint, int> &vehicle_id_to_index,
-      std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list) {
+      std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
+      carla::client::DebugHelper &debug_helper) {
 
     auto actor_id = vehicle->GetId();
     auto vehicle_location = vehicle->GetLocation();
@@ -105,7 +106,7 @@ namespace traffic_manager {
         auto &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
-        std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint;
+        std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint = nullptr;
         if (!other_vehicle_buffer.empty()) {
           same_lane_vehicle_waypoint = buffer_list->at(
               vehicle_id_to_index.at(same_lane_vehicle_id)).front();
@@ -114,7 +115,9 @@ namespace traffic_manager {
         if (
           same_lane_vehicle_id != actor_id
           &&
-          !other_vehicle_buffer.empty()
+          same_lane_vehicle_waypoint != nullptr
+          &&
+          !same_lane_vehicle_waypoint->CheckJunction()
           &&
           DeviationDotProduct(
           vehicle,

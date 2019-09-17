@@ -97,7 +97,8 @@ namespace traffic_manager {
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<uint, int> &vehicle_id_to_index,
-        std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list);
+        std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
+        carla::client::DebugHelper &debug_helper);
 
   };
 

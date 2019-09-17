@@ -24,7 +24,8 @@ void test_lane_change(const carla::client::World &world);
 void test_pipeline_stages(
     carla::SharedPtr<carla::client::ActorList> actor_list,
     carla::SharedPtr<carla::client::Map> world_map,
-    carla::client::Client &client_conn);
+    carla::client::Client &client_conn,
+    carla::client::World &world);
 
 void test_pipeline(
     carla::client::World &world,
@@ -47,7 +48,7 @@ void handler() {
         actor->Destroy();
       }
     }
-    std::cout << boost::stacktrace::stacktrace() << std::endl;
+    // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
 } 
@@ -64,9 +65,9 @@ int main(int argc, char *argv[]) {
 
   // test_dense_topology(world);
   // test_in_memory_map(world_map);
-  test_pipeline_stages(vehicle_list, world_map, client_conn);
+  // test_pipeline_stages(vehicle_list, world_map, client_conn, world);
   // test_lane_change(world);
-  // test_pipeline(world, client_conn, 0);
+  test_pipeline(world, client_conn, 0);
 
   return 0;
 }
@@ -103,6 +104,7 @@ void test_pipeline(
     registered_actors,
     *local_map.get(),
     client_conn,
+    world,
     debug_helper,
     std::ceil(core_count / 5)
   );
@@ -131,7 +133,8 @@ void test_pipeline(
 void test_pipeline_stages(
     carla::SharedPtr<carla::client::ActorList> actor_list,
     carla::SharedPtr<carla::client::Map> world_map,
-    carla::client::Client &client_conn) {
+    carla::client::Client &client_conn,
+    carla::client::World &world) {
 
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
 
@@ -164,7 +167,7 @@ void test_pipeline_stages(
   traffic_manager::CollisionStage collision_stage(
     localization_collision_messenger, collision_planner_messenger,
     registered_actors.size(), 1,
-    debug_helper
+    world, debug_helper
   );
 
   traffic_manager::TrafficLightStage traffic_light_stage(

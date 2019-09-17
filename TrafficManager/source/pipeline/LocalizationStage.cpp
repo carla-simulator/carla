@@ -153,7 +153,8 @@ namespace traffic_manager {
             current_road_ids,
             buffer_map.at(collision_frame_selector),
             vehicle_id_to_index,
-            actor_list);
+            actor_list,
+            debug_helper);
 
         if (change_over_point != nullptr) {
           waypoint_buffer.clear();
