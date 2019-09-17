@@ -90,13 +90,14 @@ from carla import ColorConverter as cc
 from agents.navigation.behavior_agent import BehaviorAgent
 from agents.navigation.local_planner import RoadOption
 
-
-
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
 
 def find_weather_presets():
+    """
+    Method to find weather presets
+    """
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
     name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
     presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
@@ -104,6 +105,9 @@ def find_weather_presets():
 
 
 def get_actor_display_name(actor, truncate=250):
+    """
+    Method to get actor display name
+    """
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
@@ -132,6 +136,9 @@ class World(object):
         self.recording_start = 0
 
     def restart(self):
+        """
+        Restart the world
+        """
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
@@ -657,7 +664,7 @@ class CameraManager(object):
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)'],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)'],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-                'Camera Semantic Segmentation (CityScapes Palette)'],
+             'Camera Semantic Segmentation (CityScapes Palette)'],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)']]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
