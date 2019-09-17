@@ -6,13 +6,6 @@
 
 #include "MoveAssetsCommandlet.h"
 
-#include "GameFramework/WorldSettings.h"
-
-#include "HAL/PlatformFile.h"
-#include "HAL/PlatformFilemanager.h"
-
-#include "UObject/MetaData.h"
-
 UMoveAssetsCommandlet::UMoveAssetsCommandlet()
 {
   IsClient = false;
