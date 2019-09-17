@@ -1,5 +1,7 @@
 #include "CollisionStage.h"
 
+namespace bg = boost::geometry;
+
 namespace traffic_manager {
 
   const float SEARCH_RADIUS = 20.0;
@@ -10,8 +12,6 @@ namespace traffic_manager {
   const float TIME_HORIZON = 0.5;
   const float HIGHWAY_SPEED = 50 / 3.6;
   const float HIGHWAY_TIME_HORIZON = 5.0;
-
-namespace bg = boost::geometry;
 
   CollisionStage::CollisionStage(
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
@@ -224,7 +224,7 @@ namespace bg = boost::geometry;
         BOUNDARY_EXTENSION_MINIMUM
         );
 
-      bbox_extension = velocity > HIGHWAY_SPEED ? HIGHWAY_TIME_HORIZON * velocity : bbox_extension;
+      bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
       auto &waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
 
       std::vector<carla::geom::Location> left_boundary;

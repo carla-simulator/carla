@@ -2,6 +2,10 @@
 
 namespace traffic_manager {
 
+  const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0;
+  const float LATERAL_DETECTION_CONE = 135.0;
+  const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0;
+
   TrafficDistributor::TrafficDistributor() {}
 
   TrafficDistributor::~TrafficDistributor() {}
@@ -124,8 +128,8 @@ namespace traffic_manager {
           same_lane_vehicle_waypoint->GetLocation()) > 0 // check other vehicle
                                                          // is ahead
           &&
-          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location) < 20   //
-                                                                                      // meters
+          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+          < LANE_CHANGE_OBSTACLE_DISTANCE
           ) {
 
           if (left_waypoint != nullptr) {
@@ -154,7 +158,8 @@ namespace traffic_manager {
     }
 
     int change_over_distance = static_cast<int>(
-      std::max(std::ceil(0.5 * vehicle_velocity), 5.0)  // Account for constants
+      std::max(std::ceil(0.5f * vehicle_velocity),
+      MINIMUM_LANE_CHANGE_DISTANCE)
       );
 
     bool possible_to_lane_change = false;
@@ -202,8 +207,9 @@ namespace traffic_manager {
                     vehicle->GetVelocity().Length();
 
                 if (
-                  relative_deviation > std::cos(M_PI * 135 / 180) ||
-                  time_to_reach_other > time_to_reach_reference) {
+                  relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180)
+                  || time_to_reach_other > time_to_reach_reference) {
+                  
                   found_hazard = true;
                   break;
                 }

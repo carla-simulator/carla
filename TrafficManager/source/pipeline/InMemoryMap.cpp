@@ -97,7 +97,7 @@ namespace traffic_manager {
           int count = LANE_CHANGE_LOOK_AHEAD;
           while (count > 0) {
             closest_connection = closest_connection->GetNextWaypoint()[0];
-            count--;
+            --count;
           }
         }
         end_point->SetNextWaypoint({closest_connection});
