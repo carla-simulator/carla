@@ -13,7 +13,7 @@ The agent also responds to traffic lights. """
 import carla
 from agents.tools.misc import is_within_distance, compute_distance
 
-class Agent():
+class Agent(object):
     """
     Base class to define agents in CARLA
     """

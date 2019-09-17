@@ -14,7 +14,7 @@ import numpy as np
 import carla
 from agents.tools.misc import get_speed
 
-class VehiclePIDController():
+class VehiclePIDController(object):
     """
     VehiclePIDController is the combination of two PID controllers
     (lateral and longitudinal) to perform the
@@ -75,7 +75,7 @@ class VehiclePIDController():
 
         return control
 
-class PIDLongitudinalController():
+class PIDLongitudinalController(object):
     """
     PIDLongitudinalController implements longitudinal control using a PID.
     """
@@ -130,7 +130,7 @@ class PIDLongitudinalController():
         return np.clip((self._k_p * _e) + (self._k_d * _de / self._dt) + \
             (self._k_i * _ie * self._dt), -1.0, 1.0)
 
-class PIDLateralController():
+class PIDLateralController(object):
     """
     PIDLateralController implements lateral control using a PID.
     """
