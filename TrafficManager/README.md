@@ -33,6 +33,6 @@ Navigate back to build folder and run the compiled executable.
 ```
 
 cd ${CARLA_ROOT}/TrafficManager/build/
-./traffic_manager
+./traffic_manager -n <NUMBER_OF_VEHICLES>
 
 ```
