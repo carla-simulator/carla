@@ -89,9 +89,9 @@ class PIDLongitudinalController():
         :param dt: time differential in seconds
         """
         self._vehicle = vehicle
-        self._K_P = K_P
-        self._K_D = K_D
-        self._K_I = K_I
+        self._k_p = K_P
+        self._k_d = K_D
+        self._k_i = K_I
         self._dt = dt
         self._e_buffer = deque(maxlen=30)
 
@@ -127,7 +127,8 @@ class PIDLongitudinalController():
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._K_P * _e) + (self._K_D * _de / self._dt) + (self._K_I * _ie * self._dt), -1.0, 1.0)
+        return np.clip((self._k_p * _e) + (self._k_d * _de / self._dt) + \
+            (self._k_i * _ie * self._dt), -1.0, 1.0)
 
 class PIDLateralController():
     """
@@ -143,9 +144,9 @@ class PIDLateralController():
         :param dt: time differential in seconds
         """
         self._vehicle = vehicle
-        self._K_P = K_P
-        self._K_D = K_D
-        self._K_I = K_I
+        self._k_p = K_P
+        self._k_d = K_D
+        self._k_i = K_I
         self._dt = dt
         self._e_buffer = deque(maxlen=10)
 
@@ -192,5 +193,5 @@ class PIDLateralController():
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._K_P * _dot) + (self._K_D * _de /
-                                             self._dt) + (self._K_I * _ie * self._dt), -1.0, 1.0)
+        return np.clip((self._k_p * _dot) + (self._k_d * _de /
+                                             self._dt) + (self._k_i * _ie * self._dt), -1.0, 1.0)

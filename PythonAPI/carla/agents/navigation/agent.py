@@ -13,7 +13,7 @@ The agent also responds to traffic lights. """
 import carla
 from agents.tools.misc import is_within_distance, compute_distance
 
-class Agent(object):
+class Agent():
     """
     Base class to define agents in CARLA
     """
@@ -28,7 +28,8 @@ class Agent(object):
         self._map = self._vehicle.get_world().get_map()
         self._last_traffic_light = None
 
-    def run_step(self, debug=False):
+    @staticmethod
+    def run_step(debug=False):
         """
         Execute one step of navigation.
         :return: control
@@ -119,7 +120,7 @@ class Agent(object):
 
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-        
+
         for target_vehicle in vehicle_list:
             # Do not account for the ego vehicle
             if target_vehicle.id == self._vehicle.id:
@@ -142,7 +143,8 @@ class Agent(object):
 
     def _is_vehicle_behind_hazard(self, vehicle_list, proximity_threshold):
         """
-        Check if a given vehicle is an obstacle in our way to change lane based on vehicles behind it.
+        Check if a given vehicle is an obstacle in
+        our way to change lane based on vehicles behind it.
         """
 
         ego_vehicle_location = self._vehicle.get_location()
@@ -167,7 +169,8 @@ class Agent(object):
 
         return (False, None, -1)
 
-    def emergency_stop(self):
+    @staticmethod
+    def emergency_stop():
         """
         Send an emergency stop command to the vehicle
         :return:
