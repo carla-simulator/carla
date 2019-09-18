@@ -63,7 +63,7 @@ class BehaviorAgent(Agent):
         self.light_id_to_ignore = 0
 
         # Parameters for agent behavior
-        if behavior == 'Cautious':
+        if behavior == 'cautious':
             self.max_speed = 40
             self.speed_increase_perc = 10
             self.speed_lim_dist = 12
@@ -74,7 +74,7 @@ class BehaviorAgent(Agent):
             self.overtake_counter = -1
             self.tailgate_counter = 0
 
-        elif behavior == 'Normal':
+        elif behavior == 'normal':
             self.max_speed = 60
             self.speed_increase_perc = 15
             self.speed_lim_dist = 6
@@ -85,7 +85,7 @@ class BehaviorAgent(Agent):
             self.overtake_counter = 0
             self.tailgate_counter = 0
 
-        elif behavior == 'Aggressive':
+        elif behavior == 'aggressive':
             self.max_speed = 70
             self.speed_increase_perc = 20
             self.speed_lim_dist = 3
