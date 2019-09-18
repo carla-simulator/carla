@@ -12,15 +12,16 @@
 
 namespace traffic_manager {
 
+  /// This class maintains vehicle positions in grid segments.
+  /// This is used in collision stage to filter vehicles.
   class VicinityGrid {
   private:
 
     std::shared_timed_mutex modification_mutex;
 
-    std::unordered_map<
-        std::string, std::unordered_set<uint>
-        > grid_to_actor_id;
+    using ActorIds = std::unordered_set<uint>;
 
+    std::unordered_map<std::string, ActorIds> grid_to_actor_id;
     std::unordered_map<uint, std::string> actor_to_grid_id;
 
     std::string MakeKey(std::pair<int, int> grid_ids);

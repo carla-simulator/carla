@@ -46,24 +46,24 @@ namespace std {
 
 namespace traffic_manager {
 
-  typedef std::unordered_map<int, std::unordered_set<uint>> LaneMap;
-  typedef std::unordered_map<uint, LaneMap> SectionMap;
+  using  LaneMap = std::unordered_map<int, std::unordered_set<uint>>;
+  using  SectionMap = std::unordered_map<uint, LaneMap>;
+  namespace cc = carla::client;
 
   /// Returns the cross product (z component value) between vehicle's heading
-  /// vector and the vector along the direction to the next target waypoint in
-  /// the
-  /// horizon.
+  /// vector and the vector along the direction to the next target waypoint in the horizon.
   float DeviationCrossProduct(
-      carla::SharedPtr<carla::client::Actor> actor,
+      carla::SharedPtr<cc::Actor> actor,
       const carla::geom::Location &target_location);
 
   /// Returns the dot product between vehicle's heading vector and
-  /// the vector along the direction to the next target waypoint in the
-  /// horizon.
+  /// the vector along the direction to the next target waypoint in the horizon.
   float DeviationDotProduct(
-      carla::SharedPtr<carla::client::Actor> actor,
+      carla::SharedPtr<cc::Actor> actor,
       const carla::geom::Location &target_location);
 
+  /// This class keeps track of vehicle’s positions in road sections, lanes and
+  /// provides lane change decisions.
   class TrafficDistributor {
 
   private:
@@ -90,15 +90,16 @@ namespace traffic_manager {
     void UpdateVehicleRoadPosition(
         uint actor_id,
         GeoIds road_ids);
-
+    /// Returns the shared pointer of SimpleWaypoint for Lane Change
+    /// if Lane Change is required and possible.
     std::shared_ptr<SimpleWaypoint> AssignLaneChange(
-        carla::SharedPtr<carla::client::Actor> vehicle,
+        carla::SharedPtr<cc::Actor> vehicle,
         std::shared_ptr<SimpleWaypoint> current_waypoint,
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<uint, int> &vehicle_id_to_index,
-        std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
-        carla::client::DebugHelper &debug_helper);
+        std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
+        cc::DebugHelper &debug_helper);
 
   };
 

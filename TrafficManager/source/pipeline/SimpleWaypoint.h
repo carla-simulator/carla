@@ -9,10 +9,9 @@
 
 namespace traffic_manager {
 
+  /// This is a simple wrapper class on carla's waypoint object.
+  /// The class is used to represent descrete samples of the world map.
   class SimpleWaypoint {
-
-    /// This is a simple wrapper class on carla's waypoint object.
-    /// The class is used to represent descrete samples of the world map.
 
   private:
 
@@ -23,7 +22,7 @@ namespace traffic_manager {
 
   public:
 
-    SimpleWaypoint(carla::SharedPtr<carla::client::Waypoint> waypoint);
+    SimpleWaypoint(carla::SharedPtr<carla::client::Waypoint> _waypoint);
     ~SimpleWaypoint();
 
     /// Returns the location object for this waypoint.
