@@ -2,10 +2,13 @@
 
 namespace traffic_manager {
 
-  const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0;
-  const float LATERAL_DETECTION_CONE = 135.0;
-  const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0;
+  namespace TrafficDistributorConstants{
+    static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0;
+    static const float LATERAL_DETECTION_CONE = 135.0;
+    static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0;
+  }
 
+  using namespace TrafficDistributorConstants;
   TrafficDistributor::TrafficDistributor() {}
 
   TrafficDistributor::~TrafficDistributor() {}

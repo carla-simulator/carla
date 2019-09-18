@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <chrono>
@@ -12,10 +13,10 @@ namespace traffic_manager {
     float steer;
   };
 
-  typedef std::chrono::time_point<
+  using TimeInstance = std::chrono::time_point<
       std::chrono::_V2::system_clock,
       std::chrono::nanoseconds
-      > TimeInstance;
+      >;
 
   struct StateEntry {
     float deviation;
@@ -25,11 +26,11 @@ namespace traffic_manager {
     float velocity_integral;
   };
 
-  class PIDController {
+  /// This class calculates PID actuation signals to control the vehicle
+  /// such that the vehicle maintains a target velocity and aligns its
+  /// orientation along it's trajectory.
 
-    /// This class calculates PID actuation signals to control the vehicle
-    /// such that the vehicle maintains a target velocity and aligns its
-    /// orientation along it's trajectory.
+  class PIDController {
 
   public:
 
@@ -43,6 +44,7 @@ namespace traffic_manager {
         float target_velocity,
         float angular_deviation,
         TimeInstance current_time);
+
 
     /// This method calculates the actuation signals based on the resent state
     /// change of the vehicle to minimize PID error.
