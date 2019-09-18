@@ -16,9 +16,10 @@ using namespace std::chrono_literals;
 
 namespace traffic_manager {
 
+  /// This class provides base functionality and template for
+  /// Various stages of the pipeline
   class PipelineStage {
-    /// This class provides base functionality and template for
-    /// Various stages of the pipeline
+
 
   private:
 
@@ -31,10 +32,10 @@ namespace traffic_manager {
 
     std::atomic<int> action_start_counter;
     std::atomic<int> action_finished_counter;
-    std::atomic<bool> run_stage;
-    std::atomic<bool> run_threads;
     std::atomic<bool> run_receiver;
     std::atomic<bool> run_sender;
+    std::atomic<bool> run_stage;
+    std::atomic<bool> run_threads;
 
     std::mutex thread_coordination_mutex;
     std::condition_variable wake_action_notifier;
@@ -69,10 +70,8 @@ namespace traffic_manager {
 
     virtual ~PipelineStage();
 
-    /// This method starts the threads for the stage.
     void Start();
 
-    /// This method stops all threads of the stage.
     void Stop();
 
   };

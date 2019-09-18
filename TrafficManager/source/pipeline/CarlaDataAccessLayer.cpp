@@ -2,18 +2,15 @@
 
 namespace traffic_manager {
 
-  CarlaDataAccessLayer::CarlaDataAccessLayer(carla::SharedPtr<carla::client::Map> world_map) {
-    this->world_map = world_map;
+  CarlaDataAccessLayer::CarlaDataAccessLayer(carla::SharedPtr<carla::client::Map> _world_map) {
+    world_map = _world_map;
   }
 
   CarlaDataAccessLayer::~CarlaDataAccessLayer() {}
 
-  std::vector<
-      std::pair<
-      carla::SharedPtr<carla::client::Waypoint>,
-      carla::SharedPtr<carla::client::Waypoint>
-      >
-      > CarlaDataAccessLayer::GetTopology() const {
+  using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
+  std::vector<std::pair<WaypointPtr, WaypointPtr>> CarlaDataAccessLayer::GetTopology() const {
     return world_map->GetTopology();
   }
 }
+

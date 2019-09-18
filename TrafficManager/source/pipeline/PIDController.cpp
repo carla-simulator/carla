@@ -1,3 +1,4 @@
+
 #include "PIDController.h"
 
 namespace traffic_manager {
@@ -7,20 +8,20 @@ namespace traffic_manager {
 
   PIDController::PIDController() {}
 
+ // Initializing present state
   StateEntry PIDController::StateUpdate(
       StateEntry previous_state,
       float current_velocity,
       float target_velocity,
       float angular_deviation,
       TimeInstance current_time) {
-    // Initializing present state
-    traffic_manager::StateEntry current_state = {
-      angular_deviation,
-      (current_velocity - target_velocity) / target_velocity,
-      current_time,
-      0,
-      0
-    };
+        traffic_manager::StateEntry current_state = {
+          angular_deviation,
+          (current_velocity - target_velocity) / target_velocity,
+          current_time,
+          0,
+          0
+        };
 
     // Calculating dt for 'D' and 'I' controller components
     std::chrono::duration<double> duration = current_state.time_instance - previous_state.time_instance;
@@ -78,3 +79,5 @@ namespace traffic_manager {
     };
   }
 }
+
+

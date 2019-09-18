@@ -12,10 +12,9 @@ namespace traffic_manager {
     std::uniform_int_distribution<size_t> dist{0u, range.size() - 1u};
     return range[dist(std::forward<RNG>(generator))];
   }
-
+  // Assuming quad core if core count not available
   int read_core_count() {
     auto core_count = std::thread::hardware_concurrency();
-    // Assuming quad core if core count not available
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
 
@@ -39,12 +38,12 @@ namespace traffic_manager {
     }
 
     if (number_of_vehicles > spawn_points.size()) {
-      std::cout << "Number of requested vehicles more than number available spawn points" <<
-        std::endl << "Spawning vehicle at every spawn point" << std::endl;
+      carla::log_warning("Number of requested vehicles more than number available spawn points\n");
+      carla::log_info("Spawning vehicle at every spawn point\n");
       number_of_vehicles = spawn_points.size();
     }
-
-    std::cout << "Spawning " << number_of_vehicles << " vehicles" << std::endl;
+    
+    carla::log_info("Spawning "+ std::to_string(number_of_vehicles) +" vehicles\n");
 
     for (int i = 0; i < number_of_vehicles; ++i) {
       auto spawn_point = spawn_points[i];
@@ -128,7 +127,7 @@ namespace traffic_manager {
         actor_list.size(), pipeline_width);
 
   }
-
+  /// To start the pipeline
   void Pipeline::Start() {
     localization_stage->Start();
     collision_stage->Start();
@@ -137,6 +136,7 @@ namespace traffic_manager {
     control_stage->Start();
   }
 
+  /// To stop the pipeline
   void Pipeline::Stop() {
 
     localization_collision_messenger->Stop();
@@ -145,7 +145,6 @@ namespace traffic_manager {
     collision_planner_messenger->Stop();
     traffic_light_planner_messenger->Stop();
     planner_control_messenger->Stop();
-
     localization_stage->Stop();
     collision_stage->Stop();
     traffic_light_stage->Stop();
