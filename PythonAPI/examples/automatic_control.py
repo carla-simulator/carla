@@ -130,18 +130,24 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart()
+        self.restart(args)
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
 
-    def restart(self):
+        # Set the seed if requested by user
+
+    def restart(self, args):
         """
         Restart the world
         """
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
+        # Set the seed if requested by user
+        if args.seed != None:
+            random.seed(args.seed)
+
         # Get a random blueprint.
         blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
         blueprint.set_attribute('role_name', 'hero')
@@ -774,6 +780,7 @@ def game_loop(args):
 
         spawn_points = world.map.get_spawn_points()
         random.shuffle(spawn_points)
+
         if spawn_points[0].location != agent._vehicle.get_location():
             destination = spawn_points[0].location
         else:
@@ -837,7 +844,7 @@ def main():
         '-v', '--verbose',
         action='store_true',
         dest='debug',
-        help='print debug information')
+        help='Print debug information')
     argparser.add_argument(
         '--host',
         metavar='H',
@@ -853,12 +860,12 @@ def main():
         '--res',
         metavar='WIDTHxHEIGHT',
         default='1280x720',
-        help='window resolution (default: 1280x720)')
+        help='Window resolution (default: 1280x720)')
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
         default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
+        help='Actor filter (default: "vehicle.*")')
     argparser.add_argument(
         '--gamma',
         default=2.2,
@@ -868,12 +875,19 @@ def main():
         '-l', '--loop',
         action='store_true',
         dest='loop',
-        help='sets a new random destination upon reaching the previous one (default: False)')
+        help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
         '-a', '--agent', type=str,
-        choices=["Cautious", "Normal", "Aggressive"],
-        help='choose one of the possible agent behaviors (default: Normal) ',
-        default='Normal')
+        choices=["cautious", "normal", "aggressive"],
+        help='Choose one of the possible agent behaviors (default: normal) ',
+        default='normal')
+    argparser.add_argument(
+        '-s', '--seed',
+        help='Set seed for repeating executions (default: None)',
+        default=None,
+        type=int,
+)
+
 
     args = argparser.parse_args()
 
