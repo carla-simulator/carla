@@ -1,5 +1,3 @@
-// Implementation for SimpleWaypoint
-
 #include "SimpleWaypoint.h"
 
 namespace traffic_manager {

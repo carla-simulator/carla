@@ -1,5 +1,3 @@
-// Implementation for CarlaDataAccessLayer
-
 #include "CarlaDataAccessLayer.h"
 
 namespace traffic_manager {

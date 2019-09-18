@@ -1,8 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <cmath>
 #include <vector>
-#include <chrono>
 
 namespace traffic_manager {
 

@@ -1,26 +1,26 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <deque>
 #include <string>
-#include <vector>
-#include <algorithm>
 #include <unordered_map>
+#include <vector>
 
+#include "boost/foreach.hpp"
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
-#include "boost/foreach.hpp"
 #include "boost/pointer_cast.hpp"
+#include "carla/client/ActorList.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/World.h"
+#include "carla/geom/Math.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
-#include "carla/geom/Math.h"
-#include "carla/client/World.h"
-#include "carla/client/ActorList.h"
 
-#include "PipelineStage.h"
 #include "MessengerAndDataTypes.h"
+#include "PipelineStage.h"
 #include "VicinityGrid.h"
 
 namespace traffic_manager {

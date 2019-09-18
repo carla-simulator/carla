@@ -1,22 +1,22 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <random>
 #include <algorithm>
+#include <memory>
+#include <vector>
+#include <random>
 
-#include "carla/Memory.h"
 #include "carla/client/Actor.h"
-#include "carla/client/World.h"
-#include "carla/client/Map.h"
 #include "carla/client/BlueprintLibrary.h"
+#include "carla/client/Map.h"
+#include "carla/client/World.h"
+#include "carla/Memory.h"
 
+#include "CollisionStage.h"
+#include "BatchControlStage.h"
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
-#include "CollisionStage.h"
-#include "TrafficLightStage.h"
 #include "MotionPlannerStage.h"
-#include "BatchControlStage.h"
+#include "TrafficLightStage.h"
 
 #define EXPECT_TRUE(pred) if (!(pred)) { throw std::runtime_error(# pred); }
 

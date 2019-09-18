@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "carla/Memory.h"
 #include "carla/client/Actor.h"
+#include "carla/Memory.h"
 
 #include "Messenger.h"
 #include "SimpleWaypoint.h"

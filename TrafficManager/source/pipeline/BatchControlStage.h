@@ -1,14 +1,14 @@
 #pragma once
 
-#include <memory>
 #include <chrono>
+#include <memory>
 
 #include "carla/client/Client.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/VehicleControl.h"
 
-#include "PipelineStage.h"
 #include "MessengerAndDataTypes.h"
+#include "PipelineStage.h"
 
 namespace traffic_manager {
   class BatchControlStage : public PipelineStage {

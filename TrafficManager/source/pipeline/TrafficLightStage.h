@@ -5,8 +5,8 @@
 #include "carla/client/Vehicle.h"
 #include "carla/rpc/TrafficLightState.h"
 
-#include "PipelineStage.h"
 #include "MessengerAndDataTypes.h"
+#include "PipelineStage.h"
 
 namespace traffic_manager {
   class TrafficLightStage : public PipelineStage {

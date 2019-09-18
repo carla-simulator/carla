@@ -1,25 +1,25 @@
 #pragma once
 
-#include <memory>
-#include <deque>
-#include <unordered_map>
 #include <algorithm>
-#include <mutex>
 #include <chrono>
 #include <cmath>
+#include <deque>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
 
 #include "carla/client/Actor.h"
-#include "carla/geom/Vector3D.h"
-#include "carla/geom/Location.h"
-#include "carla/geom/Transform.h"
-#include "carla/Memory.h"
 #include "carla/client/Vehicle.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Transform.h"
+#include "carla/geom/Vector3D.h"
+#include "carla/Memory.h"
 
+#include "InMemoryMap.h"
+#include "MessengerAndDataTypes.h"
 #include "PipelineStage.h"
 #include "SimpleWaypoint.h"
-#include "MessengerAndDataTypes.h"
-#include "InMemoryMap.h"
 #include "TrafficDistributor.h"
 
 namespace traffic_manager {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <array>
+#include <vector>
 
 #include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"

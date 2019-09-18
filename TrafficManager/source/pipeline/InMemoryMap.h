@@ -1,15 +1,15 @@
 #pragma once
 
-#include <unordered_map>
 #include <cmath>
 #include <memory>
-#include <string>
 #include <limits>
+#include <string>
+#include <unordered_map>
 
-#include "carla/Memory.h"
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/Memory.h"
 
 #include "SimpleWaypoint.h"
 

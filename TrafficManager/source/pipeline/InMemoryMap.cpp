@@ -1,5 +1,3 @@
-// Implementation for an in memory descrete map representation
-
 #include "InMemoryMap.h"
 
 namespace traffic_manager {

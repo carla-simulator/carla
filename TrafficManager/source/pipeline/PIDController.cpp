@@ -1,5 +1,3 @@
-// Definition of class members
-
 #include "PIDController.h"
 
 namespace traffic_manager {

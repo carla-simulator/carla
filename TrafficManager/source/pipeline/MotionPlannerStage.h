@@ -2,15 +2,15 @@
 
 #include <chrono>
 #include <cmath>
-#include <vector>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include "carla/client/Vehicle.h"
 
-#include "PipelineStage.h"
-#include "PIDController.h"
 #include "MessengerAndDataTypes.h"
+#include "PIDController.h"
+#include "PipelineStage.h"
 
 namespace traffic_manager {
 

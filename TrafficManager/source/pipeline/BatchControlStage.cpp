@@ -1,5 +1,3 @@
-// Definition of class memebers
-
 #include "BatchControlStage.h"
 
 namespace traffic_manager {

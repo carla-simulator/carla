@@ -1,17 +1,17 @@
 #pragma once
 
-#include <vector>
 #include <memory>
-#include <unordered_map>
-#include <unordered_set>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "carla/client/Vehicle.h"
 
-#include "SimpleWaypoint.h"
 #include "MessengerAndDataTypes.h"
+#include "SimpleWaypoint.h"
 
 namespace traffic_manager {
   struct GeoIds {

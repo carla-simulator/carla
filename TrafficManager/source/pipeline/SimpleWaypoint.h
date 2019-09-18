@@ -2,10 +2,10 @@
 
 #include <memory.h>
 
-#include "carla/Memory.h"
-#include "carla/geom/Vector3D.h"
-#include "carla/geom/Location.h"
 #include "carla/client/Waypoint.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Vector3D.h"
+#include "carla/Memory.h"
 
 namespace traffic_manager {
 

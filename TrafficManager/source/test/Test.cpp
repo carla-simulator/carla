@@ -1,19 +1,19 @@
+#include <atomic>
 #include <iostream>
 #include <signal.h>
-#include <atomic>
 
 #include "boost/stacktrace.hpp"
-#include "carla/client/Client.h"
-#include "CarlaDataAccessLayer.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/Client.h"
 
+#include "BatchControlStage.h"
+#include "CollisionStage.h"
+#include "CarlaDataAccessLayer.h"
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
-#include "CollisionStage.h"
 #include "MotionPlannerStage.h"
-#include "BatchControlStage.h"
-#include "TrafficLightStage.h"
 #include "Pipeline.h"
+#include "TrafficLightStage.h"
 
 void test_dense_topology(const carla::client::World &);
 
