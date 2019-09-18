@@ -16,6 +16,7 @@
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/GnssEvent.h>
+#include <carla/sensor/data/SafeDistanceEvent.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -216,7 +217,7 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-    class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
+  class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
     .add_property("actor", &csd::ObstacleDetectionEvent::GetActor)
     .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
     .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
@@ -234,5 +235,13 @@ void export_sensor_data() {
     .add_property("longitude", &csd::GnssEvent::GetLongitude)
     .add_property("altitude", &csd::GnssEvent::GetAltitude)
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::SafeDistanceEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::SafeDistanceEvent>>("SafeDistanceEvent", no_init)
+    .def("__len__", &csd::SafeDistanceEvent::size)
+    .def("__iter__", iterator<csd::SafeDistanceEvent>())
+    .def("__getitem__", +[](const csd::SafeDistanceEvent &self, size_t pos) -> cr::ActorId {
+      return self.at(pos);
+    })
   ;
 }
