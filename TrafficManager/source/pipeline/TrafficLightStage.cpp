@@ -10,15 +10,11 @@ namespace traffic_manager {
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       PipelineStage(pool_size, number_of_vehicle) {
+
     frame_selector = true;
 
     planner_frame_a = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicle);
     planner_frame_b = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicle);
-
-    planner_frame_map.insert(std::pair<bool, std::shared_ptr<TrafficLightToPlannerFrame>>(true,
-        planner_frame_a));
-    planner_frame_map.insert(std::pair<bool, std::shared_ptr<TrafficLightToPlannerFrame>>(false,
-        planner_frame_b));
 
     localization_messenger_state = localization_messenger->GetState();
     planner_messenger_state = planner_messenger->GetState() - 1;
@@ -28,6 +24,8 @@ namespace traffic_manager {
   TrafficLightStage::~TrafficLightStage() {}
 
   void TrafficLightStage::Action(const int start_index, const int end_index) {
+
+    auto current_planner_frame = frame_selector? planner_frame_a: planner_frame_b;
 
     for (int i = start_index; i <= end_index; ++i) {
 
@@ -47,7 +45,7 @@ namespace traffic_manager {
           next_fifth_waypoint->CheckJunction()) {
         traffic_light_hazard = 1;
       }
-      auto &message = planner_frame_map.at(frame_selector)->at(i);
+      auto &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard > 0 ? 1 : -1;
     }
 
@@ -61,7 +59,7 @@ namespace traffic_manager {
   void TrafficLightStage::DataSender() {
     DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
       planner_messenger_state,
-      planner_frame_map.at(frame_selector)
+      frame_selector? planner_frame_a: planner_frame_b
     };
     frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(packet);

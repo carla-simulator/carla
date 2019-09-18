@@ -19,7 +19,6 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToTrafficLightFrame> localization_frame;
     std::shared_ptr<TrafficLightToPlannerFrame> planner_frame_a;
     std::shared_ptr<TrafficLightToPlannerFrame> planner_frame_b;
-    std::unordered_map<bool, std::shared_ptr<TrafficLightToPlannerFrame>> planner_frame_map;
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
 
