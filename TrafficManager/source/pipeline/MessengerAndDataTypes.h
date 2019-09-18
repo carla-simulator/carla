@@ -12,8 +12,9 @@
 namespace traffic_manager {
 
   /// Convenience typing
-  typedef std::deque<std::shared_ptr<SimpleWaypoint>> Buffer;
-  typedef std::vector<Buffer> BufferList;
+
+  using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
+  using BufferList = std::vector<Buffer>;
 
   /// Data types
 
@@ -51,19 +52,19 @@ namespace traffic_manager {
 
   /// Data frame types
 
-  typedef std::vector<LocalizationToPlannerData> LocalizationToPlannerFrame;
-  typedef std::vector<PlannerToControlData> PlannerToControlFrame;
-  typedef std::vector<LocalizationToCollisionData> LocalizationToCollisionFrame;
-  typedef std::vector<LocalizationToTrafficLightData> LocalizationToTrafficLightFrame;
-  typedef std::vector<CollisionToPlannerData> CollisionToPlannerFrame;
-  typedef std::vector<TrafficLightToPlannerData> TrafficLightToPlannerFrame;
+  using LocalizationToPlannerFrame = std::vector<LocalizationToPlannerData>;
+  using PlannerToControlFrame = std::vector<PlannerToControlData>;
+  using LocalizationToCollisionFrame = std::vector<LocalizationToCollisionData>;
+  using LocalizationToTrafficLightFrame = std::vector<LocalizationToTrafficLightData>;
+  using CollisionToPlannerFrame = std::vector<CollisionToPlannerData>;
+  using TrafficLightToPlannerFrame = std::vector<TrafficLightToPlannerData>;
 
   /// Messenger types
 
-  typedef Messenger<std::shared_ptr<LocalizationToPlannerFrame>> LocalizationToPlannerMessenger;
-  typedef Messenger<std::shared_ptr<PlannerToControlFrame>> PlannerToControlMessenger;
-  typedef Messenger<std::shared_ptr<LocalizationToCollisionFrame>> LocalizationToCollisionMessenger;
-  typedef Messenger<std::shared_ptr<LocalizationToTrafficLightFrame>> LocalizationToTrafficLightMessenger;
-  typedef Messenger<std::shared_ptr<CollisionToPlannerFrame>> CollisionToPlannerMessenger;
-  typedef Messenger<std::shared_ptr<TrafficLightToPlannerFrame>> TrafficLightToPlannerMessenger;
+  using LocalizationToPlannerMessenger = Messenger<std::shared_ptr<LocalizationToPlannerFrame>>;
+  using PlannerToControlMessenger = Messenger<std::shared_ptr<PlannerToControlFrame>>;
+  using LocalizationToCollisionMessenger = Messenger<std::shared_ptr<LocalizationToCollisionFrame>>;
+  using LocalizationToTrafficLightMessenger = Messenger<std::shared_ptr<LocalizationToTrafficLightFrame>>;
+  using CollisionToPlannerMessenger = Messenger<std::shared_ptr<CollisionToPlannerFrame>>;
+  using TrafficLightToPlannerMessenger = Messenger<std::shared_ptr<TrafficLightToPlannerFrame>>;
 }

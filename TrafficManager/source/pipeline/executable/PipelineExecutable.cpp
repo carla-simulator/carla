@@ -7,32 +7,35 @@
 
 #include "boost/stacktrace.hpp"
 #include "carla/client/Client.h"
+#include "carla/Logging.h"
 
 #include "CarlaDataAccessLayer.h"
 #include "InMemoryMap.h"
 #include "Pipeline.h"
 
-void run_pipeline(
-    carla::client::World &world,
-    carla::client::Client &client_conn,
-    int target_traffic_amount);
+namespace cc = carla::client;
+
+void run_pipeline(cc::World &world, cc::Client &client_conn, int target_traffic_amount);
 
 std::atomic<bool> quit(false);
 void got_signal(int) {
   quit.store(true);
 }
 
-std::vector<carla::SharedPtr<carla::client::Actor>> *global_actor_list;
+std::vector<carla::SharedPtr<cc::Actor>> *global_actor_list;
 void handler() {
 
   if (!quit.load()) {
-    std::cout << "\nTrafficManager encountered a problem!" << std::endl;
-    std::cout << "Destorying all actors spawned" << std::endl;
+
+    carla::log_error("\nTrafficManager encountered a problem!\n");
+    carla::log_info("Destorying all spawned actors\n");
     for (auto actor: *global_actor_list) {
       if (actor != nullptr && actor->IsAlive()) {
         actor->Destroy();
       }
     }
+
+    // Uncomment the below line if compiling with debug options (in CMakeLists.txt)
     // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
@@ -41,8 +44,7 @@ void handler() {
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
 
-  auto client_conn = carla::client::Client("localhost", 2000);
-  std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
+  auto client_conn = cc::Client("localhost", 2000);
   auto world = client_conn.GetWorld();
 
   int target_traffic_amount = 0;
@@ -50,7 +52,7 @@ int main(int argc, char *argv[]) {
     try {
       target_traffic_amount = std::stoi(argv[2]);
     } catch (const std::exception &e) {
-      std::cout << "Failed to parse argument, choosing defaults" << std::endl;
+      carla::log_warning("Failed to parse argument, choosing defaults\n");
     }
   }
 
@@ -60,8 +62,8 @@ int main(int argc, char *argv[]) {
 }
 
 void run_pipeline(
-    carla::client::World &world,
-    carla::client::Client &client_conn,
+    cc::World &world,
+    cc::Client &client_conn,
     int target_traffic_amount) {
 
   struct sigaction sa;
@@ -96,12 +98,9 @@ void run_pipeline(
       );
   pipeline.Start();
 
-  std::cout << "TrafficManager started" << std::endl;
-  while (true) {
+  carla::log_info("TrafficManager started\n");
+  while (!quit.load()) {
     sleep(1);
-    if (quit.load()) {
-      break;
-    }
   }
 
   pipeline.Stop();
@@ -112,5 +111,5 @@ void run_pipeline(
     }
   }
 
-  std::cout << "\nTrafficManager stopped by user" << std::endl;
+  carla::log_info("\nTrafficManager stopped by user\n");
 }

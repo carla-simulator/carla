@@ -10,6 +10,7 @@ namespace traffic_manager {
     : messenger(messenger),
       carla_client(carla_client),
       PipelineStage(pool_size, number_of_vehicles) {
+
     messenger_state = messenger->GetState();
     frame_count = 0;
     last_update_instance = std::chrono::system_clock::now();
@@ -30,10 +31,7 @@ namespace traffic_manager {
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
 
-      carla::rpc::Command::ApplyVehicleControl control_command(actor_id, vehicle_control);
-
-      auto &command_reference = commands->at(i);
-      command_reference = control_command;
+      commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
     }
   }
 
@@ -53,12 +51,12 @@ namespace traffic_manager {
 
     ++frame_count;
     if (diff.count() > 1.0) {
-      std::cout << "Processed " << frame_count << " frames per second" << std::endl;
+      carla::log_info("Processed " + std::to_string(frame_count) + " frames per second\n");
       last_update_instance = current_time;
       frame_count = 0;
     }
 
-    std::this_thread::sleep_for(10ms);  // limit updates to 100 frames per
-                                        // second
+    // limiting updates to 100 frames per second
+    std::this_thread::sleep_for(10ms);  
   }
 }

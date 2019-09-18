@@ -14,13 +14,11 @@
 
 namespace traffic_manager {
 
+  /// The class is responsible for aggregating information from various stages
+  /// like localization stage, traffic light stage, collision detection stage
+  /// and actuation signals from PID controller and makes decisions on how to
+  /// move the vehicle to follow it's trajectory safely.
   class MotionPlannerStage : public PipelineStage {
-
-    /// The class is responsible for aggregating information from various stages
-    /// like traffic like state stage, collision detection stage and actuation
-    /// signals from PID controller and makes decisions on how to move the
-    /// vehicle to
-    /// follow it's trajectory safely.
 
   private:
 
@@ -29,9 +27,9 @@ namespace traffic_manager {
     int control_messenger_state;
     int collision_messenger_state;
     int traffic_light_messenger_state;
+
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;
-    std::unordered_map<bool, std::shared_ptr<PlannerToControlFrame>> frame_map;
     std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<CollisionToPlannerFrame> collision_frame;
     std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;

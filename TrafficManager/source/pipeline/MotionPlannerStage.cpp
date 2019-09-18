@@ -2,8 +2,11 @@
 
 namespace traffic_manager {
 
-  const float HIGHWAY_SPEED = 50 / 3.6;
-  const float INTERSECTION_APPROACH_SPEED = 15 / 3.6;
+  namespace PlannerConstants {
+    static const float HIGHWAY_SPEED = 50 / 3.6;
+    static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6;
+  }
+  using namespace PlannerConstants;
 
   MotionPlannerStage::MotionPlannerStage(
       std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
@@ -14,9 +17,7 @@ namespace traffic_manager {
       int pool_size = 1,
       float urban_target_velocity = 25 / 3.6,
       float highway_target_velocity = 50 / 3.6,
-      std::vector<float> longitudinal_parameters = {
-    0.1f, 0.15f, 0.01f
-  },
+      std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
       std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
       std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
     : urban_target_velocity(urban_target_velocity),
@@ -29,17 +30,16 @@ namespace traffic_manager {
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       PipelineStage(pool_size, number_of_vehicles) {
+
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for (auto &entry: *pid_state_vector.get()) {
       entry.time_instance = std::chrono::system_clock::now();
     }
 
+    frame_selector = true;
+
     control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
     control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
-
-    frame_selector = true;
-    frame_map.insert(std::pair<bool, std::shared_ptr<PlannerToControlFrame>>(true, control_frame_a));
-    frame_map.insert(std::pair<bool, std::shared_ptr<PlannerToControlFrame>>(false, control_frame_b));
 
     localization_messenger_state = localization_messenger->GetState();
     collision_messenger_state = collision_messenger->GetState();
@@ -50,6 +50,8 @@ namespace traffic_manager {
   MotionPlannerStage::~MotionPlannerStage() {}
 
   void MotionPlannerStage::Action(const int start_index, const int end_index) {
+
+    auto current_control_frame = frame_selector? control_frame_a: control_frame_b;
 
     for (int i = start_index; i <= end_index; ++i) {
 
@@ -97,11 +99,7 @@ namespace traffic_manager {
 
       // In case of collision or traffic light or approaching a junction
       if (
-        (
-          collision_messenger_state != 0
-          &&
-          collision_frame->at(i).hazard
-        )
+        (collision_messenger_state != 0 && collision_frame->at(i).hazard)
         ||
         (
           traffic_light_messenger_state != 0
@@ -125,7 +123,7 @@ namespace traffic_manager {
       state = current_state;
 
       // Constructing actuation signal
-      auto &message = frame_map.at(frame_selector)->at(i);
+      auto &message = current_control_frame->at(i);
       message.actor_id = actor_id;
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
@@ -147,8 +145,8 @@ namespace traffic_manager {
       collision_messenger_state = collision_packet.id;
     }
 
-    auto traafic_light_messenger_current_state = traffic_light_messenger->GetState();
-    if (traafic_light_messenger_current_state != traffic_light_messenger_state) {
+    auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
+    if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);
       traffic_light_frame = traffic_light_packet.data;
       traffic_light_messenger_state = traffic_light_packet.id;
@@ -159,7 +157,7 @@ namespace traffic_manager {
 
     DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
       control_messenger_state,
-      frame_map.at(frame_selector)
+      frame_selector? control_frame_a: control_frame_b
     };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);

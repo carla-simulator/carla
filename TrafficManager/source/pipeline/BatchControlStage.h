@@ -6,15 +6,17 @@
 #include "carla/client/Client.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/Logging.h"
 
 #include "MessengerAndDataTypes.h"
 #include "PipelineStage.h"
 
 namespace traffic_manager {
-  class BatchControlStage : public PipelineStage {
 
-    /// This class is tasked with managing communicating actuation signals to
-    /// the simulator in batches.
+  /// This class is receives actuation signals (throttle, brake, steer)
+  /// from MotionPlannerStage class and communicates these signals to
+  /// the simulator in batches to control vehicles' movement.
+  class BatchControlStage : public PipelineStage {
 
   private:
 
@@ -22,7 +24,7 @@ namespace traffic_manager {
     std::shared_ptr<PlannerToControlFrame> data_frame;
     std::shared_ptr<PlannerToControlMessenger> messenger;
 
-    int frame_count;
+    int frame_count = 0;
     carla::client::Client &carla_client;
     std::shared_ptr<std::vector<carla::rpc::Command>> commands;
     std::chrono::time_point<

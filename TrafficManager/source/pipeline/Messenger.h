@@ -15,6 +15,12 @@ namespace traffic_manager {
     Data data;
   };
 
+  /// This class is the template for messaging functionality between
+  /// different stage classes to send and receive data.
+  /// One object of this type can only facilitate receiving data from
+  /// a sender stage and passing the data onto a receiver stage.
+  /// The class maintains state internally and blocks send or receive
+  /// requests until data is available/successfully passed on.
   template <typename Data>
   class Messenger {
 

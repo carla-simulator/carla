@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <deque>
 #include <memory>
@@ -24,15 +23,11 @@
 
 namespace traffic_manager {
 
-  typedef std::chrono::time_point<
-      std::chrono::_V2::system_clock,
-      std::chrono::nanoseconds
-      > TimeInstance;
-
+  /// This class is responsible of maintaining a horizon of waypoints ahead
+  /// of the vehicle for it to follow.
+  /// The class is also responsible for managing lane change decisions and
+  /// modify the waypoints trajectory appropriately
   class LocalizationStage : PipelineStage {
-
-    /// This class is responsible of maintaining a horizon of waypoints ahead
-    /// of the vehicle for it to follow.
 
   private:
 
@@ -54,10 +49,6 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_a;
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_b;
 
-    std::unordered_map<bool, std::shared_ptr<LocalizationToPlannerFrame>> planner_frame_map;
-    std::unordered_map<bool, std::shared_ptr<LocalizationToCollisionFrame>> collision_frame_map;
-    std::unordered_map<bool, std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_frame_map;
-
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
@@ -66,7 +57,6 @@ namespace traffic_manager {
     std::vector<int> divergence_choice;
     std::shared_ptr<BufferList> buffer_list_a;
     std::shared_ptr<BufferList> buffer_list_b;
-    std::unordered_map<bool, std::shared_ptr<BufferList>> buffer_map;
     TrafficDistributor traffic_distributor;
     std::unordered_map<uint, int> vehicle_id_to_index;
     std::vector<carla::geom::Location> last_lane_change_location;

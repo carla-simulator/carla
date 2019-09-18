@@ -15,27 +15,23 @@
 
 namespace traffic_manager {
 
-  typedef std::vector<
-      std::pair<
-      carla::SharedPtr<carla::client::Waypoint>,
-      carla::SharedPtr<carla::client::Waypoint>
-      >
-      > TopologyList;
-  typedef std::vector<std::shared_ptr<SimpleWaypoint>> NodeList;
-  typedef std::unordered_map<int, std::vector<std::shared_ptr<SimpleWaypoint>>> LaneWaypointMap;
-  typedef std::unordered_map<uint, LaneWaypointMap> SectionWaypointMap;
-  typedef std::unordered_map<uint, SectionWaypointMap> RoadWaypointMap;
+  using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
+  using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
+  using NodeList = std::vector<SimpleWaypointPtr>;
+  using LaneWaypointMap = std::unordered_map<int, std::vector<SimpleWaypointPtr>>;
+  using SectionWaypointMap = std::unordered_map<uint, LaneWaypointMap>;
+  using RoadWaypointMap = std::unordered_map<uint, SectionWaypointMap>;
 
+  /// This class constructs a descretised local map cache.
+  /// Instantiate the class with map toplogy from the simulator
+  /// and run setUp() to construct the local map.
   class InMemoryMap {
-
-    /// This class constructs a descretised local map cache.
-    /// Instantiate the class with map toplogy from the simulator
-    /// and run setUp() to construct the local map.
 
   private:
 
-    TopologyList topology;
-    std::vector<std::shared_ptr<SimpleWaypoint>> dense_topology;
+    TopologyList _topology;
+    std::vector<SimpleWaypointPtr> dense_topology;
     RoadWaypointMap road_to_waypoint;
 
   public:
@@ -47,19 +43,16 @@ namespace traffic_manager {
     void SetUp(int sampling_resolution);
 
     /// Returns the closest waypoint to a given location on the map.
-    std::shared_ptr<SimpleWaypoint> GetWaypoint(const carla::geom::Location &location) const;
+    SimpleWaypointPtr GetWaypoint(const carla::geom::Location &location) const;
 
     /// Returns the full list of descrete samples of the map in local cache.
-    std::vector<std::shared_ptr<SimpleWaypoint>> GetDenseTopology() const;
+    std::vector<SimpleWaypointPtr> GetDenseTopology() const;
 
-    void StructuredWaypoints(std::shared_ptr<SimpleWaypoint> waypoint);
+    void StructuredWaypoints(SimpleWaypointPtr waypoint);
 
-    void LinkLaneChangePoint(
-        std::shared_ptr<SimpleWaypoint> reference_waypoint,
-        carla::SharedPtr<carla::client::Waypoint> neighbor_waypoint,
-        int side);
+    void LinkLaneChangePoint(SimpleWaypointPtr reference_waypoint, WaypointPtr neighbor_waypoint, int side);
 
-    void FindAndLinkLaneChange(std::shared_ptr<SimpleWaypoint> reference_waypoint);
+    void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
   };
 
