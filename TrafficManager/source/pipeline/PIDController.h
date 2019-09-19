@@ -7,17 +7,17 @@
 
 namespace traffic_manager {
 
+  namespace chr = std::chrono;
+  using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
+
+  /// Structure to hold actuation signals
   struct ActuationSignal {
     float throttle;
     float brake;
     float steer;
   };
 
-  using TimeInstance = std::chrono::time_point<
-      std::chrono::_V2::system_clock,
-      std::chrono::nanoseconds
-      >;
-
+  /// Structure to hold controller state
   struct StateEntry {
     float deviation;
     float velocity;

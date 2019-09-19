@@ -30,9 +30,22 @@ namespace traffic_manager {
 
   private:
 
+    /// Object to hold sparse topology received in the constructor
     TopologyList _topology;
+    /// Structure to hold all custom waypoint objects after
+    /// Interpollation of sparse topology
     std::vector<SimpleWaypointPtr> dense_topology;
+    /// Structure to segregate waypoints according to their geo ids
     RoadWaypointMap road_to_waypoint;
+
+    /// Method used to segregate and place waypoints into RoadWaypointMap
+    void StructuredWaypoints(SimpleWaypointPtr waypoint);
+
+    /// Method used to place lane change link between waypoints
+    void LinkLaneChangePoint(SimpleWaypointPtr reference_waypoint, WaypointPtr neighbor_waypoint, int side);
+
+    /// Method used to find and place lane change links
+    void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
   public:
 
@@ -47,12 +60,6 @@ namespace traffic_manager {
 
     /// Returns the full list of descrete samples of the map in local cache.
     std::vector<SimpleWaypointPtr> GetDenseTopology() const;
-
-    void StructuredWaypoints(SimpleWaypointPtr waypoint);
-
-    void LinkLaneChangePoint(SimpleWaypointPtr reference_waypoint, WaypointPtr neighbor_waypoint, int side);
-
-    void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
   };
 

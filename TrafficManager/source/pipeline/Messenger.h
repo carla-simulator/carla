@@ -26,12 +26,18 @@ namespace traffic_manager {
 
   private:
 
+    /// Flag used to wake up and join any waiting function calls on this object
     std::atomic<bool> stop_messenger;
+    /// State variable that will progress upon every successful communication
+    /// between sender and receiver
     std::atomic<int> state_counter;
+    /// Member used to hold data sent by sender
     Data data;
-
+    /// Mutex used to manage contention between sender and receiver
     std::mutex data_modification_mutex;
+    /// Variable to conditionally block sender incase waiting for reciever
     std::condition_variable send_condition;
+    /// Variable to conditionally block receiver incase waiting for sender
     std::condition_variable receive_condition;
 
   public:
@@ -42,6 +48,7 @@ namespace traffic_manager {
     }
     ~Messenger() {}
 
+    /// This method recieves data from a sender, stores in a member and increments state
     int SendData(DataPacket<Data> packet) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
@@ -56,6 +63,7 @@ namespace traffic_manager {
       return present_state;
     }
 
+    /// This method presents stored data to receiver and increments state
     DataPacket<Data> ReceiveData(int old_state) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
@@ -69,10 +77,12 @@ namespace traffic_manager {
       return packet;
     }
 
+    /// Returnes state counter
     int GetState() {
       return state_counter.load();
     }
 
+    /// Unblocks any waiting calls on this object
     void Stop() {
       stop_messenger.store(true);
     }

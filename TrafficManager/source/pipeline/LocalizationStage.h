@@ -31,39 +31,51 @@ namespace traffic_manager {
 
   private:
 
+    /// Reference to carla's debug helper object
     carla::client::DebugHelper &debug_helper;
-
+    /// Variables to remember messenger states
     int planner_messenger_state;
     int collision_messenger_state;
     int traffic_light_messenger_state;
+    /// Section keys to switch between output data frames
     bool planner_frame_selector;
     bool collision_frame_selector;
     bool traffic_light_frame_selector;
-
+    /// Output data frames to be shared with motion planner stage
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
-
+    /// Output data frames to be shared with collision stage
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_a;
     std::shared_ptr<LocalizationToCollisionFrame> collision_frame_b;
-
+    /// Output data frames to be shared with traffic light stage
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_a;
     std::shared_ptr<LocalizationToTrafficLightFrame> traffic_light_frame_b;
-
+    /// Pointer to messenger to motion planner stage
     std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger;
+    /// Pointer to messenger to collision stage
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
+    /// Pointer to messenger to traffic light stage
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
-
+    /// Reference to local map cache object
     InMemoryMap &local_map;
+    /// Random seed array for turn decisions
     std::vector<int> divergence_choice;
+    /// Structures to hold waypoint buffers for all vehicles
+    /// These are shared with collisions stage
     std::shared_ptr<BufferList> buffer_list_a;
     std::shared_ptr<BufferList> buffer_list_b;
+    /// Object used to keep track of vehicles according to their map position,
+    /// determine and execute lane changes
     TrafficDistributor traffic_distributor;
+    /// Map connecting actor ids to index of data arrays
     std::unordered_map<uint, int> vehicle_id_to_index;
+    /// To remember the last place a lane change occured for vehicles
     std::vector<carla::geom::Location> last_lane_change_location;
-    std::unordered_map<bool, std::vector<carla::geom::Location> *> last_lane_change_map;
+    /// Reference to list of all the actors registered with traffic manager
     std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list;
 
-    void drawBuffer(Buffer &buffer);
+    /// Simple method used to draw waypoint buffer ahead of a vehicle
+    void DrawBuffer(Buffer &buffer);
 
   public:
 

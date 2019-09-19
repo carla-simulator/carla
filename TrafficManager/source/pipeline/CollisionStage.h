@@ -23,10 +23,13 @@
 #include "PipelineStage.h"
 #include "VicinityGrid.h"
 
-namespace cc = carla::client;
 
 namespace traffic_manager {
-  using polygon = boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<double>> ;
+
+  namespace cc = carla::client;
+  namespace chr = std::chrono;
+
+  using polygon = boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<double>>;
 
   /// This class is the thread executable for the collission detection stage.
   /// The class is responsible for checking possible collisions with other
@@ -35,30 +38,37 @@ namespace traffic_manager {
 
   private:
 
+    /// Reference to carla's world object
     cc::World &world;
+    /// Reference to carla's debug helper object
     cc::DebugHelper &debug_helper;
-
+    /// Variables to remember messenger states
     int localization_messenger_state;
     int planner_messenger_state;
+    /// Selection key for switching between output frames
     bool frame_selector;
+    /// Pointer to data received from localization stage
     std::shared_ptr<LocalizationToCollisionFrame> localization_frame;
+    /// Pointers to output frames to be shared with motion planner
     std::shared_ptr<CollisionToPlannerFrame> planner_frame_a;
     std::shared_ptr<CollisionToPlannerFrame> planner_frame_b;
+    /// Pointers to messenger objects
     std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
-
+    /// Object used for grid binning vehicles for faster proximity detection
     VicinityGrid vicinity_grid;
+    /// Map used to connect actor ids to array index of data frames
     std::unordered_map<uint, int> id_to_index;
+    /// Structure used to keep track of actors spawned outside of traffic manager
     std::unordered_map<uint, carla::SharedPtr<cc::Actor>> unregistered_actors;
-    std::chrono::time_point<std::chrono::_V2::system_clock, std::chrono::nanoseconds>
-    last_world_actors_pass_instance;
+    /// Object used to keep track of time between checking for all world actors
+    chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
 
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
     /// Collision is predicted by extrapolating a boundary around the vehicle
     /// along it's trajectory and checking if it overlaps with the extrapolated
     /// boundary of the other vehicle.
-
     bool CheckGeodesicCollision(
         carla::SharedPtr<cc::Actor> vehicle,
         carla::SharedPtr<cc::Actor> ego_vehicle) const;
@@ -80,6 +90,7 @@ namespace traffic_manager {
         carla::SharedPtr<cc::Actor> ego_vehicle,
         carla::SharedPtr<cc::Actor> other_vehicle) const;
 
+    /// Simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const std::vector<carla::geom::Location> &boundary) const;
 
   public:

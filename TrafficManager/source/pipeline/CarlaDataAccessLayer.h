@@ -9,11 +9,12 @@
 
 namespace traffic_manager {
 
-/// This class is responsible for retrieving data from server
+  /// This class is responsible for retrieving data from server
   class CarlaDataAccessLayer {
 
     private:
 
+      /// Pointer to carla's map object
       carla::SharedPtr<carla::client::Map> world_map;
 
     public:

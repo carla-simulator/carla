@@ -2,8 +2,11 @@
 
 namespace traffic_manager {
 
-  int MINIMUM_CORE_COUNT = 4;
-  int MINIMUM_NUMBER_OF_VEHICLES = 100;
+  namespace PipelineConstants {
+    int MINIMUM_CORE_COUNT = 4;
+    int MINIMUM_NUMBER_OF_VEHICLES = 100;
+  }
+  using namespace PipelineConstants;
 
   // Pick a random element from @a range.
   template <typename RangeT, typename RNG>
@@ -12,6 +15,7 @@ namespace traffic_manager {
     std::uniform_int_distribution<size_t> dist{0u, range.size() - 1u};
     return range[dist(std::forward<RNG>(generator))];
   }
+
   // Assuming quad core if core count not available
   int read_core_count() {
     auto core_count = std::thread::hardware_concurrency();
@@ -127,6 +131,7 @@ namespace traffic_manager {
         actor_list.size(), pipeline_width);
 
   }
+
   /// To start the pipeline
   void Pipeline::Start() {
     localization_stage->Start();
@@ -145,6 +150,7 @@ namespace traffic_manager {
     collision_planner_messenger->Stop();
     traffic_light_planner_messenger->Stop();
     planner_control_messenger->Stop();
+
     localization_stage->Stop();
     collision_stage->Stop();
     traffic_light_stage->Stop();
