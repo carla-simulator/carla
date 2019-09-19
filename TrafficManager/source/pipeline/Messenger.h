@@ -45,11 +45,8 @@ namespace traffic_manager {
     int SendData(DataPacket<Data> packet) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
-      while (state_counter.load() == packet.id) {
+      while (state_counter.load() == packet.id && !stop_messenger.load()) {
         send_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != packet.id;});
-        if (stop_messenger.load()) {
-          break;
-        }
       }
       data = packet.data;
       state_counter.store(state_counter.load() + 1);
@@ -62,11 +59,8 @@ namespace traffic_manager {
     DataPacket<Data> ReceiveData(int old_state) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
-      while (state_counter.load() == old_state) {
+      while (state_counter.load() == old_state && !stop_messenger.load()) {
         receive_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != old_state;});
-        if (stop_messenger.load()) {
-          break;
-        }
       }
       state_counter.store(state_counter.load() + 1);
       DataPacket<Data> packet = {state_counter.load(), data};

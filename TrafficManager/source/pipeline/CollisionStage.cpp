@@ -170,6 +170,7 @@ namespace traffic_manager {
   bool CollisionStage::CheckGeodesicCollision(
       Actor reference_vehicle,
       Actor other_vehicle) const {
+
     bool overlap = false;
     auto reference_height = reference_vehicle->GetLocation().z;
     auto other_height = other_vehicle->GetLocation().z;
@@ -186,10 +187,11 @@ namespace traffic_manager {
         std::deque<polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
-        for(polygon const& p: output) {
+        // for(polygon const& p: output) {
+        for(int i = 0u; i < output.size() && !overlap; ++i) {
+          auto& p = output.at(i);
           if (bg::area(p) > ZERO_AREA) {
             overlap = true;
-            break;
           }
         }
       }

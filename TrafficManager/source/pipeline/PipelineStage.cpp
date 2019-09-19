@@ -41,23 +41,17 @@ namespace traffic_manager {
 
     while (run_stage.load()) {
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-      while (!run_receiver.load()) {
+      while (!run_receiver.load() && run_stage.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
-        if (!run_stage.load()) {
-          break;
-        }
       }
       run_receiver.store(false);
 
       if (run_stage.load()) {
-        this->DataReceiver();
+        DataReceiver();
       }
 
       while (action_start_counter.load() < pool_size && run_stage.load()) {
         wake_receiver_notifier.wait_for(lock, 1ms, [=] {return action_start_counter.load() == pool_size;});
-        if (!run_stage.load()) {
-          break;
-        }
       }
 
       run_threads.store(true);
@@ -83,26 +77,25 @@ namespace traffic_manager {
         wake_receiver_notifier.notify_one();
       }
 
-      while (!run_threads.load()) {
+      while (!run_threads.load() && run_stage.load()) {
         wake_action_notifier.wait_for(lock, 1ms, [=] {return run_threads.load();});
-        if (!run_stage.load()) {
-          break;
-        }
       }
       lock.unlock();
 
       int array_start_index = thread_id * load_per_thread;
-      int array_end_index = thread_id ==
-          pool_size - 1 ? array_size - 1 : (thread_id + 1) * load_per_thread - 1;
 
-      this->Action(array_start_index, array_end_index);
+      int array_end_index;
+      if (thread_id == pool_size - 1) {
+        array_end_index = array_size - 1;
+      } else {
+        array_end_index = (thread_id + 1) * load_per_thread - 1;
+      }
+
+      Action(array_start_index, array_end_index);
       ++action_finished_counter;
 
-      while (action_finished_counter.load() < pool_size) {
+      while (action_finished_counter.load() < pool_size && run_stage.load()) {
         std::this_thread::sleep_for(1us);
-        if (!run_stage.load()) {
-          break;
-        }
       }
 
       if (run_threads.load()) {
@@ -121,16 +114,13 @@ namespace traffic_manager {
     while (run_stage.load()) {
 
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-      while (!run_sender.load()) {
+      while (!run_sender.load() && run_stage.load()) {
         wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
-        if (!run_stage.load()) {
-          break;
-        }
       }
       run_sender.store(false);
 
       if (run_stage.load()) {
-        this->DataSender();
+        DataSender();
       }
 
       run_receiver.store(true);
