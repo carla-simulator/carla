@@ -27,7 +27,7 @@ namespace traffic_manager {
   /// of the vehicle for it to follow.
   /// The class is also responsible for managing lane change decisions and
   /// modify the waypoints trajectory appropriately
-  class LocalizationStage : PipelineStage {
+  class LocalizationStage : public PipelineStage {
 
   private:
 
@@ -84,9 +84,6 @@ namespace traffic_manager {
     void Action(const int start_index, const int end_index) override;
 
     void DataSender() override;
-
-    using PipelineStage::Start;
-    using PipelineStage::Stop;
 
   };
 
