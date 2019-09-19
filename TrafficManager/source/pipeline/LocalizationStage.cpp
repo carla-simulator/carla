@@ -265,7 +265,7 @@ namespace traffic_manager {
     }
   }
 
-  void LocalizationStage::drawBuffer(Buffer &buffer) {
+  void LocalizationStage::DrawBuffer(Buffer &buffer) {
 
     for (int i = 0; i < buffer.size() && i < 5; ++i) {
       debug_helper.DrawPoint(buffer.at(i)->GetLocation(), 0.1f, {255U, 0U, 0U}, 0.5f);

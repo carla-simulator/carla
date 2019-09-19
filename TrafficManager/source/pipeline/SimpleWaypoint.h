@@ -15,9 +15,13 @@ namespace traffic_manager {
 
   private:
 
+    /// Pointer to carla's waypoint object around which this class wraps around
     carla::SharedPtr<carla::client::Waypoint> waypoint;
+    /// List of pointers to next connecting waypoints
     std::vector<std::shared_ptr<SimpleWaypoint>> next_waypoints;
+    /// Pointer to left lane change waypoint
     std::shared_ptr<SimpleWaypoint> next_left_waypoint;
+    /// Pointer to right lane change waypoint
     std::shared_ptr<SimpleWaypoint> next_right_waypoint;
 
   public:

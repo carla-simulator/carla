@@ -14,6 +14,8 @@
 #include "SimpleWaypoint.h"
 
 namespace traffic_manager {
+
+  /// Structure used to hold geo ids
   struct GeoIds {
     uint road_id = 0;
     uint section_id = 0;
@@ -25,11 +27,11 @@ namespace traffic_manager {
              lane_id == other.lane_id);
     }
   };
-
 }
 
 namespace std {
 
+  /// Specialization of std::hash for GeoIds type
   template <>
   struct hash<traffic_manager::GeoIds>{
     std::size_t operator()(const traffic_manager::GeoIds &k) const {
@@ -41,7 +43,6 @@ namespace std {
              (hash<int>()(k.lane_id) << 1);
     }
   };
-
 }
 
 namespace traffic_manager {
@@ -68,8 +69,11 @@ namespace traffic_manager {
 
   private:
 
+    /// Mutex used to manage contention for internal resources between various accessors
     mutable std::shared_timed_mutex distributor_mutex;
+    /// Map connecting geo ids to a set of vehicles with those specific geo ids
     std::unordered_map<GeoIds, std::unordered_set<uint>> road_to_vehicle_id_map;
+    /// Map connecting vehicle id to it's geo ids
     std::unordered_map<uint, GeoIds> vehicle_id_to_road_map;
 
     void SetVehicleId(uint actor_id, GeoIds ids);
@@ -90,8 +94,9 @@ namespace traffic_manager {
     void UpdateVehicleRoadPosition(
         uint actor_id,
         GeoIds road_ids);
+
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
-    /// if Lane Change is required and possible.
+    /// if Lane Change is required and possible, else returns nullptr
     std::shared_ptr<SimpleWaypoint> AssignLaneChange(
         carla::SharedPtr<cc::Actor> vehicle,
         std::shared_ptr<SimpleWaypoint> current_waypoint,

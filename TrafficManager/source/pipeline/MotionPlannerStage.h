@@ -22,28 +22,36 @@ namespace traffic_manager {
 
   private:
 
+    /// Selection key to switch between output frames
     bool frame_selector;
+    /// Variables to remember messenger states
     int localization_messenger_state;
     int control_messenger_state;
     int collision_messenger_state;
     int traffic_light_messenger_state;
-
+    /// Pointers to data frames to be shared with batch control stage
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;
+    /// Pointers to data frames recieved from various stages
     std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<CollisionToPlannerFrame> collision_frame;
     std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;
+    /// Pointers to messenger objects connecting to various stages
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger;
-
+    /// Array to store states for integral and differential components
+    /// of the pid controller
     std::shared_ptr<std::vector<StateEntry>> pid_state_vector;
+    /// Configuration parameters for PID controller
     std::vector<float> longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
     std::vector<float> lateral_parameters;
+    /// Target velocities
     float urban_target_velocity;
     float highway_target_velocity;
+    /// Controller object
     PIDController controller;
 
   public:
@@ -67,9 +75,6 @@ namespace traffic_manager {
     void Action(const int start_index, const int end_index) override;
 
     void DataSender() override;
-
-    using PipelineStage::Start;
-    using PipelineStage::Stop;
 
   };
 

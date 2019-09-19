@@ -106,8 +106,9 @@ namespace traffic_manager {
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
     if (co_lane_vehicles.size() >= 2) {
-      for (auto &same_lane_vehicle_id: co_lane_vehicles) {
-
+      for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
+        
+        auto& same_lane_vehicle_id = *i;
         auto &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
@@ -134,7 +135,6 @@ namespace traffic_manager {
             if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = true;
-              break;
             }
           } else if (right_waypoint != nullptr) {
             auto right_lane_vehicles = GetVehicleIds({
@@ -144,7 +144,6 @@ namespace traffic_manager {
             if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = false;
-              break;
             }
           }
         }
@@ -174,9 +173,11 @@ namespace traffic_manager {
              lane_change_id});
 
         if (target_lane_vehicles.size() > 0) {
-          bool found_hazard = false;
-          for (auto other_vehicle_id: target_lane_vehicles) {
 
+          bool found_hazard = false;
+          for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
+
+            auto &other_vehicle_id = *i;
             auto &other_vehicle_buffer = buffer_list->at(
                 vehicle_id_to_index.at(other_vehicle_id));
 
@@ -201,7 +202,6 @@ namespace traffic_manager {
                 if (relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180) ||
                   time_to_reach_other > time_to_reach_reference) {
                   found_hazard = true;
-                  break;
                 }
 
               } else {
@@ -210,7 +210,6 @@ namespace traffic_manager {
                 if ( change_over_point->Distance(other_vehicle_location) <
                   (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
                   found_hazard = true;
-                  break;
                 }
 
               }

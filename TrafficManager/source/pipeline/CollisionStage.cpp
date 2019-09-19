@@ -1,5 +1,6 @@
 #include "CollisionStage.h"
 
+<<<<<<< HEAD
 namespace bg = boost::geometry;
 namespace cg = carla::geom;
 
@@ -19,6 +20,27 @@ using namespace  CollisionStageConstants;
 using Actor = carla::SharedPtr<carla::client::Actor>;
 
 namespace traffic_manager {
+=======
+namespace traffic_manager {
+
+  namespace CollisionStageConstants
+  {
+    static const float SEARCH_RADIUS = 20.0;
+    static const float VERTICAL_OVERLAP_THRESHOLD = 2.0;
+    static const float ZERO_AREA = 0.0001;
+    static const float BOUNDARY_EXTENSION_MINIMUM = 2.0;
+    static const float EXTENSION_SQUARE_POINT = 7.0;
+    static const float TIME_HORIZON = 0.5;
+    static const float HIGHWAY_SPEED = 50 / 3.6;
+    static const float HIGHWAY_TIME_HORIZON = 5.0;
+  }
+
+  namespace bg = boost::geometry;
+  namespace cg = carla::geom;
+
+  using namespace  CollisionStageConstants;
+  using Actor = carla::SharedPtr<carla::client::Actor>;
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
 
   CollisionStage::CollisionStage(
 
@@ -170,6 +192,10 @@ namespace traffic_manager {
   bool CollisionStage::CheckGeodesicCollision(
       Actor reference_vehicle,
       Actor other_vehicle) const {
+<<<<<<< HEAD
+=======
+
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
     bool overlap = false;
     auto reference_height = reference_vehicle->GetLocation().z;
     auto other_height = other_vehicle->GetLocation().z;
@@ -186,10 +212,15 @@ namespace traffic_manager {
         std::deque<polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
+<<<<<<< HEAD
         for(polygon const& p: output) {
+=======
+        // for(polygon const& p: output) {
+        for(int i = 0u; i < output.size() && !overlap; ++i) {
+          auto& p = output.at(i);
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
           if (bg::area(p) > ZERO_AREA) {
             overlap = true;
-            break;
           }
         }
       }
@@ -198,6 +229,7 @@ namespace traffic_manager {
     return overlap;
   }
 
+<<<<<<< HEAD
   traffic_manager::polygon
   CollisionStage::GetPolygon(const std::vector<cg::Location> &boundary) const {
 
@@ -209,6 +241,18 @@ namespace traffic_manager {
 
     traffic_manager::polygon boundary_polygon;
     bg::read_wkt("POLYGON((" + _string + "))", boundary_polygon);
+=======
+  traffic_manager::polygon CollisionStage::GetPolygon(const std::vector<cg::Location> &boundary) const {
+
+    std::string boundary_polygon_string;
+    for (auto location: boundary) {
+      boundary_polygon_string += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
+    }
+    boundary_polygon_string += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
+
+    traffic_manager::polygon boundary_polygon;
+    bg::read_wkt("POLYGON((" + boundary_polygon_string + "))", boundary_polygon);
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
 
     return boundary_polygon;
   }
@@ -265,8 +309,12 @@ namespace traffic_manager {
       }
   }
 
+<<<<<<< HEAD
   std::vector<cg::Location>
   CollisionStage::GetBoundary(Actor actor) const {
+=======
+  std::vector<cg::Location> CollisionStage::GetBoundary(Actor actor) const {
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
 
     auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
     auto bbox = vehicle->GetBoundingBox();
@@ -290,7 +338,11 @@ namespace traffic_manager {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0, 0, 1),
           boundary[(i + 1) % boundary.size()] + cg::Location(0, 0, 1),
+<<<<<<< HEAD
           0.1f, {255U, 0U, 0U}, 0.1f);
+=======
+          0.1f, {255u, 0u, 0u}, 0.1f);
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
     }
   }
 }

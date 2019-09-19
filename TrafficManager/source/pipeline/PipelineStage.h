@@ -23,29 +23,51 @@ namespace traffic_manager {
 
   private:
 
+    /// Number of worker threads
     const int pool_size;
+    /// Number of registered vehicles
     const int number_of_vehicles;
-
+    /// Pointer to receiver thread instance
     std::shared_ptr<std::thread> data_receiver;
+    /// Pointer to sender thread instance
     std::shared_ptr<std::thread> data_sender;
+    /// Pointers to worker thread instances
     std::vector<std::shared_ptr<std::thread>> action_threads;
-
+    /// Counter to track every worker's start condition
     std::atomic<int> action_start_counter;
+    /// Counter to track every worker's finish condition
     std::atomic<int> action_finished_counter;
+<<<<<<< HEAD
+=======
+    /// Flag to allow/block receiver
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
     std::atomic<bool> run_receiver;
+    /// Flag to allow/block sender
     std::atomic<bool> run_sender;
+<<<<<<< HEAD
     std::atomic<bool> run_stage;
     std::atomic<bool> run_threads;
 
+=======
+    /// Flag to allow/block workers
+    std::atomic<bool> run_threads;
+    /// Flag to start/stop stage
+    std::atomic<bool> run_stage;
+    /// Mutex used to co-ordinate between receiver, workers and sender
+>>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
     std::mutex thread_coordination_mutex;
-    std::condition_variable wake_action_notifier;
+    /// Variables to conditionally block receiver, workers and sender
     std::condition_variable wake_receiver_notifier;
+    std::condition_variable wake_action_notifier;
     std::condition_variable wake_sender_notifier;
 
+    /// Method to manage receiver thread
     void ReceiverThreadManager();
 
+    /// Method to manage worker threads
     void ActionThreadManager(const int thread_id);
 
+    /// Method to manage sender thread
     void SenderThreadManager();
 
   protected:
@@ -63,7 +85,6 @@ namespace traffic_manager {
 
   public:
 
-    /// Pass the number of thread pool size.
     PipelineStage(
         int pool_size,
         int number_of_vehicles);

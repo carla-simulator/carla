@@ -112,11 +112,8 @@ void test_pipeline(
 
   std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
 
-  while (true) {
+  while (!quit.load()) {
     sleep(1);
-    if (quit.load()) {
-      break;
-    }
   }
 
   pipeline.Stop();
