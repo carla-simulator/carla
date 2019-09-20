@@ -6,6 +6,7 @@ namespace traffic_manager {
     static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0;
     static const float LATERAL_DETECTION_CONE = 135.0;
     static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0;
+    static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0;
   }
 
   using namespace TrafficDistributorConstants;
@@ -131,7 +132,9 @@ namespace traffic_manager {
             vehicle,
             same_lane_vehicle_waypoint->GetLocation()) > 0 &&
           same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
-          < LANE_CHANGE_OBSTACLE_DISTANCE
+          < LANE_CHANGE_OBSTACLE_DISTANCE &&
+          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+          > LANE_OBSTACLE_MINIMUM_DISTANCE
         ) {
 
           // If lane change connections are available,

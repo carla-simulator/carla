@@ -79,7 +79,7 @@ namespace traffic_manager {
     // We need to wait till the simulator spawns all vehicles
     // Tried to use World::WaitForTick but it also wasn't sufficient
     // Need to find a better a way to do this
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(500ms);
 
     // Gathering actors spawned by traffic manager
     auto world_actors = world.GetActors();
