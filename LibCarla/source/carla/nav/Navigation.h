@@ -8,6 +8,7 @@
 
 #include "carla/AtomicList.h"
 #include "carla/client/detail/EpisodeState.h"
+#include "carla/geom/BoundingBox.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/ActorId.h"
@@ -20,6 +21,13 @@
 
 namespace carla {
 namespace nav {
+
+  /// struct to send info about vehicles to the crowd
+  struct VehicleCollisionInfo {
+    carla::rpc::ActorId id;
+    carla::geom::Transform transform;
+    carla::geom::BoundingBox bounding;
+  };
 
   /// Manage the pedestrians navigation, using the Recast & Detour library for low level calculations.
   ///
@@ -44,8 +52,12 @@ namespace nav {
     void CreateCrowd(void);
     /// create a new walker
     bool AddWalker(ActorId id, carla::geom::Location from);
-    /// remove a walker
-    bool RemoveWalker(ActorId id);
+    /// create a new vehicle in crowd to be avoided by walkers
+    bool AddOrUpdateVehicle(VehicleCollisionInfo &vehicle);
+    /// remove an agent
+    bool RemoveAgent(ActorId id);
+    /// add/update/delete vehicles in crowd
+    bool UpdateVehicles(std::vector<VehicleCollisionInfo> vehicles);
     /// set new max speed
     bool SetWalkerMaxSpeed(ActorId id, float max_speed);
     /// set a new target point to go
@@ -61,6 +73,8 @@ namespace nav {
     bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
     dtQueryFilter * filter = nullptr, bool use_lock = true) const;
 
+    dtCrowd *GetCrowd() { return _crowd; };
+
   private:
 
     bool _ready { false };
@@ -72,7 +86,8 @@ namespace nav {
     /// crowd
     dtCrowd *_crowd { nullptr };
     /// mapping Id
-    std::unordered_map<ActorId, int> _mappedId;
+    std::unordered_map<ActorId, int> _mappedWalkersId;
+    std::unordered_map<ActorId, int> _mappedVehiclesId;
     /// Store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
 
