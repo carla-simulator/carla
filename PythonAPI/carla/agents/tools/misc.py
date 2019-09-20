@@ -12,6 +12,7 @@ import math
 import numpy as np
 import carla
 
+
 def draw_waypoints(world, waypoints, z=0.5):
     """
     Draw a list of waypoints at a certain height given in z.
@@ -28,6 +29,7 @@ def draw_waypoints(world, waypoints, z=0.5):
         end = begin + carla.Location(x=math.cos(angle), y=math.sin(angle))
         world.debug.draw_arrow(begin, end, arrow_size=0.3, life_time=1.0)
 
+
 def get_speed(vehicle):
     """
     Compute speed of a vehicle in Kmh
@@ -38,17 +40,8 @@ def get_speed(vehicle):
 
     return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
 
-def get_accel(vehicle):
-    """
-    Compute acceleration of a vehicle in Kmh
-    :param vehicle: the vehicle for which acceleration is calculated
-    :return: acceleration as a float in Kmh
-    """
-    acc = vehicle.get_acceleration()
 
-    return 3.6 * math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2)
-
-def is_within_distance(target_location, current_location, orientation, max_distance, d_angle_th, d_angle_th_low=0):
+def is_within_distance(target_location, current_location, orientation, max_distance, d_angle_th_up, d_angle_th_low=0):
     """
     Check if a target object is within a certain distance from a reference object.
     A vehicle in front would be something around 0 deg, while one behind around 180 deg.
@@ -57,7 +50,7 @@ def is_within_distance(target_location, current_location, orientation, max_dista
     :param current_location: location of the reference object
     :param orientation: orientation of the reference object
     :param max_distance: maximum allowed distance
-    :param d_angle_th: upper thereshold for angle
+    :param d_angle_th_up: upper thereshold for angle
     :param d_angle_th_low: low thereshold for angle (optional, default is 0)
     :return: True if target object is within max_distance ahead of the reference object
     """
@@ -75,7 +68,8 @@ def is_within_distance(target_location, current_location, orientation, max_dista
         [math.cos(math.radians(orientation)), math.sin(math.radians(orientation))])
     d_angle = math.degrees(math.acos(np.dot(forward_vector, target_vector) / norm_target))
 
-    return d_angle_th_low < d_angle < d_angle_th
+    return d_angle_th_low < d_angle < d_angle_th_up
+
 
 def compute_magnitude_angle(target_location, current_location, orientation):
     """
@@ -94,6 +88,7 @@ def compute_magnitude_angle(target_location, current_location, orientation):
 
     return (norm_target, d_angle)
 
+
 def distance_vehicle(waypoint, vehicle_transform):
     """
     Returns the 2D distance from a waypoint to a vehicle
@@ -105,6 +100,7 @@ def distance_vehicle(waypoint, vehicle_transform):
     y = waypoint.transform.location.y - loc.y
 
     return math.sqrt(x * x + y * y)
+
 
 def vector(location_1, location_2):
     """
@@ -118,6 +114,7 @@ def vector(location_1, location_2):
 
     return [x / norm, y / norm, z / norm]
 
+
 def compute_distance(location_1, location_2):
     """
     Euclidean distance between 3D points
@@ -128,6 +125,7 @@ def compute_distance(location_1, location_2):
     z = location_2.z - location_1.z
     norm = np.linalg.norm([x, y, z]) + np.finfo(float).eps
     return norm
+
 
 def positive(num):
     """
