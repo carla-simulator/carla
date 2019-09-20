@@ -9,8 +9,11 @@
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/World.h"
+#include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/Logging.h"
+#include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/Command.h"
 
 #include "BatchControlStage.h"
 #include "CollisionStage.h"
@@ -31,6 +34,12 @@ namespace traffic_manager {
       carla::client::World &world,
       int core_count,
       int target_amount);
+
+  /// Delete actors in a list
+  void delete_traffic(
+    std::vector<carla::SharedPtr<carla::client::Actor>>& actor_list,
+    carla::client::World& world
+  );
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers

@@ -11,6 +11,7 @@ namespace traffic_manager {
   }
 
   std::pair<int, int> VicinityGrid::UpdateGrid(carla::SharedPtr<carla::client::Actor> actor) {
+
     auto actor_id = actor->GetId();
     auto location = actor->GetLocation();
     int first = static_cast<int>(std::floor(location.x / 10));
@@ -18,10 +19,14 @@ namespace traffic_manager {
 
     auto new_grid_id = MakeKey({first, second});
 
+    // If actor exists in the grid
     if (actor_to_grid_id.find(actor_id) != actor_to_grid_id.end()) {
+
       auto old_grid_id = actor_to_grid_id.at(actor_id);
+      // If actor has moved into a new road/section/lane
       if (old_grid_id != new_grid_id) {
         std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
+        // Remove actor from old grid position and update new position
         grid_to_actor_id.at(old_grid_id).erase(actor_id);
         actor_to_grid_id.insert(std::pair<uint, std::string>(actor_id, new_grid_id));
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
@@ -30,12 +35,15 @@ namespace traffic_manager {
           grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<uint>>(new_grid_id, {actor_id}));
         }
       }
-    } else {
+    }
+    // If actor is new, then add entries to map
+    else {
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
       actor_to_grid_id.insert(std::pair<uint, std::string>(actor_id, new_grid_id));
       grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<uint>>(new_grid_id, {actor_id}));
     }
 
+    // Return updated grid position
     return {first, second};
   }
 
@@ -45,6 +53,7 @@ namespace traffic_manager {
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
     std::unordered_set<uint> actors;
+    // Search all surrounding grids and find any vehicles in them
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
@@ -56,6 +65,7 @@ namespace traffic_manager {
         }
       }
     }
+
     return actors;
   }
 

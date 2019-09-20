@@ -31,19 +31,25 @@ namespace traffic_manager {
       traffic_light_messenger(traffic_light_messenger),
       PipelineStage(pool_size, number_of_vehicles) {
 
+    // Allocate and initialize vector to keep track of contoller states for all vehicles
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for (auto &entry: *pid_state_vector.get()) {
       entry.time_instance = std::chrono::system_clock::now();
     }
 
+    // Initialize output frame selector
     frame_selector = true;
 
+    // Allocate output frames
     control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
     control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
 
+    // Initialize messenger states
     localization_messenger_state = localization_messenger->GetState();
     collision_messenger_state = collision_messenger->GetState();
     traffic_light_messenger_state = traffic_light_messenger->GetState();
+    // Initialize this messenger to preemptively write since it precedes
+    // batch control stage
     control_messenger_state = control_messenger->GetState() - 1;
   }
 
@@ -51,8 +57,10 @@ namespace traffic_manager {
 
   void MotionPlannerStage::Action(const int start_index, const int end_index) {
 
+    // Selecting output frame
     auto current_control_frame = frame_selector? control_frame_a: control_frame_b;
 
+    // Looping over arrays' partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
 
       auto &localization_data = localization_frame->at(i);
@@ -138,6 +146,7 @@ namespace traffic_manager {
     localization_frame = localization_packet.data;
     localization_messenger_state = localization_packet.id;
 
+    // Block on receive call only if new data is available on the messenger
     auto collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
@@ -145,6 +154,7 @@ namespace traffic_manager {
       collision_messenger_state = collision_packet.id;
     }
 
+    // Block on receive call only if new data is available on the messenger
     auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);

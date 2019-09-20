@@ -28,12 +28,8 @@ namespace traffic_manager {
     auto dt = duration.count();
 
     // Calculating integrals
-    current_state.deviation_integral =
-        angular_deviation * dt +
-        previous_state.deviation_integral;
-    current_state.velocity_integral =
-        dt * current_state.velocity +
-        previous_state.velocity_integral;
+    current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
+    current_state.velocity_integral = dt * current_state.velocity + previous_state.velocity_integral;
 
     return current_state;
   }
@@ -43,6 +39,7 @@ namespace traffic_manager {
       StateEntry previous_state,
       const std::vector<float> &longitudinal_parameters,
       const std::vector<float> &lateral_parameters) const {
+
     // Calculating dt for updating integral component
     std::chrono::duration<double> duration = present_state.time_instance - previous_state.time_instance;
     auto dt = duration.count();
@@ -72,11 +69,7 @@ namespace traffic_manager {
         lateral_parameters[2] * (present_state.deviation - previous_state.deviation) / dt;
     steer = std::max(-1.0f, std::min(steer, 1.0f));
 
-    return ActuationSignal{
-             throttle,
-             brake,
-             steer
-    };
+    return ActuationSignal{throttle, brake, steer};
   }
 }
 

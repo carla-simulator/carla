@@ -11,9 +11,13 @@ namespace traffic_manager {
       carla_client(carla_client),
       PipelineStage(pool_size, number_of_vehicles) {
 
+    // Initializing messenger state
     messenger_state = messenger->GetState();
+    // Initializing throuput count
     frame_count = 0;
+    // Initializing clock for throughput measurement
     last_update_instance = std::chrono::system_clock::now();
+    // Allocating array for command batching
     commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
   }
 
@@ -21,6 +25,7 @@ namespace traffic_manager {
 
   void BatchControlStage::Action(const int start_index, const int end_index) {
 
+    // Looping over arrays' partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
 
       carla::rpc::VehicleControl vehicle_control;
@@ -46,9 +51,9 @@ namespace traffic_manager {
 
     carla_client.ApplyBatch(*commands.get());
 
+    // Measuring throughput
     auto current_time = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = current_time - last_update_instance;
-
     ++frame_count;
     if (diff.count() > 1.0) {
       carla::log_info("Processed " + std::to_string(frame_count) + " frames per second\n");

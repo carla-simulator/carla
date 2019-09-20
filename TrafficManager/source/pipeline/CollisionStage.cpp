@@ -33,14 +33,18 @@ namespace traffic_manager {
     world(world),
     debug_helper(debug_helper),
     PipelineStage(pool_size, number_of_vehicle) {
+
+      // Initializing clock for checking unregistered actors periodically
       last_world_actors_pass_instance = std::chrono::system_clock::now();
-
+      // Initializing output array selector
       frame_selector = true;
-
+      // Allocating output arrays to be shared with motion planner stage
       planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
       planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
-
+      // Initializing messenger states
       localization_messenger_state = localization_messenger->GetState();
+      // Initialize this messenger to preemptively write since it precedes
+      // motion planner stage
       planner_messenger_state = planner_messenger->GetState() - 1;
 
     }
@@ -51,13 +55,13 @@ namespace traffic_manager {
 
     auto current_planner_frame = frame_selector? planner_frame_a: planner_frame_b;
 
-    /// Handle vehicles not spawned by TrafficManager
-    /// Choosing an arbitrary thread
+    // Handle vehicles not spawned by TrafficManager
+    // Choosing an arbitrary thread
     if (start_index == 0) {
       auto current_time = std::chrono::system_clock::now();
       std::chrono::duration<double> diff = current_time - last_world_actors_pass_instance;
 
-      /// Periodically check for actors not spawned by TrafficManager
+      // Periodically check for actors not spawned by TrafficManager
       if (diff.count() > 0.5f) {
         auto world_actors = world.GetActors()->Filter("vehicle.*");
         for (auto actor: *world_actors.get()) {
@@ -71,7 +75,7 @@ namespace traffic_manager {
         last_world_actors_pass_instance = current_time;
       }
 
-      /// Regularly update unregistered actors
+      // Regularly update unregistered actors
       std::vector<uint> actor_ids_to_erase;
       for (auto actor_info: unregistered_actors) {
         if (actor_info.second->IsAlive()) {
@@ -86,14 +90,17 @@ namespace traffic_manager {
       }
     }
 
+    // Looping over arrays' partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
 
       auto &data = localization_frame->at(i);
       auto ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
+      // Retreive actors around ego actor
       auto actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
 
+      // Check every actor in vicinity if it poses a collision hazard
       for (auto i = actor_id_list.begin(); (i != actor_id_list.end()) && !collision_hazard; ++i) {
         auto actor_id = *i;
         try {
@@ -133,6 +140,9 @@ namespace traffic_manager {
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
 
+    // Connect actor ids to their position index on data arrays (intput and output)
+    // This map also provides us the additional benifit of being able to
+    // Quickly identify if a vehicle id is registered with traffic manager or not.
     int index = 0;
     for (auto &element: *localization_frame.get()) {
       id_to_index.insert(std::pair<uint, int>(element.actor->GetId(), index));
@@ -153,6 +163,9 @@ namespace traffic_manager {
       Actor ego_vehicle,
       Actor other_vehicle) const {
 
+    // For each vehicle, calculating the dot product between heading vector
+    // and relative position vector to the other vehicle.
+
     auto reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
     auto relative_other_vector = other_vehicle->GetLocation() - ego_vehicle->GetLocation();
     relative_other_vector = relative_other_vector.MakeUnitVector();
@@ -163,6 +176,8 @@ namespace traffic_manager {
     relative_reference_vector = relative_reference_vector.MakeUnitVector();
     auto other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
 
+    // Give preference to vehicle who's path has higher angular separation
+    // with relative position vector to the other vehicle.
     return (reference_relative_dot > other_relative_dot &&
            CheckGeodesicCollision(ego_vehicle, other_vehicle));
   }
@@ -187,7 +202,6 @@ namespace traffic_manager {
         std::deque<polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
-        // for(polygon const& p: output) {
         for(int i = 0u; i < output.size() && !overlap; ++i) {
           auto& p = output.at(i);
           if (bg::area(p) > ZERO_AREA) {
@@ -276,7 +290,7 @@ namespace traffic_manager {
     heading_vector.z = 0;
     auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
-    // Four corners of the vehicle in boost positve area order
+    // Four corners of the vehicle in clockwise order
     return {  
              location + cg::Location(heading_vector * extent.x + perpendicular_vector * extent.y),
              location + cg::Location(heading_vector * -extent.x + perpendicular_vector * extent.y),
