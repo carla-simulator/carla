@@ -20,6 +20,7 @@ namespace client {
 namespace detail {
 
   class Client;
+  class Episode;
   class EpisodeState;
 
   class WalkerNavigation
@@ -50,7 +51,7 @@ namespace detail {
 
     void RemoveWalker(ActorId walker_id) {
       // remove the walker in the crowd
-      _nav.RemoveWalker(walker_id);
+      _nav.RemoveAgent(walker_id);
     }
 
     void AddWalker(ActorId walker_id, carla::geom::Location location) {
@@ -58,7 +59,7 @@ namespace detail {
       _nav.AddWalker(walker_id, location);
     }
 
-    void Tick(const EpisodeState &episode_state);
+    void Tick(std::shared_ptr<Episode> episode);
 
     // Get Random location in nav mesh
     boost::optional<geom::Location> GetRandomLocation() {
@@ -94,8 +95,10 @@ namespace detail {
 
     AtomicList<WalkerHandle> _walkers;
 
-    // check a few walkers and if they don't exist then remove from the crowd
+    /// check a few walkers and if they don't exist then remove from the crowd
     void CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state);
+    /// add/update/delete all vehicles in crowd
+    void UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode);
   };
 
 } // namespace detail

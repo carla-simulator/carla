@@ -289,7 +289,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+RECAST_COMMIT="e32e3f85832c14c5ad31d98f9a847c9429ddd33c"
 RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
@@ -305,7 +305,7 @@ else
 
   log "Retrieving Recast & Detour"
 
-  git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+  git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 

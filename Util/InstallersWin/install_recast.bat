@@ -38,7 +38,7 @@ set RECAST_INSTALL=recast-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
 
-set RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+set RECAST_COMMIT="e32e3f85832c14c5ad31d98f9a847c9429ddd33c"
 set RECAST_BASENAME=%RECAST_SRC%
 
 
@@ -49,7 +49,7 @@ if exist "%RECAST_INSTALL_DIR%" (
 if not exist "%RECAST_SRC_DIR%" (
     echo %FILE_N% Cloning "Recast & Detour"
 
-    call git clone https://github.com/recastnavigation/recastnavigation.git %RECAST_SRC_DIR%
+    call git clone https://github.com/carla-simulator/recastnavigation.git %RECAST_SRC_DIR%
     cd %RECAST_SRC_DIR%
     call git reset --hard %RECAST_COMMIT%
     cd ..
