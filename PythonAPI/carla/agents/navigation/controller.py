@@ -40,6 +40,8 @@ class VehiclePIDController(object):
 
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
+        self.past_steering = self._vehicle.get_control().steer
+        self.max_steer = 0.5
         self._lon_controller = PIDLongitudinalController(self._vehicle, **args_longitudinal)
         self._lat_controller = PIDLateralController(self._vehicle, **args_lateral)
 
@@ -55,7 +57,7 @@ class VehiclePIDController(object):
         """
 
         acceleration = self._lon_controller.run_step(target_speed)
-        steering = self._lat_controller.run_step(waypoint)
+        current_steering = self._lat_controller.run_step(waypoint)
         control = carla.VehicleControl()
 
         if acceleration > 0.0:
@@ -65,15 +67,24 @@ class VehiclePIDController(object):
             control.throttle = 0.0
             control.brake = abs(acceleration)
 
-        if steering > 0.5:
-            steering = 0.5
-        elif steering < -0.5:
-            steering = -0.5
+        # Steering regulation: changes cannot happen abruptly, can't steer too much.
+
+        if current_steering > self.past_steering + 0.1:
+            current_steering = self.past_steering + 0.1
+        elif current_steering < self.past_steering - 0.1:
+            current_steering = self.past_steering - 0.1
+
+        if current_steering >= 0:
+            steering = min(self.max_steer, current_steering)
+        else:
+            steering = max(-self.max_steer, current_steering)
+
         control.steer = steering
         control.hand_brake = False
         control.manual_gear_shift = False
 
         return control
+
 
 class PIDLongitudinalController(object):
     """
@@ -93,7 +104,7 @@ class PIDLongitudinalController(object):
         self._k_d = K_D
         self._k_i = K_I
         self._dt = dt
-        self._e_buffer = deque(maxlen=30)
+        self._e_buffer = deque(maxlen=10)
 
     def run_step(self, target_speed, debug=False):
         """
@@ -117,7 +128,9 @@ class PIDLongitudinalController(object):
         :param current_speed: current speed of the vehicle in Km/h
         :return: throttle/brake control
         """
-        _e = ((target_speed + 5) - current_speed)
+
+        # Adding 5 is necessary for error to reach 0.
+        _e = (target_speed+5) - current_speed
         self._e_buffer.append(_e)
 
         if len(self._e_buffer) >= 2:
@@ -127,8 +140,8 @@ class PIDLongitudinalController(object):
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._k_p * _e) + (self._k_d * _de / self._dt) + \
-            (self._k_i * _ie * self._dt), -1.0, 1.0)
+        return np.clip((self._k_p * _e) + (self._k_d * _de / self._dt) + (self._k_i * _ie * self._dt), -1.0, 1.0)
+
 
 class PIDLateralController(object):
     """

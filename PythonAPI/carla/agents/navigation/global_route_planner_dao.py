@@ -6,14 +6,13 @@ This module provides implementation for GlobalRoutePlannerDAO
 """
 import numpy as np
 
-
 class GlobalRoutePlannerDAO(object):
     """
     This class is the data access layer for fetching data
     from the carla server instance for GlobalRoutePlanner
     """
 
-    def __init__(self, wmap, sampling_resolution=1, world=None):
+    def __init__(self, wmap, sampling_resolution=1):
         """get_topology
         Constructor
 

@@ -13,6 +13,7 @@ The agent also responds to traffic lights. """
 import carla
 from agents.tools.misc import is_within_distance, compute_distance
 
+
 class Agent(object):
     """
     Base class to define agents in CARLA
@@ -45,7 +46,8 @@ class Agent(object):
 
         return control
 
-    def _is_vehicle_hazard(self, vehicle_list, proximity_threshold):
+    def _is_vehicle_hazard(self, ego_wpt, ego_loc, vehicle_list,
+                           proximity_th, up_angle_th, low_angle_th=0, lane_offset=0):
         """
         Check if a given vehicle is an obstacle in our way. To this end we take
         into account the road and lane the target vehicle is on and run a
@@ -54,8 +56,8 @@ class Agent(object):
 
         WARNING: This method is an approximation that could fail for very large
         vehicles, which center is actually on a different lane but their
-        extension falls within the ego vehicle lane.
-
+        extension falls within the ego vehicle lane. Also, make sure to remove
+        the ego vehicle from the list.
         :param vehicle_list: list of potential obstacle to check
         :return: a tuple given by (bool_flag, vehicle), where
                  - bool_flag is True if there is a vehicle ahead blocking us
@@ -63,109 +65,22 @@ class Agent(object):
                  - vehicle is the blocker object itself
         """
 
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+        # Get the right offset
+        if ego_wpt.lane_id < 0 and lane_offset != 0:
+            lane_offset *= -1
 
         for target_vehicle in vehicle_list:
-            # Do not account for the ego vehicle
-            if target_vehicle.id == self._vehicle.id:
+            target_vehicle_loc = target_vehicle.get_location()
+            # If the object is not in our next or current lane it's not an obstacle
+            target_wpt = self._map.get_waypoint(target_vehicle_loc)
+            if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
                 continue
 
-            # If the object is not in our lane it's not an obstacle
-            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
-            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
-                continue
-
-            loc = target_vehicle.get_location()
-            if is_within_distance(loc, ego_vehicle_location,
+            if is_within_distance(target_vehicle_loc, ego_loc,
                                   self._vehicle.get_transform().rotation.yaw,
-                                  proximity_threshold, d_angle_th=60.0):
-                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
+                                  proximity_th, up_angle_th, low_angle_th):
 
-        return (False, None, -1)
-
-    def _is_vehicle_on_right_lane_hazard(self, vehicle_list, proximity_threshold):
-        """
-        Check if a given vehicle is an obstacle in our way to change lane to the right.
-        """
-
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-
-        for target_vehicle in vehicle_list:
-            # Do not account for the ego vehicle
-            if target_vehicle.id == self._vehicle.id:
-                continue
-
-            # If the object is not in our road it's not an obstacle,
-            # However this time we are also checking for nearby lanes
-            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
-            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    abs(target_vehicle_waypoint.lane_id) != abs(ego_vehicle_waypoint.lane_id)+1:
-                continue
-
-            loc = target_vehicle.get_location()
-            if is_within_distance(loc, ego_vehicle_location,
-                                  self._vehicle.get_transform().rotation.yaw,
-                                  proximity_threshold, d_angle_th=180.0):
-                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
-
-        return (False, None, -1)
-
-    def _is_vehicle_on_left_lane_hazard(self, vehicle_list, proximity_threshold):
-        """
-        Check if a given vehicle is an obstacle in our way to change lane to the left.
-        """
-
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-
-        for target_vehicle in vehicle_list:
-            # Do not account for the ego vehicle
-            if target_vehicle.id == self._vehicle.id:
-                continue
-
-            # If the object is not in our road it's not an obstacle,
-            # However this time we are also checking for nearby lanes
-            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
-            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    abs(target_vehicle_waypoint.lane_id) != abs(ego_vehicle_waypoint.lane_id)-1:
-                continue
-            loc = target_vehicle.get_location()
-            if is_within_distance(loc, ego_vehicle_location,
-                                  self._vehicle.get_transform().rotation.yaw,
-                                  proximity_threshold, d_angle_th=180.0):
-                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
-
-        return (False, None, -1)
-
-
-    def _is_vehicle_behind_hazard(self, vehicle_list, proximity_threshold):
-        """
-        Check if a given vehicle is an obstacle in
-        our way to change lane based on vehicles behind it.
-        """
-
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
-
-        for target_vehicle in vehicle_list:
-            # Do not account for the ego vehicle
-            if target_vehicle.id == self._vehicle.id:
-                continue
-
-            # If the object is not in our lane it's not an obstacle
-            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
-            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
-                continue
-
-            loc = target_vehicle.get_location()
-            if is_within_distance(loc, ego_vehicle_location,
-                                  self._vehicle.get_transform().rotation.yaw,
-                                  proximity_threshold, d_angle_th=180.0, d_angle_th_low=170.0):
-                return (True, target_vehicle, compute_distance(loc, ego_vehicle_location))
+                return (True, target_vehicle, compute_distance(target_vehicle_loc, ego_loc))
 
         return (False, None, -1)
 

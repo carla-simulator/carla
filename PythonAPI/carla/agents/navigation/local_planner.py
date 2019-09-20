@@ -44,9 +44,12 @@ class LocalPlanner(object):
     this local planner makes a random choice.
     """
 
-    # minimum distance to target waypoint as a percentage
+    # Minimum distance to target waypoint as a percentage
     # (e.g. within 80% of total distance)
     MIN_DISTANCE_PERCENTAGE = 0.8
+
+    # FPS used for dt
+    FPS = 40
 
     def __init__(self, agent, vehicle):
         """
@@ -56,7 +59,6 @@ class LocalPlanner(object):
         self._map = self._vehicle.get_world().get_map()
         self.agent = agent
 
-        self._dt = None
         self._target_speed = None
         self._sampling_radius = None
         self._min_distance = None
@@ -66,7 +68,7 @@ class LocalPlanner(object):
         self.target_waypoint = None
         self._vehicle_controller = None
         self._global_plan = None
-        self._waypoints_queue = deque(maxlen=20000) # queue with tuples of (waypoint, RoadOption)
+        self.waypoints_queue = deque(maxlen=20000) # queue with tuples of (waypoint, RoadOption)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
@@ -100,7 +102,6 @@ class LocalPlanner(object):
                             {'K_P':, 'K_D':, 'K_I':, 'dt'}
         """
         # Default parameters
-        self._dt = 1.0 / 40.0
         self._target_speed = 20.0  # km/h
         self._sampling_radius = self._target_speed * 1.5 / 3.6  # 1.5 second horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
@@ -108,12 +109,12 @@ class LocalPlanner(object):
             'K_P': 0.9,
             'K_D': 0.003,
             'K_I': 0.03,
-            'dt': 1.0/30.0}
+            'dt': 1.0/self.FPS}
         self.args_longitudinal_dict = {
             'K_P': 0.1,
             'K_D': 0.002,
             'K_I': 0.03,
-            'dt': 1.0/30.0}
+            'dt': 1.0/self.FPS}
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
 
         self._global_plan = False
@@ -140,14 +141,14 @@ class LocalPlanner(object):
         :return:
         """
         # Check we do not overflow the queue
-        available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
+        available_entries = self.waypoints_queue.maxlen - len(self.waypoints_queue)
         k = min(available_entries, k)
 
         for _ in range(k):
-            if len(self._waypoints_queue) < 1:
+            if len(self.waypoints_queue) == 0:
                 last_waypoint = self._current_waypoint
             else:
-                last_waypoint = self._waypoints_queue[-1][0]
+                last_waypoint = self.waypoints_queue[-1][0]
             next_waypoints = list(last_waypoint.next(self._sampling_radius))
 
             if len(next_waypoints) == 1:
@@ -160,7 +161,7 @@ class LocalPlanner(object):
                 road_option = random.choice(road_options_list)
                 next_waypoint = next_waypoints[road_options_list.index(road_option)]
 
-            self._waypoints_queue.append((next_waypoint, road_option))
+            self.waypoints_queue.append((next_waypoint, road_option))
 
     def set_global_plan(self, current_plan):
         """
@@ -168,19 +169,19 @@ class LocalPlanner(object):
         :param current_plan: list of waypoints in the actual plan
         """
         for elem in current_plan:
-            self._waypoints_queue.append(elem)
+            self.waypoints_queue.append(elem)
         self._global_plan = True
 
     def get_incoming_waypoint_and_direction(self, steps=3):
         """
         Returns direction and waypoint at a distance ahead defined by the user.
         """
-        if len(self._waypoints_queue)-1 >= steps:
-            return self._waypoints_queue[steps]
+        if len(self.waypoints_queue) > steps:
+            return self.waypoints_queue[steps]
 
         else:
             try:
-                wpt, direction = self._waypoints_queue[-1]
+                wpt, direction = self.waypoints_queue[-1]
                 return wpt, direction
             except IndexError as i:
                 print(i)
@@ -199,10 +200,10 @@ class LocalPlanner(object):
         if target_speed is not None:
             self._target_speed = target_speed
         # Not enough waypoints in the horizon? Add more!
-        if not self._global_plan and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
+        if not self._global_plan and len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
-        if len(self._waypoints_queue) == 0:
+        if len(self.waypoints_queue) == 0:
             control = carla.VehicleControl()
             control.steer = 0.0
             control.throttle = 0.0
@@ -214,9 +215,9 @@ class LocalPlanner(object):
         # Buffering the waypoints
         if not self._waypoint_buffer:
             for i in range(self._buffer_size):
-                if self._waypoints_queue:
+                if self.waypoints_queue:
                     self._waypoint_buffer.append(
-                        self._waypoints_queue.popleft())
+                        self.waypoints_queue.popleft())
                 else:
                     break
 
