@@ -10,6 +10,7 @@
 
 #include "carla/Logging.h"
 #include "carla/nav/Navigation.h"
+#include "carla/geom/Math.h"
 
 #include <iterator>
 #include <fstream>
@@ -62,7 +63,8 @@ namespace nav {
 
   Navigation::~Navigation() {
     _ready = false;
-    _mappedId.clear();
+    _mappedWalkersId.clear();
+    _mappedVehiclesId.clear();
     _yaw_walkers.clear();
     _binaryMesh.clear();
     dtFreeCrowd(_crowd);
@@ -200,7 +202,7 @@ namespace nav {
 
     // create and init
     _crowd = dtAllocCrowd();
-    if (!_crowd->init(MAX_AGENTS, AGENT_RADIUS, _navMesh)) {
+    if (!_crowd->init(MAX_AGENTS, AGENT_RADIUS * 20, _navMesh)) {
       logging::log("Nav: failed to create crowd");
       return;
     }
@@ -342,10 +344,12 @@ namespace nav {
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
     params.height = AGENT_HEIGHT;
-    params.maxAcceleration = 8.0f;
+    params.maxAcceleration = 20.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 12.0f;
+    params.collisionQueryRange = params.radius * 15.0f;
     params.pathOptimizationRange = params.radius * 30.0f;
+    params.obstacleAvoidanceType = 3;
+    params.separationWeight = 0.1f;
 
     // flags
     params.updateFlags = 0;
@@ -354,8 +358,6 @@ namespace nav {
     params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
     params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
-    params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.5f;
 
     // from Unreal coordinates (subtract half height to move pivot from center
     // (unreal) to bottom (recast))
@@ -367,15 +369,18 @@ namespace nav {
     }
 
     // save the id
-    _mappedId[id] = index;
+    _mappedWalkersId[id] = index;
 
+    // init yaw
     _yaw_walkers[id] = 0.0f;
 
     return true;
   }
 
-  // remove a walker
-  bool Navigation::RemoveWalker(ActorId id) {
+  // create a new vehicle in crowd to be avoided by walkers
+  bool Navigation::AddOrUpdateVehicle(VehicleCollisionInfo &vehicle) {
+    namespace cg = carla::geom;
+    dtCrowdAgentParams params;
 
     // force single thread running this
     std::lock_guard<std::mutex> lock(_mutex);
@@ -387,17 +392,179 @@ namespace nav {
 
     DEBUG_ASSERT(_crowd != nullptr);
 
-    // get the internal index
-    auto it = _mappedId.find(id);
-    if (it == _mappedId.end()) {
+    // get the bounding box extension
+    float hx = vehicle.bounding.extent.x + 0.5;
+    float hy = vehicle.bounding.extent.y + 0.5;
+    // define the 4 corners of the bounding box
+    cg::Vector3D boxCorner1 {-hx, -hy, 0};
+    cg::Vector3D boxCorner2 { hx, -hy, 0};
+    cg::Vector3D boxCorner3 { hx,  hy, 0};
+    cg::Vector3D boxCorner4 {-hx,  hy, 0};
+    // rotate the points
+    float angle = cg::Math::ToRadians(vehicle.transform.rotation.yaw);
+    boxCorner1 = cg::Math::RotatePointOnOrigin2D(boxCorner1, angle);
+    boxCorner2 = cg::Math::RotatePointOnOrigin2D(boxCorner2, angle);
+    boxCorner3 = cg::Math::RotatePointOnOrigin2D(boxCorner3, angle);
+    boxCorner4 = cg::Math::RotatePointOnOrigin2D(boxCorner4, angle);
+    // translate to world position
+    boxCorner1 += vehicle.transform.location;
+    boxCorner2 += vehicle.transform.location;
+    boxCorner3 += vehicle.transform.location;
+    boxCorner4 += vehicle.transform.location;
+
+    // check if this actor exists
+    auto it = _mappedVehiclesId.find(vehicle.id);
+    if (it != _mappedVehiclesId.end()) {
+      // get the index found
+      int index = it->second;
+      if (index != -1) {
+        // get the agent
+        dtCrowdAgent *agent = _crowd->getEditableAgent(index);
+        if (agent) {
+          // update its position
+          agent->npos[0] = vehicle.transform.location.x;
+          agent->npos[1] = vehicle.transform.location.z;
+          agent->npos[2] = vehicle.transform.location.y;
+          // update its oriented bounding box
+          agent->params.obb[0]  = boxCorner1.x;
+          agent->params.obb[1]  = boxCorner1.z;
+          agent->params.obb[2]  = boxCorner1.y;
+          agent->params.obb[3]  = boxCorner2.x;
+          agent->params.obb[4]  = boxCorner2.z;
+          agent->params.obb[5]  = boxCorner2.y;
+          agent->params.obb[6]  = boxCorner3.x;
+          agent->params.obb[7]  = boxCorner3.z;
+          agent->params.obb[8]  = boxCorner3.y;
+          agent->params.obb[9]  = boxCorner4.x;
+          agent->params.obb[10] = boxCorner4.z;
+          agent->params.obb[11] = boxCorner4.y;
+        }
+        return true;
+      }
+    }
+
+    // set parameters
+    memset(&params, 0, sizeof(params));
+    params.radius = AGENT_RADIUS * 2;
+    params.height = AGENT_HEIGHT;
+    params.maxAcceleration = 20.0f;
+    params.maxSpeed = 1.47f;
+    params.collisionQueryRange = params.radius * 20.0f;
+    params.pathOptimizationRange = 0.0f;
+    params.obstacleAvoidanceType = 3;
+    params.separationWeight = 0.1f;
+
+    // flags
+    params.updateFlags = 0;
+    // params.updateFlags |= DT_CROWD_ANTICIPATE_TURNS;
+    // params.updateFlags |= DT_CROWD_OPTIMIZE_VIS;
+    // params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
+    // params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
+    params.updateFlags |= DT_CROWD_SEPARATION;
+
+    // update its oriented bounding box
+    // data: [x][y][z] [x][y][z] [x][y][z] [x][y][z]
+    params.useObb = true;
+    params.obb[0]  = boxCorner1.x;
+    params.obb[1]  = boxCorner1.z;
+    params.obb[2]  = boxCorner1.y;
+    params.obb[3]  = boxCorner2.x;
+    params.obb[4]  = boxCorner2.z;
+    params.obb[5]  = boxCorner2.y;
+    params.obb[6]  = boxCorner3.x;
+    params.obb[7]  = boxCorner3.z;
+    params.obb[8]  = boxCorner3.y;
+    params.obb[9]  = boxCorner4.x;
+    params.obb[10] = boxCorner4.z;
+    params.obb[11] = boxCorner4.y;
+
+    // from Unreal coordinates (vertical is Z) to Recast coordinates (vertical is Y)
+    float PointFrom[3] = { vehicle.transform.location.x, 
+                           vehicle.transform.location.z, 
+                           vehicle.transform.location.y };
+
+    // add walker
+    int index = _crowd->addAgent(PointFrom, &params);
+    if (index == -1) {
+      logging::log("Vehicle agent not added to the crowd by some problem!");
       return false;
     }
 
-    // remove from crowd
-    _crowd->removeAgent(it->second);
+    // mark as invalid so it is not managed by the crowd automatically
+    dtCrowdAgent *agent = _crowd->getEditableAgent(index);
+    if (agent) {
+      agent->state = DT_CROWDAGENT_STATE_WALKING;
+      // agent->state = DT_CROWDAGENT_STATE_INVALID;
+    }
 
-    // remove from mapping
-    _mappedId.erase(it);
+    // save the id
+    _mappedVehiclesId[vehicle.id] = index;
+
+    return true;
+  }
+
+  // remove an agent
+  bool Navigation::RemoveAgent(ActorId id) {
+
+    // force single thread running this
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    // check if all is ready
+    if (!_ready) {
+      return false;
+    }
+
+    DEBUG_ASSERT(_crowd != nullptr);
+
+    // get the internal walker index
+    auto it = _mappedWalkersId.find(id);
+    if (it != _mappedWalkersId.end()) {
+      // remove from crowd
+      _crowd->removeAgent(it->second);
+
+      // remove from mapping
+      _mappedWalkersId.erase(it);
+      
+      return true;
+    }
+
+    // get the internal vehicle index
+    it = _mappedVehiclesId.find(id);
+    if (it != _mappedVehiclesId.end()) {
+      // remove from crowd
+      _crowd->removeAgent(it->second);
+      logging::log("Nav: removing vehicle agent");
+      // remove from mapping
+      _mappedVehiclesId.erase(it);
+      
+      return true;
+    }
+
+    return false;
+  }
+
+  // add/update/delete vehicles in crowd
+  bool Navigation::UpdateVehicles(std::vector<VehicleCollisionInfo> vehicles) {
+    std::unordered_set<int> updated;
+
+    // add all current mapped vehicles in the set
+    for (auto &&entry : _mappedVehiclesId) {
+      updated.insert(entry.first);
+    }
+
+    // add all vehicles (if already exists, it gets updated only)
+    for (auto &&entry : vehicles) {
+      // try to add or update the vehicle
+      AddOrUpdateVehicle(entry);
+      // mark as updated (to avoid removing it in this frame)
+      updated.erase(entry.id);
+    }
+
+    // remove all vehicles not updated (they don't exist in this frame)
+    for (auto &&entry : updated) {
+      // remove agent not updated
+      RemoveAgent(entry);
+    }
 
     return true;
   }
@@ -416,8 +583,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the internal index
-    auto it = _mappedId.find(id);
-    if (it == _mappedId.end()) {
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
       return false;
     }
 
@@ -440,8 +607,8 @@ namespace nav {
     }
 
     // get the internal index
-    auto it = _mappedId.find(id);
-    if (it == _mappedId.end()) {
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
       return false;
     }
 
@@ -535,8 +702,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the internal index
-    auto it = _mappedId.find(id);
-    if (it == _mappedId.end()) {
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
       return false;
     }
 
@@ -583,8 +750,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the internal index
-    auto it = _mappedId.find(id);
-    if (it == _mappedId.end()) {
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
       return 0.0f;
     }
 
