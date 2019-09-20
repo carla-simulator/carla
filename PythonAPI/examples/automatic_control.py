@@ -89,17 +89,19 @@ from carla import ColorConverter as cc
 
 from agents.navigation.behavior_agent import BehaviorAgent
 from agents.navigation.local_planner import RoadOption
+from agents.tools.misc import compute_distance
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
+
 
 def find_weather_presets():
     """
     Method to find weather presets
     """
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
-    name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
+    def name(x): return ' '.join(m.group(0) for m in rgx.finditer(x))
     presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
     return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
 
@@ -228,10 +230,8 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, client, world):
         for event in pygame.event.get():
-            if pygame.key.get_mods() & pygame.KMOD_CAPS != 0:
-                world.hud.notification("CAPSLOCK is ON. Please, turn it off.")
             if event.type == pygame.QUIT:
                 return True
             elif event.type == pygame.KEYUP:
@@ -241,8 +241,7 @@ class KeyboardControl(object):
                     world.restart()
                 elif event.key == K_F1:
                     world.hud.toggle_info()
-                elif event.key == K_h or \
-                    (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
+                elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
@@ -305,21 +304,6 @@ class KeyboardControl(object):
                         self._control.gear = max(-1, self._control.gear - 1)
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
-                    elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
-                        self._autopilot_enabled = not self._autopilot_enabled
-                        world.player.set_autopilot(self._autopilot_enabled)
-                        world.hud.notification(
-                            'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
-        if not self._autopilot_enabled:
-            if isinstance(self._control, carla.VehicleControl):
-                keys = pygame.key.get_pressed()
-                if sum(keys) > 0:
-                    self._parse_vehicle_keys(keys, clock.get_time())
-                    self._control.reverse = self._control.gear < 0
-                    world.player.apply_control(self._control)
-            elif isinstance(self._control, carla.WalkerControl):
-                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
-                world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
@@ -409,8 +393,7 @@ class HUD(object):
             'Map:     % 20s' % world.map.name,
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
-            'Speed:   % 15.0f km/h' % \
-                (3.6 * math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)),
+            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)),
             u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (transform.rotation.yaw, heading),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (transform.location.x, transform.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
@@ -437,10 +420,11 @@ class HUD(object):
             'Number of vehicles: % 8d' % len(vehicles)]
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
+
             def distance(l):
-                return math.sqrt((l.x - transform.location.x)**2 + \
-                    (l.y - transform.location.y)**2 + (l.z - transform.location.z)**2)
+                return math.sqrt((l.x - transform.location.x)**2 + (l.y - transform.location.y)**2 + (l.z - transform.location.z)**2)
             vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.player.id]
+
             for dist, vehicle in sorted(vehicles):
                 if dist > 200.0:
                     break
@@ -692,8 +676,8 @@ class CameraManager(object):
 
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
-        needs_respawn = True if self.index is None else \
-            (force_respawn or (self.sensors[index][0] != self.sensors[self.index][0]))
+        needs_respawn = True if self.index is None else (
+            force_respawn or (self.sensors[index][0] != self.sensors[self.index][0]))
         if needs_respawn:
             if self.sensor is not None:
                 self.sensor.destroy()
@@ -762,6 +746,7 @@ def game_loop(args):
     world = None
     tot_target_reached = 0
     stop = False
+    num_min_waypoints = 21
 
     try:
         client = carla.Client(args.host, args.port)
@@ -786,13 +771,12 @@ def game_loop(args):
         else:
             destination = spawn_points[1].location
 
-        agent._local_planner._waypoints_queue.clear()
-        agent.set_destination(destination, agent._vehicle.get_location())
+        agent.set_destination(destination, agent._vehicle.get_location(), clean=True)
 
         clock = pygame.time.Clock()
 
         while True:
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(client, world):
                 return
 
             # As soon as the server is ready continue!
@@ -806,13 +790,13 @@ def game_loop(args):
             pygame.display.flip()
 
             # Set new destination when target has been reached
-            if len(agent._local_planner._waypoints_queue) < 21 and args.loop:
+            if len(agent._local_planner.waypoints_queue) < num_min_waypoints and args.loop:
                 agent.reroute(spawn_points)
                 tot_target_reached += 1
-                world.hud.notification("The target has been reached " \
-                    + str(tot_target_reached) + " times.", seconds=4.0)
+                world.hud.notification("The target has been reached " +
+                                       str(tot_target_reached) + " times.", seconds=4.0)
 
-            elif len(agent._local_planner._waypoints_queue) == 0 and not args.loop:
+            elif len(agent._local_planner.waypoints_queue) == 0 and not args.loop:
                 print("Target reached, mission accomplished...")
                 stop = True
 
@@ -885,9 +869,7 @@ def main():
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
         default=None,
-        type=int,
-)
-
+        type=int)
 
     args = argparser.parse_args()
 
@@ -895,7 +877,6 @@ def main():
 
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
-
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
