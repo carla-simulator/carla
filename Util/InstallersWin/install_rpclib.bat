@@ -63,6 +63,7 @@ if not exist "%RPC_BUILD_DIR%" (
 cd "%RPC_BUILD_DIR%"
 echo %FILE_N% Generating build...
 
+rem /MT is needed to link LibCarla client, while /MD is needed to link CarlaUE4
 cmake .. -G "Visual Studio 15 2017 Win64"^
         -DCMAKE_BUILD_TYPE=Release^
         -RPCLIB_BUILD_EXAMPLES=OFF^
