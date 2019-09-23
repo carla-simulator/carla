@@ -2,14 +2,14 @@
 
 namespace traffic_manager {
 
-  namespace LocalizationConstants {
-    static const float WAYPOINT_TIME_HORIZON = 3.0f;
-    static const float MINIMUM_HORIZON_LENGTH = 25.0f;
-    static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-    static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
-    static const uint MINIMUM_JUNCTION_LOOK_AHEAD = 5u;
-    static const float HIGHWAY_SPEED = 50 / 3.6f;
-  }
+namespace LocalizationConstants {
+  static const float WAYPOINT_TIME_HORIZON = 3.0f;
+  static const float MINIMUM_HORIZON_LENGTH = 25.0f;
+  static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+  static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
+  static const uint MINIMUM_JUNCTION_LOOK_AHEAD = 5u;
+  static const float HIGHWAY_SPEED = 50 / 3.6f;
+}
   using namespace LocalizationConstants;
 
   LocalizationStage::LocalizationStage(
@@ -20,9 +20,8 @@ namespace traffic_manager {
       uint pool_size,
       std::vector<Actor> &actor_list,
       InMemoryMap &local_map,
-      cc::DebugHelper &debug_helper
-    ): 
-      planner_messenger(planner_messenger),
+      cc::DebugHelper &debug_helper)
+    : planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       actor_list(actor_list),
@@ -70,10 +69,11 @@ namespace traffic_manager {
   void LocalizationStage::Action(const uint start_index, const uint end_index) {
 
     // Selecting output frames based on selector keys
-    auto current_planner_frame = planner_frame_selector? planner_frame_a: planner_frame_b;
-    auto current_collision_frame = collision_frame_selector? collision_frame_a: collision_frame_b;
-    auto current_traffic_light_frame = traffic_light_frame_selector? traffic_light_frame_a: traffic_light_frame_b;
-    auto current_buffer_list = collision_frame_selector? buffer_list_a: buffer_list_b;
+    auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
+    auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
+    auto current_traffic_light_frame =
+        traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
+    auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
 
     // Looping over arrays' partitions for current thread
     for (auto i = start_index; i <= end_index; ++i) {
@@ -97,7 +97,7 @@ namespace traffic_manager {
           != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
           (copy_waypoint_buffer.front()->GetWaypoint()->GetSectionId()
           != waypoint_buffer.front()->GetWaypoint()->GetSectionId()))) {
- 
+
         waypoint_buffer.clear();
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
       }
@@ -160,7 +160,7 @@ namespace traffic_manager {
         auto next_waypoints = way_front->GetNextWaypoint();
         auto selection_index = 0u;
         if (next_waypoints.size() > 1) {
-          selection_index = (divergence_choice.at(i)*(1 + pre_selection_id)) % next_waypoints.size();
+          selection_index = (divergence_choice.at(i) * (1 + pre_selection_id)) % next_waypoints.size();
         }
 
         way_front = next_waypoints.at(selection_index);
@@ -240,7 +240,7 @@ namespace traffic_manager {
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
       planner_messenger_state,
-      planner_frame_selector? planner_frame_a: planner_frame_b
+      planner_frame_selector ? planner_frame_a : planner_frame_b
     };
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
@@ -251,7 +251,7 @@ namespace traffic_manager {
     if (collision_messenger_current_state != collision_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
         collision_messenger_state,
-        collision_frame_selector? collision_frame_a: collision_frame_b
+        collision_frame_selector ? collision_frame_a : collision_frame_b
       };
 
       collision_messenger_state = collision_messenger->SendData(collision_data_packet);
@@ -264,7 +264,7 @@ namespace traffic_manager {
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
         traffic_light_messenger_state,
-        traffic_light_frame_selector? traffic_light_frame_a: traffic_light_frame_b
+        traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b
       };
 
       traffic_light_messenger_state = traffic_light_messenger->SendData(traffic_light_data_packet);

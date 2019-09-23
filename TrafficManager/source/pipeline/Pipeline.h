@@ -25,8 +25,8 @@
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cr = carla::rpc;
+namespace cc = carla::client;
+namespace cr = carla::rpc;
   using ActorPtr = carla::SharedPtr<cc::Actor>;
 
   /// Function to read hardware concurrency
@@ -41,9 +41,8 @@ namespace traffic_manager {
 
   /// Detroy actors
   void destroy_traffic(
-    std::vector<ActorPtr>& actor_list,
-    cc::Client& client
-  );
+      std::vector<ActorPtr> &actor_list,
+      cc::Client &client);
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers
@@ -83,8 +82,6 @@ namespace traffic_manager {
     std::unique_ptr<LocalizationStage> localization_stage;
     std::unique_ptr<MotionPlannerStage> planner_stage;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
-
-    
 
   public:
 

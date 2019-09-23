@@ -32,7 +32,8 @@ namespace traffic_manager {
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
           grid_to_actor_id.at(new_grid_id).insert(actor_id);
         } else {
-          grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<carla::ActorId>>(new_grid_id, {actor_id}));
+          grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<carla::ActorId>>(new_grid_id,
+              {actor_id}));
         }
       }
     }
@@ -40,7 +41,8 @@ namespace traffic_manager {
     else {
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
       actor_to_grid_id.insert(std::pair<carla::ActorId, std::string>(actor_id, new_grid_id));
-      grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<carla::ActorId>>(new_grid_id, {actor_id}));
+      grid_to_actor_id.insert(std::pair<std::string, std::unordered_set<carla::ActorId>>(new_grid_id,
+          {actor_id}));
     }
 
     // Return updated grid position

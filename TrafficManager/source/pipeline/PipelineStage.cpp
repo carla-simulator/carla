@@ -3,10 +3,10 @@
 namespace traffic_manager {
 
   PipelineStage::PipelineStage(
-    uint pool_size,
-    uint number_of_vehicles) :
-    pool_size(pool_size),
-    number_of_vehicles(number_of_vehicles) {
+      uint pool_size,
+      uint number_of_vehicles)
+    : pool_size(pool_size),
+      number_of_vehicles(number_of_vehicles) {
 
     action_start_counter.store(0u);
     action_finished_counter.store(0u);
@@ -32,7 +32,7 @@ namespace traffic_manager {
   void PipelineStage::Stop() {
     run_stage.store(false);
     data_receiver->join();
-    for (auto& action: action_threads) {
+    for (auto &action: action_threads) {
       action->join();
     }
     data_sender->join();
@@ -125,7 +125,7 @@ namespace traffic_manager {
 
     while (run_stage.load()) {
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-      
+
       // Wait for notification from worker threads
       while (!run_sender.load() && run_stage.load()) {
         wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});

@@ -1,29 +1,28 @@
-
 #include "PIDController.h"
 
 namespace traffic_manager {
-  namespace PIDControllerConstants {
-    const float MAX_THROTTLE = 0.8f;
-    const float MAX_BRAKE = 1.0f;
-  }
+namespace PIDControllerConstants {
+  const float MAX_THROTTLE = 0.8f;
+  const float MAX_BRAKE = 1.0f;
+}
   using namespace PIDControllerConstants;
 
   PIDController::PIDController() {}
 
- // Initializing present state
+  // Initializing present state
   StateEntry PIDController::StateUpdate(
       StateEntry previous_state,
       float current_velocity,
       float target_velocity,
       float angular_deviation,
       TimeInstance current_time) {
-        traffic_manager::StateEntry current_state = {
-          angular_deviation,
-          (current_velocity - target_velocity) / target_velocity,
-          current_time,
-          0.0f,
-          0.0f
-        };
+    traffic_manager::StateEntry current_state = {
+      angular_deviation,
+      (current_velocity - target_velocity) / target_velocity,
+      current_time,
+      0.0f,
+      0.0f
+    };
 
     // Calculating dt for 'D' and 'I' controller components
     chr::duration<double> duration = current_state.time_instance - previous_state.time_instance;
@@ -74,5 +73,3 @@ namespace traffic_manager {
     return ActuationSignal{throttle, brake, steer};
   }
 }
-
-

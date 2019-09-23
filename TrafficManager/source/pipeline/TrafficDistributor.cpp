@@ -2,12 +2,12 @@
 
 namespace traffic_manager {
 
-  namespace TrafficDistributorConstants{
-    static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0f;
-    static const float LATERAL_DETECTION_CONE = 135.0f;
-    static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
-    static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
-  }
+namespace TrafficDistributorConstants {
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0f;
+  static const float LATERAL_DETECTION_CONE = 135.0f;
+  static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
+  static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
+}
   using namespace TrafficDistributorConstants;
 
   TrafficDistributor::TrafficDistributor() {}
@@ -69,8 +69,8 @@ namespace traffic_manager {
     auto old_ids = GetRoadIds(actor_id);
 
     if (road_ids.road_id != old_ids.road_id ||
-      road_ids.section_id != old_ids.section_id ||
-      road_ids.lane_id != old_ids.lane_id) {
+        road_ids.section_id != old_ids.section_id ||
+        road_ids.lane_id != old_ids.lane_id) {
 
       EraseVehicleId(actor_id, old_ids);
       SetVehicleId(actor_id, road_ids);
@@ -106,7 +106,7 @@ namespace traffic_manager {
       // Check if any vehicles in the current lane is blocking us
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
 
-        auto& same_lane_vehicle_id = *i;
+        auto &same_lane_vehicle_id = *i;
         auto &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
@@ -125,26 +125,27 @@ namespace traffic_manager {
             (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
             < LANE_CHANGE_OBSTACLE_DISTANCE) &&
             (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
-            > LANE_OBSTACLE_MINIMUM_DISTANCE)
-          ) {
+            > LANE_OBSTACLE_MINIMUM_DISTANCE)) {
 
           // If lane change connections are available,
           // pick a direction (prefferring left) and
           // announce need for lane change
           if (left_waypoint != nullptr) {
             auto left_lane_vehicles = GetVehicleIds({
-                 current_road_ids.road_id,
-                 current_road_ids.section_id,
-                 left_waypoint->GetWaypoint()->GetLaneId()});
+              current_road_ids.road_id,
+              current_road_ids.section_id,
+              left_waypoint->GetWaypoint()->GetLaneId()
+            });
             if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = true;
             }
           } else if (right_waypoint != nullptr) {
             auto right_lane_vehicles = GetVehicleIds({
-                 current_road_ids.road_id,
-                 current_road_ids.section_id,
-                 right_waypoint->GetWaypoint()->GetLaneId()});
+              current_road_ids.road_id,
+              current_road_ids.section_id,
+              right_waypoint->GetWaypoint()->GetLaneId()
+            });
             if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
               need_to_change_lane = true;
               lane_change_direction = false;
@@ -175,9 +176,10 @@ namespace traffic_manager {
 
         auto lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
         auto target_lane_vehicles = GetVehicleIds({
-             current_road_ids.road_id,
-             current_road_ids.section_id,
-             lane_change_id});
+          current_road_ids.road_id,
+          current_road_ids.section_id,
+          lane_change_id
+        });
 
         // If target lane has vehicles, check if there are any obstacles
         // for lane change execution
@@ -193,7 +195,7 @@ namespace traffic_manager {
             // If vehicle on target lane is behind us, check if we are
             // fast enough to execute lane change
             if (!other_vehicle_buffer.empty() &&
-              other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
+                other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
 
               auto other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
               auto other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
@@ -210,18 +212,19 @@ namespace traffic_manager {
                     vehicle->GetVelocity().Length();
 
                 if (relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180) ||
-                  time_to_reach_other > time_to_reach_reference) {
+                    time_to_reach_other > time_to_reach_reference) {
                   found_hazard = true;
                 }
 
-              } 
-              // If vehicle on target lane is in front, check if it is far enough
+              }
+              // If vehicle on target lane is in front, check if it is far
+              // enough
               // to perform lane change
               else {
 
                 auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-                if ( change_over_point->Distance(other_vehicle_location) <
-                  (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
+                if (change_over_point->Distance(other_vehicle_location) <
+                    (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
                   found_hazard = true;
                 }
 
@@ -276,8 +279,7 @@ namespace traffic_manager {
       next_vector = next_vector.MakeUnitVector();
       auto dot_product = carla::geom::Math::Dot(next_vector, heading_vector);
       return dot_product;
-    }
-    else {
+    } else {
       return 0;
     }
   }

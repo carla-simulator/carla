@@ -2,10 +2,10 @@
 
 namespace traffic_manager {
 
-  namespace PipelineConstants {
-    uint MINIMUM_CORE_COUNT = 4u;
-    uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
-  }
+namespace PipelineConstants {
+  uint MINIMUM_CORE_COUNT = 4u;
+  uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
+}
   using namespace PipelineConstants;
 
   // Pick a random element from @a range.
@@ -52,8 +52,8 @@ namespace traffic_manager {
       carla::log_info("Spawning vehicle at every spawn point\n");
       number_of_vehicles = spawn_points.size();
     }
-    
-    carla::log_info("Spawning "+ std::to_string(number_of_vehicles) +" vehicles\n");
+
+    carla::log_info("Spawning " + std::to_string(number_of_vehicles) + " vehicles\n");
 
     // Creating spawn batch command
     std::vector<cr::Command> batch_spawn_commands;
@@ -92,7 +92,7 @@ namespace traffic_manager {
         auto iter = actor_attributes.begin();
         (iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
         ++iter
-      ) {
+        ) {
         auto attribute = *iter;
         if (attribute.GetValue() == "traffic_manager") {
           found_traffic_manager_vehicle = true;
@@ -106,10 +106,10 @@ namespace traffic_manager {
     return actor_list;
   }
 
-  void destroy_traffic(std::vector<ActorPtr>& actor_list, cc::Client& client) {
+  void destroy_traffic(std::vector<ActorPtr> &actor_list, cc::Client &client) {
 
     std::vector<cr::Command> batch_spawn_commands;
-    for (auto& actor: actor_list) {
+    for (auto &actor: actor_list) {
       batch_spawn_commands.push_back(cr::Command::DestroyActor(actor->GetId()));
     }
     client.ApplyBatch(std::move(batch_spawn_commands));

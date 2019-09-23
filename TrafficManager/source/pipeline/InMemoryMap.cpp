@@ -2,13 +2,13 @@
 
 namespace traffic_manager {
 
-  namespace MapConstants {
-    // Very important that this is less than 10^-4
-    static const float ZERO_LENGTH = 0.0001f;
-    static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-    static const uint LANE_CHANGE_LOOK_AHEAD = 5u;
-    static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;   // cos(angle)
-  }
+namespace MapConstants {
+  // Very important that this is less than 10^-4
+  static const float ZERO_LENGTH = 0.0001f;
+  static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
+  static const uint LANE_CHANGE_LOOK_AHEAD = 5u;
+  static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;     // cos(angle)
+}
   using namespace MapConstants;
 
   InMemoryMap::InMemoryMap(TopologyList topology) {
@@ -171,10 +171,9 @@ namespace traffic_manager {
   }
 
   void InMemoryMap::LinkLaneChangePoint(
-    SimpleWaypointPtr reference_waypoint,
-    WaypointPtr neighbor_waypoint,
-    int side
-  ) {
+      SimpleWaypointPtr reference_waypoint,
+      WaypointPtr neighbor_waypoint,
+      int side) {
 
     if (neighbor_waypoint != nullptr) {
       auto neighbour_road_id = neighbor_waypoint->GetRoadId();
@@ -189,11 +188,12 @@ namespace traffic_manager {
           (road_to_waypoint[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
           != road_to_waypoint[neighbour_road_id][neighbour_section_id].end())) {
 
-        std::vector<SimpleWaypointPtr> waypoints_to_left
-          = road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
+        std::vector<SimpleWaypointPtr> waypoints_to_left =
+            road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
 
         // Find the nearest sample to the neighbour waypoint to be used as a
-        // local cache representative to be linked for indicating lane change connection
+        // local cache representative to be linked for indicating lane change
+        // connection
         if (waypoints_to_left.size() > 0) {
           auto nearest_waypoint = waypoints_to_left[0];
           auto smallest_left_distance = INFINITE_DISTANCE;

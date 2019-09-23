@@ -13,4 +13,3 @@ namespace traffic_manager {
     return world_map->GetTopology();
   }
 }
-

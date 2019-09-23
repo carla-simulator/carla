@@ -12,8 +12,8 @@
 
 namespace traffic_manager {
 
-  namespace chr = std::chrono;
-  
+namespace chr = std::chrono;
+
   /// The class is responsible for aggregating information from various stages
   /// like localization stage, traffic light stage, collision detection stage
   /// and actuation signals from PID controller and makes decisions on how to

@@ -2,10 +2,10 @@
 
 namespace traffic_manager {
 
-  namespace PlannerConstants {
-    static const float HIGHWAY_SPEED = 50 / 3.6f;
-    static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
-  }
+namespace PlannerConstants {
+  static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
+}
   using namespace PlannerConstants;
 
   MotionPlannerStage::MotionPlannerStage(
@@ -17,7 +17,9 @@ namespace traffic_manager {
       uint pool_size = 1u,
       float urban_target_velocity = 25 / 3.6f,
       float highway_target_velocity = 50 / 3.6f,
-      std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
+      std::vector<float> longitudinal_parameters = {
+    0.1f, 0.15f, 0.01f
+  },
       std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
       std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
     : urban_target_velocity(urban_target_velocity),
@@ -31,7 +33,8 @@ namespace traffic_manager {
       traffic_light_messenger(traffic_light_messenger),
       PipelineStage(pool_size, number_of_vehicles) {
 
-    // Allocate and initialize vector to keep track of contoller states for all vehicles
+    // Allocate and initialize vector to keep track of contoller states for all
+    // vehicles
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for (auto &entry: *pid_state_vector.get()) {
       entry.time_instance = chr::system_clock::now();
@@ -58,7 +61,7 @@ namespace traffic_manager {
   void MotionPlannerStage::Action(const uint start_index, const uint end_index) {
 
     // Selecting output frame
-    auto current_control_frame = frame_selector? control_frame_a: control_frame_b;
+    auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
 
     // Looping over arrays' partitions for current thread
     for (uint i = start_index; i <= end_index; ++i) {
@@ -159,7 +162,7 @@ namespace traffic_manager {
 
     DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
       control_messenger_state,
-      frame_selector? control_frame_a: control_frame_b
+      frame_selector ? control_frame_a : control_frame_b
     };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);

@@ -48,7 +48,8 @@ namespace traffic_manager {
     }
     ~Messenger() {}
 
-    /// This method receives data from a sender, stores in a member and increments state
+    /// This method receives data from a sender, stores in a member and
+    /// increments state
     int SendData(DataPacket<Data> packet) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);

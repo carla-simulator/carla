@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <chrono>
@@ -7,7 +6,7 @@
 
 namespace traffic_manager {
 
-  namespace chr = std::chrono;
+namespace chr = std::chrono;
   using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
 
   /// Structure to hold actuation signals
@@ -44,7 +43,6 @@ namespace traffic_manager {
         float target_velocity,
         float angular_deviation,
         TimeInstance current_time);
-
 
     /// This method calculates the actuation signals based on the resent state
     /// change of the vehicle to minimize PID error.

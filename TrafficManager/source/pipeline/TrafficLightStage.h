@@ -10,7 +10,8 @@
 
 namespace traffic_manager {
 
-  /// This class provides the information about the Traffic Lights at the junctions.
+  /// This class provides the information about the Traffic Lights at the
+  /// junctions.
   class TrafficLightStage : public PipelineStage {
 
   private:
@@ -45,4 +46,5 @@ namespace traffic_manager {
     void DataSender() override;
 
   };
+
 }

@@ -22,7 +22,6 @@ namespace traffic_manager {
   /// Various stages of the pipeline
   class PipelineStage {
 
-
   private:
 
     /// Number of worker threads

@@ -32,7 +32,7 @@ namespace traffic_manager {
   void TrafficLightStage::Action(const uint start_index, const uint end_index) {
 
     // Selecting output frame based on selection key
-    auto current_planner_frame = frame_selector? planner_frame_a: planner_frame_b;
+    auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over array's partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
@@ -71,7 +71,7 @@ namespace traffic_manager {
   void TrafficLightStage::DataSender() {
     DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
       planner_messenger_state,
-      frame_selector? planner_frame_a: planner_frame_b
+      frame_selector ? planner_frame_a : planner_frame_b
     };
     frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(packet);

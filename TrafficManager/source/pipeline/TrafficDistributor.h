@@ -28,6 +28,7 @@ namespace traffic_manager {
              lane_id == other.lane_id);
     }
   };
+
 }
 
 namespace std {
@@ -44,17 +45,19 @@ namespace std {
              (hash<int>()(k.lane_id) << 1);
     }
   };
+
 }
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cg = carla::geom;
+namespace cc = carla::client;
+namespace cg = carla::geom;
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
 
   /// Returns the cross product (z component value) between vehicle's heading
-  /// vector and the vector along the direction to the next target waypoint in the horizon.
+  /// vector and the vector along the direction to the next target waypoint in
+  /// the horizon.
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
 
   /// Returns the dot product between vehicle's heading vector and
@@ -67,7 +70,8 @@ namespace traffic_manager {
 
   private:
 
-    /// Mutex used to manage contention for internal resources between various accessors
+    /// Mutex used to manage contention for internal resources between various
+    /// accessors
     mutable std::shared_timed_mutex distributor_mutex;
     /// Map connecting geo ids to a set of vehicles with those specific geo ids
     std::unordered_map<GeoIds, std::unordered_set<ActorId>> road_to_vehicle_id_map;

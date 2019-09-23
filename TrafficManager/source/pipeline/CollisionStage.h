@@ -24,13 +24,12 @@
 #include "PipelineStage.h"
 #include "VicinityGrid.h"
 
-
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cg = carla::geom;
-  namespace chr = std::chrono;
-  namespace bg = boost::geometry;
+namespace cc = carla::client;
+namespace cg = carla::geom;
+namespace chr = std::chrono;
+namespace bg = boost::geometry;
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
@@ -65,7 +64,8 @@ namespace traffic_manager {
     VicinityGrid vicinity_grid;
     /// Map used to connect actor ids to array index of data frames
     std::unordered_map<ActorId, uint> id_to_index;
-    /// Structure used to keep track of actors spawned outside of traffic manager
+    /// Structure used to keep track of actors spawned outside of traffic
+    /// manager
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Object used to keep track of time between checking for all world actors
     chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
@@ -75,21 +75,21 @@ namespace traffic_manager {
     /// Collision is predicted by extrapolating a boundary around the vehicle
     /// along it's trajectory and checking if it overlaps with the extrapolated
     /// boundary of the other vehicle.
-    bool CheckGeodesicCollision(const Actor& vehicle, const Actor& ego_vehicle) const;
+    bool CheckGeodesicCollision(const Actor &vehicle, const Actor &ego_vehicle) const;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor& actor) const;
+    LocationList GetBoundary(const Actor &actor) const;
 
     /// Returns the extrapolated bounding box of the vehicle along it's
     /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor& actor) const;
+    LocationList GetGeodesicBoundary(const Actor &actor) const;
 
     /// Method to construct a boost polygon object
     Polygon GetPolygon(const LocationList &boundary) const;
 
     /// Method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool NegotiateCollision(const Actor& ego_vehicle, const Actor& other_vehicle) const;
+    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle) const;
 
     /// Simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary) const;
