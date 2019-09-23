@@ -96,6 +96,7 @@ namespace traffic_manager {
       auto &data = localization_frame->at(i);
       auto ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
+
       // Retreive actors around ego actor
       auto actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
@@ -256,28 +257,27 @@ namespace traffic_manager {
         auto location = swp->GetLocation();
         auto perpendicular_vector = cg::Vector3D(-vector.y, vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
+        // Direction determined for left handed system
         left_boundary.push_back(location + cg::Location(perpendicular_vector * width));
         right_boundary.push_back(location - cg::Location(perpendicular_vector * width));
       }
 
-      /// Connecting geodesic path boundary with vehicle bounding box to create
-      /// one polygon
+      // Connecting geodesic path boundary with vehicle bounding box
       std::vector<cg::Location> geodesic_boundary;   
-
-      /// Assigning left boundary to geodesic boundary 
-      std::reverse(left_boundary.begin(), left_boundary.end());
-      geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
-      geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
+      // Reversing right boundary to construct clocwise (left hand system) boundary
+      // This is so because both left and right boundary vectors have the closest
+      // point to the vehicle at their starting index
+      // For right boundary we want to begin at the farthest point to have a clocwise trace
+      std::reverse(right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
-      // Reversing final result to stay consistent with boost polygon convention
-      // for positive area
-      std::reverse(geodesic_boundary.begin(), geodesic_boundary.end());
+      geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
+      geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
 
       return geodesic_boundary;
     } else {
-        std::reverse(bbox.begin(), bbox.end());
-        return bbox;  
-      }
+
+      return bbox;  
+    }
   }
 
   std::vector<cg::Location> CollisionStage::GetBoundary(Actor actor) const {
@@ -290,12 +290,14 @@ namespace traffic_manager {
     heading_vector.z = 0;
     auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
-    // Four corners of the vehicle in clockwise order
-    return {  
-             location + cg::Location(heading_vector * extent.x + perpendicular_vector * extent.y),
-             location + cg::Location(heading_vector * -extent.x + perpendicular_vector * extent.y),
-             location + cg::Location(heading_vector * -extent.x - perpendicular_vector * extent.y),
-             location + cg::Location(heading_vector * extent.x - perpendicular_vector * extent.y)
+    // Four corners of the vehicle in top view clockwise order (left handed system)
+    auto x_boundary_vector = heading_vector * extent.x;
+    auto y_boundary_vector = perpendicular_vector * extent.y;
+    return {
+      location + cg::Location(x_boundary_vector - y_boundary_vector),
+      location + cg::Location(-1* x_boundary_vector - y_boundary_vector),
+      location + cg::Location(-1* x_boundary_vector + y_boundary_vector),
+      location + cg::Location(x_boundary_vector + y_boundary_vector),
     };
   }
 
