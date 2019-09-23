@@ -35,7 +35,7 @@ namespace traffic_manager {
     Data data;
     /// Mutex used to manage contention between sender and receiver
     std::mutex data_modification_mutex;
-    /// Variable to conditionally block sender incase waiting for reciever
+    /// Variable to conditionally block sender incase waiting for receiver
     std::condition_variable send_condition;
     /// Variable to conditionally block receiver incase waiting for sender
     std::condition_variable receive_condition;
@@ -48,7 +48,7 @@ namespace traffic_manager {
     }
     ~Messenger() {}
 
-    /// This method recieves data from a sender, stores in a member and increments state
+    /// This method receives data from a sender, stores in a member and increments state
     int SendData(DataPacket<Data> packet) {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
@@ -77,7 +77,7 @@ namespace traffic_manager {
       return packet;
     }
 
-    /// Returnes state counter
+    /// Returns state counter
     int GetState() {
       return state_counter.load();
     }

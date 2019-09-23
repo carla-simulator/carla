@@ -11,6 +11,7 @@ namespace traffic_manager {
   // Pick a random element from @a range.
   template <typename RangeT, typename RNG>
   static auto &RandomChoice(const RangeT &range, RNG &&generator) {
+
     EXPECT_TRUE(range.size() > 0u);
     std::uniform_int_distribution<size_t> dist{0u, range.size() - 1u};
     return range[dist(std::forward<RNG>(generator))];
@@ -18,22 +19,31 @@ namespace traffic_manager {
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 >>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
   // Assuming quad core if core count not available
+=======
+>>>>>>> 8928735734ab55233731f4ea1ae9b2f039f40cdd
   int read_core_count() {
+
     auto core_count = std::thread::hardware_concurrency();
+    // Assuming quad core if core count not available
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
 
-  std::vector<carla::SharedPtr<carla::client::Actor>> spawn_traffic(
-      carla::client::World &world,
+  std::vector<ActorPtr> spawn_traffic(
+      cc::Client &client,
+      cc::World &world,
       int core_count,
       int target_amount = 0) {
 
-    std::vector<carla::SharedPtr<carla::client::Actor>> actor_list;
+    std::vector<ActorPtr> actor_list;
     auto world_map = world.GetMap();
+
+    // Get a random selection of spawn points from the map
     auto spawn_points = world_map->GetRecommendedSpawnPoints();
     std::random_shuffle(spawn_points.begin(), spawn_points.end());
+    // Blueprint library containing all vehicle types
     auto blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
     std::mt19937_64 rng((std::random_device())());
 
@@ -52,9 +62,13 @@ namespace traffic_manager {
     
     carla::log_info("Spawning "+ std::to_string(number_of_vehicles) +" vehicles\n");
 
+    // Creating spawn batch command
+    std::vector<cr::Command> batch_spawn_commands;
     for (int i = 0; i < number_of_vehicles; ++i) {
+
       auto spawn_point = spawn_points[i];
       auto blueprint = RandomChoice(*blueprint_library, rng);
+
       while (
         blueprint.GetAttribute("number_of_wheels") != 4 ||
         blueprint.GetId().compare("vehicle.carlamotors.carlacola") == 0 ||
@@ -62,14 +76,50 @@ namespace traffic_manager {
         ) {
         blueprint = RandomChoice(*blueprint_library, rng);
       }
+      blueprint.SetAttribute("role_name", "traffic_manager");
 
-      auto actor = world.TrySpawnActor(blueprint, spawn_point);
-      if (actor != nullptr) {
-        actor_list.push_back(actor);
+      using spawn = cr::Command::SpawnActor;
+      batch_spawn_commands.push_back(spawn(blueprint.MakeActorDescription(), spawn_point));
+    }
+
+    client.ApplyBatch(std::move(batch_spawn_commands));
+    // We need to wait till the simulator spawns all vehicles
+    // Tried to use World::WaitForTick but it also wasn't sufficient
+    // Need to find a better a way to do this
+    std::this_thread::sleep_for(500ms);
+
+    // Gathering actors spawned by traffic manager
+    auto world_actors = world.GetActors();
+    for (auto iter = world_actors->begin(); iter != world_actors->end(); ++iter) {
+      auto world_actor = *iter;
+      auto world_vehicle = boost::static_pointer_cast<cc::Vehicle>(world_actor);
+      auto actor_attributes = world_vehicle->GetAttributes();
+      bool found_traffic_manager_vehicle = false;
+      for (
+        auto iter = actor_attributes.begin();
+        (iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
+        ++iter
+      ) {
+        auto attribute = *iter;
+        if (attribute.GetValue() == "traffic_manager") {
+          found_traffic_manager_vehicle = true;
+        }
+      }
+      if (found_traffic_manager_vehicle) {
+        actor_list.push_back(world_actor);
       }
     }
 
     return actor_list;
+  }
+
+  void destroy_traffic(std::vector<ActorPtr>& actor_list, cc::Client& client) {
+
+    std::vector<cr::Command> batch_spawn_commands;
+    for (auto& actor: actor_list) {
+      batch_spawn_commands.push_back(cr::Command::DestroyActor(actor->GetId()));
+    }
+    client.ApplyBatch(std::move(batch_spawn_commands));
   }
 
   Pipeline::Pipeline(
@@ -78,11 +128,11 @@ namespace traffic_manager {
       std::vector<float> lateral_PID_parameters,
       float urban_target_velocity,
       float highway_target_velocity,
-      std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
+      std::vector<ActorPtr> &actor_list,
       InMemoryMap &local_map,
-      carla::client::Client &client_connection,
-      carla::client::World &world,
-      carla::client::DebugHelper &debug_helper,
+      cc::Client &client_connection,
+      cc::World &world,
+      cc::DebugHelper &debug_helper,
       int pipeline_width)
     : longitudinal_PID_parameters(longitudinal_PID_parameters),
       longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
@@ -137,8 +187,12 @@ namespace traffic_manager {
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 >>>>>>> e2c8e19611819ecbb7026355674ba94b985ad488
   /// To start the pipeline
+=======
+  // To start the pipeline
+>>>>>>> 8928735734ab55233731f4ea1ae9b2f039f40cdd
   void Pipeline::Start() {
     localization_stage->Start();
     collision_stage->Start();
@@ -147,7 +201,7 @@ namespace traffic_manager {
     control_stage->Start();
   }
 
-  /// To stop the pipeline
+  // To stop the pipeline
   void Pipeline::Stop() {
 
     localization_collision_messenger->Stop();

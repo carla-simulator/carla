@@ -69,8 +69,6 @@ namespace traffic_manager {
     TrafficDistributor traffic_distributor;
     /// Map connecting actor ids to index of data arrays
     std::unordered_map<uint, int> vehicle_id_to_index;
-    /// To remember the last place a lane change occured for vehicles
-    std::vector<carla::geom::Location> last_lane_change_location;
     /// Reference to list of all the actors registered with traffic manager
     std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list;
 

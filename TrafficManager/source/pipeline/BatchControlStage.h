@@ -4,9 +4,9 @@
 #include <memory>
 
 #include "carla/client/Client.h"
+#include "carla/Logging.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/VehicleControl.h"
-#include "carla/Logging.h"
 
 #include "MessengerAndDataTypes.h"
 #include "PipelineStage.h"
@@ -30,7 +30,7 @@ namespace traffic_manager {
     std::shared_ptr<PlannerToControlMessenger> messenger;
     /// Variable used to measure system throughput
     int frame_count = 0;
-    /// Feference to carla client connection object
+    /// Reference to carla client connection object
     carla::client::Client &carla_client;
     /// Array to hold command batch
     std::shared_ptr<std::vector<carla::rpc::Command>> commands;

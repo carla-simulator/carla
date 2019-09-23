@@ -28,41 +28,39 @@ namespace traffic_manager {
       actor_list(actor_list),
       local_map(local_map),
       debug_helper(debug_helper),
-      PipelineStage(pool_size, number_of_vehicles),
-      last_lane_change_location(std::vector<carla::geom::Location>(number_of_vehicles)) {
+      PipelineStage(pool_size, number_of_vehicles) {
 
+    // Initializing various output frame selectors
     planner_frame_selector = true;
     collision_frame_selector = true;
     traffic_light_frame_selector = true;
-
+    // Allocating buffer lists
     buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
     buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
-
+    // Allocating output frames to be shared with motion planner stage
     planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
     planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
-
+    // Allocating output frames to be shared with collision stage
     collision_frame_a = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
     collision_frame_b = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
-
+    // Allocating output frames to be shared with traffic light stage
     traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
     traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
-
+    // Initializing messenger states to initiate data writes
+    // preemptively since this is the first stage in the pipeline.
     planner_messenger_state = planner_messenger->GetState() - 1;
     collision_messenger_state = collision_messenger->GetState() - 1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
 
+    // Seeding random divergence choices for every vehicle
     for (int i = 0; i < number_of_vehicles; ++i) {
       divergence_choice.push_back(rand());
     }
 
+    // Connecting vehicle ids to their position index on data arrays
     int index = 0;
     for (auto &actor: actor_list) {
       vehicle_id_to_index.insert({actor->GetId(), index});
-      ++index;
-    }
-
-    for (int i = 0; i < actor_list.size(); ++i) {
-      last_lane_change_location.at(i) = actor_list.at(i)->GetLocation();
       ++index;
     }
   }
@@ -71,11 +69,13 @@ namespace traffic_manager {
 
   void LocalizationStage::Action(const int start_index, const int end_index) {
 
+    // Selecting output frames based on selector keys
     auto current_planner_frame = planner_frame_selector? planner_frame_a: planner_frame_b;
     auto current_collision_frame = collision_frame_selector? collision_frame_a: collision_frame_b;
     auto current_traffic_light_frame = traffic_light_frame_selector? traffic_light_frame_a: traffic_light_frame_b;
     auto current_buffer_list = collision_frame_selector? buffer_list_a: buffer_list_b;
 
+    // Looping over arrays' partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
 
       auto vehicle = actor_list.at(i);
@@ -91,7 +91,7 @@ namespace traffic_manager {
       auto &waypoint_buffer = current_buffer_list->at(i);
       auto &copy_waypoint_buffer = current_buffer_list->at(i);
 
-      // Sync lane change from buffer copy
+      // Sync buffer copies in case of lane change
       if (
         !waypoint_buffer.empty() && !copy_waypoint_buffer.empty()
         &&
@@ -104,7 +104,6 @@ namespace traffic_manager {
         )) {
         waypoint_buffer.clear();
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
-        last_lane_change_location.at(i) = vehicle_location;
       }
 
       // Purge passed waypoints
@@ -165,7 +164,7 @@ namespace traffic_manager {
         auto next_waypoints = way_front->GetNextWaypoint();
         auto selection_index = 0;
         if (next_waypoints.size() > 1) {
-          selection_index = divergence_choice.at(i) * (1 + pre_selection_id) % next_waypoints.size();
+          selection_index = (divergence_choice.at(i)*(1 + pre_selection_id)) % next_waypoints.size();
         }
 
         way_front = next_waypoints.at(selection_index);
@@ -187,6 +186,8 @@ namespace traffic_manager {
       }
 
       // Filtering out false junctions on highways
+      // On highways, if there is only one possible path and the section is
+      // marked as intersection, ignore it
       auto vehicle_reference = boost::static_pointer_cast<carla::client::Vehicle>(vehicle);
       auto speed_limit = vehicle_reference->GetSpeedLimit();
       int look_ahead_index = std::max(
@@ -236,6 +237,11 @@ namespace traffic_manager {
 
   void LocalizationStage::DataSender() {
 
+    // Since send/receive calls on messenger objects can block if the other
+    // end hasn't received/sent data, choose to block on only those stages
+    // which take most priority (which need highest rate of data feed) to
+    // run the system well
+
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
       planner_messenger_state,
       planner_frame_selector? planner_frame_a: planner_frame_b
@@ -243,6 +249,8 @@ namespace traffic_manager {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
+    // Send data to collision stage only if collision stage has finished
+    // processing, received previous messange and started processing it
     auto collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
@@ -254,12 +262,15 @@ namespace traffic_manager {
       collision_frame_selector = !collision_frame_selector;
     }
 
-    DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
-      traffic_light_messenger_state,
-      traffic_light_frame_selector? traffic_light_frame_a: traffic_light_frame_b
-    };
+    // Send data to traffic light stage only if collision stage has finished
+    // processing, received previous messange and started processing it
     auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
+      DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
+        traffic_light_messenger_state,
+        traffic_light_frame_selector? traffic_light_frame_a: traffic_light_frame_b
+      };
+
       traffic_light_messenger_state = traffic_light_messenger->SendData(traffic_light_data_packet);
       traffic_light_frame_selector = !traffic_light_frame_selector;
     }

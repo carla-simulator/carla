@@ -80,7 +80,8 @@ void run_pipeline(
   local_map->SetUp(1.0);
 
   auto core_count = traffic_manager::read_core_count();
-  auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
+  auto registered_actors = traffic_manager::spawn_traffic(
+    client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 
   traffic_manager::Pipeline pipeline(
@@ -105,11 +106,7 @@ void run_pipeline(
 
   pipeline.Stop();
 
-  for (auto actor: registered_actors) {
-    if (actor != nullptr && actor->IsAlive()) {
-      actor->Destroy();
-    }
-  }
+  traffic_manager::destroy_traffic(registered_actors, client_conn);
 
   carla::log_info("\nTrafficManager stopped by user\n");
 }

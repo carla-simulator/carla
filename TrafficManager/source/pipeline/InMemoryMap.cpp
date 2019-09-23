@@ -76,6 +76,9 @@ namespace traffic_manager {
     }
 
     // Tying up loose ends
+    // Loop through all exit nodes of topology segments,
+    // connect any dangling end points to nearest entry point
+    // of another topology segment
     i = 0;
     for (auto end_point : exit_node_list) {
       if (end_point->GetNextWaypoint().size() == 0) {
@@ -178,6 +181,8 @@ namespace traffic_manager {
       auto neighbour_section_id = neighbor_waypoint->GetSectionId();
       auto neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
+      // Find waypoint samples in dense topology corresponding to the 
+      // geo ids of the neighbor waypoint found using carla's server call
       if (
         road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end()
         &&
@@ -187,11 +192,11 @@ namespace traffic_manager {
         road_to_waypoint[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
         != road_to_waypoint[neighbour_road_id][neighbour_section_id].end()) {
 
-        std::vector<SimpleWaypointPtr>
-        waypoints_to_left =
-            road_to_waypoint[neighbor_waypoint->GetRoadId()][neighbor_waypoint->GetSectionId()][
-          neighbor_waypoint->GetLaneId()];
+        std::vector<SimpleWaypointPtr> waypoints_to_left
+          = road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
 
+        // Find the nearest sample to the neighbour waypoint to be used as a
+        // local cache representative to be linked for indicating lane change connection
         if (waypoints_to_left.size() > 0) {
           auto nearest_waypoint = waypoints_to_left[0];
           auto smallest_left_distance = INFINITE_DISTANCE;
@@ -202,6 +207,7 @@ namespace traffic_manager {
             }
           }
 
+          // Place appropriate lane change link
           if (side < 0) {
             reference_waypoint->SetLeftWaypoint(nearest_waypoint);
           } else if (side > 0) {

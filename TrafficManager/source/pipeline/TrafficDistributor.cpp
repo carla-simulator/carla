@@ -6,6 +6,7 @@ namespace traffic_manager {
     static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0;
     static const float LATERAL_DETECTION_CONE = 135.0;
     static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0;
+    static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0;
   }
 
   using namespace TrafficDistributorConstants;
@@ -105,9 +106,12 @@ namespace traffic_manager {
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
+    // Don't try to change lane if current lane has less than two vehicles
     if (co_lane_vehicles.size() >= 2) {
+
+      // Check if any vehicles in the current lane is blocking us
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
-        
+
         auto& same_lane_vehicle_id = *i;
         auto &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
@@ -118,15 +122,24 @@ namespace traffic_manager {
               vehicle_id_to_index.at(same_lane_vehicle_id)).front();
         }
 
-        if (same_lane_vehicle_id != actor_id &&
+        // Check if there is another vehicle in the current lane in front
+        // within a threshold distance and current position not in a junction
+        if (
+          same_lane_vehicle_id != actor_id &&
           same_lane_vehicle_waypoint != nullptr &&
           !same_lane_vehicle_waypoint->CheckJunction() &&
-          DeviationDotProduct( vehicle,
-          // check other vehicle is ahead
-          same_lane_vehicle_waypoint->GetLocation()) > 0 &&
+          DeviationDotProduct(
+            vehicle,
+            same_lane_vehicle_waypoint->GetLocation()) > 0 &&
           same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
-          < LANE_CHANGE_OBSTACLE_DISTANCE ) {
+          < LANE_CHANGE_OBSTACLE_DISTANCE &&
+          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+          > LANE_OBSTACLE_MINIMUM_DISTANCE
+        ) {
 
+          // If lane change connections are available,
+          // pick a direction (prefferring left) and
+          // announce need for lane change
           if (left_waypoint != nullptr) {
             auto left_lane_vehicles = GetVehicleIds({
                  current_road_ids.road_id,
@@ -150,6 +163,8 @@ namespace traffic_manager {
       }
     }
 
+    // Change distance to the target point on the target lane
+    // as a function of vehicle velocity
     int change_over_distance = static_cast<int>(
       std::max(std::ceil(0.5f * vehicle_velocity),
       MINIMUM_LANE_CHANGE_DISTANCE)
@@ -166,12 +181,15 @@ namespace traffic_manager {
       }
 
       if (change_over_point != nullptr) {
+
         auto lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
         auto target_lane_vehicles = GetVehicleIds({
              current_road_ids.road_id,
              current_road_ids.section_id,
              lane_change_id});
 
+        // If target lane has vehicles, check if there are any obstacles
+        // for lane change execution
         if (target_lane_vehicles.size() > 0) {
 
           bool found_hazard = false;
@@ -181,6 +199,8 @@ namespace traffic_manager {
             auto &other_vehicle_buffer = buffer_list->at(
                 vehicle_id_to_index.at(other_vehicle_id));
 
+            // If vehicle on target lane is behind us, check if we are
+            // fast enough to execute lane change
             if (!other_vehicle_buffer.empty() &&
               other_vehicle_buffer.front()->GetWaypoint()->GetLaneId()
               == lane_change_id) {
@@ -204,7 +224,10 @@ namespace traffic_manager {
                   found_hazard = true;
                 }
 
-              } else {
+              } 
+              // If vehicle on target lane is in front, check if it is far enough
+              // to perform lane change
+              else {
 
                 auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
                 if ( change_over_point->Distance(other_vehicle_location) <
