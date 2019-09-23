@@ -5,6 +5,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/Memory.h"
+#include "carla/rpc/ActorId.h"
 
 #include "Messenger.h"
 #include "SimpleWaypoint.h"
@@ -29,7 +30,7 @@ namespace traffic_manager {
 
   /// Type of data sent by motion planner stage to batch control stage
   struct PlannerToControlData {
-    int actor_id;
+    carla::rpc::ActorId actor_id;
     float throttle;
     float brake;
     float steer;
