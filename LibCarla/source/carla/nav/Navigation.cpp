@@ -393,8 +393,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension
-    float hx = vehicle.bounding.extent.x + 0.5;
-    float hy = vehicle.bounding.extent.y + 0.5;
+    float hx = vehicle.bounding.extent.x + 0.5f;
+    float hy = vehicle.bounding.extent.y + 0.5f;
     // define the 4 corners of the bounding box
     cg::Vector3D boxCorner1 {-hx, -hy, 0};
     cg::Vector3D boxCorner2 { hx, -hy, 0};
@@ -479,8 +479,8 @@ namespace nav {
     params.obb[11] = boxCorner4.y;
 
     // from Unreal coordinates (vertical is Z) to Recast coordinates (vertical is Y)
-    float PointFrom[3] = { vehicle.transform.location.x, 
-                           vehicle.transform.location.z, 
+    float PointFrom[3] = { vehicle.transform.location.x,
+                           vehicle.transform.location.z,
                            vehicle.transform.location.y };
 
     // add walker
@@ -524,7 +524,7 @@ namespace nav {
 
       // remove from mapping
       _mappedWalkersId.erase(it);
-      
+
       return true;
     }
 
@@ -536,7 +536,7 @@ namespace nav {
       logging::log("Nav: removing vehicle agent");
       // remove from mapping
       _mappedVehiclesId.erase(it);
-      
+
       return true;
     }
 
@@ -545,7 +545,7 @@ namespace nav {
 
   // add/update/delete vehicles in crowd
   bool Navigation::UpdateVehicles(std::vector<VehicleCollisionInfo> vehicles) {
-    std::unordered_set<int> updated;
+    std::unordered_set<carla::rpc::ActorId> updated;
 
     // add all current mapped vehicles in the set
     for (auto &&entry : _mappedVehiclesId) {
