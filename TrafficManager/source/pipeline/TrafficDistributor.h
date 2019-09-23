@@ -9,6 +9,7 @@
 #include <unordered_set>
 
 #include "carla/client/Vehicle.h"
+#include "carla/rpc/ActorId.h"
 
 #include "MessengerAndDataTypes.h"
 #include "SimpleWaypoint.h"
@@ -47,21 +48,18 @@ namespace std {
 
 namespace traffic_manager {
 
-  using  LaneMap = std::unordered_map<int, std::unordered_set<uint>>;
-  using  SectionMap = std::unordered_map<uint, LaneMap>;
   namespace cc = carla::client;
+  namespace cg = carla::geom;
+  using ActorId = carla::ActorId;
+  using Actor = carla::SharedPtr<cc::Actor>;
 
   /// Returns the cross product (z component value) between vehicle's heading
   /// vector and the vector along the direction to the next target waypoint in the horizon.
-  float DeviationCrossProduct(
-      carla::SharedPtr<cc::Actor> actor,
-      const carla::geom::Location &target_location);
+  float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
 
   /// Returns the dot product between vehicle's heading vector and
   /// the vector along the direction to the next target waypoint in the horizon.
-  float DeviationDotProduct(
-      carla::SharedPtr<cc::Actor> actor,
-      const carla::geom::Location &target_location);
+  float DeviationDotProduct(Actor actor, const cg::Location &target_location);
 
   /// This class keeps track of vehicle’s positions in road sections, lanes and
   /// provides lane change decisions.
@@ -72,38 +70,36 @@ namespace traffic_manager {
     /// Mutex used to manage contention for internal resources between various accessors
     mutable std::shared_timed_mutex distributor_mutex;
     /// Map connecting geo ids to a set of vehicles with those specific geo ids
-    std::unordered_map<GeoIds, std::unordered_set<uint>> road_to_vehicle_id_map;
+    std::unordered_map<GeoIds, std::unordered_set<ActorId>> road_to_vehicle_id_map;
     /// Map connecting vehicle id to it's geo ids
-    std::unordered_map<uint, GeoIds> vehicle_id_to_road_map;
+    std::unordered_map<ActorId, GeoIds> vehicle_id_to_road_map;
 
-    void SetVehicleId(uint actor_id, GeoIds ids);
+    void SetVehicleId(ActorId actor_id, GeoIds ids);
 
-    void EraseVehicleId(uint actor_id, GeoIds ids);
+    void EraseVehicleId(ActorId actor_id, GeoIds ids);
 
-    void SetRoadIds(uint actor_id, GeoIds ids);
+    void SetRoadIds(ActorId actor_id, GeoIds ids);
 
-    std::unordered_set<uint> GetVehicleIds(GeoIds ids) const;
+    std::unordered_set<ActorId> GetVehicleIds(GeoIds ids) const;
 
-    GeoIds GetRoadIds(uint vehicle_id) const;
+    GeoIds GetRoadIds(ActorId vehicle_id) const;
 
   public:
 
     TrafficDistributor();
     ~TrafficDistributor();
 
-    void UpdateVehicleRoadPosition(
-        uint actor_id,
-        GeoIds road_ids);
+    void UpdateVehicleRoadPosition(ActorId actor_id, GeoIds road_ids);
 
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
     /// if Lane Change is required and possible, else returns nullptr
     std::shared_ptr<SimpleWaypoint> AssignLaneChange(
-        carla::SharedPtr<cc::Actor> vehicle,
+        Actor vehicle,
         std::shared_ptr<SimpleWaypoint> current_waypoint,
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
-        std::unordered_map<uint, int> &vehicle_id_to_index,
-        std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
+        std::unordered_map<ActorId, uint> &vehicle_id_to_index,
+        std::vector<Actor> &actor_list,
         cc::DebugHelper &debug_helper);
 
   };

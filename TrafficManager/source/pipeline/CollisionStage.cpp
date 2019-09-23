@@ -4,30 +4,25 @@ namespace traffic_manager {
 
   namespace CollisionStageConstants
   {
-    static const float SEARCH_RADIUS = 20.0;
-    static const float VERTICAL_OVERLAP_THRESHOLD = 2.0;
-    static const float ZERO_AREA = 0.0001;
-    static const float BOUNDARY_EXTENSION_MINIMUM = 2.0;
-    static const float EXTENSION_SQUARE_POINT = 7.0;
-    static const float TIME_HORIZON = 0.5;
-    static const float HIGHWAY_SPEED = 50 / 3.6;
-    static const float HIGHWAY_TIME_HORIZON = 5.0;
+    static const float SEARCH_RADIUS = 20.0f;
+    static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
+    static const float ZERO_AREA = 0.0001f;
+    static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
+    static const float EXTENSION_SQUARE_POINT = 7.0f;
+    static const float TIME_HORIZON = 0.5f;
+    static const float HIGHWAY_SPEED = 50 / 3.6f;
+    static const float HIGHWAY_TIME_HORIZON = 5.0f;
   }
-
-  namespace bg = boost::geometry;
-  namespace cg = carla::geom;
-
   using namespace  CollisionStageConstants;
-  using Actor = carla::SharedPtr<carla::client::Actor>;
 
   CollisionStage::CollisionStage(
 
     std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-    int number_of_vehicle,
-    int pool_size,
-    carla::client::World &world,
-    carla::client::DebugHelper &debug_helper):
+    uint number_of_vehicle,
+    uint pool_size,
+    cc::World &world,
+    cc::DebugHelper &debug_helper):
     localization_messenger(localization_messenger),
     planner_messenger(planner_messenger),
     world(world),
@@ -35,7 +30,7 @@ namespace traffic_manager {
     PipelineStage(pool_size, number_of_vehicle) {
 
       // Initializing clock for checking unregistered actors periodically
-      last_world_actors_pass_instance = std::chrono::system_clock::now();
+      last_world_actors_pass_instance = chr::system_clock::now();
       // Initializing output array selector
       frame_selector = true;
       // Allocating output arrays to be shared with motion planner stage
@@ -51,15 +46,15 @@ namespace traffic_manager {
 
   CollisionStage::~CollisionStage() {}
 
-  void CollisionStage::Action(const int start_index, const int end_index) {
+  void CollisionStage::Action(const uint start_index, const uint end_index) {
 
     auto current_planner_frame = frame_selector? planner_frame_a: planner_frame_b;
 
     // Handle vehicles not spawned by TrafficManager
     // Choosing an arbitrary thread
-    if (start_index == 0) {
-      auto current_time = std::chrono::system_clock::now();
-      std::chrono::duration<double> diff = current_time - last_world_actors_pass_instance;
+    if (start_index == 0u) {
+      auto current_time = chr::system_clock::now();
+      chr::duration<double> diff = current_time - last_world_actors_pass_instance;
 
       // Periodically check for actors not spawned by TrafficManager
       if (diff.count() > 0.5f) {
@@ -76,7 +71,7 @@ namespace traffic_manager {
       }
 
       // Regularly update unregistered actors
-      std::vector<uint> actor_ids_to_erase;
+      std::vector<carla::ActorId> actor_ids_to_erase;
       for (auto actor_info: unregistered_actors) {
         if (actor_info.second->IsAlive()) {
           vicinity_grid.UpdateGrid(actor_info.second);
@@ -91,7 +86,7 @@ namespace traffic_manager {
     }
 
     // Looping over arrays' partitions for current thread
-    for (int i = start_index; i <= end_index; ++i) {
+    for (auto i = start_index; i <= end_index; ++i) {
 
       auto &data = localization_frame->at(i);
       auto ego_actor = data.actor;
@@ -144,9 +139,9 @@ namespace traffic_manager {
     // Connect actor ids to their position index on data arrays (intput and output)
     // This map also provides us the additional benifit of being able to
     // Quickly identify if a vehicle id is registered with traffic manager or not.
-    int index = 0;
+    auto index = 0u;
     for (auto &element: *localization_frame.get()) {
-      id_to_index.insert(std::pair<uint, int>(element.actor->GetId(), index));
+      id_to_index.insert({element.actor->GetId(), index});
       index++;
     }
   }
@@ -203,7 +198,7 @@ namespace traffic_manager {
         std::deque<polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
-        for(int i = 0u; i < output.size() && !overlap; ++i) {
+        for(auto i = 0u; i < output.size() && !overlap; ++i) {
           auto& p = output.at(i);
           if (bg::area(p) > ZERO_AREA) {
             overlap = true;
@@ -236,7 +231,7 @@ namespace traffic_manager {
     if (id_to_index.find(actor->GetId()) != id_to_index.end()) {
 
       auto velocity = actor->GetVelocity().Length();
-      int bbox_extension = static_cast<int>(
+      uint bbox_extension = static_cast<uint>(
         std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
         std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
         BOUNDARY_EXTENSION_MINIMUM
@@ -250,7 +245,7 @@ namespace traffic_manager {
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
       float width = vehicle->GetBoundingBox().extent.y;
 
-      for (int i = 0; (i < bbox_extension) && (i < waypoint_buffer->size()); ++i) {
+      for (auto i = 0u; (i < bbox_extension) && (i < waypoint_buffer->size()); ++i) {
 
         auto swp = waypoint_buffer->at(i);
         auto vector = swp->GetVector();
@@ -302,7 +297,7 @@ namespace traffic_manager {
   }
 
   void CollisionStage::DrawBoundary(const std::vector<cg::Location> &boundary) const {
-    for (int i = 0; i < boundary.size(); ++i) {
+    for (auto i = 0u; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0, 0, 1),
           boundary[(i + 1) % boundary.size()] + cg::Location(0, 0, 1),

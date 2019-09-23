@@ -4,10 +4,10 @@ namespace traffic_manager {
 
   namespace MapConstants {
     // Very important that this is less than 10^-4
-    static const float ZERO_LENGTH = 0.0001;
+    static const float ZERO_LENGTH = 0.0001f;
     static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-    static const int LANE_CHANGE_LOOK_AHEAD = 5;
-    static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5;   // cos(angle)
+    static const uint LANE_CHANGE_LOOK_AHEAD = 5;
+    static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;   // cos(angle)
   }
   using namespace MapConstants;
 
@@ -64,7 +64,7 @@ namespace traffic_manager {
     }
 
     // Linking segments
-    int i = 0, j = 0;
+    uint i = 0, j = 0;
     for (auto end_point : exit_node_list) {
       for (auto begin_point : entry_node_list) {
         if (end_point->Distance(begin_point->GetLocation()) < ZERO_LENGTH and i != j) {
@@ -181,7 +181,7 @@ namespace traffic_manager {
       auto neighbour_section_id = neighbor_waypoint->GetSectionId();
       auto neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
-      // Find waypoint samples in dense topology corresponding to the 
+      // Find waypoint samples in dense topology corresponding to the
       // geo ids of the neighbor waypoint found using carla's server call
       if (
         road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end()

@@ -30,14 +30,14 @@ namespace traffic_manager {
   using ActorPtr = carla::SharedPtr<cc::Actor>;
 
   /// Function to read hardware concurrency
-  int read_core_count();
+  uint read_core_count();
 
   /// Function to spawn specified number of vehicles
   std::vector<ActorPtr> spawn_traffic(
       cc::Client &client,
       cc::World &world,
-      int core_count,
-      int target_amount);
+      uint core_count,
+      uint target_amount);
 
   /// Detroy actors
   void destroy_traffic(
@@ -56,7 +56,7 @@ namespace traffic_manager {
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
     /// Number of worker threads per stage
-    int pipeline_width;
+    uint pipeline_width;
     /// Target velocities
     float highway_target_velocity;
     float urban_target_velocity;
@@ -99,7 +99,7 @@ namespace traffic_manager {
         cc::Client &client_connection,
         cc::World &world,
         cc::DebugHelper &debug_helper,
-        int pipeline_width);
+        uint pipeline_width);
 
     void Start();
 

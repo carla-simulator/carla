@@ -3,8 +3,8 @@
 namespace traffic_manager {
 
   namespace PlannerConstants {
-    static const float HIGHWAY_SPEED = 50 / 3.6;
-    static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6;
+    static const float HIGHWAY_SPEED = 50 / 3.6f;
+    static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
   }
   using namespace PlannerConstants;
 
@@ -13,10 +13,10 @@ namespace traffic_manager {
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
-      int number_of_vehicles,
-      int pool_size = 1,
-      float urban_target_velocity = 25 / 3.6,
-      float highway_target_velocity = 50 / 3.6,
+      uint number_of_vehicles,
+      uint pool_size = 1u,
+      float urban_target_velocity = 25 / 3.6f,
+      float highway_target_velocity = 50 / 3.6f,
       std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
       std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
       std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
@@ -34,7 +34,7 @@ namespace traffic_manager {
     // Allocate and initialize vector to keep track of contoller states for all vehicles
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for (auto &entry: *pid_state_vector.get()) {
-      entry.time_instance = std::chrono::system_clock::now();
+      entry.time_instance = chr::system_clock::now();
     }
 
     // Initialize output frame selector
@@ -55,22 +55,22 @@ namespace traffic_manager {
 
   MotionPlannerStage::~MotionPlannerStage() {}
 
-  void MotionPlannerStage::Action(const int start_index, const int end_index) {
+  void MotionPlannerStage::Action(const uint start_index, const uint end_index) {
 
     // Selecting output frame
     auto current_control_frame = frame_selector? control_frame_a: control_frame_b;
 
     // Looping over arrays' partitions for current thread
-    for (int i = start_index; i <= end_index; ++i) {
+    for (uint i = start_index; i <= end_index; ++i) {
 
       auto &localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
       float current_deviation = localization_data.deviation;
-      int actor_id = actor->GetId();
+      auto actor_id = actor->GetId();
 
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
       float current_velocity = vehicle->GetVelocity().Length();
-      auto current_time = std::chrono::system_clock::now();
+      auto current_time = chr::system_clock::now();
 
       // Retreiving previous state
       traffic_manager::StateEntry previous_state;
@@ -79,7 +79,7 @@ namespace traffic_manager {
       auto dynamic_target_velocity = urban_target_velocity;
 
       // Increase speed if on highway
-      auto speed_limit = vehicle->GetSpeedLimit() / 3.6;
+      auto speed_limit = vehicle->GetSpeedLimit() / 3.6f;
       if (speed_limit > HIGHWAY_SPEED) {
         dynamic_target_velocity = highway_target_velocity;
         longitudinal_parameters = highway_longitudinal_parameters;
@@ -107,12 +107,12 @@ namespace traffic_manager {
 
       // In case of collision or traffic light or approaching a junction
       if (
-        (collision_messenger_state != 0 && collision_frame->at(i).hazard)
+        (collision_messenger_state != 0u && collision_frame->at(i).hazard)
         ||
         (
-          traffic_light_messenger_state != 0
+          traffic_light_messenger_state != 0u
           &&
-          traffic_light_frame->at(i).traffic_light_hazard > 0
+          traffic_light_frame->at(i).traffic_light_hazard > 0.0f
         )
         ||
         (
@@ -120,10 +120,10 @@ namespace traffic_manager {
           &&
           current_velocity > INTERSECTION_APPROACH_SPEED
         )) {
-        current_state.deviation_integral = 0;
-        current_state.velocity_integral = 0;
-        actuation_signal.throttle = 0;
-        actuation_signal.brake = 1.0;
+        current_state.deviation_integral = 0.0f;
+        current_state.velocity_integral = 0.0f;
+        actuation_signal.throttle = 0.0f;
+        actuation_signal.brake = 1.0f;
       }
 
       // Updating state

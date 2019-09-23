@@ -7,37 +7,40 @@
 #include "carla/client/Client.h"
 
 #include "BatchControlStage.h"
-#include "CollisionStage.h"
 #include "CarlaDataAccessLayer.h"
+#include "CollisionStage.h"
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
 #include "MotionPlannerStage.h"
 #include "Pipeline.h"
 #include "TrafficLightStage.h"
 
-void test_dense_topology(const carla::client::World &);
+namespace cc = carla::client;
+namespace chr = std::chrono;
 
-void test_in_memory_map(carla::SharedPtr<carla::client::Map>);
+void test_dense_topology(const cc::World &);
 
-void test_lane_change(const carla::client::World &world);
+void test_in_memory_map(carla::SharedPtr<cc::Map>);
+
+void test_lane_change(const cc::World &world);
 
 void test_pipeline_stages(
-    carla::SharedPtr<carla::client::ActorList> actor_list,
-    carla::SharedPtr<carla::client::Map> world_map,
-    carla::client::Client &client_conn,
-    carla::client::World &world);
+    carla::SharedPtr<cc::ActorList> actor_list,
+    carla::SharedPtr<cc::Map> world_map,
+    cc::Client &client_conn,
+    cc::World &world);
 
 void test_pipeline(
-    carla::client::World &world,
-    carla::client::Client &client_conn,
-    int target_traffic_amount);
+    cc::World &world,
+    cc::Client &client_conn,
+    uint target_traffic_amount);
 
 std::atomic<bool> quit(false);
 void got_signal(int) {
   quit.store(true);
 }
 
-std::vector<carla::SharedPtr<carla::client::Actor>>* global_actor_list;
+std::vector<carla::SharedPtr<cc::Actor>>* global_actor_list;
 void handler() {
 
   if (!quit.load()) {
@@ -56,7 +59,7 @@ void handler() {
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
 
-  auto client_conn = carla::client::Client("localhost", 2000);
+  auto client_conn = cc::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
   auto world = client_conn.GetWorld();
   auto world_map = world.GetMap();
@@ -67,15 +70,15 @@ int main(int argc, char *argv[]) {
   // test_in_memory_map(world_map);
   // test_pipeline_stages(vehicle_list, world_map, client_conn, world);
   // test_lane_change(world);
-  test_pipeline(world, client_conn, 0);
+  test_pipeline(world, client_conn, 0u);
 
   return 0;
 }
 
 void test_pipeline(
-    carla::client::World &world,
-    carla::client::Client &client_conn,
-    int target_traffic_amount) {
+    cc::World &world,
+    cc::Client &client_conn,
+    uint target_traffic_amount) {
 
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -92,28 +95,28 @@ void test_pipeline(
 
   auto core_count = traffic_manager::read_core_count();
   std::cout << "Found " << core_count << " CPU cores" << std::endl;
-  auto registered_actors = traffic_manager::spawn_traffic(world, core_count, target_traffic_amount);
+  auto registered_actors = traffic_manager::spawn_traffic(client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 
   traffic_manager::Pipeline pipeline(
     {0.1f, 0.15f, 0.01f},
     {5.0f, 0.0f, 0.1f},
     {10.0f, 0.01f, 0.1f},
-    25/3.6,
-    50/3.6,
+    25/3.6f,
+    50/3.6f,
     registered_actors,
     *local_map.get(),
     client_conn,
     world,
     debug_helper,
-    std::ceil(core_count / 5)
+    std::ceil(core_count / 5u)
   );
   pipeline.Start();
 
-  std::cout << "Started " << 2 + 4 * std::ceil(core_count / 4) << " pipeline threads" << std::endl;
+  std::cout << "Started " << 2u + 4u * std::ceil(core_count / 4u) << " pipeline threads" << std::endl;
 
   while (!quit.load()) {
-    sleep(1);
+    sleep(1u);
   }
 
   pipeline.Stop();
@@ -128,14 +131,14 @@ void test_pipeline(
 }
 
 void test_pipeline_stages(
-    carla::SharedPtr<carla::client::ActorList> actor_list,
-    carla::SharedPtr<carla::client::Map> world_map,
-    carla::client::Client &client_conn,
-    carla::client::World &world) {
+    carla::SharedPtr<cc::ActorList> actor_list,
+    carla::SharedPtr<cc::Map> world_map,
+    cc::Client &client_conn,
+    cc::World &world) {
 
   auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
 
-  std::vector<carla::SharedPtr<carla::client::Actor>> registered_actors;
+  std::vector<carla::SharedPtr<cc::Actor>> registered_actors;
   for (auto it = actor_list->begin(); it != actor_list->end(); ++it) {
     registered_actors.push_back(*it);
   }
@@ -177,8 +180,8 @@ void test_pipeline_stages(
     collision_planner_messenger,
     traffic_light_planner_messenger,
     planner_control_messenger,
-    registered_actors.size(), 1,
-    25/3.6, 50/3.6, {0.1f, 0.15f, 0.01f},
+    registered_actors.size(), 1u,
+    25/3.6f, 50/3.6f, {0.1f, 0.15f, 0.01f},
     {10.0f, 0.01f, 0.1f}, {10.0f, 0.0f, 0.1f}
   );
 
@@ -202,7 +205,7 @@ void test_pipeline_stages(
   std::cout << "Sensed pipeline output !" << std::endl;
 
   long count = 0;
-  auto last_time = std::chrono::system_clock::now();
+  auto last_time = chr::system_clock::now();
   while (true) {
     std::this_thread::sleep_for(10ms);
     // sleep(1);
@@ -231,8 +234,8 @@ void test_pipeline_stages(
     // << std::endl
     // << "===========================================================================" << std::endl;
 
-    auto current_time = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = current_time - last_time;
+    auto current_time = chr::system_clock::now();
+    chr::duration<double> diff = current_time - last_time;
 
     ++count;
     if (diff.count() > 1.0) {
@@ -243,7 +246,7 @@ void test_pipeline_stages(
   }
 }
 
-void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
+void test_in_memory_map(carla::SharedPtr<cc::Map> world_map) {
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.GetTopology();
   traffic_manager::InMemoryMap local_map(topology);
@@ -251,7 +254,7 @@ void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   std::cout << "setup starting" << std::endl;
   local_map.SetUp(1.0);
   std::cout << "setup complete" << std::endl;
-  int loose_ends_count = 0;
+  uint loose_ends_count = 0u;
   auto dense_topology = local_map.GetDenseTopology();
   for (auto &swp : dense_topology) {
     if (swp->GetNextWaypoint().size() < 1 || swp->GetNextWaypoint()[0] == 0) {
@@ -263,7 +266,7 @@ void test_in_memory_map(carla::SharedPtr<carla::client::Map> world_map) {
   std::cout << "Number of loose ends : " << loose_ends_count << std::endl;
 }
 
-void test_dense_topology(const carla::client::World &world) {
+void test_dense_topology(const cc::World &world) {
   auto debug = world.MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
   auto topology = dao.GetTopology();
@@ -273,11 +276,11 @@ void test_dense_topology(const carla::client::World &world) {
     auto location = point->GetLocation();
     debug.DrawPoint(location + carla::geom::Location(0,
         0,
-        1), 0.2, carla::client::DebugHelper::Color{225U, 0U, 0U}, 30.0F);
+        1), 0.2f, {225u, 0u, 0u}, 30.0f);
   }
 }
 
-void test_lane_change(const carla::client::World &world) {
+void test_lane_change(const cc::World &world) {
 
   auto debug = world.MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world.GetMap());
@@ -285,10 +288,10 @@ void test_lane_change(const carla::client::World &world) {
   traffic_manager::InMemoryMap local_map(topology);
   local_map.SetUp(1.0);
 
-  int missing_left_lane_links = 0;
-  int missing_right_lane_links = 0;
-  int total_left_lane_links = 0;
-  int total_right_lane_links = 0;
+  uint missing_left_lane_links = 0u;
+  uint missing_right_lane_links = 0u;
+  uint total_left_lane_links = 0u;
+  uint total_right_lane_links = 0u;
 
   for (auto point : local_map.GetDenseTopology()) {
 
@@ -297,14 +300,14 @@ void test_lane_change(const carla::client::World &world) {
     uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
     uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
 
-    if ((lane_change & change_right) > 0 && !(point->CheckJunction())) {
+    if ((lane_change & change_right) > 0u && !(point->CheckJunction())) {
       ++total_right_lane_links;
       if (point->GetRightWaypoint() == nullptr) {
         ++missing_right_lane_links;
       }
     }
 
-    if ((lane_change & change_left) > 0 && !(point->CheckJunction())) {
+    if ((lane_change & change_left) > 0u && !(point->CheckJunction())) {
       ++total_left_lane_links;
       if (point->GetLeftWaypoint() == nullptr) {
         ++missing_left_lane_links;

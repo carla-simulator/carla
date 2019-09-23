@@ -10,6 +10,8 @@
 #include <thread>
 #include <vector>
 
+#include "carla/rpc/ActorId.h"
+
 #include "Messenger.h"
 
 using namespace std::chrono_literals;
@@ -24,19 +26,19 @@ namespace traffic_manager {
   private:
 
     /// Number of worker threads
-    const int pool_size;
+    const uint pool_size;
     /// Number of registered vehicles
-    const int number_of_vehicles;
+    const uint number_of_vehicles;
     /// Pointer to receiver thread instance
-    std::shared_ptr<std::thread> data_receiver;
+    std::unique_ptr<std::thread> data_receiver;
     /// Pointer to sender thread instance
-    std::shared_ptr<std::thread> data_sender;
+    std::unique_ptr<std::thread> data_sender;
     /// Pointers to worker thread instances
-    std::vector<std::shared_ptr<std::thread>> action_threads;
+    std::vector<std::unique_ptr<std::thread>> action_threads;
     /// Counter to track every worker's start condition
-    std::atomic<int> action_start_counter;
+    std::atomic<uint> action_start_counter;
     /// Counter to track every worker's finish condition
-    std::atomic<int> action_finished_counter;
+    std::atomic<uint> action_finished_counter;
     /// Flag to allow/block receiver
     std::atomic<bool> run_receiver;
     /// Flag to allow/block sender
@@ -56,14 +58,14 @@ namespace traffic_manager {
     void ReceiverThreadManager();
 
     /// Method to manage worker threads
-    void ActionThreadManager(const int thread_id);
+    void ActionThreadManager(const uint thread_id);
 
     /// Method to manage sender thread
     void SenderThreadManager();
 
   protected:
 
-    /// Implement this method with the logic to recieve data from
+    /// Implement this method with the logic to receive data from
     /// Previous stage(s) and distribute to Action() threads
     virtual void DataReceiver() = 0;
 
@@ -72,13 +74,11 @@ namespace traffic_manager {
     virtual void DataSender() = 0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(const int start_index, const int end_index) = 0;
+    virtual void Action(const uint start_index, const uint end_index) = 0;
 
   public:
 
-    PipelineStage(
-        int pool_size,
-        int number_of_vehicles);
+    PipelineStage(uint pool_size, uint number_of_vehicles);
 
     virtual ~PipelineStage();
 

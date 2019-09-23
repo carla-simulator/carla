@@ -1,12 +1,10 @@
 #pragma once
 
 #include <chrono>
-#include <cmath>
-#include <memory>
-#include <unordered_map>
 #include <vector>
 
 #include "carla/client/Vehicle.h"
+#include "carla/rpc/Actor.h"
 
 #include "MessengerAndDataTypes.h"
 #include "PIDController.h"
@@ -14,6 +12,8 @@
 
 namespace traffic_manager {
 
+  namespace chr = std::chrono;
+  
   /// The class is responsible for aggregating information from various stages
   /// like localization stage, traffic light stage, collision detection stage
   /// and actuation signals from PID controller and makes decisions on how to
@@ -61,8 +61,8 @@ namespace traffic_manager {
         std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
-        int number_of_vehicles,
-        int pool_size,
+        uint number_of_vehicles,
+        uint pool_size,
         float urban_target_velocity,
         float highway_target_velocity,
         std::vector<float> longitudinal_parameters,
@@ -72,7 +72,7 @@ namespace traffic_manager {
 
     void DataReceiver() override;
 
-    void Action(const int start_index, const int end_index) override;
+    void Action(const uint start_index, const uint end_index) override;
 
     void DataSender() override;
 

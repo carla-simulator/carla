@@ -14,6 +14,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
+#include "carla/rpc/ActorId.h"
 
 #include "InMemoryMap.h"
 #include "MessengerAndDataTypes.h"
@@ -22,6 +23,9 @@
 #include "TrafficDistributor.h"
 
 namespace traffic_manager {
+
+  using Actor = carla::SharedPtr<carla::client::Actor>;
+  namespace cc = carla::client;
 
   /// This class is responsible of maintaining a horizon of waypoints ahead
   /// of the vehicle for it to follow.
@@ -59,7 +63,7 @@ namespace traffic_manager {
     /// Reference to local map cache object
     InMemoryMap &local_map;
     /// Random seed array for turn decisions
-    std::vector<int> divergence_choice;
+    std::vector<uint> divergence_choice;
     /// Structures to hold waypoint buffers for all vehicles
     /// These are shared with collisions stage
     std::shared_ptr<BufferList> buffer_list_a;
@@ -68,9 +72,9 @@ namespace traffic_manager {
     /// determine and execute lane changes
     TrafficDistributor traffic_distributor;
     /// Map connecting actor ids to index of data arrays
-    std::unordered_map<uint, int> vehicle_id_to_index;
+    std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
     /// Reference to list of all the actors registered with traffic manager
-    std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list;
+    std::vector<Actor> &actor_list;
 
     /// Simple method used to draw waypoint buffer ahead of a vehicle
     void DrawBuffer(Buffer &buffer);
@@ -81,17 +85,17 @@ namespace traffic_manager {
         std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
         std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
         std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-        int number_of_vehicles,
-        int pool_size,
-        std::vector<carla::SharedPtr<carla::client::Actor>> &actor_list,
+        uint number_of_vehicles,
+        uint pool_size,
+        std::vector<Actor> &actor_list,
         InMemoryMap &local_map,
-        carla::client::DebugHelper &debug_helper);
+        cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
 
     void DataReceiver() override;
 
-    void Action(const int start_index, const int end_index) override;
+    void Action(const uint start_index, const uint end_index) override;
 
     void DataSender() override;
 

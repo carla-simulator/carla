@@ -3,14 +3,13 @@
 namespace traffic_manager {
 
   PipelineStage::PipelineStage(
-    int pool_size,
-    int number_of_vehicles) :
+    uint pool_size,
+    uint number_of_vehicles) :
     pool_size(pool_size),
-    number_of_vehicles(number_of_vehicles
-  ) {
+    number_of_vehicles(number_of_vehicles) {
 
-    action_start_counter.store(0);
-    action_finished_counter.store(0);
+    action_start_counter.store(0u);
+    action_finished_counter.store(0u);
     run_stage.store(true);
     run_receiver.store(true);
     run_threads.store(false);
@@ -21,19 +20,19 @@ namespace traffic_manager {
 
   void PipelineStage::Start() {
 
-    data_receiver = std::make_shared<std::thread>(&PipelineStage::ReceiverThreadManager, this);
-    for (int i = 0; i < pool_size; ++i) {
+    data_receiver = std::make_unique<std::thread>(&PipelineStage::ReceiverThreadManager, this);
+    for (auto i = 0u; i < pool_size; ++i) {
       action_threads.push_back(
-          std::make_shared<std::thread>(&PipelineStage::ActionThreadManager, this, i));
+          std::make_unique<std::thread>(&PipelineStage::ActionThreadManager, this, i));
     }
-    data_sender = std::make_shared<std::thread>(&PipelineStage::SenderThreadManager, this);
+    data_sender = std::make_unique<std::thread>(&PipelineStage::SenderThreadManager, this);
 
   }
 
   void PipelineStage::Stop() {
     run_stage.store(false);
     data_receiver->join();
-    for (auto action: action_threads) {
+    for (auto& action: action_threads) {
       action->join();
     }
     data_sender->join();
@@ -62,18 +61,18 @@ namespace traffic_manager {
 
       // Start all workers
       run_threads.store(true);
-      action_start_counter.store(0);
-      action_finished_counter.store(0);
+      action_start_counter.store(0u);
+      action_finished_counter.store(0u);
 
       wake_action_notifier.notify_all();
       lock.unlock();
     }
   }
 
-  void PipelineStage::ActionThreadManager(const int thread_id) {
+  void PipelineStage::ActionThreadManager(const uint thread_id) {
 
-    int array_size = number_of_vehicles;
-    int load_per_thread = static_cast<int>(std::floor(array_size / pool_size));
+    uint array_size = number_of_vehicles;
+    uint load_per_thread = static_cast<uint>(std::floor(array_size / pool_size));
 
     while (run_stage.load()) {
 
@@ -91,9 +90,9 @@ namespace traffic_manager {
       }
       lock.unlock();
 
-      int array_start_index = thread_id * load_per_thread;
+      uint array_start_index = thread_id * load_per_thread;
 
-      int array_end_index;
+      uint array_end_index;
       if (thread_id == pool_size - 1) {
         array_end_index = array_size - 1;
       } else {

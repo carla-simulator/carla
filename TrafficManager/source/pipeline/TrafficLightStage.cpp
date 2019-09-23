@@ -5,8 +5,8 @@ namespace traffic_manager {
   TrafficLightStage::TrafficLightStage(
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      int number_of_vehicle,
-      int pool_size)
+      uint number_of_vehicle,
+      uint pool_size)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       PipelineStage(pool_size, number_of_vehicle) {
@@ -20,6 +20,7 @@ namespace traffic_manager {
 
     // Initializing messenger state
     localization_messenger_state = localization_messenger->GetState();
+
     // Initializing this messenger state to preemptively write
     // since this stage precedes motion planner stage
     planner_messenger_state = planner_messenger->GetState() - 1;
@@ -28,15 +29,15 @@ namespace traffic_manager {
 
   TrafficLightStage::~TrafficLightStage() {}
 
-  void TrafficLightStage::Action(const int start_index, const int end_index) {
+  void TrafficLightStage::Action(const uint start_index, const uint end_index) {
 
     // Selecting output frame based on selection key
     auto current_planner_frame = frame_selector? planner_frame_a: planner_frame_b;
 
-    // Looping over arrays' partitions for current thread
+    // Looping over array's partitions for current thread
     for (int i = start_index; i <= end_index; ++i) {
 
-      float traffic_light_hazard = -1;
+      float traffic_light_hazard = -1.0f;
       auto &data = localization_frame->at(i);
       auto ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
@@ -53,7 +54,7 @@ namespace traffic_manager {
           (traffic_light_state == carla::rpc::TrafficLightState::Red ||
           traffic_light_state == carla::rpc::TrafficLightState::Yellow) &&
           look_ahead_point->CheckJunction()) {
-        traffic_light_hazard = 1;
+        traffic_light_hazard = 1.0f;
       }
       auto &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard;
