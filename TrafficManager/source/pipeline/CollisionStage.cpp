@@ -61,9 +61,8 @@ namespace traffic_manager {
         auto world_actors = world.GetActors()->Filter("vehicle.*");
         for (auto actor: *world_actors.get()) {
           auto unregistered_id = actor->GetId();
-          if (
-            id_to_index.find(unregistered_id) == id_to_index.end() &&
-            unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+          if (id_to_index.find(unregistered_id) == id_to_index.end() &&
+              unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
             unregistered_actors.insert({unregistered_id, actor});
           }
         }
@@ -71,7 +70,7 @@ namespace traffic_manager {
       }
 
       // Regularly update unregistered actors
-      std::vector<carla::ActorId> actor_ids_to_erase;
+      std::vector<ActorId> actor_ids_to_erase;
       for (auto actor_info: unregistered_actors) {
         if (actor_info.second->IsAlive()) {
           vicinity_grid.UpdateGrid(actor_info.second);
@@ -89,7 +88,7 @@ namespace traffic_manager {
     for (auto i = start_index; i <= end_index; ++i) {
 
       auto &data = localization_frame->at(i);
-      auto ego_actor = data.actor;
+      Actor ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
 
       // Retreive actors around ego actor
@@ -111,8 +110,8 @@ namespace traffic_manager {
             }
 
             auto ego_actor_location = ego_actor->GetLocation();
-            float actor_distance = actor->GetLocation().Distance(ego_actor_location);
-            if (actor_distance <= SEARCH_RADIUS) {
+            float squared_distance = cg::Math::DistanceSquared(ego_actor_location, actor->GetLocation());
+            if (squared_distance <= SEARCH_RADIUS*SEARCH_RADIUS) {
               if (NegotiateCollision(ego_actor, actor)) {
                 collision_hazard = true;
               }
@@ -136,13 +135,12 @@ namespace traffic_manager {
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
 
-    // Connect actor ids to their position index on data arrays (intput and output)
-    // This map also provides us the additional benifit of being able to
-    // Quickly identify if a vehicle id is registered with traffic manager or not.
+    // Connecting actor ids to their position indices on data arrays.
+    // This map also provides us the additional benefit of being able to
+    // quickly identify if a vehicle id is registered with traffic manager or not.
     auto index = 0u;
     for (auto &element: *localization_frame.get()) {
-      id_to_index.insert({element.actor->GetId(), index});
-      index++;
+      id_to_index.insert({element.actor->GetId(), index++});
     }
   }
 
@@ -155,22 +153,23 @@ namespace traffic_manager {
     planner_messenger_state = planner_messenger->SendData(packet);
   }
 
-  bool CollisionStage::NegotiateCollision(
-      Actor ego_vehicle,
-      Actor other_vehicle) const {
+  bool CollisionStage::NegotiateCollision(const Actor& ego_vehicle, const Actor& other_vehicle) const {
 
     // For each vehicle, calculating the dot product between heading vector
     // and relative position vector to the other vehicle.
 
+    auto other_vehicle_location = other_vehicle->GetLocation();
+    auto ego_vehicle_location = ego_vehicle->GetLocation();
+
     auto reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
-    auto relative_other_vector = other_vehicle->GetLocation() - ego_vehicle->GetLocation();
+    cg::Vector3D relative_other_vector = other_vehicle_location - ego_vehicle_location;
     relative_other_vector = relative_other_vector.MakeUnitVector();
-    auto reference_relative_dot = cg::Math::Dot(reference_heading_vector, relative_other_vector);
+    float reference_relative_dot = cg::Math::Dot(reference_heading_vector, relative_other_vector);
 
     auto other_heading_vector = other_vehicle->GetTransform().GetForwardVector();
-    auto relative_reference_vector = ego_vehicle->GetLocation() - other_vehicle->GetLocation();
+    cg::Vector3D relative_reference_vector = ego_vehicle_location - other_vehicle_location;
     relative_reference_vector = relative_reference_vector.MakeUnitVector();
-    auto other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
+    float other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
 
     // Give preference to vehicle who's path has higher angular separation
     // with relative position vector to the other vehicle.
@@ -178,24 +177,22 @@ namespace traffic_manager {
            CheckGeodesicCollision(ego_vehicle, other_vehicle));
   }
 
-  bool CollisionStage::CheckGeodesicCollision(
-      Actor reference_vehicle,
-      Actor other_vehicle) const {
+  bool CollisionStage::CheckGeodesicCollision(const Actor& reference_vehicle, const Actor& other_vehicle) const {
 
     bool overlap = false;
-    auto reference_height = reference_vehicle->GetLocation().z;
-    auto other_height = other_vehicle->GetLocation().z;
+    float reference_height = reference_vehicle->GetLocation().z;
+    float other_height = other_vehicle->GetLocation().z;
     if (abs(reference_height - other_height) < VERTICAL_OVERLAP_THRESHOLD) {
 
-      auto reference_geodesic_boundary = GetGeodesicBoundary(reference_vehicle);
-      auto other_geodesic_boundary = GetGeodesicBoundary(other_vehicle);
+      LocationList reference_geodesic_boundary = GetGeodesicBoundary(reference_vehicle);
+      LocationList other_geodesic_boundary = GetGeodesicBoundary(other_vehicle);
       
       if (reference_geodesic_boundary.size() > 0 && other_geodesic_boundary.size() > 0) {
       
-        auto reference_polygon = GetPolygon(reference_geodesic_boundary);
-        auto other_polygon = GetPolygon(other_geodesic_boundary);
+        Polygon reference_polygon = GetPolygon(reference_geodesic_boundary);
+        Polygon other_polygon = GetPolygon(other_geodesic_boundary);
 
-        std::deque<polygon> output;
+        std::deque<Polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
         for(auto i = 0u; i < output.size() && !overlap; ++i) {
@@ -210,27 +207,27 @@ namespace traffic_manager {
     return overlap;
   }
 
-  traffic_manager::polygon CollisionStage::GetPolygon(const std::vector<cg::Location> &boundary) const {
+  traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) const {
 
-    std::string boundary_polygon_string;
+    std::string boundary_polygon_wkt;
     for (auto location: boundary) {
-      boundary_polygon_string += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
+      boundary_polygon_wkt += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
     }
-    boundary_polygon_string += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
+    boundary_polygon_wkt += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
 
-    traffic_manager::polygon boundary_polygon;
-    bg::read_wkt("POLYGON((" + boundary_polygon_string + "))", boundary_polygon);
+    traffic_manager::Polygon boundary_polygon;
+    bg::read_wkt("POLYGON((" + boundary_polygon_wkt + "))", boundary_polygon);
 
     return boundary_polygon;
   }
 
-  std::vector<cg::Location> CollisionStage::GetGeodesicBoundary(Actor actor) const {
+  LocationList CollisionStage::GetGeodesicBoundary(const Actor& actor) const {
   
-    auto bbox = GetBoundary(actor);
+    LocationList bbox = GetBoundary(actor);
 
     if (id_to_index.find(actor->GetId()) != id_to_index.end()) {
 
-      auto velocity = actor->GetVelocity().Length();
+      float velocity = actor->GetVelocity().Length();
       uint bbox_extension = static_cast<uint>(
         std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
         std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
@@ -240,25 +237,26 @@ namespace traffic_manager {
       bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
       auto &waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
 
-      std::vector<cg::Location> left_boundary;
-      std::vector<cg::Location> right_boundary;
-      auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
+      LocationList left_boundary;
+      LocationList right_boundary;
+      auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       float width = vehicle->GetBoundingBox().extent.y;
 
       for (auto i = 0u; (i < bbox_extension) && (i < waypoint_buffer->size()); ++i) {
 
-        auto swp = waypoint_buffer->at(i);
-        auto vector = swp->GetVector();
-        auto location = swp->GetLocation();
-        auto perpendicular_vector = cg::Vector3D(-vector.y, vector.x, 0);
+        std::shared_ptr<SimpleWaypoint> swp = waypoint_buffer->at(i);
+        cg::Vector3D heading_vector = swp->GetForwardVector();
+        cg::Location location = swp->GetLocation();
+        auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
         // Direction determined for left handed system
-        left_boundary.push_back(location + cg::Location(perpendicular_vector * width));
-        right_boundary.push_back(location - cg::Location(perpendicular_vector * width));
+        cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
+        left_boundary.push_back(location + cg::Location(scaled_perpendicular));
+        right_boundary.push_back(location + cg::Location(-1* scaled_perpendicular));
       }
 
       // Connecting geodesic path boundary with vehicle bounding box
-      std::vector<cg::Location> geodesic_boundary;   
+      LocationList geodesic_boundary;   
       // Reversing right boundary to construct clocwise (left hand system) boundary
       // This is so because both left and right boundary vectors have the closest
       // point to the vehicle at their starting index
@@ -275,19 +273,19 @@ namespace traffic_manager {
     }
   }
 
-  std::vector<cg::Location> CollisionStage::GetBoundary(Actor actor) const {
+  LocationList CollisionStage::GetBoundary(const Actor& actor) const {
 
-    auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
-    auto bbox = vehicle->GetBoundingBox();
-    auto extent = bbox.extent;
+    auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+    cg::BoundingBox bbox = vehicle->GetBoundingBox();
+    cg::Vector3D extent = bbox.extent;
     auto location = vehicle->GetLocation();
     auto heading_vector = vehicle->GetTransform().GetForwardVector();
     heading_vector.z = 0;
     auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
     // Four corners of the vehicle in top view clockwise order (left handed system)
-    auto x_boundary_vector = heading_vector * extent.x;
-    auto y_boundary_vector = perpendicular_vector * extent.y;
+    cg::Vector3D x_boundary_vector = heading_vector * extent.x;
+    cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
     return {
       location + cg::Location(x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1* x_boundary_vector - y_boundary_vector),
@@ -296,7 +294,7 @@ namespace traffic_manager {
     };
   }
 
-  void CollisionStage::DrawBoundary(const std::vector<cg::Location> &boundary) const {
+  void CollisionStage::DrawBoundary(const LocationList &boundary) const {
     for (auto i = 0u; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0, 0, 1),

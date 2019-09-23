@@ -7,7 +7,7 @@ namespace traffic_manager {
     static const float MINIMUM_HORIZON_LENGTH = 25.0f;
     static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
     static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
-    static const int MINIMUM_JUNCTION_LOOK_AHEAD = 5;
+    static const uint MINIMUM_JUNCTION_LOOK_AHEAD = 5u;
     static const float HIGHWAY_SPEED = 50 / 3.6f;
   }
   using namespace LocalizationConstants;
@@ -92,25 +92,21 @@ namespace traffic_manager {
       auto &copy_waypoint_buffer = current_buffer_list->at(i);
 
       // Sync buffer copies in case of lane change
-      if (
-        !waypoint_buffer.empty() && !copy_waypoint_buffer.empty()
-        &&
-        (
-          copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
-          != waypoint_buffer.front()->GetWaypoint()->GetLaneId()
-          ||
-          copy_waypoint_buffer.front()->GetWaypoint()->GetSectionId()
-          != waypoint_buffer.front()->GetWaypoint()->GetSectionId()
-        )) {
+      if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
+          ((copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
+          != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
+          (copy_waypoint_buffer.front()->GetWaypoint()->GetSectionId()
+          != waypoint_buffer.front()->GetWaypoint()->GetSectionId()))) {
+ 
         waypoint_buffer.clear();
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
       }
 
       // Purge passed waypoints
       if (!waypoint_buffer.empty()) {
-        auto dot_product = DeviationDotProduct(
-            vehicle,
-            waypoint_buffer.front()->GetLocation());
+
+        auto dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
+
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
           waypoint_buffer.pop_front();
           if (!waypoint_buffer.empty()) {
@@ -191,7 +187,7 @@ namespace traffic_manager {
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       auto speed_limit = vehicle_reference->GetSpeedLimit();
       int look_ahead_index = std::max(
-          static_cast<int>(std::floor(2 * vehicle_velocity)),
+          static_cast<uint>(std::floor(2 * vehicle_velocity)),
           MINIMUM_JUNCTION_LOOK_AHEAD);
 
       std::shared_ptr<SimpleWaypoint> look_ahead_point;

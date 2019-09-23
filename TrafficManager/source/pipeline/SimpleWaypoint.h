@@ -39,7 +39,7 @@ namespace traffic_manager {
     std::vector<std::shared_ptr<SimpleWaypoint>> GetNextWaypoint() const;
 
     /// Returns the vector along the waypoint's direction.
-    carla::geom::Vector3D GetVector() const;
+    carla::geom::Vector3D GetForwardVector() const;
 
     /// Returns the location of the waypoint as a list of x,y,z float values.
     std::vector<float> GetXYZ() const;

@@ -29,7 +29,7 @@ namespace traffic_manager {
     return waypoint->GetTransform().location;
   }
 
-  carla::geom::Vector3D SimpleWaypoint::GetVector() const {
+  carla::geom::Vector3D SimpleWaypoint::GetForwardVector() const {
     return waypoint->GetTransform().rotation.GetForwardVector();
   }
 

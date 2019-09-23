@@ -13,10 +13,10 @@ namespace traffic_manager {
 
     // Initializing messenger state
     messenger_state = messenger->GetState();
-    // Initializing throuput count
+    // Initializing throughput count
     frame_count = 0;
     // Initializing clock for throughput measurement
-    last_update_instance = std::chrono::system_clock::now();
+    last_update_instance = chr::system_clock::now();
     // Allocating array for command batching
     commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
   }
@@ -52,8 +52,8 @@ namespace traffic_manager {
     carla_client.ApplyBatch(*commands.get());
 
     // Measuring throughput
-    auto current_time = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = current_time - last_update_instance;
+    auto current_time = chr::system_clock::now();
+    chr::duration<double> diff = current_time - last_update_instance;
     ++frame_count;
     if (diff.count() > 1.0) {
       carla::log_info("Processed " + std::to_string(frame_count) + " frames per second\n");

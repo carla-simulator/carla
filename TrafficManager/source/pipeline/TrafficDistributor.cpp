@@ -8,8 +8,8 @@ namespace traffic_manager {
     static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
     static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
   }
-
   using namespace TrafficDistributorConstants;
+
   TrafficDistributor::TrafficDistributor() {}
 
   TrafficDistributor::~TrafficDistributor() {}
@@ -118,18 +118,15 @@ namespace traffic_manager {
 
         // Check if there is another vehicle in the current lane in front
         // within a threshold distance and current position not in a junction
-        if (
-          same_lane_vehicle_id != actor_id &&
-          same_lane_vehicle_waypoint != nullptr &&
-          !same_lane_vehicle_waypoint->CheckJunction() &&
-          DeviationDotProduct(
-            vehicle,
-            same_lane_vehicle_waypoint->GetLocation()) > 0 &&
-          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
-          < LANE_CHANGE_OBSTACLE_DISTANCE &&
-          same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
-          > LANE_OBSTACLE_MINIMUM_DISTANCE
-        ) {
+        if (same_lane_vehicle_id != actor_id &&
+            same_lane_vehicle_waypoint != nullptr &&
+            !same_lane_vehicle_waypoint->CheckJunction() &&
+            DeviationDotProduct(vehicle, same_lane_vehicle_waypoint->GetLocation()) > 0 &&
+            (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+            < LANE_CHANGE_OBSTACLE_DISTANCE) &&
+            (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+            > LANE_OBSTACLE_MINIMUM_DISTANCE)
+          ) {
 
           // If lane change connections are available,
           // pick a direction (prefferring left) and
@@ -196,8 +193,7 @@ namespace traffic_manager {
             // If vehicle on target lane is behind us, check if we are
             // fast enough to execute lane change
             if (!other_vehicle_buffer.empty() &&
-              other_vehicle_buffer.front()->GetWaypoint()->GetLaneId()
-              == lane_change_id) {
+              other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
 
               auto other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
               auto other_vehicle_location = other_vehicle_buffer.front()->GetLocation();

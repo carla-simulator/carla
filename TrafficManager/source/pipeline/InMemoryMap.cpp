@@ -6,7 +6,7 @@ namespace traffic_manager {
     // Very important that this is less than 10^-4
     static const float ZERO_LENGTH = 0.0001f;
     static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-    static const uint LANE_CHANGE_LOOK_AHEAD = 5;
+    static const uint LANE_CHANGE_LOOK_AHEAD = 5u;
     static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;   // cos(angle)
   }
   using namespace MapConstants;
@@ -93,7 +93,7 @@ namespace traffic_manager {
           }
           ++j;
         }
-        auto end_point_vector = end_point->GetVector();
+        auto end_point_vector = end_point->GetForwardVector();
         auto relative_vector = closest_connection->GetLocation() - end_point->GetLocation();
         relative_vector = relative_vector.MakeUnitVector();
         auto relative_dot = carla::geom::Math::Dot(end_point_vector, relative_vector);
@@ -183,14 +183,11 @@ namespace traffic_manager {
 
       // Find waypoint samples in dense topology corresponding to the
       // geo ids of the neighbor waypoint found using carla's server call
-      if (
-        road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end()
-        &&
-        road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
-        != road_to_waypoint[neighbour_road_id].end()
-        &&
-        road_to_waypoint[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
-        != road_to_waypoint[neighbour_road_id][neighbour_section_id].end()) {
+      if (road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end() &&
+          (road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
+          != road_to_waypoint[neighbour_road_id].end()) &&
+          (road_to_waypoint[neighbour_road_id][neighbour_section_id].find(neighbour_lane_id)
+          != road_to_waypoint[neighbour_road_id][neighbour_section_id].end())) {
 
         std::vector<SimpleWaypointPtr> waypoints_to_left
           = road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];

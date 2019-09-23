@@ -34,7 +34,8 @@ namespace traffic_manager {
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
-  using polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
+  using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
+  using LocationList = std::vector<cg::Location>;
 
   /// This class is the thread executable for the collission detection stage.
   /// The class is responsible for checking possible collisions with other
@@ -74,24 +75,24 @@ namespace traffic_manager {
     /// Collision is predicted by extrapolating a boundary around the vehicle
     /// along it's trajectory and checking if it overlaps with the extrapolated
     /// boundary of the other vehicle.
-    bool CheckGeodesicCollision(Actor vehicle, Actor ego_vehicle) const;
+    bool CheckGeodesicCollision(const Actor& vehicle, const Actor& ego_vehicle) const;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    std::vector<cg::Location> GetBoundary(Actor actor) const;
+    LocationList GetBoundary(const Actor& actor) const;
 
     /// Returns the extrapolated bounding box of the vehicle along it's
     /// trajectory.
-    std::vector<cg::Location> GetGeodesicBoundary(Actor actor) const;
+    LocationList GetGeodesicBoundary(const Actor& actor) const;
 
     /// Method to construct a boost polygon object
-    polygon GetPolygon(const std::vector<cg::Location> &boundary) const;
+    Polygon GetPolygon(const LocationList &boundary) const;
 
     /// Method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool NegotiateCollision(Actor ego_vehicle, Actor other_vehicle) const;
+    bool NegotiateCollision(const Actor& ego_vehicle, const Actor& other_vehicle) const;
 
     /// Simple method used to draw bounding boxes around vehicles
-    void DrawBoundary(const std::vector<cg::Location> &boundary) const;
+    void DrawBoundary(const LocationList &boundary) const;
 
   public:
 

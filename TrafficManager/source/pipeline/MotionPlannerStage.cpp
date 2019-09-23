@@ -106,20 +106,12 @@ namespace traffic_manager {
           lateral_parameters);
 
       // In case of collision or traffic light or approaching a junction
-      if (
-        (collision_messenger_state != 0u && collision_frame->at(i).hazard)
-        ||
-        (
-          traffic_light_messenger_state != 0u
-          &&
-          traffic_light_frame->at(i).traffic_light_hazard > 0.0f
-        )
-        ||
-        (
-          localization_data.approaching_true_junction
-          &&
-          current_velocity > INTERSECTION_APPROACH_SPEED
-        )) {
+      if ((collision_messenger_state != 0u && collision_frame->at(i).hazard) ||
+          (traffic_light_messenger_state != 0u &&
+          traffic_light_frame->at(i).traffic_light_hazard > 0.0f) ||
+          (localization_data.approaching_true_junction &&
+          current_velocity > INTERSECTION_APPROACH_SPEED)) {
+
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
         actuation_signal.throttle = 0.0f;
