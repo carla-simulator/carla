@@ -33,7 +33,7 @@ namespace PlannerConstants {
       traffic_light_messenger(traffic_light_messenger),
       PipelineStage(pool_size, number_of_vehicles) {
 
-    // Allocate and initialize vector to keep track of contoller states for all
+    // Allocate and initialize vector to keep track of controller states for all
     // vehicles
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
     for (auto &entry: *pid_state_vector.get()) {
@@ -75,7 +75,7 @@ namespace PlannerConstants {
       float current_velocity = vehicle->GetVelocity().Length();
       auto current_time = chr::system_clock::now();
 
-      // Retreiving previous state
+      // Retrieving previous state
       traffic_manager::StateEntry previous_state;
       previous_state = pid_state_vector->at(i);
 

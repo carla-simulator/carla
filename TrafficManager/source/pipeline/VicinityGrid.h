@@ -16,8 +16,8 @@ namespace traffic_manager {
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<carla::client::Actor>;
 
-  /// This class maintains vehicle positions in grid segments.
-  /// This is used in collision stage to filter vehicles.
+  /// This class maintains vehicle positions in grid segments
+  /// This is used in collision stage to filter vehicles
   class VicinityGrid {
 
   private:

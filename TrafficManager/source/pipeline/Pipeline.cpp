@@ -20,7 +20,7 @@ namespace PipelineConstants {
   uint read_core_count() {
 
     auto core_count = std::thread::hardware_concurrency();
-    // Assuming quad core if core count not available
+    // Assuming quad-core if core count not available
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
 
@@ -78,7 +78,7 @@ namespace PipelineConstants {
     client.ApplyBatch(std::move(batch_spawn_commands));
     // We need to wait till the simulator spawns all vehicles
     // Tried to use World::WaitForTick but it also wasn't sufficient
-    // Need to find a better a way to do this
+    // Need to find a better way to do this
     std::this_thread::sleep_for(500ms);
 
     // Gathering actors spawned by traffic manager
