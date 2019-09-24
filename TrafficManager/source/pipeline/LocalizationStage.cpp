@@ -75,7 +75,7 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
 
-    // Looping over arrays' partitions for current thread
+    // Looping over arrays' partitions for the current thread
     for (auto i = start_index; i <= end_index; ++i) {
 
       auto vehicle = actor_list.at(i);
@@ -235,7 +235,7 @@ namespace LocalizationConstants {
 
     // Since send/receive calls on messenger objects can block if the other
     // end hasn't received/sent data, choose to block on only those stages
-    // which take most priority (which need highest rate of data feed) to
+    // which take the most priority (which need the highest rate of data feed) to
     // run the system well
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
@@ -245,8 +245,8 @@ namespace LocalizationConstants {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-    // Send data to collision stage only if collision stage has finished
-    // processing, received previous messange and started processing it
+    // Send data to collision stage only if the collision stage has finished
+    // processing, received the previous message and started processing it
     auto collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
@@ -258,8 +258,8 @@ namespace LocalizationConstants {
       collision_frame_selector = !collision_frame_selector;
     }
 
-    // Send data to traffic light stage only if collision stage has finished
-    // processing, received previous messange and started processing it
+    // Send data to traffic light stage only if the collision stage has finished
+    // processing, received the previous message and started processing it
     auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {

@@ -77,7 +77,7 @@ namespace MapConstants {
 
     // Tying up loose ends
     // Loop through all exit nodes of topology segments,
-    // connect any dangling end points to nearest entry point
+    // connect any dangling endpoints to a nearest entry point
     // of another topology segment
     i = 0;
     for (auto end_point : exit_node_list) {
@@ -181,7 +181,7 @@ namespace MapConstants {
       auto neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
       // Find waypoint samples in dense topology corresponding to the
-      // geo ids of the neighbor waypoint found using carla's server call
+      // geo ids of the neighbor waypoint found using Carla's server call
       if (road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end() &&
           (road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
           != road_to_waypoint[neighbour_road_id].end()) &&
@@ -192,7 +192,7 @@ namespace MapConstants {
             road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
 
         // Find the nearest sample to the neighbour waypoint to be used as a
-        // local cache representative to be linked for indicating lane change
+        // local cache representative to be linked for indicating a lane change
         // connection
         if (waypoints_to_left.size() > 0) {
           auto nearest_waypoint = waypoints_to_left[0];

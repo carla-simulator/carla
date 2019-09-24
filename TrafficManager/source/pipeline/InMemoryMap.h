@@ -23,8 +23,8 @@ namespace traffic_manager {
   using SectionWaypointMap = std::unordered_map<uint, LaneWaypointMap>;
   using RoadWaypointMap = std::unordered_map<uint, SectionWaypointMap>;
 
-  /// This class constructs a descretised local map cache.
-  /// Instantiate the class with map toplogy from the simulator
+  /// This class constructs a discretised local map cache.
+  /// Instantiate the class with map topology from the simulator
   /// and run setUp() to construct the local map.
   class InMemoryMap {
 
@@ -33,18 +33,18 @@ namespace traffic_manager {
     /// Object to hold sparse topology received in the constructor
     TopologyList _topology;
     /// Structure to hold all custom waypoint objects after
-    /// Interpollation of sparse topology
+    /// Interpolation of sparse topology
     std::vector<SimpleWaypointPtr> dense_topology;
     /// Structure to segregate waypoints according to their geo ids
     RoadWaypointMap road_to_waypoint;
 
-    /// Method used to segregate and place waypoints into RoadWaypointMap
+    /// The method used to segregate and place waypoints into RoadWaypointMap
     void StructuredWaypoints(SimpleWaypointPtr waypoint);
 
-    /// Method used to place lane change link between waypoints
+    /// the method used to place lane change link between waypoints
     void LinkLaneChangePoint(SimpleWaypointPtr reference_waypoint, WaypointPtr neighbor_waypoint, int side);
 
-    /// Method used to find and place lane change links
+    /// The method used to find and place lane change links
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
   public:
@@ -58,7 +58,7 @@ namespace traffic_manager {
     /// Returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const carla::geom::Location &location) const;
 
-    /// Returns the full list of descrete samples of the map in local cache.
+    /// Returns the full list of discrete samples of the map in the local cache.
     std::vector<SimpleWaypointPtr> GetDenseTopology() const;
 
   };

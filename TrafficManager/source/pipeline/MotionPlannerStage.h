@@ -16,7 +16,7 @@ namespace chr = std::chrono;
 
   /// The class is responsible for aggregating information from various stages
   /// like localization stage, traffic light stage, collision detection stage
-  /// and actuation signals from PID controller and makes decisions on how to
+  /// and actuation signals from the PID controller and makes decisions on how to
   /// move the vehicle to follow it's trajectory safely.
   class MotionPlannerStage : public PipelineStage {
 
@@ -29,10 +29,10 @@ namespace chr = std::chrono;
     int control_messenger_state;
     int collision_messenger_state;
     int traffic_light_messenger_state;
-    /// Pointers to data frames to be shared with batch control stage
+    /// Pointers to data frames to be shared with the batch control stage
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;
-    /// Pointers to data frames recieved from various stages
+    /// Pointers to data frames received from various stages
     std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<CollisionToPlannerFrame> collision_frame;
     std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;
@@ -42,7 +42,7 @@ namespace chr = std::chrono;
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger;
     /// Array to store states for integral and differential components
-    /// of the pid controller
+    /// of the PID controller
     std::shared_ptr<std::vector<StateEntry>> pid_state_vector;
     /// Configuration parameters for PID controller
     std::vector<float> longitudinal_parameters;

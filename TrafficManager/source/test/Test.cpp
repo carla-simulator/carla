@@ -54,7 +54,7 @@ void handler() {
     // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
-} 
+}
 
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
@@ -189,7 +189,7 @@ void test_pipeline_stages(
     planner_control_messenger, client_conn,
     registered_actors.size(), 1
   );
- 
+
   std::cout << "Starting stages ... " << std::endl;
 
   localization_stage.Start();
@@ -210,7 +210,7 @@ void test_pipeline_stages(
     std::this_thread::sleep_for(10ms);
     // sleep(1);
 
-    // std::cout 
+    // std::cout
     // << "===========================================================================" << std::endl
     // << "Running test receiver"
     // << " with messenger's state "
@@ -225,7 +225,7 @@ void test_pipeline_stages(
     // auto dummy_2 = localization_planner_messenger->ReceiveData(messenger2_state);
     // messenger2_state = dummy_2.id;
 
-    // std::cout 
+    // std::cout
     // << "Finished test receiver"
     // << " with messenger's state "
     // << localization_planner_messenger->GetState()

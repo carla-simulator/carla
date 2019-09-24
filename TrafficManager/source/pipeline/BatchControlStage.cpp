@@ -25,7 +25,7 @@ namespace traffic_manager {
 
   void BatchControlStage::Action(const uint start_index, const uint end_index) {
 
-    // Looping over arrays' partitions for current thread
+    // Looping over arrays' partitions for the current thread
     for (uint i = start_index; i <= end_index; ++i) {
 
       carla::rpc::VehicleControl vehicle_control;

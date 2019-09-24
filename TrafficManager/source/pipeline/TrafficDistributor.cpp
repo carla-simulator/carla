@@ -100,10 +100,10 @@ namespace TrafficDistributorConstants {
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
-    // Don't try to change lane if current lane has less than two vehicles
+    // Don't try to change lane if the current lane has less than two vehicles
     if (co_lane_vehicles.size() >= 2) {
 
-      // Check if any vehicles in the current lane is blocking us
+      // Check if any vehicle in the current lane is blocking us
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
 
         auto &same_lane_vehicle_id = *i;
@@ -128,8 +128,8 @@ namespace TrafficDistributorConstants {
             > LANE_OBSTACLE_MINIMUM_DISTANCE)) {
 
           // If lane change connections are available,
-          // pick a direction (prefferring left) and
-          // announce need for lane change
+          // pick a direction (preferring left) and
+          // announce the need for a lane change
           if (left_waypoint != nullptr) {
             auto left_lane_vehicles = GetVehicleIds({
               current_road_ids.road_id,

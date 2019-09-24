@@ -27,7 +27,7 @@ namespace traffic_manager {
   using Actor = carla::SharedPtr<carla::client::Actor>;
 namespace cc = carla::client;
 
-  /// This class is responsible of maintaining a horizon of waypoints ahead
+  /// This class is responsible for maintaining a horizon of waypoints ahead
   /// of the vehicle for it to follow.
   /// The class is also responsible for managing lane change decisions and
   /// modify the waypoints trajectory appropriately
@@ -35,7 +35,7 @@ namespace cc = carla::client;
 
   private:
 
-    /// Reference to carla's debug helper object
+    /// Reference to Carla's debug helper object
     carla::client::DebugHelper &debug_helper;
     /// Variables to remember messenger states
     int planner_messenger_state;
@@ -45,7 +45,7 @@ namespace cc = carla::client;
     bool planner_frame_selector;
     bool collision_frame_selector;
     bool traffic_light_frame_selector;
-    /// Output data frames to be shared with motion planner stage
+    /// Output data frames to be shared with the motion planner stage
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_b;
     /// Output data frames to be shared with collision stage
@@ -60,7 +60,7 @@ namespace cc = carla::client;
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
     /// Pointer to messenger to traffic light stage
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
-    /// Reference to local map cache object
+    /// Reference to local map-cache object
     InMemoryMap &local_map;
     /// Random seed array for turn decisions
     std::vector<uint> divergence_choice;
@@ -73,10 +73,10 @@ namespace cc = carla::client;
     TrafficDistributor traffic_distributor;
     /// Map connecting actor ids to index of data arrays
     std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
-    /// Reference to list of all the actors registered with traffic manager
+    /// Reference to list of all the actors registered with the traffic manager
     std::vector<Actor> &actor_list;
 
-    /// Simple method used to draw waypoint buffer ahead of a vehicle
+    /// A simple method used to draw waypoint buffer ahead of a vehicle
     void DrawBuffer(Buffer &buffer);
 
   public:

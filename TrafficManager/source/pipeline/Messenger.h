@@ -31,13 +31,13 @@ namespace traffic_manager {
     /// State variable that will progress upon every successful communication
     /// between sender and receiver
     std::atomic<int> state_counter;
-    /// Member used to hold data sent by sender
+    /// Member used to hold data sent by the sender
     Data data;
     /// Mutex used to manage contention between sender and receiver
     std::mutex data_modification_mutex;
-    /// Variable to conditionally block sender incase waiting for receiver
+    /// Variable to conditionally block sender incase waiting for the receiver
     std::condition_variable send_condition;
-    /// Variable to conditionally block receiver incase waiting for sender
+    /// Variable to conditionally block receiver in case waiting for sender
     std::condition_variable receive_condition;
 
   public:

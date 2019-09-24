@@ -8,12 +8,12 @@
 
 namespace traffic_manager {
 
-  /// This class is responsible for retrieving data from server
+  /// This class is responsible for retrieving data from the server
   class CarlaDataAccessLayer {
 
   private:
 
-    /// Pointer to carla's map object
+    /// Pointer to Carla's map object
     carla::SharedPtr<carla::client::Map> world_map;
 
   public:
@@ -22,7 +22,7 @@ namespace traffic_manager {
 
     ~CarlaDataAccessLayer();
 
-    /// Retrieves list of topology segments from the simulator
+    /// Retrieves a list of topology segments from the simulator
     using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
     std::vector<std::pair<WaypointPtr, WaypointPtr>> GetTopology() const;
 

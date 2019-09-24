@@ -16,7 +16,7 @@ namespace traffic_manager {
 
   /// Alias for waypoint buffer used in localization stage
   using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
-  /// Alias used for list of buffers in localization stage
+  /// Alias used for the list of buffers in localization stage
   using BufferList = std::vector<Buffer>;
 
   /// Data types
