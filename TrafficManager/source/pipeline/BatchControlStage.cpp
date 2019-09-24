@@ -30,7 +30,7 @@ namespace traffic_manager {
 
       carla::rpc::VehicleControl vehicle_control;
 
-      auto &element = data_frame->at(i);
+      PlannerToControlData &element = data_frame->at(i);
       carla::ActorId actor_id = element.actor_id;
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;

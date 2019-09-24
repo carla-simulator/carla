@@ -66,7 +66,7 @@ namespace TrafficDistributorConstants {
 
   void TrafficDistributor::UpdateVehicleRoadPosition(ActorId actor_id, GeoIds road_ids) {
 
-    auto old_ids = GetRoadIds(actor_id);
+    GeoIds old_ids = GetRoadIds(actor_id);
 
     if (road_ids.road_id != old_ids.road_id ||
         road_ids.section_id != old_ids.section_id ||
@@ -88,10 +88,10 @@ namespace TrafficDistributorConstants {
       std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
       cc::DebugHelper &debug_helper) {
 
-    auto actor_id = vehicle->GetId();
-    auto vehicle_location = vehicle->GetLocation();
-    auto vehicle_velocity = vehicle->GetVelocity().Length();
-    auto co_lane_vehicles = GetVehicleIds(current_road_ids);
+    ActorId actor_id = vehicle->GetId();
+    cg::Location vehicle_location = vehicle->GetLocation();
+    float vehicle_velocity = vehicle->GetVelocity().Length();
+    std::unordered_set<ActorId> co_lane_vehicles = GetVehicleIds(current_road_ids);
 
     bool need_to_change_lane = false;
     // true -> left, false -> right
@@ -197,17 +197,17 @@ namespace TrafficDistributorConstants {
             if (!other_vehicle_buffer.empty() &&
                 other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
 
-              auto other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
-              auto other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
-              auto relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
+              Actor other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
+              cg::Location other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
+              float relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
 
               if (relative_deviation < 0) {
 
-                auto time_to_reach_other =
+                float time_to_reach_other =
                     (change_over_point->Distance(other_vehicle_location) + change_over_distance) /
                     other_vehicle->GetVelocity().Length();
 
-                auto time_to_reach_reference =
+                float time_to_reach_reference =
                     (change_over_point->Distance(vehicle_location) + change_over_distance) /
                     vehicle->GetVelocity().Length();
 
@@ -277,7 +277,7 @@ namespace TrafficDistributorConstants {
     next_vector.z = 0;
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
-      auto dot_product = cg::Math::Dot(next_vector, heading_vector);
+      float dot_product = cg::Math::Dot(next_vector, heading_vector);
       return dot_product;
     } else {
       return 0;
