@@ -277,7 +277,7 @@ namespace TrafficDistributorConstants {
     next_vector.z = 0;
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
-      auto dot_product = carla::geom::Math::Dot(next_vector, heading_vector);
+      auto dot_product = cg::Math::Dot(next_vector, heading_vector);
       return dot_product;
     } else {
       return 0;

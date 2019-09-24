@@ -150,10 +150,8 @@ namespace LocalizationConstants {
       }
 
       // Populate buffer
-      while (
-        waypoint_buffer.back()->Distance(
-        waypoint_buffer.front()->GetLocation()) <= horizon_size
-        ) {
+      while (waypoint_buffer.back()->DistanceSquared(
+          waypoint_buffer.front()) <= std::pow(horizon_size, 2)) {
 
         auto way_front = waypoint_buffer.back();
         auto pre_selection_id = way_front->GetWaypoint()->GetId();

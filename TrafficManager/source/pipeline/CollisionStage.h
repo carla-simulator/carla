@@ -26,10 +26,10 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
-namespace chr = std::chrono;
-namespace bg = boost::geometry;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
+  namespace chr = std::chrono;
+  namespace bg = boost::geometry;
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;

@@ -32,7 +32,7 @@ namespace chr = std::chrono;
     /// Pointers to data frames to be shared with batch control stage
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;
-    /// Pointers to data frames recieved from various stages
+    /// Pointers to data frames received from various stages
     std::shared_ptr<LocalizationToPlannerFrame> localization_frame;
     std::shared_ptr<CollisionToPlannerFrame> collision_frame;
     std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;

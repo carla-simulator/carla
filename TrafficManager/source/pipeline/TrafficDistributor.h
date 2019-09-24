@@ -50,8 +50,8 @@ namespace std {
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
 

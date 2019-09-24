@@ -4,7 +4,7 @@ namespace traffic_manager {
 
   BatchControlStage::BatchControlStage(
       std::shared_ptr<PlannerToControlMessenger> messenger,
-      carla::client::Client &carla_client,
+      cc::Client &carla_client,
       uint number_of_vehicles,
       uint pool_size)
     : messenger(messenger),
@@ -31,7 +31,7 @@ namespace traffic_manager {
       carla::rpc::VehicleControl vehicle_control;
 
       auto &element = data_frame->at(i);
-      carla::rpc::ActorId actor_id = element.actor_id;
+      carla::ActorId actor_id = element.actor_id;
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;

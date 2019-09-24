@@ -2,10 +2,10 @@
 
 namespace traffic_manager {
 
-namespace PipelineConstants {
-  uint MINIMUM_CORE_COUNT = 4u;
-  uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
-}
+  namespace PipelineConstants {
+    uint MINIMUM_CORE_COUNT = 4u;
+    uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
+  }
   using namespace PipelineConstants;
 
   // Pick a random element from @a range.
@@ -180,6 +180,7 @@ namespace PipelineConstants {
 
   // To start the pipeline
   void Pipeline::Start() {
+
     localization_stage->Start();
     collision_stage->Start();
     traffic_light_stage->Start();
