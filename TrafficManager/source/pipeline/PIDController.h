@@ -6,7 +6,7 @@
 
 namespace traffic_manager {
 
-  namespace chr = std::chrono;
+namespace chr = std::chrono;
   using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
 
   /// Structure to hold actuation signals

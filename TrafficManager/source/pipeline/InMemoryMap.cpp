@@ -21,10 +21,10 @@ namespace MapConstants {
     NodeList entry_node_list;
     NodeList exit_node_list;
 
-    auto distance_squared = [] (cg::Location l1, cg::Location l2) {
-      return cg::Math::DistanceSquared(l1, l2);
-    };
-    auto square = [] (float input) {return std::pow(input, 2);};
+    auto distance_squared = [](cg::Location l1, cg::Location l2) {
+          return cg::Math::DistanceSquared(l1, l2);
+        };
+    auto square = [](float input) {return std::pow(input, 2);};
 
     // Creating dense topology
     for (auto &pair : _topology) {
@@ -47,7 +47,7 @@ namespace MapConstants {
 
         // Populating waypoints from begin_waypoint to end_waypoint
         while (distance_squared(current_waypoint->GetTransform().location,
-          end_location) > square(sampling_resolution)) {
+            end_location) > square(sampling_resolution)) {
 
           current_waypoint = current_waypoint->GetNext(sampling_resolution)[0];
           auto previous_wp = dense_topology.back();

@@ -25,8 +25,8 @@
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cr = carla::rpc;
+namespace cc = carla::client;
+namespace cr = carla::rpc;
   using ActorPtr = carla::SharedPtr<cc::Actor>;
 
   /// Function to read hardware concurrency

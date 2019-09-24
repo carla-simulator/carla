@@ -2,10 +2,10 @@
 
 namespace traffic_manager {
 
-  namespace PIDControllerConstants {
-    const float MAX_THROTTLE = 0.8f;
-    const float MAX_BRAKE = 1.0f;
-  }
+namespace PIDControllerConstants {
+  const float MAX_THROTTLE = 0.8f;
+  const float MAX_BRAKE = 1.0f;
+}
   using namespace PIDControllerConstants;
 
   PIDController::PIDController() {}

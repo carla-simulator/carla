@@ -24,7 +24,7 @@
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
+namespace cc = carla::client;
   using Actor = carla::SharedPtr<carla::client::Actor>;
 
   /// This class is responsible of maintaining a horizon of waypoints ahead

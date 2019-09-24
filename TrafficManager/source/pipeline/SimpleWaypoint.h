@@ -10,8 +10,8 @@
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cg = carla::geom;
+namespace cc = carla::client;
+namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
 
   /// This is a simple wrapper class on carla's waypoint object.
@@ -52,7 +52,7 @@ namespace traffic_manager {
     std::vector<float> GetXYZ() const;
 
     /// This method is used to set the next waypoints.
-    int SetNextWaypoint(const std::vector<SimpleWaypointPtr>& next_waypoints);
+    int SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
     /// This method is used to set the closest left waypoint for lane change
     void SetLeftWaypoint(SimpleWaypointPtr waypoint);

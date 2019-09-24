@@ -15,7 +15,7 @@
 
 namespace traffic_manager {
 
-  namespace cg = carla::geom;
+namespace cg = carla::geom;
 
   using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;

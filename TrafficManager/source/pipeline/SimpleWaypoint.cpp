@@ -43,8 +43,8 @@ namespace traffic_manager {
     return coordinates;
   }
 
-  int SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr>& waypoints) {
-    for (auto& simple_waypoint: waypoints) {
+  int SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
+    for (auto &simple_waypoint: waypoints) {
       next_waypoints.push_back(simple_waypoint);
     }
     return waypoints.size();

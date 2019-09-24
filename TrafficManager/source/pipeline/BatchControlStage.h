@@ -14,8 +14,8 @@
 
 namespace traffic_manager {
 
-  namespace chr = std::chrono;
-  namespace cc = carla::client;
+namespace chr = std::chrono;
+namespace cc = carla::client;
 
   /// This class receives actuation signals (throttle, brake, steer)
   /// from MotionPlannerStage class and communicates these signals to
