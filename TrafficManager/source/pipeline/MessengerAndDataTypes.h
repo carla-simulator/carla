@@ -30,7 +30,7 @@ namespace traffic_manager {
 
   /// Type of data sent by motion planner stage to batch control stage
   struct PlannerToControlData {
-    carla::rpc::ActorId actor_id;
+    carla::ActorId actor_id;
     float throttle;
     float brake;
     float steer;

@@ -19,7 +19,7 @@ namespace PipelineConstants {
 
   uint read_core_count() {
 
-    auto core_count = std::thread::hardware_concurrency();
+    uint core_count = std::thread::hardware_concurrency();
     // Assuming quad core if core count not available
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
@@ -180,6 +180,7 @@ namespace PipelineConstants {
 
   // To start the pipeline
   void Pipeline::Start() {
+
     localization_stage->Start();
     collision_stage->Start();
     traffic_light_stage->Start();

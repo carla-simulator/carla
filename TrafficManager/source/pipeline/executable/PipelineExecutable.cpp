@@ -72,7 +72,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic
   sigaction(SIGINT, &sa, NULL);
 
   auto world_map = world.GetMap();
-  auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
+  cc::DebugHelper debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
   auto topology = dao.GetTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);

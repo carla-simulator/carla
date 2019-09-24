@@ -15,11 +15,13 @@
 
 namespace traffic_manager {
 
+namespace cg = carla::geom;
+
   using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
-  using LaneWaypointMap = std::unordered_map<int, std::vector<SimpleWaypointPtr>>;
+  using LaneWaypointMap = std::unordered_map<int, NodeList>;
   using SectionWaypointMap = std::unordered_map<uint, LaneWaypointMap>;
   using RoadWaypointMap = std::unordered_map<uint, SectionWaypointMap>;
 
@@ -34,7 +36,7 @@ namespace traffic_manager {
     TopologyList _topology;
     /// Structure to hold all custom waypoint objects after
     /// Interpolation of sparse topology
-    std::vector<SimpleWaypointPtr> dense_topology;
+    NodeList dense_topology;
     /// Structure to segregate waypoints according to their geo ids
     RoadWaypointMap road_to_waypoint;
 
@@ -56,10 +58,10 @@ namespace traffic_manager {
     void SetUp(int sampling_resolution);
 
     /// Returns the closest waypoint to a given location on the map.
-    SimpleWaypointPtr GetWaypoint(const carla::geom::Location &location) const;
+    SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;
 
     /// Returns the full list of discrete samples of the map in the local cache.
-    std::vector<SimpleWaypointPtr> GetDenseTopology() const;
+    NodeList GetDenseTopology() const;
 
   };
 

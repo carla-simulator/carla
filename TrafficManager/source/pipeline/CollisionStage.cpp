@@ -86,12 +86,12 @@ namespace CollisionStageConstants {
     // Looping over arrays' partitions for the current thread
     for (auto i = start_index; i <= end_index; ++i) {
 
-      auto &data = localization_frame->at(i);
+      LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
 
       // Retrieve actors around ego actor
-      auto actor_id_list = vicinity_grid.GetActors(ego_actor);
+      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
 
       // Check every actor in the vicinity if it poses a collision hazard
@@ -123,7 +123,7 @@ namespace CollisionStageConstants {
 
       }
 
-      auto &message = current_planner_frame->at(i);
+      CollisionToPlannerData &message = current_planner_frame->at(i);
       message.hazard = collision_hazard;
 
     }

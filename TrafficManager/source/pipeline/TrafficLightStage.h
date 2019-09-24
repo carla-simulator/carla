@@ -10,6 +10,10 @@
 
 namespace traffic_manager {
 
+  using ActorId = carla::ActorId;
+  using Actor = carla::SharedPtr<cc::Actor>;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
+
   /// This class provides the information about the Traffic Lights at the
   /// junctions.
   class TrafficLightStage : public PipelineStage {

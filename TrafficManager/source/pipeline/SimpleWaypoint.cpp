@@ -2,34 +2,36 @@
 
 namespace traffic_manager {
 
-  SimpleWaypoint::SimpleWaypoint(carla::SharedPtr<carla::client::Waypoint> _waypoint) {
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
+
+  SimpleWaypoint::SimpleWaypoint(WaypointPtr _waypoint) {
     waypoint = _waypoint;
     next_left_waypoint = nullptr;
     next_right_waypoint = nullptr;
   }
   SimpleWaypoint::~SimpleWaypoint() {}
 
-  std::vector<std::shared_ptr<SimpleWaypoint>> SimpleWaypoint::GetNextWaypoint() const {
+  std::vector<SimpleWaypointPtr> SimpleWaypoint::GetNextWaypoint() const {
     return next_waypoints;
   }
 
-  carla::SharedPtr<carla::client::Waypoint> SimpleWaypoint::GetWaypoint() const {
+  WaypointPtr SimpleWaypoint::GetWaypoint() const {
     return waypoint;
   }
 
-  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::GetLeftWaypoint() {
+  SimpleWaypointPtr SimpleWaypoint::GetLeftWaypoint() {
     return next_left_waypoint;
   }
 
-  std::shared_ptr<SimpleWaypoint> SimpleWaypoint::GetRightWaypoint() {
+  SimpleWaypointPtr SimpleWaypoint::GetRightWaypoint() {
     return next_right_waypoint;
   }
 
-  carla::geom::Location SimpleWaypoint::GetLocation() const {
+  cg::Location SimpleWaypoint::GetLocation() const {
     return waypoint->GetTransform().location;
   }
 
-  carla::geom::Vector3D SimpleWaypoint::GetForwardVector() const {
+  cg::Vector3D SimpleWaypoint::GetForwardVector() const {
     return waypoint->GetTransform().rotation.GetForwardVector();
   }
 
@@ -41,24 +43,35 @@ namespace traffic_manager {
     return coordinates;
   }
 
-  int SimpleWaypoint::SetNextWaypoint(std::vector<std::shared_ptr<SimpleWaypoint>> waypoints) {
-    next_waypoints.insert(
-        std::end(next_waypoints),
-        std::begin(waypoints),
-        std::end(waypoints));
+  int SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
+    for (auto &simple_waypoint: waypoints) {
+      next_waypoints.push_back(simple_waypoint);
+    }
     return waypoints.size();
   }
 
-  void SimpleWaypoint::SetLeftWaypoint(std::shared_ptr<SimpleWaypoint> waypoint) {
+  void SimpleWaypoint::SetLeftWaypoint(SimpleWaypointPtr waypoint) {
     next_left_waypoint = waypoint;
   }
 
-  void SimpleWaypoint::SetRightWaypoint(std::shared_ptr<SimpleWaypoint> waypoint) {
+  void SimpleWaypoint::SetRightWaypoint(SimpleWaypointPtr waypoint) {
     next_right_waypoint = waypoint;
   }
 
-  float SimpleWaypoint::Distance(const carla::geom::Location &location) const {
-    return waypoint->GetTransform().location.Distance(location);
+  float SimpleWaypoint::Distance(const cg::Location &location) const {
+    return GetLocation().Distance(location);
+  }
+
+  float SimpleWaypoint::Distance(const SimpleWaypointPtr &other) const {
+    return GetLocation().Distance(other->GetLocation());
+  }
+
+  float SimpleWaypoint::DistanceSquared(const cg::Location &location) const {
+    return cg::Math::DistanceSquared(GetLocation(), location);
+  }
+
+  float SimpleWaypoint::DistanceSquared(const SimpleWaypointPtr &other) const {
+    return cg::Math::DistanceSquared(GetLocation(), other->GetLocation());
   }
 
   bool SimpleWaypoint::CheckJunction() const {
