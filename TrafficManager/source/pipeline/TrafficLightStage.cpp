@@ -38,11 +38,11 @@ namespace traffic_manager {
     for (int i = start_index; i <= end_index; ++i) {
 
       float traffic_light_hazard = -1.0f;
-      auto &data = localization_frame->at(i);
-      auto ego_actor = data.actor;
-      auto ego_actor_id = ego_actor->GetId();
-      auto closest_waypoint = data.closest_waypoint;
-      auto look_ahead_point = data.junction_look_ahead_waypoint;
+      LocalizationToTrafficLightData &data = localization_frame->at(i);
+      Actor ego_actor = data.actor;
+      ActorId ego_actor_id = ego_actor->GetId();
+      SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
+      SimpleWaypointPtr look_ahead_point = data.junction_look_ahead_waypoint;
 
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(ego_actor);
       auto traffic_light_state = vehicle->GetTrafficLightState();
@@ -56,7 +56,7 @@ namespace traffic_manager {
           look_ahead_point->CheckJunction()) {
         traffic_light_hazard = 1.0f;
       }
-      auto &message = current_planner_frame->at(i);
+      TrafficLightToPlannerData &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard;
     }
 

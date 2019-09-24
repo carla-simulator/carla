@@ -83,18 +83,18 @@ namespace CollisionStageConstants {
       }
     }
 
-    // Looping over arrays' partitions for current thread
+    // Looping over arrays' partitions for the current thread
     for (auto i = start_index; i <= end_index; ++i) {
 
-      auto &data = localization_frame->at(i);
+      LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       auto ego_actor_id = ego_actor->GetId();
 
-      // Retreive actors around ego actor
-      auto actor_id_list = vicinity_grid.GetActors(ego_actor);
+      // Retrieve actors around ego actor
+      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
 
-      // Check every actor in vicinity if it poses a collision hazard
+      // Check every actor in the vicinity if it poses a collision hazard
       for (auto i = actor_id_list.begin(); (i != actor_id_list.end()) && !collision_hazard; ++i) {
         auto actor_id = *i;
         try {
@@ -123,7 +123,7 @@ namespace CollisionStageConstants {
 
       }
 
-      auto &message = current_planner_frame->at(i);
+      CollisionToPlannerData &message = current_planner_frame->at(i);
       message.hazard = collision_hazard;
 
     }
@@ -136,7 +136,7 @@ namespace CollisionStageConstants {
 
     // Connecting actor ids to their position indices on data arrays.
     // This map also provides us the additional benefit of being able to
-    // quickly identify if a vehicle id is registered with traffic manager or
+    // quickly identify if a vehicle id is registered with the traffic manager or
     // not.
     auto index = 0u;
     for (auto &element: *localization_frame.get()) {
@@ -171,8 +171,8 @@ namespace CollisionStageConstants {
     relative_reference_vector = relative_reference_vector.MakeUnitVector();
     float other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
 
-    // Give preference to vehicle who's path has higher angular separation
-    // with relative position vector to the other vehicle.
+    // Give preference to the vehicle who's path has a higher angular separation
+    // with a relative position vector to the other vehicle.
     return (reference_relative_dot > other_relative_dot &&
            CheckGeodesicCollision(ego_vehicle, other_vehicle));
   }
@@ -251,21 +251,21 @@ namespace CollisionStageConstants {
         cg::Location location = swp->GetLocation();
         auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
-        // Direction determined for left handed system
+        // Direction determined for the left-handed system
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
         left_boundary.push_back(location + cg::Location(scaled_perpendicular));
         right_boundary.push_back(location + cg::Location(-1 * scaled_perpendicular));
       }
 
-      // Connecting geodesic path boundary with vehicle bounding box
+      // Connecting the geodesic path boundary with the vehicle bounding box
       LocationList geodesic_boundary;
-      // Reversing right boundary to construct clocwise (left hand system)
+      // Reversing right boundary to construct clockwise (left-hand system)
       // boundary
       // This is so because both left and right boundary vectors have the
       // closest
       // point to the vehicle at their starting index
-      // For right boundary we want to begin at the farthest point to have a
-      // clocwise trace
+      // For the right boundary, we want to begin at the farthest point to have a
+      // clockwise trace
       std::reverse(right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
@@ -288,7 +288,7 @@ namespace CollisionStageConstants {
     heading_vector.z = 0;
     auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
-    // Four corners of the vehicle in top view clockwise order (left handed
+    // Four corners of the vehicle in top view clockwise order (left-handed
     // system)
     cg::Vector3D x_boundary_vector = heading_vector * extent.x;
     cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;

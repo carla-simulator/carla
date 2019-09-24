@@ -36,7 +36,7 @@ namespace PlannerConstants {
     // Allocate and initialize vector to keep track of controller states for all
     // vehicles
     pid_state_vector = std::make_shared<std::vector<StateEntry>>(number_of_vehicles);
-    for (auto &entry: *pid_state_vector.get()) {
+    for (StateEntry &entry: *pid_state_vector.get()) {
       entry.time_instance = chr::system_clock::now();
     }
 
@@ -60,13 +60,13 @@ namespace PlannerConstants {
 
   void MotionPlannerStage::Action(const uint start_index, const uint end_index) {
 
-    // Selecting output frame
+    // Selecting an output frame
     auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
 
-    // Looping over arrays' partitions for current thread
+    // Looping over arrays' partitions for the current thread
     for (uint i = start_index; i <= end_index; ++i) {
 
-      auto &localization_data = localization_frame->at(i);
+      LocalizationToPlannerData &localization_data = localization_frame->at(i);
       auto actor = localization_data.actor;
       float current_deviation = localization_data.deviation;
       auto actor_id = actor->GetId();
@@ -88,13 +88,13 @@ namespace PlannerConstants {
         longitudinal_parameters = highway_longitudinal_parameters;
       }
 
-      // Decrease speed approaching intersection
+      // Decrease speed approaching an intersection
       if (localization_data.approaching_true_junction) {
         dynamic_target_velocity = INTERSECTION_APPROACH_SPEED;
       }
 
       // State update for vehicle
-      auto current_state = controller.StateUpdate(
+      StateEntry current_state = controller.StateUpdate(
           previous_state,
           current_velocity,
           dynamic_target_velocity,
@@ -102,13 +102,13 @@ namespace PlannerConstants {
           current_time);
 
       // Controller actuation
-      auto actuation_signal = controller.RunStep(
+      ActuationSignal actuation_signal = controller.RunStep(
           current_state,
           previous_state,
           longitudinal_parameters,
           lateral_parameters);
 
-      // In case of collision or traffic light or approaching a junction
+      // In case of the collision or traffic light or approaching a junction
       if ((collision_messenger_state != 0u && collision_frame->at(i).hazard) ||
           (traffic_light_messenger_state != 0u &&
           traffic_light_frame->at(i).traffic_light_hazard > 0.0f) ||
@@ -122,11 +122,11 @@ namespace PlannerConstants {
       }
 
       // Updating state
-      auto &state = pid_state_vector->at(i);
+      StateEntry &state = pid_state_vector->at(i);
       state = current_state;
 
       // Constructing actuation signal
-      auto &message = current_control_frame->at(i);
+      PlannerToControlData &message = current_control_frame->at(i);
       message.actor_id = actor_id;
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;

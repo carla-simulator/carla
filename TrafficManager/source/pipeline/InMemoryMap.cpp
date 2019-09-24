@@ -83,7 +83,7 @@ namespace MapConstants {
 
     // Tying up loose ends
     // Loop through all exit nodes of topology segments,
-    // connect any dangling end points to nearest entry point
+    // connect any dangling endpoints to a nearest entry point
     // of another topology segment
     i = 0;
     for (auto end_point : exit_node_list) {
@@ -141,10 +141,10 @@ namespace MapConstants {
   }
 
   void InMemoryMap::StructuredWaypoints(SimpleWaypointPtr waypoint) {
-    auto current_waypoint = waypoint->GetWaypoint();
-    auto section_id = current_waypoint->GetSectionId();
-    auto road_id = current_waypoint->GetRoadId();
-    auto lane_id = current_waypoint->GetLaneId();
+    WaypointPtr current_waypoint = waypoint->GetWaypoint();
+    uint section_id = current_waypoint->GetSectionId();
+    uint road_id = current_waypoint->GetRoadId();
+    int lane_id = current_waypoint->GetLaneId();
 
     if (road_to_waypoint.find(road_id) != road_to_waypoint.end()) {
       if (road_to_waypoint[road_id].find(section_id) != road_to_waypoint[road_id].end()) {
@@ -182,12 +182,12 @@ namespace MapConstants {
       int side) {
 
     if (neighbor_waypoint != nullptr) {
-      auto neighbour_road_id = neighbor_waypoint->GetRoadId();
-      auto neighbour_section_id = neighbor_waypoint->GetSectionId();
-      auto neighbour_lane_id = neighbor_waypoint->GetLaneId();
+      uint neighbour_road_id = neighbor_waypoint->GetRoadId();
+      uint neighbour_section_id = neighbor_waypoint->GetSectionId();
+      int neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
       // Find waypoint samples in dense topology corresponding to the
-      // geo ids of the neighbor waypoint found using carla's server call
+      // geo ids of the neighbor waypoint found using Carla's server call
       if (road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end() &&
           (road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
           != road_to_waypoint[neighbour_road_id].end()) &&
@@ -198,11 +198,11 @@ namespace MapConstants {
             road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
 
         // Find the nearest sample to the neighbour waypoint to be used as a
-        // local cache representative to be linked for indicating lane change
+        // local cache representative to be linked for indicating a lane change
         // connection
         if (waypoints_to_left.size() > 0) {
-          auto nearest_waypoint = waypoints_to_left[0];
-          auto smallest_left_distance = INFINITE_DISTANCE;
+          SimpleWaypointPtr nearest_waypoint = waypoints_to_left[0];
+          float smallest_left_distance = INFINITE_DISTANCE;
           for (auto left_wp : waypoints_to_left) {
             if (reference_waypoint->DistanceSquared(left_wp) < smallest_left_distance) {
               smallest_left_distance = reference_waypoint->DistanceSquared(left_wp);

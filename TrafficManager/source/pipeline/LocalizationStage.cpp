@@ -75,21 +75,21 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
 
-    // Looping over arrays' partitions for current thread
+    // Looping over arrays' partitions for the current thread
     for (auto i = start_index; i <= end_index; ++i) {
 
-      auto vehicle = actor_list.at(i);
-      auto actor_id = vehicle->GetId();
+      Actor vehicle = actor_list.at(i);
+      ActorId actor_id = vehicle->GetId();
 
-      auto vehicle_location = vehicle->GetLocation();
-      auto vehicle_velocity = vehicle->GetVelocity().Length();
+      cg::Location vehicle_location = vehicle->GetLocation();
+      float vehicle_velocity = vehicle->GetVelocity().Length();
 
       float horizon_size = std::max(
           WAYPOINT_TIME_HORIZON * vehicle_velocity,
           MINIMUM_HORIZON_LENGTH);
 
-      auto &waypoint_buffer = current_buffer_list->at(i);
-      auto &copy_waypoint_buffer = current_buffer_list->at(i);
+      Buffer &waypoint_buffer = current_buffer_list->at(i);
+      Buffer &copy_waypoint_buffer = current_buffer_list->at(i);
 
       // Sync buffer copies in case of lane change
       if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
@@ -105,7 +105,7 @@ namespace LocalizationConstants {
       // Purge passed waypoints
       if (!waypoint_buffer.empty()) {
 
-        auto dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
+        float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
           waypoint_buffer.pop_front();
@@ -117,12 +117,12 @@ namespace LocalizationConstants {
 
       // Initialize buffer if empty
       if (waypoint_buffer.empty()) {
-        auto closest_waypoint = local_map.GetWaypoint(vehicle_location);
+        SimpleWaypointPtr closest_waypoint = local_map.GetWaypoint(vehicle_location);
         waypoint_buffer.push_back(closest_waypoint);
       }
 
       // Assign lane change
-      auto front_waypoint = waypoint_buffer.front();
+      SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
       GeoIds current_road_ids = {
         front_waypoint->GetWaypoint()->GetRoadId(),
         front_waypoint->GetWaypoint()->GetSectionId(),
@@ -134,7 +134,7 @@ namespace LocalizationConstants {
           current_road_ids);
 
       if (!front_waypoint->CheckJunction()) {
-        auto change_over_point = traffic_distributor.AssignLaneChange(
+        SimpleWaypointPtr change_over_point = traffic_distributor.AssignLaneChange(
             vehicle,
             front_waypoint,
             current_road_ids,
@@ -153,8 +153,8 @@ namespace LocalizationConstants {
       while (waypoint_buffer.back()->DistanceSquared(
           waypoint_buffer.front()) <= std::pow(horizon_size, 2)) {
 
-        auto way_front = waypoint_buffer.back();
-        auto pre_selection_id = way_front->GetWaypoint()->GetId();
+        SimpleWaypointPtr way_front = waypoint_buffer.back();
+        uint pre_selection_id = way_front->GetWaypoint()->GetId();
         auto next_waypoints = way_front->GetNextWaypoint();
         auto selection_index = 0u;
         if (next_waypoints.size() > 1) {
@@ -171,8 +171,8 @@ namespace LocalizationConstants {
         std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
         TARGET_WAYPOINT_HORIZON_LENGTH)
         );
-      auto target_waypoint = waypoint_buffer.at(horizon_index);
-      auto dot_product = DeviationDotProduct(vehicle, target_waypoint->GetLocation());
+      SimpleWaypointPtr target_waypoint = waypoint_buffer.at(horizon_index);
+      float dot_product = DeviationDotProduct(vehicle, target_waypoint->GetLocation());
       float cross_product = DeviationCrossProduct(vehicle, target_waypoint->GetLocation());
       dot_product = 1 - dot_product;
       if (cross_product < 0) {
@@ -183,7 +183,7 @@ namespace LocalizationConstants {
       // On highways, if there is only one possible path and the section is
       // marked as intersection, ignore it
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-      auto speed_limit = vehicle_reference->GetSpeedLimit();
+      float speed_limit = vehicle_reference->GetSpeedLimit();
       int look_ahead_index = std::max(
           static_cast<uint>(std::floor(2 * vehicle_velocity)),
           MINIMUM_JUNCTION_LOOK_AHEAD);
@@ -199,7 +199,7 @@ namespace LocalizationConstants {
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
         if (speed_limit > HIGHWAY_SPEED) {
           for (auto i = 0u; i < look_ahead_index && !approaching_junction; ++i) {
-            auto swp = waypoint_buffer.at(i);
+            SimpleWaypointPtr swp = waypoint_buffer.at(i);
             if (swp->GetNextWaypoint().size() > 1) {
               approaching_junction = true;
             }
@@ -210,16 +210,16 @@ namespace LocalizationConstants {
       }
 
       // Editing output frames
-      auto &planner_message = current_planner_frame->at(i);
+      LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
       planner_message.deviation = dot_product;
       planner_message.approaching_true_junction = approaching_junction;
 
-      auto &collision_message = current_collision_frame->at(i);
+      LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
       collision_message.buffer = &waypoint_buffer;
 
-      auto &traffic_light_message = current_traffic_light_frame->at(i);
+      LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
@@ -233,7 +233,7 @@ namespace LocalizationConstants {
 
     // Since send/receive calls on messenger objects can block if the other
     // end hasn't received/sent data, choose to block on only those stages
-    // which take most priority (which need highest rate of data feed) to
+    // which take the most priority (which need the highest rate of data feed) to
     // run the system well
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
@@ -243,9 +243,9 @@ namespace LocalizationConstants {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-    // Send data to collision stage only if collision stage has finished
-    // processing, received previous messange and started processing it
-    auto collision_messenger_current_state = collision_messenger->GetState();
+    // Send data to collision stage only if the collision stage has finished
+    // processing, received the previous message and started processing it
+    int collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
         collision_messenger_state,
@@ -256,9 +256,9 @@ namespace LocalizationConstants {
       collision_frame_selector = !collision_frame_selector;
     }
 
-    // Send data to traffic light stage only if collision stage has finished
-    // processing, received previous messange and started processing it
-    auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
+    // Send data to traffic light stage only if the collision stage has finished
+    // processing, received the previous message and started processing it
+    int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
         traffic_light_messenger_state,

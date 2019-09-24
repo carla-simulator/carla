@@ -19,8 +19,8 @@ namespace PipelineConstants {
 
   uint read_core_count() {
 
-    auto core_count = std::thread::hardware_concurrency();
     // Assuming quad-core if core count not available
+    uint core_count = std::thread::hardware_concurrency();
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
 

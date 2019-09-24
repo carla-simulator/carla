@@ -12,8 +12,8 @@ namespace traffic_manager {
 
   std::pair<int, int> VicinityGrid::UpdateGrid(Actor actor) {
 
-    auto actor_id = actor->GetId();
-    auto location = actor->GetLocation();
+    ActorId actor_id = actor->GetId();
+    cg::Location location = actor->GetLocation();
     int first = static_cast<int>(std::floor(location.x / 10.0f));
     int second = static_cast<int>(std::floor(location.y / 10.0f));
 
