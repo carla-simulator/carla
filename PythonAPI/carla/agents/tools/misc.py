@@ -17,10 +17,9 @@ def draw_waypoints(world, waypoints, z=0.5):
     """
     Draw a list of waypoints at a certain height given in z.
 
-    :param world: carla.world object
-    :param waypoints: list or iterable container with the waypoints to draw
-    :param z: height in meters
-    :return:
+        :param world: carla.world object
+        :param waypoints: list or iterable container with the waypoints to draw
+        :param z: height in meters
     """
     for wpt in waypoints:
         wpt_t = wpt.transform
@@ -32,9 +31,10 @@ def draw_waypoints(world, waypoints, z=0.5):
 
 def get_speed(vehicle):
     """
-    Compute speed of a vehicle in Kmh
-    :param vehicle: the vehicle for which speed is calculated
-    :return: speed as a float in Kmh
+    Compute speed of a vehicle in Km/h.
+
+        :param vehicle: the vehicle for which speed is calculated
+        :return: speed as a float in Km/h
     """
     vel = vehicle.get_velocity()
 
@@ -46,13 +46,13 @@ def is_within_distance(target_location, current_location, orientation, max_dista
     Check if a target object is within a certain distance from a reference object.
     A vehicle in front would be something around 0 deg, while one behind around 180 deg.
 
-    :param target_location: location of the target object
-    :param current_location: location of the reference object
-    :param orientation: orientation of the reference object
-    :param max_distance: maximum allowed distance
-    :param d_angle_th_up: upper thereshold for angle
-    :param d_angle_th_low: low thereshold for angle (optional, default is 0)
-    :return: True if target object is within max_distance ahead of the reference object
+        :param target_location: location of the target object
+        :param current_location: location of the reference object
+        :param orientation: orientation of the reference object
+        :param max_distance: maximum allowed distance
+        :param d_angle_th_up: upper thereshold for angle
+        :param d_angle_th_low: low thereshold for angle (optional, default is 0)
+        :return: True if target object is within max_distance ahead of the reference object
     """
     target_vector = np.array([target_location.x - current_location.x, target_location.y - current_location.y])
     norm_target = np.linalg.norm(target_vector)
@@ -75,10 +75,10 @@ def compute_magnitude_angle(target_location, current_location, orientation):
     """
     Compute relative angle and distance between a target_location and a current_location
 
-    :param target_location: location of the target object
-    :param current_location: location of the reference object
-    :param orientation: orientation of the reference object
-    :return: a tuple composed by the distance to the object and the angle between both objects
+        :param target_location: location of the target object
+        :param current_location: location of the reference object
+        :param orientation: orientation of the reference object
+        :return: a tuple composed by the distance to the object and the angle between both objects
     """
     target_vector = np.array([target_location.x - current_location.x, target_location.y - current_location.y])
     norm_target = np.linalg.norm(target_vector)
@@ -92,8 +92,9 @@ def compute_magnitude_angle(target_location, current_location, orientation):
 def distance_vehicle(waypoint, vehicle_transform):
     """
     Returns the 2D distance from a waypoint to a vehicle
-    :param waypoint: actual waypoint
-    :param vehicle_transform: transform of the target vehicle
+
+        :param waypoint: actual waypoint
+        :param vehicle_transform: transform of the target vehicle
     """
     loc = vehicle_transform.location
     x = waypoint.transform.location.x - loc.x
@@ -105,7 +106,8 @@ def distance_vehicle(waypoint, vehicle_transform):
 def vector(location_1, location_2):
     """
     Returns the unit vector from location_1 to location_2
-    :param location_1, location_2: carla.Location objects
+
+        :param location_1, location_2: carla.Location objects
     """
     x = location_2.x - location_1.x
     y = location_2.y - location_1.y
@@ -118,7 +120,8 @@ def vector(location_1, location_2):
 def compute_distance(location_1, location_2):
     """
     Euclidean distance between 3D points
-    :param location_1, location_2: 3D points
+
+        :param location_1, location_2: 3D points
     """
     x = location_2.x - location_1.x
     y = location_2.y - location_1.y
@@ -130,5 +133,7 @@ def compute_distance(location_1, location_2):
 def positive(num):
     """
     Return the given number if positive, else 0
+
+        :param num: value to check
     """
     return num if num > 0.0 else 0.0
