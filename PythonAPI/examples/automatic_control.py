@@ -6,9 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""
-    Example of automatic vehicle control from client side.
-"""
+"""Example of automatic vehicle control from client side."""
 
 from __future__ import print_function
 
@@ -88,8 +86,6 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.behavior_agent import BehaviorAgent
-from agents.navigation.local_planner import RoadOption
-from agents.tools.misc import compute_distance
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -97,9 +93,7 @@ from agents.tools.misc import compute_distance
 
 
 def find_weather_presets():
-    """
-    Method to find weather presets
-    """
+    """Method to find weather presets"""
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
     def name(x): return ' '.join(m.group(0) for m in rgx.finditer(x))
     presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
@@ -107,9 +101,7 @@ def find_weather_presets():
 
 
 def get_actor_display_name(actor, truncate=250):
-    """
-    Method to get actor display name
-    """
+    """Method to get actor display name"""
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
@@ -120,6 +112,7 @@ def get_actor_display_name(actor, truncate=250):
 
 class World(object):
     def __init__(self, carla_world, hud, args):
+        """Constructor method"""
         self.world = carla_world
         self.map = self.world.get_map()
         self.hud = hud
@@ -140,9 +133,7 @@ class World(object):
         # Set the seed if requested by user
 
     def restart(self, args):
-        """
-        Restart the world
-        """
+        """Restart the world"""
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
@@ -181,6 +172,7 @@ class World(object):
         self.hud.notification(actor_type)
 
     def next_weather(self, reverse=False):
+        """Get next weather setting"""
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
         preset = self._weather_presets[self._weather_index]
@@ -188,18 +180,22 @@ class World(object):
         self.player.get_world().set_weather(preset[0])
 
     def tick(self, clock):
+        """Method for every tick"""
         self.hud.tick(self, clock)
 
     def render(self, display):
+        """Render world"""
         self.camera_manager.render(display)
         self.hud.render(display)
 
     def destroy_sensors(self):
+        """Destroy sensors"""
         self.camera_manager.sensor.destroy()
         self.camera_manager.sensor = None
         self.camera_manager.index = None
 
     def destroy(self):
+        """Destroys all actors"""
         actors = [
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
@@ -217,6 +213,7 @@ class World(object):
 
 class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
+        """Constructor method"""
         self._autopilot_enabled = start_in_autopilot
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
@@ -231,6 +228,7 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world):
+        """Main method for parsing events"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -337,6 +335,7 @@ class KeyboardControl(object):
 
     @staticmethod
     def _is_quit_shortcut(key):
+        """Shortcut for quitting"""
         return (key == K_ESCAPE) or (key == K_q and pygame.key.get_mods() & KMOD_CTRL)
 
 # ==============================================================================
@@ -346,6 +345,7 @@ class KeyboardControl(object):
 
 class HUD(object):
     def __init__(self, width, height):
+        """Constructor method"""
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
         fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
@@ -363,12 +363,14 @@ class HUD(object):
         self._server_clock = pygame.time.Clock()
 
     def on_world_tick(self, timestamp):
+        """Gets informations from the world at every tick"""
         self._server_clock.tick()
         self.server_fps = self._server_clock.get_fps()
         self.frame = timestamp.frame_count
         self.simulation_time = timestamp.elapsed_seconds
 
     def tick(self, world, clock):
+        """HUD method for every tick"""
         self._notifications.tick(world, clock)
         if not self._show_info:
             return
@@ -432,15 +434,19 @@ class HUD(object):
                 self._info_text.append('% 4dm %s' % (dist, vehicle_type))
 
     def toggle_info(self):
+        """Toggle info on or off"""
         self._show_info = not self._show_info
 
     def notification(self, text, seconds=2.0):
+        """Notification text"""
         self._notifications.set_text(text, seconds=seconds)
 
     def error(self, text):
+        """Error text"""
         self._notifications.set_text('Error: %s' % text, (255, 0, 0))
 
     def render(self, display):
+        """Render for HUD class"""
         if self._show_info:
             info_surface = pygame.Surface((220, self.dim[1]))
             info_surface.set_alpha(100)
@@ -485,6 +491,7 @@ class HUD(object):
 
 class FadingText(object):
     def __init__(self, font, dim, pos):
+        """Constructor method"""
         self.font = font
         self.dim = dim
         self.pos = pos
@@ -492,6 +499,7 @@ class FadingText(object):
         self.surface = pygame.Surface(self.dim)
 
     def set_text(self, text, color=(255, 255, 255), seconds=2.0):
+        """Set fading text"""
         text_texture = self.font.render(text, True, color)
         self.surface = pygame.Surface(self.dim)
         self.seconds_left = seconds
@@ -499,11 +507,13 @@ class FadingText(object):
         self.surface.blit(text_texture, (10, 11))
 
     def tick(self, _, clock):
+        """Fading text method for every tick"""
         delta_seconds = 1e-3 * clock.get_time()
         self.seconds_left = max(0.0, self.seconds_left - delta_seconds)
         self.surface.set_alpha(500.0 * self.seconds_left)
 
     def render(self, display):
+        """Render fading text method"""
         display.blit(self.surface, self.pos)
 
 # ==============================================================================
@@ -513,6 +523,7 @@ class FadingText(object):
 
 class HelpText(object):
     def __init__(self, font, width, height):
+        """Constructor method"""
         lines = __doc__.split('\n')
         self.font = font
         self.dim = (680, len(lines) * 22 + 12)
@@ -527,9 +538,11 @@ class HelpText(object):
         self.surface.set_alpha(220)
 
     def toggle(self):
+        """Toggle on or off the render help"""
         self._render = not self._render
 
     def render(self, display):
+        """Render help text method"""
         if self._render:
             display.blit(self.surface, self.pos)
 
@@ -540,6 +553,7 @@ class HelpText(object):
 
 class CollisionSensor(object):
     def __init__(self, parent_actor, hud):
+        """Constructor method"""
         self.sensor = None
         self.history = []
         self._parent = parent_actor
@@ -553,6 +567,7 @@ class CollisionSensor(object):
         self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
 
     def get_collision_history(self):
+        """Gets the history of collisions"""
         history = collections.defaultdict(int)
         for frame, intensity in self.history:
             history[frame] += intensity
@@ -560,6 +575,7 @@ class CollisionSensor(object):
 
     @staticmethod
     def _on_collision(weak_self, event):
+        """On collision method"""
         self = weak_self()
         if not self:
             return
@@ -578,6 +594,7 @@ class CollisionSensor(object):
 
 class LaneInvasionSensor(object):
     def __init__(self, parent_actor, hud):
+        """Constructor method"""
         self.sensor = None
         self._parent = parent_actor
         self.hud = hud
@@ -591,6 +608,7 @@ class LaneInvasionSensor(object):
 
     @staticmethod
     def _on_invasion(weak_self, event):
+        """On invasion method"""
         self = weak_self()
         if not self:
             return
@@ -605,6 +623,7 @@ class LaneInvasionSensor(object):
 
 class GnssSensor(object):
     def __init__(self, parent_actor):
+        """Constructor method"""
         self.sensor = None
         self._parent = parent_actor
         self.lat = 0.0
@@ -620,6 +639,7 @@ class GnssSensor(object):
 
     @staticmethod
     def _on_gnss_event(weak_self, event):
+        """GNSS method"""
         self = weak_self()
         if not self:
             return
@@ -633,6 +653,7 @@ class GnssSensor(object):
 
 class CameraManager(object):
     def __init__(self, parent_actor, hud, gamma_correction):
+        """Constructor method"""
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -671,10 +692,12 @@ class CameraManager(object):
         self.index = None
 
     def toggle_camera(self):
+        """Activate a camera"""
         self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
         self.set_sensor(self.index, notify=False, force_respawn=True)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
+        """Set a sensor"""
         index = index % len(self.sensors)
         needs_respawn = True if self.index is None else (
             force_respawn or (self.sensors[index][0] != self.sensors[self.index][0]))
@@ -697,13 +720,16 @@ class CameraManager(object):
         self.index = index
 
     def next_sensor(self):
+        """Get the next sensor"""
         self.set_sensor(self.index + 1)
 
     def toggle_recording(self):
+        """Toggle recording on or off"""
         self.recording = not self.recording
         self.hud.notification('Recording %s' % ('On' if self.recording else 'Off'))
 
     def render(self, display):
+        """Render method"""
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
 
@@ -741,6 +767,8 @@ class CameraManager(object):
 
 
 def game_loop(args):
+    """ Main loop for agent"""
+
     pygame.init()
     pygame.font.init()
     world = None
@@ -771,7 +799,7 @@ def game_loop(args):
         else:
             destination = spawn_points[1].location
 
-        agent.set_destination(destination, agent._vehicle.get_location(), clean=True)
+        agent.set_destination(agent._vehicle.get_location(), destination, clean=True)
 
         clock = pygame.time.Clock()
 
@@ -822,6 +850,8 @@ def game_loop(args):
 
 
 def main():
+    """Main method"""
+
     argparser = argparse.ArgumentParser(
         description='CARLA Automatic Control Client')
     argparser.add_argument(
