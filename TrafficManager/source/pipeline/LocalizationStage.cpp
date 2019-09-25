@@ -7,7 +7,7 @@ namespace LocalizationConstants {
   static const float MINIMUM_HORIZON_LENGTH = 25.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
-  static const uint MINIMUM_JUNCTION_LOOK_AHEAD = 5u;
+  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 5.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
 }
   using namespace LocalizationConstants;
@@ -74,6 +74,7 @@ namespace LocalizationConstants {
     auto current_traffic_light_frame =
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
+    auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
 
     // Looping over arrays' partitions for the current thread
     for (auto i = start_index; i <= end_index; ++i) {
@@ -89,7 +90,7 @@ namespace LocalizationConstants {
           MINIMUM_HORIZON_LENGTH);
 
       Buffer &waypoint_buffer = current_buffer_list->at(i);
-      Buffer &copy_waypoint_buffer = current_buffer_list->at(i);
+      Buffer &copy_waypoint_buffer = copy_buffer_list->at(i);
 
       // Sync buffer copies in case of lane change
       if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
@@ -184,21 +185,23 @@ namespace LocalizationConstants {
       // marked as intersection, ignore it
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       float speed_limit = vehicle_reference->GetSpeedLimit();
-      int look_ahead_index = std::max(
-          static_cast<uint>(std::floor(2 * vehicle_velocity)),
-          MINIMUM_JUNCTION_LOOK_AHEAD);
+      float look_ahead_distance = std::max(2 * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
 
-      std::shared_ptr<SimpleWaypoint> look_ahead_point;
-      if (waypoint_buffer.size() > look_ahead_index) {
-        look_ahead_point = waypoint_buffer.at(look_ahead_index);
-      } else {
-        look_ahead_point =  waypoint_buffer.back();
+      SimpleWaypointPtr look_ahead_point = waypoint_buffer.front();
+      uint look_ahead_index = 0u;
+      for (auto i = 0u;
+          (waypoint_buffer.front()->DistanceSquared(look_ahead_point)
+          < std::pow(look_ahead_distance, 2)) &&
+          (i < waypoint_buffer.size());
+          ++i) {
+        look_ahead_point = waypoint_buffer.at(i);
+        look_ahead_index = i;
       }
 
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
         if (speed_limit > HIGHWAY_SPEED) {
-          for (auto i = 0u; i < look_ahead_index && !approaching_junction; ++i) {
+          for (auto i = 0u; (i < look_ahead_index) && !approaching_junction; ++i) {
             SimpleWaypointPtr swp = waypoint_buffer.at(i);
             if (swp->GetNextWaypoint().size() > 1) {
               approaching_junction = true;
@@ -223,7 +226,6 @@ namespace LocalizationConstants {
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
-
     }
   }
 

@@ -35,6 +35,7 @@ namespace bg = boost::geometry;
   using Actor = carla::SharedPtr<cc::Actor>;
   using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
   using LocationList = std::vector<cg::Location>;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 
   /// This class is the thread executable for the collision detection stage.
   /// The class is responsible for checking possible collisions with other

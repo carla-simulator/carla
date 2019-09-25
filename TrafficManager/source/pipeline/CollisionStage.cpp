@@ -6,7 +6,7 @@ namespace CollisionStageConstants {
   static const float SEARCH_RADIUS = 20.0f;
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 1.3f;
   static const float EXTENSION_SQUARE_POINT = 7.0f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
@@ -88,7 +88,7 @@ namespace CollisionStageConstants {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
-      auto ego_actor_id = ego_actor->GetId();
+      ActorId ego_actor_id = ego_actor->GetId();
 
       // Retrieve actors around ego actor
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
@@ -96,7 +96,7 @@ namespace CollisionStageConstants {
 
       // Check every actor in the vicinity if it poses a collision hazard
       for (auto i = actor_id_list.begin(); (i != actor_id_list.end()) && !collision_hazard; ++i) {
-        auto actor_id = *i;
+        ActorId actor_id = *i;
         try {
 
           if (actor_id != ego_actor_id) {
@@ -108,7 +108,7 @@ namespace CollisionStageConstants {
               actor = unregistered_actors.at(actor_id);
             }
 
-            auto ego_actor_location = ego_actor->GetLocation();
+            cg::Location ego_actor_location = ego_actor->GetLocation();
             float squared_distance = cg::Math::DistanceSquared(ego_actor_location, actor->GetLocation());
             if (squared_distance <= SEARCH_RADIUS * SEARCH_RADIUS) {
               if (NegotiateCollision(ego_actor, actor)) {
@@ -230,11 +230,9 @@ namespace CollisionStageConstants {
     if (id_to_index.find(actor->GetId()) != id_to_index.end()) {
 
       float velocity = actor->GetVelocity().Length();
-      uint bbox_extension = static_cast<uint>(
-        std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
-        std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
-        BOUNDARY_EXTENSION_MINIMUM
-        );
+      float bbox_extension = (std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
+                              std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
+                              BOUNDARY_EXTENSION_MINIMUM);
 
       bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
       auto &waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
@@ -244,28 +242,32 @@ namespace CollisionStageConstants {
       auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       float width = vehicle->GetBoundingBox().extent.y;
 
-      for (auto i = 0u; (i < bbox_extension) && (i < waypoint_buffer->size()); ++i) {
+      SimpleWaypointPtr boundary_start = waypoint_buffer->front();
+      SimpleWaypointPtr boundary_end = waypoint_buffer->front();
 
-        std::shared_ptr<SimpleWaypoint> swp = waypoint_buffer->at(i);
-        cg::Vector3D heading_vector = swp->GetForwardVector();
-        cg::Location location = swp->GetLocation();
+      for (auto i = 0u;
+          (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
+          (i < waypoint_buffer->size());
+          ++i) {
+
+        cg::Vector3D heading_vector = boundary_end->GetForwardVector();
+        cg::Location location = boundary_end->GetLocation();
         auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
         // Direction determined for the left-handed system
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
         left_boundary.push_back(location + cg::Location(scaled_perpendicular));
         right_boundary.push_back(location + cg::Location(-1 * scaled_perpendicular));
+        boundary_end = waypoint_buffer->at(i);
       }
 
       // Connecting the geodesic path boundary with the vehicle bounding box
       LocationList geodesic_boundary;
       // Reversing right boundary to construct clockwise (left-hand system)
-      // boundary
-      // This is so because both left and right boundary vectors have the
-      // closest
-      // point to the vehicle at their starting index
-      // For the right boundary, we want to begin at the farthest point to have a
-      // clockwise trace
+      // boundary. This is so because both left and right boundary vectors
+      // have the closest point to the vehicle at their starting index
+      // For the right boundary, we want to begin at the farthest point to
+      // have a clockwise trace
       std::reverse(right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
