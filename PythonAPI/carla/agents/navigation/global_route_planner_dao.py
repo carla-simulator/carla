@@ -13,10 +13,11 @@ class GlobalRoutePlannerDAO(object):
     """
 
     def __init__(self, wmap, sampling_resolution=1):
-        """get_topology
-        Constructor
+        """
+        Constructor method.
 
-        wmap    :   carl world map object
+            :param wmap: carla.world object
+            :param sampling_resolution: sampling distance between waypoints
         """
         self._sampling_resolution = sampling_resolution
         self._wmap = wmap
@@ -28,7 +29,7 @@ class GlobalRoutePlannerDAO(object):
         road segments as pairs of waypoint objects, and processes the
         topology into a list of dictionary objects.
 
-        return: list of dictionary objects with the following attributes
+            :return topology: list of dictionary objects with the following attributes
                 entry   -   waypoint of entry point of road segment
                 entryxyz-   (x,y,z) of entry point of road segment
                 exit    -   waypoint of exit point of road segment
@@ -62,10 +63,13 @@ class GlobalRoutePlannerDAO(object):
     def get_waypoint(self, location):
         """
         The method returns waypoint at given location
+
+            :param location: vehicle location
+            :return waypoint: generated waypoint close to location
         """
         waypoint = self._wmap.get_waypoint(location)
         return waypoint
 
     def get_resolution(self):
-        """ Accessor for self._sampling_resolution """
+        """ Accessor for self._sampling_resolution"""
         return self._sampling_resolution

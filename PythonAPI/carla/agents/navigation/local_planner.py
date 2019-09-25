@@ -51,13 +51,13 @@ class LocalPlanner(object):
     # FPS used for dt
     FPS = 40
 
-    def __init__(self, agent, vehicle):
+    def __init__(self, agent):
         """
+        :param agent: agent that regulates the vehicle
         :param vehicle: actor to apply to local planner logic onto
         """
-        self._vehicle = vehicle
-        self._map = self._vehicle.get_world().get_map()
-        self.agent = agent
+        self._vehicle = agent._vehicle
+        self._map = agent._vehicle.get_world().get_map()
 
         self._target_speed = None
         self._sampling_radius = None
@@ -68,18 +68,20 @@ class LocalPlanner(object):
         self.target_waypoint = None
         self._vehicle_controller = None
         self._global_plan = None
-        self.waypoints_queue = deque(maxlen=20000) # queue with tuples of (waypoint, RoadOption)
+        self.waypoints_queue = deque(maxlen=20000)  # queue with tuples of (waypoint, RoadOption)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
-        self._init_controller() # initializing controller
+        self._init_controller()  # initializing controller
 
     def __del__(self):
+        """Destroy the ego-vehicle"""
         if self._vehicle:
             self._vehicle.destroy()
         print("Destroying ego-vehicle!")
 
     def reset_vehicle(self):
+        """Reset the ego-vehicle"""
         self._vehicle = None
         print("Resetting ego-vehicle!")
 
@@ -88,8 +90,8 @@ class LocalPlanner(object):
         Controller initialization.
 
         dt -- time difference between physics control in seconds.
-                This is typically fixed from server side
-                using the arguments -benchmark -fps=F . In this case dt = 1/F
+        This is can be fixed from server side
+        using the arguments -benchmark -fps=F, since dt = 1/F
 
         target_speed -- desired cruise speed in km/h
 
@@ -107,17 +109,21 @@ class LocalPlanner(object):
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         self.args_lateral_dict = {
             'K_P': 0.9,
-            'K_D': 0.003,
+            'K_D': 0.03,
             'K_I': 0.03,
             'dt': 1.0/self.FPS}
         self.args_longitudinal_dict = {
-            'K_P': 0.1,
-            'K_D': 0.002,
-            'K_I': 0.03,
+            'K_P': 0.37,
+            'K_D': 0.024,
+            'K_I': 0.032,
             'dt': 1.0/self.FPS}
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
 
         self._global_plan = False
+
+        self._pid_controller = VehiclePIDController(self._vehicle,
+                                                    args_lateral=self.args_lateral_dict,
+                                                    args_longitudinal=self.args_longitudinal_dict)
 
         # Fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
@@ -126,19 +132,16 @@ class LocalPlanner(object):
         """
         Request new target speed.
 
-        :param speed: new target speed in km/h
-        :return:
+            :param speed: new target speed in km/h
         """
 
         self._target_speed = speed
-
 
     def _compute_next_waypoints(self, k=1):
         """
         Add new waypoints to the trajectory queue.
 
-        :param k: how many waypoints to compute
-        :return:
+            :param k: how many waypoints to compute
         """
         # Check we do not overflow the queue
         available_entries = self.waypoints_queue.maxlen - len(self.waypoints_queue)
@@ -166,7 +169,8 @@ class LocalPlanner(object):
     def set_global_plan(self, current_plan):
         """
         Sets new global plan.
-        :param current_plan: list of waypoints in the actual plan
+
+            :param current_plan: list of waypoints in the actual plan
         """
         for elem in current_plan:
             self.waypoints_queue.append(elem)
@@ -175,6 +179,8 @@ class LocalPlanner(object):
     def get_incoming_waypoint_and_direction(self, steps=3):
         """
         Returns direction and waypoint at a distance ahead defined by the user.
+
+            :param steps: number of steps to get the incoming waypoint.
         """
         if len(self.waypoints_queue) > steps:
             return self.waypoints_queue[steps]
@@ -194,8 +200,9 @@ class LocalPlanner(object):
         running the longitudinal and lateral PID controllers to
         follow the waypoints trajectory.
 
-        :param debug: boolean flag to activate waypoints debugging
-        :return: control
+            :param target_speed: desired speed
+            :param debug: boolean flag to activate waypoints debugging
+            :return: control
         """
         if target_speed is not None:
             self._target_speed = target_speed
@@ -227,11 +234,7 @@ class LocalPlanner(object):
         # Target waypoint
         self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
 
-        # Apply PID controllers
-        self._vehicle_controller = VehiclePIDController(self._vehicle,
-                                                        args_lateral=self.args_lateral_dict,
-                                                        args_longitudinal=self.args_longitudinal_dict)
-        control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
+        control = self._pid_controller.run_step(self._target_speed, self.target_waypoint)
 
         # Purge the queue of obsolete waypoints
         vehicle_transform = self._vehicle.get_transform()
@@ -249,16 +252,17 @@ class LocalPlanner(object):
             draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], self._vehicle.get_location().z + 1.0)
         return control
 
+
 def _retrieve_options(list_waypoints, current_waypoint):
     """
     Compute the type of connection between the current active waypoint
     and the multiple waypoints present in list_waypoints.
     The result is encoded as a list of RoadOption enums.
 
-    :param list_waypoints: list with the possible target waypoints in case of multiple options
-    :param current_waypoint: current active waypoint
-    :return: list of RoadOption enums representing the type of connection from the active waypoint to each
-             candidate in list_waypoints
+        :param list_waypoints: list with the possible target waypoints in case of multiple options
+        :param current_waypoint: current active waypoint
+        :return: list of RoadOption enums representing the type of connection from the active waypoint to each
+                candidate in list_waypoints
     """
     options = []
     for next_waypoint in list_waypoints:
@@ -277,9 +281,9 @@ def _compute_connection(current_waypoint, next_waypoint):
     Compute the type of topological connection between an
     active waypoint (current_waypoint) and a target waypoint (next_waypoint).
 
-    :param current_waypoint: active waypoint
-    :param next_waypoint: target waypoint
-    :return: the type of topological connection encoded as a RoadOption enum:
+        :param current_waypoint: active waypoint
+        :param next_waypoint: target waypoint
+        :return: the type of topological connection encoded as a RoadOption enum:
              RoadOption.STRAIGHT
              RoadOption.LEFT
              RoadOption.RIGHT

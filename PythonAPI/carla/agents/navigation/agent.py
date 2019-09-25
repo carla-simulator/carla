@@ -15,13 +15,13 @@ from agents.tools.misc import is_within_distance, compute_distance
 
 
 class Agent(object):
-    """
-    Base class to define agents in CARLA
-    """
+    """Base class to define agents in CARLA"""
 
     def __init__(self, vehicle):
         """
-        :param vehicle: actor to apply to local planner logic onto
+        Constructor method.
+
+            :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
         self._local_planner = None
@@ -33,7 +33,9 @@ class Agent(object):
     def run_step(debug=False):
         """
         Execute one step of navigation.
-        :return: control
+
+            :param debug: boolean flag for debugging
+            :return: control
         """
         control = carla.VehicleControl()
 
@@ -57,12 +59,22 @@ class Agent(object):
         WARNING: This method is an approximation that could fail for very large
         vehicles, which center is actually on a different lane but their
         extension falls within the ego vehicle lane. Also, make sure to remove
-        the ego vehicle from the list.
-        :param vehicle_list: list of potential obstacle to check
-        :return: a tuple given by (bool_flag, vehicle), where
-                 - bool_flag is True if there is a vehicle ahead blocking us
+        the ego vehicle from the list. Lane offset is set to +1 for right lanes
+        and -1 for left lanes, but this has to be inverted if lane values are
+        negative.
+
+            :param ego_wpt: waypoint of ego-vehicle
+            :param ego_log: location of ego-vehicle
+            :param vehicle_list: list of potential obstacle to check
+            :param proximity_th: threshold for the agent to be alerted of
+            a possible collision
+            :param up_angle_th: upper threshold for angle
+            :param low_angle_th: lower threshold for angle
+            :param lane_offset: for right and left lane changes
+            :return: a tuple given by (bool_flag, vehicle), where:
+            - bool_flag is True if there is a vehicle ahead blocking us
                    and False otherwise
-                 - vehicle is the blocker object itself
+            - vehicle is the blocker object itself
         """
 
         # Get the right offset
@@ -88,7 +100,8 @@ class Agent(object):
     def emergency_stop():
         """
         Send an emergency stop command to the vehicle
-        :return:
+
+            :return: control for braking
         """
         control = carla.VehicleControl()
         control.steer = 0.0
