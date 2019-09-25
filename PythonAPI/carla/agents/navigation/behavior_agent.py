@@ -198,24 +198,24 @@ class BehaviorAgent(Agent):
             :param vehicle_list: list of all the nearby vehicles
         """
 
-        # Checks for same road.
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
+
         if (waypoint.lane_change == carla.LaneChange.Left or waypoint.lane_change == carla.LaneChange.Both) and waypoint.lane_id*left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=-1)
             if not new_vehicle_state:
                 print("Overtaking to the left!")
                 self.behavior.overtake_counter = 200
-                self.set_destination(waypoint.get_left_lane().transform.location,
+                self.set_destination(left_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
-        elif waypoint.lane_change == carla.LaneChange.Right and waypoint.lane_id*waypoint.get_right_lane().lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
+        elif waypoint.lane_change == carla.LaneChange.Right and waypoint.lane_id*right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
                 print("Overtaking to the right!")
                 self.behavior.overtake_counter = 200
-                self.set_destination(waypoint.get_right_lane().transform.location,
+                self.set_destination(right_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
 
     def _tailgating(self, location, waypoint, vehicle_list):
@@ -238,7 +238,7 @@ class BehaviorAgent(Agent):
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
                     self.behavior.tailgate_counter = 200
-                    self.set_destination(waypoint.get_right_lane().transform.location,
+                    self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
             elif waypoint.lane_change == carla.LaneChange.Left and waypoint.lane_id*left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
@@ -246,7 +246,7 @@ class BehaviorAgent(Agent):
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
                     self.behavior.tailgate_counter = 200
-                    self.set_destination(waypoint.get_left_lane().transform.location,
+                    self.set_destination(left_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
 
     def collision_and_car_avoid_manager(self, location, waypoint):
@@ -263,7 +263,7 @@ class BehaviorAgent(Agent):
 
         vehicle_list = self._world.get_actors().filter("*vehicle*")
         def dist(v): return v.get_location().distance(waypoint.transform.location)
-        vehicle_list = [v for v in vehicle_list if dist(v) < 25 and v.id != self._vehicle.id]
+        vehicle_list = [v for v in vehicle_list if dist(v) < 45 and v.id != self._vehicle.id]
 
         if self.direction == RoadOption.CHANGELANELEFT:
             vehicle_state, vehicle, distance = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
