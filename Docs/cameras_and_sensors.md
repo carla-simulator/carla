@@ -60,21 +60,76 @@ sensor.camera.rgb
 
 The "RGB" camera acts as a regular camera capturing images from the scene.
 
-| Blueprint attribute | Type  | Default | Description |
-| ------------------- | ----  | ------- | ----------- |
-| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
-| `image_size_x`      | int   | 800     | Image width in pixels |
-| `image_size_y`      | int   | 600     | Image height in pixels  |
-| `fov`               | float | 90.0    | Horizontal field of view in degrees |
+<h4>Basic camera attributes</h4>
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `sensor_tick` | float | 0.0 | Seconds between sensor captures (ticks) |
+| `image_size_x` | int | 800 | Image width in pixels |
+| `image_size_y` | int | 600 | Image height in pixels |
+| `gamma` | float | 2.2 | Target gamma value of the camera |
+| `fov` | float | 90.0 | Horizontal field of view in degrees |
+| `shutter_speed` | float | 60.0 | The camera shutter speed in seconds (1.0 / s) |
+| `iso` | float | 1200.0 | The camera sensor sensitivity |
+| `fstop` | float | 1.4 | Defines the opening of the camera lens. Aperture is `1 / fstop` with typical lens going down to f / 1.2 (larger opening). Larger numbers will reduce the Depth of Field effect |
+
+<h4>Camera lens distortion attributes.</h4>
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
+| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
+| `lens_k` | float | -1.0 | Range: [-inf, inf] |
+| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
+| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
+| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
+
+<h4>Advanced camera attributes.</h4>
+
+Since these effects are provided from Unreal Engine 4, please make sure to check their documentation on how they work and the relation between them:
+
+  * [Automatic Exposure][AutomaticExposure.Docs]
+  * [Cinematic Depth of Field Method][CinematicDOFMethod.Docs]
+  * [Color Grading and Filmic Tonemapper][ColorGrading.Docs]
+
+[AutomaticExposure.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
+[CinematicDOFMethod.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
+[ColorGrading.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `min_fstop` | float | 1.2 | Maximum Aperture |
+| `blade_count` | int | 5 | The number of blades that make up the diaphragm mechanism |
+| `exposure_mode` | str | `"manual"` | Can be `"manual"` or `"histogram"`. More info in [UE4 official docs][AutomaticExposure.gamesetting] |
+| `exposure_compensation` | float | 3.0 | Logarithmic adjustment for the exposure. Only used if a tonemapper is specified. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter |
+| `exposure_min_bright` | float | 0.1 | Used when `exposure_mode`:`"histogram"`  The minimum brightness for auto exposure that limits the lower brightness the eye can adapt within. Values must be greater than 0 and should be less than or equal to Max Brightness |
+| `exposure_max_bright` | float | 2.0 | Used when `exposure_mode`:`"histogram"`  The maximum brightness for auto exposure that limits the upper brightness the eye can adapt within. Values must be greater 0 and should be greater than or equal to Min Brightness |
+| `exposure_speed_up` | float | 3.0 | Used when `exposure_mode`:`"histogram"` The speed at which the adaptation occurs from a dark environment to a bright environment |
+| `exposure_speed_down` | float | 1.0 | Used when `exposure_mode`:`"histogram"` The speed at which the adaptation occurs from a bright environment to a dark environment |
+| `calibration_constant` | float | 16.0 | Calibration constant for 18% Albedo |
+| `focal_distance` | float | 1000.0 | The distance in which the depth of field effect should be sharp. This value is measured in Unreal Units (cm) |
+| `blur_amount` | float | 0.0 | ... |
+| `blur_radius` | float | 1.0 | ... |
+| `motion_blur_intensity` | float | 0.45 | Strength of motion blur. 1 is max and 0 is off |
+| `motion_blur_max_distortion` | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
+| `motion_blur_min_object_screen_size` | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
+| `slope` | float | 0.88 | This will adjust the steepness of the S-curve used for the tonemapper, where larger values will make the slope steeper (darker) and lower values will make the slope less steep (lighter). Range: [0.0, 1.0] |
+| `toe` | float | 0.55 | This will adjust the dark color in the tonemapper. Range: [0.0, 1.0] |
+| `shoulder` | float | 0.26 | This will adjust the bright color in the tonemapper. Range: [0.0, 1.0] |
+| `black_clip` | float | 0.0 | This will set where the crossover happens where black's start to cut off their value. In general, this value should NOT be adjusted. Range: [0.0, 1.0] |
+| `white_clip` | float | 0.04 | This will set where the crossover happens where white's start to cut off their values. This will appear as a subtle change in most cases. Range: [0.0, 1.0] |
+| `temp` | float | 6500.0 | This will adjust the white balance in relation to the temperature of the light in the scene. When the light temperature and this one match the light will appear white. When a value is used that is higher than the light in the scene it will yield a "warm" or yellow color, and, conversely, if the value is lower, it would yield a "cool" or blue color |
+| `tint` | float | 0.0 | This will adjust the white balance temperature tint for the scene by adjusting the cyan and magenta color ranges. Ideally, this setting should be used once you've adjusted the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural |
+| `chromatic_aberration_intensity` | float | 0.0 | Scaling factor that controls how much color shifting occurs, more noticable on the screen borders |
+| `chromatic_aberration_offset` | float | 0.0 | Normalized distance to the center of the image where the effect takes place |
 | `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
-| `gamma`             | float | 2.2     | Target gamma value of the camera |
-| `motion_blur_intensity`       | float | 0.45 | Strength of motion blur. 1 is max and 0 is off |
-| `motion_blur_max_distortion`  | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
-| `motion_blur_min_object_screen_size`  | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
+
+[AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
 `sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
-If `enable_postprocess_effects` is enabled, a set of post-process effects is
+<!-- This is commented as a reminder to improve documentation about post process effects -->
+<!-- If `enable_postprocess_effects` is enabled, a set of post-process effects is
 applied to the image to create a more realistic feel
 
   * **Vignette** Darkens the border of the screen.
@@ -83,7 +138,7 @@ applied to the image to create a more realistic feel
   * **Auto exposure** Modifies the image gamma to simulate the eye adaptation to
     darker or brighter areas.
   * **Lens flares** Simulates the reflection of bright objects on the lens.
-  * **Depth of field** Blurs objects near or very far away of the camera.
+  * **Depth of field** Blurs objects near or very far away of the camera. -->
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -106,12 +161,25 @@ sensor.camera.depth
 The "Depth" camera provides a view over the scene codifying the distance of each
 pixel to the camera (also known as **depth buffer** or **z-buffer**).
 
+<h4>Basic camera attributes</h4>
+
 | Blueprint attribute | Type  | Default | Description |
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
+
+<h4>Camera lens distortion attributes.</h4>
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
+| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
+| `lens_k` | float | -1.0 | Range: [-inf, inf] |
+| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
+| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
+| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -145,12 +213,25 @@ The "Semantic Segmentation" camera classifies every object in the view by
 displaying it in a different color according to the object class. E.g.,
 pedestrians appear in a different color than vehicles.
 
+<h4>Basic camera attributes</h4>
+
 | Blueprint attribute | Type  | Default | Description |
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels |
 | `image_size_y`      | int   | 600     | Image height in pixels  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
+
+<h4>Camera lens distortion attributes.</h4>
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
+| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
+| `lens_k` | float | -1.0 | Range: [-inf, inf] |
+| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
+| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
+| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -209,6 +290,8 @@ then the rotation is simulated computing the horizontal angle that the Lidar
 rotated this frame, and doing a ray-cast for each point that each laser was
 supposed to generate this frame; `points_per_second / (FPS * channels)`.
 
+<h4>Basic camera attributes</h4>
+
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
 | `channels`           | int   | 32      | Number of lasers |
@@ -218,6 +301,17 @@ supposed to generate this frame; `points_per_second / (FPS * channels)`.
 | `upper_fov`          | float | 10.0    | Angle in degrees of the upper most laser |
 | `lower_fov`          | float | -30.0   | Angle in degrees of the lower most laser |
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
+
+<h4>Camera lens distortion attributes.</h4>
+
+| Blueprint attribute | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
+| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
+| `lens_k` | float | -1.0 | Range: [-inf, inf] |
+| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
+| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
+| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
 
 This sensor produces
 [`carla.LidarMeasurement`](python_api.md#carla.LidarMeasurement)

@@ -1134,9 +1134,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetFocalDistance(
         RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 1000.0f));
     Camera->SetDepthBlurAmount(
-        RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 0.0f));
+        RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 1.0f));
     Camera->SetDepthBlurRadius(
-        RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 1.0f));
+        RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 0.0f));
     Camera->SetDepthOfFieldMinFstop(
         RetrieveActorAttributeToFloat("min_fstop", Description.Variations, 1.2f));
     Camera->SetBladeCount(
