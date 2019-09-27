@@ -9,14 +9,14 @@ namespace traffic_manager {
 namespace chr = std::chrono;
   using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
 
-  /// Structure to hold actuation signals
+  /// Structure to hold the actuation signals.
   struct ActuationSignal {
     float throttle;
     float brake;
     float steer;
   };
 
-  /// Structure to hold controller state
+  /// Structure to hold the controller state.
   struct StateEntry {
     float deviation;
     float velocity;
@@ -27,7 +27,7 @@ namespace chr = std::chrono;
 
   /// This class calculates PID actuation signals to control the vehicle
   /// such that the vehicle maintains a target velocity and aligns its
-  /// orientation along it's trajectory.
+  /// orientation along its trajectory.
 
   class PIDController {
 

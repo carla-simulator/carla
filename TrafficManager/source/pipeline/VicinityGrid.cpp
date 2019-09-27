@@ -17,16 +17,16 @@ namespace traffic_manager {
     int first = static_cast<int>(std::floor(location.x / 10.0f));
     int second = static_cast<int>(std::floor(location.y / 10.0f));
 
-    auto new_grid_id = MakeKey({first, second});
+    std::string new_grid_id = MakeKey({first, second});
 
-    // If actor exists in the grid
+    // If the actor exists in the grid.
     if (actor_to_grid_id.find(actor_id) != actor_to_grid_id.end()) {
 
-      auto old_grid_id = actor_to_grid_id.at(actor_id);
-      // If actor has moved into a new road/section/lane
+      std::string old_grid_id = actor_to_grid_id.at(actor_id);
+      // If the actor has moved into a new road/section/lane.
       if (old_grid_id != new_grid_id) {
         std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
-        // Remove actor from old grid position and update new position
+        // Remove actor from old grid position and update the new position.
         grid_to_actor_id.at(old_grid_id).erase(actor_id);
         actor_to_grid_id.insert({actor_id, new_grid_id});
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
@@ -36,7 +36,7 @@ namespace traffic_manager {
         }
       }
     }
-    // If actor is new, then add entries to map
+    // If the actor is new, then add entries to map.
     else {
 
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
@@ -44,21 +44,21 @@ namespace traffic_manager {
       grid_to_actor_id.insert({new_grid_id, {actor_id}});
     }
 
-    // Return updated grid position
+    // Return updated grid position.
     return {first, second};
   }
 
   std::unordered_set<carla::ActorId> VicinityGrid::GetActors(Actor actor) {
 
-    auto grid_ids = UpdateGrid(actor);
+    std::pair<int, int> grid_ids = UpdateGrid(actor);
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
     std::unordered_set<ActorId> actors;
-    // Search all surrounding grids and find any vehicles in them
+    // Search all surrounding grids and find any vehicles in them.
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
-        auto grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
+        std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
         if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
           for (auto actor: grid_to_actor_id.at(grid_key)) {
             actors.insert(actor);
@@ -71,7 +71,7 @@ namespace traffic_manager {
   }
 
   void VicinityGrid::EraseActor(ActorId actor_id) {
-    auto grid_key = actor_to_grid_id.at(actor_id);
+    std::string grid_key = actor_to_grid_id.at(actor_id);
     actor_to_grid_id.erase(actor_id);
     grid_to_actor_id.at(grid_key).erase(actor_id);
   }

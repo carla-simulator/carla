@@ -17,6 +17,8 @@
 
 namespace cc = carla::client;
 namespace chr = std::chrono;
+using ActorListPtr = carla::SharedPtr<carla::client::ActorList>;
+using CarlaMap = carla::SharedPtr<carla::client::Map>;
 
 void test_dense_topology(const cc::World &);
 
@@ -25,7 +27,7 @@ void test_in_memory_map(carla::SharedPtr<cc::Map>);
 void test_lane_change(const cc::World &world);
 
 void test_pipeline_stages(
-    carla::SharedPtr<cc::ActorList> actor_list,
+    ActorListPtr actor_list,
     carla::SharedPtr<cc::Map> world_map,
     cc::Client &client_conn,
     cc::World &world);
@@ -59,12 +61,12 @@ void handler() {
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
 
-  auto client_conn = cc::Client("localhost", 2000);
+  cc::Client client_conn = cc::Client("localhost", 2000);
   std::cout << "Connected with client object : " << client_conn.GetClientVersion() << std::endl;
-  auto world = client_conn.GetWorld();
-  auto world_map = world.GetMap();
-  auto actorList = world.GetActors();
-  auto vehicle_list = actorList->Filter("vehicle.*");
+  cc::World world = client_conn.GetWorld();
+  CarlaMap world_map = world.GetMap();
+  ActorListPtr actorList = world.GetActors();
+  ActorListPtr vehicle_list = actorList->Filter("vehicle.*");
 
   // test_dense_topology(world);
   // test_in_memory_map(world_map);
@@ -86,14 +88,14 @@ void test_pipeline(
   sigfillset(&sa.sa_mask);
   sigaction(SIGINT, &sa, NULL);
 
-  auto world_map = world.GetMap();
-  auto debug_helper = client_conn.GetWorld().MakeDebugHelper();
+  CarlaMap world_map = world.GetMap();
+  cc::DebugHelper debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.GetTopology();
+  traffic_manager::TopologyList topology = dao.GetTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
   local_map->SetUp(1.0);
 
-  auto core_count = traffic_manager::read_core_count();
+  uint core_count = traffic_manager::read_core_count();
   std::cout << "Found " << core_count << " CPU cores" << std::endl;
   auto registered_actors = traffic_manager::spawn_traffic(client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;

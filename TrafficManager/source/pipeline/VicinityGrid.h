@@ -16,22 +16,22 @@ namespace traffic_manager {
 namespace cc = carla::client;
 namespace cg = carla::geom;
   using ActorId = carla::ActorId;
-  using Actor = carla::SharedPtr<carla::client::Actor>;
+  using Actor = carla::SharedPtr<cc::Actor>;
 
-  /// This class maintains vehicle positions in grid segments
-  /// This is used in collision stage to filter vehicles
+  /// This class maintains vehicle positions in grid segments.
+  /// This is used in the collision stage to filter vehicles.
   class VicinityGrid {
 
   private:
 
-    /// Mutex to manage contention between modifiers and readers
+    /// Mutex to manage contention between modifiers and readers.
     std::shared_timed_mutex modification_mutex;
-    /// Map connecting grid id to set of actor ids
+    /// Map connecting grid id to set of actor ids.
     std::unordered_map<std::string, std::unordered_set<ActorId>> grid_to_actor_id;
-    /// Map connecting actor id to grid key
+    /// Map connecting actor id to grid key.
     std::unordered_map<ActorId, std::string> actor_to_grid_id;
 
-    /// Key generator for given grid
+    /// Key generator for a given grid.
     std::string MakeKey(std::pair<int, int> grid_ids);
 
   public:
@@ -39,13 +39,13 @@ namespace cg = carla::geom;
     VicinityGrid();
     ~VicinityGrid();
 
-    /// Returns a set of actors in the vicinity of a given actor
+    /// Returns a set of actors in the vicinity of a given actor.
     std::unordered_set<ActorId> GetActors(Actor actor);
 
-    /// Updates the grid position of the given actor and returns new grid id
+    /// Updates the grid position of the given actor and returns new grid id.
     std::pair<int, int> UpdateGrid(Actor actor);
 
-    /// Removes actor
+    /// Removes actor.
     void EraseActor(ActorId actor_id);
 
   };

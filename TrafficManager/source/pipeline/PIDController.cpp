@@ -10,7 +10,7 @@ namespace PIDControllerConstants {
 
   PIDController::PIDController() {}
 
-  // Initializing present state
+  // Initializing present state.
   StateEntry PIDController::StateUpdate(
       StateEntry previous_state,
       float current_velocity,
@@ -26,11 +26,11 @@ namespace PIDControllerConstants {
       0.0f
     };
 
-    // Calculating dt for 'D' and 'I' controller components
+    // Calculating dt for 'D' and 'I' controller components.
     chr::duration<double> duration = current_state.time_instance - previous_state.time_instance;
     double dt = duration.count();
 
-    // Calculating integrals
+    // Calculating integrals.
     current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
     current_state.velocity_integral = dt * current_state.velocity + previous_state.velocity_integral;
 
@@ -43,11 +43,11 @@ namespace PIDControllerConstants {
       const std::vector<float> &longitudinal_parameters,
       const std::vector<float> &lateral_parameters) const {
 
-    // Calculating dt for updating integral component
+    // Calculating dt for updating the integral component.
     chr::duration<double> duration = present_state.time_instance - previous_state.time_instance;
     double dt = duration.count();
 
-    // Longitudinal PID calculation
+    // Longitudinal PID calculation.
     float expr_v =
         longitudinal_parameters[0] * present_state.velocity +
         longitudinal_parameters[1] * present_state.velocity_integral +
@@ -64,7 +64,7 @@ namespace PIDControllerConstants {
       brake = MAX_BRAKE;
     }
 
-    // Lateral PID calculation
+    // Lateral PID calculation.
     float steer;
     steer =
         lateral_parameters[0] * present_state.deviation +

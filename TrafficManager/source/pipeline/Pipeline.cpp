@@ -19,7 +19,7 @@ namespace PipelineConstants {
 
   uint read_core_count() {
 
-    // Assuming quad-core if core count not available
+    // Assuming quad-core if core count not available.
     uint core_count = std::thread::hardware_concurrency();
     return core_count > 0 ? core_count : MINIMUM_CORE_COUNT;
   }
@@ -31,13 +31,13 @@ namespace PipelineConstants {
       uint target_amount = 0) {
 
     std::vector<ActorPtr> actor_list;
-    auto world_map = world.GetMap();
+    carla::SharedPtr<cc::Map> world_map = world.GetMap();
 
-    // Get a random selection of spawn points from the map
-    auto spawn_points = world_map->GetRecommendedSpawnPoints();
+    // Get a random selection of spawn points from the map.
+    std::vector<cg::Transform> spawn_points = world_map->GetRecommendedSpawnPoints();
     std::random_shuffle(spawn_points.begin(), spawn_points.end());
-    // Blueprint library containing all vehicle types
-    auto blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
+    // Blueprint library containing all vehicle types.
+    carla::SharedPtr<cc::BlueprintLibrary> blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
     std::mt19937_64 rng((std::random_device())());
 
     uint number_of_vehicles;
@@ -55,12 +55,12 @@ namespace PipelineConstants {
 
     carla::log_info("Spawning " + std::to_string(number_of_vehicles) + " vehicles\n");
 
-    // Creating spawn batch command
+    // Creating spawn batch command.
     std::vector<cr::Command> batch_spawn_commands;
-    for (auto i = 0u; i < number_of_vehicles; ++i) {
+    for (uint i = 0u; i < number_of_vehicles; ++i) {
 
-      auto spawn_point = spawn_points[i];
-      auto blueprint = RandomChoice(*blueprint_library, rng);
+      cg::Transform spawn_point = spawn_points[i];
+      cc::ActorBlueprint blueprint = RandomChoice(*blueprint_library, rng);
 
       while (
         blueprint.GetAttribute("number_of_wheels") != 4 ||
@@ -76,24 +76,24 @@ namespace PipelineConstants {
     }
 
     client.ApplyBatch(std::move(batch_spawn_commands));
-    // We need to wait till the simulator spawns all vehicles
-    // Tried to use World::WaitForTick but it also wasn't sufficient
-    // Need to find a better way to do this
+    // We need to wait till the simulator spawns all vehicles,
+    // tried to use World::WaitForTick but it also wasn't sufficient.
+    // We need to find a better way to do this.
     std::this_thread::sleep_for(500ms);
 
-    // Gathering actors spawned by traffic manager
-    auto world_actors = world.GetActors();
+    // Gathering actors spawned by the traffic manager.
+    carla::SharedPtr<cc::ActorList> world_actors = world.GetActors();
     for (auto iter = world_actors->begin(); iter != world_actors->end(); ++iter) {
-      auto world_actor = *iter;
+      ActorPtr world_actor = *iter;
       auto world_vehicle = boost::static_pointer_cast<cc::Vehicle>(world_actor);
-      auto actor_attributes = world_vehicle->GetAttributes();
+      std::vector<cc::ActorAttributeValue> actor_attributes = world_vehicle->GetAttributes();
       bool found_traffic_manager_vehicle = false;
       for (
         auto iter = actor_attributes.begin();
         (iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
         ++iter
         ) {
-        auto attribute = *iter;
+        cc::ActorAttributeValue attribute = *iter;
         if (attribute.GetValue() == "traffic_manager") {
           found_traffic_manager_vehicle = true;
         }
@@ -178,7 +178,6 @@ namespace PipelineConstants {
 
   }
 
-  // To start the pipeline
   void Pipeline::Start() {
 
     localization_stage->Start();
@@ -188,7 +187,6 @@ namespace PipelineConstants {
     control_stage->Start();
   }
 
-  // To stop the pipeline
   void Pipeline::Stop() {
 
     localization_collision_messenger->Stop();

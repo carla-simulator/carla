@@ -4,9 +4,9 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "carla/client/Vehicle.h"
 #include "carla/rpc/ActorId.h"
@@ -16,7 +16,7 @@
 
 namespace traffic_manager {
 
-  /// Structure used to hold geo ids
+  /// Structure used to hold geo ids.
   struct GeoIds {
     uint road_id = 0;
     uint section_id = 0;
@@ -33,7 +33,7 @@ namespace traffic_manager {
 
 namespace std {
 
-  /// Specialization of std::hash for GeoIds type
+  /// Specialization of std::hash for GeoIds type.
   template <>
   struct hash<traffic_manager::GeoIds>{
     std::size_t operator()(const traffic_manager::GeoIds &k) const {
@@ -54,28 +54,29 @@ namespace cc = carla::client;
 namespace cg = carla::geom;
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using ActorIDSet = std::unordered_set<traffic_manager::ActorId>;
 
-  /// Returns the cross product (z component value) between vehicle's heading
-  /// vector and the vector along the direction to the next target waypoint in
+  /// Returns the cross product (z component value) between the vehicle's heading
+  /// vector and the vector along the direction to the next target waypoint on
   /// the horizon.
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
 
-  /// Returns the dot product between vehicle's heading vector and
-  /// the vector along the direction to the next target waypoint in the horizon.
+  /// Returns the dot product between the vehicle's heading vector and
+  /// the vector along the direction to the next target waypoint on the horizon.
   float DeviationDotProduct(Actor actor, const cg::Location &target_location);
 
-  /// This class keeps track of vehicle’s positions in road sections, lanes and
+  /// This class keeps track of the vehicle’s positions in road sections, lanes and
   /// provides lane change decisions.
   class TrafficDistributor {
 
   private:
 
     /// Mutex used to manage contention for internal resources between various
-    /// accessors
+    /// accessors.
     mutable std::shared_timed_mutex distributor_mutex;
-    /// Map connecting geo ids to a set of vehicles with those specific geo ids
+    /// Map connecting geo ids to a set of vehicles with those specific geo ids.
     std::unordered_map<GeoIds, std::unordered_set<ActorId>> road_to_vehicle_id_map;
-    /// Map connecting vehicle id to it's geo ids
+    /// Map connecting vehicle id to it's geo ids.
     std::unordered_map<ActorId, GeoIds> vehicle_id_to_road_map;
 
     void SetVehicleId(ActorId actor_id, GeoIds ids);
@@ -96,7 +97,7 @@ namespace cg = carla::geom;
     void UpdateVehicleRoadPosition(ActorId actor_id, GeoIds road_ids);
 
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
-    /// if Lane Change is required and possible, else returns nullptr
+    /// if Lane Change is required and possible, else returns nullptr.
     std::shared_ptr<SimpleWaypoint> AssignLaneChange(
         Actor vehicle,
         std::shared_ptr<SimpleWaypoint> current_waypoint,

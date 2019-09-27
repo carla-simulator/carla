@@ -11,18 +11,18 @@ namespace traffic_manager {
       planner_messenger(planner_messenger),
       PipelineStage(pool_size, number_of_vehicle) {
 
-    // Initializing output frame selector
+    // Initializing output frame selector.
     frame_selector = true;
 
-    // Allocating output frames
+    // Allocating output frames.
     planner_frame_a = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicle);
     planner_frame_b = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicle);
 
-    // Initializing messenger state
+    // Initializing messenger state.
     localization_messenger_state = localization_messenger->GetState();
 
     // Initializing this messenger state to preemptively write
-    // since this stage precedes motion planner stage
+    // since this stage precedes motion planner stage.
     planner_messenger_state = planner_messenger->GetState() - 1;
 
   }
@@ -31,11 +31,11 @@ namespace traffic_manager {
 
   void TrafficLightStage::Action(const uint start_index, const uint end_index) {
 
-    // Selecting output frame based on selection key
+    // Selecting the output frame based on the selection key.
     auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
-    // Looping over array's partitions for current thread
-    for (int i = start_index; i <= end_index; ++i) {
+    // Looping over array's partitions for the current thread.
+    for (uint i = start_index; i <= end_index; ++i) {
 
       float traffic_light_hazard = -1.0f;
       LocalizationToTrafficLightData &data = localization_frame->at(i);
@@ -47,9 +47,9 @@ namespace traffic_manager {
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(ego_actor);
       auto traffic_light_state = vehicle->GetTrafficLightState();
 
-      // We determine to stop if current position of vehicle is not a junction,
-      // a point on the path beyond a threshold (velocity dependent) distance
-      // is inside the junction and there is a red or yellow light
+      // We determine to stop if the current position of the vehicle is not a junction,
+      // a point on the path beyond a threshold (velocity-dependent) distance
+      // is inside the junction and there is a red or yellow light.
       if (!(closest_waypoint->CheckJunction()) &&
           (traffic_light_state == carla::rpc::TrafficLightState::Red ||
           traffic_light_state == carla::rpc::TrafficLightState::Yellow) &&

@@ -100,14 +100,14 @@ namespace TrafficDistributorConstants {
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
-    // Don't try to change lane if the current lane has less than two vehicles
+    // Don't try to change lane if the current lane has less than two vehicles.
     if (co_lane_vehicles.size() >= 2) {
 
-      // Check if any vehicle in the current lane is blocking us
+      // Check if any vehicle in the current lane is blocking us.
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
 
-        auto &same_lane_vehicle_id = *i;
-        auto &other_vehicle_buffer = buffer_list->at(
+        const traffic_manager::ActorId &same_lane_vehicle_id = *i;
+        traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
         std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint = nullptr;
@@ -116,8 +116,8 @@ namespace TrafficDistributorConstants {
               vehicle_id_to_index.at(same_lane_vehicle_id)).front();
         }
 
-        // Check if there is another vehicle in the current lane in front
-        // within a threshold distance and current position not in a junction
+        // Check if there is another vehicle in the current lane in front for
+        // a threshold distance and current position not in a junction.
         if (same_lane_vehicle_id != actor_id &&
             same_lane_vehicle_waypoint != nullptr &&
             !same_lane_vehicle_waypoint->CheckJunction() &&
@@ -129,9 +129,9 @@ namespace TrafficDistributorConstants {
 
           // If lane change connections are available,
           // pick a direction (preferring left) and
-          // announce the need for a lane change
+          // announce the need for a lane change.
           if (left_waypoint != nullptr) {
-            auto left_lane_vehicles = GetVehicleIds({
+            traffic_manager::ActorIDSet left_lane_vehicles = GetVehicleIds({
               current_road_ids.road_id,
               current_road_ids.section_id,
               left_waypoint->GetWaypoint()->GetLaneId()
@@ -141,7 +141,7 @@ namespace TrafficDistributorConstants {
               lane_change_direction = true;
             }
           } else if (right_waypoint != nullptr) {
-            auto right_lane_vehicles = GetVehicleIds({
+            traffic_manager::ActorIDSet right_lane_vehicles = GetVehicleIds({
               current_road_ids.road_id,
               current_road_ids.section_id,
               right_waypoint->GetWaypoint()->GetLaneId()
@@ -155,8 +155,8 @@ namespace TrafficDistributorConstants {
       }
     }
 
-    // Change distance to the target point on the target lane
-    // as a function of vehicle velocity
+    // Change the distance to the target point on the target lane
+    // as a function of vehicle velocity.
     int change_over_distance = static_cast<int>(
       std::max(std::ceil(0.5f * vehicle_velocity),
       MINIMUM_LANE_CHANGE_DISTANCE)
@@ -174,26 +174,26 @@ namespace TrafficDistributorConstants {
 
       if (change_over_point != nullptr) {
 
-        auto lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
-        auto target_lane_vehicles = GetVehicleIds({
+        carla::road::LaneId lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
+        traffic_manager::ActorIDSet target_lane_vehicles = GetVehicleIds({
           current_road_ids.road_id,
           current_road_ids.section_id,
           lane_change_id
         });
 
         // If target lane has vehicles, check if there are any obstacles
-        // for lane change execution
+        // for lane change execution.
         if (target_lane_vehicles.size() > 0) {
 
           bool found_hazard = false;
           for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
 
-            auto &other_vehicle_id = *i;
-            auto &other_vehicle_buffer = buffer_list->at(
+            const traffic_manager::ActorId &other_vehicle_id = *i;
+            traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
                 vehicle_id_to_index.at(other_vehicle_id));
 
-            // If vehicle on target lane is behind us, check if we are
-            // fast enough to execute lane change
+            // If a vehicle on target lane is behind us, check if we are
+            // fast enough to execute lane change.
             if (!other_vehicle_buffer.empty() &&
                 other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
 
@@ -217,9 +217,8 @@ namespace TrafficDistributorConstants {
                 }
 
               }
-              // If vehicle on target lane is in front, check if it is far
-              // enough
-              // to perform lane change
+              // If a vehicle on target lane is in front, check if it is far
+              // enough to perform a lane change.
               else {
 
                 auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
@@ -243,7 +242,7 @@ namespace TrafficDistributorConstants {
     }
 
     if (need_to_change_lane && possible_to_lane_change) {
-      for (auto i = change_over_distance; i >= 0; i--) {
+      for (int i = change_over_distance; i >= 0; i--) {
         change_over_point = change_over_point->GetNextWaypoint()[0];
       }
       return change_over_point;
@@ -254,10 +253,10 @@ namespace TrafficDistributorConstants {
 
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location) {
 
-    auto heading_vector = actor->GetTransform().GetForwardVector();
+    cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0;
     heading_vector = heading_vector.MakeUnitVector();
-    auto next_vector = target_location - actor->GetLocation();
+    cg::Location next_vector = target_location - actor->GetLocation();
     next_vector.z = 0;
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
@@ -270,10 +269,10 @@ namespace TrafficDistributorConstants {
 
   float DeviationDotProduct(Actor actor, const cg::Location &target_location) {
 
-    auto heading_vector = actor->GetTransform().GetForwardVector();
+    cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0;
     heading_vector = heading_vector.MakeUnitVector();
-    auto next_vector = target_location - actor->GetLocation();
+    cg::Location next_vector = target_location - actor->GetLocation();
     next_vector.z = 0;
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();

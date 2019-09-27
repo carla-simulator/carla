@@ -20,17 +20,17 @@ namespace traffic_manager {
 
   private:
 
-    /// Variables to remember messenger states
+    /// Variables to remember messenger states.
     int localization_messenger_state;
     int planner_messenger_state;
-    /// Selection key to switch between output frames
+    /// Selection key to switch between output frames.
     bool frame_selector;
-    /// Pointer data frame received from localization stage
+    /// Pointer data frame received from localization stage.
     std::shared_ptr<LocalizationToTrafficLightFrame> localization_frame;
-    /// Pointers to data frames to be shared with motion planner stage
+    /// Pointers to data frames to be shared with motion planner stage.
     std::shared_ptr<TrafficLightToPlannerFrame> planner_frame_a;
     std::shared_ptr<TrafficLightToPlannerFrame> planner_frame_b;
-    /// Pointers to messenger objects
+    /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
 
