@@ -67,9 +67,9 @@ namespace PlannerConstants {
     for (uint i = start_index; i <= end_index; ++i) {
 
       LocalizationToPlannerData &localization_data = localization_frame->at(i);
-      auto actor = localization_data.actor;
+      Actor actor = localization_data.actor;
       float current_deviation = localization_data.deviation;
-      auto actor_id = actor->GetId();
+      ActorId actor_id = actor->GetId();
 
       auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
       float current_velocity = vehicle->GetVelocity().Length();
@@ -79,10 +79,10 @@ namespace PlannerConstants {
       traffic_manager::StateEntry previous_state;
       previous_state = pid_state_vector->at(i);
 
-      auto dynamic_target_velocity = urban_target_velocity;
+      float dynamic_target_velocity = urban_target_velocity;
 
       // Increase speed if on highway
-      auto speed_limit = vehicle->GetSpeedLimit() / 3.6f;
+      float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
       if (speed_limit > HIGHWAY_SPEED) {
         dynamic_target_velocity = highway_target_velocity;
         longitudinal_parameters = highway_longitudinal_parameters;
@@ -142,7 +142,7 @@ namespace PlannerConstants {
     localization_messenger_state = localization_packet.id;
 
     // Block on receive call only if new data is available on the messenger
-    auto collision_messenger_current_state = collision_messenger->GetState();
+    int collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
       collision_frame = collision_packet.data;
@@ -150,7 +150,7 @@ namespace PlannerConstants {
     }
 
     // Block on receive call only if new data is available on the messenger
-    auto traffic_light_messenger_current_state = traffic_light_messenger->GetState();
+    int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);
       traffic_light_frame = traffic_light_packet.data;

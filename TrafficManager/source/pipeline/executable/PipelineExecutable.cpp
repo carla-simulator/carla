@@ -30,8 +30,8 @@ void handler() {
   if (!quit.load()) {
 
     carla::log_error("\nTrafficManager encountered a problem!\n");
-    carla::log_info("Destorying all spawned actors\n");
-    for (auto actor: *global_actor_list) {
+    carla::log_info("Destroying all spawned actors\n");
+    for (auto &actor: *global_actor_list) {
       if (actor != nullptr && actor->IsAlive()) {
         actor->Destroy();
       }
@@ -46,8 +46,8 @@ void handler() {
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);
 
-  auto client_conn = cc::Client("localhost", 2000);
-  auto world = client_conn.GetWorld();
+  cc::Client client_conn = cc::Client("localhost", 2000);
+  cc::World world = client_conn.GetWorld();
 
   uint target_traffic_amount = 0u;
   if (argc == 3 && std::string(argv[1]) == "-n") {
@@ -71,15 +71,17 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic
   sigfillset(&sa.sa_mask);
   sigaction(SIGINT, &sa, NULL);
 
-  auto world_map = world.GetMap();
+  using WorldMap = carla::SharedPtr<cc::Map>;
+  WorldMap world_map = world.GetMap();
   cc::DebugHelper debug_helper = client_conn.GetWorld().MakeDebugHelper();
   auto dao = traffic_manager::CarlaDataAccessLayer(world_map);
-  auto topology = dao.GetTopology();
+  using Topology = std::vector<std::pair<traffic_manager::WaypointPtr, traffic_manager::WaypointPtr>>;
+  Topology topology = dao.GetTopology();
   auto local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
   local_map->SetUp(1.0);
 
-  auto core_count = traffic_manager::read_core_count();
-  auto registered_actors = traffic_manager::spawn_traffic(
+  uint core_count = traffic_manager::read_core_count();
+  std::vector<traffic_manager::Actor> registered_actors = traffic_manager::spawn_traffic(
     client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 

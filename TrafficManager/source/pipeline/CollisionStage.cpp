@@ -84,7 +84,7 @@ namespace CollisionStageConstants {
     }
 
     // Looping over arrays' partitions for the current thread
-    for (auto i = start_index; i <= end_index; ++i) {
+    for (uint i = start_index; i <= end_index; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
@@ -138,7 +138,7 @@ namespace CollisionStageConstants {
     // This map also provides us the additional benefit of being able to
     // quickly identify if a vehicle id is registered with the traffic manager or
     // not.
-    auto index = 0u;
+    uint index = 0u;
     for (auto &element: *localization_frame.get()) {
       id_to_index.insert({element.actor->GetId(), index++});
     }
@@ -158,15 +158,15 @@ namespace CollisionStageConstants {
     // For each vehicle, calculating the dot product between heading vector
     // and relative position vector to the other vehicle.
 
-    auto other_vehicle_location = other_vehicle->GetLocation();
-    auto ego_vehicle_location = ego_vehicle->GetLocation();
+    cg::Location other_vehicle_location = other_vehicle->GetLocation();
+    cg::Location ego_vehicle_location = ego_vehicle->GetLocation();
 
-    auto reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
+    cg::Vector3D reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
     cg::Vector3D relative_other_vector = other_vehicle_location - ego_vehicle_location;
     relative_other_vector = relative_other_vector.MakeUnitVector();
     float reference_relative_dot = cg::Math::Dot(reference_heading_vector, relative_other_vector);
 
-    auto other_heading_vector = other_vehicle->GetTransform().GetForwardVector();
+    cg::Vector3D other_heading_vector = other_vehicle->GetTransform().GetForwardVector();
     cg::Vector3D relative_reference_vector = ego_vehicle_location - other_vehicle_location;
     relative_reference_vector = relative_reference_vector.MakeUnitVector();
     float other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
@@ -197,8 +197,8 @@ namespace CollisionStageConstants {
         std::deque<Polygon> output;
         bg::intersection(reference_polygon, other_polygon, output);
 
-        for (auto i = 0u; i < output.size() && !overlap; ++i) {
-          auto &p = output.at(i);
+        for (uint i = 0u; i < output.size() && !overlap; ++i) {
+          Polygon &p = output.at(i);
           if (bg::area(p) > ZERO_AREA) {
             overlap = true;
           }
@@ -212,7 +212,7 @@ namespace CollisionStageConstants {
   traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) const {
 
     std::string boundary_polygon_wkt;
-    for (auto location: boundary) {
+    for (const cg::Location &location: boundary) {
       boundary_polygon_wkt += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
     }
     boundary_polygon_wkt += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
@@ -245,14 +245,14 @@ namespace CollisionStageConstants {
       SimpleWaypointPtr boundary_start = waypoint_buffer->front();
       SimpleWaypointPtr boundary_end = waypoint_buffer->front();
 
-      for (auto i = 0u;
+      for (uint i = 0u;
           (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
           (i < waypoint_buffer->size());
           ++i) {
 
         cg::Vector3D heading_vector = boundary_end->GetForwardVector();
         cg::Location location = boundary_end->GetLocation();
-        auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
+        cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
         // Direction determined for the left-handed system
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
@@ -285,10 +285,10 @@ namespace CollisionStageConstants {
     auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
     cg::BoundingBox bbox = vehicle->GetBoundingBox();
     cg::Vector3D extent = bbox.extent;
-    auto location = vehicle->GetLocation();
-    auto heading_vector = vehicle->GetTransform().GetForwardVector();
+    cg::Location location = vehicle->GetLocation();
+    cg::Vector3D heading_vector = vehicle->GetTransform().GetForwardVector();
     heading_vector.z = 0;
-    auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
+    cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
     // Four corners of the vehicle in top view clockwise order (left-handed
     // system)
@@ -303,7 +303,7 @@ namespace CollisionStageConstants {
   }
 
   void CollisionStage::DrawBoundary(const LocationList &boundary) const {
-    for (auto i = 0u; i < boundary.size(); ++i) {
+    for (uint i = 0u; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0, 0, 1),
           boundary[(i + 1) % boundary.size()] + cg::Location(0, 0, 1),

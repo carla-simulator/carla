@@ -14,6 +14,9 @@ namespace traffic_manager {
 
 namespace chr = std::chrono;
 
+  using Actor = carla::SharedPtr<carla::client::Actor>;
+  using ActorId = carla::rpc::ActorId;
+
   /// The class is responsible for aggregating information from various stages
   /// like localization stage, traffic light stage, collision detection stage
   /// and actuation signals from the PID controller and makes decisions on how to

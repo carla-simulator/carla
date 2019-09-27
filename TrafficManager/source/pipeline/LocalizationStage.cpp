@@ -52,12 +52,12 @@ namespace LocalizationConstants {
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
 
     // Seeding random divergence choices for every vehicle
-    for (auto i = 0u; i < number_of_vehicles; ++i) {
+    for (uint i = 0u; i < number_of_vehicles; ++i) {
       divergence_choice.push_back(rand());
     }
 
     // Connecting vehicle ids to their position index on data arrays
-    auto index = 0u;
+    uint index = 0u;
     for (auto &actor: actor_list) {
       vehicle_id_to_index.insert({actor->GetId(), index});
       ++index;
@@ -77,7 +77,7 @@ namespace LocalizationConstants {
     auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
 
     // Looping over arrays' partitions for the current thread
-    for (auto i = start_index; i <= end_index; ++i) {
+    for (uint i = start_index; i <= end_index; ++i) {
 
       Actor vehicle = actor_list.at(i);
       ActorId actor_id = vehicle->GetId();
@@ -156,8 +156,8 @@ namespace LocalizationConstants {
 
         SimpleWaypointPtr way_front = waypoint_buffer.back();
         uint pre_selection_id = way_front->GetWaypoint()->GetId();
-        auto next_waypoints = way_front->GetNextWaypoint();
-        auto selection_index = 0u;
+        std::vector<SimpleWaypointPtr> next_waypoints = way_front->GetNextWaypoint();
+        uint selection_index = 0u;
         if (next_waypoints.size() > 1) {
           selection_index = (divergence_choice.at(i) * (1 + pre_selection_id)) % next_waypoints.size();
         }
@@ -167,12 +167,16 @@ namespace LocalizationConstants {
       }
 
       // Generate output
-      auto horizon_index = static_cast<int>(
-        std::max(
-        std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
-        TARGET_WAYPOINT_HORIZON_LENGTH)
-        );
-      SimpleWaypointPtr target_waypoint = waypoint_buffer.at(horizon_index);
+      float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
+                                             TARGET_WAYPOINT_HORIZON_LENGTH);
+      SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
+      for (uint i = 0u;
+          (i < waypoint_buffer.size()) &&
+          (waypoint_buffer.front()->DistanceSquared(target_waypoint)
+          < std::pow(target_point_distance, 2));
+          ++i) {
+        target_waypoint = waypoint_buffer.at(i);
+      }
       float dot_product = DeviationDotProduct(vehicle, target_waypoint->GetLocation());
       float cross_product = DeviationCrossProduct(vehicle, target_waypoint->GetLocation());
       dot_product = 1 - dot_product;
@@ -189,7 +193,7 @@ namespace LocalizationConstants {
 
       SimpleWaypointPtr look_ahead_point = waypoint_buffer.front();
       uint look_ahead_index = 0u;
-      for (auto i = 0u;
+      for (uint i = 0u;
           (waypoint_buffer.front()->DistanceSquared(look_ahead_point)
           < std::pow(look_ahead_distance, 2)) &&
           (i < waypoint_buffer.size());
@@ -201,7 +205,7 @@ namespace LocalizationConstants {
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
         if (speed_limit > HIGHWAY_SPEED) {
-          for (auto i = 0u; (i < look_ahead_index) && !approaching_junction; ++i) {
+          for (uint i = 0u; (i < look_ahead_index) && !approaching_junction; ++i) {
             SimpleWaypointPtr swp = waypoint_buffer.at(i);
             if (swp->GetNextWaypoint().size() > 1) {
               approaching_junction = true;
