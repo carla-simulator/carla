@@ -29,20 +29,20 @@ namespace LocalizationConstants {
       debug_helper(debug_helper),
       PipelineStage(pool_size, number_of_vehicles) {
 
-    // Initializing various output frame selectors
+    // Initializing various output frame selectors.
     planner_frame_selector = true;
     collision_frame_selector = true;
     traffic_light_frame_selector = true;
-    // Allocating buffer lists
+    // Allocating the buffer lists.
     buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
     buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
-    // Allocating output frames to be shared with motion planner stage
+    // Allocating output frames to be shared with the motion planner stage.
     planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
     planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
-    // Allocating output frames to be shared with collision stage
+    // Allocating output frames to be shared with the collision stage.
     collision_frame_a = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
     collision_frame_b = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
-    // Allocating output frames to be shared with traffic light stage
+    // Allocating output frames to be shared with the traffic light stage
     traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
     traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
     // Initializing messenger states to initiate data writes
@@ -51,12 +51,12 @@ namespace LocalizationConstants {
     collision_messenger_state = collision_messenger->GetState() - 1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
 
-    // Seeding random divergence choices for every vehicle
+    // Seeding random divergence choices for every vehicle.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
       divergence_choice.push_back(rand());
     }
 
-    // Connecting vehicle ids to their position index on data arrays
+    // Connecting vehicle ids to their position indices on data arrays.
     uint index = 0u;
     for (auto &actor: actor_list) {
       vehicle_id_to_index.insert({actor->GetId(), index});
@@ -68,7 +68,7 @@ namespace LocalizationConstants {
 
   void LocalizationStage::Action(const uint start_index, const uint end_index) {
 
-    // Selecting output frames based on selector keys
+    // Selecting output frames based on selector keys.
     auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
     auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
     auto current_traffic_light_frame =
@@ -76,7 +76,7 @@ namespace LocalizationConstants {
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
     auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
 
-    // Looping over arrays' partitions for the current thread
+    // Looping over arrays' partitions for the current thread.
     for (uint i = start_index; i <= end_index; ++i) {
 
       Actor vehicle = actor_list.at(i);
@@ -92,7 +92,7 @@ namespace LocalizationConstants {
       Buffer &waypoint_buffer = current_buffer_list->at(i);
       Buffer &copy_waypoint_buffer = copy_buffer_list->at(i);
 
-      // Sync buffer copies in case of lane change
+      // Synchronizing buffer copies in the case of lane change.
       if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
           ((copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
           != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
@@ -103,7 +103,7 @@ namespace LocalizationConstants {
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
       }
 
-      // Purge passed waypoints
+      // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
 
         float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
@@ -116,13 +116,13 @@ namespace LocalizationConstants {
         }
       }
 
-      // Initialize buffer if empty
+      // Initializing buffer if it is empty.
       if (waypoint_buffer.empty()) {
         SimpleWaypointPtr closest_waypoint = local_map.GetWaypoint(vehicle_location);
         waypoint_buffer.push_back(closest_waypoint);
       }
 
-      // Assign lane change
+      // Assign a lane change.
       SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
       GeoIds current_road_ids = {
         front_waypoint->GetWaypoint()->GetRoadId(),
@@ -150,7 +150,7 @@ namespace LocalizationConstants {
         }
       }
 
-      // Populate buffer
+      // Populating the buffer.
       while (waypoint_buffer.back()->DistanceSquared(
           waypoint_buffer.front()) <= std::pow(horizon_size, 2)) {
 
@@ -166,7 +166,7 @@ namespace LocalizationConstants {
         waypoint_buffer.push_back(way_front);
       }
 
-      // Generate output
+      // Generating output.
       float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
                                              TARGET_WAYPOINT_HORIZON_LENGTH);
       SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
@@ -184,9 +184,9 @@ namespace LocalizationConstants {
         dot_product *= -1;
       }
 
-      // Filtering out false junctions on highways
+      // Filtering out false junctions on highways.
       // On highways, if there is only one possible path and the section is
-      // marked as intersection, ignore it
+      // marked as intersection, ignore it.
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       float speed_limit = vehicle_reference->GetSpeedLimit();
       float look_ahead_distance = std::max(2 * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
@@ -216,7 +216,7 @@ namespace LocalizationConstants {
         }
       }
 
-      // Editing output frames
+      // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
       planner_message.deviation = dot_product;
@@ -239,8 +239,8 @@ namespace LocalizationConstants {
 
     // Since send/receive calls on messenger objects can block if the other
     // end hasn't received/sent data, choose to block on only those stages
-    // which take the most priority (which need the highest rate of data feed) to
-    // run the system well
+    // which takes the most priority (which needs the highest rate of data feed)
+    // to run the system well.
 
     DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
       planner_messenger_state,
@@ -249,8 +249,8 @@ namespace LocalizationConstants {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-    // Send data to collision stage only if the collision stage has finished
-    // processing, received the previous message and started processing it
+    // Send data to collision stage only if it has finished
+    // processing, received the previous message and started processing it.
     int collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
@@ -262,8 +262,8 @@ namespace LocalizationConstants {
       collision_frame_selector = !collision_frame_selector;
     }
 
-    // Send data to traffic light stage only if the collision stage has finished
-    // processing, received the previous message and started processing it
+    // Send data to traffic light stage only if it has finished
+    // processing, received the previous message and started processing it.
     int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
       DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {

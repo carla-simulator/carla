@@ -28,17 +28,16 @@ namespace CollisionStageConstants {
       debug_helper(debug_helper),
       PipelineStage(pool_size, number_of_vehicle) {
 
-    // Initializing clock for checking unregistered actors periodically
+    // Initializing clock for checking unregistered actors periodically.
     last_world_actors_pass_instance = chr::system_clock::now();
-    // Initializing output array selector
+    // Initializing output array selector.
     frame_selector = true;
-    // Allocating output arrays to be shared with motion planner stage
+    // Allocating output arrays to be shared with motion planner stage.
     planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
     planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
-    // Initializing messenger states
+    // Initializing messenger states.
     localization_messenger_state = localization_messenger->GetState();
-    // Initialize this messenger to preemptively write since it precedes
-    // motion planner stage
+    // Initializing this messenger to preemptively write since it precedes motion planner stage.
     planner_messenger_state = planner_messenger->GetState() - 1;
 
   }
@@ -49,13 +48,13 @@ namespace CollisionStageConstants {
 
     auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
-    // Handle vehicles not spawned by TrafficManager
-    // Choosing an arbitrary thread
+    // Handle vehicles not spawned by TrafficManager.
+    // Choosing an arbitrary thread.
     if (start_index == 0u) {
       auto current_time = chr::system_clock::now();
       chr::duration<double> diff = current_time - last_world_actors_pass_instance;
 
-      // Periodically check for actors not spawned by TrafficManager
+      // Periodically check for actors not spawned by TrafficManager.
       if (diff.count() > 0.5f) {
         auto world_actors = world.GetActors()->Filter("vehicle.*");
         for (auto actor: *world_actors.get()) {
@@ -68,7 +67,7 @@ namespace CollisionStageConstants {
         last_world_actors_pass_instance = current_time;
       }
 
-      // Regularly update unregistered actors
+      // Regularly update unregistered actors.
       std::vector<ActorId> actor_ids_to_erase;
       for (auto actor_info: unregistered_actors) {
         if (actor_info.second->IsAlive()) {
@@ -83,18 +82,18 @@ namespace CollisionStageConstants {
       }
     }
 
-    // Looping over arrays' partitions for the current thread
+    // Looping over arrays' partitions for the current thread.
     for (uint i = start_index; i <= end_index; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
 
-      // Retrieve actors around ego actor
+      // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
 
-      // Check every actor in the vicinity if it poses a collision hazard
+      // Check every actor in the vicinity if it poses a collision hazard.
       for (auto i = actor_id_list.begin(); (i != actor_id_list.end()) && !collision_hazard; ++i) {
         ActorId actor_id = *i;
         try {
@@ -135,9 +134,8 @@ namespace CollisionStageConstants {
     localization_messenger_state = packet.id;
 
     // Connecting actor ids to their position indices on data arrays.
-    // This map also provides us the additional benefit of being able to
-    // quickly identify if a vehicle id is registered with the traffic manager or
-    // not.
+    // This map also provides us the additional benefit of being able to quickly identify
+    // if a vehicle id is registered with the traffic manager or not.
     uint index = 0u;
     for (auto &element: *localization_frame.get()) {
       id_to_index.insert({element.actor->GetId(), index++});
@@ -254,20 +252,19 @@ namespace CollisionStageConstants {
         cg::Location location = boundary_end->GetLocation();
         cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
         perpendicular_vector = perpendicular_vector.MakeUnitVector();
-        // Direction determined for the left-handed system
+        // Direction determined for the left-handed system.
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
         left_boundary.push_back(location + cg::Location(scaled_perpendicular));
         right_boundary.push_back(location + cg::Location(-1 * scaled_perpendicular));
         boundary_end = waypoint_buffer->at(i);
       }
 
-      // Connecting the geodesic path boundary with the vehicle bounding box
+      // Connecting the geodesic path boundary with the vehicle bounding box.
       LocationList geodesic_boundary;
       // Reversing right boundary to construct clockwise (left-hand system)
-      // boundary. This is so because both left and right boundary vectors
-      // have the closest point to the vehicle at their starting index
-      // For the right boundary, we want to begin at the farthest point to
-      // have a clockwise trace
+      // boundary. This is so because both left and right boundary vectors have
+      // the closest point to the vehicle at their starting index for the right boundary,
+      // we want to begin at the farthest point to have a clockwise trace.
       std::reverse(right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), right_boundary.begin(), right_boundary.end());
       geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
@@ -291,7 +288,7 @@ namespace CollisionStageConstants {
     cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
     // Four corners of the vehicle in top view clockwise order (left-handed
-    // system)
+    // system).
     cg::Vector3D x_boundary_vector = heading_vector * extent.x;
     cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
     return {

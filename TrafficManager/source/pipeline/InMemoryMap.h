@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cmath>
-#include <memory>
 #include <limits>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -25,28 +25,28 @@ namespace cg = carla::geom;
   using SectionWaypointMap = std::unordered_map<uint, LaneWaypointMap>;
   using RoadWaypointMap = std::unordered_map<uint, SectionWaypointMap>;
 
-  /// This class constructs a discretised local map cache.
+  /// This class constructs a discretized local map-cache.
   /// Instantiate the class with map topology from the simulator
-  /// and run setUp() to construct the local map.
+  /// and run SetUp() to construct the local map.
   class InMemoryMap {
 
   private:
 
-    /// Object to hold sparse topology received in the constructor
+    /// Object to hold sparse topology received by the constructor.
     TopologyList _topology;
     /// Structure to hold all custom waypoint objects after
-    /// Interpolation of sparse topology
+    /// interpolation of sparse topology.
     NodeList dense_topology;
-    /// Structure to segregate waypoints according to their geo ids
+    /// Structure to segregate waypoints according to their geo ids.
     RoadWaypointMap road_to_waypoint;
 
-    /// The method used to segregate and place waypoints into RoadWaypointMap
+    /// This method is used to segregate and place waypoints into RoadWaypointMap.
     void StructuredWaypoints(SimpleWaypointPtr waypoint);
 
-    /// the method used to place lane change link between waypoints
+    /// This method is used to place a lane change link between waypoints
     void LinkLaneChangePoint(SimpleWaypointPtr reference_waypoint, WaypointPtr neighbor_waypoint, int side);
 
-    /// The method used to find and place lane change links
+    /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
   public:
@@ -54,13 +54,13 @@ namespace cg = carla::geom;
     InMemoryMap(TopologyList topology);
     ~InMemoryMap();
 
-    /// Constructs the local map with a resolution of sampling_resolution.
+    /// This method constructs the local map with a resolution of sampling_resolution.
     void SetUp(int sampling_resolution);
 
-    /// Returns the closest waypoint to a given location on the map.
+    /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;
 
-    /// Returns the full list of discrete samples of the map in the local cache.
+    /// This method returns the full list of discrete samples of the map in the local cache.
     NodeList GetDenseTopology() const;
 
   };

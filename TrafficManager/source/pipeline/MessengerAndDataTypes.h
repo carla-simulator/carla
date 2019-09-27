@@ -12,23 +12,25 @@
 
 namespace traffic_manager {
 
-  /// Convenience typing
+namespace cc = carla::client;
 
-  /// Alias for waypoint buffer used in localization stage
+  /// Convenience typing.
+
+  /// Alias for waypoint buffer used in the localization stage.
   using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
-  /// Alias used for the list of buffers in localization stage
+  /// Alias used for the list of buffers in the localization stage.
   using BufferList = std::vector<Buffer>;
 
-  /// Data types
+  /// Data types.
 
-  /// Type of data sent by localization stage to motion planner stage
+  /// Type of data sent by the localization stage to the motion planner stage.
   struct LocalizationToPlannerData {
-    carla::SharedPtr<carla::client::Actor> actor;
+    carla::SharedPtr<cc::Actor> actor;
     float deviation;
     bool approaching_true_junction;
   };
 
-  /// Type of data sent by motion planner stage to batch control stage
+  /// Type of data sent by the motion planner stage to the batch control stage.
   struct PlannerToControlData {
     carla::ActorId actor_id;
     float throttle;
@@ -36,31 +38,32 @@ namespace traffic_manager {
     float steer;
   };
 
-  /// Type of data sent by localization stage to collision stage
+  /// Type of data sent by the localization stage to the collision stage.
   struct LocalizationToCollisionData {
-    carla::SharedPtr<carla::client::Actor> actor;
+    carla::SharedPtr<cc::Actor> actor;
     Buffer *buffer;
   };
 
-  /// Type of data sent by collision stage to motion planner stage
+  /// Type of data sent by the collision stage to the motion planner stage.
   struct CollisionToPlannerData {
     bool hazard;
   };
 
-  /// Type of data sent by localization stage to traffic light stage
+  /// Type of data sent by the localization stage to the traffic light stage.
   struct LocalizationToTrafficLightData {
-    carla::SharedPtr<carla::client::Actor> actor;
+    carla::SharedPtr<cc::Actor> actor;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
   };
 
-  /// Type of data sent by traffic light stage to motion planner stage
+  /// Type of data sent by the traffic light stage to the motion planner stage.
   struct TrafficLightToPlannerData {
     float traffic_light_hazard;
   };
 
-  /// Data frame types
-  /// Array types of data flowing between stages
+  /// Data frame types.
+
+  /// Array types of data flowing between stages.
 
   using LocalizationToPlannerFrame = std::vector<LocalizationToPlannerData>;
   using PlannerToControlFrame = std::vector<PlannerToControlData>;

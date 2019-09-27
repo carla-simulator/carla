@@ -3,11 +3,12 @@
 namespace traffic_manager {
 
 namespace MapConstants {
-  // Very important that this is less than 10^-4
+  // Very important that this is less than 10^-4.
   static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
   static const uint LANE_CHANGE_LOOK_AHEAD = 5u;
-  static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;     // cos(angle)
+  // Cosine of the angle.
+  static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
 }
   using namespace MapConstants;
 
@@ -26,10 +27,10 @@ namespace MapConstants {
         };
     auto square = [](float input) {return std::pow(input, 2);};
 
-    // Creating dense topology
+    // Creating dense topology.
     for (auto &pair : _topology) {
 
-      // Looping through every topology segment
+      // Looping through every topology segment.
       WaypointPtr begin_waypoint = pair.first;
       WaypointPtr end_waypoint = pair.second;
       cg::Location begin_location = begin_waypoint->GetTransform().location;
@@ -37,7 +38,7 @@ namespace MapConstants {
 
       if (distance_squared(begin_location, end_location) > square(ZERO_LENGTH)) {
 
-        // Adding entry waypoint
+        // Adding entry waypoint.
         WaypointPtr current_waypoint = begin_waypoint;
         dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
 
@@ -45,7 +46,7 @@ namespace MapConstants {
 
         entry_node_list.push_back(dense_topology.back());
 
-        // Populating waypoints from begin_waypoint to end_waypoint
+        // Populating waypoints from begin_waypoint to end_waypoint.
         while (distance_squared(current_waypoint->GetTransform().location,
             end_location) > square(sampling_resolution)) {
 
@@ -58,7 +59,7 @@ namespace MapConstants {
           previous_wp->SetNextWaypoint({dense_topology.back()});
         }
 
-        // Adding exit waypoint
+        // Adding exit waypoint.
         SimpleWaypointPtr previous_wp = dense_topology.back();
         dense_topology.push_back(std::make_shared<SimpleWaypoint>(end_waypoint));
 
@@ -69,7 +70,7 @@ namespace MapConstants {
       }
     }
 
-    // Linking segments
+    // Linking segments.
     uint i = 0, j = 0;
     for (SimpleWaypointPtr end_point : exit_node_list) {
       for (SimpleWaypointPtr begin_point : entry_node_list) {
@@ -81,10 +82,10 @@ namespace MapConstants {
       ++i;
     }
 
-    // Tying up loose ends
+    // Tying up loose ends.
     // Loop through all exit nodes of topology segments,
-    // connect any dangling endpoints to a nearest entry point
-    // of another topology segment
+    // connect any dangling endpoints to the nearest entry point
+    // of another topology segment.
     i = 0;
     for (auto &end_point : exit_node_list) {
       if (end_point->GetNextWaypoint().size() == 0) {
@@ -104,7 +105,7 @@ namespace MapConstants {
         relative_vector = relative_vector.MakeUnitVector();
         float relative_dot = cg::Math::Dot(end_point_vector, relative_vector);
         if (relative_dot < LANE_CHANGE_ANGULAR_THRESHOLD) {
-          int count = LANE_CHANGE_LOOK_AHEAD;
+          uint count = LANE_CHANGE_LOOK_AHEAD;
           while (count > 0) {
             closest_connection = closest_connection->GetNextWaypoint()[0];
             --count;
@@ -115,7 +116,7 @@ namespace MapConstants {
       ++i;
     }
 
-    // Linking lane change connections
+    // Linking lane change connections.
     for (auto &simple_waypoint:dense_topology) {
       FindAndLinkLaneChange(simple_waypoint);
     }
@@ -123,7 +124,7 @@ namespace MapConstants {
   }
 
   SimpleWaypointPtr InMemoryMap::GetWaypoint(const carla::geom::Location &location) const {
-    // Need more efficient code for the functionality
+
     SimpleWaypointPtr closest_waypoint;
     float min_distance = std::numeric_limits<float>::max();
     for (auto &simple_waypoint : dense_topology) {
@@ -187,7 +188,7 @@ namespace MapConstants {
       int neighbour_lane_id = neighbor_waypoint->GetLaneId();
 
       // Find waypoint samples in dense topology corresponding to the
-      // geo ids of the neighbor waypoint found using Carla's server call
+      // geo ids of the neighbor waypoint found using Carla's server call.
       if (road_to_waypoint.find(neighbour_road_id) != road_to_waypoint.end() &&
           (road_to_waypoint[neighbour_road_id].find(neighbour_section_id)
           != road_to_waypoint[neighbour_road_id].end()) &&
@@ -197,9 +198,9 @@ namespace MapConstants {
         std::vector<SimpleWaypointPtr> waypoints_to_left =
             road_to_waypoint[neighbour_road_id][neighbour_section_id][neighbour_lane_id];
 
-        // Find the nearest sample to the neighbour waypoint to be used as a
+        // Find the nearest sample to the neighbor waypoint to be used as a
         // local cache representative to be linked for indicating a lane change
-        // connection
+        // connection.
         if (waypoints_to_left.size() > 0) {
           SimpleWaypointPtr nearest_waypoint = waypoints_to_left[0];
           float smallest_left_distance = INFINITE_DISTANCE;
@@ -210,7 +211,7 @@ namespace MapConstants {
             }
           }
 
-          // Place appropriate lane change link
+          // Place appropriate lane change link.
           if (side < 0) {
             reference_waypoint->SetLeftWaypoint(nearest_waypoint);
           } else if (side > 0) {
