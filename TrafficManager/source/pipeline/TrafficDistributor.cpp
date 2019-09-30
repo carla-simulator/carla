@@ -7,6 +7,7 @@ namespace TrafficDistributorConstants {
   static const float LATERAL_DETECTION_CONE = 135.0f;
   static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
   static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
+  static const float APPROACHING_VEHICLE_TIME_MARGIN = 1.0f;
 }
   using namespace TrafficDistributorConstants;
 
@@ -188,11 +189,11 @@ namespace TrafficDistributorConstants {
           bool found_hazard = false;
           for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
 
-            const traffic_manager::ActorId &other_vehicle_id = *i;
+            const ActorId &other_vehicle_id = *i;
             traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
                 vehicle_id_to_index.at(other_vehicle_id));
 
-            // If a vehicle on target lane is behind us, check if we are
+            // If a vehicle on the target lane is behind us, check if we are
             // fast enough to execute lane change.
             if (!other_vehicle_buffer.empty() &&
                 other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
@@ -204,20 +205,20 @@ namespace TrafficDistributorConstants {
               if (relative_deviation < 0) {
 
                 float time_to_reach_other =
-                    (change_over_point->Distance(other_vehicle_location) + change_over_distance) /
+                    change_over_point->Distance(other_vehicle_location) /
                     other_vehicle->GetVelocity().Length();
 
                 float time_to_reach_reference =
-                    (change_over_point->Distance(vehicle_location) + change_over_distance) /
+                    change_over_point->Distance(vehicle_location) /
                     vehicle->GetVelocity().Length();
 
                 if (relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180) ||
-                    time_to_reach_other > time_to_reach_reference) {
+                    time_to_reach_other > (time_to_reach_reference + APPROACHING_VEHICLE_TIME_MARGIN)) {
+
                   found_hazard = true;
                 }
-
               }
-              // If a vehicle on target lane is in front, check if it is far
+              // If a vehicle on the target lane is in front, check if it is far
               // enough to perform a lane change.
               else {
 
@@ -226,7 +227,6 @@ namespace TrafficDistributorConstants {
                     (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
                   found_hazard = true;
                 }
-
               }
             }
           }

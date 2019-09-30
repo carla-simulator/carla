@@ -35,14 +35,6 @@ namespace traffic_manager {
     return waypoint->GetTransform().rotation.GetForwardVector();
   }
 
-  std::vector<float> SimpleWaypoint::GetXYZ() const {
-    float x = waypoint->GetTransform().location.x;
-    float y = waypoint->GetTransform().location.y;
-    float z = waypoint->GetTransform().location.z;
-    std::vector<float> coordinates = {x, y, z};
-    return coordinates;
-  }
-
   uint SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
     for (auto &simple_waypoint: waypoints) {
       next_waypoints.push_back(simple_waypoint);
@@ -50,12 +42,26 @@ namespace traffic_manager {
     return waypoints.size();
   }
 
-  void SimpleWaypoint::SetLeftWaypoint(SimpleWaypointPtr waypoint) {
-    next_left_waypoint = waypoint;
+  void SimpleWaypoint::SetLeftWaypoint(SimpleWaypointPtr _waypoint) {
+
+    cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
+    cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
+    if ((heading_vector.x*relative_vector.y - heading_vector.y*relative_vector.x) > 0) {
+      next_left_waypoint = _waypoint;
+    } else {
+      throw std::invalid_argument("Argument not on the left side!");
+    }
   }
 
-  void SimpleWaypoint::SetRightWaypoint(SimpleWaypointPtr waypoint) {
-    next_right_waypoint = waypoint;
+  void SimpleWaypoint::SetRightWaypoint(SimpleWaypointPtr _waypoint) {
+
+    cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
+    cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
+    if ((heading_vector.x*relative_vector.y - heading_vector.y*relative_vector.x) < 0) {
+      next_left_waypoint = _waypoint;
+    } else {
+      throw std::invalid_argument("Argument not on the right side!");
+    }
   }
 
   float SimpleWaypoint::Distance(const cg::Location &location) const {

@@ -6,7 +6,7 @@ namespace CollisionStageConstants {
   static const float SEARCH_RADIUS = 20.0f;
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 1.3f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 1.5f;
   static const float EXTENSION_SQUARE_POINT = 7.0f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;

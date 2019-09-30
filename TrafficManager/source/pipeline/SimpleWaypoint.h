@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <memory.h>
 
 #include "carla/client/Waypoint.h"
@@ -47,9 +48,6 @@ namespace cg = carla::geom;
 
     /// Returns the vector along the waypoint's direction.
     cg::Vector3D GetForwardVector() const;
-
-    /// Returns the location of the waypoint as a list of x,y,z float values.
-    std::vector<float> GetXYZ() const;
 
     /// This method is used to set the next waypoints.
     uint SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);

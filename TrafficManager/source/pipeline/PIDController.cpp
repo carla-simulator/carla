@@ -61,7 +61,7 @@ namespace PIDControllerConstants {
       brake = 0.0f;
     } else {
       throttle = 0.0f;
-      brake = MAX_BRAKE;
+      brake = std::min(std::abs(expr_v), MAX_BRAKE);
     }
 
     // Lateral PID calculation.

@@ -126,7 +126,7 @@ namespace MapConstants {
   SimpleWaypointPtr InMemoryMap::GetWaypoint(const carla::geom::Location &location) const {
 
     SimpleWaypointPtr closest_waypoint;
-    float min_distance = std::numeric_limits<float>::max();
+    float min_distance = INFINITE_DISTANCE;
     for (auto &simple_waypoint : dense_topology) {
       float current_distance = simple_waypoint->DistanceSquared(location);
       if (current_distance < min_distance) {
@@ -142,37 +142,54 @@ namespace MapConstants {
   }
 
   void InMemoryMap::StructuredWaypoints(SimpleWaypointPtr waypoint) {
+
     WaypointPtr current_waypoint = waypoint->GetWaypoint();
     uint section_id = current_waypoint->GetSectionId();
     uint road_id = current_waypoint->GetRoadId();
     int lane_id = current_waypoint->GetLaneId();
 
+    // Find the road by its id.
     if (road_to_waypoint.find(road_id) != road_to_waypoint.end()) {
-      if (road_to_waypoint[road_id].find(section_id) != road_to_waypoint[road_id].end()) {
-        if (road_to_waypoint[road_id][section_id].find(lane_id) !=
-            road_to_waypoint[road_id][section_id].end()) {
 
-          road_to_waypoint[road_id][section_id][lane_id].push_back(waypoint);
+      SectionWaypointMap &section_map = road_to_waypoint.at(road_id);
+      // Find the section of the road by its id.
+      if (section_map.find(section_id) != section_map.end()) {
+
+        LaneWaypointMap &lane_map = section_map.at(section_id);
+        // Find the lane of the section by its id.
+        if (lane_map.find(lane_id) != lane_map.end()) {
+
+          // Place the waypoint in the lane's list.
+          lane_map.at(lane_id).push_back(waypoint);
         } else {
-          std::vector<SimpleWaypointPtr> lane_wp;
-          lane_wp.push_back(waypoint);
-          road_to_waypoint[road_id][section_id].insert({lane_id, lane_wp});
+
+          // Create a new list to hold waypoints for the lane.
+          std::vector<SimpleWaypointPtr> lane_waypoint_list;
+          lane_waypoint_list.push_back(waypoint);
+          // Insert the new list into the lane map.
+          lane_map.insert({lane_id, lane_waypoint_list});
         }
       } else {
-        std::vector<SimpleWaypointPtr> lane_wp;
-        lane_wp.push_back(waypoint);
+
+        std::vector<SimpleWaypointPtr> lane_waypoint_list;
+        lane_waypoint_list.push_back(waypoint);
+        // Create a new lane map to hold the waypoint list.
         LaneWaypointMap lane_map;
-        lane_map.insert({lane_id, lane_wp});
-        road_to_waypoint[road_id].insert({section_id, lane_map});
+        lane_map.insert({lane_id, lane_waypoint_list});
+        SectionWaypointMap &section_map = road_to_waypoint.at(road_id);
+        // Insert the new lane map into the corresponding section map.
+        section_map.insert({section_id, lane_map});
       }
     } else {
 
-      std::vector<SimpleWaypointPtr> lane_wp;
-      lane_wp.push_back(waypoint);
+      std::vector<SimpleWaypointPtr> lane_waypoint_list;
+      lane_waypoint_list.push_back(waypoint);
       LaneWaypointMap lane_map;
-      lane_map.insert({lane_id, lane_wp});
+      lane_map.insert({lane_id, lane_waypoint_list});
+      // Create a new section map to hold the lane map.
       SectionWaypointMap section_map;
       section_map.insert({section_id, lane_map});
+      // Insert the new section map into the corresponding road.
       road_to_waypoint.insert({road_id, section_map});
     }
   }
