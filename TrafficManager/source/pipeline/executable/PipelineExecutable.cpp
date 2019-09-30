@@ -1,9 +1,11 @@
 #include <atomic>
 #include <cstdlib>
+#include <ctime>
 #include <execinfo.h>
 #include <iostream>
 #include <signal.h>
 #include <stdexcept>
+#include <random>
 
 #include "boost/stacktrace.hpp"
 #include "carla/client/Client.h"
@@ -17,7 +19,8 @@
 namespace cc = carla::client;
 using Actor = carla::SharedPtr<cc::Actor>;
 
-void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic_amount);
+void run_pipeline(cc::World &world, cc::Client &client_conn,
+                  uint target_traffic_amount, uint randomization_seed);
 
 std::atomic<bool> quit(false);
 void got_signal(int) {
@@ -58,12 +61,28 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  run_pipeline(world, client_conn, target_traffic_amount);
+  int randomization_seed = -1;
+  if (argc == 5 && std::string(argv[3]) == "-s") {
+    try {
+      randomization_seed = std::stoi(argv[4]);
+    } catch (const std::exception &e) {
+      carla::log_warning("Failed to parse argument, choosing defaults\n");
+    }
+  }
+
+  if (randomization_seed < 0) {
+    std::srand(std::time(0));
+  } else {
+    std::srand(randomization_seed);
+  }
+
+  run_pipeline(world, client_conn, target_traffic_amount, randomization_seed);
 
   return 0;
 }
 
-void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic_amount) {
+void run_pipeline(cc::World &world, cc::Client &client_conn,
+                  uint target_traffic_amount, uint randomization_seed) {
 
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -81,7 +100,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic
   local_map->SetUp(1.0);
 
   uint core_count = traffic_manager::read_core_count();
-  std::vector<traffic_manager::Actor> registered_actors = traffic_manager::spawn_traffic(
+  std::vector<Actor> registered_actors = traffic_manager::spawn_traffic(
     client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 
@@ -101,6 +120,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, uint target_traffic
   pipeline.Start();
 
   carla::log_info("TrafficManager started\n");
+
   while (!quit.load()) {
     sleep(1);
   }

@@ -8,15 +8,6 @@ namespace PipelineConstants {
 }
   using namespace PipelineConstants;
 
-  // Pick a random element from @a range.
-  template <typename RangeT, typename RNG>
-  static auto &RandomChoice(const RangeT &range, RNG &&generator) {
-
-    EXPECT_TRUE(range.size() > 0u);
-    std::uniform_int_distribution<size_t> dist{0u, range.size() - 1u};
-    return range[dist(std::forward<RNG>(generator))];
-  }
-
   uint read_core_count() {
 
     // Assuming quad-core if core count not available.
@@ -33,12 +24,30 @@ namespace PipelineConstants {
     std::vector<ActorPtr> actor_list;
     carla::SharedPtr<cc::Map> world_map = world.GetMap();
 
+    auto max_random = [] (uint limit) {return rand()%limit;};
+
     // Get a random selection of spawn points from the map.
     std::vector<cg::Transform> spawn_points = world_map->GetRecommendedSpawnPoints();
-    std::random_shuffle(spawn_points.begin(), spawn_points.end());
+    std::random_shuffle(spawn_points.begin(), spawn_points.end(), max_random);
+
     // Blueprint library containing all vehicle types.
-    carla::SharedPtr<cc::BlueprintLibrary> blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
-    std::mt19937_64 rng((std::random_device())());
+    using BlueprintLibraryPtr = carla::SharedPtr<cc::BlueprintLibrary>;
+    BlueprintLibraryPtr blueprint_library = world.GetBlueprintLibrary()->Filter("vehicle.*");
+
+    // Removing unsafe vehicles from the blueprint library.
+    std::vector<cc::ActorBlueprint> safe_blueprint_library;
+    for (auto &blueprint: *blueprint_library.get()) {
+
+      if (blueprint.GetAttribute("number_of_wheels") == 4 &&
+          blueprint.GetId() != "vehicle.carlamotors.carlacola" &&
+          blueprint.GetId() != "vehicle.bmw.isetta") {
+
+        safe_blueprint_library.push_back(blueprint);
+      }
+    }
+
+    // Randomizing the order of the list.
+    std::random_shuffle(safe_blueprint_library.begin(), safe_blueprint_library.end(), max_random);
 
     uint number_of_vehicles;
     if (target_amount == 0u) {
@@ -59,16 +68,10 @@ namespace PipelineConstants {
     std::vector<cr::Command> batch_spawn_commands;
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
-      cg::Transform spawn_point = spawn_points[i];
-      cc::ActorBlueprint blueprint = RandomChoice(*blueprint_library, rng);
+      cg::Transform spawn_point = spawn_points.at(i);
+      uint blueprint_size = safe_blueprint_library.size();
+      cc::ActorBlueprint blueprint = safe_blueprint_library.at(i % blueprint_size);
 
-      while (
-        blueprint.GetAttribute("number_of_wheels") != 4 ||
-        blueprint.GetId().compare("vehicle.carlamotors.carlacola") == 0 ||
-        blueprint.GetId().compare("vehicle.bmw.isetta") == 0
-        ) {
-        blueprint = RandomChoice(*blueprint_library, rng);
-      }
       blueprint.SetAttribute("role_name", "traffic_manager");
 
       using spawn = cr::Command::SpawnActor;
