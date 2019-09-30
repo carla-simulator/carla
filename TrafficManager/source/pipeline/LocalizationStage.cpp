@@ -151,19 +151,19 @@ namespace LocalizationConstants {
       }
 
       // Populating the buffer.
-      while (waypoint_buffer.back()->DistanceSquared(
-          waypoint_buffer.front()) <= std::pow(horizon_size, 2)) {
+      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
+             <= std::pow(horizon_size, 2)) {
 
-        SimpleWaypointPtr way_front = waypoint_buffer.back();
-        uint pre_selection_id = way_front->GetWaypoint()->GetId();
-        std::vector<SimpleWaypointPtr> next_waypoints = way_front->GetNextWaypoint();
+        uint pre_selection_id = waypoint_buffer.back()->GetWaypoint()->GetId();
+        std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+
         uint selection_index = 0u;
+        // Pseudo-randomize path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
-          selection_index = (divergence_choice.at(i) * (1 + pre_selection_id)) % next_waypoints.size();
+          selection_index = (divergence_choice.at(i) * (1u + pre_selection_id)) % next_waypoints.size();
         }
 
-        way_front = next_waypoints.at(selection_index);
-        waypoint_buffer.push_back(way_front);
+        waypoint_buffer.push_back(next_waypoints.at(selection_index));
       }
 
       // Generating output.
