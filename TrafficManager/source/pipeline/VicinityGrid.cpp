@@ -41,7 +41,11 @@ namespace traffic_manager {
 
       std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
       actor_to_grid_id.insert({actor_id, new_grid_id});
-      grid_to_actor_id.insert({new_grid_id, {actor_id}});
+      if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
+        grid_to_actor_id.at(new_grid_id).insert(actor_id);
+      } else {
+        grid_to_actor_id.insert({new_grid_id, {actor_id}});
+      }
     }
 
     // Return updated grid position.
