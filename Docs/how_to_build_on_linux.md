@@ -1,11 +1,12 @@
 <h1>How to build CARLA on Linux</h1>
+---
 
 !!! note
     CARLA requires Ubuntu 16.04 or later.
 
 Install the build tools and dependencies
 
-```
+```sh
 sudo apt-get update
 sudo apt-get install wget software-properties-common
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -16,6 +17,9 @@ sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build libvu
 pip2 install --user setuptools
 pip3 install --user setuptools
 ```
+
+!!! tip
+    For **Ubuntu 18.04**, change `libpng16-dev` to `libpng-dev` from the previous example.
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
@@ -30,6 +34,7 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clan
 
 Build Unreal Engine
 -------------------
+---
 
 !!! note
     Unreal Engine repositories are set to private. In order to gain access you
@@ -37,7 +42,7 @@ Build Unreal Engine
     [www.unrealengine.com](https://www.unrealengine.com).
 
 Download and compile Unreal Engine 4.22. Here we will assume you install it at
-`~/UnrealEngine_4.22", but you can install it anywhere, just replace the path
+`~/UnrealEngine_4.22`, but you can install it anywhere, just replace the path
 where necessary.
 
 ```sh
@@ -46,15 +51,14 @@ cd ~/UnrealEngine_4.22
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
-Check Unreal's documentation
-["Building On Linux"](https://wiki.unrealengine.com/Building_On_Linux) if any of
-the steps above fail.
+Check Unreal's documentation ["Building On Linux"](https://wiki.unrealengine.com/Building_On_Linux)
+if any of the steps above fail.
 
 Build CARLA
 -----------
+---
 
-Clone or download the project from our
-[GitHub repository](https://github.com/carla-simulator/carla)
+Clone or download the project from our [GitHub repository](https://github.com/carla-simulator/carla)
 
 ```sh
 git clone https://github.com/carla-simulator/carla
@@ -96,6 +100,7 @@ make help       # Print all available commands.
 
 Updating CARLA
 --------------
+---
 
 Every new release of CARLA, we release too a new package with the latest changes
 in the CARLA assets. To download the latest version and recompile CARLA, run
@@ -109,7 +114,8 @@ make launch
 
 - - -
 
-<h2>Assets repository (development only)</h2>
+Assets repository (development only)
+------------------------------------
 
 Our 3D assets, models, and maps have also a
 [publicly available git repository][contentrepolink]. We regularly push latest

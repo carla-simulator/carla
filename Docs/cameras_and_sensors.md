@@ -3,10 +3,10 @@
 ![Client window](img/client_window.png)
 
 Sensors are a special type of actor able to measure and stream data. All the
-sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the callback function that will
-be called each time the sensor produces a new measurement. Sensors are typically
-attached to vehicles and produce data either each simulation update, or when a
-certain event is registered.
+sensors have a [`listen`](python_api.md#carla.Sensor.listen) method that registers the
+callback function that will be called each time the sensor produces a new measurement.
+Sensors are typically attached to vehicles and produce data either each simulation update,
+or when a certain event is registered.
 
 The following Python excerpt shows how you would typically attach a sensor to a
 vehicle, in this case we are adding a dashboard HD camera to a vehicle.
@@ -51,7 +51,8 @@ This is the list of sensors currently available
   * [sensor.other.lane_invasion](#sensorotherlane_invasion)
   * [sensor.other.obstacle](#sensorotherobstacle)
 
-Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to convert the pixels of the original image.
+Camera sensors use [`carla.colorConverter`](python_api.md#carla.ColorConverter) in order to
+convert the pixels of the original image.
 
 sensor.camera.rgb
 -----------------
@@ -73,7 +74,7 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | `iso` | float | 1200.0 | The camera sensor sensitivity |
 | `fstop` | float | 1.4 | Defines the opening of the camera lens. Aperture is `1 / fstop` with typical lens going down to f / 1.2 (larger opening). Larger numbers will reduce the Depth of Field effect |
 
-<h4>Camera lens distortion attributes.</h4>
+<h4>Camera lens distortion attributes</h4>
 
 | Blueprint attribute | Type | Default | Description |
 |---------------------|------|---------|-------------|
@@ -84,7 +85,7 @@ The "RGB" camera acts as a regular camera capturing images from the scene.
 | `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
 | `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
 
-<h4>Advanced camera attributes.</h4>
+<h4>Advanced camera attributes</h4>
 
 Since these effects are provided from Unreal Engine 4, please make sure to check their documentation on how they work and the relation between them:
 
@@ -101,15 +102,15 @@ Since these effects are provided from Unreal Engine 4, please make sure to check
 | `min_fstop` | float | 1.2 | Maximum Aperture |
 | `blade_count` | int | 5 | The number of blades that make up the diaphragm mechanism |
 | `exposure_mode` | str | `"manual"` | Can be `"manual"` or `"histogram"`. More info in [UE4 official docs][AutomaticExposure.gamesetting] |
-| `exposure_compensation` | float | 3.0 | Logarithmic adjustment for the exposure. Only used if a tonemapper is specified. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter |
-| `exposure_min_bright` | float | 0.1 | Used when `exposure_mode`:`"histogram"`  The minimum brightness for auto exposure that limits the lower brightness the eye can adapt within. Values must be greater than 0 and should be less than or equal to Max Brightness |
-| `exposure_max_bright` | float | 2.0 | Used when `exposure_mode`:`"histogram"`  The maximum brightness for auto exposure that limits the upper brightness the eye can adapt within. Values must be greater 0 and should be greater than or equal to Min Brightness |
+| `exposure_compensation` | float | 3.0 | Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter |
+| `exposure_min_bright` | float | 0.1 | Used when `exposure_mode`:`"histogram"`  The minimum brightness for auto exposure that limits the lower brightness the eye can adapt within. Values must be greater than 0 and should be less than or equal to `exposure_max_bright` |
+| `exposure_max_bright` | float | 2.0 | Used when `exposure_mode`:`"histogram"`  The maximum brightness for auto exposure that limits the upper brightness the eye can adapt within. Values must be greater 0 and should be greater than or equal to `exposure_min_bright` |
 | `exposure_speed_up` | float | 3.0 | Used when `exposure_mode`:`"histogram"` The speed at which the adaptation occurs from a dark environment to a bright environment |
 | `exposure_speed_down` | float | 1.0 | Used when `exposure_mode`:`"histogram"` The speed at which the adaptation occurs from a bright environment to a dark environment |
 | `calibration_constant` | float | 16.0 | Calibration constant for 18% Albedo |
 | `focal_distance` | float | 1000.0 | The distance in which the depth of field effect should be sharp. This value is measured in Unreal Units (cm) |
-| `blur_amount` | float | 0.0 | ... |
-| `blur_radius` | float | 1.0 | ... |
+| `blur_amount` | float | 1.0 | Strength/intensity of motion blur |
+| `blur_radius` | float | 0.0 | Radius in pixels at 1080p resolution to apply according to distance from camera to emulate atmospheric scattering |
 | `motion_blur_intensity` | float | 0.45 | Strength of motion blur. 1 is max and 0 is off |
 | `motion_blur_max_distortion` | float | 0.35 | Max distortion caused by motion blur, in percent of the screen width, 0 is off |
 | `motion_blur_min_object_screen_size` | float | 0.1 | Percentage of screen width objects must have for motion blur, lower value means less draw calls
@@ -126,7 +127,9 @@ Since these effects are provided from Unreal Engine 4, please make sure to check
 
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
-`sensor_tick` tells how fast we want the sensor to capture the data. A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
+The `sensor_tick` tells how fast we want the sensor to capture the data.
+A value of 1.5 means that we want the sensor to capture data each second and a half.
+By default a value of 0.0 means as fast as possible.
 
 <!-- This is commented as a reminder to improve documentation about post process effects -->
 <!-- If `enable_postprocess_effects` is enabled, a set of post-process effects is
@@ -139,6 +142,8 @@ applied to the image to create a more realistic feel
     darker or brighter areas.
   * **Lens flares** Simulates the reflection of bright objects on the lens.
   * **Depth of field** Blurs objects near or very far away of the camera. -->
+
+<h4>Output attributes</h4>
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -170,7 +175,7 @@ pixel to the camera (also known as **depth buffer** or **z-buffer**).
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
-<h4>Camera lens distortion attributes.</h4>
+<h4>Camera lens distortion attributes</h4>
 
 | Blueprint attribute | Type | Default | Description |
 |---------------------|------|---------|-------------|
@@ -180,6 +185,8 @@ pixel to the camera (also known as **depth buffer** or **z-buffer**).
 | `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
 | `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
 | `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
+
+<h4>Output attributes</h4>
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -222,7 +229,7 @@ pedestrians appear in a different color than vehicles.
 | `fov`               | float | 90.0    | Horizontal field of view in degrees |
 | `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks) |
 
-<h4>Camera lens distortion attributes.</h4>
+<h4>Camera lens distortion attributes</h4>
 
 | Blueprint attribute | Type | Default | Description |
 |---------------------|------|---------|-------------|
@@ -232,6 +239,8 @@ pedestrians appear in a different color than vehicles.
 | `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
 | `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
 | `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
+
+<h4>Output attributes</h4>
 
 This sensor produces [`carla.Image`](python_api.md#carla.Image)
 objects.
@@ -290,7 +299,7 @@ then the rotation is simulated computing the horizontal angle that the Lidar
 rotated this frame, and doing a ray-cast for each point that each laser was
 supposed to generate this frame; `points_per_second / (FPS * channels)`.
 
-<h4>Basic camera attributes</h4>
+<h4>Lidar attributes</h4>
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
@@ -302,16 +311,7 @@ supposed to generate this frame; `points_per_second / (FPS * channels)`.
 | `lower_fov`          | float | -30.0   | Angle in degrees of the lower most laser |
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
 
-<h4>Camera lens distortion attributes.</h4>
-
-| Blueprint attribute | Type | Default | Description |
-|---------------------|------|---------|-------------|
-| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
-| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
-| `lens_k` | float | -1.0 | Range: [-inf, inf] |
-| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
-| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
-| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
+<h4>Output attributes</h4>
 
 This sensor produces
 [`carla.LidarMeasurement`](python_api.md#carla.LidarMeasurement)
@@ -353,7 +353,10 @@ actor collisions against something in the world. This sensor does not have any
 configurable attribute.
 
 !!! note
-    This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it collides with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
+
+<h4>Output attributes</h4>
 
 This sensor produces a
 [`carla.CollisionEvent`](python_api.md#carla.CollisionEvent)
@@ -387,6 +390,8 @@ by this sensor.
 
 This sensor does not have any configurable attribute.
 
+<h4>Output attributes</h4>
+
 This sensor produces a
 [`carla.LaneInvasionEvent`](python_api.md#carla.LaneInvasionEvent)
 object for each lane marking crossed by the actor
@@ -405,6 +410,8 @@ sensor.other.gnss
 This sensor, when attached to an actor, reports its current gnss position.
 The gnss position is internally calculated by adding the metric position to
 an initial geo reference location defined within the OpenDRIVE map definition.
+
+<h4>Output attributes</h4>
 
 This sensor produces
 [`carla.GnssEvent`](python_api.md#carla.GnssEvent)
@@ -425,7 +432,8 @@ sensor.other.obstacle
 This sensor, when attached to an actor, reports if there is obstacles ahead.
 
 !!! note
-    This sensor creates "fake" actors when it detects obstacles with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+    This sensor creates "fake" actors when it detects obstacles with something that is not an actor,
+    this is so we can retrieve the semantic tags of the object we hit.
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
@@ -434,6 +442,8 @@ This sensor, when attached to an actor, reports if there is obstacles ahead.
 | `only_dynamics`      | bool  | false   | If true, the trace will only look for dynamic objects |
 | `debug_linetrace`    | bool  | false   | If true, the trace will be visible |
 | `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks) |
+
+<h4>Output attributes</h4>
 
 This sensor produces
 [`carla.ObstacleDetectionEvent`](python_api.md#carla.ObstacleDetectionEvent)
