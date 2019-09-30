@@ -1,8 +1,8 @@
 <h1>How to model vehicles</h1>
 
-## 4-Wheeled Vehicles
+# 4-Wheeled Vehicles
 
-<h3>Modelling</h3>
+## Modelling
 
 Vehicles must have a minimum of 10.000 and a maximum of 17.000 Tris
 approximately. We model the vehicles using the size and scale of actual cars.
@@ -35,9 +35,7 @@ The vehicle must be divided in 6 materials:
     Put a rectangular plane with this size 29-12 cm, for the licence Plate. 
     We assign the license plate texture.
 
-    
-
-<h3>Nomenclature of Material</h3>
+## Nomenclature of Material
 
 * M(Material)_"CarName"_Bodywork(part of car)
 
@@ -51,8 +49,7 @@ The vehicle must be divided in 6 materials:
 
 * M_"CarName"_LicencePlate
 
-
-<h3>Textures</h3>
+## Textures
 
 The size of the textures is 2048x2048.
 
@@ -73,11 +70,7 @@ TEXTURES
 MATERIAL
 * M_Tesla3_BodyWork
 
-
-
-
-
-<h3>RIG</h3>
+## RIG
 
 The easiest way is to copy the "General4WheeledVehicleSkeleton" present in our project,
 either by exporting it and copying it to your model or by creating your skeleton
@@ -98,7 +91,7 @@ Vhehicle_Base: The origin point of the mesh, place it in the point (0,0,0) of th
 
 * Wheel_Rear_Left: Set the joint's position in the middle of the Wheel.
 
-<h3>LODs</h3>
+## LODs
 
 All vehicle LODs must be made in Maya or other 3D software. Because Unreal does
 not generate LODs automatically, you can adjust the number of Tris to make a

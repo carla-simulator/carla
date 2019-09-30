@@ -4,8 +4,8 @@ BINDIR=$(CURDIR)/bin
 INSTALLDIR=$(CURDIR)/libcarla-install
 TOOLCHAIN=$(CURDIR)/ToolChain.cmake
 
-CC=/usr/bin/clang-7
-CXX=/usr/bin/clang++-7
+CC=/usr/bin/gcc-7
+CXX=/usr/bin/g++-7
 CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG -Werror -Wall -Wextra
 
 define log

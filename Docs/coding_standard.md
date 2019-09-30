@@ -1,9 +1,7 @@
 <h1>Coding standard</h1>
 
-> _This document is a work in progress and might be incomplete._
-
 General
--------
+=======
 
   * Use spaces, not tabs.
   * Avoid adding trailing whitespace as it creates noise in the diffs.

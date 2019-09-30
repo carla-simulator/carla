@@ -108,8 +108,9 @@ actor = world.spawn_actor(blueprint, transform)
 ```
 
 The spawn actor function comes in two flavours, [`spawn_actor`](python_api.md#carla.World.spawn_actor) and
-[`try_spawn_actor`](python_api.md#carla.World.try_spawn_actor). The former will raise an exception if the actor could not be
-spawned, the later will return `None` instead. The most typical cause of
+[`try_spawn_actor`](python_api.md#carla.World.try_spawn_actor).
+The former will raise an exception if the actor could not be spawned,
+the later will return `None` instead. The most typical cause of
 failure is collision at spawn point, meaning the actor does not fit at the spot
 we chose; probably another vehicle is in that spot or we tried to spawn into a
 static object.
@@ -180,8 +181,8 @@ by providing throttle, break, and steer values
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
 
-These are all the parameters of the [`VehicleControl`](python_api.md#carla.VehicleControl) object and their default
-values
+These are all the parameters of the [`VehicleControl`](python_api.md#carla.VehicleControl)
+object and their default values
 
 ```py
 carla.VehicleControl(
@@ -195,11 +196,15 @@ carla.VehicleControl(
 ```
 
 Also, physics control properties can be tuned for vehicles and its wheels
+
 ```py
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-These properties are controlled through a [`VehiclePhysicsControl`](python_api.md#carla.VehiclePhysicsControl) object, which also contains a property to control each wheel's physics through a [`WheelPhysicsControl`](python_api.md#carla.WheelPhysicsControl) object.
+These properties are controlled through a 
+[`VehiclePhysicsControl`](python_api.md#carla.VehiclePhysicsControl) object,
+which also contains a property to control each wheel's physics through a
+[`WheelPhysicsControl`](python_api.md#carla.WheelPhysicsControl) object.
 
 ```py
 carla.VehiclePhysicsControl(
@@ -218,13 +223,18 @@ carla.VehiclePhysicsControl(
     steering_curve,
     wheels)
 ```
+
 Where:
-- *torque_curve*: Curve that indicates the torque measured in Nm for a specific revolutions per minute of the vehicle's engine
+
+- *torque_curve*: Curve that indicates the torque measured in Nm for a specific revolutions
+per minute of the vehicle's engine
 - *max_rpm*: The maximum revolutions per minute of the vehicle's engine
 - *moi*: The moment of inertia of the vehicle's engine
 - *damping_rate_full_throttle*: Damping rate when the throttle is maximum.
-- *damping_rate_zero_throttle_clutch_engaged*: Damping rate when the thottle is zero with clutch engaged
-- *damping_rate_zero_throttle_clutch_disengaged*: Damping rate when the thottle is zero with clutch disengaged
+- *damping_rate_zero_throttle_clutch_engaged*: Damping rate when the thottle is zero
+with clutch engaged
+- *damping_rate_zero_throttle_clutch_disengaged*: Damping rate when the thottle is zero
+with clutch disengaged
 
 - *use_gear_autobox*: If true, the vehicle will have automatic transmission
 - *gear_switch_time*: Switching time between gears
@@ -327,7 +337,8 @@ for speed_sign in actor_list.filter('traffic.speed_limit.*'):
 
 Among the actors you can find in this list are
 
-  * **Traffic lights** with a [`state`](python_api.md#carla.TrafficLight.state) property to check the light's current state.
+  * **Traffic lights** with a [`state`](python_api.md#carla.TrafficLight.state) property
+  to check the light's current state.
   * **Speed limit signs** with the speed codified in their type_id.
   * The **Spectator** actor that can be used to move the view of the simulator window.
 
@@ -359,7 +370,10 @@ The full list of presets can be found in the
 
 ### World Snapshot
 
-A world snapshot represents the state of every actor in the simulation at a single frame, a sort of still image of the world with a timestamp. With this feature it is possible to record the location of every actor and make sure all of them were captured at the same frame without the need of using synchronous mode.
+A world snapshot represents the state of every actor in the simulation at a single frame,
+a sort of still image of the world with a timestamp. With this feature it is possible to
+record the location of every actor and make sure all of them were captured at the same
+frame without the need of using synchronous mode.
 
 ```py
 # Retrieve a snapshot of the world at this point in time.
@@ -372,7 +386,10 @@ world_snapshot = world.wait_for_tick()
 world.on_tick(lambda world_snapshot: do_something(world_snapshot))
 ```
 
-The world snapshot contains a timestamp and a list of actor snapshots. Actor snapshots do not allow to operate on the actor directly as they only contain data about the physical state of the actor, but you can use their id to retrieve the actual actor. And the other way around, you can look up snapshots by id (average O(1) complexity).
+The world snapshot contains a timestamp and a list of actor snapshots. Actor snapshots do not
+allow to operate on the actor directly as they only contain data about the physical state of
+the actor, but you can use their id to retrieve the actual actor. And the other way around,
+you can look up snapshots by id (average O(1) complexity).
 
 ```py
 timestamp = world_snapshot.timestamp
@@ -410,26 +427,28 @@ Let's start by getting the map of the current world
 map = world.get_map()
 ```
 
-For starters, the map has a [`name`](python_api.md#carla.Map.name) attribute that matches the name of the
-currently loaded city, e.g. Town01. And, as we've seen before, we can also ask
+For starters, the map has a [`name`](python_api.md#carla.Map.name) attribute that matches
+the name of the currently loaded city, e.g. Town01. And, as we've seen before, we can also ask
 the map to provide a list of recommended locations for spawning vehicles,
 [`map.get_spawn_points()`](python_api.md#carla.Map.get_spawn_points).
 
 However, the real power of this map API comes apparent when we introduce
-[`waypoints`](python_api.md#carla.Waypoint). We can tell the map to give us a waypoint on the road closest to our
-vehicle
+[`waypoints`](python_api.md#carla.Waypoint). We can tell the map to give us a waypoint on
+the road closest to our vehicle
 
 ```py
 waypoint = map.get_waypoint(vehicle.get_location())
 ```
 
-This waypoint's [`transform`](python_api.md#carla.Waypoint.transform) is located on a drivable lane, and it's oriented
-according to the road direction at that point.
+This waypoint's [`transform`](python_api.md#carla.Waypoint.transform) is located on a drivable lane,
+and it's oriented according to the road direction at that point.
 
-Waypoints have their unique identifier [`carla.Waypoint.id`](python_api.md#carla.Waypoint.id) based on the hash of its
-[`road_id`](python_api.md#carla.Waypoint.road_id), [`section_id`](python_api.md#carla.Waypoint.section_id),
+Waypoints have their unique identifier [`carla.Waypoint.id`](python_api.md#carla.Waypoint.id)
+based on the hash of its [`road_id`](python_api.md#carla.Waypoint.road_id),
+[`section_id`](python_api.md#carla.Waypoint.section_id),
 [`lane_id`](python_api.md#carla.Waypoint.lane_id) and [`s`](python_api.md#carla.Waypoint.s).
-They also provide more information about lanes, such as the [`lane_type`](python_api.md#carla.Waypoint.lane_type) of the current waypoint
+They also provide more information about lanes, such as the
+[`lane_type`](python_api.md#carla.Waypoint.lane_type) of the current waypoint
 and if a [`lane_change`](python_api.md#carla.Waypoint.lane_change) is possible and in which direction.
 
 ```py
@@ -441,8 +460,10 @@ lane_type = waypoint.lane_type
 lane_change = waypoint.lane_change
 ```
 
-Surrounding lane markings _(right / left)_ can also be accessed through the waypoint API. Therefore, it is possible to know all the information
-provided by a [`carla.LaneMarking`](python_api.md#carla.LaneMarking), like the lane marking [`type`](python_api.md#carla.LaneMarkingType) and its
+Surrounding lane markings _(right / left)_ can also be accessed through the waypoint API.
+Therefore, it is possible to know all the information provided by a
+[`carla.LaneMarking`](python_api.md#carla.LaneMarking),
+like the lane marking [`type`](python_api.md#carla.LaneMarkingType) and its
 [`lane_change`](python_api.md#carla.LaneChange) availability.
 
 ```py
@@ -494,7 +515,10 @@ converted to OpenDrive format, and saved to disk as such.
 
 ### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and
+later replay that simulation. The file is written on server side only, and it includes which
+**actors are created or destroyed** in the simulation, the **state of the traffic lights**
+and the **position** and **orientation** of all vehicles and pedestrians.
 
 To start recording we only need to supply a file name:
 
@@ -530,7 +554,8 @@ blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
 walker_bp = random.choice(blueprintsWalkers)
 ```
 
-We can **get a list of random points** where to spawn the pedestrians. Those points are always from the areas where the pedestrian can walk:
+We can **get a list of random points** where to spawn the pedestrians. Those points are always
+from the areas where the pedestrian can walk:
 
 ```py
 # 1. take all the random locations to spawn
@@ -561,7 +586,8 @@ for i in range(len(results)):
         walkers_list.append({"id": results[i].actor_id})
 ```
 
-We save the id of each walker from the results of the batch, in a dictionary because we will assign to them also a controller.
+We save the id of each walker from the results of the batch, in a dictionary because we will
+assign to them also a controller.
 We need to **create the controller** that will manage the pedestrian automatically:
 
 ```py
@@ -582,7 +608,9 @@ for i in range(len(results)):
 
 We create the controller as child of the walker, so the location we pass is (0,0,0).
 
-At this point we have a list of pedestrians with a controller each one, but we need to get the actual actor from the id. Because the controller is a child of the pedestrian, we need to **put all id in the same list** so the parent can find the child in the same list.
+At this point we have a list of pedestrians with a controller each one, but we need to get
+the actual actor from the id. Because the controller is a child of the pedestrian,
+we need to **put all id in the same list** so the parent can find the child in the same list.
 
 ```py
 # 4. we put altogether the walkers and controllers id to get the objects from their id
@@ -591,14 +619,18 @@ for i in range(len(walkers_list)):
     all_id.append(walkers_list[i]["id"])
 all_actors = world.get_actors(all_id)
 ```
+
 The list all_actors has now all the actor objects we created.
 
-At this point is a good idea to **wait for a tick** on client, because then the server has time to send all new data about the new actors we just created (we need the transform of each one updated). So we can do a call like:
+At this point is a good idea to **wait for a tick** on client, because then the server has
+time to send all new data about the new actors we just created (we need the transform of
+each one updated). So we can do a call like:
 
 ```py
 # wait for a tick to ensure client receives the last transform of the walkers we have just created
 world.wait_for_tick()
 ```
+
 After that, our client has the data about the actors updated.
 
  **Using the controller** we can set the locations where we want each pedestrian walk to:
@@ -614,13 +646,15 @@ for i in range(0, len(all_actors), 2):
     all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2 (default is 1.4 m/s)
 ```
 
-There we have set at each pedestrian (through its controller) a random point and random speed. When they reach the target point then automatically walk to another random point.
+There we have set at each pedestrian (through its controller) a random point and random speed.
+When they reach the target point then automatically walk to another random point.
 
 If the target point is not reachable, then they reach the closest point from the are where they are.
 
 ![pedestrian sample](img/pedestrians_shoot.png)
 
-To **destroy the pedestrians**, we need to stop them from the navigation, and then destroy the objects (actor and controller):
+To **destroy the pedestrians**, we need to stop them from the navigation,
+and then destroy the objects (actor and controller):
 
 ```py
 # stop pedestrians (list is [controller, actor, controller, actor ...])

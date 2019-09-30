@@ -1,6 +1,7 @@
 <h1>CARLA F.A.Q.</h1>
 
-For more issues related to F.A.Q. see [question list](https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+).
+For more issues related to F.A.Q. see [question list][issuelink].
+[issuelink]: https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+
 
 <!-- ======================================================================= -->
   <details>

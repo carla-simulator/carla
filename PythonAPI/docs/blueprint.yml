@@ -90,7 +90,7 @@
     - var_name: id
       type: str
       doc: >
-        String identifier of the attribute
+        The attribute's identifier
     - var_name: type
       type: carla.ActorAttributeType
       doc: >

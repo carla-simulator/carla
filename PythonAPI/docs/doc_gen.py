@@ -468,7 +468,7 @@ class Documentation:
 
     def gen_markdown(self):
         """Generates the whole markdown file"""
-        return join([self.gen_overview(), self.gen_body()], '\n').strip()
+        return join([self.gen_body()], '\n').strip()
 
 
 def main():

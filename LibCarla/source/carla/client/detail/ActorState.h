@@ -55,6 +55,8 @@ namespace detail {
 
   protected:
 
+    explicit ActorState(rpc::Actor description, EpisodeProxy episode);
+
     const geom::BoundingBox &GetBoundingBox() const {
       return _description.bounding_box;
     }
@@ -74,8 +76,6 @@ namespace detail {
   private:
 
     friend class Simulator;
-
-    explicit ActorState(rpc::Actor description, EpisodeProxy episode);
 
     rpc::Actor _description;
 

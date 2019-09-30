@@ -9,7 +9,7 @@
 #if defined(_MSC_VER)
 #  define LIBCARLA_FORCEINLINE __forceinline
 #  define LIBCARLA_NOINLINE __declspec(noinline)
-#elif defined(__clang__)
+#elif defined(__clang__) || defined(__GNUC__)
 #  if defined(NDEBUG)
 #    define LIBCARLA_FORCEINLINE inline __attribute__((always_inline))
 #  else
