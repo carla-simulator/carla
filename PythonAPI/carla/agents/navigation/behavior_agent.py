@@ -89,7 +89,7 @@ class BehaviorAgent(Agent):
         self.speed = get_speed(self.vehicle)
         self.speed_limit = world.player.get_speed_limit()
         self._local_planner.set_speed(self.speed_limit)
-        self.direction = self._local_planner._target_road_option
+        self.direction = self._local_planner.target_road_option
         if self.direction is None:
             self.direction = RoadOption.LANEFOLLOW
 
@@ -283,15 +283,15 @@ class BehaviorAgent(Agent):
             # Check for overtaking
 
             if vehicle_state and self.direction == RoadOption.LANEFOLLOW and \
-            not waypoint.is_junction and self.speed > 10 \
-            and self.behavior.overtake_counter == 0 and self.speed > get_speed(vehicle):
+                    not waypoint.is_junction and self.speed > 10 \
+                    and self.behavior.overtake_counter == 0 and self.speed > get_speed(vehicle):
                 self._overtake(location, waypoint, vehicle_list)
 
             # Check for tailgating
 
             elif not vehicle_state and self.direction == RoadOption.LANEFOLLOW \
-            and not waypoint.is_junction and self.speed > 10 \
-            and self.behavior.tailgate_counter == 0:
+                    and not waypoint.is_junction and self.speed > 10 \
+                    and self.behavior.tailgate_counter == 0:
                 self._tailgating(location, waypoint, vehicle_list)
 
         return vehicle_state, vehicle, distance
@@ -343,7 +343,7 @@ class BehaviorAgent(Agent):
         if self.behavior.safety_time > ttc > 0.0:
             control = self._local_planner.run_step(
                 target_speed=min(positive(vehicle_speed - self.behavior.speed_decrease),
-                             min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Actual safety distance area, try to follow the speed of the vehicle in front.
         elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
             control = self._local_planner.run_step(
@@ -357,7 +357,7 @@ class BehaviorAgent(Agent):
 
         return control
 
-    def walker_following_manager(self, walker, distance, debug=False):
+    def walker_following_manager(self, distance, debug=False):
         """
         Module in charge of car-following behaviors when there's
         someone in front of us.
@@ -368,7 +368,7 @@ class BehaviorAgent(Agent):
             :return control: carla.VehicleControl
         """
 
-        walker_speed = 3  # Fixed speed of walker?
+        walker_speed = 1.4 / 3.6  # Fixed speed of walker is 1.4 m/s
         delta_v = max(1, (self.speed - walker_speed) / 3.6)
         ttc = distance / delta_v if delta_v != 0 else distance / np.nextafter(0., 1.)
 
@@ -411,23 +411,21 @@ class BehaviorAgent(Agent):
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
             return self.emergency_stop()
 
-        """
         # 2.1: Pedestrian avoidancd behaviors, commented until release
 
-        walker_state, walker, w_distance = self.pedestrian_avoid_manager(ego_vehicle_loc, ego_vehicle_wp)
+        #walker_state, walker, w_distance = self.pedestrian_avoid_manager(ego_vehicle_loc, ego_vehicle_wp)
 
-        elif walker_state:
+        # elif walker_state:
             # Distance is computed from the center of the two cars,
             # we use bounding boxes to calculate the actual distance
-            distance = w_distance - max(walker.bounding_box.extent.y, walker.bounding_box.extent.x) - max(
-                self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
+            # distance = w_distance - max(walker.bounding_box.extent.y, walker.bounding_box.extent.x) - max(
+            # self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
 
             # Emergency brake if the car is very close.
-            if distance < self.behavior.braking_distance:
-                return self.emergency_stop()
-            else:
-                control = self.walker_following_manager(walker, distance)
-        """
+            # if distance < self.behavior.braking_distance:
+            # return self.emergency_stop()
+            # else:
+            #control = self.walker_following_manager(distance)
 
         # 3: Car following behaviors
         vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(

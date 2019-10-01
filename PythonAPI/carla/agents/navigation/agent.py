@@ -36,6 +36,10 @@ class Agent(object):
             sys.exit(1)
         self._last_traffic_light = None
 
+    def get_local_planner(self):
+        """Get method for protected member local planner"""
+        return self._local_planner
+
     @staticmethod
     def run_step(debug=False):
         """

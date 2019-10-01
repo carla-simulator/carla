@@ -63,7 +63,7 @@ class LocalPlanner(object):
         self._sampling_radius = None
         self._min_distance = None
         self._current_waypoint = None
-        self._target_road_option = None
+        self.target_road_option = None
         self._next_waypoints = None
         self.target_waypoint = None
         self._vehicle_controller = None
@@ -227,7 +227,7 @@ class LocalPlanner(object):
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
 
         # Target waypoint
-        self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
+        self.target_waypoint, self.target_road_option = self._waypoint_buffer[0]
 
         control = self._pid_controller.run_step(self._target_speed, self.target_waypoint)
 
