@@ -108,8 +108,8 @@ class LocalPlanner(object):
             'K_I': 1.4,
             'dt': self._dt}
         args_longitudinal_dict = {
-            'K_P': 1.0,
-            'K_D': 0,
+            'K_P': 0.1,
+            'K_D': 0.0005,
             'K_I': 1,
             'dt': self._dt}
 
