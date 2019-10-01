@@ -111,10 +111,17 @@ def get_actor_display_name(actor, truncate=250):
 # ==============================================================================
 
 class World(object):
+    """ Class representing the surrounding environment """
     def __init__(self, carla_world, hud, args):
         """Constructor method"""
         self.world = carla_world
-        self.map = self.world.get_map()
+        try:
+            self.map = self.world.get_map()
+        except RuntimeError as error:
+            print('RuntimeError: {}'.format(error))
+            print('  The server could not send the OpenDRIVE (.xodr) file:')
+            print('  Make sure it exists, has the same name of your town, and is correct.')
+            sys.exit(1)
         self.hud = hud
         self.player = None
         self.collision_sensor = None
@@ -138,7 +145,7 @@ class World(object):
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Set the seed if requested by user
-        if args.seed != None:
+        if args.seed is not None:
             random.seed(args.seed)
 
         # Get a random blueprint.
@@ -158,6 +165,10 @@ class World(object):
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
 
         while self.player is None:
+            if not self.map.get_spawn_points():
+                print('There are no spawn points available in your map/town.')
+                print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
@@ -212,6 +223,7 @@ class World(object):
 
 
 class KeyboardControl(object):
+    """ Class in charge of keyboard control"""
     def __init__(self, world, start_in_autopilot):
         """Constructor method"""
         self._autopilot_enabled = start_in_autopilot
@@ -239,7 +251,8 @@ class KeyboardControl(object):
                     world.restart()
                 elif event.key == K_F1:
                     world.hud.toggle_info()
-                elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
+                elif event.key == K_h or \
+                (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
@@ -344,6 +357,7 @@ class KeyboardControl(object):
 
 
 class HUD(object):
+    """Class for HUD text"""
     def __init__(self, width, height):
         """Constructor method"""
         self.dim = (width, height)
@@ -375,7 +389,7 @@ class HUD(object):
         if not self._show_info:
             return
         transform = world.player.get_transform()
-        velocity = world.player.get_velocity()
+        vel = world.player.get_velocity()
         control = world.player.get_control()
         heading = 'N' if abs(transform.rotation.yaw) < 89.5 else ''
         heading += 'S' if abs(transform.rotation.yaw) > 90.5 else ''
@@ -395,7 +409,7 @@ class HUD(object):
             'Map:     % 20s' % world.map.name,
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
-            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)),
+            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)),
             u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (transform.rotation.yaw, heading),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (transform.location.x, transform.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
@@ -423,9 +437,10 @@ class HUD(object):
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
 
-            def distance(l):
-                return math.sqrt((l.x - transform.location.x)**2 + (l.y - transform.location.y)**2 + (l.z - transform.location.z)**2)
-            vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.player.id]
+            def dist(l):
+                return math.sqrt((l.x - transform.location.x)**2 + (l.y - transform.location.y)
+                                 ** 2 + (l.z - transform.location.z)**2)
+            vehicles = [(dist(x.get_location()), x) for x in vehicles if x.id != world.player.id]
 
             for dist, vehicle in sorted(vehicles):
                 if dist > 200.0:
@@ -459,7 +474,7 @@ class HUD(object):
                     break
                 if isinstance(item, list):
                     if len(item) > 1:
-                        points = [(x+8, v_offset+8+(1.0-y)*30) for x, y in enumerate(item)]
+                        points = [(x + 8, v_offset + 8 + (1 - y) * 30) for x, y in enumerate(item)]
                         pygame.draw.lines(display, (255, 136, 0), False, points, 2)
                     item = None
                     v_offset += 18
@@ -472,7 +487,8 @@ class HUD(object):
                         pygame.draw.rect(display, (255, 255, 255), rect_border, 1)
                         fig = (item[1] - item[2]) / (item[3] - item[2])
                         if item[2] < 0.0:
-                            rect = pygame.Rect((bar_h_offset+fig*(bar_width-6), v_offset+8), (6, 6))
+                            rect = pygame.Rect(
+                                (bar_h_offset + fig * (bar_width - 6), v_offset + 8), (6, 6))
                         else:
                             rect = pygame.Rect((bar_h_offset, v_offset + 8), (fig * bar_width, 6))
                         pygame.draw.rect(display, (255, 255, 255), rect)
@@ -490,6 +506,7 @@ class HUD(object):
 
 
 class FadingText(object):
+    """ Class for fading text """
     def __init__(self, font, dim, pos):
         """Constructor method"""
         self.font = font
@@ -522,6 +539,7 @@ class FadingText(object):
 
 
 class HelpText(object):
+    """ Helper class for text render"""
     def __init__(self, font, width, height):
         """Constructor method"""
         lines = __doc__.split('\n')
@@ -552,6 +570,7 @@ class HelpText(object):
 
 
 class CollisionSensor(object):
+    """ Class for collision sensors"""
     def __init__(self, parent_actor, hud):
         """Constructor method"""
         self.sensor = None
@@ -593,6 +612,7 @@ class CollisionSensor(object):
 
 
 class LaneInvasionSensor(object):
+    """Class for lane invasion sensors"""
     def __init__(self, parent_actor, hud):
         """Constructor method"""
         self.sensor = None
@@ -622,6 +642,7 @@ class LaneInvasionSensor(object):
 
 
 class GnssSensor(object):
+    """ Class for GNSS sensors"""
     def __init__(self, parent_actor):
         """Constructor method"""
         self.sensor = None
@@ -652,6 +673,7 @@ class GnssSensor(object):
 
 
 class CameraManager(object):
+    """ Class for camera management"""
     def __init__(self, parent_actor, hud, gamma_correction):
         """Constructor method"""
         self.sensor = None
@@ -660,13 +682,18 @@ class CameraManager(object):
         self.hud = hud
         self.recording = False
         bound_y = 0.5 + self._parent.bounding_box.extent.y
-        Attachment = carla.AttachmentType
+        attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
+            (carla.Transform(
+                carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), attachment.SpringArm),
+            (carla.Transform(
+                carla.Location(x=1.6, z=1.7)), attachment.Rigid),
+            (carla.Transform(
+                carla.Location(x=5.5, y=1.5, z=1.5)), attachment.SpringArm),
+            (carla.Transform(
+                carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), attachment.SpringArm),
+            (carla.Transform(
+                carla.Location(x=-1, y=-bound_y, z=0.5)), attachment.Rigid)]
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],
@@ -680,15 +707,15 @@ class CameraManager(object):
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
-            bp = bp_library.find(item[0])
+            blp = bp_library.find(item[0])
             if item[0].startswith('sensor.camera'):
-                bp.set_attribute('image_size_x', str(hud.dim[0]))
-                bp.set_attribute('image_size_y', str(hud.dim[1]))
-                if bp.has_attribute('gamma'):
-                    bp.set_attribute('gamma', str(gamma_correction))
+                blp.set_attribute('image_size_x', str(hud.dim[0]))
+                blp.set_attribute('image_size_y', str(hud.dim[1]))
+                if blp.has_attribute('gamma'):
+                    blp.set_attribute('gamma', str(gamma_correction))
             elif item[0].startswith('sensor.lidar'):
-                bp.set_attribute('range', '5000')
-            item.append(bp)
+                blp.set_attribute('range', '5000')
+            item.append(blp)
         self.index = None
 
     def toggle_camera(self):
@@ -744,7 +771,7 @@ class CameraManager(object):
             lidar_data = np.array(points[:, :2])
             lidar_data *= min(self.hud.dim) / 100.0
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
-            lidar_data = np.fabs(lidar_data)  # pylint: disable=E1111
+            lidar_data = np.fabs(lidar_data)
             lidar_data = lidar_data.astype(np.int32)
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
@@ -794,12 +821,12 @@ def game_loop(args):
         spawn_points = world.map.get_spawn_points()
         random.shuffle(spawn_points)
 
-        if spawn_points[0].location != agent._vehicle.get_location():
+        if spawn_points[0].location != agent.vehicle.get_location():
             destination = spawn_points[0].location
         else:
             destination = spawn_points[1].location
 
-        agent.set_destination(agent._vehicle.get_location(), destination, clean=True)
+        agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
 
         clock = pygame.time.Clock()
 
@@ -913,7 +940,6 @@ def main():
     print(__doc__)
 
     try:
-
         game_loop(args)
 
     except KeyboardInterrupt:
