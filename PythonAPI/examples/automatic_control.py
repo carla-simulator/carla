@@ -75,6 +75,16 @@ except IndexError:
     pass
 
 # ==============================================================================
+# -- Add agents folder ---------------------------------------------------------
+# ==============================================================================
+
+try:
+    sys.path.append(glob.glob('../carla/agents'))
+except IndexError:
+    pass
+
+
+# ==============================================================================
 # -- Add PythonAPI for release mode --------------------------------------------
 # ==============================================================================
 try:
@@ -85,7 +95,7 @@ except IndexError:
 import carla
 from carla import ColorConverter as cc
 
-from agents.navigation.behavior_agent import BehaviorAgent
+from agents.navigation.behavior_agent import BehaviorAgent # pylint: disable=import-error
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -244,7 +254,7 @@ class KeyboardControl(object):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
-            elif event.type == pygame.KEYUP:
+            if event.type == pygame.KEYUP:
                 if self._is_quit_shortcut(event.key):
                     return True
                 elif event.key == K_BACKSPACE:
@@ -845,13 +855,13 @@ def game_loop(args):
             pygame.display.flip()
 
             # Set new destination when target has been reached
-            if len(agent._local_planner.waypoints_queue) < num_min_waypoints and args.loop:
+            if len(agent.get_local_planner().waypoints_queue) < num_min_waypoints and args.loop:
                 agent.reroute(spawn_points)
                 tot_target_reached += 1
                 world.hud.notification("The target has been reached " +
                                        str(tot_target_reached) + " times.", seconds=4.0)
 
-            elif len(agent._local_planner.waypoints_queue) == 0 and not args.loop:
+            elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
                 print("Target reached, mission accomplished...")
                 stop = True
 
@@ -859,7 +869,7 @@ def game_loop(args):
                 break
 
             speed_limit = world.player.get_speed_limit()
-            agent._local_planner.set_speed(speed_limit)
+            agent.get_local_planner().set_speed(speed_limit)
 
             control = agent.run_step()
             world.player.apply_control(control)
