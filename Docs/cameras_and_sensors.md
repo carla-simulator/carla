@@ -117,13 +117,13 @@ Since these effects are provided from Unreal Engine 4, please make sure to check
 | `slope` | float | 0.88 | This will adjust the steepness of the S-curve used for the tonemapper, where larger values will make the slope steeper (darker) and lower values will make the slope less steep (lighter). Range: [0.0, 1.0] |
 | `toe` | float | 0.55 | This will adjust the dark color in the tonemapper. Range: [0.0, 1.0] |
 | `shoulder` | float | 0.26 | This will adjust the bright color in the tonemapper. Range: [0.0, 1.0] |
-| `black_clip` | float | 0.0 | This will set where the crossover happens where black's start to cut off their value. In general, this value should NOT be adjusted. Range: [0.0, 1.0] |
-| `white_clip` | float | 0.04 | This will set where the crossover happens where white's start to cut off their values. This will appear as a subtle change in most cases. Range: [0.0, 1.0] |
-| `temp` | float | 6500.0 | This will adjust the white balance in relation to the temperature of the light in the scene. When the light temperature and this one match the light will appear white. When a value is used that is higher than the light in the scene it will yield a "warm" or yellow color, and, conversely, if the value is lower, it would yield a "cool" or blue color |
+| `black_clip` | float | 0.0 | This will set where the crossover happens when black tones start to cut off their value. In general, this value should NOT be adjusted. Range: [0.0, 1.0] |
+| `white_clip` | float | 0.04 | This will set where the crossover happens when white tones start to cut off their value. This will appear as a subtle change in most cases. Range: [0.0, 1.0] |
+| `temp` | float | 6500.0 | This will adjust the white balance in relation to the temperature of the light in the scene. When the light temperature and this one match, the light will appear white. When a value is used that is higher than the light in the scene it will yield a "warm" or yellow color, and, conversely, if the value is lower, it would yield a "cool" or blue color |
 | `tint` | float | 0.0 | This will adjust the white balance temperature tint for the scene by adjusting the cyan and magenta color ranges. Ideally, this setting should be used once you've adjusted the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural |
 | `chromatic_aberration_intensity` | float | 0.0 | Scaling factor that controls how much color shifting occurs, more noticable on the screen borders |
 | `chromatic_aberration_offset` | float | 0.0 | Normalized distance to the center of the image where the effect takes place |
-| `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affect the image |
+| `enable_postprocess_effects` | bool | True | Whether the post-process effect in the scene affects the image |
 
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
