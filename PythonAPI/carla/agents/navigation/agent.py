@@ -23,10 +23,10 @@ class Agent(object):
 
             :param vehicle: actor to apply to local planner logic onto
         """
-        self._vehicle = vehicle
+        self.vehicle = vehicle
         self._local_planner = None
-        self._world = self._vehicle.get_world()
-        self._map = self._vehicle.get_world().get_map()
+        self._world = self.vehicle.get_world()
+        self._map = self.vehicle.get_world().get_map()
         self._last_traffic_light = None
 
     @staticmethod
@@ -54,7 +54,8 @@ class Agent(object):
         Check if a given vehicle is an obstacle in our way. To this end we take
         into account the road and lane the target vehicle is on and run a
         geometry test to check if the target vehicle is under a certain distance
-        in front of our ego vehicle.
+        in front of our ego vehicle. We also check the next waypoint, just to be
+        sure there's not a sudden road id change.
 
         WARNING: This method is an approximation that could fail for very large
         vehicles, which center is actually on a different lane but their
@@ -71,10 +72,11 @@ class Agent(object):
             :param up_angle_th: upper threshold for angle
             :param low_angle_th: lower threshold for angle
             :param lane_offset: for right and left lane changes
-            :return: a tuple given by (bool_flag, vehicle), where:
+            :return: a tuple given by (bool_flag, vehicle, distance), where:
             - bool_flag is True if there is a vehicle ahead blocking us
                    and False otherwise
             - vehicle is the blocker object itself
+            - distance is the meters separating the two vehicles
         """
 
         # Get the right offset
@@ -84,12 +86,17 @@ class Agent(object):
         for target_vehicle in vehicle_list:
             target_vehicle_loc = target_vehicle.get_location()
             # If the object is not in our next or current lane it's not an obstacle
+
             target_wpt = self._map.get_waypoint(target_vehicle_loc)
-            if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
-                continue
+            if target_wpt.road_id != ego_wpt.road_id or \
+            target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
+                next_wpt = self.local_planner.get_incoming_waypoint_and_direction(steps=1)[0]
+                if target_wpt.road_id != next_wpt.road_id or \
+                target_wpt.lane_id != next_wpt.lane_id + lane_offset:
+                    continue
 
             if is_within_distance(target_vehicle_loc, ego_loc,
-                                  self._vehicle.get_transform().rotation.yaw,
+                                  self.vehicle.get_transform().rotation.yaw,
                                   proximity_th, up_angle_th, low_angle_th):
 
                 return (True, target_vehicle, compute_distance(target_vehicle_loc, ego_loc))

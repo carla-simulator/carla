@@ -56,8 +56,8 @@ class LocalPlanner(object):
         :param agent: agent that regulates the vehicle
         :param vehicle: actor to apply to local planner logic onto
         """
-        self._vehicle = agent._vehicle
-        self._map = agent._vehicle.get_world().get_map()
+        self._vehicle = agent.vehicle
+        self._map = agent.vehicle.get_world().get_map()
 
         self._target_speed = None
         self._sampling_radius = None
@@ -73,12 +73,6 @@ class LocalPlanner(object):
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
 
         self._init_controller()  # initializing controller
-
-    def __del__(self):
-        """Destroy the ego-vehicle"""
-        if self._vehicle:
-            self._vehicle.destroy()
-        print("Destroying ego-vehicle!")
 
     def reset_vehicle(self):
         """Reset the ego-vehicle"""
@@ -97,10 +91,10 @@ class LocalPlanner(object):
 
         sampling_radius -- search radius for next waypoints in seconds: e.g. 0.5 seconds ahead
 
-        lateral_control_dict -- dictionary of arguments to setup the lateral PID controller
+        lateral_dict -- dictionary of arguments to setup the lateral PID controller
                             {'K_P':, 'K_D':, 'K_I':, 'dt'}
 
-        longitudinal_control_dict -- dictionary of arguments to setup the longitudinal PID controller
+        longitudinal_dict -- dictionary of arguments to setup the longitudinal PID controller
                             {'K_P':, 'K_D':, 'K_I':, 'dt'}
         """
         # Default parameters
@@ -111,12 +105,12 @@ class LocalPlanner(object):
             'K_P': 0.9,
             'K_D': 0.03,
             'K_I': 0.03,
-            'dt': 1.0/self.FPS}
+            'dt': 1.0 / self.FPS}
         self.args_longitudinal_dict = {
             'K_P': 0.37,
             'K_D': 0.024,
             'K_I': 0.032,
-            'dt': 1.0/self.FPS}
+            'dt': 1.0 / self.FPS}
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
 
         self._global_plan = False
@@ -207,7 +201,8 @@ class LocalPlanner(object):
         if target_speed is not None:
             self._target_speed = target_speed
         # Not enough waypoints in the horizon? Add more!
-        if not self._global_plan and len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
+        if not self._global_plan and \
+            len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
         if len(self.waypoints_queue) == 0:
@@ -249,7 +244,8 @@ class LocalPlanner(object):
                 self._waypoint_buffer.popleft()
 
         if debug:
-            draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], self._vehicle.get_location().z + 1.0)
+            draw_waypoints(self._vehicle.get_world(), \
+            [self.target_waypoint], self._vehicle.get_location().z + 1.0)
         return control
 
 
@@ -261,8 +257,8 @@ def _retrieve_options(list_waypoints, current_waypoint):
 
         :param list_waypoints: list with the possible target waypoints in case of multiple options
         :param current_waypoint: current active waypoint
-        :return: list of RoadOption enums representing the type of connection from the active waypoint to each
-                candidate in list_waypoints
+        :return: list of RoadOption enums representing the type of connection from the
+                active waypoint to each candidate in list_waypoints
     """
     options = []
     for next_waypoint in list_waypoints:
@@ -288,13 +284,13 @@ def _compute_connection(current_waypoint, next_waypoint):
              RoadOption.LEFT
              RoadOption.RIGHT
     """
-    n = next_waypoint.transform.rotation.yaw
-    n = n % 360.0
+    n_wpt = next_waypoint.transform.rotation.yaw
+    n_wpt = n_wpt % 360.0
 
-    c = current_waypoint.transform.rotation.yaw
-    c = c % 360.0
+    c_wpt = current_waypoint.transform.rotation.yaw
+    c_wpt = c_wpt % 360.0
 
-    diff_angle = (n - c) % 180.0
+    diff_angle = (n_wpt - c_wpt) % 180.0
     if diff_angle < 1.0:
         return RoadOption.STRAIGHT
     elif diff_angle > 90.0:

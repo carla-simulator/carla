@@ -378,4 +378,3 @@ class GlobalRoutePlanner(object):
                             break
 
         return route_trace
-    

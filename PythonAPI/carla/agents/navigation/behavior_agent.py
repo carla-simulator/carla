@@ -86,14 +86,14 @@ class BehaviorAgent(Agent):
 
             :param world: carla.world object
         """
-        self.speed = get_speed(self._vehicle)
+        self.speed = get_speed(self.vehicle)
         self.speed_limit = world.player.get_speed_limit()
         self._local_planner.set_speed(self.speed_limit)
         self.direction = self._local_planner._target_road_option
         if self.direction is None:
             self.direction = RoadOption.LANEFOLLOW
 
-        self.look_ahead_steps = int((self.speed)/10)
+        self.look_ahead_steps = int((self.speed) / 10)
 
         self.incoming_waypoint, self.incoming_direction = self._local_planner.get_incoming_waypoint_and_direction(
             steps=self.look_ahead_steps)
@@ -105,7 +105,7 @@ class BehaviorAgent(Agent):
             self.light_state = "Green"
         else:
             # This method also includes stop signs and intersections.
-            self.light_state = str(self._vehicle.get_traffic_light_state())
+            self.light_state = str(self.vehicle.get_traffic_light_state())
 
     def set_destination(self, start_location, end_location, clean=False):
         """
@@ -152,7 +152,7 @@ class BehaviorAgent(Agent):
         """
         # Setting up global router
         if self._grp is None:
-            wld = self._vehicle.get_world()
+            wld = self.vehicle.get_world()
             dao = GlobalRoutePlannerDAO(
                 wld.get_map(), sampling_resolution=self._hop_resolution)
             grp = GlobalRoutePlanner(dao)
@@ -178,7 +178,7 @@ class BehaviorAgent(Agent):
             :param waypoint: current waypoint of the agent
         """
 
-        light_id = self._vehicle.get_traffic_light().id if self._vehicle.get_traffic_light() is not None else -1
+        light_id = self.vehicle.get_traffic_light().id if self.vehicle.get_traffic_light() is not None else -1
 
         if self.light_state == "Red":
             if not waypoint.is_junction and (self.light_id_to_ignore != light_id or light_id == -1):
@@ -201,17 +201,18 @@ class BehaviorAgent(Agent):
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
 
-        if (waypoint.lane_change == carla.LaneChange.Left or waypoint.lane_change == carla.LaneChange.Both) and waypoint.lane_id*left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
+        if (waypoint.lane_change == carla.LaneChange.Left or waypoint.lane_change ==
+                carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=-1)
+                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
             if not new_vehicle_state:
                 print("Overtaking to the left!")
                 self.behavior.overtake_counter = 200
                 self.set_destination(left_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
-        elif waypoint.lane_change == carla.LaneChange.Right and waypoint.lane_id*right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
+        elif waypoint.lane_change == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=1)
+                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
                 print("Overtaking to the right!")
                 self.behavior.overtake_counter = 200
@@ -230,19 +231,20 @@ class BehaviorAgent(Agent):
         right_wpt = waypoint.get_right_lane()
 
         behind_vehicle_state, behind_vehicle, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-            self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, low_angle_th=160)
+            self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self.speed < get_speed(behind_vehicle):
-            if (waypoint.lane_change == carla.LaneChange.Right or waypoint.lane_change == carla.LaneChange.Both) and waypoint.lane_id*right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
+            if (waypoint.lane_change == carla.LaneChange.Right or waypoint.lane_change ==
+                    carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                    self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=1)
+                    self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
                     self.behavior.tailgate_counter = 200
                     self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
-            elif waypoint.lane_change == carla.LaneChange.Left and waypoint.lane_id*left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
+            elif waypoint.lane_change == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                    self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=-1)
+                    self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
                     self.behavior.tailgate_counter = 200
@@ -263,29 +265,64 @@ class BehaviorAgent(Agent):
 
         vehicle_list = self._world.get_actors().filter("*vehicle*")
         def dist(v): return v.get_location().distance(waypoint.transform.location)
-        vehicle_list = [v for v in vehicle_list if dist(v) < 45 and v.id != self._vehicle.id]
+        vehicle_list = [v for v in vehicle_list if dist(v) < 45 and v.id != self.vehicle.id]
 
         if self.direction == RoadOption.CHANGELANELEFT:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=-1)
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                waypoint, location, vehicle_list, max(
+                    self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
         elif self.direction == RoadOption.CHANGELANERIGHT:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit/2), up_angle_th=180, lane_offset=1)
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                waypoint, location, vehicle_list, max(
+                    self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
         else:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit/3), up_angle_th=30)
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                waypoint, location, vehicle_list, max(
+                    self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=30)
 
             # Check for overtaking
 
-            if vehicle_state and self.direction == RoadOption.LANEFOLLOW and not waypoint.is_junction and self.speed > 10 and self.behavior.overtake_counter == 0 and self.speed > get_speed(vehicle):
+            if vehicle_state and self.direction == RoadOption.LANEFOLLOW and \
+            not waypoint.is_junction and self.speed > 10 \
+            and self.behavior.overtake_counter == 0 and self.speed > get_speed(vehicle):
                 self._overtake(location, waypoint, vehicle_list)
 
             # Check for tailgating
 
-            elif not vehicle_state and self.direction == RoadOption.LANEFOLLOW and not waypoint.is_junction and self.speed > 10 and self.behavior.tailgate_counter == 0:
+            elif not vehicle_state and self.direction == RoadOption.LANEFOLLOW \
+            and not waypoint.is_junction and self.speed > 10 \
+            and self.behavior.tailgate_counter == 0:
                 self._tailgating(location, waypoint, vehicle_list)
 
         return vehicle_state, vehicle, distance
+
+    def pedestrian_avoid_manager(self, location, waypoint):
+        """
+        This module is in charge of warning in case of a collision
+        with any pedestrian.
+
+            :param location: current location of the agent
+            :param waypoint: current waypoint of the agent
+            :return vehicle_state: True if there is a walker nearby, False if not
+            :return vehicle: nearby walker
+            :return distance: distance to nearby walker
+        """
+
+        walker_list = self._world.get_actors().filter("*walker.pedestrian*")
+        def dist(w): return w.get_location().distance(waypoint.transform.location)
+        walker_list = [w for w in walker_list if dist(w) < 10]
+
+        if self.direction == RoadOption.CHANGELANELEFT:
+            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=-1)
+        elif self.direction == RoadOption.CHANGELANERIGHT:
+            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=1)
+        else:
+            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+                self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=60)
+
+        return walker_state, walker, distance
 
     def car_following_manager(self, vehicle, distance, debug=False):
         """
@@ -299,24 +336,57 @@ class BehaviorAgent(Agent):
         """
 
         vehicle_speed = get_speed(vehicle)
-        delta_v = max(1, (self.speed - vehicle_speed)/3.6)
-        ttc = distance/delta_v if delta_v != 0 else distance/np.nextafter(0., 1.)
+        delta_v = max(1, (self.speed - vehicle_speed) / 3.6)
+        ttc = distance / delta_v if delta_v != 0 else distance / np.nextafter(0., 1.)
 
         # Under safety time distance, slow down.
         if self.behavior.safety_time > ttc > 0.0:
             control = self._local_planner.run_step(
-                target_speed=min(positive(vehicle_speed-self.behavior.speed_decrease),
-                                 min(self.behavior.max_speed, self.speed_limit-self.behavior.speed_lim_dist)), debug=debug)
+                target_speed=min(positive(vehicle_speed - self.behavior.speed_decrease),
+                             min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Actual safety distance area, try to follow the speed of the vehicle in front.
-        elif 2*self.behavior.safety_time > ttc >= self.behavior.safety_time:
+        elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
             control = self._local_planner.run_step(
-                target_speed=min(max(self.min_speed, vehicle_speed-self.behavior.speed_decrease/2),
-                                 min(self.behavior.max_speed, self.speed_limit-self.behavior.speed_lim_dist)), debug=debug)
+                target_speed=min(max(self.min_speed, vehicle_speed - self.behavior.speed_decrease / 2),
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Normal behavior.
         else:
             control = self._local_planner.run_step(
-                target_speed=min(self.speed+(self.behavior.speed_increase_perc*self.behavior.max_speed)/100,
-                                 min(self.behavior.max_speed, self.speed_limit-self.behavior.speed_lim_dist)), debug=debug)
+                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+
+        return control
+
+    def walker_following_manager(self, walker, distance, debug=False):
+        """
+        Module in charge of car-following behaviors when there's
+        someone in front of us.
+
+            :param vehicle: car to follow
+            :param distance: distance from vehicle
+            :param debug: boolean for debugging
+            :return control: carla.VehicleControl
+        """
+
+        walker_speed = 3  # Fixed speed of walker?
+        delta_v = max(1, (self.speed - walker_speed) / 3.6)
+        ttc = distance / delta_v if delta_v != 0 else distance / np.nextafter(0., 1.)
+
+        # Under safety time distance, slow down.
+        if self.behavior.safety_time > ttc > 0.0:
+            control = self._local_planner.run_step(
+                target_speed=min(positive(walker_speed - self.behavior.speed_decrease),
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+        # Actual safety distance area, try to follow the speed of the vehicle in front.
+        elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
+            control = self._local_planner.run_step(
+                target_speed=min(max(self.min_speed, walker_speed - self.behavior.speed_decrease / 2),
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+        # Normal behavior.
+        else:
+            control = self._local_planner.run_step(
+                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
 
         return control
 
@@ -333,7 +403,7 @@ class BehaviorAgent(Agent):
         if self.behavior.overtake_counter > 0:
             self.behavior.overtake_counter -= 1
 
-        ego_vehicle_loc = self._vehicle.get_location()
+        ego_vehicle_loc = self.vehicle.get_location()
         ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
 
         # 1: Red lights and stops behavior
@@ -341,17 +411,34 @@ class BehaviorAgent(Agent):
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
             return self.emergency_stop()
 
-        # 2: Collision and car avoidance behaviors
+        """
+        # 2.1: Pedestrian avoidancd behaviors, commented until release
 
-        vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(ego_vehicle_loc, ego_vehicle_wp)
+        walker_state, walker, w_distance = self.pedestrian_avoid_manager(ego_vehicle_loc, ego_vehicle_wp)
+
+        elif walker_state:
+            # Distance is computed from the center of the two cars,
+            # we use bounding boxes to calculate the actual distance
+            distance = w_distance - max(walker.bounding_box.extent.y, walker.bounding_box.extent.x) - max(
+                self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
+
+            # Emergency brake if the car is very close.
+            if distance < self.behavior.braking_distance:
+                return self.emergency_stop()
+            else:
+                control = self.walker_following_manager(walker, distance)
+        """
 
         # 3: Car following behaviors
+        vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(
+            ego_vehicle_loc, ego_vehicle_wp)
 
         if vehicle_state:
             # Distance is computed from the center of the two cars,
             # we use bounding boxes to calculate the actual distance
-            distance = distance - max(vehicle.bounding_box.extent.y, vehicle.bounding_box.extent.x) - max(
-                self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
+            distance = distance - max(
+                vehicle.bounding_box.extent.y, vehicle.bounding_box.extent.x) - max(
+                    self.vehicle.bounding_box.extent.y, self.vehicle.bounding_box.extent.x)
 
             # Emergency brake if the car is very close.
             if distance < self.behavior.braking_distance:
@@ -364,15 +451,15 @@ class BehaviorAgent(Agent):
         # Checking if there's a junction nearby to slow down
         elif self.incoming_waypoint.is_junction and self.incoming_direction != RoadOption.LANEFOLLOW:
             control = self._local_planner.run_step(
-                target_speed=min(self.behavior.max_speed, self.speed_limit-10), debug=debug)
+                target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
 
         # 5: Normal behavior
 
         # Calculate controller based on no turn, traffic light or vehicle in front
         else:
             control = self._local_planner.run_step(
-                target_speed=min(self.speed+(self.behavior.speed_increase_perc*self.behavior.max_speed)/100,
-                                 min(self.behavior.max_speed, self.speed_limit-self.behavior.speed_lim_dist)),
+                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
+                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)),
                 debug=debug)
 
         return control
