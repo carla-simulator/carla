@@ -10,6 +10,7 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
+import sys
 import carla
 from agents.tools.misc import is_within_distance, compute_distance
 
@@ -26,7 +27,13 @@ class Agent(object):
         self.vehicle = vehicle
         self._local_planner = None
         self._world = self.vehicle.get_world()
-        self._map = self.vehicle.get_world().get_map()
+        try:
+            self.map = self._world.get_map()
+        except RuntimeError as error:
+            print('RuntimeError: {}'.format(error))
+            print('  The server could not send the OpenDRIVE (.xodr) file:')
+            print('  Make sure it exists, has the same name of your town, and is correct.')
+            sys.exit(1)
         self._last_traffic_light = None
 
     @staticmethod
