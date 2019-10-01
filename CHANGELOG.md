@@ -1,4 +1,5 @@
 ## Latest
+  * Better PID parameters for the longitudinal control
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
