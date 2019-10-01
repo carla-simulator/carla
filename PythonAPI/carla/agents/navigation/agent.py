@@ -28,7 +28,7 @@ class Agent(object):
         self._local_planner = None
         self._world = self.vehicle.get_world()
         try:
-            self.map = self._world.get_map()
+            self._map = self._world.get_map()
         except RuntimeError as error:
             print('RuntimeError: {}'.format(error))
             print('  The server could not send the OpenDRIVE (.xodr) file:')
