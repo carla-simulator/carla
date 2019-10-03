@@ -89,6 +89,8 @@ namespace CollisionStageConstants {
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
 
+      // DrawBoundary(GetGeodesicBoundary(ego_actor));
+
       // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
@@ -243,8 +245,12 @@ namespace CollisionStageConstants {
       SimpleWaypointPtr boundary_start = waypoint_buffer->front();
       SimpleWaypointPtr boundary_end = waypoint_buffer->front();
 
+      auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(actor);
       for (uint i = 0u;
-          (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
+          (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2) ||
+          (!vehicle_reference->IsAtTrafficLight() &&
+            boundary_end->CheckJunction() &&
+            !boundary_start->CheckJunction())) &&
           (i < waypoint_buffer->size());
           ++i) {
 

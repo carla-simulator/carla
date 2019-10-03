@@ -3,6 +3,8 @@
 #include <unordered_map>
 
 #include "carla/client/Vehicle.h"
+#include "carla/client/TrafficLight.h"
+#include "carla/Memory.h"
 #include "carla/rpc/TrafficLightState.h"
 
 #include "MessengerAndDataTypes.h"
@@ -10,9 +12,14 @@
 
 namespace traffic_manager {
 
+namespace cc = carla::client;
+namespace cg = carla::geom;
+
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
+  using TrafficLight = carla::SharedPtr<cc::TrafficLight>;
+  using TLS = carla::rpc::TrafficLightState;
 
   /// This class provides the information about the Traffic Lights at the
   /// junctions.
@@ -20,6 +27,7 @@ namespace traffic_manager {
 
   private:
 
+    cc::DebugHelper &debug_helper;
     /// Variables to remember messenger states.
     int localization_messenger_state;
     int planner_messenger_state;
@@ -40,7 +48,8 @@ namespace traffic_manager {
         std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
         uint number_of_vehicle,
-        uint pool_size);
+        uint pool_size,
+        cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 
     void DataReceiver() override;

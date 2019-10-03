@@ -14,12 +14,11 @@ namespace PlannerConstants {
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
       uint number_of_vehicles,
+      cc::DebugHelper &debug_helper,
       uint pool_size = 1u,
       float urban_target_velocity = 25 / 3.6f,
       float highway_target_velocity = 50 / 3.6f,
-      std::vector<float> longitudinal_parameters = {
-    0.1f, 0.15f, 0.01f
-  },
+      std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
       std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
       std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
     : urban_target_velocity(urban_target_velocity),
@@ -31,6 +30,7 @@ namespace PlannerConstants {
       control_messenger(control_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
+      debug_helper(debug_helper),
       PipelineStage(pool_size, number_of_vehicles) {
 
     // Allocate and initialize vector to keep track of controller states for all
@@ -109,11 +109,11 @@ namespace PlannerConstants {
           lateral_parameters);
 
       // In case of collision or traffic light or approaching a junction.
-      if ((collision_messenger_state != 0u && collision_frame->at(i).hazard) ||
-          (traffic_light_messenger_state != 0u &&
-          traffic_light_frame->at(i).traffic_light_hazard > 0.0f) ||
+      if ((collision_messenger_state != 0 && collision_frame->at(i).hazard) ||
+          (traffic_light_messenger_state != 0 &&
+           traffic_light_frame->at(i).traffic_light_hazard) ||
           (localization_data.approaching_true_junction &&
-          current_velocity > INTERSECTION_APPROACH_SPEED)) {
+           current_velocity > INTERSECTION_APPROACH_SPEED)) {
 
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
@@ -132,6 +132,10 @@ namespace PlannerConstants {
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
 
+      // std::string debug_string = std::to_string(static_cast<int>(message.throttle * 100))
+      //                            + " " + std::to_string(static_cast<int>(message.brake * 100))
+      //                            + " " + std::to_string(static_cast<int>(message.steer * 100));
+      // debug_helper.DrawString(actor->GetLocation(), debug_string, false, {0u, 0u, 255u}, 0.1);
     }
   }
 

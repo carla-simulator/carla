@@ -6,10 +6,12 @@ namespace traffic_manager {
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
       uint number_of_vehicle,
-      uint pool_size)
+      uint pool_size,
+      cc::DebugHelper &debug_helper)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
-      PipelineStage(pool_size, number_of_vehicle) {
+      PipelineStage(pool_size, number_of_vehicle),
+      debug_helper(debug_helper){
 
     // Initializing output frame selector.
     frame_selector = true;
@@ -37,27 +39,45 @@ namespace traffic_manager {
     // Looping over array's partitions for the current thread.
     for (uint i = start_index; i <= end_index; ++i) {
 
-      float traffic_light_hazard = -1.0f;
+      bool traffic_light_hazard = false;
       LocalizationToTrafficLightData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
       SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
       SimpleWaypointPtr look_ahead_point = data.junction_look_ahead_waypoint;
 
-      auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(ego_actor);
-      auto traffic_light_state = vehicle->GetTrafficLightState();
+      auto vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
+      // TrafficLight traffic_light;
+      TLS traffic_light_state = vehicle->GetTrafficLightState();
+      // if (traffic_light != nullptr) {
+      //   traffic_light_state = traffic_light->GetState();
+
+      //   debug_helper.DrawLine(vehicle->GetLocation() + cg::Location(0, 0, 2),
+      //                         traffic_light->GetLocation() + cg::Location(0, 0, 2),
+      //                         0.2, {127u, 0u, 127u}, 0.1f);
+      // }
+
 
       // We determine to stop if the current position of the vehicle is not a junction,
       // a point on the path beyond a threshold (velocity-dependent) distance
       // is inside the junction and there is a red or yellow light.
-      if (!(closest_waypoint->CheckJunction()) &&
-          (traffic_light_state == carla::rpc::TrafficLightState::Red ||
-          traffic_light_state == carla::rpc::TrafficLightState::Yellow) &&
-          look_ahead_point->CheckJunction()) {
-        traffic_light_hazard = 1.0f;
+      if (vehicle->IsAtTrafficLight() &&
+          !closest_waypoint->CheckJunction() &&
+          look_ahead_point->CheckJunction() &&
+          traffic_light_state != TLS::Green) {
+
+        traffic_light_hazard = true;
       }
       TrafficLightToPlannerData &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard;
+
+      // if (traffic_light_state != TLS::Green) {
+      //   debug_helper.DrawString(closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
+      //                           "TrafficLight", false, {255u, 0u, 0u}, 0.1);
+      // } else {
+      //   debug_helper.DrawString(closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
+      //                           "TrafficLight", false, {0u, 255u, 0u}, 0.1);
+      // }
     }
 
   }

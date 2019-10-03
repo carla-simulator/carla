@@ -161,14 +161,16 @@ namespace PipelineConstants {
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         localization_traffic_light_messenger, traffic_light_planner_messenger,
-        actor_list.size(), pipeline_width);
+        actor_list.size(), pipeline_width, debug_helper);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
         localization_planner_messenger,
         collision_planner_messenger,
         traffic_light_planner_messenger,
         planner_control_messenger,
-        actor_list.size(), pipeline_width,
+        actor_list.size(),
+        debug_helper,
+        pipeline_width,
         urban_target_velocity,
         highway_target_velocity,
         longitudinal_PID_parameters,
@@ -178,7 +180,6 @@ namespace PipelineConstants {
     control_stage = std::make_unique<BatchControlStage>(
         planner_control_messenger, client_connection,
         actor_list.size(), pipeline_width);
-
   }
 
   void Pipeline::Start() {

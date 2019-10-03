@@ -13,6 +13,7 @@
 namespace traffic_manager {
 
 namespace chr = std::chrono;
+namespace cc = carla::client;
 
   using Actor = carla::SharedPtr<carla::client::Actor>;
   using ActorId = carla::rpc::ActorId;
@@ -25,6 +26,7 @@ namespace chr = std::chrono;
 
   private:
 
+    cc::DebugHelper &debug_helper;
     /// Selection key to switch between the output frames.
     bool frame_selector;
     /// Variables to remember messenger states.
@@ -65,6 +67,7 @@ namespace chr = std::chrono;
         std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
         uint number_of_vehicles,
+        cc::DebugHelper &debug_helper,
         uint pool_size,
         float urban_target_velocity,
         float highway_target_velocity,

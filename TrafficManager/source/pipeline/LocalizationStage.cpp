@@ -7,7 +7,7 @@ namespace LocalizationConstants {
   static const float MINIMUM_HORIZON_LENGTH = 25.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
-  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 5.0f;
+  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
 }
   using namespace LocalizationConstants;
@@ -216,6 +216,13 @@ namespace LocalizationConstants {
         }
       }
 
+      // Extending buffer beyond junction when the vehicle is close to the junction.
+      if (approaching_junction) {
+        while (waypoint_buffer.back()->CheckJunction()) {
+          waypoint_buffer.push_back(waypoint_buffer.back()->GetNextWaypoint()[0]);
+        }
+      }
+
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
@@ -230,6 +237,11 @@ namespace LocalizationConstants {
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
+
+      // debug_helper.DrawPoint(traffic_light_message.closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
+      //                        0.3, {0u, 255u, 0u}, 0.1);
+      // debug_helper.DrawPoint(traffic_light_message.junction_look_ahead_waypoint->GetLocation() + cg::Location(0, 0, 2),
+      //                        0.3, {0u, 0u, 255u}, 0.1);
     }
   }
 

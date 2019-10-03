@@ -58,7 +58,7 @@ namespace cc = carla::client;
 
   /// Type of data sent by the traffic light stage to the motion planner stage.
   struct TrafficLightToPlannerData {
-    float traffic_light_hazard;
+    bool traffic_light_hazard;
   };
 
   /// Data frame types.

@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   cc::World world = client_conn.GetWorld();
 
   uint target_traffic_amount = 0u;
-  if (argc == 3 && std::string(argv[1]) == "-n") {
+  if (argc >= 3 && std::string(argv[1]) == "-n") {
     try {
       target_traffic_amount = std::stoi(argv[2]);
     } catch (const std::exception &e) {
