@@ -57,23 +57,24 @@ matrix:
         - shopt -s globstar
         - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/BuildTools/*.py
 
-    - env: TEST="Pylint 3"
-      addons:
-        apt:
-          packages:
-            - python3
-            - python3-pip
-      install:
-        - pip3 install -q --user setuptools
-        - pip3 install -q pylint
-        - pip3 install -q --user -r PythonAPI/carla/requirements.txt
-        - pip3 install -q --user -r PythonAPI/examples/requirements.txt
-        - pip3 install -q --user -r PythonAPI/test/requirements.txt
-        - pip3 install -q --user -r PythonAPI/util/requirements.txt
-        - pip3 install -q --user -r Util/Docker/requirements.txt
-      script:
-        - shopt -s globstar
-        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py Util/BuildTools/*.py
+    # Commented until astroid can be downgraded to 2.2.5
+    # - env: TEST="Pylint 3"
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - python3
+    #         - python3-pip
+    #   install:
+    #     - pip3 install -q --user setuptools
+    #     - pip3 install -q pylint
+    #     - pip3 install -q --user -r PythonAPI/carla/requirements.txt
+    #     - pip3 install -q --user -r PythonAPI/examples/requirements.txt
+    #     - pip3 install -q --user -r PythonAPI/test/requirements.txt
+    #     - pip3 install -q --user -r PythonAPI/util/requirements.txt
+    #     - pip3 install -q --user -r Util/Docker/requirements.txt
+    #   script:
+    #     - shopt -s globstar
+    #     - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py Util/BuildTools/*.py
 
     - env: TEST="MkDocs"
       install:
