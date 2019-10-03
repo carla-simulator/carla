@@ -42,6 +42,7 @@ class GlobalRoutePlannerDAO(object):
         for segment in self._wmap.get_topology():
             wp1, wp2 = segment[0], segment[1]
             l1, l2 = wp1.transform.location, wp2.transform.location
+            #draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], 1.0)
             # Rounding off to avoid floating point imprecision
             x1, y1, z1, x2, y2, z2 = np.round([l1.x, l1.y, l1.z, l2.x, l2.y, l2.z], 0)
             wp1.transform.location, wp2.transform.location = l1, l2

@@ -37,7 +37,7 @@ class BehaviorAgent(Agent):
     to a more aggressive ones.
     """
 
-    def __init__(self, vehicle, ignore_traffic_light=False, behavior='normal'):
+    def __init__(self, vehicle, ignore_traffic_light=True, behavior='normal'):
         """
         Constructor method.
 
@@ -49,7 +49,7 @@ class BehaviorAgent(Agent):
         super(BehaviorAgent, self).__init__(vehicle)
         self.ignore_traffic_light = ignore_traffic_light
         self._local_planner = LocalPlanner(self)
-        self._hop_resolution = 3.0
+        self._hop_resolution = 3
         self._path_seperation_hop = 2
         self._path_seperation_threshold = 0.5
         self._grp = None
@@ -198,10 +198,13 @@ class BehaviorAgent(Agent):
             :param vehicle_list: list of all the nearby vehicles
         """
 
+        left_turn = waypoint.left_lane_marking.lane_change
+        right_turn = waypoint.right_lane_marking.lane_change
+
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
 
-        if (waypoint.lane_change == carla.LaneChange.Left or waypoint.lane_change ==
+        if (left_turn == carla.LaneChange.Left or left_turn ==
                 carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
@@ -210,7 +213,7 @@ class BehaviorAgent(Agent):
                 self.behavior.overtake_counter = 200
                 self.set_destination(left_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
-        elif waypoint.lane_change == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
+        elif right_turn == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
@@ -227,13 +230,17 @@ class BehaviorAgent(Agent):
             :param waypoint: current waypoint of the agent
             :param vehicle_list: list of all the nearby vehicles
         """
+
+        left_turn = waypoint.left_lane_marking.lane_change
+        right_turn = waypoint.right_lane_marking.lane_change
+
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
 
         behind_vehicle_state, behind_vehicle, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
             self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self.speed < get_speed(behind_vehicle):
-            if (waypoint.lane_change == carla.LaneChange.Right or waypoint.lane_change ==
+            if (right_turn == carla.LaneChange.Right or right_turn ==
                     carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
@@ -242,7 +249,7 @@ class BehaviorAgent(Agent):
                     self.behavior.tailgate_counter = 200
                     self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
-            elif waypoint.lane_change == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
+            elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:

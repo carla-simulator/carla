@@ -68,6 +68,7 @@ class LocalPlanner(object):
         self.target_waypoint = None
         self._vehicle_controller = None
         self._global_plan = None
+        self._pid_controller = None
         self.waypoints_queue = deque(maxlen=20000)  # queue with tuples of (waypoint, RoadOption)
         self._buffer_size = 5
         self._waypoint_buffer = deque(maxlen=self._buffer_size)
@@ -98,14 +99,17 @@ class LocalPlanner(object):
                             {'K_P':, 'K_D':, 'K_I':, 'dt'}
         """
         # Default parameters
-        self._target_speed = 20.0  # km/h
-        self._sampling_radius = self._target_speed * 1.5 / 3.6  # 1.5 second horizon
-        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
-        self.args_lateral_dict = {
-            'K_P': 0.9,
-            'K_D': 0.03,
-            'K_I': 0.03,
+        self.args_lat_highway_dict = {
+            'K_P': 0.5,
+            'K_D': 0.002,
+            'K_I': 0.05,
             'dt': 1.0 / self.FPS}
+        self.args_lat_city_dict = {
+            'K_P': 0.65,
+            'K_D': 0.002,
+            'K_I': 0.09,
+            'dt': 1.0 / self.FPS}
+
         self.args_longitudinal_dict = {
             'K_P': 0.37,
             'K_D': 0.024,
@@ -115,12 +119,12 @@ class LocalPlanner(object):
 
         self._global_plan = False
 
-        self._pid_controller = VehiclePIDController(self._vehicle,
-                                                    args_lateral=self.args_lateral_dict,
-                                                    args_longitudinal=self.args_longitudinal_dict)
+        self._target_speed = 20
+        self._sampling_radius = self._target_speed / 3.6  # variable horizon
+        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
 
         # Fill waypoint trajectory queue
-        self._compute_next_waypoints(k=200)
+        self._compute_next_waypoints(k=10)
 
     def set_speed(self, speed):
         """
@@ -189,6 +193,7 @@ class LocalPlanner(object):
         return None, RoadOption.VOID
 
     def run_step(self, target_speed=None, debug=False):
+        #debug = True
         """
         Execute one step of local planning which involves
         running the longitudinal and lateral PID controllers to
@@ -198,12 +203,16 @@ class LocalPlanner(object):
             :param debug: boolean flag to activate waypoints debugging
             :return: control
         """
+
         if target_speed is not None:
             self._target_speed = target_speed
         # Not enough waypoints in the horizon? Add more!
         if not self._global_plan and \
             len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=100)
+            self._compute_next_waypoints(k=200)
+
+        self._sampling_radius = self._target_speed / 3.6  # variable horizon
+        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
 
         if len(self.waypoints_queue) == 0:
             control = carla.VehicleControl()
@@ -229,6 +238,12 @@ class LocalPlanner(object):
         # Target waypoint
         self.target_waypoint, self.target_road_option = self._waypoint_buffer[0]
 
+        args_lat = self.args_lat_city_dict if target_speed < 50 else self.args_lat_highway_dict
+
+        self._pid_controller = VehiclePIDController(self._vehicle,
+                                                    args_lateral=args_lat,
+                                                    args_longitudinal=self.args_longitudinal_dict)
+
         control = self._pid_controller.run_step(self._target_speed, self.target_waypoint)
 
         # Purge the queue of obsolete waypoints
@@ -245,7 +260,7 @@ class LocalPlanner(object):
 
         if debug:
             draw_waypoints(self._vehicle.get_world(), \
-            [self.target_waypoint], self._vehicle.get_location().z + 1.0)
+            [self.target_waypoint], 1.0)
         return control
 
 

@@ -201,6 +201,7 @@ class PIDLateralController(object):
                                  (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
 
         _cross = np.cross(v_vec, w_vec)
+
         if _cross[2] < 0:
             _dot *= -1.0
 
