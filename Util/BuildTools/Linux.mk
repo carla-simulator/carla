@@ -59,6 +59,12 @@ check.PythonAPI.2: PythonAPI.2
 check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api-3 $(ARGS)
 
+.PHONY: TrafficManager
+TrafficManager:
+	@rm -rf TrafficManager/build
+	@mkdir TrafficManager/build
+	@cd TrafficManager/build && cmake .. && make -j
+
 benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
