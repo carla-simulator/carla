@@ -89,8 +89,6 @@ namespace CollisionStageConstants {
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
 
-      // DrawBoundary(GetGeodesicBoundary(ego_actor));
-
       // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
       bool collision_hazard = false;
@@ -153,55 +151,54 @@ namespace CollisionStageConstants {
     planner_messenger_state = planner_messenger->SendData(packet);
   }
 
-  bool CollisionStage::NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle) const {
+  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) const {
 
-    // For each vehicle, calculating the dot product between heading vector
-    // and relative position vector to the other vehicle.
+    bool hazard = false;
 
-    cg::Location other_vehicle_location = other_vehicle->GetLocation();
-    cg::Location ego_vehicle_location = ego_vehicle->GetLocation();
-
-    cg::Vector3D reference_heading_vector = ego_vehicle->GetTransform().GetForwardVector();
-    cg::Vector3D relative_other_vector = other_vehicle_location - ego_vehicle_location;
-    relative_other_vector = relative_other_vector.MakeUnitVector();
-    float reference_relative_dot = cg::Math::Dot(reference_heading_vector, relative_other_vector);
-
-    cg::Vector3D other_heading_vector = other_vehicle->GetTransform().GetForwardVector();
-    cg::Vector3D relative_reference_vector = ego_vehicle_location - other_vehicle_location;
-    relative_reference_vector = relative_reference_vector.MakeUnitVector();
-    float other_relative_dot = cg::Math::Dot(other_heading_vector, relative_reference_vector);
-
-    // Give preference to the vehicle who's path has a higher angular separation
-    // with a relative position vector to the other vehicle.
-    return (reference_relative_dot > other_relative_dot &&
-           CheckGeodesicCollision(ego_vehicle, other_vehicle));
-  }
-
-  bool CollisionStage::CheckGeodesicCollision(
-      const Actor &reference_vehicle,
-      const Actor &other_vehicle) const {
-
-    bool overlap = false;
     float reference_height = reference_vehicle->GetLocation().z;
     float other_height = other_vehicle->GetLocation().z;
     if (abs(reference_height - other_height) < VERTICAL_OVERLAP_THRESHOLD) {
 
-      LocationList reference_geodesic_boundary = GetGeodesicBoundary(reference_vehicle);
-      LocationList other_geodesic_boundary = GetGeodesicBoundary(other_vehicle);
+      LocationList reference_geodesic_bbox = GetGeodesicBoundary(reference_vehicle);
+      LocationList other_geodesic_bbox = GetGeodesicBoundary(other_vehicle);
 
-      if (reference_geodesic_boundary.size() > 0 && other_geodesic_boundary.size() > 0) {
+      bool geodesic_overlap = CheckOverlap(reference_geodesic_bbox, other_geodesic_bbox);
 
-        Polygon reference_polygon = GetPolygon(reference_geodesic_boundary);
-        Polygon other_polygon = GetPolygon(other_geodesic_boundary);
+      Polygon reference_geodesic_polygon = GetPolygon(reference_geodesic_bbox);
+      Polygon other_geodesic_polygon = GetPolygon(other_geodesic_bbox);
+      Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
+      Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
 
-        std::deque<Polygon> output;
-        bg::intersection(reference_polygon, other_polygon, output);
+      float reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+      float other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
 
-        for (uint i = 0u; i < output.size() && !overlap; ++i) {
-          Polygon &p = output.at(i);
-          if (bg::area(p) > ZERO_AREA) {
-            overlap = true;
-          }
+      // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
+      if (geodesic_overlap &&
+          (reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic)) {
+
+        hazard = true;
+      }
+    }
+
+    return hazard;
+  }
+
+  bool CollisionStage::CheckOverlap(const LocationList &boundary_a,
+                                    const LocationList &boundary_b) const {
+
+    bool overlap = false;
+    if (boundary_a.size() > 0 && boundary_b.size() > 0) {
+
+      Polygon reference_polygon = GetPolygon(boundary_a);
+      Polygon other_polygon = GetPolygon(boundary_b);
+
+      std::deque<Polygon> output;
+      bg::intersection(reference_polygon, other_polygon, output);
+
+      for (uint i = 0u; i < output.size() && !overlap; ++i) {
+        Polygon &p = output.at(i);
+        if (bg::area(p) > ZERO_AREA) {
+          overlap = true;
         }
       }
     }
@@ -246,11 +243,12 @@ namespace CollisionStageConstants {
       SimpleWaypointPtr boundary_end = waypoint_buffer->front();
 
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(actor);
+      // At non-signalized junctions, we extend the boundary across the junction and
+      // in all other situations, boundary length is velocity-dependent.
       for (uint i = 0u;
           (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2) ||
           (!vehicle_reference->IsAtTrafficLight() &&
-            boundary_end->CheckJunction() &&
-            !boundary_start->CheckJunction())) &&
+           boundary_end->CheckJunction())) &&
           (i < waypoint_buffer->size());
           ++i) {
 

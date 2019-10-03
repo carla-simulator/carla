@@ -131,11 +131,6 @@ namespace PlannerConstants {
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
-
-      // std::string debug_string = std::to_string(static_cast<int>(message.throttle * 100))
-      //                            + " " + std::to_string(static_cast<int>(message.brake * 100))
-      //                            + " " + std::to_string(static_cast<int>(message.steer * 100));
-      // debug_helper.DrawString(actor->GetLocation(), debug_string, false, {0u, 0u, 255u}, 0.1);
     }
   }
 

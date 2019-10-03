@@ -76,7 +76,7 @@ namespace bg = boost::geometry;
     /// Collision is predicted by extrapolating a boundary around the vehicle
     /// along its trajectory and checking if it overlaps with the extrapolated
     /// boundary of the other vehicle.
-    bool CheckGeodesicCollision(const Actor &vehicle, const Actor &ego_vehicle) const;
+    bool CheckOverlap(const LocationList &boundary_a, const LocationList &boundary_b) const;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
     LocationList GetBoundary(const Actor &actor) const;

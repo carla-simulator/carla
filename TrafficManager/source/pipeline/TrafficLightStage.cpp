@@ -47,16 +47,7 @@ namespace traffic_manager {
       SimpleWaypointPtr look_ahead_point = data.junction_look_ahead_waypoint;
 
       auto vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
-      // TrafficLight traffic_light;
       TLS traffic_light_state = vehicle->GetTrafficLightState();
-      // if (traffic_light != nullptr) {
-      //   traffic_light_state = traffic_light->GetState();
-
-      //   debug_helper.DrawLine(vehicle->GetLocation() + cg::Location(0, 0, 2),
-      //                         traffic_light->GetLocation() + cg::Location(0, 0, 2),
-      //                         0.2, {127u, 0u, 127u}, 0.1f);
-      // }
-
 
       // We determine to stop if the current position of the vehicle is not a junction,
       // a point on the path beyond a threshold (velocity-dependent) distance
@@ -70,14 +61,6 @@ namespace traffic_manager {
       }
       TrafficLightToPlannerData &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard;
-
-      // if (traffic_light_state != TLS::Green) {
-      //   debug_helper.DrawString(closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
-      //                           "TrafficLight", false, {255u, 0u, 0u}, 0.1);
-      // } else {
-      //   debug_helper.DrawString(closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
-      //                           "TrafficLight", false, {0u, 255u, 0u}, 0.1);
-      // }
     }
 
   }

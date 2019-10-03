@@ -237,11 +237,6 @@ namespace LocalizationConstants {
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
-
-      // debug_helper.DrawPoint(traffic_light_message.closest_waypoint->GetLocation() + cg::Location(0, 0, 2),
-      //                        0.3, {0u, 255u, 0u}, 0.1);
-      // debug_helper.DrawPoint(traffic_light_message.junction_look_ahead_waypoint->GetLocation() + cg::Location(0, 0, 2),
-      //                        0.3, {0u, 0u, 255u}, 0.1);
     }
   }
 
