@@ -18,7 +18,9 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
     const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  LoadPostProcessingMaterial(
+  AddPostProcessingMaterial(
+      TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+  AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
 }
 
