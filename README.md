@@ -16,7 +16,7 @@ validation of autonomous driving systems. In addition to open-source code
 and protocols, CARLA provides open digital assets (urban layouts, buildings,
 vehicles) that were created for this purpose and can be used freely. The
 simulation platform supports flexible specification of sensor suites and
-environmental conditions.
+environmental conditions..
 
 [![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
 
