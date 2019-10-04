@@ -65,7 +65,7 @@ matrix:
             - python3-pip
       install:
         - pip3 install -q --user setuptools
-        - pip3 install -q pylint
+        - pip3 install -q astroid==2.2.5 pylint==2.3.1
         - pip3 install -q --user -r PythonAPI/carla/requirements.txt
         - pip3 install -q --user -r PythonAPI/examples/requirements.txt
         - pip3 install -q --user -r PythonAPI/test/requirements.txt

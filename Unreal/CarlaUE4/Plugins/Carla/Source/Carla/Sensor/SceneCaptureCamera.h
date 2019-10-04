@@ -6,22 +6,23 @@
 
 #pragma once
 
-#include "Carla/Sensor/SceneCaptureSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/PixelReader.h"
+#include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "SceneCaptureCamera.generated.h"
 
 /// A sensor that captures images from the scene.
 UCLASS()
-class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
+class CARLA_API ASceneCaptureCamera : public AShaderBasedSensor
 {
   GENERATED_BODY()
 
 public:
 
   static FActorDefinition GetSensorDefinition();
+
+  ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
 

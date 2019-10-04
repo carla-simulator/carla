@@ -9,6 +9,7 @@
 
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/ShaderBasedSensor.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -315,13 +316,60 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   ResX.Type = EActorAttributeType::Int;
   ResX.RecommendedValues = { TEXT("800") };
   ResX.bRestrictToRecommended = false;
+
   FActorVariation ResY;
   ResY.Id = TEXT("image_size_y");
   ResY.Type = EActorAttributeType::Int;
   ResY.RecommendedValues = { TEXT("600") };
   ResY.bRestrictToRecommended = false;
 
-  Definition.Variations.Append({ResX, ResY, FOV});
+  // Lens parameters
+  FActorVariation LensCircleFalloff;
+  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+  LensCircleFalloff.Type = EActorAttributeType::Float;
+  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+  LensCircleFalloff.bRestrictToRecommended = false;
+
+  FActorVariation LensCircleMultiplier;
+  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+  LensCircleMultiplier.Type = EActorAttributeType::Float;
+  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
+  LensCircleMultiplier.bRestrictToRecommended = false;
+
+  FActorVariation LensK;
+  LensK.Id = TEXT("lens_k");
+  LensK.Type = EActorAttributeType::Float;
+  LensK.RecommendedValues = { TEXT("-1.0") };
+  LensK.bRestrictToRecommended = false;
+
+  FActorVariation LensKcube;
+  LensKcube.Id = TEXT("lens_kcube");
+  LensKcube.Type = EActorAttributeType::Float;
+  LensKcube.RecommendedValues = { TEXT("0.0") };
+  LensKcube.bRestrictToRecommended = false;
+
+  FActorVariation LensXSize;
+  LensXSize.Id = TEXT("lens_x_size");
+  LensXSize.Type = EActorAttributeType::Float;
+  LensXSize.RecommendedValues = { TEXT("0.08") };
+  LensXSize.bRestrictToRecommended = false;
+
+  FActorVariation LensYSize;
+  LensYSize.Id = TEXT("lens_y_size");
+  LensYSize.Type = EActorAttributeType::Float;
+  LensYSize.RecommendedValues = { TEXT("0.08") };
+  LensYSize.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      ResX,
+      ResY,
+      FOV,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
 
   if (bEnableModifyingPostProcessEffects)
   {
@@ -535,6 +583,18 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     Tint.RecommendedValues = { TEXT("0.0") };
     Tint.bRestrictToRecommended = false;
 
+    FActorVariation ChromaticIntensity;
+    ChromaticIntensity.Id = TEXT("chromatic_aberration_intensity");
+    ChromaticIntensity.Type = EActorAttributeType::Float;
+    ChromaticIntensity.RecommendedValues = { TEXT("0.0") };
+    ChromaticIntensity.bRestrictToRecommended = false;
+
+    FActorVariation ChromaticOffset;
+    ChromaticOffset.Id = TEXT("chromatic_aberration_offset");
+    ChromaticOffset.Type = EActorAttributeType::Float;
+    ChromaticOffset.RecommendedValues = { TEXT("0.0") };
+    ChromaticOffset.bRestrictToRecommended = false;
+
     Definition.Variations.Append({
       ExposureMode,
       ExposureCompensation,
@@ -562,7 +622,9 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       FilmBlackClip,
       FilmWhiteClip,
       Temperature,
-      Tint});
+      Tint,
+      ChromaticIntensity,
+      ChromaticOffset});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -1072,9 +1134,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetFocalDistance(
         RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 1000.0f));
     Camera->SetDepthBlurAmount(
-        RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 0.0f));
+        RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 1.0f));
     Camera->SetDepthBlurRadius(
-        RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 1.0f));
+        RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 0.0f));
     Camera->SetDepthOfFieldMinFstop(
         RetrieveActorAttributeToFloat("min_fstop", Description.Variations, 1.2f));
     Camera->SetBladeCount(
@@ -1095,7 +1157,31 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("temp", Description.Variations, 6500.0f));
     Camera->SetWhiteTint(
         RetrieveActorAttributeToFloat("tint", Description.Variations, 0.0f));
+
+    Camera->SetChromAberrIntensity(
+        RetrieveActorAttributeToFloat("chromatic_aberration_intensity", Description.Variations, 0.0f));
+    Camera->SetChromAberrOffset(
+        RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
   }
+}
+
+void UActorBlueprintFunctionLibrary::SetCamera(
+    const FActorDescription &Description,
+    AShaderBasedSensor *Camera)
+{
+  CARLA_ABFL_CHECK_ACTOR(Camera);
+  Camera->SetFloatShaderParameter(0, TEXT("CircleFalloff_NState"),
+      RetrieveActorAttributeToFloat("lens_circle_falloff", Description.Variations, 5.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("CircleMultiplier_NState"),
+      RetrieveActorAttributeToFloat("lens_circle_multiplier", Description.Variations, 0.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("K_NState"),
+      RetrieveActorAttributeToFloat("lens_k", Description.Variations, -1.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("kcube"),
+      RetrieveActorAttributeToFloat("lens_kcube", Description.Variations, 0.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("XSize_NState"),
+      RetrieveActorAttributeToFloat("lens_x_size", Description.Variations, 0.08f));
+  Camera->SetFloatShaderParameter(0, TEXT("YSize_NState"),
+      RetrieveActorAttributeToFloat("lens_y_size", Description.Variations, 0.08f));
 }
 
 void UActorBlueprintFunctionLibrary::SetLidar(

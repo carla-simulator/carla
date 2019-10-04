@@ -1,4 +1,8 @@
 ## Latest
+  * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
+  * Updated manual_control.py with a lens disortion effect example
+  * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
+  * Fixed pylint for python3 in travis
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
