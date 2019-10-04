@@ -167,6 +167,8 @@ class World(object):
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
+        self.player_max_speed = 1.589
+        self.player_max_speed_fast = 3.713
 
     def restart(self):
         # Keep same camera config if the camera manager exists.
@@ -183,6 +185,18 @@ class World(object):
             blueprint.set_attribute('driver_id', driver_id)
         if blueprint.has_attribute('is_invincible'):
             blueprint.set_attribute('is_invincible', 'true')
+        # set the max speed
+        if blueprint.has_attribute('age'):
+            age = blueprint.get_attribute('age').as_str()
+            if (age == "child"):
+                self.player_max_speed = 1.1         # child pedestrian
+                self.player_max_speed_fast = 2.6    # child pedestrian spring
+            else:
+                self.player_max_speed = 1.6         # adult pedestrian
+                self.player_max_speed_fast = 3.7    # adult pedestrian spring
+        else:
+            self.player_max_speed = 1.589           # vehicles
+            self.player_max_speed_fast = 3.713      # vehicles spring
         # Spawn the player.
         if self.player is not None:
             spawn_point = self.player.get_transform()
@@ -340,7 +354,7 @@ class KeyboardControl(object):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
             elif isinstance(self._control, carla.WalkerControl):
-                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
+                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
             world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
@@ -363,7 +377,7 @@ class KeyboardControl(object):
         self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
         self._control.hand_brake = keys[K_SPACE]
 
-    def _parse_walker_keys(self, keys, milliseconds):
+    def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0
         if keys[K_DOWN] or keys[K_s]:
             self._control.speed = 0.0
@@ -374,7 +388,7 @@ class KeyboardControl(object):
             self._control.speed = .01
             self._rotation.yaw += 0.08 * milliseconds
         if keys[K_UP] or keys[K_w]:
-            self._control.speed = 3.333 if pygame.key.get_mods() & KMOD_SHIFT else 1.389
+            self._control.speed = world.player_max_speed_fast if pygame.key.get_mods() & KMOD_SHIFT else world.player_max_speed
         self._control.jump = keys[K_SPACE]
         self._rotation.yaw = round(self._rotation.yaw, 1)
         self._control.direction = self._rotation.get_forward_vector()
@@ -393,7 +407,10 @@ class HUD(object):
     def __init__(self, width, height):
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
-        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+        if os.name == 'nt':
+            fonts = [x for x in pygame.font.get_fonts() if 'arial' in x]
+        else:
+            fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
         default_font = 'ubuntumono'
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)

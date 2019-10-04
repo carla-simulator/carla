@@ -10,6 +10,7 @@
 #include "Carla/Game/CarlaStatics.h"
 
 #include "Components/DrawFrustumComponent.h"
+#include "Engine/Classes/Engine/Scene.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -536,6 +537,31 @@ namespace SceneCaptureSensor_local_ns {
     // Chromatic Aberration
     PostProcessSettings.bOverride_SceneFringeIntensity = true;
     PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
+
+    // Ambient Occlusion
+    PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
+    PostProcessSettings.AmbientOcclusionIntensity = 0.8f;
+    PostProcessSettings.bOverride_AmbientOcclusionRadius	= true;
+    PostProcessSettings.AmbientOcclusionRadius = 100.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionStaticFraction = true;
+    PostProcessSettings.AmbientOcclusionStaticFraction = 1.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionFadeDistance = true;
+    PostProcessSettings.AmbientOcclusionFadeDistance = 50000.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionPower	= true;
+    PostProcessSettings.AmbientOcclusionPower = 2.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionBias = true;
+    PostProcessSettings.AmbientOcclusionBias	= 1.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
+    PostProcessSettings.AmbientOcclusionQuality = 100.0f;
+
+
+    // Bloom
+    PostProcessSettings.bOverride_BloomMethod = true;
+    PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
+    PostProcessSettings.bOverride_BloomIntensity = true;
+    PostProcessSettings.BloomIntensity = 1.0f;
+    PostProcessSettings.bOverride_BloomThreshold = true;
+    PostProcessSettings.BloomThreshold = -1.0f;
   }
 
   // Remove the show flags that might interfere with post-processing effects
