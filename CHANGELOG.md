@@ -26,6 +26,7 @@
     - Added tire friction trigger boxes for simulating slippery surfaces
   * Added camera gamma correction as command-line argument to manual_control.py
   * Added ability to set motion blur settings for RGB camera in sensor python blueprint
+  * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Added C++ client example using LibCarla
   * Added PythonAPI documentation generator, we documented in detail all the Python reference
   * Added a new Python script config.py that allows the user to configure the simulator from the command-line
