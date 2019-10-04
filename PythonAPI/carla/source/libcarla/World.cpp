@@ -156,6 +156,7 @@ void export_world() {
     .def("on_tick", &OnTick, (arg("callback")))
     .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
     .def("tick", CALL_WITHOUT_GIL(cc::World, Tick))
+    .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
     .def(self_ns::str(self_ns::self))
   ;
 

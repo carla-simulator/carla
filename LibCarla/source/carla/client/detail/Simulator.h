@@ -196,6 +196,8 @@ namespace detail {
       return _episode->GetNavigation();
     }
 
+    void SetPedestriansCrossFactor(float percentage);
+
     /// @}
     // =========================================================================
     /// @name General operations with actors

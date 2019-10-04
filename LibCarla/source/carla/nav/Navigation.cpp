@@ -55,6 +55,8 @@ namespace nav {
   static const int MAX_QUERY_SEARCH_NODES = 2048;
   static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_RADIUS = 0.3f;
+  
+  static const float AREA_WATER_COST = 10.0f;
 
   // return a random float
   static float frand() {
@@ -207,8 +209,15 @@ namespace nav {
       return;
     }
 
-    // make polygons with 'disabled' flag invalid
-    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
+    // set different filters
+    // filter 0 can not cross roads
+    _crowd->getEditableFilter(0)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
+    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED ^ SAMPLE_POLYFLAGS_SWIM);
+    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
+    // filter 1 can cross roads
+    _crowd->getEditableFilter(1)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
+    _crowd->getEditableFilter(1)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
+    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
 
     // Setup local avoidance params to different qualities.
     dtObstacleAvoidanceParams params;
@@ -277,8 +286,9 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
+      filter2.setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(0);
+      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
       filter = &filter2;
     }
 
@@ -350,6 +360,13 @@ namespace nav {
     params.pathOptimizationRange = params.radius * 30.0f;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.1f;
+        
+    // set if the agent can cross roads or not
+    if (frand() <= _probabilityCrossing) {
+      params.queryFilterType = 1;
+    } else {
+      params.queryFilterType = 0;
+    }
 
     // flags
     params.updateFlags = 0;
@@ -393,8 +410,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension
-    float hx = vehicle.bounding.extent.x + 0.5f;
-    float hy = vehicle.bounding.extent.y + 0.5f;
+    float hx = vehicle.bounding.extent.x + 1.0f;
+    float hy = vehicle.bounding.extent.y + 1.0f;
     // define the 4 corners of the bounding box
     cg::Vector3D boxCorner1 {-hx, -hy, 0};
     cg::Vector3D boxCorner2 { hx, -hy, 0};
@@ -680,6 +697,12 @@ namespace nav {
       const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
       carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
       if (dist.SquaredLength() <= 2) {
+        // set if the agent can cross roads or not
+        if (frand() <= _probabilityCrossing) {
+          SetAgentFilter(i, 1);
+        } else {
+          SetAgentFilter(i, 0);
+        }
         // set a new random target
         carla::geom::Location location;
         GetRandomLocation(location, 1, nullptr, false);
@@ -789,7 +812,7 @@ namespace nav {
     dtQueryFilter filter2;
     if (filter == nullptr) {
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(0);
+      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_SWIM);
       filter = &filter2;
     }
 
@@ -812,6 +835,23 @@ namespace nav {
     } while (1);
 
     return true;
+  }
+
+  // assign a filter index to an agent
+  void Navigation::SetAgentFilter(int agentIndex, int filterIndex)
+  {
+    // get the walker
+    dtCrowdAgent *agent = _crowd->getEditableAgent(agentIndex);
+    agent->params.queryFilterType = filterIndex;
+  }
+
+  /// set the probability that an agent could cross the roads in its path following
+  /// percentage of 0.0f means no pedestrian can cross roads
+  /// percentage of 0.5f means 50% of all pedestrians can cross roads
+  /// percentage of 1.0f means all pedestrians can cross roads if needed
+  void Navigation::SetPedestriansCrossFactor(float percentage)
+  {
+    _probabilityCrossing = percentage;
   }
 
 } // namespace nav
