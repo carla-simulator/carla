@@ -246,9 +246,7 @@ namespace CollisionStageConstants {
       // At non-signalized junctions, we extend the boundary across the junction and
       // in all other situations, boundary length is velocity-dependent.
       for (uint i = 0u;
-          (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2) ||
-          (!vehicle_reference->IsAtTrafficLight() &&
-           boundary_end->CheckJunction())) &&
+          (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
           (i < waypoint_buffer->size());
           ++i) {
 
