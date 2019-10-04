@@ -7,7 +7,7 @@ namespace TrafficDistributorConstants {
   static const float LATERAL_DETECTION_CONE = 135.0f;
   static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
   static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
-  static const float APPROACHING_VEHICLE_TIME_MARGIN = 1.0f;
+  static const float APPROACHING_VEHICLE_TIME_MARGIN = 2.0f;
 }
   using namespace TrafficDistributorConstants;
 
@@ -112,9 +112,12 @@ namespace TrafficDistributorConstants {
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
         std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint = nullptr;
+        cg::Location same_lane_location;
         if (!other_vehicle_buffer.empty()) {
+
           same_lane_vehicle_waypoint = buffer_list->at(
               vehicle_id_to_index.at(same_lane_vehicle_id)).front();
+          same_lane_location = same_lane_vehicle_waypoint->GetLocation();
         }
 
         // Check if there is another vehicle in the current lane in front for
@@ -122,10 +125,10 @@ namespace TrafficDistributorConstants {
         if (same_lane_vehicle_id != actor_id &&
             same_lane_vehicle_waypoint != nullptr &&
             !same_lane_vehicle_waypoint->CheckJunction() &&
-            DeviationDotProduct(vehicle, same_lane_vehicle_waypoint->GetLocation()) > 0 &&
-            (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+            DeviationDotProduct(vehicle, same_lane_location) > 0 &&
+            (same_lane_location.Distance(vehicle_location)
             < LANE_CHANGE_OBSTACLE_DISTANCE) &&
-            (same_lane_vehicle_waypoint->GetLocation().Distance(vehicle_location)
+            (same_lane_location.Distance(vehicle_location)
             > LANE_OBSTACLE_MINIMUM_DISTANCE)) {
 
           // If lane change connections are available,

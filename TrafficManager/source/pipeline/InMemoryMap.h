@@ -16,8 +16,9 @@
 namespace traffic_manager {
 
 namespace cg = carla::geom;
+namespace cc = carla::client;
 
-  using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
+  using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
@@ -25,7 +26,7 @@ namespace cg = carla::geom;
   using SectionWaypointMap = std::unordered_map<uint, LaneWaypointMap>;
   using RoadWaypointMap = std::unordered_map<uint, SectionWaypointMap>;
 
-  /// This class constructs a discretized local map-cache.
+  /// This class builds a discretized local map-cache.
   /// Instantiate the class with map topology from the simulator
   /// and run SetUp() to construct the local map.
   class InMemoryMap {

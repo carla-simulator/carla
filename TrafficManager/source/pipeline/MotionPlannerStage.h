@@ -15,7 +15,7 @@ namespace traffic_manager {
 namespace chr = std::chrono;
 namespace cc = carla::client;
 
-  using Actor = carla::SharedPtr<carla::client::Actor>;
+  using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::rpc::ActorId;
 
   /// The class is responsible for aggregating information from various stages

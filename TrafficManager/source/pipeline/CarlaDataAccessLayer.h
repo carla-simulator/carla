@@ -16,7 +16,7 @@ namespace traffic_manager {
   private:
 
     /// Pointer to Carla's map object.
-    carla::SharedPtr<carla::client::Map> world_map;
+    carla::SharedPtr<cc::Map> world_map;
 
   public:
 

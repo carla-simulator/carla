@@ -123,7 +123,7 @@ namespace MapConstants {
 
   }
 
-  SimpleWaypointPtr InMemoryMap::GetWaypoint(const carla::geom::Location &location) const {
+  SimpleWaypointPtr InMemoryMap::GetWaypoint(const cg::Location &location) const {
 
     SimpleWaypointPtr closest_waypoint;
     float min_distance = INFINITE_DISTANCE;

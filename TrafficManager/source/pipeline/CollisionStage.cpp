@@ -107,8 +107,7 @@ namespace CollisionStageConstants {
               actor = unregistered_actors.at(actor_id);
             }
 
-            cg::Location ego_actor_location = ego_actor->GetLocation();
-            float squared_distance = cg::Math::DistanceSquared(ego_actor_location, actor->GetLocation());
+            float squared_distance = cg::Math::DistanceSquared(ego_actor->GetLocation(), actor->GetLocation());
             if (squared_distance <= SEARCH_RADIUS * SEARCH_RADIUS) {
               if (NegotiateCollision(ego_actor, actor)) {
                 collision_hazard = true;

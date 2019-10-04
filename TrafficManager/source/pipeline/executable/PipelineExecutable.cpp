@@ -52,31 +52,39 @@ int main(int argc, char *argv[]) {
   cc::Client client_conn = cc::Client("localhost", 2000);
   cc::World world = client_conn.GetWorld();
 
-  uint target_traffic_amount = 0u;
-  if (argc >= 3 && std::string(argv[1]) == "-n") {
-    try {
-      target_traffic_amount = std::stoi(argv[2]);
-    } catch (const std::exception &e) {
-      carla::log_warning("Failed to parse argument, choosing defaults\n");
-    }
-  }
-
-  int randomization_seed = -1;
-  if (argc == 5 && std::string(argv[3]) == "-s") {
-    try {
-      randomization_seed = std::stoi(argv[4]);
-    } catch (const std::exception &e) {
-      carla::log_warning("Failed to parse argument, choosing defaults\n");
-    }
-  }
-
-  if (randomization_seed < 0) {
-    std::srand(std::time(0));
+  if (argc == 2 && std::string(argv[1]) == "-h") {
+    std::cout << "\nAvailable options\n";
+    std::cout << "[-n] \t\t Number of vehicles to be spawned\n";
+    std::cout << "[-s] \t\t System randomization seed integer\n";
   } else {
-    std::srand(randomization_seed);
-  }
 
-  run_pipeline(world, client_conn, target_traffic_amount, randomization_seed);
+    uint target_traffic_amount = 0u;
+    if (argc >= 3 && std::string(argv[1]) == "-n") {
+      try {
+        target_traffic_amount = std::stoi(argv[2]);
+      } catch (const std::exception &e) {
+        carla::log_warning("Failed to parse argument, choosing defaults\n");
+      }
+    }
+
+    int randomization_seed = -1;
+    if (argc == 5 && std::string(argv[3]) == "-s") {
+      try {
+        randomization_seed = std::stoi(argv[4]);
+      } catch (const std::exception &e) {
+        carla::log_warning("Failed to parse argument, choosing defaults\n");
+      }
+    }
+
+    if (randomization_seed < 0) {
+      std::srand(std::time(0));
+    } else {
+      std::srand(randomization_seed);
+    }
+
+    run_pipeline(world, client_conn, target_traffic_amount, randomization_seed);
+
+  }
 
   return 0;
 }

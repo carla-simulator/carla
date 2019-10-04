@@ -177,8 +177,9 @@ namespace LocalizationConstants {
           ++i) {
         target_waypoint = waypoint_buffer.at(i);
       }
-      float dot_product = DeviationDotProduct(vehicle, target_waypoint->GetLocation());
-      float cross_product = DeviationCrossProduct(vehicle, target_waypoint->GetLocation());
+      cg::Location target_location = target_waypoint->GetLocation();
+      float dot_product = DeviationDotProduct(vehicle, target_location);
+      float cross_product = DeviationCrossProduct(vehicle, target_location);
       dot_product = 1 - dot_product;
       if (cross_product < 0) {
         dot_product *= -1;

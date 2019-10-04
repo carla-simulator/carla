@@ -5,6 +5,11 @@ namespace traffic_manager {
 namespace PlannerConstants {
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
+  static const float URBAN_DEFAULT_VELOCITY = 25 / 3.6f;
+  static const float HIGHWAY_DEFAULT_VELOCITY = 50 / 3.6f;
+  static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
+  static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.0f, 0.1f};
+  static const std::vector<float> LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
 }
   using namespace PlannerConstants;
 
@@ -16,11 +21,11 @@ namespace PlannerConstants {
       uint number_of_vehicles,
       cc::DebugHelper &debug_helper,
       uint pool_size = 1u,
-      float urban_target_velocity = 25 / 3.6f,
-      float highway_target_velocity = 50 / 3.6f,
-      std::vector<float> longitudinal_parameters = {0.1f, 0.15f, 0.01f},
-      std::vector<float> highway_longitudinal_parameters = {5.0f, 0.0f, 0.1f},
-      std::vector<float> lateral_parameters = {10.0f, 0.0f, 0.1f})
+      float urban_target_velocity = URBAN_DEFAULT_VELOCITY,
+      float highway_target_velocity = HIGHWAY_DEFAULT_VELOCITY,
+      std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
+      std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
+      std::vector<float> lateral_parameters = LATERAL_DEFAULTS)
     : urban_target_velocity(urban_target_velocity),
       highway_target_velocity(highway_target_velocity),
       longitudinal_parameters(longitudinal_parameters),
@@ -71,7 +76,7 @@ namespace PlannerConstants {
       float current_deviation = localization_data.deviation;
       ActorId actor_id = actor->GetId();
 
-      auto vehicle = boost::static_pointer_cast<carla::client::Vehicle>(actor);
+      auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       float current_velocity = vehicle->GetVelocity().Length();
       auto current_time = chr::system_clock::now();
 
@@ -111,9 +116,7 @@ namespace PlannerConstants {
       // In case of collision or traffic light or approaching a junction.
       if ((collision_messenger_state != 0 && collision_frame->at(i).hazard) ||
           (traffic_light_messenger_state != 0 &&
-           traffic_light_frame->at(i).traffic_light_hazard) ||
-          (localization_data.approaching_true_junction &&
-           current_velocity > INTERSECTION_APPROACH_SPEED)) {
+           traffic_light_frame->at(i).traffic_light_hazard)) {
 
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
