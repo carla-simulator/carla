@@ -121,7 +121,7 @@ class LocalPlanner(object):
                 self._target_speed = opt_dict['target_speed']
             if 'sampling_radius' in opt_dict:
                 self._sampling_radius = self._target_speed * \
-                    opt_dict['sampling_radius'] / 3.6
+                                        opt_dict['sampling_radius'] / 3.6
             if 'lateral_control_dict' in opt_dict:
                 args_lateral_dict = opt_dict['lateral_control_dict']
             if 'longitudinal_control_dict' in opt_dict:
@@ -129,8 +129,8 @@ class LocalPlanner(object):
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self._vehicle_controller = VehiclePIDController(self._vehicle,
-                                                       args_lateral=args_lateral_dict,
-                                                       args_longitudinal=args_longitudinal_dict)
+                                                        args_lateral=args_lateral_dict,
+                                                        args_longitudinal=args_longitudinal_dict)
 
         self._global_plan = False
 
@@ -219,19 +219,18 @@ class LocalPlanner(object):
                     break
 
         # current vehicle waypoint
-        self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        vehicle_transform = self._vehicle.get_transform()
+        self._current_waypoint = self._map.get_waypoint(vehicle_transform.location)
         # target waypoint
         self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
         # move using PID controllers
         control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
 
         # purge the queue of obsolete waypoints
-        vehicle_transform = self._vehicle.get_transform()
         max_index = -1
 
         for i, (waypoint, _) in enumerate(self._waypoint_buffer):
-            if distance_vehicle(
-                    waypoint, vehicle_transform) < self._min_distance:
+            if waypoint.transform.location.distance(vehicle_transform.location) < self._min_distance:
                 max_index = i
         if max_index >= 0:
             for i in range(max_index + 1):
@@ -242,6 +241,9 @@ class LocalPlanner(object):
 
         return control
 
+    def done(self):
+        vehicle_transform = self._vehicle.get_transform()
+        return len(self._waypoints_queue) == 0 and all([distance_vehicle(wp, vehicle_transform) < self._min_distance for wp in self._waypoints_queue])
 
 def _retrieve_options(list_waypoints, current_waypoint):
     """
