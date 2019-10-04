@@ -1023,6 +1023,19 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     EActorAttributeType::String,
     GetAge(Parameters.Age)});
 
+  if (Parameters.Speed.Num() > 0)
+  {
+    FActorVariation Speed;
+    Speed.Id = TEXT("speed");
+    Speed.Type = EActorAttributeType::Float;
+    for (auto &Value : Parameters.Speed)
+    {
+      Speed.RecommendedValues.Emplace(FString::SanitizeFloat(Value));
+    }
+    Speed.bRestrictToRecommended = false;
+    Definition.Variations.Emplace(Speed);
+  }
+
   FActorVariation IsInvincible;
   IsInvincible.Id = TEXT("is_invincible");
   IsInvincible.Type = EActorAttributeType::Bool;

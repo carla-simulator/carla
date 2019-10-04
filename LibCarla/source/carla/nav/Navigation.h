@@ -72,6 +72,8 @@ namespace nav {
     /// get a random location for navigation
     bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
     dtQueryFilter * filter = nullptr, bool use_lock = true) const;
+    /// set the probability that an agent could cross the roads in its path following
+    void SetPedestriansCrossFactor(float percentage);
 
     dtCrowd *GetCrowd() { return _crowd; };
 
@@ -93,6 +95,10 @@ namespace nav {
 
     mutable std::mutex _mutex;
 
+    float _probabilityCrossing { 0.05f };
+
+    /// assign a filter index to an agent
+    void SetAgentFilter(int agentIndex, int filterIndex);
   };
 
 } // namespace nav
