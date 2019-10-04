@@ -217,13 +217,6 @@ namespace LocalizationConstants {
         }
       }
 
-      // Extending buffer beyond junction when the vehicle is close to the junction.
-      if (approaching_junction) {
-        while (waypoint_buffer.back()->CheckJunction()) {
-          waypoint_buffer.push_back(waypoint_buffer.back()->GetNextWaypoint()[0]);
-        }
-      }
-
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
