@@ -30,14 +30,10 @@ namespace cc = carla::client;
     std::shared_ptr<PlannerToControlFrame> data_frame;
     /// Pointer to a messenger from MotionPlanner.
     std::shared_ptr<PlannerToControlMessenger> messenger;
-    /// Variable used to measure system throughput.
-    uint frame_count = 0;
     /// Reference to carla client connection object.
     cc::Client &carla_client;
     /// Array to hold command batch.
     std::shared_ptr<std::vector<carla::rpc::Command>> commands;
-    /// The Object used to track time for measuring throughput.
-    chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_update_instance;
 
   public:
 

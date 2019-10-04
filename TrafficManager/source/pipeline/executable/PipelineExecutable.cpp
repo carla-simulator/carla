@@ -9,6 +9,7 @@
 
 #include "boost/stacktrace.hpp"
 #include "carla/client/Client.h"
+#include "carla/client/TimeoutException.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
 
@@ -112,6 +113,8 @@ void run_pipeline(cc::World &world, cc::Client &client_conn,
     client_conn, world, core_count, target_traffic_amount);
   global_actor_list = &registered_actors;
 
+  client_conn.SetTimeout(2s);
+  
   traffic_manager::Pipeline pipeline(
       {0.1f, 0.15f, 0.01f},
       {5.0f, 0.0f, 0.1f},
@@ -125,12 +128,21 @@ void run_pipeline(cc::World &world, cc::Client &client_conn,
       debug_helper,
       1
       );
-  pipeline.Start();
 
-  carla::log_info("TrafficManager started\n");
+  try
+  {
+    pipeline.Start();
+    carla::log_info("TrafficManager started\n");
 
-  while (!quit.load()) {
-    sleep(1);
+    while (!quit.load()) {
+      sleep(1);
+      // Periodically polling if Carla is still running
+      world.GetSettings();
+    }
+  }
+  catch(const cc::TimeoutException& e)
+  {
+    carla::log_error("Carla has stopped running, stopping TrafficManager\n");
   }
 
   pipeline.Stop();
