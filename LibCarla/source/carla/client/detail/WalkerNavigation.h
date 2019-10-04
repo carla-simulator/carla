@@ -80,6 +80,11 @@ namespace detail {
       return _nav.SetWalkerMaxSpeed(id, max_speed);
     }
 
+    // set percentage of pedestrians that can cross the road
+    void SetPedestriansCrossFactor(float percentage) {
+      _nav.SetPedestriansCrossFactor(percentage);
+    }
+
   private:
 
     Client &_client;
