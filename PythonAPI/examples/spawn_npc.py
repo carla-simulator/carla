@@ -191,8 +191,7 @@ def main():
             all_actors[i].start()
             # set walk to random point
             all_actors[i].go_to_location(world.get_random_location_from_navigation())
-            # random max speed
-            # all_actors[i].set_max_speed(1.3 + (random.random() * 0.2))    # max speed (default is 1.4 m/s)
+            # max speed
             all_actors[i].set_max_speed(walker_speed[int(i/2)])
 
         print('spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
