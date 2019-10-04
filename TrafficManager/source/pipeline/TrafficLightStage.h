@@ -1,5 +1,8 @@
 #pragma once
 
+#include <chrono>
+#include <memory>
+#include <mutex>
 #include <unordered_map>
 
 #include "carla/client/Vehicle.h"
@@ -12,14 +15,17 @@
 
 namespace traffic_manager {
 
+namespace chr = std::chrono;
 namespace cc = carla::client;
 namespace cg = carla::geom;
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using JunctionID = carla::road::JuncId;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using TrafficLight = carla::SharedPtr<cc::TrafficLight>;
   using TLS = carla::rpc::TrafficLightState;
+  using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
 
   /// This class provides the information about the Traffic Lights at the
   /// junctions.
@@ -41,6 +47,12 @@ namespace cg = carla::geom;
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
+    /// Map containing the time ticket issued for vehicles.
+    std::unordered_map<ActorId, TimeInstance> time_tickets;
+    /// Map containing the previous time ticket issued for junctions.
+    std::unordered_map<JunctionID, TimeInstance> junction_last_tickets;
+    /// No signal negotiation mutex.
+    std::mutex no_signal_negotiation_mutex;
 
   public:
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <chrono>
 #include <memory>
 
 #include "carla/client/Client.h"
@@ -14,7 +13,6 @@
 
 namespace traffic_manager {
 
-namespace chr = std::chrono;
 namespace cc = carla::client;
 
   /// This class receives actuation signals (throttle, brake, steer)
