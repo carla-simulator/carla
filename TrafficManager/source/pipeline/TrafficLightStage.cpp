@@ -127,10 +127,6 @@ namespace traffic_manager {
         if (diff.count() > 0) {
           traffic_light_hazard = true;
         }
-
-        debug_helper.DrawString(closest_waypoint->GetLocation(),
-                                std::to_string(chr::duration_cast<chr::seconds>(diff).count()),
-                                false, {255u, 0u, 255u}, 0.1);
       }
 
       TrafficLightToPlannerData &message = current_planner_frame->at(i);
