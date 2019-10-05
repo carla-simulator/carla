@@ -62,8 +62,6 @@ namespace cc = carla::client;
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
     /// Reference to local map-cache object.
     InMemoryMap &local_map;
-    /// Random seed array for turn decisions.
-    std::vector<uint> divergence_choice;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list_a;

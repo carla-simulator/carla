@@ -48,9 +48,11 @@ namespace cg = carla::geom;
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
     /// Map containing the time ticket issued for vehicles.
-    std::unordered_map<ActorId, TimeInstance> time_tickets;
+    std::unordered_map<ActorId, TimeInstance> vehicle_last_ticket;
     /// Map containing the previous time ticket issued for junctions.
-    std::unordered_map<JunctionID, TimeInstance> junction_last_tickets;
+    std::unordered_map<JunctionID, TimeInstance> junction_last_ticket;
+    /// Map containing the previous junction visited by a vehicle.
+    std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
     /// No signal negotiation mutex.
     std::mutex no_signal_negotiation_mutex;
 

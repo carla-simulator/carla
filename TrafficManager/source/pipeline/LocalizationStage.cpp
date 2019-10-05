@@ -51,11 +51,6 @@ namespace LocalizationConstants {
     collision_messenger_state = collision_messenger->GetState() - 1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
 
-    // Seeding random divergence choices for every vehicle.
-    for (uint i = 0u; i < number_of_vehicles; ++i) {
-      divergence_choice.push_back(rand());
-    }
-
     // Connecting vehicle ids to their position indices on data arrays.
     uint index = 0u;
     for (auto &actor: actor_list) {
@@ -92,12 +87,14 @@ namespace LocalizationConstants {
       Buffer &waypoint_buffer = current_buffer_list->at(i);
       Buffer &copy_waypoint_buffer = copy_buffer_list->at(i);
 
-      // Synchronizing buffer copies in the case of lane change.
+      // Synchronizing buffer copies in case the path of the vehicle has changed.
       if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
           ((copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
           != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
           (copy_waypoint_buffer.front()->GetWaypoint()->GetSectionId()
-          != waypoint_buffer.front()->GetWaypoint()->GetSectionId()))) {
+          != waypoint_buffer.front()->GetWaypoint()->GetSectionId()) ||
+          (copy_waypoint_buffer.front()->GetWaypoint()->GetRoadId()
+          != waypoint_buffer.front()->GetWaypoint()->GetRoadId()))) {
 
         waypoint_buffer.clear();
         waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
@@ -158,9 +155,9 @@ namespace LocalizationConstants {
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
 
         uint selection_index = 0u;
-        // Pseudo-randomize path selection if found more than one choice.
+        // Pseudo-randomized path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
-          selection_index = (divergence_choice.at(i) * (1u + pre_selection_id)) % next_waypoints.size();
+          selection_index = rand() % next_waypoints.size();
         }
 
         waypoint_buffer.push_back(next_waypoints.at(selection_index));

@@ -72,48 +72,65 @@ namespace traffic_manager {
 
         std::lock_guard<std::mutex> lock(no_signal_negotiation_mutex);
 
-        bool need_to_issue_new_ticket = false;
-        // Check if the vehicle has an outdated ticket or needs a new one.
-        if (time_tickets.find(ego_actor_id) == time_tickets.end()) {
-          need_to_issue_new_ticket = true;
-        } else {
-          TimeInstance& previous_ticket = time_tickets.at(ego_actor_id);
-          chr::duration<double> diff = current_time - previous_ticket;
-          if (diff.count() > NO_SIGNAL_PASSTHROUGH_INTERVAL) {
-            need_to_issue_new_ticket = true;
-          }
+        if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
+          // Initializing new map entry for the actor with
+          // an arbitrary and different junction id.
+          vehicle_last_junction.insert({ego_actor_id, junction_id + 1});
         }
-        // If new ticket is needed for the vehicle, then query the junction ticket map
-        // and update the map value to the new ticket value.
-        if (need_to_issue_new_ticket) {
-          if (junction_last_tickets.find(junction_id) != junction_last_tickets.end()) {
 
-            TimeInstance& last_ticket = junction_last_tickets.at(junction_id);
-            chr::duration<double> diff = current_time - last_ticket;
-            if (diff.count() > 0) {
-              last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
-            } else {
-              last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
-            }
+        if (vehicle_last_junction.at(ego_actor_id) != junction_id) {
+          vehicle_last_junction.at(ego_actor_id) = junction_id;
+
+          // Check if the vehicle has an outdated ticket or needs a new one.
+          bool need_to_issue_new_ticket = false;
+          if (vehicle_last_ticket.find(ego_actor_id) == vehicle_last_ticket.end()) {
+
+            need_to_issue_new_ticket = true;
           } else {
 
-            junction_last_tickets.insert({junction_id, current_time +
-                                          chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
+            TimeInstance& previous_ticket = vehicle_last_ticket.at(ego_actor_id);
+            chr::duration<double> diff = current_time - previous_ticket;
+            if (diff.count() > NO_SIGNAL_PASSTHROUGH_INTERVAL) {
+              need_to_issue_new_ticket = true;
+            }
           }
 
-          time_tickets.insert({ego_actor_id, junction_last_tickets.at(junction_id)});
-        }
-      }
+          // If new ticket is needed for the vehicle, then query the junction ticket map
+          // and update the map value to the new ticket value.
+          if (need_to_issue_new_ticket) {
+            if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
 
-      // If at a non-signalised junction.
-      if (junction_last_tickets.find(junction_id) != junction_last_tickets.end() &&
-          time_tickets.find(ego_actor_id) != time_tickets.end()) {
+              TimeInstance& last_ticket = junction_last_ticket.at(junction_id);
+              chr::duration<double> diff = current_time - last_ticket;
+              if (diff.count() > 0) {
+                last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+              } else {
+                last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+              }
+            } else {
+
+              junction_last_ticket.insert({junction_id, current_time +
+                                            chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
+            }
+
+            if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
+              vehicle_last_ticket.at(ego_actor_id) = junction_last_ticket.at(junction_id);
+            } else {
+              vehicle_last_ticket.insert({ego_actor_id, junction_last_ticket.at(junction_id)});
+            }
+          }
+        }
 
         // If current time is behind ticket time, then do not enter junction.
-        TimeInstance& current_ticket = time_tickets.at(ego_actor_id);
-        if ((current_ticket - current_time).count() > 0) {
+        TimeInstance& current_ticket = vehicle_last_ticket.at(ego_actor_id);
+        chr::duration<double> diff = current_ticket - current_time;
+        if (diff.count() > 0) {
           traffic_light_hazard = true;
         }
+
+        debug_helper.DrawString(closest_waypoint->GetLocation(),
+                                std::to_string(chr::duration_cast<chr::seconds>(diff).count()),
+                                false, {255u, 0u, 255u}, 0.1);
       }
 
       TrafficLightToPlannerData &message = current_planner_frame->at(i);
