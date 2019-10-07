@@ -55,6 +55,10 @@ namespace nav {
   static const int MAX_QUERY_SEARCH_NODES = 2048;
   static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_RADIUS = 0.3f;
+
+  static const float AGENT_LOW_SPEED = 0.5f;
+  static const float AGENT_LOW_SPEED_SQUARED = AGENT_LOW_SPEED * AGENT_LOW_SPEED;
+  static const float AGENT_LOW_SPEED_TIME = 3.0f;
   
   static const float AREA_WATER_COST = 10.0f;
 
@@ -67,6 +71,7 @@ namespace nav {
     _ready = false;
     _mappedWalkersId.clear();
     _mappedVehiclesId.clear();
+    _walkersBlockedTime.clear();
     _yaw_walkers.clear();
     _binaryMesh.clear();
     dtFreeCrowd(_crowd);
@@ -359,7 +364,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 15.0f;
     params.pathOptimizationRange = params.radius * 30.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.1f;
+    params.separationWeight = 0.3f;
         
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
@@ -469,7 +474,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.1f;
+    params.separationWeight = 0.5f;
 
     // flags
     params.updateFlags = 0;
@@ -693,15 +698,40 @@ namespace nav {
         continue;
       }
 
+      // count the time the agent is quiet or in low speed
+      float speed = carla::geom::Vector3D(ag->nvel[0], ag->nvel[1], ag->nvel[2]).SquaredLength();
+      bool resetTargetPos = false;
+      bool useSameFilter = false;
+      if (speed <= AGENT_LOW_SPEED_SQUARED) {
+        // count time
+        _walkersBlockedTime[i] += _delta_seconds;
+        // check time
+        if (_walkersBlockedTime[i] >= AGENT_LOW_SPEED_TIME) {
+          resetTargetPos = true;
+          useSameFilter = true;
+          _walkersBlockedTime[i] = 0;
+        }
+      } else {
+        // reset time
+        _walkersBlockedTime[i] = 0;
+      }
+
       // check distance to the target point
       const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
       carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
       if (dist.SquaredLength() <= 2) {
+        resetTargetPos = true;
+      }
+      
+      // check to assign a new target position
+      if (resetTargetPos) {
         // set if the agent can cross roads or not
-        if (frand() <= _probabilityCrossing) {
-          SetAgentFilter(i, 1);
-        } else {
-          SetAgentFilter(i, 0);
+        if (!useSameFilter) {
+          if (frand() <= _probabilityCrossing) {
+            SetAgentFilter(i, 1);
+          } else {
+            SetAgentFilter(i, 0);
+          }
         }
         // set a new random target
         carla::geom::Location location;
