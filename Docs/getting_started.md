@@ -77,7 +77,6 @@ waiting for a client app to connect and interact with the world.
 Let's add now some life to the city, open a new terminal window and write:
 
 ```sh
-make LibCarla
 make TrafficManager
 ```
 
