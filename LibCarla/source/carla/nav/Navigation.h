@@ -90,8 +90,10 @@ namespace nav {
     /// mapping Id
     std::unordered_map<ActorId, int> _mappedWalkersId;
     std::unordered_map<ActorId, int> _mappedVehiclesId;
-    /// Store walkers yaw angle from previous tick
+    /// store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
+    /// saves how much time an agent is quiet or in low speed (to avoid agents blocked by some reason)
+    std::unordered_map<int, float> _walkersBlockedTime;
 
     mutable std::mutex _mutex;
 
