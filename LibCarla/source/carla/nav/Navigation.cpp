@@ -61,7 +61,7 @@ namespace nav {
   static const float AGENT_UNBLOCK_DISTANCE = 1.5f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
   static const float AGENT_UNBLOCK_TIME = 3.0f;
-  
+
   static const float AREA_ROAD_COST = 10.0f;
 
   // return a random float
@@ -368,7 +368,7 @@ namespace nav {
     params.pathOptimizationRange = params.radius * 30.0f;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
-        
+
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
       params.queryFilterType = 1;
@@ -710,8 +710,8 @@ namespace nav {
 
       // check for unblocking actors
       if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
-        
-        // get the distance moved by each actor        
+
+        // get the distance moved by each actor
         carla::geom::Vector3D previous = _walkersBlockedPosition[i];
         carla::geom::Vector3D current = carla::geom::Vector3D(ag->npos[0], ag->npos[1], ag->npos[2]);
         carla::geom::Vector3D distance = current - previous;
@@ -730,7 +730,7 @@ namespace nav {
       if (dist.SquaredLength() <= 2) {
         resetTargetPos = true;
       }
-      
+
       // check to assign a new target position
       if (resetTargetPos) {
         // set if the agent can cross roads or not
@@ -885,7 +885,7 @@ namespace nav {
   {
     // get the walker
     dtCrowdAgent *agent = _crowd->getEditableAgent(agentIndex);
-    agent->params.queryFilterType = filterIndex;
+    agent->params.queryFilterType = static_cast<unsigned char>(filterIndex);
   }
 
   /// set the probability that an agent could cross the roads in its path following
