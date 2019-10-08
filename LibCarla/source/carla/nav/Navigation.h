@@ -94,7 +94,7 @@ namespace nav {
     std::unordered_map<ActorId, float> _yaw_walkers;
     /// saves the position of each actor at intervals and check if any is blocked
     std::unordered_map<int, carla::geom::Vector3D> _walkersBlockedPosition;
-    float _timeToUnblock;
+    double _timeToUnblock;
 
     mutable std::mutex _mutex;
 
