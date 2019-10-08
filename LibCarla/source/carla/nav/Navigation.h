@@ -92,8 +92,9 @@ namespace nav {
     std::unordered_map<ActorId, int> _mappedVehiclesId;
     /// store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
-    /// saves how much time an agent is quiet or in low speed (to avoid agents blocked by some reason)
-    std::unordered_map<int, float> _walkersBlockedTime;
+    /// saves the position of each actor at intervals and check if any is blocked
+    std::unordered_map<int, carla::geom::Vector3D> _walkersBlockedPosition;
+    float _timeToUnblock;
 
     mutable std::mutex _mutex;
 

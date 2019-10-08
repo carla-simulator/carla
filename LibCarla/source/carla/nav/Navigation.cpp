@@ -26,6 +26,7 @@ namespace nav {
     SAMPLE_POLYAREA_DOOR,
     SAMPLE_POLYAREA_GRASS,
     SAMPLE_POLYAREA_JUMP,
+   	SAMPLE_POLYAREA_CROSS
   };
 
   enum SamplePolyFlags {
@@ -35,6 +36,7 @@ namespace nav {
     SAMPLE_POLYFLAGS_DOOR       = 0x04,   // Ability to move through doors.
     SAMPLE_POLYFLAGS_JUMP       = 0x08,   // Ability to jump.
     SAMPLE_POLYFLAGS_DISABLED   = 0x10,   // Disabled polygon
+  	SAMPLE_POLYFLAGS_CROSS      = 0x20,		// Ability to cross through road
     SAMPLE_POLYFLAGS_ALL        = 0xffff  // All abilities.
   };
 
@@ -56,11 +58,11 @@ namespace nav {
   static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_RADIUS = 0.3f;
 
-  static const float AGENT_LOW_SPEED = 0.5f;
-  static const float AGENT_LOW_SPEED_SQUARED = AGENT_LOW_SPEED * AGENT_LOW_SPEED;
-  static const float AGENT_LOW_SPEED_TIME = 3.0f;
+  static const float AGENT_UNBLOCK_DISTANCE = 1.5f;
+  static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
+  static const float AGENT_UNBLOCK_TIME = 3.0f;
   
-  static const float AREA_WATER_COST = 10.0f;
+  static const float AREA_ROAD_COST = 10.0f;
 
   // return a random float
   static float frand() {
@@ -69,9 +71,10 @@ namespace nav {
 
   Navigation::~Navigation() {
     _ready = false;
+    _timeToUnblock = 0.0f;
     _mappedWalkersId.clear();
     _mappedVehiclesId.clear();
-    _walkersBlockedTime.clear();
+    _walkersBlockedPosition.clear();
     _yaw_walkers.clear();
     _binaryMesh.clear();
     dtFreeCrowd(_crowd);
@@ -217,12 +220,12 @@ namespace nav {
     // set different filters
     // filter 0 can not cross roads
     _crowd->getEditableFilter(0)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED ^ SAMPLE_POLYFLAGS_SWIM);
-    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
+    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED ^ SAMPLE_POLYFLAGS_CROSS);
+    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
     // filter 1 can cross roads
     _crowd->getEditableFilter(1)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
     _crowd->getEditableFilter(1)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
+    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
 
     // Setup local avoidance params to different qualities.
     dtObstacleAvoidanceParams params;
@@ -291,7 +294,7 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setAreaCost(SAMPLE_POLYAREA_WATER, AREA_WATER_COST);
+      filter2.setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
       filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
       filter = &filter2;
@@ -359,12 +362,12 @@ namespace nav {
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
     params.height = AGENT_HEIGHT;
-    params.maxAcceleration = 20.0f;
+    params.maxAcceleration = 5.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 15.0f;
+    params.collisionQueryRange = params.radius * 6.0f * params.maxSpeed;
     params.pathOptimizationRange = params.radius * 30.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.3f;
+    params.separationWeight = 0.5f;
         
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
@@ -471,10 +474,10 @@ namespace nav {
     params.height = AGENT_HEIGHT;
     params.maxAcceleration = 20.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 20.0f;
+    params.collisionQueryRange = params.radius * 6.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.5f;
+    params.separationWeight = 1.0f;
 
     // flags
     params.updateFlags = 0;
@@ -614,6 +617,7 @@ namespace nav {
     dtCrowdAgent *agent = _crowd->getEditableAgent(it->second);
     if (agent) {
       agent->params.maxSpeed = max_speed;
+      agent->params.collisionQueryRange = agent->params.radius * 15.0f * max_speed;
       return true;
     }
 
@@ -691,6 +695,9 @@ namespace nav {
     _delta_seconds = state.GetTimestamp().delta_seconds;
     _crowd->update(static_cast<float>(_delta_seconds), nullptr);
 
+    // update the time to check for blocked agents
+    _timeToUnblock += _delta_seconds;
+
     // check if walker has finished
     for (int i = 0; i < _crowd->getAgentCount(); ++i) {
       const dtCrowdAgent *ag = _crowd->getAgent(i);
@@ -698,22 +705,23 @@ namespace nav {
         continue;
       }
 
-      // count the time the agent is quiet or in low speed
-      float speed = carla::geom::Vector3D(ag->nvel[0], ag->nvel[1], ag->nvel[2]).SquaredLength();
       bool resetTargetPos = false;
       bool useSameFilter = false;
-      if (speed <= AGENT_LOW_SPEED_SQUARED) {
-        // count time
-        _walkersBlockedTime[i] += _delta_seconds;
-        // check time
-        if (_walkersBlockedTime[i] >= AGENT_LOW_SPEED_TIME) {
+
+      // check for unblocking actors
+      if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
+        
+        // get the distance moved by each actor        
+        carla::geom::Vector3D previous = _walkersBlockedPosition[i];
+        carla::geom::Vector3D current = carla::geom::Vector3D(ag->npos[0], ag->npos[1], ag->npos[2]);
+        carla::geom::Vector3D distance = current - previous;
+        float d = distance.SquaredLength();
+        if (d < AGENT_UNBLOCK_DISTANCE_SQUARED) {
           resetTargetPos = true;
           useSameFilter = true;
-          _walkersBlockedTime[i] = 0;
         }
-      } else {
-        // reset time
-        _walkersBlockedTime[i] = 0;
+        // update with current position
+        _walkersBlockedPosition[i] = current;
       }
 
       // check distance to the target point
@@ -738,6 +746,11 @@ namespace nav {
         GetRandomLocation(location, 1, nullptr, false);
         SetWalkerTargetIndex(i, location, false);
       }
+    }
+
+    // check for resetting time
+    if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
+      _timeToUnblock = 0.0f;
     }
   }
 
@@ -842,7 +855,7 @@ namespace nav {
     dtQueryFilter filter2;
     if (filter == nullptr) {
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_SWIM);
+      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_CROSS);
       filter = &filter2;
     }
 

@@ -148,7 +148,12 @@ def main():
                 walker_bp.set_attribute('is_invincible', 'false')
             # set the max speed
             if walker_bp.has_attribute('speed'):
-                walker_speed.append(random.choice(walker_bp.get_attribute('speed').recommended_values[1:]))
+                if (random.random() > 0.1):
+                    # walking
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
+                else:
+                    # running
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[2])
             else:
                 print("Walker has no speed")
                 walker_speed.append(0.0)
@@ -184,7 +189,7 @@ def main():
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         # set how many pedestrians can cross the road
-        world.set_pedestrians_cross_factor(0.5)
+        world.set_pedestrians_cross_factor(0.01)
         for i in range(0, len(all_id), 2):
             # start walker
             all_actors[i].start()
