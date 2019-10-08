@@ -86,6 +86,9 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.behavior_agent import BehaviorAgent # pylint: disable=import-error
+from agents.navigation.roaming_agent import RoamingAgent # pylint: disable=import-error
+from agents.navigation.basic_agent import BasicAgent # pylint: disable=import-error
+
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -434,19 +437,21 @@ class HUD(object):
             collision,
             '',
             'Number of vehicles: % 8d' % len(vehicles)]
+
+
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
 
-            def dist(l):
-                return math.sqrt((l.x - transform.location.x)**2 + (l.y - transform.location.y)
-                                 ** 2 + (l.z - transform.location.z)**2)
-            vehicles = [(dist(x.get_location()), x) for x in vehicles if x.id != world.player.id]
+        def dist(l):
+            return math.sqrt((l.x - transform.location.x)**2 + (l.y - transform.location.y)
+                             ** 2 + (l.z - transform.location.z)**2)
+        vehicles = [(dist(x.get_location()), x) for x in vehicles if x.id != world.player.id]
 
-            for dist, vehicle in sorted(vehicles):
-                if dist > 200.0:
-                    break
-                vehicle_type = get_actor_display_name(vehicle, truncate=22)
-                self._info_text.append('% 4dm %s' % (dist, vehicle_type))
+        for dist, vehicle in sorted(vehicles):
+            if dist > 200.0:
+                break
+            vehicle_type = get_actor_display_name(vehicle, truncate=22)
+            self._info_text.append('% 4dm %s' % (dist, vehicle_type))
 
     def toggle_info(self):
         """Toggle info on or off"""
@@ -812,21 +817,29 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-
         world = World(client.get_world(), hud, args)
-
         controller = KeyboardControl(world, False)
-        agent = BehaviorAgent(world.player, behavior=args.agent)
 
-        spawn_points = world.map.get_spawn_points()
-        random.shuffle(spawn_points)
-
-        if spawn_points[0].location != agent.vehicle.get_location():
-            destination = spawn_points[0].location
+        if args.agent == "Roaming":
+            agent = RoamingAgent(world.player)
+        elif args.agent == "Basic":
+            agent = BasicAgent(world.player)
+            spawn_point = world.map.get_spawn_points()[0]
+            agent.set_destination((spawn_point.location.x,
+                                   spawn_point.location.y,
+                                   spawn_point.location.z))
         else:
-            destination = spawn_points[1].location
+            agent = BehaviorAgent(world.player, behavior=args.behavior)
 
-        agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
+            spawn_points = world.map.get_spawn_points()
+            random.shuffle(spawn_points)
+
+            if spawn_points[0].location != agent.vehicle.get_location():
+                destination = spawn_points[0].location
+            else:
+                destination = spawn_points[1].location
+
+            agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
 
         clock = pygame.time.Clock()
 
@@ -838,31 +851,45 @@ def game_loop(args):
             if not world.world.wait_for_tick(10.0):
                 continue
 
-            agent.update_information(world)
+            if args.agent == "Roaming" or args.agent == "Basic":
+                if controller.parse_events(client, world):
+                    return
 
-            world.tick(clock)
-            world.render(display)
-            pygame.display.flip()
+                # as soon as the server is ready continue!
+                world.world.wait_for_tick(10.0)
 
-            # Set new destination when target has been reached
-            if len(agent.get_local_planner().waypoints_queue) < num_min_waypoints and args.loop:
-                agent.reroute(spawn_points)
-                tot_target_reached += 1
-                world.hud.notification("The target has been reached " +
-                                       str(tot_target_reached) + " times.", seconds=4.0)
+                world.tick(clock)
+                world.render(display)
+                pygame.display.flip()
+                control = agent.run_step()
+                control.manual_gear_shift = False
+                world.player.apply_control(control)
+            else:
+                agent.update_information(world)
 
-            elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
-                print("Target reached, mission accomplished...")
-                stop = True
+                world.tick(clock)
+                world.render(display)
+                pygame.display.flip()
 
-            if stop:
-                break
+                # Set new destination when target has been reached
+                if len(agent.get_local_planner().waypoints_queue) < num_min_waypoints and args.loop:
+                    agent.reroute(spawn_points)
+                    tot_target_reached += 1
+                    world.hud.notification("The target has been reached " +
+                                        str(tot_target_reached) + " times.", seconds=4.0)
 
-            speed_limit = world.player.get_speed_limit()
-            agent.get_local_planner().set_speed(speed_limit)
+                elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
+                    print("Target reached, mission accomplished...")
+                    stop = True
 
-            control = agent.run_step()
-            world.player.apply_control(control)
+                if stop:
+                    break
+
+                speed_limit = world.player.get_speed_limit()
+                agent.get_local_planner().set_speed(speed_limit)
+
+                control = agent.run_step()
+                world.player.apply_control(control)
 
     finally:
         if world is not None:
@@ -918,10 +945,14 @@ def main():
         dest='loop',
         help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
-        '-a', '--agent', type=str,
+        '-b', '--behavior', type=str,
         choices=["cautious", "normal", "aggressive"],
         help='Choose one of the possible agent behaviors (default: normal) ',
         default='normal')
+    argparser.add_argument("-a", "--agent", type=str,
+                           choices=["Behavior", "Roaming", "Basic"],
+                           help="select which agent to run",
+                           default="Behavior")
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',

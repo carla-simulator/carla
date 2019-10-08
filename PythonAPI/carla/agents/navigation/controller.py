@@ -43,6 +43,8 @@ class VehiclePIDController(object):
         self._world = self._vehicle.get_world()
         self.past_steering = self._vehicle.get_control().steer
         self.max_steer = 0.8
+        self.max_accel = 0.75
+        self.max_brake = 0.2
         self._lon_controller = PIDLongitudinalController(self._vehicle, **args_longitudinal)
         self._lat_controller = PIDLateralController(self._vehicle, **args_lateral)
 
@@ -60,13 +62,12 @@ class VehiclePIDController(object):
         acceleration = self._lon_controller.run_step(target_speed)
         current_steering = self._lat_controller.run_step(waypoint)
         control = carla.VehicleControl()
-
-        if acceleration > 0.0:
-            control.throttle = acceleration
+        if acceleration >= 0.0:
+            control.throttle = min(acceleration, self.max_accel)
             control.brake = 0.0
         else:
             control.throttle = 0.0
-            control.brake = abs(acceleration)
+            control.brake = min(abs(acceleration), self.max_brake)
 
         # Steering regulation: changes cannot happen abruptly, can't steer too much.
 

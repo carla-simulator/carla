@@ -13,11 +13,10 @@ The agent also responds to traffic lights. """
 import random
 import numpy as np
 import carla
-from agents.navigation.agent import Agent
-from agents.navigation.local_planner import LocalPlanner
+from agents.navigation.new_agent import Agent
+from agents.navigation.new_local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.navigation.local_planner import RoadOption
 from agents.navigation.behavior_types import Cautious, Aggressive, Normal
 
 from agents.tools.misc import get_speed, positive
@@ -37,7 +36,7 @@ class BehaviorAgent(Agent):
     to a more aggressive ones.
     """
 
-    def __init__(self, vehicle, ignore_traffic_light=True, behavior='normal'):
+    def __init__(self, vehicle, ignore_traffic_light=False, behavior='normal'):
         """
         Constructor method.
 
@@ -354,13 +353,12 @@ class BehaviorAgent(Agent):
         # Actual safety distance area, try to follow the speed of the vehicle in front.
         elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
             control = self._local_planner.run_step(
-                target_speed=min(max(self.min_speed, vehicle_speed - self.behavior.speed_decrease / 2),
+                target_speed=min(max(self.min_speed, vehicle_speed),
                                  min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Normal behavior.
         else:
             control = self._local_planner.run_step(
-                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
 
@@ -454,17 +452,15 @@ class BehaviorAgent(Agent):
         # 4: Intersection behavior
 
         # Checking if there's a junction nearby to slow down
-        elif self.incoming_waypoint.is_junction and self.incoming_direction != RoadOption.LANEFOLLOW:
-            control = self._local_planner.run_step(
-                target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
+        #elif self.incoming_waypoint.is_junction and self.incoming_direction != RoadOption.LANEFOLLOW:
+        #    control = self._local_planner.run_step(
+        #        target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
 
         # 5: Normal behavior
 
         # Calculate controller based on no turn, traffic light or vehicle in front
         else:
             control = self._local_planner.run_step(
-                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)),
-                debug=debug)
+                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
