@@ -13,8 +13,8 @@ The agent also responds to traffic lights. """
 import random
 import numpy as np
 import carla
-from agents.navigation.new_agent import Agent
-from agents.navigation.new_local_planner import LocalPlanner, RoadOption
+from agents.navigation.base_behavior_agent import Agent
+from agents.navigation.behavior_local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from agents.navigation.behavior_types import Cautious, Aggressive, Normal
@@ -49,8 +49,6 @@ class BehaviorAgent(Agent):
         self.ignore_traffic_light = ignore_traffic_light
         self._local_planner = LocalPlanner(self)
         self._hop_resolution = 3
-        self._path_seperation_hop = 2
-        self._path_seperation_threshold = 0.5
         self._grp = None
         self.look_ahead_steps = 0
 
@@ -92,7 +90,7 @@ class BehaviorAgent(Agent):
         if self.direction is None:
             self.direction = RoadOption.LANEFOLLOW
 
-        self.look_ahead_steps = int((self.speed) / 10)
+        self.look_ahead_steps = int((self.speed_limit) / 10)
 
         self.incoming_waypoint, self.incoming_direction = self._local_planner.get_incoming_waypoint_and_direction(
             steps=self.look_ahead_steps)
@@ -153,7 +151,7 @@ class BehaviorAgent(Agent):
         if self._grp is None:
             wld = self.vehicle.get_world()
             dao = GlobalRoutePlannerDAO(
-                wld.get_map(), sampling_resolution=self._hop_resolution)
+                wld.get_map(), sampling_resolution=self._local_planner._sampling_radius)
             grp = GlobalRoutePlanner(dao)
             grp.setup()
             self._grp = grp
@@ -206,7 +204,7 @@ class BehaviorAgent(Agent):
         if (left_turn == carla.LaneChange.Left or left_turn ==
                 carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
+                self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=-1)
             if not new_vehicle_state:
                 print("Overtaking to the left!")
                 self.behavior.overtake_counter = 200
@@ -214,7 +212,7 @@ class BehaviorAgent(Agent):
                                      self.end_waypoint.transform.location, clean=True)
         elif right_turn == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
             new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
-                self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
+                self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
                 print("Overtaking to the right!")
                 self.behavior.overtake_counter = 200

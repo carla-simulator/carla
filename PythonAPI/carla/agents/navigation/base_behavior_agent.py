@@ -95,6 +95,7 @@ class Agent(object):
             lane_offset *= -1
 
         for target_vehicle in vehicle_list:
+
             target_vehicle_loc = target_vehicle.get_location()
             # If the object is not in our next or current lane it's not an obstacle
 

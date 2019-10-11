@@ -46,10 +46,10 @@ class LocalPlanner(object):
 
     # Minimum distance to target waypoint as a percentage
     # (e.g. within 80% of total distance)
-    MIN_DISTANCE_PERCENTAGE = 0.8
+    MIN_DISTANCE_PERCENTAGE = 0.95
 
     # FPS used for dt
-    FPS = 40
+    FPS = 20
 
     def __init__(self, agent):
         """
@@ -100,14 +100,14 @@ class LocalPlanner(object):
         """
         # Default parameters
         self.args_lat_hw_dict = {
-            'K_P': 0.5,
-            'K_D': 0.002,
-            'K_I': 0.05,
+            'K_P': 0.45,
+            'K_D': 0.02,
+            'K_I': 0.6,
             'dt': 1.0 / self.FPS}
         self.args_lat_city_dict = {
-            'K_P': 0.65,
-            'K_D': 0.002,
-            'K_I': 0.2,
+            'K_P': 0.58,
+            'K_D': 0.02,
+            'K_I': 0.5,
             'dt': 1.0 / self.FPS}
         self.args_long_hw_dict = {
             'K_P': 0.37,
@@ -115,7 +115,7 @@ class LocalPlanner(object):
             'K_I': 0.032,
             'dt': 1.0 / self.FPS}
         self.args_long_city_dict = {
-            'K_P': 0.25,
+            'K_P': 0.15,
             'K_D': 0.05,
             'K_I': 0.07,
             'dt': 1.0 / self.FPS}
@@ -124,12 +124,13 @@ class LocalPlanner(object):
 
         self._global_plan = False
 
-        self._target_speed = 20
-        self._sampling_radius = self._target_speed / 3.6  # variable horizon
+        self._target_speed = self._vehicle.get_speed_limit()
+
+        self._sampling_radius = 10  # variable horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
 
         # Fill waypoint trajectory queue
-        self._compute_next_waypoints(k=10)
+        self._compute_next_waypoints(k=20)
 
     def set_speed(self, speed):
         """
@@ -198,7 +199,6 @@ class LocalPlanner(object):
         return None, RoadOption.VOID
 
     def run_step(self, target_speed=None, debug=False):
-        #debug = True
         """
         Execute one step of local planning which involves
         running the longitudinal and lateral PID controllers to
@@ -208,16 +208,16 @@ class LocalPlanner(object):
             :param debug: boolean flag to activate waypoints debugging
             :return: control
         """
+        debug = True # Remember to take this away please.
 
         if target_speed is not None:
             self._target_speed = target_speed
+        else:
+            self._target_speed = self._vehicle.get_speed_limit()
         # Not enough waypoints in the horizon? Add more!
         if not self._global_plan and \
             len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=200)
-
-        self._sampling_radius = self._target_speed / 3.6  # variable horizon
-        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
 
         if len(self.waypoints_queue) == 0:
             control = carla.VehicleControl()

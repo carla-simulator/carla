@@ -10,7 +10,7 @@ import numpy as np
 import networkx as nx
 
 import carla
-from agents.navigation.new_local_planner import RoadOption
+from agents.navigation.behavior_local_planner import RoadOption
 from agents.tools.misc import vector
 
 
@@ -104,11 +104,11 @@ class GlobalRoutePlanner(object):
 
     def _find_loose_ends(self):
         """
-        This method finds road segments that have an unconnected end and
+        This method finds road segments that have an unconnected end, and
         adds them to the internal graph representation
         """
         count_loose_ends = 0
-        hop_resolution = self._dao.get_resolution()
+        hop_resolution = self._dao._sampling_resolution
         for segment in self._topology:
             end_wp = segment['exit']
             exit_xyz = segment['exitxyz']
@@ -140,6 +140,7 @@ class GlobalRoutePlanner(object):
                         entry_waypoint=end_wp, exit_waypoint=path[-1],
                         entry_vector=None, exit_vector=None, net_vector=None,
                         intersection=end_wp.is_junction, type=RoadOption.LANEFOLLOW)
+                print(len(path) + 1)
 
     def _localize(self, location):
         """

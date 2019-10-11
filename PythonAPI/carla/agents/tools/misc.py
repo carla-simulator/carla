@@ -12,7 +12,6 @@ import math
 import numpy as np
 import carla
 
-
 def draw_waypoints(world, waypoints, z=0.5):
     """
     Draw a list of waypoints at a certain height given in z.
@@ -61,7 +60,7 @@ def is_within_distance_ahead(target_location, current_location, orientation, max
 
     forward_vector = np.array(
         [math.cos(math.radians(orientation)), math.sin(math.radians(orientation))])
-    d_angle = math.degrees(math.acos(np.dot(forward_vector, target_vector) / norm_target))
+    d_angle = math.degrees(math.acos(np.clip(np.dot(forward_vector, target_vector) / norm_target, -1., 1.)))
 
     return d_angle < 90.0
 
@@ -90,7 +89,7 @@ def is_within_distance(target_location, current_location, orientation, max_dista
 
     forward_vector = np.array(
         [math.cos(math.radians(orientation)), math.sin(math.radians(orientation))])
-    d_angle = math.degrees(math.acos(np.dot(forward_vector, target_vector) / norm_target))
+    d_angle = math.degrees(math.acos(np.clip(np.dot(forward_vector, target_vector) / norm_target, -1., 1.)))
 
     return d_angle_th_low < d_angle < d_angle_th_up
 
