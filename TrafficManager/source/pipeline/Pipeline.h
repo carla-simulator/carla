@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <random>
+#include <unordered_set>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -13,6 +14,7 @@
 #include "carla/Logging.h"
 #include "carla/Memory.h"
 
+#include "AtomicActorSet.h"
 #include "BatchControlStage.h"
 #include "CarlaDataAccessLayer.h"
 #include "CollisionStage.h"
@@ -37,13 +39,11 @@ namespace cc = carla::client;
     std::vector<float> longitudinal_PID_parameters;
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
-    /// The number of working threads per stage.
-    uint pipeline_width;
     /// Target velocities.
     float highway_target_velocity;
     float urban_target_velocity;
-    /// List of all actors registered with traffic manager.
-    std::vector<ActorPtr> actor_list;
+    /// Set of all actors registered with traffic manager.
+    AtomicActorSet registered_actors;
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
     /// Carla's debug helper object.
@@ -68,18 +68,22 @@ namespace cc = carla::client;
 
   public:
 
-    Pipeline(
-        std::vector<float> longitudinal_PID_parameters,
-        std::vector<float> longitudinal_highway_PID_parameters,
-        std::vector<float> lateral_PID_parameters,
-        float urban_target_velocity,
-        float highway_target_velocity,
-        std::vector<ActorPtr> &actor_list,
-        cc::Client &client_connection,
-        uint pipeline_width);
+    Pipeline(std::vector<float> longitudinal_PID_parameters,
+             std::vector<float> longitudinal_highway_PID_parameters,
+             std::vector<float> lateral_PID_parameters,
+             float urban_target_velocity,
+             float highway_target_velocity,
+             cc::Client &client_connection);
+
+    /// This method registers a vehicle with the traffic manager.
+    void RegisterVehicles(std::vector<ActorPtr> actor_list);
+
+    /// This method unregisters a vehicle from traffic manager.
+    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
 
     /// To start the pipeline.
     void Start();
+
     /// To stop the pipeline.
     void Stop();
 

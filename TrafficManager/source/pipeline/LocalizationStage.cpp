@@ -16,52 +16,35 @@ namespace LocalizationConstants {
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
       std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
       std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-      uint number_of_vehicles,
-      uint pool_size,
-      std::vector<Actor> &actor_list,
+      AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
       cc::DebugHelper &debug_helper)
     : planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
-      actor_list(actor_list),
+      registered_actors(registered_actors),
       local_map(local_map),
-      debug_helper(debug_helper),
-      PipelineStage(pool_size, number_of_vehicles) {
+      debug_helper(debug_helper) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;
     collision_frame_selector = true;
     traffic_light_frame_selector = true;
-    // Allocating the buffer lists.
-    buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
-    buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
-    // Allocating output frames to be shared with the motion planner stage.
-    planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
-    planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
-    // Allocating output frames to be shared with the collision stage.
-    collision_frame_a = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
-    collision_frame_b = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
-    // Allocating output frames to be shared with the traffic light stage
-    traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
-    traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
+    // Initializing the number of vehicles to zero in the begining.
+    number_of_vehicles = 0u;
+
     // Initializing messenger states to initiate data writes
     // preemptively since this is the first stage in the pipeline.
     planner_messenger_state = planner_messenger->GetState() - 1;
     collision_messenger_state = collision_messenger->GetState() - 1;
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
-
-    // Connecting vehicle ids to their position indices on data arrays.
-    uint index = 0u;
-    for (auto &actor: actor_list) {
-      vehicle_id_to_index.insert({actor->GetId(), index});
-      ++index;
-    }
+    // Initializing the registered actors container state.
+    registered_actors_state = -1;
   }
 
   LocalizationStage::~LocalizationStage() {}
 
-  void LocalizationStage::Action(const uint start_index, const uint end_index) {
+  void LocalizationStage::Action() {
 
     // Selecting output frames based on selector keys.
     auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
@@ -71,12 +54,11 @@ namespace LocalizationConstants {
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
     auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
 
-    // Looping over arrays' partitions for the current thread.
-    for (uint i = start_index; i <= end_index; ++i) {
+    // Looping over registered actors.
+    for (uint i = 0u; i < actor_list.size(); ++i) {
 
       Actor vehicle = actor_list.at(i);
       ActorId actor_id = vehicle->GetId();
-
       cg::Location vehicle_location = vehicle->GetLocation();
       float vehicle_velocity = vehicle->GetVelocity().Length();
 
@@ -231,7 +213,44 @@ namespace LocalizationConstants {
     }
   }
 
-  void LocalizationStage::DataReceiver() {}
+  void LocalizationStage::DataReceiver() {
+
+    // Building a list of registered actors and
+    // connecting the vehicle ids to their position indices on data arrays.
+
+    if (registered_actors_state != registered_actors.GetState()) {
+
+      actor_list = registered_actors.GetList();
+
+      uint index = 0u;
+      for (auto &actor: actor_list) {
+
+        vehicle_id_to_index.insert({actor->GetId(), index});
+        ++index;
+      }
+
+      registered_actors_state = registered_actors.GetState();
+    }
+
+    // Allocating new containers for the changed number of registered vehicles.
+    if (number_of_vehicles != actor_list.size()) {
+
+      number_of_vehicles = actor_list.size();
+      // Allocating the buffer lists.
+      buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
+      buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
+      // Allocating output frames to be shared with the motion planner stage.
+      planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
+      planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
+      // Allocating output frames to be shared with the collision stage.
+      collision_frame_a = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
+      collision_frame_b = std::make_shared<LocalizationToCollisionFrame>(number_of_vehicles);
+      // Allocating output frames to be shared with the traffic light stage
+      traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
+      traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
+    }
+
+  }
 
   void LocalizationStage::DataSender() {
 
