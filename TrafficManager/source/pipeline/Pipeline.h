@@ -5,7 +5,6 @@
 #include <random>
 #include <vector>
 
-
 #include "carla/client/Actor.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
@@ -13,38 +12,20 @@
 #include "carla/geom/Transform.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
-#include "carla/rpc/Command.h"
 
 #include "BatchControlStage.h"
+#include "CarlaDataAccessLayer.h"
 #include "CollisionStage.h"
 #include "InMemoryMap.h"
 #include "LocalizationStage.h"
 #include "MotionPlannerStage.h"
 #include "TrafficLightStage.h"
 
-#define EXPECT_TRUE(pred) if (!(pred)) { throw std::runtime_error(# pred); }
-
 namespace traffic_manager {
 
 namespace cc = carla::client;
-namespace cg = carla::geom;
-namespace cr = carla::rpc;
+
   using ActorPtr = carla::SharedPtr<cc::Actor>;
-
-  /// Function to read hardware concurrency.
-  uint read_core_count();
-
-  /// Function to spawn a specified number of vehicles.
-  std::vector<ActorPtr> spawn_traffic(
-      cc::Client &client,
-      cc::World &world,
-      uint core_count,
-      uint target_amount);
-
-  /// Destroy actors.
-  void destroy_traffic(
-      std::vector<ActorPtr> &actor_list,
-      cc::Client &client);
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers.
@@ -61,16 +42,16 @@ namespace cr = carla::rpc;
     /// Target velocities.
     float highway_target_velocity;
     float urban_target_velocity;
-    /// Reference to list of all actors registered with traffic manager.
-    std::vector<ActorPtr> &actor_list;
-    /// Reference to local map cache.
-    InMemoryMap &local_map;
-    /// Reference to Carla's debug helper object.
-    cc::DebugHelper &debug_helper;
-    /// Reference to Carla's client connection object.
-    cc::Client &client_connection;
-    /// Reference to Carla's world object.
-    cc::World &world;
+    /// List of all actors registered with traffic manager.
+    std::vector<ActorPtr> actor_list;
+    /// Pointer to local map cache.
+    std::shared_ptr<InMemoryMap> local_map;
+    /// Carla's debug helper object.
+    cc::DebugHelper debug_helper;
+    /// Carla's client connection object.
+    cc::Client client_connection;
+    /// Carla's world object.
+    cc::World world;
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;
@@ -94,10 +75,7 @@ namespace cr = carla::rpc;
         float urban_target_velocity,
         float highway_target_velocity,
         std::vector<ActorPtr> &actor_list,
-        InMemoryMap &local_map,
         cc::Client &client_connection,
-        cc::World &world,
-        cc::DebugHelper &debug_helper,
         uint pipeline_width);
 
     /// To start the pipeline.
