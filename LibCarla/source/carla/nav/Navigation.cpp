@@ -58,7 +58,7 @@ namespace nav {
   static const float AGENT_HEIGHT = 1.8f;
   static const float AGENT_RADIUS = 0.3f;
 
-  static const float AGENT_UNBLOCK_DISTANCE = 1.5f;
+  static const float AGENT_UNBLOCK_DISTANCE = 1.0f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
   static const float AGENT_UNBLOCK_TIME = 3.0f;
 
@@ -220,12 +220,12 @@ namespace nav {
     // set different filters
     // filter 0 can not cross roads
     _crowd->getEditableFilter(0)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED ^ SAMPLE_POLYFLAGS_CROSS);
-    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
+    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_CROSS);
+    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
     // filter 1 can cross roads
     _crowd->getEditableFilter(1)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
     _crowd->getEditableFilter(1)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
+    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
 
     // Setup local avoidance params to different qualities.
     dtObstacleAvoidanceParams params;
@@ -294,7 +294,7 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setAreaCost(SAMPLE_POLYAREA_WATER, AREA_ROAD_COST);
+      filter2.setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
       filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
       filter = &filter2;
@@ -362,12 +362,12 @@ namespace nav {
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
     params.height = AGENT_HEIGHT;
-    params.maxAcceleration = 5.0f;
+    params.maxAcceleration = 80.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 6.0f * params.maxSpeed;
-    params.pathOptimizationRange = params.radius * 30.0f;
+    params.collisionQueryRange = params.radius * 20.0f;
+    params.pathOptimizationRange = params.radius * 10.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.5f;
+    params.separationWeight = 0.5f + (frand() * 0.5f);
 
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
@@ -417,7 +417,7 @@ namespace nav {
 
     DEBUG_ASSERT(_crowd != nullptr);
 
-    // get the bounding box extension
+    // get the bounding box extension plus some space around
     float hx = vehicle.bounding.extent.x + 1.0f;
     float hy = vehicle.bounding.extent.y + 1.0f;
     // define the 4 corners of the bounding box
@@ -472,12 +472,12 @@ namespace nav {
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS * 2;
     params.height = AGENT_HEIGHT;
-    params.maxAcceleration = 20.0f;
+    params.maxAcceleration = 0.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 6.0f;
+    params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 1.0f;
+    params.separationWeight = 5.0f;
 
     // flags
     params.updateFlags = 0;
@@ -515,11 +515,10 @@ namespace nav {
       return false;
     }
 
-    // mark as invalid so it is not managed by the crowd automatically
+    // mark as valid
     dtCrowdAgent *agent = _crowd->getEditableAgent(index);
     if (agent) {
       agent->state = DT_CROWDAGENT_STATE_WALKING;
-      // agent->state = DT_CROWDAGENT_STATE_INVALID;
     }
 
     // save the id
@@ -546,7 +545,7 @@ namespace nav {
     if (it != _mappedWalkersId.end()) {
       // remove from crowd
       _crowd->removeAgent(it->second);
-
+      // logging::log("Nav: removing walker agent", id);
       // remove from mapping
       _mappedWalkersId.erase(it);
 
@@ -558,7 +557,7 @@ namespace nav {
     if (it != _mappedVehiclesId.end()) {
       // remove from crowd
       _crowd->removeAgent(it->second);
-      logging::log("Nav: removing vehicle agent");
+      // logging::log("Nav: removing vehicle agent", id);
       // remove from mapping
       _mappedVehiclesId.erase(it);
 
@@ -617,7 +616,6 @@ namespace nav {
     dtCrowdAgent *agent = _crowd->getEditableAgent(it->second);
     if (agent) {
       agent->params.maxSpeed = max_speed;
-      agent->params.collisionQueryRange = agent->params.radius * 15.0f * max_speed;
       return true;
     }
 
@@ -699,57 +697,62 @@ namespace nav {
     _timeToUnblock += _delta_seconds;
 
     // check if walker has finished
+    int totalUnblocked = 0;
     for (int i = 0; i < _crowd->getAgentCount(); ++i) {
       const dtCrowdAgent *ag = _crowd->getAgent(i);
       if (!ag->active) {
         continue;
       }
 
-      bool resetTargetPos = false;
-      bool useSameFilter = false;
+      // check only pedestrians, no vehicles
+      if (!ag->params.useObb) {
+        bool resetTargetPos = false;
+        bool useSameFilter = false;
 
-      // check for unblocking actors
-      if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
-
-        // get the distance moved by each actor
-        carla::geom::Vector3D previous = _walkersBlockedPosition[i];
-        carla::geom::Vector3D current = carla::geom::Vector3D(ag->npos[0], ag->npos[1], ag->npos[2]);
-        carla::geom::Vector3D distance = current - previous;
-        float d = distance.SquaredLength();
-        if (d < AGENT_UNBLOCK_DISTANCE_SQUARED) {
-          resetTargetPos = true;
-          useSameFilter = true;
-        }
-        // update with current position
-        _walkersBlockedPosition[i] = current;
-      }
-
-      // check distance to the target point
-      const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
-      carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
-      if (dist.SquaredLength() <= 2) {
-        resetTargetPos = true;
-      }
-
-      // check to assign a new target position
-      if (resetTargetPos) {
-        // set if the agent can cross roads or not
-        if (!useSameFilter) {
-          if (frand() <= _probabilityCrossing) {
-            SetAgentFilter(i, 1);
-          } else {
-            SetAgentFilter(i, 0);
+        // check for unblocking actors
+        if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
+          // get the distance moved by each actor
+          carla::geom::Vector3D previous = _walkersBlockedPosition[i];
+          carla::geom::Vector3D current = carla::geom::Vector3D(ag->npos[0], ag->npos[1], ag->npos[2]);
+          carla::geom::Vector3D distance = current - previous;
+          float d = distance.SquaredLength();
+          if (d < AGENT_UNBLOCK_DISTANCE_SQUARED) {
+            ++totalUnblocked;
+            resetTargetPos = true;
+            useSameFilter = true;
           }
+          // update with current position
+          _walkersBlockedPosition[i] = current;
         }
-        // set a new random target
-        carla::geom::Location location;
-        GetRandomLocation(location, 1, nullptr, false);
-        SetWalkerTargetIndex(i, location, false);
+
+        // check distance to the target point
+        const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
+        carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
+        if (dist.SquaredLength() <= 2) {
+          resetTargetPos = true;
+        }
+
+        // check to assign a new target position
+        if (resetTargetPos) {
+          // set if the agent can cross roads or not
+          if (!useSameFilter) {
+            if (frand() <= _probabilityCrossing) {
+              SetAgentFilter(i, 1);
+            } else {
+              SetAgentFilter(i, 0);
+            }
+          }
+          // set a new random target
+          carla::geom::Location location;
+          GetRandomLocation(location, 1, nullptr, false);
+          SetWalkerTargetIndex(i, location, false);
+        }
       }
     }
 
     // check for resetting time
     if (_timeToUnblock >= AGENT_UNBLOCK_TIME) {
+      // logging::log("Unblocked agents: ", totalUnblocked);
       _timeToUnblock = 0.0f;
     }
   }
@@ -792,7 +795,7 @@ namespace nav {
     trans.location.z = agent->npos[1];
 
     // set its rotation
-    float yaw =  atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
+    float yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
     float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
     float rotation_speed = 4.0f;
     trans.rotation.yaw = _yaw_walkers[id] +
