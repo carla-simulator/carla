@@ -43,7 +43,7 @@ namespace traffic_manager {
   public:
 
     Messenger() {
-      state_counter = 0;
+      state_counter.store(0);
       stop_messenger.store(false);
     }
     ~Messenger() {}
@@ -86,6 +86,13 @@ namespace traffic_manager {
     /// This method unblocks any waiting calls on this object.
     void Stop() {
       stop_messenger.store(true);
+    }
+
+    /// This method restores regular functionality of the messenger.
+    /// This method needs to be called if the messenger has to be
+    /// used again after a call to the Stop() method.
+    void Start() {
+      stop_messenger.store(false);
     }
 
   };
