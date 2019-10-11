@@ -64,12 +64,14 @@ namespace bg = boost::geometry;
     /// An object used for grid binning vehicles for faster proximity detection.
     VicinityGrid vicinity_grid;
     /// The map used to connect actor ids to the array index of data frames.
-    std::unordered_map<ActorId, uint> id_to_index;
+    std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// A structure used to keep track of actors spawned outside of traffic
     /// manager.
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// An object used to keep track of time between checking for all world actors.
     chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
+    /// Number of vehicles registered with the traffic manager.
+    uint number_of_vehicles;
 
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
@@ -100,15 +102,13 @@ namespace bg = boost::geometry;
     CollisionStage(
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-        uint number_of_vehicle,
-        uint pool_size,
         cc::World &world,
         cc::DebugHelper &debug_helper);
     ~CollisionStage();
 
     void DataReceiver() override;
 
-    void Action(const uint start_index, const uint end_index) override;
+    void Action() override;
 
     void DataSender() override;
 

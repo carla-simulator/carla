@@ -14,6 +14,7 @@
 namespace traffic_manager {
 
 namespace cc = carla::client;
+namespace cr = carla::rpc;
 
   /// This class receives actuation signals (throttle, brake, steer)
   /// from MotionPlannerStage class and communicates these signals to
@@ -31,20 +32,20 @@ namespace cc = carla::client;
     /// Reference to carla client connection object.
     cc::Client &carla_client;
     /// Array to hold command batch.
-    std::shared_ptr<std::vector<carla::rpc::Command>> commands;
+    std::shared_ptr<std::vector<cr::Command>> commands;
+    /// Number of vehicles registered with the traffic manager.
+    uint number_of_vehicles;
 
   public:
 
     BatchControlStage(
         std::shared_ptr<PlannerToControlMessenger> messenger,
-        cc::Client &carla_client,
-        uint number_of_vehicles,
-        uint pool_size);
+        cc::Client &carla_client);
     ~BatchControlStage();
 
     void DataReceiver() override;
 
-    void Action(const uint start_index, const uint end_index) override;
+    void Action() override;
 
     void DataSender() override;
 

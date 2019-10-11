@@ -55,20 +55,20 @@ namespace cg = carla::geom;
     std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
     /// No signal negotiation mutex.
     std::mutex no_signal_negotiation_mutex;
+    /// Number of vehicles registered with the traffic manager.
+    uint number_of_vehicles;
 
   public:
 
     TrafficLightStage(
         std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-        uint number_of_vehicle,
-        uint pool_size,
         cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 
     void DataReceiver() override;
 
-    void Action(const uint start_index, const uint end_index) override;
+    void Action() override;
 
     void DataSender() override;
 

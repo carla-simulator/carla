@@ -170,16 +170,19 @@ void run_pipeline(cc::World &world, cc::Client &client_conn,
       {0.1f, 0.15f, 0.01f},
       {5.0f, 0.0f, 0.1f},
       {10.0f, 0.01f, 0.1f},
-      25 / 3.6,
-      50 / 3.6,
-      registered_actors,
-      client_conn,
-      1
+      25 / 3.6f,
+      50 / 3.6f,
+      client_conn
       );
 
-  try
-  {
+  try {
+
     pipeline.Start();
+
+    // Delayed vehicles' registration for demonstration.
+    sleep(1);
+    pipeline.RegisterVehicles(registered_actors);
+
     carla::log_info("TrafficManager started\n");
 
     while (!quit.load()) {
@@ -187,9 +190,8 @@ void run_pipeline(cc::World &world, cc::Client &client_conn,
       // Periodically polling to check if Carla is still running.
       world.GetSettings();
     }
-  }
-  catch(const cc::TimeoutException& e)
-  {
+  } catch(const cc::TimeoutException& e) {
+
     carla::log_error("Carla has stopped running, stopping TrafficManager\n");
   }
 
@@ -239,7 +241,6 @@ int main(int argc, char *argv[]) {
     }
 
     run_pipeline(world, client_conn, target_traffic_amount, randomization_seed);
-
   }
 
   return 0;

@@ -16,6 +16,7 @@
 #include "carla/Memory.h"
 #include "carla/rpc/ActorId.h"
 
+#include "AtomicActorSet.h"
 #include "InMemoryMap.h"
 #include "MessengerAndDataTypes.h"
 #include "PipelineStage.h"
@@ -60,6 +61,13 @@ namespace cc = carla::client;
     std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger;
     /// Pointer to messenger to traffic light stage.
     std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger;
+    /// Reference to set of all actors registered with the traffic manager.
+    AtomicActorSet &registered_actors;
+    /// List of actors registered with the traffic manager in
+    /// current update cycle.
+    std::vector<Actor> actor_list;
+    /// State counter to track changes in registered actors.
+    int registered_actors_state;
     /// Reference to local map-cache object.
     InMemoryMap &local_map;
     /// Structures to hold waypoint buffers for all vehicles.
@@ -71,29 +79,26 @@ namespace cc = carla::client;
     TrafficDistributor traffic_distributor;
     /// Map connecting actor ids to indices of data arrays.
     std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
-    /// Reference to list of all the actors registered with the traffic manager.
-    std::vector<Actor> &actor_list;
+    /// Number of vehicles currently registered with the traffic manager.
+    uint number_of_vehicles;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
 
   public:
 
-    LocalizationStage(
-        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-        uint number_of_vehicles,
-        uint pool_size,
-        std::vector<Actor> &actor_list,
-        InMemoryMap &local_map,
-        cc::DebugHelper &debug_helper);
+    LocalizationStage(std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+                      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+                      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+                      AtomicActorSet &registered_actors,
+                      InMemoryMap &local_map,
+                      cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
 
     void DataReceiver() override;
 
-    void Action(const uint start_index, const uint end_index) override;
+    void Action() override;
 
     void DataSender() override;
 
