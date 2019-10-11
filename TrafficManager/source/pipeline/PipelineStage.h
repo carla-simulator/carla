@@ -24,26 +24,18 @@ namespace traffic_manager {
 
   private:
 
-    /// Number of worker threads.
-    const uint pool_size;
-    /// Number of registered vehicles.
-    const uint number_of_vehicles;
     /// Pointer to receiver thread instance.
     std::unique_ptr<std::thread> data_receiver;
     /// Pointer to sender thread instance.
     std::unique_ptr<std::thread> data_sender;
-    /// Pointers to worker thread instances.
-    std::vector<std::unique_ptr<std::thread>> action_threads;
-    /// Counter to track every worker's start condition.
-    std::atomic<uint> action_start_counter;
-    /// Counter to track every worker's finish condition.
-    std::atomic<uint> action_finished_counter;
+    /// Pointer to worker thread instance.
+    std::unique_ptr<std::thread> action_thread;
     /// Flag to allow/block receiver.
     std::atomic<bool> run_receiver;
     /// Flag to allow/block sender.
     std::atomic<bool> run_sender;
     /// Flag to allow/block workers.
-    std::atomic<bool> run_threads;
+    std::atomic<bool> run_action;
     /// Flag to start/stop stage.
     std::atomic<bool> run_stage;
     /// Mutex used to co-ordinate between receiver, workers, and sender.
@@ -57,7 +49,7 @@ namespace traffic_manager {
     void ReceiverThreadManager();
 
     /// Method to manage worker threads.
-    void ActionThreadManager(const uint thread_id);
+    void ActionThreadManager();
 
     /// Method to manage sender thread.
     void SenderThreadManager();
@@ -73,11 +65,11 @@ namespace traffic_manager {
     virtual void DataSender() = 0;
 
     /// Implement this method with logic to process data inside the stage
-    virtual void Action(const uint start_index, const uint end_index) = 0;
+    virtual void Action() = 0;
 
   public:
 
-    PipelineStage(uint pool_size, uint number_of_vehicles);
+    PipelineStage();
 
     virtual ~PipelineStage();
 

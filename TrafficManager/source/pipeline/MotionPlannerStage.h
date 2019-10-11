@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <unordered_map>
 #include <vector>
 
 #include "carla/client/Vehicle.h"
@@ -46,9 +47,9 @@ namespace cc = carla::client;
     std::shared_ptr<PlannerToControlMessenger> control_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger;
-    /// Array to store states for integral and differential components
-    /// of the PID controller.
-    std::shared_ptr<std::vector<StateEntry>> pid_state_vector;
+    /// Map to store states for integral and differential components
+    /// of the PID controller for every vehicle
+    std::unordered_map<ActorId, StateEntry> pid_state_map;
     /// Configuration parameters for the PID controller.
     std::vector<float> longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
@@ -58,6 +59,8 @@ namespace cc = carla::client;
     float highway_target_velocity;
     /// Controller object.
     PIDController controller;
+    /// Number of vehicles registered with the traffic manager.
+    uint number_of_vehicles;
 
   public:
 
@@ -66,19 +69,18 @@ namespace cc = carla::client;
         std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
-        uint number_of_vehicles,
         cc::DebugHelper &debug_helper,
-        uint pool_size,
         float urban_target_velocity,
         float highway_target_velocity,
         std::vector<float> longitudinal_parameters,
         std::vector<float> highway_longitudinal_parameters,
         std::vector<float> lateral_parameters);
+
     ~MotionPlannerStage();
 
     void DataReceiver() override;
 
-    void Action(const uint start_index, const uint end_index) override;
+    void Action() override;
 
     void DataSender() override;
 

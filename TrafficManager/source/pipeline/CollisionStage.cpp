@@ -15,75 +15,66 @@ namespace CollisionStageConstants {
   using namespace  CollisionStageConstants;
 
   CollisionStage::CollisionStage(
-
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-      uint number_of_vehicle,
-      uint pool_size,
       cc::World &world,
       cc::DebugHelper &debug_helper)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       world(world),
-      debug_helper(debug_helper),
-      PipelineStage(pool_size, number_of_vehicle) {
+      debug_helper(debug_helper){
 
     // Initializing clock for checking unregistered actors periodically.
     last_world_actors_pass_instance = chr::system_clock::now();
     // Initializing output array selector.
     frame_selector = true;
-    // Allocating output arrays to be shared with motion planner stage.
-    planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
-    planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicle);
     // Initializing messenger states.
     localization_messenger_state = localization_messenger->GetState();
     // Initializing this messenger to preemptively write since it precedes motion planner stage.
     planner_messenger_state = planner_messenger->GetState() - 1;
-
+    // Initializing the number of vehicles to zero in the beginning.
+    number_of_vehicles = 0u;
   }
 
   CollisionStage::~CollisionStage() {}
 
-  void CollisionStage::Action(const uint start_index, const uint end_index) {
+  void CollisionStage::Action() {
 
     auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Handle vehicles not spawned by TrafficManager.
-    // Choosing an arbitrary thread.
-    if (start_index == 0u) {
-      auto current_time = chr::system_clock::now();
-      chr::duration<double> diff = current_time - last_world_actors_pass_instance;
+    auto current_time = chr::system_clock::now();
+    chr::duration<double> diff = current_time - last_world_actors_pass_instance;
 
-      // Periodically check for actors not spawned by TrafficManager.
-      if (diff.count() > 0.5f) {
-        auto world_actors = world.GetActors()->Filter("vehicle.*");
-        for (auto actor: *world_actors.get()) {
-          auto unregistered_id = actor->GetId();
-          if (id_to_index.find(unregistered_id) == id_to_index.end() &&
-              unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-            unregistered_actors.insert({unregistered_id, actor});
-          }
-        }
-        last_world_actors_pass_instance = current_time;
-      }
-
-      // Regularly update unregistered actors.
-      std::vector<ActorId> actor_ids_to_erase;
-      for (auto actor_info: unregistered_actors) {
-        if (actor_info.second->IsAlive()) {
-          vicinity_grid.UpdateGrid(actor_info.second);
-        } else {
-          vicinity_grid.EraseActor(actor_info.first);
-          actor_ids_to_erase.push_back(actor_info.first);
+    // Periodically check for actors not spawned by TrafficManager.
+    if (diff.count() > 0.5f) {
+      auto world_actors = world.GetActors()->Filter("vehicle.*");
+      for (auto actor: *world_actors.get()) {
+        auto unregistered_id = actor->GetId();
+        if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
+            unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+          unregistered_actors.insert({unregistered_id, actor});
         }
       }
-      for (auto actor_id: actor_ids_to_erase) {
-        unregistered_actors.erase(actor_id);
-      }
+      last_world_actors_pass_instance = current_time;
     }
 
-    // Looping over arrays' partitions for the current thread.
-    for (uint i = start_index; i <= end_index; ++i) {
+    // Regularly update unregistered actors.
+    std::vector<ActorId> actor_ids_to_erase;
+    for (auto actor_info: unregistered_actors) {
+      if (actor_info.second->IsAlive()) {
+        vicinity_grid.UpdateGrid(actor_info.second);
+      } else {
+        vicinity_grid.EraseActor(actor_info.first);
+        actor_ids_to_erase.push_back(actor_info.first);
+      }
+    }
+    for (auto actor_id: actor_ids_to_erase) {
+      unregistered_actors.erase(actor_id);
+    }
+
+    // Looping over registered actors.
+    for (uint i = 0u; i < number_of_vehicles; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
@@ -101,8 +92,8 @@ namespace CollisionStageConstants {
           if (actor_id != ego_actor_id) {
 
             Actor actor = nullptr;
-            if (id_to_index.find(actor_id) != id_to_index.end()) {
-              actor = localization_frame->at(id_to_index.at(actor_id)).actor;
+            if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
+              actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
             } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
               actor = unregistered_actors.at(actor_id);
             }
@@ -132,12 +123,23 @@ namespace CollisionStageConstants {
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
 
-    // Connecting actor ids to their position indices on data arrays.
-    // This map also provides us the additional benefit of being able to quickly identify
-    // if a vehicle id is registered with the traffic manager or not.
-    uint index = 0u;
-    for (auto &element: *localization_frame.get()) {
-      id_to_index.insert({element.actor->GetId(), index++});
+    if (localization_frame != nullptr) {
+      // Connecting actor ids to their position indices on data arrays.
+      // This map also provides us the additional benefit of being able to quickly identify
+      // if a vehicle id is registered with the traffic manager or not.
+      uint index = 0u;
+      for (auto &element: *localization_frame.get()) {
+        vehicle_id_to_index.insert({element.actor->GetId(), index++});
+      }
+
+      // Allocating new containers for the changed number of registered vehicles.
+      if (number_of_vehicles != (*localization_frame.get()).size()) {
+
+        number_of_vehicles = (*localization_frame.get()).size();
+        // Allocating output arrays to be shared with motion planner stage.
+        planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
+        planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
+      }
     }
   }
 
@@ -223,7 +225,7 @@ namespace CollisionStageConstants {
 
     LocationList bbox = GetBoundary(actor);
 
-    if (id_to_index.find(actor->GetId()) != id_to_index.end()) {
+    if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
 
       float velocity = actor->GetVelocity().Length();
       float bbox_extension = (std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
@@ -231,7 +233,7 @@ namespace CollisionStageConstants {
                               BOUNDARY_EXTENSION_MINIMUM);
 
       bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
-      auto &waypoint_buffer =  localization_frame->at(id_to_index.at(actor->GetId())).buffer;
+      auto &waypoint_buffer =  localization_frame->at(vehicle_id_to_index.at(actor->GetId())).buffer;
 
       LocationList left_boundary;
       LocationList right_boundary;
