@@ -565,7 +565,7 @@ This function executes the whole list of commands on a single simulation step. F
 This function executes the whole list of commands on a single simulation step, blocks until the commands are executed, and returns a list of [`command.Response`](#command.Response) that can be used to determine whether a single command succeeded or not. [sample_code](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116).  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. For a list of commands available see function above apply_batch().  
-        - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to apply a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_.  
+        - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_.  
     - **Return:** _list_  
 
 ---
