@@ -56,3 +56,8 @@ target_link_libraries(traffic_manager ${PYTHON_LIBRARIES}
 # Setting target properties for python wrapper
 set_target_properties(traffic_manager PROPERTIES SUFFIX .so)
 set_target_properties(traffic_manager PROPERTIES PREFIX "")
+
+file(COPY
+     ${CARLA_LOCATION}/TrafficManager/source/pipeline/python/tm_demo.py
+     DESTINATION
+     ${CARLA_LOCATION}/TrafficManager/build/)
