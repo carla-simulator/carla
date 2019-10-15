@@ -14,14 +14,14 @@
 #include "carla/Logging.h"
 #include "carla/Memory.h"
 
-#include "AtomicActorSet.h"
-#include "BatchControlStage.h"
-#include "CarlaDataAccessLayer.h"
-#include "CollisionStage.h"
-#include "InMemoryMap.h"
-#include "LocalizationStage.h"
-#include "MotionPlannerStage.h"
-#include "TrafficLightStage.h"
+#include "carla/trafficmanager/AtomicActorSet.h"
+#include "carla/trafficmanager/BatchControlStage.h"
+#include "carla/trafficmanager/CarlaDataAccessLayer.h"
+#include "carla/trafficmanager/CollisionStage.h"
+#include "carla/trafficmanager/InMemoryMap.h"
+#include "carla/trafficmanager/LocalizationStage.h"
+#include "carla/trafficmanager/MotionPlannerStage.h"
+#include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace traffic_manager {
 

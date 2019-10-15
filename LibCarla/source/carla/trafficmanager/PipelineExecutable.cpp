@@ -8,14 +8,13 @@
 #include <stdexcept>
 #include <random>
 
-#include "boost/stacktrace.hpp"
 #include "carla/client/Client.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
 #include "carla/rpc/Command.h"
 
-#include "Pipeline.h"
+#include "carla/trafficmanager/Pipeline.h"
 
 static uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
 
@@ -42,8 +41,6 @@ void handler() {
       }
     }
 
-    // Uncomment the below line if compiling with debug options (in CMakeLists.txt)
-    // std::cout << boost::stacktrace::stacktrace() << std::endl;
     exit(1);
   }
 }

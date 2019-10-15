@@ -11,8 +11,8 @@
 #include "carla/client/Vehicle.h"
 #include "carla/rpc/ActorId.h"
 
-#include "MessengerAndDataTypes.h"
-#include "SimpleWaypoint.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/SimpleWaypoint.h"
 
 namespace traffic_manager {
 

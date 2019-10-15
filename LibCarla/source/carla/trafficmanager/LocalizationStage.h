@@ -16,12 +16,12 @@
 #include "carla/Memory.h"
 #include "carla/rpc/ActorId.h"
 
-#include "AtomicActorSet.h"
-#include "InMemoryMap.h"
-#include "MessengerAndDataTypes.h"
-#include "PipelineStage.h"
-#include "SimpleWaypoint.h"
-#include "TrafficDistributor.h"
+#include "carla/trafficmanager/AtomicActorSet.h"
+#include "carla/trafficmanager/InMemoryMap.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/PipelineStage.h"
+#include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/TrafficDistributor.h"
 
 namespace traffic_manager {
 
