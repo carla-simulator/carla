@@ -11,7 +11,7 @@
 #include <cstring>
 
 // compile with
-// g++ -shared inverseFilter.cpp -o ExampleInverseFilter.dll -fPIC -lGL -lGLEW
+// g++ -shared ExampleInverseFilter.cpp -o inverseFilter.dll -fPIC -lGL -lGLEW
 class InverseFilter : public Filter {
 public:
   InverseFilter() {};
