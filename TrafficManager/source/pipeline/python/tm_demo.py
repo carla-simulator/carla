@@ -37,8 +37,10 @@ for n, transform in enumerate(spawn_points):
         driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
         blueprint.set_attribute('driver_id', driver_id)
     blueprint.set_attribute('role_name', 'autopilot')
-    vehicle = world.spawn_actor(blueprint, transform)
+    vehicle = world.try_spawn_actor(blueprint, transform)
     vehicle_list.append(vehicle)
+
+tm = None
 
 try:
 
