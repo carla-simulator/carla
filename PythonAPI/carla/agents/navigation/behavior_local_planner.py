@@ -46,7 +46,7 @@ class LocalPlanner(object):
 
     # Minimum distance to target waypoint as a percentage
     # (e.g. within 80% of total distance)
-    MIN_DISTANCE_PERCENTAGE = 0.95
+    MIN_DISTANCE_PERCENTAGE = 0.80
 
     # FPS used for dt
     FPS = 20
@@ -60,7 +60,7 @@ class LocalPlanner(object):
         self._map = agent.vehicle.get_world().get_map()
 
         self._target_speed = None
-        self._sampling_radius = None
+        self.sampling_radius = None
         self._min_distance = None
         self._current_waypoint = None
         self.target_road_option = None
@@ -126,8 +126,8 @@ class LocalPlanner(object):
 
         self._target_speed = self._vehicle.get_speed_limit()
 
-        self._sampling_radius = 10  # variable horizon
-        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
+        self.sampling_radius = 7  # fixed horizon, waiting for more reliable speed limit methods.
+        self._min_distance = self.sampling_radius * self.MIN_DISTANCE_PERCENTAGE
 
         # Fill waypoint trajectory queue
         self._compute_next_waypoints(k=20)
@@ -147,6 +147,7 @@ class LocalPlanner(object):
 
             :param k: how many waypoints to compute
         """
+
         # Check we do not overflow the queue
         available_entries = self.waypoints_queue.maxlen - len(self.waypoints_queue)
         k = min(available_entries, k)
@@ -156,7 +157,7 @@ class LocalPlanner(object):
                 last_waypoint = self._current_waypoint
             else:
                 last_waypoint = self.waypoints_queue[-1][0]
-            next_waypoints = list(last_waypoint.next(self._sampling_radius))
+            next_waypoints = list(last_waypoint.next(self.sampling_radius))
 
             if len(next_waypoints) == 1:
                 # Only one option available, lane following
@@ -208,7 +209,6 @@ class LocalPlanner(object):
             :param debug: boolean flag to activate waypoints debugging
             :return: control
         """
-        debug = True # Remember to take this away please.
 
         if target_speed is not None:
             self._target_speed = target_speed
@@ -217,7 +217,7 @@ class LocalPlanner(object):
         # Not enough waypoints in the horizon? Add more!
         if not self._global_plan and \
             len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=200)
+            self._compute_next_waypoints(k=20)
 
         if len(self.waypoints_queue) == 0:
             control = carla.VehicleControl()

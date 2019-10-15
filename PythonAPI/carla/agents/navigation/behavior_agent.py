@@ -151,7 +151,7 @@ class BehaviorAgent(Agent):
         if self._grp is None:
             wld = self.vehicle.get_world()
             dao = GlobalRoutePlannerDAO(
-                wld.get_map(), sampling_resolution=self._local_planner._sampling_radius)
+                wld.get_map(), sampling_resolution=self._local_planner.sampling_radius)
             grp = GlobalRoutePlanner(dao)
             grp.setup()
             self._grp = grp
@@ -450,9 +450,9 @@ class BehaviorAgent(Agent):
         # 4: Intersection behavior
 
         # Checking if there's a junction nearby to slow down
-        #elif self.incoming_waypoint.is_junction and self.incoming_direction != RoadOption.LANEFOLLOW:
-        #    control = self._local_planner.run_step(
-        #        target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
+        elif self.incoming_waypoint.is_junction and (self.incoming_direction == RoadOption.LEFT or self.incoming_direction == RoadOption.RIGHT):
+            control = self._local_planner.run_step(
+                target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
 
         # 5: Normal behavior
 

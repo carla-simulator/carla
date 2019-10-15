@@ -44,7 +44,7 @@ class VehiclePIDController(object):
         self.past_steering = self._vehicle.get_control().steer
         self.max_steer = 0.8
         self.max_accel = 0.75
-        self.max_brake = 0.2
+        self.max_brake = 0.3
         self._lon_controller = PIDLongitudinalController(self._vehicle, **args_longitudinal)
         self._lat_controller = PIDLateralController(self._vehicle, **args_lateral)
 
