@@ -86,8 +86,7 @@ namespace TrafficDistributorConstants {
       GeoIds current_road_ids,
       std::shared_ptr<BufferList> buffer_list,
       std::unordered_map<ActorId, uint> &vehicle_id_to_index,
-      std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
-      cc::DebugHelper &debug_helper) {
+      std::vector<carla::SharedPtr<cc::Actor>> &actor_list) {
 
     ActorId actor_id = vehicle->GetId();
     cg::Location vehicle_location = vehicle->GetLocation();

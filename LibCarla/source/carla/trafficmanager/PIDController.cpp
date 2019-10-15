@@ -27,8 +27,8 @@ namespace PIDControllerConstants {
     };
 
     // Calculating dt for 'D' and 'I' controller components.
-    chr::duration<double> duration = current_state.time_instance - previous_state.time_instance;
-    double dt = duration.count();
+    chr::duration<float> duration = current_state.time_instance - previous_state.time_instance;
+    float dt = duration.count();
 
     // Calculating integrals.
     current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
@@ -44,8 +44,8 @@ namespace PIDControllerConstants {
       const std::vector<float> &lateral_parameters) const {
 
     // Calculating dt for updating the integral component.
-    chr::duration<double> duration = present_state.time_instance - previous_state.time_instance;
-    double dt = duration.count();
+    chr::duration<float> duration = present_state.time_instance - previous_state.time_instance;
+    float dt = duration.count();
 
     // Longitudinal PID calculation.
     float expr_v = longitudinal_parameters[0] * present_state.velocity +

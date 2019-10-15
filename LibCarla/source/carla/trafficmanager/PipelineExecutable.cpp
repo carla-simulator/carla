@@ -1,4 +1,5 @@
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <execinfo.h>
@@ -50,7 +51,7 @@ void handler() {
 std::vector<Actor> spawn_traffic(
     cc::Client &client,
     cc::World &world,
-    uint target_amount = 0) {
+    ulong target_amount = 0u) {
 
   std::vector<Actor> actor_list;
   carla::SharedPtr<cc::Map> world_map = world.GetMap();
@@ -100,7 +101,7 @@ std::vector<Actor> spawn_traffic(
   for (uint i = 0u; i < number_of_vehicles; ++i) {
 
     cg::Transform spawn_point = spawn_points.at(i);
-    uint blueprint_size = safe_blueprint_library.size();
+    size_t blueprint_size = safe_blueprint_library.size();
     cc::ActorBlueprint blueprint = safe_blueprint_library.at(i % blueprint_size);
 
     blueprint.SetAttribute("role_name", "traffic_manager");
@@ -113,7 +114,7 @@ std::vector<Actor> spawn_traffic(
   // We need to wait till the simulator spawns all vehicles,
   // tried to use World::WaitForTick but it also wasn't sufficient.
   // We need to find a better way to do this.
-  std::this_thread::sleep_for(500ms);
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   // Gathering actors spawned by the traffic manager.
   carla::SharedPtr<cc::ActorList> world_actors = world.GetActors();
@@ -122,12 +123,11 @@ std::vector<Actor> spawn_traffic(
     auto world_vehicle = boost::static_pointer_cast<cc::Vehicle>(world_actor);
     std::vector<cc::ActorAttributeValue> actor_attributes = world_vehicle->GetAttributes();
     bool found_traffic_manager_vehicle = false;
-    for (
-      iter = actor_attributes.begin();
-      (iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
-      ++iter
-      ) {
-      cc::ActorAttributeValue attribute = *iter;
+    for (auto attribute_iter = actor_attributes.begin();
+         (attribute_iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
+         ++attribute_iter
+        ) {
+      cc::ActorAttributeValue attribute = *attribute_iter;
       if (attribute.GetValue() == "traffic_manager") {
         found_traffic_manager_vehicle = true;
       }
@@ -151,8 +151,7 @@ void destroy_traffic(std::vector<Actor> &actor_list, cc::Client &client) {
 }
 
 
-void run_pipeline(cc::World &world, cc::Client &client_conn,
-                  uint target_traffic_amount, uint randomization_seed) {
+void run_pipeline(cc::World &world, cc::Client &client_conn, ulong target_traffic_amount) {
 
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -164,7 +163,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn,
     client_conn, world, target_traffic_amount);
   global_actor_list = &registered_actors;
 
-  client_conn.SetTimeout(2s);
+  client_conn.SetTimeout(std::chrono::seconds(2));
 
   traffic_manager::Pipeline pipeline(
       {0.1f, 0.15f, 0.01f},
@@ -216,10 +215,10 @@ int main(int argc, char *argv[]) {
     std::cout << "[-s] \t\t System randomization seed integer\n";
   } else {
 
-    uint target_traffic_amount = 0u;
+    ulong target_traffic_amount = 0u;
     if (argc >= 3 && std::string(argv[1]) == "-n") {
       try {
-        target_traffic_amount = std::stoi(argv[2]);
+        target_traffic_amount = std::stoul(argv[2]);
       } catch (const std::exception &e) {
         carla::log_warning("Failed to parse argument, choosing defaults\n");
       }
@@ -235,12 +234,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (randomization_seed < 0) {
-      std::srand(std::time(0));
+      std::srand(static_cast<uint>(std::time(0)));
     } else {
-      std::srand(randomization_seed);
+      std::srand(static_cast<uint>(abs(randomization_seed)));
     }
 
-    run_pipeline(world, client_conn, target_traffic_amount, randomization_seed);
+    run_pipeline(world, client_conn, target_traffic_amount);
   }
 
   return 0;

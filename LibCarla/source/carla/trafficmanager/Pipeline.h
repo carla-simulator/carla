@@ -39,19 +39,16 @@ namespace cc = carla::client;
     std::vector<float> longitudinal_PID_parameters;
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
-    /// Target velocities.
-    float highway_target_velocity;
-    float urban_target_velocity;
     /// Set of all actors registered with traffic manager.
     AtomicActorSet registered_actors;
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
-    /// Carla's debug helper object.
-    cc::DebugHelper debug_helper;
     /// Carla's client connection object.
     cc::Client client_connection;
     /// Carla's world object.
     cc::World world;
+    /// Carla's debug helper object.
+    cc::DebugHelper debug_helper;
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;

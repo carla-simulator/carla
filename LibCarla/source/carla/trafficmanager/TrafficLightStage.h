@@ -33,7 +33,6 @@ namespace cg = carla::geom;
 
   private:
 
-    cc::DebugHelper &debug_helper;
     /// Variables to remember messenger states.
     int localization_messenger_state;
     int planner_messenger_state;
@@ -60,10 +59,8 @@ namespace cg = carla::geom;
 
   public:
 
-    TrafficLightStage(
-        std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-        std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-        cc::DebugHelper &debug_helper);
+    TrafficLightStage(std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
+                      std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger);
     ~TrafficLightStage();
 
     void DataReceiver() override;

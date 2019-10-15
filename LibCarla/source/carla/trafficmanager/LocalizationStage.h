@@ -36,8 +36,6 @@ namespace cc = carla::client;
 
   private:
 
-    /// Reference to Carla's debug helper object.
-    cc::DebugHelper &debug_helper;
     /// Variables to remember messenger states.
     int planner_messenger_state;
     int collision_messenger_state;
@@ -70,6 +68,8 @@ namespace cc = carla::client;
     int registered_actors_state;
     /// Reference to local map-cache object.
     InMemoryMap &local_map;
+    /// Reference to Carla's debug helper object.
+    cc::DebugHelper &debug_helper;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list_a;
