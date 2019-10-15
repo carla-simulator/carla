@@ -5,9 +5,9 @@
 #include <condition_variable>
 #include <mutex>
 
-using namespace std::chrono_literals;
-
 namespace traffic_manager {
+
+  using namespace std::chrono_literals;
 
   template <typename Data>
   struct DataPacket {

@@ -43,7 +43,7 @@ namespace traffic_manager {
     if (data_frame != nullptr &&
         number_of_vehicles != (*data_frame.get()).size()) {
 
-      number_of_vehicles = (*data_frame.get()).size();
+      number_of_vehicles = static_cast<uint>((*data_frame.get()).size());
       // Allocating array for command batching.
       commands = std::make_shared<std::vector<cr::Command>>(number_of_vehicles);
     }

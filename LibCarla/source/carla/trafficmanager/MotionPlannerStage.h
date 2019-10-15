@@ -27,7 +27,6 @@ namespace cc = carla::client;
 
   private:
 
-    cc::DebugHelper &debug_helper;
     /// Selection key to switch between the output frames.
     bool frame_selector;
     /// Variables to remember messenger states.
@@ -44,19 +43,19 @@ namespace cc = carla::client;
     std::shared_ptr<TrafficLightToPlannerFrame> traffic_light_frame;
     /// Pointers to messenger objects connecting to various stages.
     std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger;
-    std::shared_ptr<PlannerToControlMessenger> control_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> collision_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger;
+    std::shared_ptr<PlannerToControlMessenger> control_messenger;
     /// Map to store states for integral and differential components
     /// of the PID controller for every vehicle
     std::unordered_map<ActorId, StateEntry> pid_state_map;
+    /// Target velocities.
+    float urban_target_velocity;
+    float highway_target_velocity;
     /// Configuration parameters for the PID controller.
     std::vector<float> longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
     std::vector<float> lateral_parameters;
-    /// Target velocities.
-    float urban_target_velocity;
-    float highway_target_velocity;
     /// Controller object.
     PIDController controller;
     /// Number of vehicles registered with the traffic manager.
@@ -69,7 +68,6 @@ namespace cc = carla::client;
         std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
-        cc::DebugHelper &debug_helper,
         float urban_target_velocity,
         float highway_target_velocity,
         std::vector<float> longitudinal_parameters,

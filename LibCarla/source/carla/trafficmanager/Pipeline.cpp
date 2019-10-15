@@ -12,7 +12,6 @@ namespace traffic_manager {
     : longitudinal_PID_parameters(longitudinal_PID_parameters),
       longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
       lateral_PID_parameters(lateral_PID_parameters),
-      urban_target_velocity(urban_target_velocity),
       client_connection(client_connection),
       world(client_connection.GetWorld()),
       debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
@@ -44,15 +43,13 @@ namespace traffic_manager {
         world, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
-        localization_traffic_light_messenger, traffic_light_planner_messenger,
-        debug_helper);
+        localization_traffic_light_messenger, traffic_light_planner_messenger);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
         localization_planner_messenger,
         collision_planner_messenger,
         traffic_light_planner_messenger,
         planner_control_messenger,
-        debug_helper,
         urban_target_velocity,
         highway_target_velocity,
         longitudinal_PID_parameters,

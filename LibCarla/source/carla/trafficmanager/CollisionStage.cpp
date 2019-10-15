@@ -85,8 +85,8 @@ namespace CollisionStageConstants {
       bool collision_hazard = false;
 
       // Check every actor in the vicinity if it poses a collision hazard.
-      for (auto i = actor_id_list.begin(); (i != actor_id_list.end()) && !collision_hazard; ++i) {
-        ActorId actor_id = *i;
+      for (auto j = actor_id_list.begin(); (j != actor_id_list.end()) && !collision_hazard; ++j) {
+        ActorId actor_id = *j;
         try {
 
           if (actor_id != ego_actor_id) {
@@ -135,7 +135,7 @@ namespace CollisionStageConstants {
       // Allocating new containers for the changed number of registered vehicles.
       if (number_of_vehicles != (*localization_frame.get()).size()) {
 
-        number_of_vehicles = (*localization_frame.get()).size();
+        number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
         // Allocating output arrays to be shared with motion planner stage.
         planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
         planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
@@ -170,8 +170,8 @@ namespace CollisionStageConstants {
       Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
       Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
 
-      float reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-      float other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+      double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+      double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
 
       // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
       if (geodesic_overlap &&
@@ -196,8 +196,8 @@ namespace CollisionStageConstants {
       std::deque<Polygon> output;
       bg::intersection(reference_polygon, other_polygon, output);
 
-      for (uint i = 0u; i < output.size() && !overlap; ++i) {
-        Polygon &p = output.at(i);
+      for (uint j = 0u; j < output.size() && !overlap; ++j) {
+        Polygon &p = output.at(j);
         if (bg::area(p) > ZERO_AREA) {
           overlap = true;
         }
@@ -246,10 +246,10 @@ namespace CollisionStageConstants {
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(actor);
       // At non-signalized junctions, we extend the boundary across the junction and
       // in all other situations, boundary length is velocity-dependent.
-      for (uint i = 0u;
+      for (uint j = 0u;
           (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
-          (i < waypoint_buffer->size());
-          ++i) {
+          (j < waypoint_buffer->size());
+          ++j) {
 
         cg::Vector3D heading_vector = boundary_end->GetForwardVector();
         cg::Location location = boundary_end->GetLocation();
@@ -259,7 +259,7 @@ namespace CollisionStageConstants {
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
         left_boundary.push_back(location + cg::Location(scaled_perpendicular));
         right_boundary.push_back(location + cg::Location(-1 * scaled_perpendicular));
-        boundary_end = waypoint_buffer->at(i);
+        boundary_end = waypoint_buffer->at(j);
       }
 
       // Connecting the geodesic path boundary with the vehicle bounding box.

@@ -64,8 +64,8 @@ namespace traffic_manager {
 
         std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
         if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
-          for (auto actor: grid_to_actor_id.at(grid_key)) {
-            actors.insert(actor);
+          for (auto grid_actor: grid_to_actor_id.at(grid_key)) {
+            actors.insert(grid_actor);
           }
         }
       }

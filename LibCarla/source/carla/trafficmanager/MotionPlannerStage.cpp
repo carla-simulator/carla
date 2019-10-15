@@ -5,8 +5,6 @@ namespace traffic_manager {
 namespace PlannerConstants {
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
-  static const float URBAN_DEFAULT_VELOCITY = 25 / 3.6f;
-  static const float HIGHWAY_DEFAULT_VELOCITY = 50 / 3.6f;
   static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
   static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.0f, 0.1f};
   static const std::vector<float> LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
@@ -18,22 +16,20 @@ namespace PlannerConstants {
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
-      cc::DebugHelper &debug_helper,
-      float urban_target_velocity = URBAN_DEFAULT_VELOCITY,
-      float highway_target_velocity = HIGHWAY_DEFAULT_VELOCITY,
+      float urban_target_velocity = 25 / 3.6f,
+      float highway_target_velocity = 50 / 3.6f,
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
       std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
       std::vector<float> lateral_parameters = LATERAL_DEFAULTS)
-    : urban_target_velocity(urban_target_velocity),
+    : localization_messenger(localization_messenger),
+      collision_messenger(collision_messenger),
+      traffic_light_messenger(traffic_light_messenger),
+      control_messenger(control_messenger),
+      urban_target_velocity(urban_target_velocity),
       highway_target_velocity(highway_target_velocity),
       longitudinal_parameters(longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
-      lateral_parameters(lateral_parameters),
-      localization_messenger(localization_messenger),
-      control_messenger(control_messenger),
-      collision_messenger(collision_messenger),
-      traffic_light_messenger(traffic_light_messenger),
-      debug_helper(debug_helper) {
+      lateral_parameters(lateral_parameters) {
 
     // Initializing the output frame selector.
     frame_selector = true;
@@ -158,7 +154,7 @@ namespace PlannerConstants {
     if (localization_frame != nullptr &&
         number_of_vehicles != (*localization_frame.get()).size()) {
 
-      number_of_vehicles = (*localization_frame.get()).size();
+      number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
       // Allocate output frames.
       control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
       control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
