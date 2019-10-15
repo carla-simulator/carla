@@ -14,6 +14,7 @@
 #include <carla/Buffer.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
+#include "Carla/Sensor/FilterLoader.h"
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -73,6 +74,7 @@ private:
       UTextureRenderTarget2D &RenderTarget,
       carla::Buffer &Buffer,
       uint32 Offset,
+      std::shared_ptr<FilterLoader> filterLoader,
       FRHICommandListImmediate &InRHICmdList);
 
 };
@@ -101,6 +103,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
             *Sensor.CaptureRenderTarget,
             Buffer,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+            Sensor.getFilterLoader(),
             InRHICmdList);
         Stream.Send(Sensor, std::move(Buffer));
       }

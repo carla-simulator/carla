@@ -11,11 +11,17 @@
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
+#include "OpenGLLinux.h"
+#include "BoundShaderStateCache.h"
+#include "OpenGLUtil.h"
+#include "OpenGLResources.h"
+#include "Runtime/OpenGLDrv/Public/OpenGLResources.h"
+
 // For now we only support Vulkan on Windows.
 #if PLATFORM_WINDOWS
 #  define CARLA_WITH_VULKAN_SUPPORT 1
 #else
-#  define CARLA_WITH_VULKAN_SUPPORT 1
+#  define CARLA_WITH_VULKAN_SUPPORT 0
 #endif
 
 // =============================================================================
@@ -134,6 +140,7 @@ void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     carla::Buffer &Buffer,
     uint32 Offset,
+    std::shared_ptr<FilterLoader> filterLoader,
     FRHICommandListImmediate &
 #if CARLA_WITH_VULKAN_SUPPORT == 1
     InRHICmdList
@@ -157,6 +164,19 @@ void FPixelReader::WritePixelsToBuffer(
   const uint32 Width = Texture->GetSizeX();
   const uint32 Height = Texture->GetSizeY();
   const uint32 ExpectedStride = Width * BytesPerPixel;
+
+  if (filterLoader) {
+    std::shared_ptr <Filter> filter = filterLoader->getFilter();
+    if (filter) {
+      FOpenGLTextureBase *openGLTexture = GetOpenGLTextureFromRHITexture(Texture);
+      if (openGLTexture) {
+        uint8 *source = (uint8 *) filter->filter(openGLTexture->Resource, Width, Height);
+        Buffer.copy_from(Offset, source, ExpectedStride * Height);
+        return;
+      }
+      UE_LOG(LogCarla, Error, TEXT("Could not get openGL texture for filter: %s"), *(filterLoader->filterName));
+    }
+  }
 
   uint32 SrcStride;
   LockTexture Lock(Texture, SrcStride);

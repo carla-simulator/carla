@@ -457,3 +457,35 @@ objects.
 | `actor`                | carla.Actor | Actor that detected the obstacle ("self" actor) |
 | `other_actor`          | carla.Actor | Actor detected as obstacle |
 | `distance`             | float       | Distance from actor to other_actor |
+
+Server-side filters
+-------------------
+
+Camera sensors can use server-side plugin filters to extend image processing (e.g. to create custom lens or color space output).
+Both CPU and CUDA processing is supported.
+
+<h4>Compilation and location of filters</h4>
+
+Filters must be provided in form of dll files and conform to [this](../Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/Filter.h) interface.
+In order for a filter to be loaded, it must be placed in `Filters` directory in Carla Unreal launch dir (for package build it is the same place as executable scripts, for editor build it is [CarlaUE4](../Unreal/CarlaUE4) dir).
+
+Example filter sources and appropriate client scripts can be found [here](../SensorsFiltersPlugins).
+
+Filters are loaded at runtime, so they can be placed in `Filters` folder at any point in time (e.g. after each filter build) and will be detected by sensors.
+However, once filter with a given filename is loaded, it cannot be unloaded or reloaded anymore (to prevent reinitialization of shared libraries components).
+To support such scenario, replacing filters during runtime is done by the following mechanism:
+
+1. `<filter_name>.dll` and `<filter_name>_<int>.dll` are treated as the same filter instance.
+2. If multiple files with `<filter_name>` prefix are detected, the one with the highest `<int>` will be used.
+3. Replacing filter file during runtime with different content (keeping the same name) won't change previously loaded filter.
+
+<h4>Camera configuration for filters</h4>
+
+A camera sensor can use only one filter simultaneously.
+For sensor to use a filter, it's blueprint must pass `filter_name` attribute during spawn from client.
+Provided name must match filter file name except for `.dll` extension and optional `*_<int>` suffix.
+Example:
+
+```py
+blueprint.set_attribute('filter_name', 'inverseFilter')
+```

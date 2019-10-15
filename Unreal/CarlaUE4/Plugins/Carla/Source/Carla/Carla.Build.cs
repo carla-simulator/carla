@@ -58,7 +58,8 @@ public class Carla : ModuleRules
         "PhysXVehicles",
         "PhysXVehicleLib",
         "Slate",
-        "SlateCore"
+        "SlateCore",
+        "OpenGLDrv"
         // ... add private dependencies that you statically link with here ...
       }
       );
@@ -99,6 +100,7 @@ public class Carla : ModuleRules
   private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
   {
     string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
+    string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
 
     ADelegate GetLibName = (string BaseName) => {
       if (IsWindows(Target))
@@ -144,6 +146,7 @@ public class Carla : ModuleRules
 
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
+    PrivateIncludePaths.Add(EnginePath + "Source/Runtime/OpenGLDrv/Private/Linux");
 
     PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");

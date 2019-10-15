@@ -8,6 +8,7 @@
 
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/FilterLoader.h"
 
 #include "SceneCaptureSensor.generated.h"
 
@@ -257,6 +258,15 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  std::shared_ptr<FilterLoader> getFilterLoader() {
+    FString filterName = this->GetEpisode().GetActorRegistry().Find(this)
+            .GetActorInfo()->Description.Variations.Find("filter_name")->Value;
+    if (!filterName.IsEmpty() && !filterLoader) {
+      filterLoader = std::shared_ptr<FilterLoader>(new FilterLoader(filterName));
+    }
+    return std::shared_ptr<FilterLoader>(filterLoader);
+  }
+
 protected:
 
   virtual void BeginPlay() override;
@@ -291,4 +301,6 @@ private:
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
+
+  std::shared_ptr<FilterLoader> filterLoader = std::shared_ptr<FilterLoader>(nullptr);
 };

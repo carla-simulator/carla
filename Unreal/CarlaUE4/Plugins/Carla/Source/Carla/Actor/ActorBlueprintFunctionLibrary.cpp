@@ -226,14 +226,21 @@ static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
 
 static void AddVariationsForSensor(FActorDefinition &Def)
 {
+  //Tick
   FActorVariation Tick;
-
   Tick.Id = TEXT("sensor_tick");
   Tick.Type = EActorAttributeType::Float;
   Tick.RecommendedValues = { TEXT("0.0") };
   Tick.bRestrictToRecommended = false;
-
   Def.Variations.Emplace(Tick);
+
+  //FilterName
+  FActorVariation FilterName;
+  FilterName.Id = TEXT("filter_name");
+  FilterName.Type = EActorAttributeType::String;
+  FilterName.RecommendedValues = { TEXT("") };
+  FilterName.bRestrictToRecommended = false;
+  Def.Variations.Emplace(FilterName);
 }
 
 static void AddVariationsForTrigger(FActorDefinition &Def)
