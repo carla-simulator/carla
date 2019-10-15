@@ -44,10 +44,6 @@ namespace bg = boost::geometry;
 
   private:
 
-    /// Reference to Carla's world object.
-    cc::World &world;
-    /// Reference to Carla's debug helper object.
-    cc::DebugHelper &debug_helper;
     /// Variables to remember messenger states.
     int localization_messenger_state;
     int planner_messenger_state;
@@ -61,6 +57,10 @@ namespace bg = boost::geometry;
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
+    /// Reference to Carla's world object.
+    cc::World &world;
+    /// Reference to Carla's debug helper object.
+    cc::DebugHelper &debug_helper;
     /// An object used for grid binning vehicles for faster proximity detection.
     VicinityGrid vicinity_grid;
     /// The map used to connect actor ids to the array index of data frames.

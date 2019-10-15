@@ -14,9 +14,9 @@
 
 #include "Messenger.h"
 
-using namespace std::chrono_literals;
-
 namespace traffic_manager {
+
+  using namespace std::chrono_literals;
 
   /// This class provides base functionality and template for
   /// various stages of the pipeline.

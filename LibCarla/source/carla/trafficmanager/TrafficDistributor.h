@@ -104,9 +104,7 @@ namespace cg = carla::geom;
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<ActorId, uint> &vehicle_id_to_index,
-        std::vector<Actor> &actor_list,
-        cc::DebugHelper &debug_helper);
-
+        std::vector<Actor> &actor_list);
   };
 
 }

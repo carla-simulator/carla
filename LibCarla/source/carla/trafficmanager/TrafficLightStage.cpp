@@ -4,13 +4,10 @@ namespace traffic_manager {
 
   static const uint NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
 
-  TrafficLightStage::TrafficLightStage(
-      std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-      std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      cc::DebugHelper &debug_helper)
+  TrafficLightStage::TrafficLightStage(std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
+                                       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger)
     : localization_messenger(localization_messenger),
-      planner_messenger(planner_messenger),
-      debug_helper(debug_helper){
+      planner_messenger(planner_messenger) {
 
     // Initializing output frame selector.
     frame_selector = true;
@@ -139,7 +136,7 @@ namespace traffic_manager {
     if (localization_frame != nullptr &&
         number_of_vehicles != (*localization_frame.get()).size()) {
 
-      number_of_vehicles = (*localization_frame.get()).size();
+      number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
       // Allocating output frames.
       planner_frame_a = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);

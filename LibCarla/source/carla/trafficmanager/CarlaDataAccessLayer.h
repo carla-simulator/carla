@@ -22,8 +22,6 @@ namespace traffic_manager {
 
     CarlaDataAccessLayer(carla::SharedPtr<cc::Map> world_map);
 
-    ~CarlaDataAccessLayer();
-
     /// This method retrieves a list of topology segments from the simulator.
     using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
     std::vector<std::pair<WaypointPtr, WaypointPtr>> GetTopology() const;
