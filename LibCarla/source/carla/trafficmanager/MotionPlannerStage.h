@@ -7,9 +7,9 @@
 #include "carla/client/Vehicle.h"
 #include "carla/rpc/Actor.h"
 
-#include "MessengerAndDataTypes.h"
-#include "PIDController.h"
-#include "PipelineStage.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/PIDController.h"
+#include "carla/trafficmanager/PipelineStage.h"
 
 namespace traffic_manager {
 

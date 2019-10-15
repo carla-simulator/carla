@@ -20,9 +20,9 @@
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 
-#include "MessengerAndDataTypes.h"
-#include "PipelineStage.h"
-#include "VicinityGrid.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/PipelineStage.h"
+#include "carla/trafficmanager/VicinityGrid.h"
 
 namespace traffic_manager {
 
