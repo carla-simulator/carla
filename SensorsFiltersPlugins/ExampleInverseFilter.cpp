@@ -1,3 +1,8 @@
+// Copyright (c) 2019 Aptiv
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include <iostream>
 #include "Filter.h"
 #include <GL/glew.h>

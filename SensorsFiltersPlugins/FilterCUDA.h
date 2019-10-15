@@ -1,4 +1,7 @@
-// TODO header?
+// Copyright (c) 2019 Aptiv
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 #include "Kernel.cuh"
