@@ -12,7 +12,7 @@
 
 #include "carla/rpc/ActorId.h"
 
-#include "Messenger.h"
+#include "carla/trafficmanager/Messenger.h"
 
 namespace traffic_manager {
 

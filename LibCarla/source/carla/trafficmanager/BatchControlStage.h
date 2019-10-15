@@ -8,8 +8,8 @@
 #include "carla/rpc/Command.h"
 #include "carla/rpc/VehicleControl.h"
 
-#include "MessengerAndDataTypes.h"
-#include "PipelineStage.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/PipelineStage.h"
 
 namespace traffic_manager {
 

@@ -10,8 +10,8 @@
 #include "carla/Memory.h"
 #include "carla/rpc/TrafficLightState.h"
 
-#include "MessengerAndDataTypes.h"
-#include "PipelineStage.h"
+#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/PipelineStage.h"
 
 namespace traffic_manager {
 
