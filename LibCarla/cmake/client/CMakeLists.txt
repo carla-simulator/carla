@@ -84,6 +84,12 @@ file(GLOB libcarla_carla_nav_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_sources}")
 install(FILES ${libcarla_carla_nav_sources} DESTINATION include/carla/nav)
 
+file(GLOB libcarla_carla_trafficmanager_sources
+    "${libcarla_source_path}/carla/trafficmanager/*.cpp"
+    "${libcarla_source_path}/carla/trafficmanager/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
+install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
+
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
     "${libcarla_source_path}/carla/opendrive/*.h")
