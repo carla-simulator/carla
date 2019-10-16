@@ -160,8 +160,8 @@ objects.
 
 <h4>Server-side filters</h4>
 
-Camera sensors can use server-side plugin filters to extend image processing (e.g. to create custom lens or color space output).
-Both CPU and CUDA processing is supported.
+Camera sensors can use server-side plugin filters to extend image processing (e.g. to create custom lens or color profile output).
+Both CPU and CUDA processing are supported. Required Carla to be using OpenGL (-opengl4 flag).
 
 <h4>Compilation and location of filters</h4>
 

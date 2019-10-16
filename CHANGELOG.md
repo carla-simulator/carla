@@ -1,4 +1,5 @@
 ## Latest
+  * Support for CUDA and CPU server-side based filters (for custom sensor modeling)
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
