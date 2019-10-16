@@ -165,7 +165,7 @@ Both CPU and CUDA processing are supported. Required Carla to be using OpenGL (-
 
 <h4>Compilation and location of filters</h4>
 
-Filters must be provided in form of dll files and conform to [this](../Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/Filter.h) interface.
+Filters must be provided in form of dll files and conform to [this](../SensorsFiltersPlugins/Filter.h) interface.
 In order for a filter to be loaded, it must be placed in `Filters` directory in Carla Unreal launch dir (for package build it is the same place as executable scripts, for editor build it is [CarlaUE4](../Unreal/CarlaUE4) dir).
 
 Example filter sources and appropriate client scripts can be found [here](../SensorsFiltersPlugins).
