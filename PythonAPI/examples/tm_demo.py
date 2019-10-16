@@ -1,12 +1,8 @@
-
 import time
 import random
 
 import sys, os
-sys.path.append("/home/jacopobartiromo/carla/PythonAPI/carla/dist/carla-0.9.6-py2.7-linux-x86_64.egg")
-sys.path.append("/home/jacopobartiromo/carla/TrafficManager/source/pipeline/python/Wrapper.cpp")
 import carla
-from traffic_manager import traffic_manager, parameters, actor_list
 
 ip = 'localhost'
 port = 2000
@@ -46,19 +42,21 @@ tm = None
 
 try:
 
-    long_pid = parameters()
-    long_high_pid = parameters()
-    lat_pid = parameters()
-    vehicle_vec = actor_list()
+    long_pid = carla.parameters()
+    long_high_pid = carla.parameters()
+    lat_pid = carla.parameters()
 
     long_pid.extend([0.1, 0.15, 0.01])
     long_high_pid.extend([5.0, 0.0, 0.1])
     lat_pid.extend([10.0, 0.01, 0.1])
-    vehicle_vec.extend(vehicle_list)
 
-    tm = traffic_manager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client_connection)
+    tm = carla.traffic_manager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client_connection)
     tm.start()
     time.sleep(1)
+
+    vehicle_vec = carla.actor_list()
+    vehicle_vec.extend(vehicle_list)
+
     tm.register_vehicles(vehicle_vec)
 
     while True:
@@ -68,6 +66,8 @@ except Exception, e:
 
     print e
     print "Stopping TrafficManager!"
+
+finally:
 
     if tm:
         tm.stop()
