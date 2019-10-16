@@ -1,76 +1,152 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+"""Spawn NPCs into the simulation using the Traffic Manager interface"""
+
 import time
 import random
-
-import sys, os
+import glob
+import argparse
+import logging
+import sys
+import os
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
 import carla
 
-ip = 'localhost'
-port = 2000
-number_of_vehicles = 20
 
-client_connection = carla.Client(ip, port)
-client_connection.set_timeout(2.0)
+def main():
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-n', '--number-of-vehicles',
+        metavar='N',
+        default=50,
+        type=int,
+        help='number of vehicles (default: 10)')
+    argparser.add_argument(
+        '--safe',
+        action='store_true',
+        help='avoid spawning vehicles prone to accidents')
+    argparser.add_argument(
+        '--filter',
+        metavar='PATTERN',
+        default='vehicle.*',
+        help='vehicles filter (default: "vehicle.*")')
+    args = argparser.parse_args()
 
-world = client_connection.get_world()
-blueprints = world.get_blueprint_library().filter('vehicle.*')
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
-blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
-blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
+    vehicle_list = []
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(2.0)
 
-spawn_points = world.get_map().get_spawn_points()
-random.shuffle(spawn_points)
+    try:
+        traffic_manager = None
+        world = client.get_world()
+        blueprints = world.get_blueprint_library().filter(args.filter)
 
-vehicle_list = []
-batch = []
+        if args.safe:
+            blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
+            blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
+            blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
 
-for n, transform in enumerate(spawn_points):
-    if n >= number_of_vehicles:
-        break
-    blueprint = random.choice(blueprints)
-    if blueprint.has_attribute('color'):
-        color = random.choice(blueprint.get_attribute('color').recommended_values)
-        blueprint.set_attribute('color', color)
-    if blueprint.has_attribute('driver_id'):
-        driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
-        blueprint.set_attribute('driver_id', driver_id)
-    blueprint.set_attribute('role_name', 'autopilot')
-    vehicle = world.try_spawn_actor(blueprint, transform)
-    vehicle_list.append(vehicle)
+        spawn_points = world.get_map().get_spawn_points()
+        number_of_spawn_points = len(spawn_points)
 
-tm = None
+        if args.number_of_vehicles < number_of_spawn_points:
+            random.shuffle(spawn_points)
+        elif args.number_of_vehicles > number_of_spawn_points:
+            msg = 'Requested %d vehicles, but could only find %d spawn points'
+            logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
+            args.number_of_vehicles = number_of_spawn_points
 
-try:
+        # --------------
+        # Spawn vehicles
+        # --------------
 
-    long_pid = carla.parameters()
-    long_high_pid = carla.parameters()
-    lat_pid = carla.parameters()
+        batch = []
+        for n, transform in enumerate(spawn_points):
+            if n >= args.number_of_vehicles:
+                break
+            blueprint = random.choice(blueprints)
+            if blueprint.has_attribute('color'):
+                color = random.choice(blueprint.get_attribute('color').recommended_values)
+                blueprint.set_attribute('color', color)
+            if blueprint.has_attribute('driver_id'):
+                driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
+                blueprint.set_attribute('driver_id', driver_id)
+            blueprint.set_attribute('role_name', 'autopilot')
+            vehicle = world.try_spawn_actor(blueprint, transform)
+            vehicle_list.append(vehicle)
 
-    long_pid.extend([0.1, 0.15, 0.01])
-    long_high_pid.extend([5.0, 0.0, 0.1])
-    lat_pid.extend([10.0, 0.01, 0.1])
+        for response in client.apply_batch_sync(batch):
+            if response.error:
+                logging.error(response.error)
+            else:
+                vehicle_list.append(response.actor_id)
 
-    tm = carla.traffic_manager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client_connection)
-    tm.start()
-    time.sleep(1)
+        print('Spawned %d vehicles, press Ctrl+C to exit.\n' % (len(vehicle_list)))
 
-    vehicle_vec = carla.actor_list()
-    vehicle_vec.extend(vehicle_list)
+        long_pid = carla.parameters()
+        long_high_pid = carla.parameters()
+        lat_pid = carla.parameters()
 
-    tm.register_vehicles(vehicle_vec)
+        long_pid.extend([0.1, 0.15, 0.01])
+        long_high_pid.extend([5.0, 0.0, 0.1])
+        lat_pid.extend([10.0, 0.01, 0.1])
 
-    while True:
+        traffic_manager = carla.traffic_manager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client)
+        traffic_manager.start()
         time.sleep(1)
 
-except Exception, e:
+        vehicle_vec = carla.actor_list()
+        vehicle_vec.extend(vehicle_list)
 
-    print e
-    print "Stopping TrafficManager!"
+        traffic_manager.register_vehicles(vehicle_vec)
 
-finally:
+        while True:
+            time.sleep(1)
 
-    if tm:
-        tm.stop()
+    except Exception as e:
 
-    for vehicle in vehicle_list:
-		vehicle.destroy()
+        print(e)
+        print("Stopping TrafficManager!")
+
+    finally:
+        if traffic_manager:
+            traffic_manager.stop()
+
+        print('Destroying %d vehicles.\n' % len(vehicle_list))
+        client.apply_batch([carla.command.DestroyActor(x) for x in vehicle_list])
+
+
+if __name__ == '__main__':
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print('Done.\n')
