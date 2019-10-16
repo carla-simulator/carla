@@ -21,7 +21,7 @@
 #if PLATFORM_WINDOWS
 #  define CARLA_WITH_VULKAN_SUPPORT 1
 #else
-#  define CARLA_WITH_VULKAN_SUPPORT 0
+#  define CARLA_WITH_VULKAN_SUPPORT 1
 #endif
 
 // =============================================================================
@@ -165,7 +165,7 @@ void FPixelReader::WritePixelsToBuffer(
   const uint32 Height = Texture->GetSizeY();
   const uint32 ExpectedStride = Width * BytesPerPixel;
 
-  if (filterLoader) {
+  if (!IsVulkanPlatform(GMaxRHIShaderPlatform) && filterLoader) {
     std::shared_ptr <Filter> filter = filterLoader->getFilter();
     if (filter) {
       FOpenGLTextureBase *openGLTexture = GetOpenGLTextureFromRHITexture(Texture);
