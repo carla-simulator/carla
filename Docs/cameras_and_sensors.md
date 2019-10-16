@@ -165,12 +165,22 @@ Both CPU and CUDA processing are supported. Required Carla to be using OpenGL (-
 
 <h4>Compilation and location of filters</h4>
 
-Filters must be provided in form of dll files and conform to [this](../SensorsFiltersPlugins/Filter.h) interface.
-In order for a filter to be loaded, it must be placed in `Filters` directory in Carla Unreal launch dir (for package build it is the same place as executable scripts, for editor build it is [CarlaUE4](../Unreal/CarlaUE4) dir).
+Filters must be provided in form of dll files and conform to the following interface (SensorsFiltersPlugins/Filter.h):
+```C++
+class Filter {
+public:
+  Filter() {}
 
-Example filter sources and appropriate client scripts can be found [here](../SensorsFiltersPlugins).
+  virtual ~Filter() {}
 
-Filters are loaded at runtime, so they can be placed in `Filters` folder at any point in time (e.g. after each filter build) and will be detected by sensors.
+  virtual uint8_t *filter(unsigned int textureId, unsigned int width, unsigned int height) = 0;
+};
+```
+
+In order for a filter to be loaded, it must be placed in `Filters` directory in Carla Unreal launch dir (next to CarlaUE4.sh).
+Example filter sources and appropriate client scripts can be found in 'SensorsFiltersPlugins' folder.
+
+Filters are loaded at runtime. They can be placed in `Filters` folder at any point in time (e.g. after each filter build) and will be detected by sensors.
 However, once filter with a given filename is loaded, it cannot be unloaded or reloaded anymore (to prevent reinitialization of shared libraries components).
 To support such scenario, replacing filters during runtime is done by the following mechanism:
 
