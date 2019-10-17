@@ -13,14 +13,13 @@ The agent also responds to traffic lights. """
 import random
 import numpy as np
 import carla
-from agents.navigation.base_behavior_agent import Agent
-from agents.navigation.behavior_local_planner import LocalPlanner, RoadOption
-from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.navigation.behavior_types import Cautious, Aggressive, Normal
+from agents.navigation.behavior.base_behavior_agent import Agent
+from agents.navigation.behavior.local_planner_behavior import LocalPlanner, RoadOption
+from agents.navigation.behavior.global_route_planner_behavior import GlobalRoutePlanner
+from agents.navigation.behavior.global_route_planner_dao_behavior import GlobalRoutePlannerDAO
+from agents.navigation.behavior.types_behavior import Cautious, Aggressive, Normal
 
 from agents.tools.misc import get_speed, positive
-
 
 class BehaviorAgent(Agent):
     """
@@ -48,7 +47,6 @@ class BehaviorAgent(Agent):
         super(BehaviorAgent, self).__init__(vehicle)
         self.ignore_traffic_light = ignore_traffic_light
         self._local_planner = LocalPlanner(self)
-        self._hop_resolution = 3
         self._grp = None
         self.look_ahead_steps = 0
 
@@ -65,6 +63,7 @@ class BehaviorAgent(Agent):
         self.light_id_to_ignore = -1
         self.min_speed = 5
         self.behavior = None
+        self._sampling_resolution = 4.5
 
         # Parameters for agent behavior
         if behavior == 'cautious':
@@ -151,7 +150,7 @@ class BehaviorAgent(Agent):
         if self._grp is None:
             wld = self.vehicle.get_world()
             dao = GlobalRoutePlannerDAO(
-                wld.get_map(), sampling_resolution=self._local_planner.sampling_radius)
+                wld.get_map(), sampling_resolution=self._sampling_resolution)
             grp = GlobalRoutePlanner(dao)
             grp.setup()
             self._grp = grp
@@ -388,8 +387,7 @@ class BehaviorAgent(Agent):
         # Normal behavior.
         else:
             control = self._local_planner.run_step(
-                target_speed=min(self.speed + (self.behavior.speed_increase_perc * self.behavior.max_speed) / 100,
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
 
@@ -452,7 +450,7 @@ class BehaviorAgent(Agent):
         # Checking if there's a junction nearby to slow down
         elif self.incoming_waypoint.is_junction and (self.incoming_direction == RoadOption.LEFT or self.incoming_direction == RoadOption.RIGHT):
             control = self._local_planner.run_step(
-                target_speed=min(self.behavior.max_speed, self.speed_limit - 10), debug=debug)
+                target_speed=min(self.behavior.max_speed, self.speed_limit - 5), debug=debug)
 
         # 5: Normal behavior
 

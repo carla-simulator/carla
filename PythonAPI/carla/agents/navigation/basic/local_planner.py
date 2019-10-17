@@ -13,7 +13,7 @@ from collections import deque
 import random
 
 import carla
-from agents.navigation.controller import VehiclePIDController
+from agents.navigation.basic.controller import VehiclePIDController
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
 
@@ -279,3 +279,4 @@ def _compute_connection(current_waypoint, next_waypoint):
         return RoadOption.LEFT
     else:
         return RoadOption.RIGHT
+

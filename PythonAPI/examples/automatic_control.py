@@ -85,9 +85,9 @@ except IndexError:
 import carla
 from carla import ColorConverter as cc
 
-from agents.navigation.behavior_agent import BehaviorAgent # pylint: disable=import-error
-from agents.navigation.roaming_agent import RoamingAgent # pylint: disable=import-error
-from agents.navigation.basic_agent import BasicAgent # pylint: disable=import-error
+from agents.navigation.behavior.behavior_agent import BehaviorAgent  # pylint: disable=import-error
+from agents.navigation.basic.roaming_agent import RoamingAgent  # pylint: disable=import-error
+from agents.navigation.basic.basic_agent import BasicAgent  # pylint: disable=import-error
 
 
 # ==============================================================================
@@ -115,6 +115,7 @@ def get_actor_display_name(actor, truncate=250):
 
 class World(object):
     """ Class representing the surrounding environment """
+
     def __init__(self, carla_world, hud, args):
         """Constructor method"""
         self.world = carla_world
@@ -227,6 +228,7 @@ class World(object):
 
 class KeyboardControl(object):
     """ Class in charge of keyboard control"""
+
     def __init__(self, world, start_in_autopilot):
         """Constructor method"""
         self._autopilot_enabled = start_in_autopilot
@@ -255,7 +257,7 @@ class KeyboardControl(object):
                 elif event.key == K_F1:
                     world.hud.toggle_info()
                 elif event.key == K_h or \
-                (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
+                        (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
@@ -361,6 +363,7 @@ class KeyboardControl(object):
 
 class HUD(object):
     """Class for HUD text"""
+
     def __init__(self, width, height):
         """Constructor method"""
         self.dim = (width, height)
@@ -438,7 +441,6 @@ class HUD(object):
             '',
             'Number of vehicles: % 8d' % len(vehicles)]
 
-
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
 
@@ -512,6 +514,7 @@ class HUD(object):
 
 class FadingText(object):
     """ Class for fading text """
+
     def __init__(self, font, dim, pos):
         """Constructor method"""
         self.font = font
@@ -545,6 +548,7 @@ class FadingText(object):
 
 class HelpText(object):
     """ Helper class for text render"""
+
     def __init__(self, font, width, height):
         """Constructor method"""
         lines = __doc__.split('\n')
@@ -576,6 +580,7 @@ class HelpText(object):
 
 class CollisionSensor(object):
     """ Class for collision sensors"""
+
     def __init__(self, parent_actor, hud):
         """Constructor method"""
         self.sensor = None
@@ -618,6 +623,7 @@ class CollisionSensor(object):
 
 class LaneInvasionSensor(object):
     """Class for lane invasion sensors"""
+
     def __init__(self, parent_actor, hud):
         """Constructor method"""
         self.sensor = None
@@ -648,6 +654,7 @@ class LaneInvasionSensor(object):
 
 class GnssSensor(object):
     """ Class for GNSS sensors"""
+
     def __init__(self, parent_actor):
         """Constructor method"""
         self.sensor = None
@@ -679,6 +686,7 @@ class GnssSensor(object):
 
 class CameraManager(object):
     """ Class for camera management"""
+
     def __init__(self, parent_actor, hud, gamma_correction):
         """Constructor method"""
         self.sensor = None
@@ -776,7 +784,7 @@ class CameraManager(object):
             lidar_data = np.array(points[:, :2])
             lidar_data *= min(self.hud.dim) / 100.0
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
-            lidar_data = np.fabs(lidar_data) # pylint: disable=assignment-from-no-return
+            lidar_data = np.fabs(lidar_data)  # pylint: disable=assignment-from-no-return
             lidar_data = lidar_data.astype(np.int32)
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
@@ -876,7 +884,7 @@ def game_loop(args):
                     agent.reroute(spawn_points)
                     tot_target_reached += 1
                     world.hud.notification("The target has been reached " +
-                                        str(tot_target_reached) + " times.", seconds=4.0)
+                                           str(tot_target_reached) + " times.", seconds=4.0)
 
                 elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
                     print("Target reached, mission accomplished...")

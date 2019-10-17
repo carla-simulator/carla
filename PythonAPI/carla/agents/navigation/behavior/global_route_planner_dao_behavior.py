@@ -6,6 +6,7 @@ This module provides implementation for GlobalRoutePlannerDAO
 """
 import numpy as np
 
+
 class GlobalRoutePlannerDAO(object):
     """
     This class is the data access layer for fetching data
@@ -71,5 +72,5 @@ class GlobalRoutePlannerDAO(object):
         return waypoint
 
     def get_resolution(self):
-        """ Accessor for self._sampling_resolution"""
+        """ Accessor for self._sampling_resolution """
         return self._sampling_resolution

@@ -14,7 +14,7 @@ from collections import deque
 from enum import Enum
 
 import carla
-from agents.navigation.controller import VehiclePIDController
+from agents.navigation.behavior.controller_behavior import VehiclePIDController
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
 
@@ -46,7 +46,6 @@ class LocalPlanner(object):
 
     # Minimum distance to target waypoint as a percentage
     # (e.g. within 80% of total distance)
-    MIN_DISTANCE_PERCENTAGE = 0.80
 
     # FPS used for dt
     FPS = 20
@@ -90,7 +89,7 @@ class LocalPlanner(object):
 
         target_speed -- desired cruise speed in km/h
 
-        sampling_radius -- search radius for next waypoints in seconds: e.g. 0.5 seconds ahead
+        min_distance -- minimum distance to remove waypoint from queue
 
         lateral_dict -- dictionary of arguments to setup the lateral PID controller
                             {'K_P':, 'K_D':, 'K_I':, 'dt'}
@@ -100,9 +99,9 @@ class LocalPlanner(object):
         """
         # Default parameters
         self.args_lat_hw_dict = {
-            'K_P': 0.45,
+            'K_P': 0.75,
             'K_D': 0.02,
-            'K_I': 0.6,
+            'K_I': 0.4,
             'dt': 1.0 / self.FPS}
         self.args_lat_city_dict = {
             'K_P': 0.58,
@@ -126,11 +125,7 @@ class LocalPlanner(object):
 
         self._target_speed = self._vehicle.get_speed_limit()
 
-        self.sampling_radius = 7  # fixed horizon, waiting for more reliable speed limit methods.
-        self._min_distance = self.sampling_radius * self.MIN_DISTANCE_PERCENTAGE
-
-        # Fill waypoint trajectory queue
-        self._compute_next_waypoints(k=20)
+        self._min_distance = 3
 
     def set_speed(self, speed):
         """
@@ -140,36 +135,6 @@ class LocalPlanner(object):
         """
 
         self._target_speed = speed
-
-    def _compute_next_waypoints(self, k=1):
-        """
-        Add new waypoints to the trajectory queue.
-
-            :param k: how many waypoints to compute
-        """
-
-        # Check we do not overflow the queue
-        available_entries = self.waypoints_queue.maxlen - len(self.waypoints_queue)
-        k = min(available_entries, k)
-
-        for _ in range(k):
-            if len(self.waypoints_queue) == 0:
-                last_waypoint = self._current_waypoint
-            else:
-                last_waypoint = self.waypoints_queue[-1][0]
-            next_waypoints = list(last_waypoint.next(self.sampling_radius))
-
-            if len(next_waypoints) == 1:
-                # Only one option available, lane following
-                next_waypoint = next_waypoints[0]
-                road_option = RoadOption.LANEFOLLOW
-            else:
-                # Random choice between the possible options
-                road_options_list = _retrieve_options(next_waypoints, last_waypoint)
-                road_option = random.choice(road_options_list)
-                next_waypoint = next_waypoints[road_options_list.index(road_option)]
-
-            self.waypoints_queue.append((next_waypoint, road_option))
 
     def set_global_plan(self, current_plan):
         """
@@ -209,15 +174,11 @@ class LocalPlanner(object):
             :param debug: boolean flag to activate waypoints debugging
             :return: control
         """
-
+        debug = True
         if target_speed is not None:
             self._target_speed = target_speed
         else:
             self._target_speed = self._vehicle.get_speed_limit()
-        # Not enough waypoints in the horizon? Add more!
-        if not self._global_plan and \
-            len(self.waypoints_queue) < int(self.waypoints_queue.maxlen * 0.5):
-            self._compute_next_waypoints(k=20)
 
         if len(self.waypoints_queue) == 0:
             control = carla.VehicleControl()
@@ -243,11 +204,12 @@ class LocalPlanner(object):
         # Target waypoint
         self.target_waypoint, self.target_road_option = self._waypoint_buffer[0]
 
-        args_lat = self.args_lat_city_dict
-        args_long = self.args_long_city_dict
         if target_speed > 50:
             args_lat = self.args_lat_hw_dict
             args_long = self.args_long_hw_dict
+        else:
+            args_lat = self.args_lat_city_dict
+            args_long = self.args_long_city_dict
 
         self._pid_controller = VehiclePIDController(self._vehicle,
                                                     args_lateral=args_lat,
@@ -268,56 +230,6 @@ class LocalPlanner(object):
                 self._waypoint_buffer.popleft()
 
         if debug:
-            draw_waypoints(self._vehicle.get_world(), \
-            [self.target_waypoint], 1.0)
+            draw_waypoints(self._vehicle.get_world(),
+                           [self.target_waypoint], 1.0)
         return control
-
-
-def _retrieve_options(list_waypoints, current_waypoint):
-    """
-    Compute the type of connection between the current active waypoint
-    and the multiple waypoints present in list_waypoints.
-    The result is encoded as a list of RoadOption enums.
-
-        :param list_waypoints: list with the possible target waypoints in case of multiple options
-        :param current_waypoint: current active waypoint
-        :return: list of RoadOption enums representing the type of connection from the
-                active waypoint to each candidate in list_waypoints
-    """
-    options = []
-    for next_waypoint in list_waypoints:
-        # This is needed because something we are linking to
-        # the beggining of an intersection, therefore the
-        # variation in angle is small.
-        next_next_waypoint = next_waypoint.next(3.0)[0]
-        link = _compute_connection(current_waypoint, next_next_waypoint)
-        options.append(link)
-
-    return options
-
-
-def _compute_connection(current_waypoint, next_waypoint):
-    """
-    Compute the type of topological connection between an
-    active waypoint (current_waypoint) and a target waypoint (next_waypoint).
-
-        :param current_waypoint: active waypoint
-        :param next_waypoint: target waypoint
-        :return: the type of topological connection encoded as a RoadOption enum:
-             RoadOption.STRAIGHT
-             RoadOption.LEFT
-             RoadOption.RIGHT
-    """
-    n_wpt = next_waypoint.transform.rotation.yaw
-    n_wpt = n_wpt % 360.0
-
-    c_wpt = current_waypoint.transform.rotation.yaw
-    c_wpt = c_wpt % 360.0
-
-    diff_angle = (n_wpt - c_wpt) % 180.0
-    if diff_angle < 1.0:
-        return RoadOption.STRAIGHT
-    elif diff_angle > 90.0:
-        return RoadOption.LEFT
-    else:
-        return RoadOption.RIGHT
