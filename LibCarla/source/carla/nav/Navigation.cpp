@@ -10,6 +10,7 @@
 
 #include "carla/Logging.h"
 #include "carla/nav/Navigation.h"
+#include "carla/nav/WalkerManager.h"
 #include "carla/geom/Math.h"
 
 #include <iterator>
@@ -18,16 +19,6 @@
 
 namespace carla {
 namespace nav {
-
-  enum SamplePolyAreas {
-    SAMPLE_POLYAREA_GROUND,
-    SAMPLE_POLYAREA_WATER,
-    SAMPLE_POLYAREA_ROAD,
-    SAMPLE_POLYAREA_DOOR,
-    SAMPLE_POLYAREA_GRASS,
-    SAMPLE_POLYAREA_JUMP,
-   	SAMPLE_POLYAREA_CROSS
-  };
 
   enum SamplePolyFlags {
     SAMPLE_POLYFLAGS_WALK       = 0x01,   // Ability to walk (ground, grass,
@@ -69,11 +60,17 @@ namespace nav {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
   }
 
+  Navigation::Navigation() {
+    // assign walker manager
+    _walkerManager.SetNav(this);
+  }
+
   Navigation::~Navigation() {
     _ready = false;
     _timeToUnblock = 0.0f;
     _mappedWalkersId.clear();
     _mappedVehiclesId.clear();
+    _mappedByIndex.clear();
     _walkersBlockedPosition.clear();
     _yaw_walkers.clear();
     _binaryMesh.clear();
@@ -263,20 +260,21 @@ namespace nav {
   }
 
   // return the path points to go from one position to another
-  bool Navigation::GetPath(carla::geom::Location from, carla::geom::Location to,
-  dtQueryFilter * filter, std::vector<carla::geom::Location> &path) {
+  bool Navigation::GetPath(carla::geom::Location from, 
+                           carla::geom::Location to,
+                           dtQueryFilter * filter, 
+                           std::vector<carla::geom::Location> &path, 
+                           std::vector<unsigned char> &area) {
     // path found
     float m_straightPath[MAX_POLYS * 3];
     unsigned char m_straightPathFlags[MAX_POLYS];
     dtPolyRef m_straightPathPolys[MAX_POLYS];
     int m_nstraightPath;
-    int m_straightPathOptions = 0;
+    int m_straightPathOptions = DT_STRAIGHTPATH_AREA_CROSSINGS;
+
     // polys in path
     dtPolyRef m_polys[MAX_POLYS];
     int m_npolys;
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -305,14 +303,22 @@ namespace nav {
     dtPolyRef m_endRef = 0;
     float m_spos[3] = { from.x, from.z, from.y };
     float m_epos[3] = { to.x, to.z, to.y };
-    _navQuery->findNearestPoly(m_spos, m_polyPickExt, filter, &m_startRef, 0);
-    _navQuery->findNearestPoly(m_epos, m_polyPickExt, filter, &m_endRef, 0);
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->findNearestPoly(m_spos, m_polyPickExt, filter, &m_startRef, 0);
+      _navQuery->findNearestPoly(m_epos, m_polyPickExt, filter, &m_endRef, 0);
+    }
     if (!m_startRef || !m_endRef) {
       return false;
     }
 
-    // get the path of nodes
-    _navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, filter, m_polys, &m_npolys, MAX_POLYS);
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      // get the path of nodes
+      _navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, filter, m_polys, &m_npolys, MAX_POLYS);
+    }
 
     // get the path of points
     m_nstraightPath = 0;
@@ -325,20 +331,138 @@ namespace nav {
     float epos[3];
     dtVcopy(epos, m_epos);
     if (m_polys[m_npolys - 1] != m_endRef) {
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
       _navQuery->closestPointOnPoly(m_polys[m_npolys - 1], m_epos, epos, 0);
     }
 
     // get the points
-    _navQuery->findStraightPath(m_spos, epos, m_polys, m_npolys,
-    m_straightPath, m_straightPathFlags,
-    m_straightPathPolys, &m_nstraightPath, MAX_POLYS, m_straightPathOptions);
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->findStraightPath(m_spos, epos, m_polys, m_npolys,
+      m_straightPath, m_straightPathFlags,
+      m_straightPathPolys, &m_nstraightPath, MAX_POLYS, m_straightPathOptions);
+    }
 
     // copy the path to the output buffer
     path.clear();
     path.reserve(static_cast<unsigned long>(m_nstraightPath));
-    for (int i = 0; i < m_nstraightPath * 3; i += 3) {
-      // export for Unreal axis (x, z, y)
+    unsigned char areaType;
+    for (int i = 0, j = 0; j < m_nstraightPath; i += 3, ++j) {
+      // save coordinate for Unreal axis (x, z, y)
       path.emplace_back(m_straightPath[i], m_straightPath[i + 2], m_straightPath[i + 1]);
+      // save area type
+      { 
+        // critical section, force single thread running this
+        std::lock_guard<std::mutex> lock(_mutex);
+        _navMesh->getPolyArea(m_straightPathPolys[j], &areaType);
+      }
+      area.emplace_back(areaType);
+    }
+
+    return true;
+  }
+
+  bool Navigation::GetAgentRoute(ActorId id, carla::geom::Location from, carla::geom::Location to,
+  std::vector<carla::geom::Location> &path, std::vector<unsigned char> &area) {
+    // path found
+    float m_straightPath[MAX_POLYS * 3];
+    unsigned char m_straightPathFlags[MAX_POLYS];
+    dtPolyRef m_straightPathPolys[MAX_POLYS];
+    int m_nstraightPath;
+    int m_straightPathOptions = DT_STRAIGHTPATH_AREA_CROSSINGS;
+
+    // polys in path
+    dtPolyRef m_polys[MAX_POLYS];
+    int m_npolys;
+
+    // check if all is ready
+    if (!_ready) {
+      return false;
+    }
+
+    DEBUG_ASSERT(_navQuery != nullptr);
+
+    // point extension
+    float m_polyPickExt[3];
+    m_polyPickExt[0] = 2;
+    m_polyPickExt[1] = 4;
+    m_polyPickExt[2] = 2;
+
+    // get current filter from agent
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end())
+      return false;
+
+    const dtQueryFilter *filter;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      filter = _crowd->getFilter(_crowd->getAgent(it->second)->params.queryFilterType);
+    }
+
+    // set the points
+    dtPolyRef m_startRef = 0;
+    dtPolyRef m_endRef = 0;
+    float m_spos[3] = { from.x, from.z, from.y };
+    float m_epos[3] = { to.x, to.z, to.y };
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->findNearestPoly(m_spos, m_polyPickExt, filter, &m_startRef, 0);
+      _navQuery->findNearestPoly(m_epos, m_polyPickExt, filter, &m_endRef, 0);
+    }
+    if (!m_startRef || !m_endRef) {
+      return false;
+    }
+
+    // get the path of nodes
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, filter, m_polys, &m_npolys, MAX_POLYS);
+    }
+
+    // get the path of points
+    m_nstraightPath = 0;
+    if (m_npolys == 0) {
+      return false;
+    }
+
+    // in case of partial path, make sure the end point is clamped to the last
+    // polygon
+    float epos[3];
+    dtVcopy(epos, m_epos);
+    if (m_polys[m_npolys - 1] != m_endRef) {
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->closestPointOnPoly(m_polys[m_npolys - 1], m_epos, epos, 0);
+    }
+
+    // get the points
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _navQuery->findStraightPath(m_spos, epos, m_polys, m_npolys,
+      m_straightPath, m_straightPathFlags,
+      m_straightPathPolys, &m_nstraightPath, MAX_POLYS, m_straightPathOptions);
+    }
+
+    // copy the path to the output buffer
+    path.clear();
+    path.reserve(static_cast<unsigned long>(m_nstraightPath));
+    unsigned char areaType;
+    for (int i = 0, j = 0; j < m_nstraightPath; i += 3, ++j) {
+      // save coordinate for Unreal axis (x, z, y)
+      path.emplace_back(m_straightPath[i], m_straightPath[i + 2], m_straightPath[i + 1]);
+      // save area type
+      { 
+        // critical section, force single thread running this
+        std::lock_guard<std::mutex> lock(_mutex);
+        _navMesh->getPolyArea(m_straightPathPolys[j], &areaType);
+      }
+      area.emplace_back(areaType);
     }
 
     return true;
@@ -347,9 +471,6 @@ namespace nav {
   // create a new walker in crowd
   bool Navigation::AddWalker(ActorId id, carla::geom::Location from) {
     dtCrowdAgentParams params;
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -367,7 +488,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = params.radius * 10.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.5f + (frand() * 0.5f);
+    params.separationWeight = 0.25f + (frand() * 0.25f);
 
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
@@ -388,16 +509,25 @@ namespace nav {
     // (unreal) to bottom (recast))
     float PointFrom[3] = { from.x, from.z - (AGENT_HEIGHT / 2.0f), from.y };
     // add walker
-    int index = _crowd->addAgent(PointFrom, &params);
-    if (index == -1) {
-      return false;
+    int index;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      index = _crowd->addAgent(PointFrom, &params);
+      if (index == -1) {
+        return false;
+      }
     }
 
     // save the id
     _mappedWalkersId[id] = index;
+    _mappedByIndex[index] = id;
 
     // init yaw
     _yaw_walkers[id] = 0.0f;
+
+    // add walker for the route planning
+    _walkerManager.AddWalker(id, from);
 
     return true;
   }
@@ -406,9 +536,6 @@ namespace nav {
   bool Navigation::AddOrUpdateVehicle(VehicleCollisionInfo &vehicle) {
     namespace cg = carla::geom;
     dtCrowdAgentParams params;
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -444,7 +571,12 @@ namespace nav {
       int index = it->second;
       if (index != -1) {
         // get the agent
-        dtCrowdAgent *agent = _crowd->getEditableAgent(index);
+        dtCrowdAgent *agent;
+        { 
+          // critical section, force single thread running this
+          std::lock_guard<std::mutex> lock(_mutex);
+          agent = _crowd->getEditableAgent(index);
+        }
         if (agent) {
           // update its position
           agent->npos[0] = vehicle.transform.location.x;
@@ -509,29 +641,32 @@ namespace nav {
                            vehicle.transform.location.y };
 
     // add walker
-    int index = _crowd->addAgent(PointFrom, &params);
-    if (index == -1) {
-      logging::log("Vehicle agent not added to the crowd by some problem!");
-      return false;
-    }
+    int index;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      index = _crowd->addAgent(PointFrom, &params);
+      if (index == -1) {
+        logging::log("Vehicle agent not added to the crowd by some problem!");
+        return false;
+      }
 
-    // mark as valid
-    dtCrowdAgent *agent = _crowd->getEditableAgent(index);
-    if (agent) {
-      agent->state = DT_CROWDAGENT_STATE_WALKING;
+      // mark as valid
+      dtCrowdAgent *agent = _crowd->getEditableAgent(index);
+      if (agent) {
+        agent->state = DT_CROWDAGENT_STATE_WALKING;
+      }
     }
 
     // save the id
     _mappedVehiclesId[vehicle.id] = index;
+    _mappedByIndex[index] = vehicle.id;
 
     return true;
   }
 
   // remove an agent
   bool Navigation::RemoveAgent(ActorId id) {
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -544,10 +679,16 @@ namespace nav {
     auto it = _mappedWalkersId.find(id);
     if (it != _mappedWalkersId.end()) {
       // remove from crowd
-      _crowd->removeAgent(it->second);
-      // logging::log("Nav: removing walker agent", id);
+      { 
+        // critical section, force single thread running this
+        std::lock_guard<std::mutex> lock(_mutex);
+        _crowd->removeAgent(it->second);
+      }
+      _walkerManager.RemoveWalker(it->second);
+      logging::log("Nav: removing walker agent", id);
       // remove from mapping
       _mappedWalkersId.erase(it);
+      _mappedByIndex.erase(it->second);
 
       return true;
     }
@@ -556,10 +697,15 @@ namespace nav {
     it = _mappedVehiclesId.find(id);
     if (it != _mappedVehiclesId.end()) {
       // remove from crowd
-      _crowd->removeAgent(it->second);
+      { 
+        // critical section, force single thread running this
+        std::lock_guard<std::mutex> lock(_mutex);
+        _crowd->removeAgent(it->second);
+      }
       // logging::log("Nav: removing vehicle agent", id);
       // remove from mapping
       _mappedVehiclesId.erase(it);
+      _mappedByIndex.erase(it->second);
 
       return true;
     }
@@ -596,9 +742,6 @@ namespace nav {
   // set new max speed
   bool Navigation::SetWalkerMaxSpeed(ActorId id, float max_speed) {
 
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
-
     // check if all is ready
     if (!_ready) {
       return false;
@@ -613,10 +756,14 @@ namespace nav {
     }
 
     // get the agent
-    dtCrowdAgent *agent = _crowd->getEditableAgent(it->second);
-    if (agent) {
-      agent->params.maxSpeed = max_speed;
-      return true;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      dtCrowdAgent *agent = _crowd->getEditableAgent(it->second);
+      if (agent) {
+        agent->params.maxSpeed = max_speed;
+        return true;
+      }
     }
 
     return false;
@@ -624,6 +771,24 @@ namespace nav {
 
   // set a new target point to go
   bool Navigation::SetWalkerTarget(ActorId id, carla::geom::Location to) {
+
+    logging::log("Set walker target", id);
+    // check if all is ready
+    if (!_ready) {
+      return false;
+    }
+
+    // get the internal index
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
+      return false;
+    }
+
+    return _walkerManager.SetWalkerRoute(id, to);
+  }
+
+  // set a new target point to go directly without events
+  bool Navigation::SetWalkerDirectTarget(ActorId id, carla::geom::Location to) {
 
     // check if all is ready
     if (!_ready) {
@@ -636,18 +801,11 @@ namespace nav {
       return false;
     }
 
-    return SetWalkerTargetIndex(it->second, to);
+    return SetWalkerDirectTargetIndex(it->second, to);
   }
 
-  // set a new target point to go
-  bool Navigation::SetWalkerTargetIndex(int index, carla::geom::Location to, bool use_lock) {
-
-    std::unique_lock<std::mutex> guard(_mutex, std::defer_lock);
-
-    // lock mutex
-    if (use_lock) {
-      guard.lock();
-    }
+  // set a new target point to go directly without events
+  bool Navigation::SetWalkerDirectTargetIndex(int index, carla::geom::Location to) {
 
     // check if all is ready
     if (!_ready) {
@@ -664,23 +822,25 @@ namespace nav {
     // set target position
     float pointTo[3] = { to.x, to.z, to.y };
     float nearest[3];
-    const dtQueryFilter *filter = _crowd->getFilter(0);
-    dtPolyRef targetRef;
-    _navQuery->findNearestPoly(pointTo, _crowd->getQueryHalfExtents(), filter, &targetRef, nearest);
-    if (!targetRef) {
-      return false;
-    }
+    bool res;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      const dtQueryFilter *filter = _crowd->getFilter(0);
+      dtPolyRef targetRef;
+      _navQuery->findNearestPoly(pointTo, _crowd->getQueryHalfExtents(), filter, &targetRef, nearest);
+      if (!targetRef) {
+        return false;
+      }
 
-    bool res = _crowd->requestMoveTarget(index, targetRef, pointTo);
+      res = _crowd->requestMoveTarget(index, targetRef, pointTo);
+    }
 
     return res;
   }
 
   // update all walkers in crowd
   void Navigation::UpdateCrowd(const client::detail::EpisodeState &state) {
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -689,23 +849,41 @@ namespace nav {
 
     DEBUG_ASSERT(_crowd != nullptr);
 
-    // update all
+    // update crowd agents
     _delta_seconds = state.GetTimestamp().delta_seconds;
-    _crowd->update(static_cast<float>(_delta_seconds), nullptr);
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      _crowd->update(static_cast<float>(_delta_seconds), nullptr);
+    }
+
+    // update the walkers route
+    _walkerManager.Update(_delta_seconds);
 
     // update the time to check for blocked agents
     _timeToUnblock += _delta_seconds;
 
-    // check if walker has finished
+    // check all active agents
     int totalUnblocked = 0;
-    for (int i = 0; i < _crowd->getAgentCount(); ++i) {
-      const dtCrowdAgent *ag = _crowd->getAgent(i);
-      if (!ag->active) {
+    int totalAgents;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      totalAgents = _crowd->getAgentCount();
+    }
+    const dtCrowdAgent *ag;
+    for (int i = 0; i < totalAgents; ++i) {
+      { 
+        // critical section, force single thread running this
+        std::lock_guard<std::mutex> lock(_mutex);
+        ag = _crowd->getAgent(i);
+      }
+      if (!ag->active || ag->paused) {
         continue;
       }
 
-      // check only pedestrians, no vehicles
-      if (!ag->params.useObb) {
+      // check only pedestrians not paused, and no vehicles 
+      if (!ag->params.useObb && !ag->paused) {
         bool resetTargetPos = false;
         bool useSameFilter = false;
 
@@ -723,29 +901,22 @@ namespace nav {
           }
           // update with current position
           _walkersBlockedPosition[i] = current;
-        }
 
-        // check distance to the target point
-        const float *end = &ag->cornerVerts[(ag->ncorners - 1) * 3];
-        carla::geom::Vector3D dist(end[0] - ag->npos[0], end[1] - ag->npos[1], end[2] - ag->npos[2]);
-        if (dist.SquaredLength() <= 2) {
-          resetTargetPos = true;
-        }
-
-        // check to assign a new target position
-        if (resetTargetPos) {
-          // set if the agent can cross roads or not
-          if (!useSameFilter) {
-            if (frand() <= _probabilityCrossing) {
-              SetAgentFilter(i, 1);
-            } else {
-              SetAgentFilter(i, 0);
+          // check to assign a new target position
+          if (resetTargetPos) {
+            // set if the agent can cross roads or not
+            if (!useSameFilter) {
+              if (frand() <= _probabilityCrossing) {
+                SetAgentFilter(i, 1);
+              } else {
+                SetAgentFilter(i, 0);
+              }
             }
+            // set a new random target
+            carla::geom::Location location;
+            GetRandomLocation(location, 1, nullptr);
+            _walkerManager.SetWalkerRoute(i, location);
           }
-          // set a new random target
-          carla::geom::Location location;
-          GetRandomLocation(location, 1, nullptr, false);
-          SetWalkerTargetIndex(i, location, false);
         }
       }
     }
@@ -760,9 +931,6 @@ namespace nav {
   // get the walker current transform
   bool Navigation::GetWalkerTransform(ActorId id, carla::geom::Transform &trans) {
 
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
-
     // check if all is ready
     if (!_ready) {
       return false;
@@ -783,7 +951,12 @@ namespace nav {
     }
 
     // get the walker
-    const dtCrowdAgent *agent = _crowd->getAgent(index);
+    const dtCrowdAgent *agent;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getAgent(index);
+    }
 
     if (!agent->active) {
       return false;
@@ -795,21 +968,67 @@ namespace nav {
     trans.location.z = agent->npos[1];
 
     // set its rotation
-    float yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
+    float yaw;
+    if (agent->vel[0] != 0.0f || agent->vel[2] != 0.0f) {
+      yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
+    } else {
+      yaw = atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
+    }
+
+    // interpolate current and target angle
     float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
-    float rotation_speed = 4.0f;
+    float rotation_speed = 8.0f;
     trans.rotation.yaw = _yaw_walkers[id] +
     (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
-
     _yaw_walkers[id] = trans.rotation.yaw;
+
+
+    return true;
+  }
+
+  // get the walker current location
+  bool Navigation::GetWalkerPosition(ActorId id, carla::geom::Location &location) {
+
+    // check if all is ready
+    if (!_ready) {
+      return false;
+    }
+
+    DEBUG_ASSERT(_crowd != nullptr);
+
+    // get the internal index
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
+      return false;
+    }
+
+    // get the index found
+    int index = it->second;
+    if (index == -1) {
+      return false;
+    }
+
+    // get the walker
+    const dtCrowdAgent *agent;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getAgent(index);
+    }
+
+    if (!agent->active) {
+      return false;
+    }
+
+    // set its position in Unreal coordinates
+    location.x = agent->npos[0];
+    location.y = agent->npos[2];
+    location.z = agent->npos[1];
 
     return true;
   }
 
   float Navigation::GetWalkerSpeed(ActorId id) {
-
-    // force single thread running this
-    std::lock_guard<std::mutex> lock(_mutex);
 
     // check if all is ready
     if (!_ready) {
@@ -831,21 +1050,19 @@ namespace nav {
     }
 
     // get the walker
-    const dtCrowdAgent *agent = _crowd->getAgent(index);
+    const dtCrowdAgent *agent;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getAgent(index);
+    }
+
     return sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] *
     agent->vel[2]);
   }
 
   // get a random location for navigation
-  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter,
-  bool use_lock) const {
-
-    std::unique_lock<std::mutex> guard(_mutex, std::defer_lock);
-
-    // lock mutex
-    if (use_lock) {
-      guard.lock();
-    }
+  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter) const {
 
     // check if all is ready
     if (!_ready) {
@@ -866,19 +1083,23 @@ namespace nav {
     dtPolyRef randomRef { 0 };
     float point[3] { 0.0f, 0.0f, 0.0f };
 
-    do {
-      dtStatus status = _navQuery->findRandomPoint(filter, frand, &randomRef, point);
-      if (status == DT_SUCCESS) {
-        // set the location in Unreal coords
-        location.x = point[0];
-        location.y = point[2];
-        location.z = point[1];
-        // check for max height (to avoid roofs, it is a workaround until next version)
-        if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight)) {
-          break;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      do {
+        dtStatus status = _navQuery->findRandomPoint(filter, frand, &randomRef, point);
+        if (status == DT_SUCCESS) {
+          // set the location in Unreal coords
+          location.x = point[0];
+          location.y = point[2];
+          location.z = point[1];
+          // check for max height (to avoid roofs, it is a workaround until next version)
+          if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight)) {
+            break;
+          }
         }
-      }
-    } while (1);
+      } while (1);
+    }
 
     return true;
   }
@@ -887,7 +1108,12 @@ namespace nav {
   void Navigation::SetAgentFilter(int agentIndex, int filterIndex)
   {
     // get the walker
-    dtCrowdAgent *agent = _crowd->getEditableAgent(agentIndex);
+    dtCrowdAgent *agent;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getEditableAgent(agentIndex);
+    }
     agent->params.queryFilterType = static_cast<unsigned char>(filterIndex);
   }
 
@@ -898,6 +1124,39 @@ namespace nav {
   void Navigation::SetPedestriansCrossFactor(float percentage)
   {
     _probabilityCrossing = percentage;
+  }
+
+  /// set an agent as paused for the crowd
+  void Navigation::PauseAgent(ActorId id, bool pause) {
+    // check if all is ready
+    if (!_ready) {
+      return;
+    }
+
+    DEBUG_ASSERT(_crowd != nullptr);
+
+    // get the internal index
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
+      return;
+    }
+
+    // get the index found
+    int index = it->second;
+    if (index == -1) {
+      return;
+    }
+
+    // get the walker
+    dtCrowdAgent *agent;
+    { 
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getEditableAgent(index);
+    }
+
+    // mark
+    agent->paused = pause;
   }
 
 } // namespace nav
