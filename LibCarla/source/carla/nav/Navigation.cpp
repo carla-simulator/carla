@@ -51,7 +51,7 @@ namespace nav {
 
   static const float AGENT_UNBLOCK_DISTANCE = 1.0f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
-  static const float AGENT_UNBLOCK_TIME = 3.0f;
+  static const float AGENT_UNBLOCK_TIME = 2.0f;
 
   static const float AREA_ROAD_COST = 10.0f;
 
@@ -545,8 +545,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 1.0f;
-    float hy = vehicle.bounding.extent.y + 1.0f;
+    float hx = vehicle.bounding.extent.x + 1.5f;
+    float hy = vehicle.bounding.extent.y + 1.5f;
     // define the 4 corners of the bounding box
     cg::Vector3D boxCorner1 {-hx, -hy, 0};
     cg::Vector3D boxCorner2 { hx, -hy, 0};
@@ -609,7 +609,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 5.0f;
+    params.separationWeight = 10.0f;
 
     // flags
     params.updateFlags = 0;
@@ -772,7 +772,6 @@ namespace nav {
   // set a new target point to go
   bool Navigation::SetWalkerTarget(ActorId id, carla::geom::Location to) {
 
-    logging::log("Set walker target", id);
     // check if all is ready
     if (!_ready) {
       return false;
@@ -969,7 +968,9 @@ namespace nav {
 
     // set its rotation
     float yaw;
-    if (agent->vel[0] != 0.0f || agent->vel[2] != 0.0f) {
+    float min = 0.2f;
+    if (agent->vel[0] < -min || agent->vel[0] > min ||
+        agent->vel[2] < -min || agent->vel[2] > min) {
       yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
     } else {
       yaw = atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
@@ -977,7 +978,7 @@ namespace nav {
 
     // interpolate current and target angle
     float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
-    float rotation_speed = 8.0f;
+    float rotation_speed = 6.0f;
     trans.rotation.yaw = _yaw_walkers[id] +
     (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
     _yaw_walkers[id] = trans.rotation.yaw;
