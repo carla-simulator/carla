@@ -14,6 +14,8 @@
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/WalkerControl.h"
 
+#include <sstream>
+
 namespace carla {
 namespace client {
 namespace detail {
@@ -98,8 +100,8 @@ namespace detail {
     // update the vehicles found
     _nav.UpdateVehicles(vehicles);
 
-    // draw for debug
     /*
+    // draw vehicle bounding boxes for debug
     if (_nav.GetCrowd() == nullptr) return;
     for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
       // get the agent
@@ -140,7 +142,28 @@ namespace detail {
         _client.DrawDebugShape(line1);
       }
     }
-  */
+    */
+    /*
+    // draw speed text for debug
+    if (_nav.GetCrowd() == nullptr) return;
+    for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
+      // get the agent
+      const dtCrowdAgent *agent = _nav.GetCrowd()->getAgent(i);
+      if (agent) {
+        // draw for debug
+        carla::geom::Location p1(agent->npos[0], agent->npos[2], agent->npos[1] + 1);
+        float speed = carla::geom::Vector3D(agent->vel[0], agent->vel[1], agent->vel[2]).Length();
+        std::ostringstream out;
+        out << speed;
+        carla::rpc::DebugShape text;
+        text.life_time = 0.01f;
+        text.persistent_lines = false;
+        text.primitive = std::move(carla::rpc::DebugShape::String {p1, out.str(), false});
+        text.color = { 0, 255, 0 };
+        _client.DrawDebugShape(text);
+      }
+    }
+    */
   }
 
 } // namespace detail

@@ -11,6 +11,7 @@
 #include "carla/geom/BoundingBox.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
+#include "carla/nav/WalkerManager.h"
 #include "carla/rpc/ActorId.h"
 #include <recast/Recast.h>
 #include <recast/DetourCrowd.h>
@@ -21,6 +22,16 @@
 
 namespace carla {
 namespace nav {
+
+  enum SamplePolyAreas {
+    SAMPLE_POLYAREA_GROUND,
+    SAMPLE_POLYAREA_WATER,
+    SAMPLE_POLYAREA_ROAD,
+    SAMPLE_POLYAREA_DOOR,
+    SAMPLE_POLYAREA_GRASS,
+    SAMPLE_POLYAREA_JUMP,
+   	SAMPLE_POLYAREA_CROSS
+  };
 
   /// struct to send info about vehicles to the crowd
   struct VehicleCollisionInfo {
@@ -37,7 +48,7 @@ namespace nav {
 
   public:
 
-    Navigation() = default;
+    Navigation();
     ~Navigation();
 
     /// load navigation data
@@ -46,7 +57,9 @@ namespace nav {
     bool Load(std::vector<uint8_t> content);
     /// return the path points to go from one position to another
     bool GetPath(carla::geom::Location from, carla::geom::Location to, dtQueryFilter * filter,
-    std::vector<carla::geom::Location> &path);
+    std::vector<carla::geom::Location> &path, std::vector<unsigned char> &area);
+    bool GetAgentRoute(ActorId id, carla::geom::Location from, carla::geom::Location to,
+    std::vector<carla::geom::Location> &path, std::vector<unsigned char> &area);
 
     /// create the crowd object
     void CreateCrowd(void);
@@ -60,28 +73,37 @@ namespace nav {
     bool UpdateVehicles(std::vector<VehicleCollisionInfo> vehicles);
     /// set new max speed
     bool SetWalkerMaxSpeed(ActorId id, float max_speed);
-    /// set a new target point to go
+    /// set a new target point to go through a route with events
     bool SetWalkerTarget(ActorId id, carla::geom::Location to);
-    bool SetWalkerTargetIndex(int index, carla::geom::Location to, bool use_lock = true);
+    // set a new target point to go directly without events
+    bool SetWalkerDirectTarget(ActorId id, carla::geom::Location to);
+    bool SetWalkerDirectTargetIndex(int index, carla::geom::Location to);
     /// get the walker current transform
     bool GetWalkerTransform(ActorId id, carla::geom::Transform &trans);
+    /// get the walker current location
+    bool GetWalkerPosition(ActorId id, carla::geom::Location &location);
     /// get the walker current transform
     float GetWalkerSpeed(ActorId id);
     /// update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
     /// get a random location for navigation
     bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
-    dtQueryFilter * filter = nullptr, bool use_lock = true) const;
+    dtQueryFilter * filter = nullptr) const;
     /// set the probability that an agent could cross the roads in its path following
     void SetPedestriansCrossFactor(float percentage);
+    /// set an agent as paused for the crowd
+    void PauseAgent(ActorId id, bool pause);
 
     dtCrowd *GetCrowd() { return _crowd; };
+
+    /// return the last delta seconds
+    double GetDeltaSeconds() { return _delta_seconds; };
 
   private:
 
     bool _ready { false };
     std::vector<uint8_t> _binaryMesh;
-    double _delta_seconds;
+    double _delta_seconds { 0.0 };
     /// meshes
     dtNavMesh *_navMesh { nullptr };
     dtNavMeshQuery *_navQuery { nullptr };
@@ -90,11 +112,16 @@ namespace nav {
     /// mapping Id
     std::unordered_map<ActorId, int> _mappedWalkersId;
     std::unordered_map<ActorId, int> _mappedVehiclesId;
+    // mapping by index also
+    std::unordered_map<int, ActorId> _mappedByIndex;
     /// store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
     /// saves the position of each actor at intervals and check if any is blocked
     std::unordered_map<int, carla::geom::Vector3D> _walkersBlockedPosition;
-    double _timeToUnblock;
+    double _timeToUnblock { 0.0 };
+
+    /// walker manager for the route planning with events
+    WalkerManager _walkerManager;
 
     mutable std::mutex _mutex;
 
