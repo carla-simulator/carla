@@ -124,7 +124,8 @@ namespace nav {
                 // stop and check
                 case SAMPLE_POLYAREA_ROAD:
                 case SAMPLE_POLYAREA_CROSS: 
-                    info.route.emplace_back(WalkerEventStopAndCheck(4), std::move(path[i]));
+                    // info.route.emplace_back(WalkerEventStopAndCheck(4), std::move(path[i]));
+                    info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
                     break;
                 
                 default:
