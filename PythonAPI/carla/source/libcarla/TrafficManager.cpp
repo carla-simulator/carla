@@ -4,7 +4,7 @@
 #include "carla/PythonUtil.h"
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 
-#include "carla/trafficmanager/Pipeline.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 void export_trafficmanager() {
     namespace cc = carla::client;
@@ -12,15 +12,15 @@ void export_trafficmanager() {
     using ActorList = std::vector<carla::SharedPtr<cc::Actor>>;
     using Parameters = std::vector<float>;
 
-    class_<ActorList>("actor_list").def(vector_indexing_suite<ActorList>());
+    class_<ActorList>("TM_ActorList").def(vector_indexing_suite<ActorList>());
 
-    class_<Parameters>("parameters").def(vector_indexing_suite<Parameters>());
+    class_<Parameters>("TM_Parameters").def(vector_indexing_suite<Parameters>());
 
-    class_<traffic_manager::Pipeline, boost::noncopyable>(
-        "traffic_manager", init<Parameters, Parameters, Parameters, float, float, cc::Client&>())
-        .def("register_vehicles", &traffic_manager::Pipeline::RegisterVehicles)
-        .def("unregister_vehicles", &traffic_manager::Pipeline::UnregisterVehicles)
-        .def("start", &traffic_manager::Pipeline::Start)
-        .def("stop", &traffic_manager::Pipeline::Stop);
+    class_<traffic_manager::TrafficManager, boost::noncopyable>(
+        "TrafficManager", init<Parameters, Parameters, Parameters, float, float, cc::Client&>())
+        .def("register_vehicles", &traffic_manager::TrafficManager::RegisterVehicles)
+        .def("unregister_vehicles", &traffic_manager::TrafficManager::UnregisterVehicles)
+        .def("start", &traffic_manager::TrafficManager::Start)
+        .def("stop", &traffic_manager::TrafficManager::Stop);
 
 }

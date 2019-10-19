@@ -14,7 +14,7 @@
 #include "carla/Memory.h"
 #include "carla/rpc/Command.h"
 
-#include "carla/trafficmanager/Pipeline.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 static uint MINIMUM_NUMBER_OF_VEHICLES = 100u;
 
@@ -148,7 +148,7 @@ void destroy_traffic(std::vector<Actor> &actor_list, cc::Client &client) {
 }
 
 
-void run_pipeline(cc::World &world, cc::Client &client_conn, ulong target_traffic_amount) {
+void run_TrafficManager(cc::World &world, cc::Client &client_conn, ulong target_traffic_amount) {
 
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -162,7 +162,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, ulong target_traffi
 
   client_conn.SetTimeout(std::chrono::seconds(2));
 
-  traffic_manager::Pipeline pipeline(
+  traffic_manager::TrafficManager TrafficManager(
       {0.1f, 0.15f, 0.01f},
       {5.0f, 0.0f, 0.1f},
       {10.0f, 0.01f, 0.1f},
@@ -173,11 +173,11 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, ulong target_traffi
 
   try {
 
-    pipeline.Start();
+    TrafficManager.Start();
 
     // Delayed vehicles' registration for demonstration.
     sleep(1);
-    pipeline.RegisterVehicles(registered_actors);
+    TrafficManager.RegisterVehicles(registered_actors);
 
     carla::log_info("TrafficManager started\n");
 
@@ -191,7 +191,7 @@ void run_pipeline(cc::World &world, cc::Client &client_conn, ulong target_traffi
     carla::log_error("Carla has stopped running, stopping TrafficManager\n");
   }
 
-  pipeline.Stop();
+  TrafficManager.Stop();
 
   destroy_traffic(registered_actors, client_conn);
 
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
       std::srand(static_cast<uint>(abs(randomization_seed)));
     }
 
-    run_pipeline(world, client_conn, target_traffic_amount);
+    run_TrafficManager(world, client_conn, target_traffic_amount);
   }
 
   return 0;

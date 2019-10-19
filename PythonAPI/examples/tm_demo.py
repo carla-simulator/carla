@@ -109,19 +109,19 @@ def main():
 
         print('Spawned %d vehicles, press Ctrl+C to exit.\n' % (len(vehicle_list)))
 
-        long_pid = carla.parameters()
-        long_high_pid = carla.parameters()
-        lat_pid = carla.parameters()
+        long_pid = carla.TM_Parameters()
+        long_high_pid = carla.TM_Parameters()
+        lat_pid = carla.TM_Parameters()
 
         long_pid.extend([0.1, 0.15, 0.01])
         long_high_pid.extend([5.0, 0.0, 0.1])
         lat_pid.extend([10.0, 0.01, 0.1])
 
-        traffic_manager = carla.traffic_manager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client)
+        traffic_manager = carla.TrafficManager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client)
         traffic_manager.start()
         time.sleep(1)
 
-        vehicle_vec = carla.actor_list()
+        vehicle_vec = carla.TM_ActorList()
         vehicle_vec.extend(vehicle_list)
 
         traffic_manager.register_vehicles(vehicle_vec)
