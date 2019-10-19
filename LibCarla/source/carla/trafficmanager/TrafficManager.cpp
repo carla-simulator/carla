@@ -1,8 +1,8 @@
-#include "Pipeline.h"
+#include "TrafficManager.h"
 
 namespace traffic_manager {
 
-  Pipeline::Pipeline(
+  TrafficManager::TrafficManager(
       std::vector<float> longitudinal_PID_parameters,
       std::vector<float> longitudinal_highway_PID_parameters,
       std::vector<float> lateral_PID_parameters,
@@ -60,15 +60,15 @@ namespace traffic_manager {
         planner_control_messenger, client_connection);
   }
 
-  void Pipeline::RegisterVehicles(std::vector<ActorPtr> actor_list) {
+  void TrafficManager::RegisterVehicles(std::vector<ActorPtr> actor_list) {
     registered_actors.Insert(actor_list);
   }
 
-  void Pipeline::UnregisterVehicles(std::vector<ActorPtr> actor_list) {
+  void TrafficManager::UnregisterVehicles(std::vector<ActorPtr> actor_list) {
     registered_actors.Remove(actor_list);
   }
 
-  void Pipeline::Start() {
+  void TrafficManager::Start() {
 
     localization_collision_messenger->Start();
     localization_traffic_light_messenger->Start();
@@ -84,7 +84,7 @@ namespace traffic_manager {
     control_stage->Start();
   }
 
-  void Pipeline::Stop() {
+  void TrafficManager::Stop() {
 
     localization_collision_messenger->Stop();
     localization_traffic_light_messenger->Stop();
