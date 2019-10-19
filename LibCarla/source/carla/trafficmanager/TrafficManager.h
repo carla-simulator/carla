@@ -14,14 +14,14 @@
 #include "carla/Logging.h"
 #include "carla/Memory.h"
 
-#include "AtomicActorSet.h"
-#include "BatchControlStage.h"
-#include "CarlaDataAccessLayer.h"
-#include "CollisionStage.h"
-#include "InMemoryMap.h"
-#include "LocalizationStage.h"
-#include "MotionPlannerStage.h"
-#include "TrafficLightStage.h"
+#include "carla/trafficmanager/AtomicActorSet.h"
+#include "carla/trafficmanager/BatchControlStage.h"
+#include "carla/trafficmanager/CarlaDataAccessLayer.h"
+#include "carla/trafficmanager/CollisionStage.h"
+#include "carla/trafficmanager/InMemoryMap.h"
+#include "carla/trafficmanager/LocalizationStage.h"
+#include "carla/trafficmanager/MotionPlannerStage.h"
+#include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace traffic_manager {
 
@@ -31,7 +31,7 @@ namespace cc = carla::client;
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers.
-  class Pipeline {
+  class TrafficManager {
 
   private:
 
@@ -39,19 +39,16 @@ namespace cc = carla::client;
     std::vector<float> longitudinal_PID_parameters;
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
-    /// Target velocities.
-    float highway_target_velocity;
-    float urban_target_velocity;
     /// Set of all actors registered with traffic manager.
     AtomicActorSet registered_actors;
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
-    /// Carla's debug helper object.
-    cc::DebugHelper debug_helper;
     /// Carla's client connection object.
     cc::Client client_connection;
     /// Carla's world object.
     cc::World world;
+    /// Carla's debug helper object.
+    cc::DebugHelper debug_helper;
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;
@@ -68,7 +65,7 @@ namespace cc = carla::client;
 
   public:
 
-    Pipeline(std::vector<float> longitudinal_PID_parameters,
+    TrafficManager(std::vector<float> longitudinal_PID_parameters,
              std::vector<float> longitudinal_highway_PID_parameters,
              std::vector<float> lateral_PID_parameters,
              float urban_target_velocity,
@@ -81,10 +78,10 @@ namespace cc = carla::client;
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(std::vector<ActorPtr> actor_list);
 
-    /// To start the pipeline.
+    /// To start the TrafficManager.
     void Start();
 
-    /// To stop the pipeline.
+    /// To stop the TrafficManager.
     void Stop();
 
   };
