@@ -16,6 +16,7 @@ namespace PlannerConstants {
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
+      AtomicMap<ActorId, float>& vehicle_target_velocity,
       float urban_target_velocity = 25 / 3.6f,
       float highway_target_velocity = 50 / 3.6f,
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
@@ -25,6 +26,7 @@ namespace PlannerConstants {
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       control_messenger(control_messenger),
+      vehicle_target_velocity(vehicle_target_velocity),
       urban_target_velocity(urban_target_velocity),
       highway_target_velocity(highway_target_velocity),
       longitudinal_parameters(longitudinal_parameters),
@@ -53,7 +55,7 @@ namespace PlannerConstants {
     // Selecting an output frame.
     auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
 
-    // Looping over arrays' partitions for the current thread.
+    // Looping over all vehicles.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
       LocalizationToPlannerData &localization_data = localization_frame->at(i);
@@ -83,6 +85,11 @@ namespace PlannerConstants {
         longitudinal_parameters = highway_longitudinal_parameters;
       }
 
+      // Set vehicle specific target velocity.
+      if (vehicle_target_velocity.Contains(actor_id)) {
+        dynamic_target_velocity = vehicle_target_velocity.GetValue(actor_id);
+      }
+
       // Decrease speed approaching an intersection.
       if (localization_data.approaching_true_junction) {
         dynamic_target_velocity = INTERSECTION_APPROACH_SPEED;
@@ -103,7 +110,7 @@ namespace PlannerConstants {
           longitudinal_parameters,
           lateral_parameters);
 
-      // In case of collision or traffic light or approaching a junction.
+      // In case of collision or traffic light
       if ((collision_frame != nullptr && traffic_light_frame != nullptr) &&
           ((collision_messenger_state != 0 && collision_frame->at(i).hazard) ||
           (traffic_light_messenger_state != 0 &&
