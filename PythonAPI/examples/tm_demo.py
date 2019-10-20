@@ -86,7 +86,6 @@ def main():
         # Spawn vehicles
         # --------------
 
-        batch = []
         for n, transform in enumerate(spawn_points):
             if n >= args.number_of_vehicles:
                 break
@@ -100,12 +99,6 @@ def main():
             blueprint.set_attribute('role_name', 'autopilot')
             vehicle = world.try_spawn_actor(blueprint, transform)
             vehicle_list.append(vehicle)
-
-        for response in client.apply_batch_sync(batch):
-            if response.error:
-                logging.error(response.error)
-            else:
-                vehicle_list.append(response.actor_id)
 
         print('Spawned %d vehicles, press Ctrl+C to exit.\n' % (len(vehicle_list)))
 
@@ -125,6 +118,12 @@ def main():
         vehicle_vec.extend(vehicle_list)
 
         traffic_manager.register_vehicles(vehicle_vec)
+
+        # Arbitrarily setting some vehicle velocities to 15kmph
+        time.sleep(1)
+        for v in vehicle_list:
+            if (v.id % 2 == 0):
+                traffic_manager.set_vehicle_target_velocity(v.id, 15.0/3.6)
 
         while True:
             time.sleep(1)

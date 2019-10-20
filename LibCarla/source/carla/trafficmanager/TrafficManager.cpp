@@ -50,6 +50,7 @@ namespace traffic_manager {
         collision_planner_messenger,
         traffic_light_planner_messenger,
         planner_control_messenger,
+        vehicle_target_velocity,
         urban_target_velocity,
         highway_target_velocity,
         longitudinal_PID_parameters,
@@ -98,6 +99,11 @@ namespace traffic_manager {
     traffic_light_stage->Stop();
     planner_stage->Stop();
     control_stage->Stop();
+  }
+
+  void TrafficManager::SetVehicleTargetVelocity(ActorId actor_id, float velocity) {
+
+    vehicle_target_velocity.AddEntry({actor_id, velocity});
   }
 
 }
