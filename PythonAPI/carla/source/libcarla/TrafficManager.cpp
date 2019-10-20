@@ -21,6 +21,7 @@ void export_trafficmanager() {
         .def("register_vehicles", &traffic_manager::TrafficManager::RegisterVehicles)
         .def("unregister_vehicles", &traffic_manager::TrafficManager::UnregisterVehicles)
         .def("start", &traffic_manager::TrafficManager::Start)
-        .def("stop", &traffic_manager::TrafficManager::Stop);
+        .def("stop", &traffic_manager::TrafficManager::Stop)
+        .def("set_vehicle_target_velocity", &traffic_manager::TrafficManager::SetVehicleTargetVelocity);
 
 }

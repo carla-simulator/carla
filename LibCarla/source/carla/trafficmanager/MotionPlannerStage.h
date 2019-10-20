@@ -7,6 +7,7 @@
 #include "carla/client/Vehicle.h"
 #include "carla/rpc/Actor.h"
 
+#include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/PIDController.h"
 #include "carla/trafficmanager/PipelineStage.h"
@@ -49,6 +50,8 @@ namespace cc = carla::client;
     /// Map to store states for integral and differential components
     /// of the PID controller for every vehicle
     std::unordered_map<ActorId, StateEntry> pid_state_map;
+    /// Target velocities for specific vehicles.
+    AtomicMap<ActorId, float>& vehicle_target_velocity;
     /// Target velocities.
     float urban_target_velocity;
     float highway_target_velocity;
@@ -61,18 +64,19 @@ namespace cc = carla::client;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
 
+
   public:
 
-    MotionPlannerStage(
-        std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
-        std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
-        std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
-        std::shared_ptr<PlannerToControlMessenger> control_messenger,
-        float urban_target_velocity,
-        float highway_target_velocity,
-        std::vector<float> longitudinal_parameters,
-        std::vector<float> highway_longitudinal_parameters,
-        std::vector<float> lateral_parameters);
+    MotionPlannerStage(std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+                       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+                       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
+                       std::shared_ptr<PlannerToControlMessenger> control_messenger,
+                       AtomicMap<ActorId, float>& vehicle_target_velocity,
+                       float urban_target_velocity,
+                       float highway_target_velocity,
+                       std::vector<float> longitudinal_parameters,
+                       std::vector<float> highway_longitudinal_parameters,
+                       std::vector<float> lateral_parameters);
 
     ~MotionPlannerStage();
 
