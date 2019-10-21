@@ -359,38 +359,6 @@ class BehaviorAgent(Agent):
 
         return control
 
-    def walker_following_manager(self, distance, debug=False):
-        """
-        Module in charge of car-following behaviors when there's
-        someone in front of us.
-
-            :param vehicle: car to follow
-            :param distance: distance from vehicle
-            :param debug: boolean for debugging
-            :return control: carla.VehicleControl
-        """
-
-        walker_speed = 1.4 / 3.6  # Fixed speed of walker is 1.4 m/s
-        delta_v = max(1, (self.speed - walker_speed) / 3.6)
-        ttc = distance / delta_v if delta_v != 0 else distance / np.nextafter(0., 1.)
-
-        # Under safety time distance, slow down.
-        if self.behavior.safety_time > ttc > 0.0:
-            control = self._local_planner.run_step(
-                target_speed=min(positive(walker_speed - self.behavior.speed_decrease),
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
-        # Actual safety distance area, try to follow the speed of the vehicle in front.
-        elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
-            control = self._local_planner.run_step(
-                target_speed=min(max(self.min_speed, walker_speed - self.behavior.speed_decrease / 2),
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
-        # Normal behavior.
-        else:
-            control = self._local_planner.run_step(
-                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
-
-        return control
-
     def run_step(self, debug=False):
         """
         Execute one step of navigation.
@@ -412,23 +380,23 @@ class BehaviorAgent(Agent):
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
             return self.emergency_stop()
 
-        # 2.1: Pedestrian avoidancd behaviors, commented until release
+        # 2.1: Pedestrian avoidancd behaviors
 
-        #walker_state, walker, w_distance = self.pedestrian_avoid_manager(ego_vehicle_loc, ego_vehicle_wp)
+        walker_state, walker, w_distance = self.pedestrian_avoid_manager(
+            ego_vehicle_loc, ego_vehicle_wp)
 
-        # elif walker_state:
+        if walker_state:
             # Distance is computed from the center of the two cars,
             # we use bounding boxes to calculate the actual distance
-            # distance = w_distance - max(walker.bounding_box.extent.y, walker.bounding_box.extent.x) - max(
-            # self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
+            distance = w_distance - max(
+                walker.bounding_box.extent.y, walker.bounding_box.extent.x) - max(
+                    self.vehicle.bounding_box.extent.y, self.vehicle.bounding_box.extent.x)
 
             # Emergency brake if the car is very close.
-            # if distance < self.behavior.braking_distance:
-            # return self.emergency_stop()
-            # else:
-            #control = self.walker_following_manager(distance)
+            if distance < self.behavior.braking_distance:
+                return self.emergency_stop()
 
-        # 3: Car following behaviors
+        # 2.2: Car following behaviors
         vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(
             ego_vehicle_loc, ego_vehicle_wp)
 
