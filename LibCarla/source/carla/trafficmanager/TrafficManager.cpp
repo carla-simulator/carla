@@ -36,11 +36,11 @@ namespace traffic_manager {
         localization_planner_messenger, localization_collision_messenger,
         localization_traffic_light_messenger,
         registered_actors, *local_map.get(),
-        debug_helper);
+        force_lane_change, debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
         localization_collision_messenger, collision_planner_messenger,
-        world, debug_helper);
+        world, ignore_collision, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         localization_traffic_light_messenger, traffic_light_planner_messenger);
@@ -65,8 +65,8 @@ namespace traffic_manager {
     registered_actors.Insert(actor_list);
   }
 
-  void TrafficManager::UnregisterVehicles(std::vector<ActorPtr> actor_list) {
-    registered_actors.Remove(actor_list);
+  void TrafficManager::UnregisterVehicles(std::vector<ActorId> actor_ids) {
+    registered_actors.Remove(actor_ids);
   }
 
   void TrafficManager::Start() {
@@ -114,19 +114,30 @@ namespace traffic_manager {
     if (detect_collision) {
 
       if (ignore_collision.Contains(reference_id)) {
-        AtomicActorSet& actor_set = ignore_collision.GetValue(reference_id);
-        if (actor_set.Contains(other_id)) {
-          actor_set.Remove({other_id});
+        std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
+        if (actor_set->Contains(other_id)) {
+          actor_set->Remove({other_id});
         }
       }
     } else {
 
       if (ignore_collision.Contains(reference_id)) {
-        AtomicActorSet& actor_set = ignore_collision.GetValue(reference_id);
-        if (!actor_set.Contains(other_id)) {
-          actor_set.Insert({other_id});
+        std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
+        if (!actor_set->Contains(other_id)) {
+          actor_set->Insert({other_actor});
         }
+      } else {
+        std::shared_ptr<AtomicActorSet> actor_set = std::make_shared<AtomicActorSet>();
+        actor_set->Insert({other_actor});
+        auto entry = std::make_pair(reference_id, actor_set);
+        ignore_collision.AddEntry(entry);
       }
     }
+  }
+
+  void TrafficManager::ForceLaneChange(ActorPtr actor, bool direction) {
+
+    auto entry = std::make_pair(actor->GetId(), direction);
+    force_lane_change.AddEntry(entry);
   }
 }

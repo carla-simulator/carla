@@ -79,14 +79,14 @@ namespace TrafficDistributorConstants {
     }
   }
 
-  std::shared_ptr<SimpleWaypoint>
-  TrafficDistributor::AssignLaneChange(
+  std::shared_ptr<SimpleWaypoint> TrafficDistributor::AssignLaneChange(
       Actor vehicle,
       std::shared_ptr<SimpleWaypoint> current_waypoint,
       GeoIds current_road_ids,
       std::shared_ptr<BufferList> buffer_list,
       std::unordered_map<ActorId, uint> &vehicle_id_to_index,
-      std::vector<carla::SharedPtr<cc::Actor>> &actor_list) {
+      std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
+      bool force, bool direction) {
 
     ActorId actor_id = vehicle->GetId();
     cg::Location vehicle_location = vehicle->GetLocation();
@@ -101,7 +101,7 @@ namespace TrafficDistributorConstants {
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
     // Don't try to change lane if the current lane has less than two vehicles.
-    if (co_lane_vehicles.size() >= 2) {
+    if (co_lane_vehicles.size() >= 2 && !force) {
 
       // Check if any vehicle in the current lane is blocking us.
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
@@ -156,6 +156,10 @@ namespace TrafficDistributorConstants {
           }
         }
       }
+    } else if (force) {
+
+      need_to_change_lane = true;
+      lane_change_direction = direction;
     }
 
     // Change the distance to the target point on the target lane
@@ -186,7 +190,7 @@ namespace TrafficDistributorConstants {
 
         // If target lane has vehicles, check if there are any obstacles
         // for lane change execution.
-        if (target_lane_vehicles.size() > 0) {
+        if (target_lane_vehicles.size() > 0 && !force) {
 
           bool found_hazard = false;
           for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
