@@ -44,11 +44,11 @@ namespace cc = carla::client;
             ++state_counter;
         }
 
-        void Remove(std::vector<ActorPtr> actor_list) {
+        void Remove(std::vector<ActorId> actor_ids) {
 
             std::lock_guard<std::mutex> lock(modification_mutex);
-            for (auto &actor: actor_list) {
-                actor_set.erase(actor->GetId());
+            for (auto& id: actor_ids) {
+                actor_set.erase(id);
             }
             ++state_counter;
         }
@@ -59,6 +59,10 @@ namespace cc = carla::client;
             return state_counter;
         }
 
+        bool Contains(ActorId id) {
+            
+            return actor_set.find(id) != actor_set.end();
+        }
     };
 
 }
