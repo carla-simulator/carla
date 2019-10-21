@@ -18,12 +18,14 @@ namespace LocalizationConstants {
       std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
       AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
+      AtomicMap<ActorId, bool>& lane_change_command,
       cc::DebugHelper &debug_helper)
     : planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       registered_actors(registered_actors),
       local_map(local_map),
+      lane_change_command(lane_change_command),
       debug_helper(debug_helper) {
 
     // Initializing various output frame selectors.
@@ -113,14 +115,20 @@ namespace LocalizationConstants {
           actor_id,
           current_road_ids);
 
-      if (!front_waypoint->CheckJunction()) {
+      bool force_lane_change = false;
+      bool lane_change_direction = false;
+      if (lane_change_command.Contains(actor_id)) {
+        force_lane_change = true;
+        lane_change_direction = lane_change_command.GetValue(actor_id);
+        lane_change_command.RemoveEntry(actor_id);
+      }
+
+      if (!front_waypoint->CheckJunction() || force_lane_change) {
+
         SimpleWaypointPtr change_over_point = traffic_distributor.AssignLaneChange(
-            vehicle,
-            front_waypoint,
-            current_road_ids,
-            current_buffer_list,
-            vehicle_id_to_index,
-            actor_list);
+            vehicle, front_waypoint, current_road_ids,
+            current_buffer_list, vehicle_id_to_index,
+            actor_list, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
           waypoint_buffer.clear();

@@ -98,13 +98,16 @@ namespace cg = carla::geom;
 
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
     /// if Lane Change is required and possible, else returns nullptr.
+    /// Lane change can be forced by setting the force flag and providing
+    /// direction using direction flag (true -> left, false -> right)
     std::shared_ptr<SimpleWaypoint> AssignLaneChange(
         Actor vehicle,
         std::shared_ptr<SimpleWaypoint> current_waypoint,
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<ActorId, uint> &vehicle_id_to_index,
-        std::vector<Actor> &actor_list);
+        std::vector<Actor> &actor_list,
+        bool force = false, bool direction = false);
   };
 
 }

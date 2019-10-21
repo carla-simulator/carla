@@ -33,4 +33,10 @@ public:
         return map.at(key);
     };
 
+    void RemoveEntry(const Key& key) {
+
+        std::lock_guard<std::mutex> lock(map_mutex);
+        map.erase(key);
+    }
+
 };
