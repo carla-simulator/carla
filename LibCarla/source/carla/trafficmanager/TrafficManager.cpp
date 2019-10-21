@@ -35,7 +35,7 @@ namespace traffic_manager {
         localization_planner_messenger, localization_collision_messenger,
         localization_traffic_light_messenger,
         registered_actors, *local_map.get(),
-        force_lane_change, debug_helper);
+        force_lane_change, auto_lane_change, debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
         localization_collision_messenger, collision_planner_messenger,
@@ -141,5 +141,11 @@ namespace traffic_manager {
 
     auto entry = std::make_pair(actor->GetId(), direction);
     force_lane_change.AddEntry(entry);
+  }
+
+  void TrafficManager::AutoLaneChange(ActorPtr actor, bool enable) {
+
+    auto entry = std::make_pair(actor->GetId(), enable);
+    auto_lane_change.AddEntry(entry);
   }
 }

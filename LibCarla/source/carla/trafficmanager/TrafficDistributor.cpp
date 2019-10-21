@@ -158,7 +158,6 @@ namespace TrafficDistributorConstants {
         }
       }
     } else if (force) {
-
       need_to_change_lane = true;
       lane_change_direction = direction;
     }
@@ -181,7 +180,6 @@ namespace TrafficDistributorConstants {
       }
 
       if (change_over_point != nullptr) {
-
         carla::road::LaneId lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
         traffic_manager::ActorIDSet target_lane_vehicles = GetVehicleIds({
           current_road_ids.road_id,
