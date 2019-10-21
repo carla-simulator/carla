@@ -69,6 +69,8 @@ namespace cc = carla::client;
     AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
     /// Map containing force lane change commands.
     AtomicMap<ActorId, bool> force_lane_change;
+    /// Map containing auto lane change commands.
+    AtomicMap<ActorId, bool> auto_lane_change;
 
   public:
 
@@ -102,6 +104,8 @@ namespace cc = carla::client;
     /// Direction flag can be set to true for left and false for right.
     void ForceLaneChange(ActorPtr actor, bool direction);
 
+    /// Enable / disable automatic lane change on a vehicle.
+    void AutoLaneChange(ActorPtr actor, bool enable);
   };
 
 }
