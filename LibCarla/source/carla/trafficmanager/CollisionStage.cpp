@@ -18,10 +18,12 @@ namespace CollisionStageConstants {
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       cc::World &world,
+      AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>>& selective_collision,
       cc::DebugHelper &debug_helper)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       world(world),
+      selective_collision(selective_collision),
       debug_helper(debug_helper){
 
     // Initializing clock for checking unregistered actors periodically.
@@ -89,7 +91,9 @@ namespace CollisionStageConstants {
         ActorId actor_id = *j;
         try {
 
-          if (actor_id != ego_actor_id) {
+          if (actor_id != ego_actor_id &&
+              !(selective_collision.Contains(ego_actor_id) &&
+              selective_collision.GetValue(ego_actor_id)->Contains(actor_id))) {
 
             Actor actor = nullptr;
             if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {

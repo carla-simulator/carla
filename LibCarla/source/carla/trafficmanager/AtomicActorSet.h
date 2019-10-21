@@ -60,7 +60,7 @@ namespace cc = carla::client;
         }
 
         bool Contains(ActorId id) {
-            
+
             return actor_set.find(id) != actor_set.end();
         }
     };

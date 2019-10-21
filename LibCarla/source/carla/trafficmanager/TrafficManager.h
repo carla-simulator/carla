@@ -63,10 +63,12 @@ namespace cc = carla::client;
     std::unique_ptr<LocalizationStage> localization_stage;
     std::unique_ptr<MotionPlannerStage> planner_stage;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
-    /// Target velocity map for inidividual vehicles.
+    /// Target velocity map for individual vehicles.
     AtomicMap<ActorId, float> vehicle_target_velocity;
     /// Map containing a set of actors to be ignored during collision detection.
-    AtomicMap<ActorId, AtomicActorSet> ignore_collision;
+    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
+    /// Map containing force lane change commands.
+    AtomicMap<ActorId, bool> force_lane_change;
 
   public:
 
@@ -81,7 +83,7 @@ namespace cc = carla::client;
     void RegisterVehicles(std::vector<ActorPtr> actor_list);
 
     /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
+    void UnregisterVehicles(std::vector<ActorId> actor_ids);
 
     /// To start the TrafficManager.
     void Start();
@@ -94,6 +96,10 @@ namespace cc = carla::client;
 
     /// Set collision detection rules between vehicles.
     void SetCollisionDetection(ActorPtr reference_actor, ActorPtr other_actor, bool detect_collision);
+
+    /// Method to force lane change on a vehicle.
+    /// Direction flag can be set to true for left and false for right.
+    void ForceLaneChange(ActorPtr actor, bool direction);
   };
 
 }
