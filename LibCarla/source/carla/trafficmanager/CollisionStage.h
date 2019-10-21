@@ -13,6 +13,7 @@
 #include "boost/pointer_cast.hpp"
 #include "carla/client/ActorList.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
 #include "carla/client/World.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
@@ -66,7 +67,8 @@ namespace bg = boost::geometry;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// An object used for grid binning vehicles for faster proximity detection.
-    VicinityGrid vicinity_grid;
+    VicinityGrid vicinity_grid1;
+    VicinityGrid vicinity_grid2;
     /// The map used to connect actor ids to the array index of data frames.
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// A structure used to keep track of actors spawned outside of traffic
@@ -74,6 +76,9 @@ namespace bg = boost::geometry;
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// An object used to keep track of time between checking for all world
     /// actors.
+
+    std::unordered_map<ActorId, Actor> walkers_list;
+    ///
     chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;

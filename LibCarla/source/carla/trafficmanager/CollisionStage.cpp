@@ -52,6 +52,7 @@ namespace CollisionStageConstants {
     // Periodically check for actors not spawned by TrafficManager.
     if (diff.count() > 0.5f) {
       auto world_actors = world.GetActors()->Filter("vehicle.*");
+      auto world_walker = world.GetActors()->Filter("walker");
       for (auto actor: *world_actors.get()) {
         auto unregistered_id = actor->GetId();
         if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
@@ -59,6 +60,14 @@ namespace CollisionStageConstants {
           unregistered_actors.insert({unregistered_id, actor});
         }
       }
+    //
+      for (auto walker: *world_walker.get()) {
+        auto unregistered_id = walker->GetId();
+        if (walkers_list.find(unregistered_id) == walkers_list.end()) {
+          walkers_list.insert({unregistered_id, walker});
+        }
+      }
+
       last_world_actors_pass_instance = current_time;
     }
 
@@ -66,14 +75,28 @@ namespace CollisionStageConstants {
     std::vector<ActorId> actor_ids_to_erase;
     for (auto actor_info: unregistered_actors) {
       if (actor_info.second->IsAlive()) {
-        vicinity_grid.UpdateGrid(actor_info.second);
+        vicinity_grid1.UpdateGrid(actor_info.second);
       } else {
-        vicinity_grid.EraseActor(actor_info.first);
+        vicinity_grid1.EraseActor(actor_info.first);
         actor_ids_to_erase.push_back(actor_info.first);
       }
     }
     for (auto actor_id: actor_ids_to_erase) {
       unregistered_actors.erase(actor_id);
+    }
+
+    // Regularly update walkers_list.
+    std::vector<ActorId> walker_ids_to_erase;
+    for (auto actor_info: walkers_list) {
+      if (actor_info.second->IsAlive()) {
+        vicinity_grid2.UpdateGrid(actor_info.second);
+      } else {
+        vicinity_grid2.EraseActor(actor_info.first);
+        walker_ids_to_erase.push_back(actor_info.first);
+      }
+    }
+    for (auto actor_id: walker_ids_to_erase) {
+      walkers_list.erase(actor_id);
     }
 
     // Looping over registered actors.
@@ -84,7 +107,9 @@ namespace CollisionStageConstants {
       ActorId ego_actor_id = ego_actor->GetId();
 
       // Retrieve actors around ego actor.
-      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
+      std::unordered_set<ActorId> actor_id_list = vicinity_grid1.GetActors(ego_actor);
+      std::unordered_set<ActorId> walker_id_list = vicinity_grid2.GetActors(ego_actor);
+      actor_id_list.insert(walker_id_list.begin(), walker_id_list.end());
       bool collision_hazard = false;
 
       // Check every actor in the vicinity if it poses a collision hazard.
@@ -101,8 +126,9 @@ namespace CollisionStageConstants {
               actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
             } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
               actor = unregistered_actors.at(actor_id);
+            } else if (walkers_list.find(actor_id) != walkers_list.end()) {
+              actor = walkers_list.at(actor_id);
             }
-
             float squared_distance =
                 cg::Math::DistanceSquared(ego_actor->GetLocation(), actor->GetLocation());
             if (squared_distance <= SEARCH_RADIUS * SEARCH_RADIUS) {
@@ -294,12 +320,23 @@ namespace CollisionStageConstants {
   }
 
   LocationList CollisionStage::GetBoundary(const Actor &actor) const {
+    auto actor_type = actor->GetTypeId();
 
-    auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-    cg::BoundingBox bbox = vehicle->GetBoundingBox();
+    cg::BoundingBox bbox;
+    cg::Location location;
+    cg::Vector3D heading_vector;
+
+    if (actor_type[0] =='v') {
+      auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+      bbox = vehicle->GetBoundingBox();
+      heading_vector = vehicle->GetTransform().GetForwardVector();
+    } else if (actor_type[0] =='w') {
+      auto walker = boost::static_pointer_cast<cc::Walker>(actor);
+      bbox = walker->GetBoundingBox();
+      heading_vector = walker->GetTransform().GetForwardVector();
+    }
+
     cg::Vector3D extent = bbox.extent;
-    cg::Location location = vehicle->GetLocation();
-    cg::Vector3D heading_vector = vehicle->GetTransform().GetForwardVector();
     heading_vector.z = 0;
     cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0);
 
