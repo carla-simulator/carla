@@ -9,7 +9,6 @@
 """ This module contains a local planner to perform
 low-level waypoint following based on PID controllers. """
 
-import random
 from collections import deque
 from enum import Enum
 
