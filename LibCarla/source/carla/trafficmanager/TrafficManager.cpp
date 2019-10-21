@@ -106,4 +106,27 @@ namespace traffic_manager {
     vehicle_target_velocity.AddEntry({actor_id, velocity});
   }
 
+  void TrafficManager::SetCollisionDetection(ActorPtr reference_actor, ActorPtr other_actor, bool detect_collision) {
+
+    ActorId reference_id = reference_actor->GetId();
+    ActorId other_id = other_actor->GetId();
+
+    if (detect_collision) {
+
+      if (ignore_collision.Contains(reference_id)) {
+        AtomicActorSet& actor_set = ignore_collision.GetValue(reference_id);
+        if (actor_set.Contains(other_id)) {
+          actor_set.Remove({other_id});
+        }
+      }
+    } else {
+
+      if (ignore_collision.Contains(reference_id)) {
+        AtomicActorSet& actor_set = ignore_collision.GetValue(reference_id);
+        if (!actor_set.Contains(other_id)) {
+          actor_set.Insert({other_id});
+        }
+      }
+    }
+  }
 }

@@ -65,6 +65,8 @@ namespace cc = carla::client;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
     /// Target velocity map for inidividual vehicles.
     AtomicMap<ActorId, float> vehicle_target_velocity;
+    /// Map containing a set of actors to be ignored during collision detection.
+    AtomicMap<ActorId, AtomicActorSet> ignore_collision;
 
   public:
 
@@ -90,6 +92,8 @@ namespace cc = carla::client;
     /// Set target velocity specific to a vehicle.
     void SetVehicleTargetVelocity(ActorId actor_id, float velocity);
 
+    /// Set collision detection rules between vehicles.
+    void SetCollisionDetection(ActorPtr reference_actor, ActorPtr other_actor, bool detect_collision);
   };
 
 }
