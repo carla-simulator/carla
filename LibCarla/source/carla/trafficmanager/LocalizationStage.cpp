@@ -19,6 +19,7 @@ namespace LocalizationConstants {
       AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
       AtomicMap<ActorId, bool> &lane_change_command,
+      AtomicMap<ActorId, bool> &auto_lane_change,
       cc::DebugHelper &debug_helper)
     : planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
@@ -26,6 +27,7 @@ namespace LocalizationConstants {
       registered_actors(registered_actors),
       local_map(local_map),
       lane_change_command(lane_change_command),
+      auto_lane_change(auto_lane_change),
       debug_helper(debug_helper) {
 
     // Initializing various output frame selectors.
@@ -124,7 +126,10 @@ namespace LocalizationConstants {
         lane_change_command.RemoveEntry(actor_id);
       }
 
-      if (!front_waypoint->CheckJunction() || force_lane_change) {
+      if ((!(auto_lane_change.Contains(actor_id) &&
+             !auto_lane_change.GetValue(actor_id)) &&
+           !front_waypoint->CheckJunction()) ||
+          force_lane_change) {
 
         SimpleWaypointPtr change_over_point = traffic_distributor.AssignLaneChange(
             vehicle, front_waypoint, current_road_ids,

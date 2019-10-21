@@ -24,5 +24,6 @@ void export_trafficmanager() {
         .def("stop", &traffic_manager::TrafficManager::Stop)
         .def("set_vehicle_target_velocity", &traffic_manager::TrafficManager::SetVehicleTargetVelocity)
         .def("set_collision_detection", &traffic_manager::TrafficManager::SetCollisionDetection)
-        .def("force_lane_change", &traffic_manager::TrafficManager::ForceLaneChange);
+        .def("force_lane_change", &traffic_manager::TrafficManager::ForceLaneChange)
+        .def("set_auto_lane_change", &traffic_manager::TrafficManager::AutoLaneChange);
 }

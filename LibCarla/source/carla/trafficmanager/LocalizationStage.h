@@ -71,6 +71,8 @@ namespace cc = carla::client;
     InMemoryMap &local_map;
     /// Force lane change command map.
     AtomicMap<ActorId, bool> &lane_change_command;
+    /// Auto lane change command map.
+    AtomicMap<ActorId, bool> &auto_lane_change;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// Structures to hold waypoint buffers for all vehicles.
@@ -97,6 +99,7 @@ namespace cc = carla::client;
         AtomicActorSet &registered_actors,
         InMemoryMap &local_map,
         AtomicMap<ActorId, bool> &lane_change_command,
+        AtomicMap<ActorId, bool> &auto_lane_change,
         cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
