@@ -70,7 +70,7 @@ namespace cc = carla::client;
     /// Reference to local map-cache object.
     InMemoryMap &local_map;
     /// Force lane change command map.
-    AtomicMap<ActorId, bool>& lane_change_command;
+    AtomicMap<ActorId, bool> &lane_change_command;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// Structures to hold waypoint buffers for all vehicles.
@@ -90,13 +90,14 @@ namespace cc = carla::client;
 
   public:
 
-    LocalizationStage(std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-                      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-                      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-                      AtomicActorSet &registered_actors,
-                      InMemoryMap &local_map,
-                      AtomicMap<ActorId, bool>& lane_change_command,
-                      cc::DebugHelper &debug_helper);
+    LocalizationStage(
+        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+        AtomicActorSet &registered_actors,
+        InMemoryMap &local_map,
+        AtomicMap<ActorId, bool> &lane_change_command,
+        cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
 

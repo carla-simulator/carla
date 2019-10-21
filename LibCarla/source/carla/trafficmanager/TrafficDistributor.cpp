@@ -86,7 +86,8 @@ namespace TrafficDistributorConstants {
       std::shared_ptr<BufferList> buffer_list,
       std::unordered_map<ActorId, uint> &vehicle_id_to_index,
       std::vector<carla::SharedPtr<cc::Actor>> &actor_list,
-      bool force, bool direction) {
+      bool force,
+      bool direction) {
 
     ActorId actor_id = vehicle->GetId();
     cg::Location vehicle_location = vehicle->GetLocation();

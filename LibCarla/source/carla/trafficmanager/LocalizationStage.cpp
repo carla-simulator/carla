@@ -18,7 +18,7 @@ namespace LocalizationConstants {
       std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
       AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
-      AtomicMap<ActorId, bool>& lane_change_command,
+      AtomicMap<ActorId, bool> &lane_change_command,
       cc::DebugHelper &debug_helper)
     : planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
@@ -71,7 +71,8 @@ namespace LocalizationConstants {
       Buffer &waypoint_buffer = current_buffer_list->at(i);
       Buffer &copy_waypoint_buffer = copy_buffer_list->at(i);
 
-      // Synchronizing buffer copies in case the path of the vehicle has changed.
+      // Synchronizing buffer copies in case the path of the vehicle has
+      // changed.
       if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
           ((copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
           != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
@@ -138,7 +139,7 @@ namespace LocalizationConstants {
 
       // Populating the buffer.
       while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-             <= std::pow(horizon_size, 2)) {
+          <= std::pow(horizon_size, 2)) {
 
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint selection_index = 0u;
@@ -152,7 +153,7 @@ namespace LocalizationConstants {
 
       // Generating output.
       float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
-                                             TARGET_WAYPOINT_HORIZON_LENGTH);
+          TARGET_WAYPOINT_HORIZON_LENGTH);
       SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
       for (uint j = 0u;
           (j < waypoint_buffer.size()) &&

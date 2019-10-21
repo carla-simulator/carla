@@ -72,12 +72,13 @@ namespace cc = carla::client;
 
   public:
 
-    TrafficManager(std::vector<float> longitudinal_PID_parameters,
-                   std::vector<float> longitudinal_highway_PID_parameters,
-                   std::vector<float> lateral_PID_parameters,
-                   float urban_target_velocity,
-                   float highway_target_velocity,
-                   cc::Client &client_connection);
+    TrafficManager(
+        std::vector<float> longitudinal_PID_parameters,
+        std::vector<float> longitudinal_highway_PID_parameters,
+        std::vector<float> lateral_PID_parameters,
+        float urban_target_velocity,
+        float highway_target_velocity,
+        cc::Client &client_connection);
 
     /// This method registers a vehicle with the traffic manager.
     void RegisterVehicles(std::vector<ActorPtr> actor_list);
@@ -100,6 +101,7 @@ namespace cc = carla::client;
     /// Method to force lane change on a vehicle.
     /// Direction flag can be set to true for left and false for right.
     void ForceLaneChange(ActorPtr actor, bool direction);
+
   };
 
 }
