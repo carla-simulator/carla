@@ -24,7 +24,6 @@ namespace traffic_manager {
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
     local_map->SetUp(1.0);
 
-
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
     localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
     collision_planner_messenger = std::make_shared<CollisionToPlannerMessenger>();
@@ -106,7 +105,10 @@ namespace traffic_manager {
     vehicle_target_velocity.AddEntry({actor_id, velocity});
   }
 
-  void TrafficManager::SetCollisionDetection(ActorPtr reference_actor, ActorPtr other_actor, bool detect_collision) {
+  void TrafficManager::SetCollisionDetection(
+      ActorPtr reference_actor,
+      ActorPtr other_actor,
+      bool detect_collision) {
 
     ActorId reference_id = reference_actor->GetId();
     ActorId other_id = other_actor->GetId();

@@ -21,7 +21,8 @@ namespace cc = carla::client;
   using ActorId = carla::rpc::ActorId;
 
   /// The class is responsible for aggregating information from various stages
-  /// like the localization stage, traffic light stage, collision detection stage
+  /// like the localization stage, traffic light stage, collision detection
+  /// stage
   /// and actuation signals from the PID controller and makes decisions on
   /// how to move the vehicle to follow it's trajectory safely.
   class MotionPlannerStage : public PipelineStage {
@@ -51,7 +52,7 @@ namespace cc = carla::client;
     /// of the PID controller for every vehicle
     std::unordered_map<ActorId, StateEntry> pid_state_map;
     /// Target velocities for specific vehicles.
-    AtomicMap<ActorId, float>& vehicle_target_velocity;
+    AtomicMap<ActorId, float> &vehicle_target_velocity;
     /// Target velocities.
     float urban_target_velocity;
     float highway_target_velocity;
@@ -64,19 +65,19 @@ namespace cc = carla::client;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
 
-
   public:
 
-    MotionPlannerStage(std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
-                       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
-                       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
-                       std::shared_ptr<PlannerToControlMessenger> control_messenger,
-                       AtomicMap<ActorId, float>& vehicle_target_velocity,
-                       float urban_target_velocity,
-                       float highway_target_velocity,
-                       std::vector<float> longitudinal_parameters,
-                       std::vector<float> highway_longitudinal_parameters,
-                       std::vector<float> lateral_parameters);
+    MotionPlannerStage(
+        std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+        std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+        std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
+        std::shared_ptr<PlannerToControlMessenger> control_messenger,
+        AtomicMap<ActorId, float> &vehicle_target_velocity,
+        float urban_target_velocity,
+        float highway_target_velocity,
+        std::vector<float> longitudinal_parameters,
+        std::vector<float> highway_longitudinal_parameters,
+        std::vector<float> lateral_parameters);
 
     ~MotionPlannerStage();
 

@@ -49,9 +49,9 @@ namespace PIDControllerConstants {
 
     // Longitudinal PID calculation.
     float expr_v = longitudinal_parameters[0] * present_state.velocity +
-    longitudinal_parameters[1] * present_state.velocity_integral +
-    longitudinal_parameters[2] * (present_state.velocity -
-    previous_state.velocity) / dt;
+        longitudinal_parameters[1] * present_state.velocity_integral +
+        longitudinal_parameters[2] * (present_state.velocity -
+        previous_state.velocity) / dt;
 
     float throttle;
     float brake;
@@ -65,10 +65,10 @@ namespace PIDControllerConstants {
     }
 
     // Lateral PID calculation.
-    float steer =lateral_parameters[0] * present_state.deviation +
-    lateral_parameters[1] * present_state.deviation_integral +
-    lateral_parameters[2] * (present_state.deviation -
-    previous_state.deviation) / dt;
+    float steer = lateral_parameters[0] * present_state.deviation +
+        lateral_parameters[1] * present_state.deviation_integral +
+        lateral_parameters[2] * (present_state.deviation -
+        previous_state.deviation) / dt;
 
     steer = std::max(-1.0f, std::min(steer, 1.0f));
 

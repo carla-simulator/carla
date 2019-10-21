@@ -41,7 +41,8 @@ namespace cc = carla::client;
     /// Structure to segregate waypoints according to their geo ids.
     RoadWaypointMap road_to_waypoint;
 
-    /// This method is used to segregate and place waypoints into RoadWaypointMap.
+    /// This method is used to segregate and place waypoints into
+    /// RoadWaypointMap.
     void StructuredWaypoints(SimpleWaypointPtr waypoint);
 
     /// This method is used to place a lane change link between waypoints
@@ -55,13 +56,15 @@ namespace cc = carla::client;
     InMemoryMap(TopologyList topology);
     ~InMemoryMap();
 
-    /// This method constructs the local map with a resolution of sampling_resolution.
+    /// This method constructs the local map with a resolution of
+    /// sampling_resolution.
     void SetUp(int sampling_resolution);
 
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;
 
-    /// This method returns the full list of discrete samples of the map in the local cache.
+    /// This method returns the full list of discrete samples of the map in the
+    /// local cache.
     NodeList GetDenseTopology() const;
 
   };
