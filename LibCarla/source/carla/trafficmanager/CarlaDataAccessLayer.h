@@ -8,7 +8,7 @@
 
 namespace traffic_manager {
 
-  namespace cc = carla::client;
+namespace cc = carla::client;
 
   /// This class is responsible for retrieving data from the server.
   class CarlaDataAccessLayer {

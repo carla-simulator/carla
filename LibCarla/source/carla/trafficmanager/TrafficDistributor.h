@@ -56,7 +56,8 @@ namespace cg = carla::geom;
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorIDSet = std::unordered_set<traffic_manager::ActorId>;
 
-  /// Returns the cross product (z component value) between the vehicle's heading
+  /// Returns the cross product (z component value) between the vehicle's
+  /// heading
   /// vector and the vector along the direction to the next target waypoint on
   /// the horizon.
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
@@ -65,7 +66,8 @@ namespace cg = carla::geom;
   /// the vector along the direction to the next target waypoint on the horizon.
   float DeviationDotProduct(Actor actor, const cg::Location &target_location);
 
-  /// This class keeps track of the vehicle’s positions in road sections, lanes and
+  /// This class keeps track of the vehicle’s positions in road sections, lanes
+  /// and
   /// provides lane change decisions.
   class TrafficDistributor {
 
@@ -107,7 +109,9 @@ namespace cg = carla::geom;
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<ActorId, uint> &vehicle_id_to_index,
         std::vector<Actor> &actor_list,
-        bool force = false, bool direction = false);
+        bool force = false,
+        bool direction = false);
+
   };
 
 }

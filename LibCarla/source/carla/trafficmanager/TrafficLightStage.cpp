@@ -4,8 +4,9 @@ namespace traffic_manager {
 
   static const uint NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
 
-  TrafficLightStage::TrafficLightStage(std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-                                       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger)
+  TrafficLightStage::TrafficLightStage(
+      std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
+      std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger) {
 
@@ -46,7 +47,8 @@ namespace traffic_manager {
       auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
 
-      // We determine to stop if the current position of the vehicle is not a junction,
+      // We determine to stop if the current position of the vehicle is not a
+      // junction,
       // a point on the path beyond a threshold (velocity-dependent) distance
       // is inside the junction and there is a red or yellow light.
       if (ego_vehicle->IsAtTrafficLight() &&
@@ -58,9 +60,9 @@ namespace traffic_manager {
       }
       // Handle entry negotiation at non-signalised junction.
       else if (!ego_vehicle->IsAtTrafficLight() &&
-               !closest_waypoint->CheckJunction() &&
-               look_ahead_point->CheckJunction() &&
-               traffic_light_state != TLS::Green) {
+          !closest_waypoint->CheckJunction() &&
+          look_ahead_point->CheckJunction() &&
+          traffic_light_state != TLS::Green) {
 
         std::lock_guard<std::mutex> lock(no_signal_negotiation_mutex);
 
@@ -80,19 +82,20 @@ namespace traffic_manager {
             need_to_issue_new_ticket = true;
           } else {
 
-            TimeInstance& previous_ticket = vehicle_last_ticket.at(ego_actor_id);
+            TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
             chr::duration<double> diff = current_time - previous_ticket;
             if (diff.count() > NO_SIGNAL_PASSTHROUGH_INTERVAL) {
               need_to_issue_new_ticket = true;
             }
           }
 
-          // If new ticket is needed for the vehicle, then query the junction ticket map
+          // If new ticket is needed for the vehicle, then query the junction
+          // ticket map
           // and update the map value to the new ticket value.
           if (need_to_issue_new_ticket) {
             if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
 
-              TimeInstance& last_ticket = junction_last_ticket.at(junction_id);
+              TimeInstance &last_ticket = junction_last_ticket.at(junction_id);
               chr::duration<double> diff = current_time - last_ticket;
               if (diff.count() > 0) {
                 last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
@@ -102,7 +105,7 @@ namespace traffic_manager {
             } else {
 
               junction_last_ticket.insert({junction_id, current_time +
-                                            chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
+                                           chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
             }
 
             if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
@@ -114,7 +117,7 @@ namespace traffic_manager {
         }
 
         // If current time is behind ticket time, then do not enter junction.
-        TimeInstance& current_ticket = vehicle_last_ticket.at(ego_actor_id);
+        TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
         chr::duration<double> diff = current_ticket - current_time;
         if (diff.count() > 0) {
           traffic_light_hazard = true;

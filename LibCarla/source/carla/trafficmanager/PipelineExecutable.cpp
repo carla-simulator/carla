@@ -53,7 +53,7 @@ std::vector<Actor> spawn_traffic(
   std::vector<Actor> actor_list;
   carla::SharedPtr<cc::Map> world_map = world.GetMap();
 
-  auto max_random = [] (int limit) {return rand()%limit;};
+  auto max_random = [](int limit) {return rand() % limit;};
 
   // Get a random selection of spawn points from the map.
   std::vector<cg::Transform> spawn_points = world_map->GetRecommendedSpawnPoints();
@@ -121,8 +121,8 @@ std::vector<Actor> spawn_traffic(
     std::vector<cc::ActorAttributeValue> actor_attributes = world_vehicle->GetAttributes();
     bool found_traffic_manager_vehicle = false;
     for (auto attribute_iter = actor_attributes.begin();
-         (attribute_iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
-         ++attribute_iter
+        (attribute_iter != actor_attributes.end()) && !found_traffic_manager_vehicle;
+        ++attribute_iter
         ) {
       cc::ActorAttributeValue attribute = *attribute_iter;
       if (attribute.GetValue() == "traffic_manager") {
@@ -137,7 +137,6 @@ std::vector<Actor> spawn_traffic(
   return actor_list;
 }
 
-
 void destroy_traffic(std::vector<Actor> &actor_list, cc::Client &client) {
 
   std::vector<cr::Command> batch_spawn_commands;
@@ -146,7 +145,6 @@ void destroy_traffic(std::vector<Actor> &actor_list, cc::Client &client) {
   }
   client.ApplyBatch(std::move(batch_spawn_commands));
 }
-
 
 void run_TrafficManager(cc::World &world, cc::Client &client_conn, ulong target_traffic_amount) {
 
@@ -157,7 +155,7 @@ void run_TrafficManager(cc::World &world, cc::Client &client_conn, ulong target_
   sigaction(SIGINT, &sa, NULL);
 
   std::vector<Actor> registered_actors = spawn_traffic(
-    client_conn, world, target_traffic_amount);
+      client_conn, world, target_traffic_amount);
   global_actor_list = &registered_actors;
 
   client_conn.SetTimeout(std::chrono::seconds(2));
@@ -186,7 +184,7 @@ void run_TrafficManager(cc::World &world, cc::Client &client_conn, ulong target_
       // Periodically polling to check if Carla is still running.
       world.GetSettings();
     }
-  } catch(const cc::TimeoutException& e) {
+  } catch (const cc::TimeoutException &e) {
 
     carla::log_error("Carla has stopped running, stopping TrafficManager\n");
   }
@@ -197,7 +195,6 @@ void run_TrafficManager(cc::World &world, cc::Client &client_conn, ulong target_
 
   carla::log_info("\nTrafficManager stopped by user\n");
 }
-
 
 int main(int argc, char *argv[]) {
   std::set_terminate(handler);

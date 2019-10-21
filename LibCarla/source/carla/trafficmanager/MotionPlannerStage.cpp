@@ -16,7 +16,7 @@ namespace PlannerConstants {
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
-      AtomicMap<ActorId, float>& vehicle_target_velocity,
+      AtomicMap<ActorId, float> &vehicle_target_velocity,
       float urban_target_velocity = 25 / 3.6f,
       float highway_target_velocity = 50 / 3.6f,
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
@@ -88,6 +88,9 @@ namespace PlannerConstants {
       // Set vehicle specific target velocity.
       if (vehicle_target_velocity.Contains(actor_id)) {
         dynamic_target_velocity = vehicle_target_velocity.GetValue(actor_id);
+        if (dynamic_target_velocity > HIGHWAY_SPEED) {
+          longitudinal_parameters = highway_longitudinal_parameters;
+        }
       }
 
       // Decrease speed approaching an intersection.

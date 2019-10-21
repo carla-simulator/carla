@@ -59,8 +59,9 @@ namespace cg = carla::geom;
 
   public:
 
-    TrafficLightStage(std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-                      std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger);
+    TrafficLightStage(
+        std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
+        std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger);
     ~TrafficLightStage();
 
     void DataReceiver() override;

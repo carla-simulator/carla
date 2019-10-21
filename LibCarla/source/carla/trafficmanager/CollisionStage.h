@@ -62,7 +62,7 @@ namespace bg = boost::geometry;
     /// Reference to Carla's world object.
     cc::World &world;
     /// Map specifying selective collision avoidance rules between vehicles.
-    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>>& selective_collision;
+    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// An object used for grid binning vehicles for faster proximity detection.
@@ -72,7 +72,8 @@ namespace bg = boost::geometry;
     /// A structure used to keep track of actors spawned outside of traffic
     /// manager.
     std::unordered_map<ActorId, Actor> unregistered_actors;
-    /// An object used to keep track of time between checking for all world actors.
+    /// An object used to keep track of time between checking for all world
+    /// actors.
     chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
@@ -107,7 +108,7 @@ namespace bg = boost::geometry;
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
         cc::World &world,
-        AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>>& selective_collision,
+        AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision,
         cc::DebugHelper &debug_helper);
     ~CollisionStage();
 
