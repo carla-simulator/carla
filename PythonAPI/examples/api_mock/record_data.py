@@ -300,7 +300,6 @@ def lane_marking_data(lane_marking):
         'width': lane_marking.width
     }
 
-
 def save_data(path, data):
     with open(path, 'wb') as file:
         print(data, file=file)

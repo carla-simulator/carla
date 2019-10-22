@@ -243,7 +243,7 @@ class BasicSynchronousClient(object):
         """
 
         car_bp = self.world.get_blueprint_library().filter('vehicle.*')[0]
-        car_bp.set_attribute('role_name', "hero")
+        car_bp.set_attribute('role_name', 'hero')
         location = random.choice(self.world.get_map().get_spawn_points())
         self.car = self.world.spawn_actor(car_bp, location)
 
