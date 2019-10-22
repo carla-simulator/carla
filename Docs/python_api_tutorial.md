@@ -664,3 +664,126 @@ for i in range(0, len(all_id), 2):
 # destroy pedestrian (actor and controller)
 client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
 ```
+
+### API mock and recording
+
+Carla API mock allows to record server-client communication, then replay it without the server running.
+
+#### Recording
+
+Recording module saves data received from Carla server for a given configuration of actors and sensors.
+Configuration is stored in `.ini` files. An example with all recording features enabled is shown below:
+
+```
+[rgb camera sensor]
+name=rgb
+type=sensor.camera.rgb
+width=1280
+height=720
+attach.to.role=hero
+attachment.type=SpringArm
+x=-5.5
+z=2.5
+pitch=8.0
+
+[rgb camera sensor standalone]
+name=rgb-standalone
+type=sensor.camera.rgb
+width=1280
+height=720
+x=20
+y=20
+z=20
+pitch=20.0
+
+[depth camera sensor]
+name=depth
+type=sensor.camera.depth
+width=1280
+height=720
+attach.to.role=hero
+attachment.type=SpringArm
+
+[semantic segmentation camera sensor]
+name=semantic-segmentation
+type=sensor.camera.semantic_segmentation
+width=1280
+height=720
+attach.to.role=hero
+attachment.type=SpringArm
+
+[lidar ray cast]
+name=lidar-ray-cast
+type=sensor.lidar.ray_cast
+range=5000
+attach.to.role=hero
+attachment.type=SpringArm
+
+[gnss sensor]
+name=gnss
+type=sensor.other.gnss
+attach.to.role=hero
+
+[lane detector sensor]
+name=lane_detector
+type=sensor.other.lane_invasion
+attach.to.role=hero
+
+[collision sensor]
+name=collision
+type=sensor.other.collision
+attach.to.role=hero
+
+[record all agents data]
+name=agent-all
+type=agent.all
+
+[record world data]
+name=world
+type=world
+```
+
+Sensors configuration must be the same as the one used in a client session to be replayed back.
+Non-sensor data are configured through `agent-all` and `world` entries.
+
+Once simulation and all necessary client-side scripts are running, the recording can be started by:
+
+```sh
+cd PythonAPI/examples/api_mock
+python record_data.py -c <config_file_path> -o <output_dir_path>
+```
+
+#### Replaying
+
+To run client-side script with mocked Python API, directory with the script must contain:
+
+1. target client-side Python script WITHOUT the following "find carla module" part:
+    ```py
+    try:
+        sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+            sys.version_info.major,
+            sys.version_info.minor,
+            'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    except IndexError:
+        pass
+    ```
+2. mocked API package carla (PythonAPI/examples/api_mock/replay/carla/__init__.py) in `carla/` subfolder
+3. `output/` directory with previously recorded data
+
+With the above setup replaying the recorded data to client script will act as Carla server.
+
+Full example with client_bounding_boxes.py:
+
+```sh
+# start Carla
+# start additional scripts like spawn_npc.py, etc.
+# run client_bounding_boxes.py
+
+cd PythonAPI/examples/api_mock
+python record_data.py -c example_recording_config_bounding_boxes.ini -o replay/output
+
+# record for a desired amount of time, then stop all scripts
+
+cd replay
+python client_bounding_boxes.py # modified script to use Carla API mock
+```
