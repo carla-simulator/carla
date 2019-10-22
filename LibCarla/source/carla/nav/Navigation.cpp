@@ -527,7 +527,7 @@ namespace nav {
     _yaw_walkers[id] = 0.0f;
 
     // add walker for the route planning
-    _walkerManager.AddWalker(id, from);
+    _walkerManager.AddWalker(id);
 
     return true;
   }

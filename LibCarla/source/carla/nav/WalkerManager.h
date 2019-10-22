@@ -31,7 +31,7 @@ namespace nav {
 		WALKER_WALKING,
 		WALKER_IN_EVENT,
 		WALKER_STOP
-	}; 
+	};
 
 	struct WalkerRoutePoint {
 		WalkerEvent event;
@@ -42,7 +42,7 @@ namespace nav {
 	struct WalkerInfo {
 		carla::geom::Location from;
 		carla::geom::Location to;
-		int currentIndex { 0 };
+		unsigned int currentIndex { 0 };
 		WalkerState state;
 		std::vector<WalkerRoutePoint> route;
 	};
@@ -58,7 +58,7 @@ namespace nav {
 	void SetNav(Navigation *nav) { _nav = nav; };
 
 	/// create a new walker route
-    bool AddWalker(ActorId id, carla::geom::Location from);
+    bool AddWalker(ActorId id);
 
 	/// remove a walker route
     bool RemoveWalker(ActorId id);
