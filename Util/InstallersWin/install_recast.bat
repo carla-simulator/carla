@@ -38,7 +38,7 @@ set RECAST_INSTALL=recast-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
 
-set RECAST_COMMIT="4850ab7cac1fcbddcd78d7582f2af7f03f69154d"
+set RECAST_COMMIT="163651bfa4aab314a1a3e7b1c476b3cbc5e4fdf1"
 set RECAST_BASENAME=%RECAST_SRC%
 
 
@@ -53,7 +53,7 @@ if not exist "%RECAST_SRC_DIR%" (
     cd %RECAST_SRC_DIR%
     call git reset --hard %RECAST_COMMIT%
     cd ..
-    if %errorlevel% neq 0 goto error_git
+     if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning "Recast & Detour" because already exists a folder called "%RECAST_SRC%".
 )
