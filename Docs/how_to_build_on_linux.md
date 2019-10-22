@@ -18,6 +18,9 @@ pip2 install --user setuptools
 pip3 install --user setuptools
 ```
 
+!!! tip
+    For **Ubuntu 18.04**, change `libpng16-dev` to `libpng-dev` from the previous example.
+
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
 and C++ runtime library. We use clang 6.0 and LLVM's libc++. We recommend to

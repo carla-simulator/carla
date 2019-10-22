@@ -2,12 +2,12 @@ Build
 Dist
 Doxygen
 Deprecated/PythonClient/dist
+TrafficManager/build
 Util/Build
 Install
 
 /ExportedMaps
-/Import
-/RoadRunnerFiles/*/
+/Import/*/
 
 *.VC.db
 *.VC.opendb
