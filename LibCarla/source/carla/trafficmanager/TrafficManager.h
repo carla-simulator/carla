@@ -86,7 +86,7 @@ namespace cc = carla::client;
     void RegisterVehicles(std::vector<ActorPtr> actor_list);
 
     /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(std::vector<ActorId> actor_ids);
+    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
 
     /// To start the TrafficManager.
     void Start();
