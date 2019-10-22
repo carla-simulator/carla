@@ -289,7 +289,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_COMMIT="4850ab7cac1fcbddcd78d7582f2af7f03f69154d"
+RECAST_COMMIT="163651bfa4aab314a1a3e7b1c476b3cbc5e4fdf1"
 RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
