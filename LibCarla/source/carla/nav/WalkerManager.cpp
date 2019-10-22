@@ -4,7 +4,6 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/logging.h"
 #include "carla/nav/WalkerManager.h"
 #include "carla/nav/Navigation.h"
 
@@ -19,7 +18,7 @@ namespace nav {
     }
 
 	/// create a new walker route
-    bool WalkerManager::AddWalker(ActorId id, carla::geom::Location from) {
+    bool WalkerManager::AddWalker(ActorId id) {
         WalkerInfo info;
         info.state = WALKER_IDLE;
 
@@ -45,7 +44,7 @@ namespace nav {
 
         // check all walkers
         for (auto &it : _walkers) {
-            
+
             // get the elements
             WalkerInfo &info = it.second;
 
@@ -69,19 +68,19 @@ namespace nav {
                         }
                     }
                     break;
-            
+
                 case WALKER_IN_EVENT:
                     if (ExecuteEvent(it.second, delta)) {
                         SetWalkerNextPoint(it.first);
                     }
                     break;
-                
+
                 case WALKER_STOP:
                     info.state = WALKER_IDLE;
                     break;
             }
         }
-        
+
         return true;
     }
 
@@ -113,21 +112,21 @@ namespace nav {
         // create each point of the route
         info.route.clear();
         info.route.reserve(path.size());
-        for (int i=0; i<path.size(); ++i) {
+        for (unsigned int i=0; i<path.size(); ++i) {
             // get the type
             switch (area[i]) {
                 // random waiting
-                case SAMPLE_POLYAREA_GROUND: 
+                case SAMPLE_POLYAREA_GROUND:
                     info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
                     break;
-                
+
                 // stop and check
                 case SAMPLE_POLYAREA_ROAD:
-                case SAMPLE_POLYAREA_CROSS: 
+                case SAMPLE_POLYAREA_CROSS:
                     // info.route.emplace_back(WalkerEventStopAndCheck(4), std::move(path[i]));
                     info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
                     break;
-                
+
                 default:
                     info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
             }
@@ -171,7 +170,7 @@ namespace nav {
             _nav->GetRandomLocation(location, 1, nullptr);
             SetWalkerRoute(id, location);
         }
-        
+
         return true;
     }
 

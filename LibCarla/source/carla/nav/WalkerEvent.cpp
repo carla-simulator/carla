@@ -10,7 +10,7 @@
 namespace carla {
 namespace nav {
 
-    bool WalkerEventVisitor::operator()(WalkerEventIgnore &event, double delta) {
+    bool WalkerEventVisitor::operator()(WalkerEventIgnore &, double ) {
         return true;
     }
 

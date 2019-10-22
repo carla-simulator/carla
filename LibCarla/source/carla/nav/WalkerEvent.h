@@ -15,13 +15,13 @@ namespace nav {
     };
 
     struct WalkerEventWait {
-        float time;
-        WalkerEventWait(float duration) : time(duration) {};
+        double time;
+        WalkerEventWait(double duration) : time(duration) {};
     };
 
     struct WalkerEventStopAndCheck {
-        float time;
-        WalkerEventStopAndCheck(float duration) : time(duration) {};
+        double time;
+        WalkerEventStopAndCheck(double duration) : time(duration) {};
     };
 
     using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
