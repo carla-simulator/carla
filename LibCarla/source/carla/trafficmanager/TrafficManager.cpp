@@ -64,8 +64,8 @@ namespace traffic_manager {
     registered_actors.Insert(actor_list);
   }
 
-  void TrafficManager::UnregisterVehicles(std::vector<ActorId> actor_ids) {
-    registered_actors.Remove(actor_ids);
+  void TrafficManager::UnregisterVehicles(std::vector<ActorPtr> actor_list) {
+    registered_actors.Remove(actor_list);
   }
 
   void TrafficManager::Start() {
@@ -118,7 +118,7 @@ namespace traffic_manager {
       if (ignore_collision.Contains(reference_id)) {
         std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
         if (actor_set->Contains(other_id)) {
-          actor_set->Remove({other_id});
+          actor_set->Remove({other_actor});
         }
       }
     } else {
