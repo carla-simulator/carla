@@ -44,11 +44,11 @@ namespace cc = carla::client;
             ++state_counter;
         }
 
-        void Remove(std::vector<ActorId> actor_ids) {
+        void Remove(std::vector<ActorPtr> actor_list) {
 
             std::lock_guard<std::mutex> lock(modification_mutex);
-            for (auto& id: actor_ids) {
-                actor_set.erase(id);
+            for (auto& actor: actor_list) {
+                actor_set.erase(actor->GetId());
             }
             ++state_counter;
         }
