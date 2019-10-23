@@ -9,12 +9,12 @@
 #include <boost/variant.hpp>
 
 #include "carla/rpc/ActorId.h"
-// #include "carla/nav/Navigation.h"
 
 namespace carla {
 namespace nav {
 
     class Navigation;
+    class WalkerManager;
 
     struct WalkerEventIgnore {
     };
@@ -27,15 +27,16 @@ namespace nav {
     struct WalkerEventStopAndCheck {
         ActorId id;
         Navigation *nav;
-        WalkerEventStopAndCheck(ActorId id, Navigation *nav) : id(id), nav(nav) {};
+        double time;
+        WalkerEventStopAndCheck(ActorId id, Navigation *nav, double duration) : id(id), nav(nav), time(duration) {};
     };
 
     using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
 
     struct WalkerEventVisitor {
-        bool operator()(WalkerEventIgnore &event, double delta);
-        bool operator()(WalkerEventWait &event, double delta);
-        bool operator()(WalkerEventStopAndCheck &event, double delta);
+        bool operator()(WalkerEventIgnore &event, double delta, WalkerManager &manager);
+        bool operator()(WalkerEventWait &event, double delta, WalkerManager &manager);
+        bool operator()(WalkerEventStopAndCheck &event, double delta, WalkerManager &manager);
     };
 
 } // namespace nav

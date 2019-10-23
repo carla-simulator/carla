@@ -67,6 +67,7 @@ namespace nav {
     bool Update(double delta);
 
 	/// set a new route from its current position
+    bool SetWalkerRoute(ActorId id);
     bool SetWalkerRoute(ActorId id, carla::geom::Location to);
 
 	/// set the next point in the route
