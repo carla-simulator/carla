@@ -75,6 +75,8 @@ namespace cc = carla::client;
     static std::unique_ptr<TrafficManager> singleton_pointer;
     /// Singleton lifecycle management mutex.
     // static std::mutex singleton_mutex;
+    /// Map containing distance to leading vehicle command.
+    AtomicMap<ActorId, float> distance_to_leading_vehicle;
 
     /// Private constructor for singleton lifecycle management.
     TrafficManager(
@@ -97,23 +99,29 @@ namespace cc = carla::client;
     static TrafficManager& GetInstance(cc::Client &client_connection);
 
     /// This method registers a vehicle with the traffic manager.
-    void RegisterVehicles(std::vector<ActorPtr> actor_list);
+    void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
 
     /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
+    void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
     /// Set target velocity specific to a vehicle.
-    void SetVehicleTargetVelocity(ActorId actor_id, float velocity);
+    void SetVehicleTargetVelocity(const ActorPtr &actor, const float velocity);
 
     /// Set collision detection rules between vehicles.
-    void SetCollisionDetection(ActorPtr reference_actor, ActorPtr other_actor, bool detect_collision);
+    void SetCollisionDetection(const ActorPtr &reference_actor,
+                               const ActorPtr &other_actor,
+                               const bool detect_collision);
 
     /// Method to force lane change on a vehicle.
     /// Direction flag can be set to true for left and false for right.
-    void ForceLaneChange(ActorPtr actor, bool direction);
+    void ForceLaneChange(const ActorPtr &actor, const bool direction);
 
     /// Enable / disable automatic lane change on a vehicle.
-    void AutoLaneChange(ActorPtr actor, bool enable);
+    void AutoLaneChange(const ActorPtr &actor, const bool enable);
+
+    /// Method to specify how much distance a vehicle should maintain to
+    /// the leading vehicle.
+    void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
     /// Destructor.
     ~TrafficManager();

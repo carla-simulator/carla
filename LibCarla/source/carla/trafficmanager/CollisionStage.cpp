@@ -6,10 +6,10 @@ namespace CollisionStageConstants {
   static const float SEARCH_RADIUS = 20.0f;
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 1.5f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 0.5f;
   static const float EXTENSION_SQUARE_POINT = 7.0f;
   static const float TIME_HORIZON = 0.5f;
-  static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float HIGHWAY_SPEED = 50.0f / 3.6f;
   static const float HIGHWAY_TIME_HORIZON = 5.0f;
 }
   using namespace  CollisionStageConstants;
@@ -19,11 +19,13 @@ namespace CollisionStageConstants {
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       cc::World &world,
       AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision,
+      AtomicMap<ActorId, float> &distance_to_leading_vehicle,
       cc::DebugHelper &debug_helper)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       world(world),
       selective_collision(selective_collision),
+      distance_to_leading_vehicle(distance_to_leading_vehicle),
       debug_helper(debug_helper) {
 
     // Initializing clock for checking unregistered actors periodically.
@@ -248,27 +250,41 @@ namespace CollisionStageConstants {
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
 
       float velocity = actor->GetVelocity().Length();
+      cg::Location vehicle_location = actor->GetLocation();
+
       float bbox_extension =
           (std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
           std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
           BOUNDARY_EXTENSION_MINIMUM);
 
       bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
+
+      if (distance_to_leading_vehicle.Contains(actor->GetId())) {
+        bbox_extension = std::max(distance_to_leading_vehicle.GetValue(actor->GetId()), bbox_extension);
+      }
+
       auto &waypoint_buffer =  localization_frame->at(vehicle_id_to_index.at(actor->GetId())).buffer;
 
       LocationList left_boundary;
       LocationList right_boundary;
       auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       float width = vehicle->GetBoundingBox().extent.y;
+      float length = vehicle->GetBoundingBox().extent.x;
 
       SimpleWaypointPtr boundary_start = waypoint_buffer->front();
-      SimpleWaypointPtr boundary_end = waypoint_buffer->front();
+      uint boundary_start_index = 0u;
+      while (boundary_start->DistanceSquared(vehicle_location) < std::pow(length, 2) &&
+             boundary_start_index < waypoint_buffer->size() -1) {
+        boundary_start = waypoint_buffer->at(boundary_start_index);
+        ++boundary_start_index;
+      }
+      SimpleWaypointPtr boundary_end = waypoint_buffer->at(boundary_start_index);
 
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(actor);
       // At non-signalized junctions, we extend the boundary across the junction
       // and
       // in all other situations, boundary length is velocity-dependent.
-      for (uint j = 0u;
+      for (uint j = boundary_start_index;
           (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
           (j < waypoint_buffer->size());
           ++j) {
