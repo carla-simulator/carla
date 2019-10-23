@@ -58,6 +58,34 @@ namespace traffic_manager {
 
     control_stage = std::make_unique<BatchControlStage>(
         planner_control_messenger, client_connection);
+
+    Start();
+  }
+
+  TrafficManager::~TrafficManager() {
+    Stop();
+  }
+
+  std::unique_ptr<TrafficManager> TrafficManager::singleton_pointer = nullptr;
+
+  TrafficManager& TrafficManager::GetInstance(cc::Client &client_connection) {
+    // std::lock_guard<std::mutex> lock(singleton_mutex);
+
+    if (singleton_pointer == nullptr) {
+
+      std::vector<float> longitudinal_param = {0.1f, 0.15f, 0.01f};
+      std::vector<float> longitudinal_highway_param = {5.0f, 0.09f, 0.01f};
+      std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
+
+      TrafficManager* tm_ptr = new TrafficManager(
+        longitudinal_param, longitudinal_highway_param, lateral_param,
+        25.0f/3.6f, 50.0f/3.6f, client_connection
+      );
+
+      singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);
+    }
+
+    return *singleton_pointer.get();
   }
 
   void TrafficManager::RegisterVehicles(std::vector<ActorPtr> actor_list) {
