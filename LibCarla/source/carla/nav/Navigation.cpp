@@ -47,9 +47,9 @@ namespace nav {
   static const int MAX_AGENTS = 500;
   static const int MAX_QUERY_SEARCH_NODES = 2048;
   static const float AGENT_HEIGHT = 1.8f;
-  static const float AGENT_RADIUS = 0.3f;
+  static const float AGENT_RADIUS = 0.4f;
 
-  static const float AGENT_UNBLOCK_DISTANCE = 1.0f;
+  static const float AGENT_UNBLOCK_DISTANCE = 0.5f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
   static const float AGENT_UNBLOCK_TIME = 2.0f;
 
@@ -545,8 +545,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 1.5f;
-    float hy = vehicle.bounding.extent.y + 1.5f;
+    float hx = vehicle.bounding.extent.x + 1.0f;
+    float hy = vehicle.bounding.extent.y + 1.0f;
     // define the 4 corners of the bounding box
     cg::Vector3D boxCorner1 {-hx, -hy, 0};
     cg::Vector3D boxCorner2 { hx, -hy, 0};
@@ -1158,6 +1158,25 @@ namespace nav {
 
     // mark
     agent->paused = pause;
+  }
+  
+  bool Navigation::hasVehicleNear(ActorId id) {
+    // get the internal index (walker or vehicle)
+    auto it = _mappedWalkersId.find(id);
+    if (it == _mappedWalkersId.end()) {
+      it = _mappedVehiclesId.find(id);
+      if (it == _mappedVehiclesId.end()) {
+        return false;
+      }
+    }
+
+    bool result;
+    {
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      result = _crowd->hasVehicleNear(it->second);
+    }
+    return result;
   }
 
 } // namespace nav

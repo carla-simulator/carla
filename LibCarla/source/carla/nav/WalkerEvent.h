@@ -8,8 +8,13 @@
 
 #include <boost/variant.hpp>
 
+#include "carla/rpc/ActorId.h"
+// #include "carla/nav/Navigation.h"
+
 namespace carla {
 namespace nav {
+
+    class Navigation;
 
     struct WalkerEventIgnore {
     };
@@ -20,8 +25,9 @@ namespace nav {
     };
 
     struct WalkerEventStopAndCheck {
-        double time;
-        WalkerEventStopAndCheck(double duration) : time(duration) {};
+        ActorId id;
+        Navigation *nav;
+        WalkerEventStopAndCheck(ActorId id, Navigation *nav) : id(id), nav(nav) {};
     };
 
     using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;

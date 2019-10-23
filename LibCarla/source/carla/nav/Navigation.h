@@ -93,6 +93,8 @@ namespace nav {
     void SetPedestriansCrossFactor(float percentage);
     /// set an agent as paused for the crowd
     void PauseAgent(ActorId id, bool pause);
+    /// return if the agent has a vehicle near (as neighbour)
+    bool hasVehicleNear(ActorId id);
 
     dtCrowd *GetCrowd() { return _crowd; };
 

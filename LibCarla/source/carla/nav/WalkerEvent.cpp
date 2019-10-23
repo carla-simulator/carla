@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/Logging.h"
+#include "carla/nav/Navigation.h"
 #include "carla/nav/WalkerEvent.h"
 
 namespace carla {
@@ -21,9 +22,8 @@ namespace nav {
     }
 
     bool WalkerEventVisitor::operator()(WalkerEventStopAndCheck &event, double delta) {
-        // refresh time and check
-        event.time -= delta;
-        return (event.time <= 0.0f);
+        // check if the agent has any vehicle around
+        return (!event.nav->hasVehicleNear(event.id));
     }
 
 } // namespace nav
