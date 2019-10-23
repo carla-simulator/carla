@@ -71,9 +71,12 @@ namespace cc = carla::client;
     AtomicMap<ActorId, bool> force_lane_change;
     /// Map containing auto lane change commands.
     AtomicMap<ActorId, bool> auto_lane_change;
+    /// Static pointer to singleton object.
+    static std::unique_ptr<TrafficManager> singleton_pointer;
+    /// Singleton lifecycle management mutex.
+    // static std::mutex singleton_mutex;
 
-  public:
-
+    /// Private constructor for singleton lifecycle management.
     TrafficManager(
         std::vector<float> longitudinal_PID_parameters,
         std::vector<float> longitudinal_highway_PID_parameters,
@@ -82,17 +85,22 @@ namespace cc = carla::client;
         float highway_target_velocity,
         cc::Client &client_connection);
 
-    /// This method registers a vehicle with the traffic manager.
-    void RegisterVehicles(std::vector<ActorPtr> actor_list);
-
-    /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
-
     /// To start the TrafficManager.
     void Start();
 
     /// To stop the TrafficManager.
     void Stop();
+
+  public:
+
+    /// Static method for singleton lifecycle management.
+    static TrafficManager& GetInstance(cc::Client &client_connection);
+
+    /// This method registers a vehicle with the traffic manager.
+    void RegisterVehicles(std::vector<ActorPtr> actor_list);
+
+    /// This method unregisters a vehicle from traffic manager.
+    void UnregisterVehicles(std::vector<ActorPtr> actor_list);
 
     /// Set target velocity specific to a vehicle.
     void SetVehicleTargetVelocity(ActorId actor_id, float velocity);
@@ -106,6 +114,10 @@ namespace cc = carla::client;
 
     /// Enable / disable automatic lane change on a vehicle.
     void AutoLaneChange(ActorPtr actor, bool enable);
+
+    /// Destructor.
+    ~TrafficManager();
+
   };
 
 }
