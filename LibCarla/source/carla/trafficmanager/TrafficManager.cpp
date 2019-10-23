@@ -39,7 +39,7 @@ namespace traffic_manager {
 
     collision_stage = std::make_unique<CollisionStage>(
         localization_collision_messenger, collision_planner_messenger,
-        world, ignore_collision, debug_helper);
+        world, ignore_collision, distance_to_leading_vehicle, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         localization_traffic_light_messenger, traffic_light_planner_messenger);
@@ -88,11 +88,11 @@ namespace traffic_manager {
     return *singleton_pointer.get();
   }
 
-  void TrafficManager::RegisterVehicles(std::vector<ActorPtr> actor_list) {
+  void TrafficManager::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
     registered_actors.Insert(actor_list);
   }
 
-  void TrafficManager::UnregisterVehicles(std::vector<ActorPtr> actor_list) {
+  void TrafficManager::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
     registered_actors.Remove(actor_list);
   }
 
@@ -128,15 +128,15 @@ namespace traffic_manager {
     control_stage->Stop();
   }
 
-  void TrafficManager::SetVehicleTargetVelocity(ActorId actor_id, float velocity) {
+  void TrafficManager::SetVehicleTargetVelocity(const ActorPtr &actor, const float velocity) {
 
-    vehicle_target_velocity.AddEntry({actor_id, velocity});
+    vehicle_target_velocity.AddEntry({actor->GetId(), velocity});
   }
 
   void TrafficManager::SetCollisionDetection(
-      ActorPtr reference_actor,
-      ActorPtr other_actor,
-      bool detect_collision) {
+      const ActorPtr &reference_actor,
+      const ActorPtr &other_actor,
+      const bool detect_collision) {
 
     ActorId reference_id = reference_actor->GetId();
     ActorId other_id = other_actor->GetId();
@@ -165,15 +165,21 @@ namespace traffic_manager {
     }
   }
 
-  void TrafficManager::ForceLaneChange(ActorPtr actor, bool direction) {
+  void TrafficManager::ForceLaneChange(const ActorPtr &actor, const bool direction) {
 
     auto entry = std::make_pair(actor->GetId(), direction);
     force_lane_change.AddEntry(entry);
   }
 
-  void TrafficManager::AutoLaneChange(ActorPtr actor, bool enable) {
+  void TrafficManager::AutoLaneChange(const ActorPtr &actor, const bool enable) {
 
     auto entry = std::make_pair(actor->GetId(), enable);
     auto_lane_change.AddEntry(entry);
+  }
+
+  void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
+
+    auto entry = std::make_pair(actor->GetId(), distance);
+    distance_to_leading_vehicle.AddEntry(entry);
   }
 }

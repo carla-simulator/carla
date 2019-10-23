@@ -114,7 +114,10 @@ def main():
         time.sleep(1)
         for v in vehicle_list:
             if (v.id % 2 == 0):
-                traffic_manager.set_vehicle_target_velocity(v.id, 15.0/3.6)
+                traffic_manager.set_vehicle_target_velocity(v, 15.0/3.6)
+                traffic_manager.set_distance_to_leading_vehicle(v, 5)
+            else:
+                traffic_manager.set_distance_to_leading_vehicle(v, 10)
 
         while True:
             time.sleep(1)
