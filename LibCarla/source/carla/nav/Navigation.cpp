@@ -51,7 +51,7 @@ namespace nav {
 
   static const float AGENT_UNBLOCK_DISTANCE = 0.5f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
-  static const float AGENT_UNBLOCK_TIME = 2.0f;
+  static const float AGENT_UNBLOCK_TIME = 4.0f;
 
   static const float AREA_ROAD_COST = 10.0f;
 
