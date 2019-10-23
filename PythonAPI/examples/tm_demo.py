@@ -102,16 +102,7 @@ def main():
 
         print('Spawned %d vehicles, press Ctrl+C to exit.\n' % (len(vehicle_list)))
 
-        long_pid = carla.TM_Parameters()
-        long_high_pid = carla.TM_Parameters()
-        lat_pid = carla.TM_Parameters()
-
-        long_pid.extend([0.1, 0.15, 0.01])
-        long_high_pid.extend([5.0, 0.0, 0.1])
-        lat_pid.extend([10.0, 0.01, 0.1])
-
-        traffic_manager = carla.TrafficManager(long_pid, long_high_pid, lat_pid, 25.0/3.6, 50.0/3.6, client)
-        traffic_manager.start()
+        traffic_manager = carla.GetTrafficManager(client)
         time.sleep(1)
 
         vehicle_vec = carla.TM_ActorList()
@@ -135,7 +126,7 @@ def main():
 
     finally:
         if traffic_manager:
-            traffic_manager.stop()
+            del traffic_manager
 
         print('Destroying %d vehicles.\n' % len(vehicle_list))
         client.apply_batch([carla.command.DestroyActor(x) for x in vehicle_list])
