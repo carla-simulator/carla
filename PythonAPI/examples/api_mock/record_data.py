@@ -300,9 +300,15 @@ def lane_marking_data(lane_marking):
         'width': lane_marking.width
     }
 
+
 def save_data(path, data):
-    with open(path, 'wb') as file:
+    with open(path, 'w') as file:
         print(data, file=file)
+
+
+def save_binary_data(path, data):
+    with open(path, 'wb') as file:
+        file.write(data)
 
 
 def get_sensor_callback(sensor_name, dir):
@@ -314,7 +320,7 @@ def get_sensor_callback(sensor_name, dir):
                       'fov': data.fov,
                       'timestamp': time.time()
                   })
-        save_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
+        save_binary_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
 
     def callback_lidar(data):
         save_data('%s/%s' % (dir, data.frame_number),
@@ -323,7 +329,7 @@ def get_sensor_callback(sensor_name, dir):
                       'channels': data.channels,
                       'timestamp': time.time()
                   })
-        save_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
+        save_binary_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
 
     def callback_gnss(data):
         save_data('%s/%s' % (dir, data.frame_number),

@@ -205,7 +205,8 @@ class Reader:
         if self.is_raw:
             self.current_index += 1
         if self.callback is not None:
-            with open(join(self.path, self.files[self.current_index]), 'r') as file:
+            open_mode = 'rb' if self.is_raw else 'r'
+            with open(join(self.path, self.files[self.current_index]), open_mode) as file:
                 content = file.read()
                 if not self.is_raw:
                     try:
@@ -480,7 +481,7 @@ class Sensor:
     def refresh(self, data, resolution=None):
         if self.callback is not None:
             if self.is_raw:
-                data = Image(data[:-1], resolution[0], resolution[1])
+                data = Image(data, resolution[0], resolution[1])
             else:
                 att = recursive_attr_dict(data)
                 data = att
