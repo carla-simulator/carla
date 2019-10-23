@@ -85,6 +85,20 @@ namespace nav {
     }
 
 	/// set a new route from its current position
+    bool WalkerManager::SetWalkerRoute(ActorId id) {
+        // check
+        if (_nav == nullptr)
+            return false;
+
+        // set a new random target
+        carla::geom::Location location;
+        _nav->GetRandomLocation(location, 1, nullptr);
+
+        // set the route
+        SetWalkerRoute(id, location);
+    }
+
+	/// set a new route from its current position
     bool WalkerManager::SetWalkerRoute(ActorId id, carla::geom::Location to) {
         // check
         if (_nav == nullptr)
@@ -123,7 +137,7 @@ namespace nav {
                 // stop and check
                 case SAMPLE_POLYAREA_ROAD:
                 case SAMPLE_POLYAREA_CROSS:
-                    info.route.emplace_back(WalkerEventStopAndCheck(id, _nav), std::move(path[i]));
+                    info.route.emplace_back(WalkerEventStopAndCheck(id, _nav, 3), std::move(path[i]));
                     break;
 
                 default:
@@ -165,9 +179,7 @@ namespace nav {
             info.state = WALKER_STOP;
             _nav->PauseAgent(id, true);
             // we need a new route from here
-            carla::geom::Location location;
-            _nav->GetRandomLocation(location, 1, nullptr);
-            SetWalkerRoute(id, location);
+            SetWalkerRoute(id);
         }
 
         return true;
@@ -177,8 +189,8 @@ namespace nav {
         // go to the event
         WalkerRoutePoint &rp = info.route[info.currentIndex];
 
-        // we need to add 'delta' as second parameter
-        auto bound_visitor = std::bind(WalkerEventVisitor(), std::placeholders::_1, delta);
+        // we need to add 'delta' as second parameter, and 'this' as third
+        auto bound_visitor = std::bind(WalkerEventVisitor(), std::placeholders::_1, delta, *this);
         return boost::apply_visitor(bound_visitor, rp.event);
     }
 
