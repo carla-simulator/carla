@@ -137,6 +137,15 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+    Vector3D(const FVector &v) : x(v.X), y(v.Y), z(v.Z) {}
+
+    Vector3D& operator=(const FVector &rhs) {
+      x = rhs.X;
+      y = rhs.Y;
+      z = rhs.Z;
+      return *this;
+    }
+
     /// Return a Vector3D converted from centimeters to meters.
     Vector3D ToMeters() const {
       return *this * 1e-2f;

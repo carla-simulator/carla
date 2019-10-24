@@ -11,6 +11,7 @@
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
+#include <carla/sensor/data/IMUMeasurement.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
@@ -71,6 +72,16 @@ namespace data {
         << ", lat=" << meas.GetLatitude()
         << ", lon=" << meas.GetLongitude()
         << ", alt=" << meas.GetAltitude()
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const IMUMeasurement &meas) {
+    out << "IMUMeasurement(frame=" << meas.GetFrame()
+        << ", timestamp=" << meas.GetTimestamp()
+        << ", accelerometer=" << meas.GetAccelerometer()
+        << ", gyroscope=" << meas.GetGyroscope()
+        << ", compass=" << meas.GetCompass()
         << ')';
     return out;
   }
@@ -233,6 +244,13 @@ void export_sensor_data() {
     .add_property("latitude", &csd::GnssEvent::GetLatitude)
     .add_property("longitude", &csd::GnssEvent::GetLongitude)
     .add_property("altitude", &csd::GnssEvent::GetAltitude)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
+    .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer)
+    .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope)
+    .add_property("compass", &csd::IMUMeasurement::GetCompass)
     .def(self_ns::str(self_ns::self))
   ;
 }
