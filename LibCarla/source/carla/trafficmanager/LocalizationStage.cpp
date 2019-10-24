@@ -102,7 +102,7 @@ namespace LocalizationConstants {
 
       // Initializing buffer if it is empty.
       if (waypoint_buffer.empty()) {
-        SimpleWaypointPtr closest_waypoint = local_map.GetWaypoint(vehicle_location);
+        SimpleWaypointPtr closest_waypoint = local_map.GetWaypointInVicinity(vehicle_location);
         waypoint_buffer.push_back(closest_waypoint);
       }
 
