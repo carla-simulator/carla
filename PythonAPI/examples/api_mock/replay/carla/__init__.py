@@ -21,6 +21,7 @@ from os.path import isfile, join, isdir
 import re
 from threading import Timer
 import time
+import ast
 
 # ==============================================================================
 # -- setup ---------------------------------------------------------------------
@@ -30,8 +31,8 @@ import time
 path_to_recorded_data = './output/'
 
 start_time = time.time()
-with open(path_to_recorded_data + 'start.dict', 'r') as file:
-    recorded_start_time = json.loads(file.read().replace("'", '"'))['timestamp']
+with open(path_to_recorded_data + 'start.dict', 'r') as f:
+    recorded_start_time = json.loads(f.read().replace("'", '"'))['timestamp']
 
 
 # ==============================================================================
@@ -66,10 +67,10 @@ def normalize_content(content):
 
 
 def parse_manifest(manifest_file_path):
-    with open(manifest_file_path, 'r') as file:
-        content = file.read()
-        manifest = eval(normalize_content(content))
-    return recursive_attr_dict(manifest)
+    with open(manifest_file_path, 'r') as manif_file:
+        content = manif_file.read()
+        manif = ast.literal_eval(normalize_content(content))
+    return recursive_attr_dict(manif)
 
 
 class RepeatedTimer(object):
@@ -158,7 +159,7 @@ class Actors:
         self.actors = []
 
     def filter(self, regex):
-        return list(filter(lambda x: re.match(regex, x.type_id), self.actors))
+        return list(filter([re.match(regex, x.type_id) for x in self.actors]))
 
 
 class Map:
@@ -176,43 +177,43 @@ class Reader:
         self.callback = callback
         self.is_raw = is_raw
         if isdir(self.path):
-            self.files = sorted([f for f in listdir(self.path) if isfile(join(self.path, f))])
+            self.files = sorted([fi for fi in listdir(self.path) if isfile(join(self.path, fi))])
             if self.files:
                 self.current_index = 0
                 self.timer = Timer(self.get_next_time(), self.read)
                 self.timer.start()
         else:
-            logging.error("Failed to read files for path %s and data name %s" % (path, data_name))
+            logging.error("Failed to read files for path %s and data name %s", path, data_name)
             self.files = []
 
     def call_first(self):
         if not self.files:
             return None
-        with open(join(self.path, self.files[0]), 'r') as file:
-            content = file.read()
+        with open(join(self.path, self.files[0]), 'r') as fi:
+            content = fi.read()
             if not self.is_raw:
                 try:
-                    content = eval(normalize_content(content))
+                    content = ast.literal_eval(normalize_content(content))
                 except SyntaxError:
-                    logging.error("First and only file %s for %s is corrupted" % (file.name, self.data_name))
+                    logging.error("First and only file %s for %s is corrupted", fi.name, self.data_name)
                     return None
             self.callback(content)
 
     def read(self):
         if self.current_index >= len(self.files):
-            logging.info('Finished replaying %s' % self.data_name)
+            logging.info('Finished replaying %s', self.data_name)
             return
         if self.is_raw:
             self.current_index += 1
         if self.callback is not None:
             open_mode = 'rb' if self.is_raw else 'r'
-            with open(join(self.path, self.files[self.current_index]), open_mode) as file:
-                content = file.read()
+            with open(join(self.path, self.files[self.current_index]), open_mode) as fi:
+                content = fi.read()
                 if not self.is_raw:
                     try:
-                        content = eval(normalize_content(content))
+                        content = ast.literal_eval(normalize_content(content))
                     except SyntaxError:
-                        logging.info('Finished replaying %s' % self.data_name)
+                        logging.info('Finished replaying %s', self.data_name)
                         return
             if self.is_raw:
                 self.callback(content, self.get_raw_resolution())
@@ -222,25 +223,25 @@ class Reader:
         if self.current_index < len(self.files):
             next_time = self.get_next_time()
             if next_time is None:
-                logging.info('Finished replaying %s' % self.data_name)
+                logging.info('Finished replaying %s', self.data_name)
                 return
             self.timer = Timer(next_time, self.read)
             self.timer.start()
         else:
-            logging.info('Finished replaying %s' % self.data_name)
+            logging.info('Finished replaying %s', self.data_name)
 
     def get_raw_resolution(self):
-        with open(join(self.path, self.files[self.current_index-1]), 'r') as file:
-            data = recursive_attr_dict(eval(normalize_content(file.read())))
+        with open(join(self.path, self.files[self.current_index-1]), 'r') as fi:
+            data = recursive_attr_dict(ast.literal_eval(normalize_content(fi.read())))
         return data.get('width', None), data.get('height', None)
 
     def get_next_time_from_file(self, path):
-        with open(path, 'r') as file:
-            content = file.read()
+        with open(path, 'r') as fi:
+            content = fi.read()
             try:
-                data = eval(normalize_content(content))
+                data = ast.literal_eval(normalize_content(content))
             except SyntaxError:
-                logging.error("Corrupted file for %s: %s" % (self.data_name, self.path))
+                logging.error("Corrupted file for %s: %s", self.data_name, self.path)
                 return None
         return data['timestamp']
 
@@ -353,19 +354,33 @@ class CarlaWorld:
         class Library:
             def __init__(self):
                 class Blueprint:
-                    def __init__(self, type):
-                        self.type = type
+                    def __init__(self, t):
+                        self.type = t
                         self.attributes = {}
+
                         def set_att(key, value):
                             self.attributes[key] = value
-                        self.set_attribute = set_att
-                        self.has_attribute = lambda key: key in self.attributes
 
-                self.find = lambda blueprint_type: Blueprint(blueprint_type)
-                self.filter = lambda blueprint_type: [Blueprint(blueprint_type)]
+                        self.set_attribute = set_att
+
+                        def has_att(key):
+                            return key in self.attributes
+
+                        self.has_attribute = has_att
+
+                def find_func(blueprint_type):
+                    return Blueprint(blueprint_type)
+
+                self.find = find_func
+
+                def filter_func(blueprint_type):
+                    return [Blueprint(blueprint_type)]
+
+                self.filter = filter_func
+
         return Library()
 
-    def spawn_actor(self, blueprint, transform, attach_to=None, attachment_type=None):
+    def spawn_actor(self, blueprint, transform, attach_to=None):
         if blueprint.type.startswith('sensor'):
             for sensor in sensors:
                 if attach_to is not None \
@@ -379,7 +394,7 @@ class CarlaWorld:
                         and transform_equals(transform, sensor.starting_transform) \
                         and blueprint.type == sensor.type_id:
                     return sensor
-            logging.error("Could not connect blueprint %s with any recorded sensors" % blueprint.type)
+            logging.error("Could not connect blueprint %s with any recorded sensors", blueprint.type)
             return None
 
         for actor in self.actors_map.values():
@@ -398,12 +413,14 @@ class CarlaWorld:
 
 
 class Vehicle:
-    pass
+    def __init__(self):
+        pass
 
 
 class Actor(AttrDict, Vehicle):
     def __init__(self, *args, **kwargs):
         super(Actor, self).__init__(*args, **kwargs)
+        self.transform = {}
 
     def get_transform(self):
         return self.transform
@@ -451,6 +468,9 @@ class WalkerControl:
 
 
 class ColorConverter:
+    def __init__(self):
+        pass
+
     Raw = None
     Depth = None
     LogarithmicDepth = None
@@ -508,19 +528,34 @@ class Image:
 
 
 class carla:
+    def __init__(self):
+        pass
+
     class libcarla:
+        def __init__(self):
+            pass
+
         class LaneChange:
+            def __init__(self):
+                pass
+
             NONE = 'NONE'
             Right = 'Right'
             Left = 'Left'
             Both = 'Both'
 
         class TrafficLightState:
+            def __init__(self):
+                pass
+
             Green = 'Green'
             Red = 'Red'
             Yellow = 'Yellow'
 
         class LaneMarkingColor:
+            def __init__(self):
+                pass
+
             Standard = 'White'
             White = 'White'
             Blue = 'Blue'
@@ -530,6 +565,9 @@ class carla:
             Other = 'Other'
 
         class LaneMarkingType:
+            def __init__(self):
+                pass
+
             NONE = 'NONE'
             Other = 'Other'
             Broken = 'Broken'

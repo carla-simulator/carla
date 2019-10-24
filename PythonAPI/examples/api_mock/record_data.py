@@ -54,10 +54,10 @@ except ImportError:
 # -- Data recording ------------------------------------------------------------
 # ==============================================================================
 
-def create_dir(dir):
-    if not os.path.exists(os.path.dirname(dir)):
-        os.makedirs(os.path.dirname(dir))
-        logging.info("created dir: %s" % dir)
+def create_dir(directory):
+    if not os.path.exists(os.path.dirname(directory)):
+        os.makedirs(os.path.dirname(directory))
+        logging.info("created dir: %s", directory)
 
 
 def has_actor_role_filter(role):
@@ -111,15 +111,15 @@ class DataRecorder:
             elif record_type.startswith('agent') or record_type == 'world':
                 world_callbacks.append(self.get_world_callback(record_type, output_dir_for_type))
             else:
-                logging.warning("Unknown record type %s" % record_type)
+                logging.warning("Unknown record type %s", record_type)
         self.world.on_tick(lambda timestamp: on_tick(timestamp, world_callbacks))
 
     def save_start(self, output_dir):
         file_path = "%s/start.dict" % output_dir
         create_dir(file_path)
-        with open(file_path, 'w') as file:
-            print({'timestamp': time.time()}, file=file)
-        logging.info("saved starting timestamp in %s" % file_path)
+        with open(file_path, 'w') as f:
+            print({'timestamp': time.time()}, file=f)
+        logging.info("saved starting timestamp in %s", file_path)
 
     def set_sensor(self, sensor_config, root_dir, save_dir):
         sensor_type = sensor_config['type']
@@ -136,11 +136,11 @@ class DataRecorder:
             following_role = sensor_config['attach.to.role']
             agents_with_given_role = list(filter(has_actor_role_filter(following_role), self.world.get_actors()))
             if not agents_with_given_role:
-                logging.error("No actor with role %s found for sensor %s" % (following_role, sensor_config['name']))
+                logging.error("No actor with role %s found for sensor %s", following_role, sensor_config['name'])
                 return
             if len(agents_with_given_role) > 1:
-                logging.error("Multiple (%d) actors with role %s found for sensor %s"
-                              % (len(agents_with_given_role), following_role, sensor_config['name']))
+                logging.error("Multiple (%d) actors with role %s found for sensor %s",
+                              len(agents_with_given_role), following_role, sensor_config['name'])
                 return
             parent = agents_with_given_role[0]
             data['attach_to_role'] = following_role
@@ -162,7 +162,7 @@ class DataRecorder:
         elif sensor_type.startswith('sensor.other.lane_invasion') or sensor_type.startswith('sensor.other.collision'):
             defaults = {}
         else:
-            logging.warning('Sensor %s not recognized' % sensor_type)
+            logging.warning('Sensor %s not recognized', sensor_type)
             return
         set_generic_camera_config_properties(transform, sensor_config, defaults)
         if parent:
@@ -187,7 +187,7 @@ class DataRecorder:
 
         def callback_all(timestamp):
             save_data("%s/%s" % (output_dir, timestamp.frame_count), {
-                'actors': list(map(lambda actor: actor_data(actor), self.world.get_actors())),
+                'actors': list(map([actor_data(data) for data in self.world.get_actors()])),
                 'timestamp': time.time()
             })
 
@@ -208,10 +208,10 @@ class DataRecorder:
 
 def on_tick(timestamp, callbacks):
     if callbacks:
-        logging.debug("recording frame %d" % timestamp.frame_count)
+        logging.debug("recording frame %d", timestamp.frame_count)
         for callback in callbacks:
             callback(timestamp)
-        logging.debug("finished recording frame %d" % timestamp.frame_count)
+        logging.debug("finished recording frame %d", timestamp.frame_count)
 
 
 def world_data(timestamp, world):
@@ -302,37 +302,37 @@ def lane_marking_data(lane_marking):
 
 
 def save_data(path, data):
-    with open(path, 'w') as file:
-        print(data, file=file)
+    with open(path, 'w') as f:
+        print(data, file=f)
 
 
 def save_binary_data(path, data):
-    with open(path, 'wb') as file:
-        file.write(data)
+    with open(path, 'wb') as f:
+        f.write(data)
 
 
-def get_sensor_callback(sensor_name, dir):
+def get_sensor_callback(sensor_name, directory):
     def callback_image(data):
-        save_data('%s/%s' % (dir, data.frame_number),
+        save_data('%s/%s' % (directory, data.frame_number),
                   {
                       'width': data.width,
                       'height': data.height,
                       'fov': data.fov,
                       'timestamp': time.time()
                   })
-        save_binary_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
+        save_binary_data('%s/%s-raw-data' % (directory, data.frame_number), data.raw_data)
 
     def callback_lidar(data):
-        save_data('%s/%s' % (dir, data.frame_number),
+        save_data('%s/%s' % (directory, data.frame_number),
                   {
                       'horizontal_angle': data.horizontal_angle,
                       'channels': data.channels,
                       'timestamp': time.time()
                   })
-        save_binary_data('%s/%s-raw-data' % (dir, data.frame_number), data.raw_data)
+        save_binary_data('%s/%s-raw-data' % (directory, data.frame_number), data.raw_data)
 
     def callback_gnss(data):
-        save_data('%s/%s' % (dir, data.frame_number),
+        save_data('%s/%s' % (directory, data.frame_number),
                   {
                       'latitude': data.latitude,
                       'longitude': data.longitude,
@@ -341,14 +341,14 @@ def get_sensor_callback(sensor_name, dir):
                   })
 
     def callback_lane_detector(data):
-        save_data('%s/%s' % (dir, data.frame_number),
+        save_data('%s/%s' % (directory, data.frame_number),
                   {
                       'crossed_lane_markings': lane_markings_data(data.crossed_lane_markings),
                       'timestamp': time.time()
                   })
 
     def callback_collision(data):
-        save_data('%s/%s' % (dir, data.frame_number), {
+        save_data('%s/%s' % (directory, data.frame_number), {
             'actor_id': data.actor.id,
             'other_actor_id': data.other_actor.id,
             'actor': actor_data(data.actor),
