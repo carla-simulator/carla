@@ -22,7 +22,7 @@ namespace traffic_manager {
     using Topology = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
     Topology topology = dao.GetTopology();
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-    local_map->SetUp(1.0);
+    local_map->SetUp(0.1f);
 
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
     localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
