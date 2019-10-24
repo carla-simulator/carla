@@ -3,14 +3,14 @@
 namespace traffic_manager {
 
 namespace CollisionStageConstants {
-  static const float SEARCH_RADIUS = 20.0f;
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 0.5f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 1.5f;
   static const float EXTENSION_SQUARE_POINT = 7.0f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
   static const float HIGHWAY_TIME_HORIZON = 5.0f;
+  static const float CRAWL_SPEED = 10.0f / 3.6f;
 }
   using namespace  CollisionStageConstants;
 
@@ -115,12 +115,8 @@ namespace CollisionStageConstants {
               actor = unregistered_actors.at(actor_id);
             }
 
-            float squared_distance = cg::Math::DistanceSquared(ego_actor->GetLocation(),
-                                                               actor->GetLocation());
-            if (squared_distance <= SEARCH_RADIUS * SEARCH_RADIUS) {
-              if (NegotiateCollision(ego_actor, actor)) {
-                collision_hazard = true;
-              }
+            if (NegotiateCollision(ego_actor, actor)) {
+              collision_hazard = true;
             }
           }
         } catch (const std::exception &e) {
@@ -252,12 +248,16 @@ namespace CollisionStageConstants {
       float velocity = actor->GetVelocity().Length();
       cg::Location vehicle_location = actor->GetLocation();
 
-      float bbox_extension =
-          (std::max(std::sqrt(EXTENSION_SQUARE_POINT * velocity), BOUNDARY_EXTENSION_MINIMUM) +
-          std::max(velocity * TIME_HORIZON, BOUNDARY_EXTENSION_MINIMUM) +
-          BOUNDARY_EXTENSION_MINIMUM);
-
-      bbox_extension = (velocity > HIGHWAY_SPEED) ? (HIGHWAY_TIME_HORIZON * velocity) : bbox_extension;
+      float bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
+      if (velocity > HIGHWAY_SPEED) {
+        bbox_extension = HIGHWAY_TIME_HORIZON * velocity;
+      } else if (velocity < CRAWL_SPEED) {
+        bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
+      } else {
+        bbox_extension = std::sqrt(EXTENSION_SQUARE_POINT * velocity) +
+                         velocity * TIME_HORIZON +
+                         BOUNDARY_EXTENSION_MINIMUM;
+      }
 
       if (distance_to_leading_vehicle.Contains(actor->GetId())) {
         bbox_extension = std::max(distance_to_leading_vehicle.GetValue(actor->GetId()), bbox_extension);

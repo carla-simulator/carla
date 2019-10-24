@@ -14,8 +14,8 @@ namespace traffic_manager {
 
     ActorId actor_id = actor->GetId();
     cg::Location location = actor->GetLocation();
-    int first = static_cast<int>(std::floor(location.x / 10.0f));
-    int second = static_cast<int>(std::floor(location.y / 10.0f));
+    int first = static_cast<int>(std::floor(location.x / 20.0f));
+    int second = static_cast<int>(std::floor(location.y / 20.0f));
 
     std::string new_grid_id = MakeKey({first, second});
 

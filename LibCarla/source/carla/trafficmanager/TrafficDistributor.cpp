@@ -3,7 +3,7 @@
 namespace traffic_manager {
 
 namespace TrafficDistributorConstants {
-  static const float MINIMUM_LANE_CHANGE_DISTANCE = 5.0f;
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
   static const float LATERAL_DETECTION_CONE = 135.0f;
   static const float LANE_CHANGE_OBSTACLE_DISTANCE = 20.0f;
   static const float LANE_OBSTACLE_MINIMUM_DISTANCE = 10.0f;
@@ -164,10 +164,7 @@ namespace TrafficDistributorConstants {
 
     // Change the distance to the target point on the target lane
     // as a function of vehicle velocity.
-    int change_over_distance = static_cast<int>(
-      std::max(std::ceil(0.5f * vehicle_velocity),
-      MINIMUM_LANE_CHANGE_DISTANCE)
-      );
+    float change_over_distance = std::max(vehicle_velocity, MINIMUM_LANE_CHANGE_DISTANCE);
 
     bool possible_to_lane_change = false;
     std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
@@ -247,7 +244,9 @@ namespace TrafficDistributorConstants {
     }
 
     if (need_to_change_lane && possible_to_lane_change) {
-      for (int i = change_over_distance; i >= 0; i--) {
+      auto starting_point = change_over_point;
+      while (change_over_point->DistanceSquared(starting_point) < change_over_distance &&
+             !change_over_point->CheckJunction()) {
         change_over_point = change_over_point->GetNextWaypoint()[0];
       }
       return change_over_point;
