@@ -488,7 +488,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = params.radius * 10.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 0.25f + (frand() * 0.25f);
+    params.separationWeight = 0.5f;
 
     // set if the agent can cross roads or not
     if (frand() <= _probabilityCrossing) {
@@ -545,8 +545,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 1.0f;
-    float hy = vehicle.bounding.extent.y + 1.0f;
+    float hx = vehicle.bounding.extent.x + 0.5f;
+    float hy = vehicle.bounding.extent.y + 0.5f;
     // define the 4 corners of the bounding box
     cg::Vector3D boxCorner1 {-hx, -hy, 0};
     cg::Vector3D boxCorner2 { hx, -hy, 0};
@@ -609,7 +609,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 10.0f;
+    params.separationWeight = 100.0f;
 
     // flags
     params.updateFlags = 0;
