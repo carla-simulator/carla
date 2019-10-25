@@ -159,7 +159,7 @@ class Actors:
         self.actors = []
 
     def filter(self, regex):
-        return list(filter([re.match(regex, x.type_id) for x in self.actors]))
+        return list([x for x in self.actors if re.match(regex, x.type_id)])
 
 
 class Map:
@@ -193,7 +193,7 @@ class Reader:
             content = fi.read()
             if not self.is_raw:
                 try:
-                    content = ast.literal_eval(normalize_content(content))
+                    content = eval(normalize_content(content))
                 except SyntaxError:
                     logging.error("First and only file %s for %s is corrupted", fi.name, self.data_name)
                     return None
@@ -211,7 +211,7 @@ class Reader:
                 content = fi.read()
                 if not self.is_raw:
                     try:
-                        content = ast.literal_eval(normalize_content(content))
+                        content = eval(normalize_content(content))
                     except SyntaxError:
                         logging.info('Finished replaying %s', self.data_name)
                         return
@@ -232,14 +232,14 @@ class Reader:
 
     def get_raw_resolution(self):
         with open(join(self.path, self.files[self.current_index-1]), 'r') as fi:
-            data = recursive_attr_dict(ast.literal_eval(normalize_content(fi.read())))
+            data = recursive_attr_dict(eval(normalize_content(fi.read())))
         return data.get('width', None), data.get('height', None)
 
     def get_next_time_from_file(self, path):
         with open(path, 'r') as fi:
             content = fi.read()
             try:
-                data = ast.literal_eval(normalize_content(content))
+                data = eval(normalize_content(content))
             except SyntaxError:
                 logging.error("Corrupted file for %s: %s", self.data_name, self.path)
                 return None

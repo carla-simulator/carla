@@ -187,7 +187,7 @@ class DataRecorder:
 
         def callback_all(timestamp):
             save_data("%s/%s" % (output_dir, timestamp.frame_count), {
-                'actors': list(map([actor_data(data) for data in self.world.get_actors()])),
+                'actors': list(map(lambda actor: actor_data(actor), self.world.get_actors())),
                 'timestamp': time.time()
             })
 
