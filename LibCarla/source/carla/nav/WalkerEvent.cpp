@@ -12,27 +12,29 @@
 namespace carla {
 namespace nav {
 
-    bool WalkerEventVisitor::operator()(WalkerEventIgnore &, double, WalkerManager &) {
-        return true;
+    EventResult WalkerEventVisitor::operator()(WalkerEventIgnore &) {
+        return EventResult::End;
     }
 
-    bool WalkerEventVisitor::operator()(WalkerEventWait &event, double delta, WalkerManager &) {
+    EventResult WalkerEventVisitor::operator()(WalkerEventWait &event) {
         // refresh time and check
-        event.time -= delta;
-        return (event.time <= 0.0);
+        event.time -= _delta;
+        if (event.time <= 0.0)
+            return EventResult::End;
+        else
+            return EventResult::Continue;
     }
 
-    bool WalkerEventVisitor::operator()(WalkerEventStopAndCheck &event, double delta, WalkerManager &manager) {
-        event.time -= delta;
-        logging::log("time = ", event.time);
+    EventResult WalkerEventVisitor::operator()(WalkerEventStopAndCheck &event) {
+        event.time -= _delta;
         if (event.time <= 0.0) {
-            // assign a new route
-            logging::log("event time out");
-            manager.SetWalkerRoute(event.id);
-            return true;
+            return EventResult::TimeOut;
         } else {
             // check if the agent has any vehicle around
-            return (!event.nav->hasVehicleNear(event.id));
+            if (_manager && !(_manager->GetNavigation()->hasVehicleNear(_id)))
+                return EventResult::End;
+            else
+                return EventResult::Continue;
         }
     }
 

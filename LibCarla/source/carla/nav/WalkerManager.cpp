@@ -70,8 +70,17 @@ namespace nav {
                     break;
 
                 case WALKER_IN_EVENT:
-                    if (ExecuteEvent(it.second, delta)) {
-                        SetWalkerNextPoint(it.first);
+                    switch (ExecuteEvent(it.first, it.second, delta)) {
+                        case EventResult::Continue:
+                            break;
+                        case EventResult::End:
+                            // next point in route
+                            SetWalkerNextPoint(it.first);
+                            break;
+                        case EventResult::TimeOut:
+                            // unblock changing the route
+                            SetWalkerRoute(it.first);
+                            break;
                     }
                     break;
 
@@ -95,7 +104,7 @@ namespace nav {
         _nav->GetRandomLocation(location, 1, nullptr);
 
         // set the route
-        SetWalkerRoute(id, location);
+        return SetWalkerRoute(id, location);
     }
 
 	/// set a new route from its current position
@@ -137,7 +146,7 @@ namespace nav {
                 // stop and check
                 case SAMPLE_POLYAREA_ROAD:
                 case SAMPLE_POLYAREA_CROSS:
-                    info.route.emplace_back(WalkerEventStopAndCheck(id, _nav, 3), std::move(path[i]));
+                    info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]));
                     break;
 
                 default:
@@ -185,13 +194,14 @@ namespace nav {
         return true;
     }
 
-    bool WalkerManager::ExecuteEvent(WalkerInfo &info, double delta) {
+    EventResult WalkerManager::ExecuteEvent(ActorId id, WalkerInfo &info, double delta) {
         // go to the event
         WalkerRoutePoint &rp = info.route[info.currentIndex];
 
-        // we need to add 'delta' as second parameter, and 'this' as third
-        auto bound_visitor = std::bind(WalkerEventVisitor(), std::placeholders::_1, delta, *this);
-        return boost::apply_visitor(bound_visitor, rp.event);
+        // build the visitor structure
+        WalkerEventVisitor visitor(this, id, delta);
+        // run the event
+        return boost::apply_visitor(visitor, rp.event);
     }
 
 

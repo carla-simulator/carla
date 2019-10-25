@@ -16,6 +16,12 @@ namespace nav {
     class Navigation;
     class WalkerManager;
 
+    enum class EventResult : uint8_t {
+        Continue,
+        End,
+        TimeOut
+    };
+
     struct WalkerEventIgnore {
     };
 
@@ -25,18 +31,23 @@ namespace nav {
     };
 
     struct WalkerEventStopAndCheck {
-        ActorId id;
-        Navigation *nav;
         double time;
-        WalkerEventStopAndCheck(ActorId id, Navigation *nav, double duration) : id(id), nav(nav), time(duration) {};
+        WalkerEventStopAndCheck(double duration) : time(duration) {};
     };
 
     using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
 
-    struct WalkerEventVisitor {
-        bool operator()(WalkerEventIgnore &event, double delta, WalkerManager &manager);
-        bool operator()(WalkerEventWait &event, double delta, WalkerManager &manager);
-        bool operator()(WalkerEventStopAndCheck &event, double delta, WalkerManager &manager);
+    // visitor class
+    class WalkerEventVisitor {
+        public:
+            WalkerEventVisitor(WalkerManager *manager, ActorId id, double delta) : _manager(manager), _id(id), _delta(delta) {};
+            EventResult operator()(WalkerEventIgnore &event);
+            EventResult operator()(WalkerEventWait &event);
+            EventResult operator()(WalkerEventStopAndCheck &event);
+        private:
+            WalkerManager *_manager { nullptr };
+            double _delta { 0 };
+            ActorId _id { 0 };
     };
 
 } // namespace nav
