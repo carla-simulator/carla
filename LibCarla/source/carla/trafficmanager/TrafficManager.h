@@ -83,8 +83,7 @@ namespace cc = carla::client;
         std::vector<float> longitudinal_PID_parameters,
         std::vector<float> longitudinal_highway_PID_parameters,
         std::vector<float> lateral_PID_parameters,
-        float urban_target_velocity,
-        float highway_target_velocity,
+        float perc_decrease_from_limit,
         cc::Client &client_connection);
 
     /// To start the TrafficManager.

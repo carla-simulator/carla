@@ -54,8 +54,7 @@ namespace cc = carla::client;
     /// Target velocities for specific vehicles.
     AtomicMap<ActorId, float> &vehicle_target_velocity;
     /// Target velocities.
-    float urban_target_velocity;
-    float highway_target_velocity;
+    float perc_decrease_from_limit;
     /// Configuration parameters for the PID controller.
     std::vector<float> longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
@@ -73,8 +72,7 @@ namespace cc = carla::client;
         std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
         std::shared_ptr<PlannerToControlMessenger> control_messenger,
         AtomicMap<ActorId, float> &vehicle_target_velocity,
-        float urban_target_velocity,
-        float highway_target_velocity,
+        float perc_decrease_from_limit,
         std::vector<float> longitudinal_parameters,
         std::vector<float> highway_longitudinal_parameters,
         std::vector<float> lateral_parameters);

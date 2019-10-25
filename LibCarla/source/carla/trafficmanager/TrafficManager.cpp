@@ -6,8 +6,7 @@ namespace traffic_manager {
       std::vector<float> longitudinal_PID_parameters,
       std::vector<float> longitudinal_highway_PID_parameters,
       std::vector<float> lateral_PID_parameters,
-      float urban_target_velocity,
-      float highway_target_velocity,
+      float perc_decrease_from_limit,
       cc::Client &client_connection)
     : longitudinal_PID_parameters(longitudinal_PID_parameters),
       longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
@@ -50,8 +49,7 @@ namespace traffic_manager {
         traffic_light_planner_messenger,
         planner_control_messenger,
         vehicle_target_velocity,
-        urban_target_velocity,
-        highway_target_velocity,
+        perc_decrease_from_limit,
         longitudinal_PID_parameters,
         longitudinal_highway_PID_parameters,
         lateral_PID_parameters);
@@ -76,10 +74,11 @@ namespace traffic_manager {
       std::vector<float> longitudinal_param = {0.1f, 0.15f, 0.01f};
       std::vector<float> longitudinal_highway_param = {5.0f, 0.09f, 0.01f};
       std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
+      float perc_decrease_from_limit = 20.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
         longitudinal_param, longitudinal_highway_param, lateral_param,
-        25.0f/3.6f, 50.0f/3.6f, client_connection
+        perc_decrease_from_limit, client_connection
       );
 
       singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);

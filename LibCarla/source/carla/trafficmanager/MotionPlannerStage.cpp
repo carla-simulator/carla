@@ -4,7 +4,6 @@ namespace traffic_manager {
 
 namespace PlannerConstants {
   static const float HIGHWAY_SPEED = 50 / 3.6f;
-  static const float INTERSECTION_APPROACH_SPEED = 15 / 3.6f;
   static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
   static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.1f, 0.01f};
   static const std::vector<float> LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
@@ -17,8 +16,7 @@ namespace PlannerConstants {
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
       AtomicMap<ActorId, float> &vehicle_target_velocity,
-      float urban_target_velocity = 25 / 3.6f,
-      float highway_target_velocity = 50 / 3.6f,
+      float perc_decrease_from_limit = 20.0f,
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
       std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
       std::vector<float> lateral_parameters = LATERAL_DEFAULTS)
@@ -27,8 +25,7 @@ namespace PlannerConstants {
       traffic_light_messenger(traffic_light_messenger),
       control_messenger(control_messenger),
       vehicle_target_velocity(vehicle_target_velocity),
-      urban_target_velocity(urban_target_velocity),
-      highway_target_velocity(highway_target_velocity),
+      perc_decrease_from_limit(perc_decrease_from_limit),
       longitudinal_parameters(longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
       lateral_parameters(lateral_parameters) {
@@ -76,12 +73,12 @@ namespace PlannerConstants {
       traffic_manager::StateEntry previous_state;
       previous_state = pid_state_map.at(actor_id);
 
-      float dynamic_target_velocity = urban_target_velocity;
-
       // Increase speed if on highway.
       float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
+
+      float dynamic_target_velocity = speed_limit - (speed_limit*perc_decrease_from_limit)/100.0f;
+
       if (speed_limit > HIGHWAY_SPEED) {
-        dynamic_target_velocity = highway_target_velocity;
         longitudinal_parameters = highway_longitudinal_parameters;
       }
 
@@ -93,10 +90,6 @@ namespace PlannerConstants {
         }
       }
 
-      // Decrease speed approaching an intersection.
-      if (localization_data.approaching_true_junction) {
-        dynamic_target_velocity = INTERSECTION_APPROACH_SPEED;
-      }
 
       // State update for vehicle.
       StateEntry current_state = controller.StateUpdate(
