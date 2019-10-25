@@ -46,8 +46,8 @@ namespace nav {
             EventResult operator()(WalkerEventStopAndCheck &event);
         private:
             WalkerManager *_manager { nullptr };
-            double _delta { 0 };
             ActorId _id { 0 };
+            double _delta { 0 };
     };
 
 } // namespace nav
