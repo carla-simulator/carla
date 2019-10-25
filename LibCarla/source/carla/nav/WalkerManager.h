@@ -73,9 +73,12 @@ namespace nav {
 	/// set the next point in the route
     bool SetWalkerNextPoint(ActorId id);
 
+	/// return the navigation object
+	Navigation *GetNavigation() { return _nav; };
+
 	private:
 
-    bool ExecuteEvent(WalkerInfo &info, double delta);
+    EventResult ExecuteEvent(ActorId id, WalkerInfo &info, double delta);
 
     std::unordered_map<ActorId, WalkerInfo> _walkers;
 	Navigation *_nav { nullptr };
