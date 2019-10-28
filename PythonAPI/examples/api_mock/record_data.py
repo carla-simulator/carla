@@ -170,8 +170,10 @@ class DataRecorder:
             if 'attachment.type' in sensor_config:
                 if sensor_config['attachment.type'] == 'Rigid':
                     attachment_type = attachment.Rigid
+                    data['attachment_type'] = "Attachment.Rigid"
                 else:
                     attachment_type = attachment.SpringArm
+                    data['attachment_type'] = "Attachment.SpringArm"
                 sensor = self.world.spawn_actor(bp, transform, attach_to=parent, attachment_type=attachment_type)
             else:
                 sensor = self.world.spawn_actor(bp, transform, attach_to=parent)
@@ -187,7 +189,7 @@ class DataRecorder:
 
         def callback_all(timestamp):
             save_data("%s/%s" % (output_dir, timestamp.frame_count), {
-                'actors': list(map(lambda actor: actor_data(actor), self.world.get_actors())),
+                'actors': list(map(actor_data, self.world.get_actors())),
                 'timestamp': time.time()
             })
 

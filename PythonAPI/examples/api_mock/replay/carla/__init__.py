@@ -21,7 +21,6 @@ from os.path import isfile, join, isdir
 import re
 from threading import Timer
 import time
-import ast
 
 # ==============================================================================
 # -- setup ---------------------------------------------------------------------
@@ -36,8 +35,75 @@ with open(path_to_recorded_data + 'start.dict', 'r') as f:
 
 
 # ==============================================================================
+# -- libcarla mocks ------------------------------------------------------------
+# ==============================================================================
+
+
+class carla:
+    def __init__(self):
+        pass
+
+    class libcarla:
+        def __init__(self):
+            pass
+
+        class LaneChange:
+            def __init__(self):
+                pass
+
+            NONE = 'NONE'
+            Right = 'Right'
+            Left = 'Left'
+            Both = 'Both'
+
+        class TrafficLightState:
+            def __init__(self):
+                pass
+
+            Green = 'Green'
+            Red = 'Red'
+            Yellow = 'Yellow'
+
+        class LaneMarkingColor:
+            def __init__(self):
+                pass
+
+            Standard = 'White'
+            White = 'White'
+            Blue = 'Blue'
+            Green = 'Green'
+            Red = 'Red'
+            Yellow = 'Yellow'
+            Other = 'Other'
+
+        class LaneMarkingType:
+            def __init__(self):
+                pass
+
+            NONE = 'NONE'
+            Other = 'Other'
+            Broken = 'Broken'
+            Solid = 'Solid'
+            SolidSolid = 'SolidSolid'
+            SolidBroken = 'SolidBroken'
+            BrokenSolid = 'BrokenSolid'
+            BrokenBroken = 'BrokenBroken'
+            BottsDots = 'BottsDots'
+            Grass = 'Grass'
+            Curb = 'Curb'
+
+
+safe_expressions = {"carla": carla, "True": True, "False": False}
+
+
+# ==============================================================================
 # -- utils ---------------------------------------------------------------------
 # ==============================================================================
+
+
+def safe_eval(expression):
+    # pylint: disable=eval-used
+    return eval(expression, {"__builtins__": None}, safe_expressions)
 
 
 class AttrDict(dict):
@@ -69,7 +135,7 @@ def normalize_content(content):
 def parse_manifest(manifest_file_path):
     with open(manifest_file_path, 'r') as manif_file:
         content = manif_file.read()
-        manif = ast.literal_eval(normalize_content(content))
+        manif = safe_eval(normalize_content(content))
     return recursive_attr_dict(manif)
 
 
@@ -193,7 +259,7 @@ class Reader:
             content = fi.read()
             if not self.is_raw:
                 try:
-                    content = eval(normalize_content(content))
+                    content = safe_eval(normalize_content(content))
                 except SyntaxError:
                     logging.error("First and only file %s for %s is corrupted", fi.name, self.data_name)
                     return None
@@ -211,7 +277,7 @@ class Reader:
                 content = fi.read()
                 if not self.is_raw:
                     try:
-                        content = eval(normalize_content(content))
+                        content = safe_eval(normalize_content(content))
                     except SyntaxError:
                         logging.info('Finished replaying %s', self.data_name)
                         return
@@ -232,14 +298,14 @@ class Reader:
 
     def get_raw_resolution(self):
         with open(join(self.path, self.files[self.current_index-1]), 'r') as fi:
-            data = recursive_attr_dict(eval(normalize_content(fi.read())))
+            data = recursive_attr_dict(safe_eval(normalize_content(fi.read())))
         return data.get('width', None), data.get('height', None)
 
     def get_next_time_from_file(self, path):
         with open(path, 'r') as fi:
             content = fi.read()
             try:
-                data = eval(normalize_content(content))
+                data = safe_eval(normalize_content(content))
             except SyntaxError:
                 logging.error("Corrupted file for %s: %s", self.data_name, self.path)
                 return None
@@ -380,13 +446,14 @@ class CarlaWorld:
 
         return Library()
 
-    def spawn_actor(self, blueprint, transform, attach_to=None):
+    def spawn_actor(self, blueprint, transform, attach_to=None, attachment_type=None):
         if blueprint.type.startswith('sensor'):
             for sensor in sensors:
                 if attach_to is not None \
                         and 'role_name' in attach_to.attributes \
                         and attach_to.attributes['role_name'] is not None \
                         and attach_to.attributes['role_name'] == sensor.following_role \
+                        and (attachment_type is None or attachment_type == sensor.attachment_type) \
                         and blueprint.type == sensor.type_id \
                         and transform_equals(transform, sensor.starting_transform):
                     return sensor
@@ -478,13 +545,14 @@ class ColorConverter:
 
 
 class Sensor:
-    def __init__(self, type_name, type_id, transform, following_role, is_raw=False):
+    def __init__(self, type_name, type_id, transform, following_role, attachment_type, is_raw=False):
         self.id = None
         self.type_name = type_name
         self.type_id = type_id
         self.transform = transform
         self.starting_transform = transform
         self.following_role = following_role
+        self.attachment_type = attachment_type
         self.is_raw = is_raw
         self.callback = None
         self.current = None
@@ -527,60 +595,6 @@ class Image:
         pass
 
 
-class carla:
-    def __init__(self):
-        pass
-
-    class libcarla:
-        def __init__(self):
-            pass
-
-        class LaneChange:
-            def __init__(self):
-                pass
-
-            NONE = 'NONE'
-            Right = 'Right'
-            Left = 'Left'
-            Both = 'Both'
-
-        class TrafficLightState:
-            def __init__(self):
-                pass
-
-            Green = 'Green'
-            Red = 'Red'
-            Yellow = 'Yellow'
-
-        class LaneMarkingColor:
-            def __init__(self):
-                pass
-
-            Standard = 'White'
-            White = 'White'
-            Blue = 'Blue'
-            Green = 'Green'
-            Red = 'Red'
-            Yellow = 'Yellow'
-            Other = 'Other'
-
-        class LaneMarkingType:
-            def __init__(self):
-                pass
-
-            NONE = 'NONE'
-            Other = 'Other'
-            Broken = 'Broken'
-            Solid = 'Solid'
-            SolidSolid = 'SolidSolid'
-            SolidBroken = 'SolidBroken'
-            BrokenSolid = 'BrokenSolid'
-            BrokenBroken = 'BrokenBroken'
-            BottsDots = 'BottsDots'
-            Grass = 'Grass'
-            Curb = 'Curb'
-
-
 raw_sensor_types = {
     'sensor.camera.rgb',
     'sensor.camera.depth',
@@ -590,7 +604,13 @@ raw_sensor_types = {
 
 
 sensors = [
-    Sensor(manifest.name, manifest.type, manifest.transform, manifest.attach_to_role, manifest.type in raw_sensor_types)
+    Sensor(
+        manifest.name,
+        manifest.type,
+        manifest.transform,
+        manifest.attach_to_role,
+        manifest.attachment_type if "attachment_type" in manifest else None,
+        manifest.type in raw_sensor_types)
     for manifest in sensors_manifests
 ]
 
