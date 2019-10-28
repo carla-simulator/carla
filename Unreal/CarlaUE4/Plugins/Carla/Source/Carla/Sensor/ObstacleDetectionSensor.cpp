@@ -139,6 +139,6 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     GetDataStream(*this).Send(*this,
         Episode.SerializeActor(Episode.FindOrFakeActor(Actor)),
         Episode.SerializeActor(Episode.FindOrFakeActor(OtherActor)),
-        HitDistance/100.0);
+        HitDistance/100.0f);
   }
 }
