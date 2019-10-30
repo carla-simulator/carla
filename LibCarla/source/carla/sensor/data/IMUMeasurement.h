@@ -39,7 +39,7 @@ namespace data {
       return _gyroscope;
     }
 
-    geom::Vector3D GetCompass() const {
+    float GetCompass() const {
       return _compass;
     }
 
@@ -47,7 +47,7 @@ namespace data {
 
     geom::Vector3D _accelerometer;
     geom::Vector3D _gyroscope;
-    geom::Vector3D _compass;
+    float _compass;
 
   };
 

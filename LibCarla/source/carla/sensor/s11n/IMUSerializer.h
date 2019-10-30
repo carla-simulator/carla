@@ -27,7 +27,7 @@ namespace s11n {
 
       geom::Vector3D gyroscope;
 
-      geom::Vector3D compass;
+      float compass;
 
       MSGPACK_DEFINE_ARRAY(accelerometer, gyroscope, compass)
     };
@@ -37,7 +37,7 @@ namespace s11n {
       const SensorT &sensor,
       const geom::Vector3D &accelerometer,
       const geom::Vector3D &gyroscope,
-      const geom::Vector3D &compass);
+      const float compass);
 
     static Data DeserializeRawData(const RawData &message) {
       return MsgPack::UnPack<Data>(message.begin(), message.size());
@@ -51,7 +51,7 @@ namespace s11n {
       const SensorT &,
       const geom::Vector3D &accelerometer,
       const geom::Vector3D &gyroscope,
-      const geom::Vector3D &compass) {
+      const float compass) {
     return MsgPack::Pack(Data{accelerometer, gyroscope, compass});
   }
 

@@ -30,4 +30,5 @@ public:
 
   void Tick(float DeltaTime) override;
 
+  static const FVector CarlaNorthVector;
 };
