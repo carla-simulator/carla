@@ -16,7 +16,7 @@
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
-#include <carla/sensor/data/GnssEvent.h>
+#include <carla/sensor/data/GnssMeasurement.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -66,12 +66,12 @@ namespace data {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const GnssEvent &meas) {
-    out << "GnssEvent(frame=" << std::to_string(meas.GetFrame())
-        << ", timestamp=" << std::to_string(meas.GetTimestamp())
-        << ", lat=" << std::to_string(meas.GetLatitude())
-        << ", lon=" << std::to_string(meas.GetLongitude())
-        << ", alt=" << std::to_string(meas.GetAltitude())
+  std::ostream &operator<<(std::ostream &out, const GnssMeasurement &meas) {
+    out << "GnssMeasurement(frame=" << meas.GetFrame()
+        << ", timestamp=" << meas.GetTimestamp()
+        << ", lat=" << meas.GetLatitude()
+        << ", lon=" << meas.GetLongitude()
+        << ", alt=" << meas.GetAltitude()
         << ')';
     return out;
   }
@@ -240,10 +240,10 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::GnssEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssEvent>>("GnssEvent", no_init)
-    .add_property("latitude", &csd::GnssEvent::GetLatitude)
-    .add_property("longitude", &csd::GnssEvent::GetLongitude)
-    .add_property("altitude", &csd::GnssEvent::GetAltitude)
+  class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
+    .add_property("latitude", &csd::GnssMeasurement::GetLatitude)
+    .add_property("longitude", &csd::GnssMeasurement::GetLongitude)
+    .add_property("altitude", &csd::GnssMeasurement::GetAltitude)
     .def(self_ns::str(self_ns::self))
   ;
 

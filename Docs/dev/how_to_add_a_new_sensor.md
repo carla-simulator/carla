@@ -23,9 +23,8 @@ collision.
 
 Although most sensors compute their measurements in the server side (UE4), it's
 worth noticing that some sensors run in the client-side only. An example of such
-sensor is the GNSS, it computes the simulated geo-location in the client-side
-based on its 3D location. For further details see
-[Appendix: Client-side sensors](#appendix-client-side-sensors).
+sensor is the LaneInvasion, it notifies every time a lane mark has been crossed.
+For further details see [Appendix: Client-side sensors](#appendix-client-side-sensors).
 
 In this tutorial, we'll be focusing on server-side sensors.
 
@@ -551,16 +550,14 @@ void MySensor::Tick(float DeltaSeconds)
 
 Some sensors do not require the simulator to do their measurements, those
 sensors may run completely in the client-side freeing the simulator from extra
-computations. Examples of such sensors are the _GNSS_ and the _LaneInvasion_
-sensors.
+computations. Examples of such sensors is the _LaneInvasion_ sensors.
 
 The usual approach is to create a "dummy" sensor in the server-side, just so the
 simulator is aware that such actor exists. However, this dummy sensor doesn't tick
 nor sends any sort of data. Its counterpart on the client-side however,
 registers a "on tick" callback to execute some code on every new update. For
-instance, the GNSS sensor registers a callback that converts the current 3D
-location of the vehicle to a geo-location (latitude, longitude, altitude) every
-tick.
+instance, the LaneInvasion sensor registers a callback that notifies every time a
+lane mark has been crossed.
 
 It is very important to take into account that the "on tick" callback in the
 client-side is executed concurrently, i.e., the same method may be executed
