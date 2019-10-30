@@ -1,9 +1,11 @@
 ## Latest
   * Added new sensor: Inertial measurement unit (IMU)
+  * Moved GNSS sensor from client to server side
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
     - Lidar: `horizontal_angle` is now received in radians, not in degrees
+    - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
   * Updated manual_control.py with a lens disortion effect example

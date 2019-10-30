@@ -18,6 +18,7 @@
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
+#include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
 #include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
@@ -52,7 +53,7 @@ namespace sensor {
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
-    std::pair<AGnssSensor *, s11n::NoopSerializer>,
+    std::pair<AGnssSensor *, s11n::GnssSerializer>,
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>
   >;
