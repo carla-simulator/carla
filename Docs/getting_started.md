@@ -74,7 +74,24 @@ waiting for a client app to connect and interact with the world.
     the simulator with the command-line argument `-carla-port=N`, the second
     port will be automatically set to `N+1`.
 
-Let's add now some life to the city, open a new terminal window and execute
+Let's add now some life to the city, open a new terminal window and write:
+
+```sh
+make TrafficManager
+```
+
+Once that is completed, move to the TrafficManager/build folder and execute:
+
+```sh
+./trafficmanager
+```
+
+Which will create an appropriate amount of cars given the specs of your machine.
+Alternatively, you can use the -n <NUMBER_OF_VEHICLES> flag to choose how many
+cars you want to create.
+
+We still support the spawn_npc.py script, even if it will be removed soon. To spawn
+vehicles in "autopilot" mode, you can execute:
 
 ```sh
 python spawn_npc.py -n 80
