@@ -58,6 +58,8 @@ namespace LocalizationConstants {
     auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
     auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
 
+    int collision_messenger_current_state = collision_messenger->GetState();
+
     // Looping over registered actors.
     for (uint i = 0u; i < actor_list.size(); ++i) {
 
@@ -213,9 +215,13 @@ namespace LocalizationConstants {
       planner_message.deviation = dot_product;
       planner_message.approaching_true_junction = approaching_junction;
 
-      LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
-      collision_message.actor = vehicle;
-      collision_message.buffer = &waypoint_buffer;
+      // Reading current messenger state of the collision stage before modifying it's frame.
+      if (collision_messenger_current_state != collision_messenger_state) {
+
+        LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
+        collision_message.actor = vehicle;
+        collision_message.buffer = waypoint_buffer;
+      }
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;

@@ -271,14 +271,14 @@ namespace CollisionStageConstants {
       float width = vehicle->GetBoundingBox().extent.y;
       float length = vehicle->GetBoundingBox().extent.x;
 
-      SimpleWaypointPtr boundary_start = waypoint_buffer->front();
+      SimpleWaypointPtr boundary_start = waypoint_buffer.front();
       uint boundary_start_index = 0u;
       while (boundary_start->DistanceSquared(vehicle_location) < std::pow(length, 2) &&
-             boundary_start_index < waypoint_buffer->size() -1) {
-        boundary_start = waypoint_buffer->at(boundary_start_index);
+             boundary_start_index < waypoint_buffer.size() -1) {
+        boundary_start = waypoint_buffer.at(boundary_start_index);
         ++boundary_start_index;
       }
-      SimpleWaypointPtr boundary_end = waypoint_buffer->at(boundary_start_index);
+      SimpleWaypointPtr boundary_end = waypoint_buffer.at(boundary_start_index);
 
       auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(actor);
       // At non-signalized junctions, we extend the boundary across the junction
@@ -286,7 +286,7 @@ namespace CollisionStageConstants {
       // in all other situations, boundary length is velocity-dependent.
       for (uint j = boundary_start_index;
           (boundary_start->DistanceSquared(boundary_end) < std::pow(bbox_extension, 2)) &&
-          (j < waypoint_buffer->size());
+          (j < waypoint_buffer.size());
           ++j) {
 
         cg::Vector3D heading_vector = boundary_end->GetForwardVector();
@@ -297,7 +297,7 @@ namespace CollisionStageConstants {
         cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
         left_boundary.push_back(location + cg::Location(scaled_perpendicular));
         right_boundary.push_back(location + cg::Location(-1 * scaled_perpendicular));
-        boundary_end = waypoint_buffer->at(j);
+        boundary_end = waypoint_buffer.at(j);
       }
 
       // Connecting the geodesic path boundary with the vehicle bounding box.
