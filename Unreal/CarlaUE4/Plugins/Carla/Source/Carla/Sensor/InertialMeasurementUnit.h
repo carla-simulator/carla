@@ -31,4 +31,12 @@ public:
   void Tick(float DeltaTime) override;
 
   static const FVector CarlaNorthVector;
+
+private:
+
+  void BeginPlay() override;
+
+  FVector PrevVelocity;
+  float PrevSimulationTime;
+
 };
