@@ -41,7 +41,7 @@ namespace cc = carla::client;
   /// Type of data sent by the localization stage to the collision stage.
   struct LocalizationToCollisionData {
     carla::SharedPtr<cc::Actor> actor;
-    Buffer *buffer;
+    Buffer buffer;
   };
 
   /// Type of data sent by the collision stage to the motion planner stage.
