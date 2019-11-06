@@ -27,7 +27,8 @@ namespace nav {
     SAMPLE_POLYFLAGS_DOOR       = 0x04,   // Ability to move through doors.
     SAMPLE_POLYFLAGS_JUMP       = 0x08,   // Ability to jump.
     SAMPLE_POLYFLAGS_DISABLED   = 0x10,   // Disabled polygon
-  	SAMPLE_POLYFLAGS_CROSS      = 0x20,		// Ability to cross through road
+  	SAMPLE_POLYFLAGS_ROAD	    	= 0x20,		// Ability to walk on road
+  	SAMPLE_POLYFLAGS_GRASS	    = 0x40,		// Ability to walk on grass
     SAMPLE_POLYFLAGS_ALL        = 0xffff  // All abilities.
   };
 
@@ -53,7 +54,8 @@ namespace nav {
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
   static const float AGENT_UNBLOCK_TIME = 4.0f;
 
-  static const float AREA_ROAD_COST = 10.0f;
+  static const float AREA_GRASS_COST =  1.0f;
+  static const float AREA_ROAD_COST  = 10.0f;
 
   // return a random float
   static float frand() {
@@ -215,14 +217,16 @@ namespace nav {
     }
 
     // set different filters
-    // filter 0 can not cross roads
+    // filter 0 can not walk on roads
     _crowd->getEditableFilter(0)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_CROSS);
+    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_ROAD);
     _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
-    // filter 1 can cross roads
+    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
+    // filter 1 can walk on roads
     _crowd->getEditableFilter(1)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
     _crowd->getEditableFilter(1)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
     _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
+    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
 
     // Setup local avoidance params to different qualities.
     dtObstacleAvoidanceParams params;
@@ -293,6 +297,7 @@ namespace nav {
     dtQueryFilter filter2;
     if (filter == nullptr) {
       filter2.setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
+      filter2.setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
       filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
       filter = &filter2;
@@ -1076,7 +1081,7 @@ namespace nav {
     dtQueryFilter filter2;
     if (filter == nullptr) {
       filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_CROSS);
+      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_ROAD | SAMPLE_POLYFLAGS_GRASS);
       filter = &filter2;
     }
 
