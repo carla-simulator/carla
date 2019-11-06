@@ -64,7 +64,11 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   namespace cg = carla::geom;
 
   // Accelerometer measures linear acceleration in m/s2
-  cg::Vector3D Accelerometer = FVector::OneVector;
+  FVector CurrentVelocity = GetOwner()->GetVelocity(); // cm/s
+  float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
+  cg::Vector3D Accelerometer = 0.01f * (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
+  PrevVelocity = CurrentVelocity;
+  PrevSimulationTime = CurrentSimulationTime;
 
   // Gyroscope measures angular velocity in degrees/sec
   const cg::Vector3D AngularVelocity =
@@ -95,4 +99,13 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       Accelerometer,
       Gyroscope,
       Compass);
+}
+
+void AInertialMeasurementUnit::BeginPlay()
+{
+  Super::BeginPlay();
+
+  PrevVelocity = GetVelocity();
+  PrevSimulationTime = GetWorld()->GetTimeSeconds();
+
 }
