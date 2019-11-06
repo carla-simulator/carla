@@ -9,13 +9,13 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Math.h"
 #include <compiler/enable-ue4-macros.h>
-
-#include <cmath>
 
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+// Based on OpenDRIVE's lon and lat
 const FVector AInertialMeasurementUnit::CarlaNorthVector =
     FVector(0.0f, -1.0f, 0.0f);
 
@@ -35,7 +35,9 @@ FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
 
 void AInertialMeasurementUnit::Set(const FActorDescription &ActorDescription)
 {
-
+  Super::Set(ActorDescription);
+  // Fill the parameters that the user requested
+  // Not currently needed in this sensor
 }
 
 void AInertialMeasurementUnit::SetOwner(AActor *Owner)
@@ -43,13 +45,13 @@ void AInertialMeasurementUnit::SetOwner(AActor *Owner)
   Super::SetOwner(Owner);
 }
 
-// Temporal copy of FWorldObserver_GetAngularVelocity
-static carla::geom::Vector3D temp_FWorldObserver_GetAngularVelocity(AActor &Actor)
+// Copy of FWorldObserver_GetAngularVelocity but using radiants
+static carla::geom::Vector3D GetActorAngularVelocityInRadians(AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
   const FVector AngularVelocity =
       RootComponent != nullptr ?
-          RootComponent->GetPhysicsAngularVelocityInDegrees() :
+          RootComponent->GetPhysicsAngularVelocityInRadians() :
           FVector{0.0f, 0.0f, 0.0f};
 
   return AngularVelocity;
@@ -65,15 +67,26 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   cg::Vector3D Accelerometer = FVector::OneVector;
 
   // Gyroscope measures angular velocity in degrees/sec
-  cg::Vector3D Gyroscope = temp_FWorldObserver_GetAngularVelocity(*GetOwner());
+  const cg::Vector3D AngularVelocity =
+      GetActorAngularVelocityInRadians(*GetOwner());
 
-  // Magnetometer: orientation with respect to the North,
-  // that based on OpenDRIVE's lon and lat, is (0.0f, -1.0f, 0.0f)
-  auto ForwVect = GetActorForwardVector().GetSafeNormal2D();
-  float Compass = FMath::RadiansToDegrees(std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect)));
+  const FTransform RotationTransform = FTransform(
+      RootComponent->GetRelativeTransform().GetRotation());
+
+  const auto Gyroscope = RotationTransform.TransformVectorNoScale({
+      AngularVelocity.x,
+      AngularVelocity.y,
+      AngularVelocity.z
+  });
+
+  // Magnetometer: orientation with respect to the North
+  const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
+  float Compass = std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect));
+
+  // Keep the angle between [0, 2pi)
   if (FVector::CrossProduct(CarlaNorthVector, ForwVect).Z > 0.0f)
   {
-    Compass = 360.0f - Compass;
+    Compass = cg::Math::Pi2<float>() - Compass;
   }
 
   auto Stream = GetDataStream(*this);
