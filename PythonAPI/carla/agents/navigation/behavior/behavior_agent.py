@@ -177,7 +177,7 @@ class BehaviorAgent(Agent):
         light_id = self.vehicle.get_traffic_light().id if self.vehicle.get_traffic_light() is not None else -1
 
         if self.light_state == "Red":
-            if not waypoint.is_junction and (self.light_id_to_ignore != light_id or light_id == -1):
+            if not waypoint.is_junction and self.light_id_to_ignore != light_id:
                 return 1
             elif waypoint.is_junction and light_id != -1:
                 self.light_id_to_ignore = light_id
