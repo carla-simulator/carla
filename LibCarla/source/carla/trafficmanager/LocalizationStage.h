@@ -44,6 +44,7 @@ namespace cc = carla::client;
     /// Section keys to switch between the output data frames.
     bool planner_frame_selector;
     bool collision_frame_selector;
+    bool previous_collision_selector;
     bool traffic_light_frame_selector;
     /// Output data frames to be shared with the motion planner stage.
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
@@ -77,8 +78,7 @@ namespace cc = carla::client;
     cc::DebugHelper &debug_helper;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
-    std::shared_ptr<BufferList> buffer_list_a;
-    std::shared_ptr<BufferList> buffer_list_b;
+    std::shared_ptr<BufferList> buffer_list;
     /// Object used to keep track of vehicles according to their map position,
     /// determine and execute lane changes.
     TrafficDistributor traffic_distributor;
