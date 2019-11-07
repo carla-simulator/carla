@@ -178,9 +178,8 @@ class BehaviorAgent(Agent):
 
         if self.light_state == "Red":
             if not waypoint.is_junction and (self.light_id_to_ignore != light_id or light_id == -1):
-                return 1
-            elif waypoint.is_junction and light_id != -1:
                 self.light_id_to_ignore = light_id
+                return 1
         if self.light_id_to_ignore != light_id:
             self.light_id_to_ignore = -1
         return 0
@@ -245,7 +244,8 @@ class BehaviorAgent(Agent):
                     self.behavior.tailgate_counter = 200
                     self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
-            elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
+            elif (left_turn == carla.LaneChange.Left or left_turn ==
+                    carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
                 new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:
@@ -352,10 +352,9 @@ class BehaviorAgent(Agent):
             control = self._local_planner.run_step(
                 target_speed=min(max(self.min_speed, vehicle_speed),
                                  min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
-        # Normal behavior.
+        # Too close, emergency stop
         else:
-            control = self._local_planner.run_step(
-                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
+            control = self.emergency_stop()
 
         return control
 
