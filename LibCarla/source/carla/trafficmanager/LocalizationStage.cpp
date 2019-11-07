@@ -33,6 +33,7 @@ namespace LocalizationConstants {
     // Initializing various output frame selectors.
     planner_frame_selector = true;
     collision_frame_selector = true;
+    previous_collision_selector = !collision_frame_selector;
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
@@ -55,10 +56,6 @@ namespace LocalizationConstants {
     auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
     auto current_traffic_light_frame =
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
-    auto current_buffer_list = collision_frame_selector ? buffer_list_a : buffer_list_b;
-    auto copy_buffer_list = !collision_frame_selector ? buffer_list_a : buffer_list_b;
-
-    int collision_messenger_current_state = collision_messenger->GetState();
 
     // Looping over registered actors.
     for (uint i = 0u; i < actor_list.size(); ++i) {
@@ -72,22 +69,7 @@ namespace LocalizationConstants {
           WAYPOINT_TIME_HORIZON * vehicle_velocity,
           MINIMUM_HORIZON_LENGTH);
 
-      Buffer &waypoint_buffer = current_buffer_list->at(i);
-      Buffer &copy_waypoint_buffer = copy_buffer_list->at(i);
-
-      // Synchronizing buffer copies in case the path of the vehicle has
-      // changed.
-      if (!waypoint_buffer.empty() && !copy_waypoint_buffer.empty() &&
-          ((copy_waypoint_buffer.front()->GetWaypoint()->GetLaneId()
-          != waypoint_buffer.front()->GetWaypoint()->GetLaneId()) ||
-          (copy_waypoint_buffer.front()->GetWaypoint()->GetSectionId()
-          != waypoint_buffer.front()->GetWaypoint()->GetSectionId()) ||
-          (copy_waypoint_buffer.front()->GetWaypoint()->GetRoadId()
-          != waypoint_buffer.front()->GetWaypoint()->GetRoadId()))) {
-
-        waypoint_buffer.clear();
-        waypoint_buffer.assign(copy_waypoint_buffer.begin(), copy_waypoint_buffer.end());
-      }
+      Buffer &waypoint_buffer = buffer_list->at(i);
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
@@ -105,6 +87,9 @@ namespace LocalizationConstants {
       // Initializing buffer if it is empty.
       if (waypoint_buffer.empty()) {
         SimpleWaypointPtr closest_waypoint = local_map.GetWaypointInVicinity(vehicle_location);
+        if (closest_waypoint == nullptr) {
+          closest_waypoint = local_map.GetWaypoint(vehicle_location);
+        }
         waypoint_buffer.push_back(closest_waypoint);
       }
 
@@ -116,9 +101,7 @@ namespace LocalizationConstants {
         front_waypoint->GetWaypoint()->GetLaneId()
       };
 
-      traffic_distributor.UpdateVehicleRoadPosition(
-          actor_id,
-          current_road_ids);
+      traffic_distributor.UpdateVehicleRoadPosition(actor_id, current_road_ids);
 
       bool force_lane_change = false;
       bool lane_change_direction = false;
@@ -129,13 +112,13 @@ namespace LocalizationConstants {
       }
 
       if ((!(auto_lane_change.Contains(actor_id) &&
-             !auto_lane_change.GetValue(actor_id)) &&
-           !front_waypoint->CheckJunction()) ||
+            !auto_lane_change.GetValue(actor_id)) &&
+          !front_waypoint->CheckJunction()) ||
           force_lane_change) {
 
         SimpleWaypointPtr change_over_point = traffic_distributor.AssignLaneChange(
             vehicle, front_waypoint, current_road_ids,
-            current_buffer_list, vehicle_id_to_index,
+            buffer_list, vehicle_id_to_index,
             actor_list, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
@@ -216,7 +199,7 @@ namespace LocalizationConstants {
       planner_message.approaching_true_junction = approaching_junction;
 
       // Reading current messenger state of the collision stage before modifying it's frame.
-      if (collision_messenger_current_state != collision_messenger_state) {
+      if (collision_frame_selector != previous_collision_selector) {
 
         LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
         collision_message.actor = vehicle;
@@ -228,6 +211,8 @@ namespace LocalizationConstants {
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
+
+    previous_collision_selector = collision_frame_selector;
   }
 
   void LocalizationStage::DataReceiver() {
@@ -254,8 +239,7 @@ namespace LocalizationConstants {
 
       number_of_vehicles = static_cast<uint>(actor_list.size());
       // Allocating the buffer lists.
-      buffer_list_a = std::make_shared<BufferList>(number_of_vehicles);
-      buffer_list_b = std::make_shared<BufferList>(number_of_vehicles);
+      buffer_list = std::make_shared<BufferList>(number_of_vehicles);
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);

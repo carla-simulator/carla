@@ -81,6 +81,9 @@ namespace bg = boost::geometry;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
 
+    /// Stage throughput count.
+    uint throughput_count = 0;
+
     /// Returns true if there is a possible collision detected between the
     /// vehicles passed to the method.
     /// Collision is predicted by extrapolating a boundary around the vehicle
