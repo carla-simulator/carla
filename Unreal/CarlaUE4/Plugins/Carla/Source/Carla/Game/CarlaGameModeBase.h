@@ -14,10 +14,6 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include "carla/geom/GeoLocation.h"
-#include <compiler/enable-ue4-macros.h>
-
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
@@ -38,12 +34,6 @@ public:
     check(Episode != nullptr);
     return *Episode;
   }
-
-  const carla::geom::GeoLocation &GeoLocation() const
-  {
-    return CurrentGeoLocation;
-  }
-
 
 protected:
 
@@ -88,5 +78,4 @@ private:
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
 
-  carla::geom::GeoLocation CurrentGeoLocation;
 };

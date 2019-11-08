@@ -6,7 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/GnssSensor.h"
-#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
@@ -47,5 +47,6 @@ void AGnssSensor::BeginPlay()
   Super::BeginPlay();
 
   ACarlaGameModeBase* game_mode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  CurrentGeoLocation = game_mode->GeoLocation();
+  const UCarlaEpisode& episode = game_mode->GetCarlaEpisode();
+  CurrentGeoLocation = episode.GeoLocation();
 }
