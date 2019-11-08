@@ -64,20 +64,29 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   namespace cg = carla::geom;
 
   // Accelerometer measures linear acceleration in m/s2
-  FVector CurrentVelocity = GetOwner()->GetVelocity(); // cm/s
-  float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
-  cg::Vector3D Accelerometer = 0.01f * (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
+  constexpr float TO_METERS = 1e-2;
+  const FVector CurrentVelocity = GetOwner()->GetVelocity() * TO_METERS; // cm/s -> m/s
+  const float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
+  cg::Vector3D Accelerometer =
+      (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
   PrevVelocity = CurrentVelocity;
   PrevSimulationTime = CurrentSimulationTime;
+
+  FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
+  Accelerometer = ImuRotation.UnrotateVector({
+      Accelerometer.x,
+      Accelerometer.y,
+      Accelerometer.z
+  });
 
   // Gyroscope measures angular velocity in degrees/sec
   const cg::Vector3D AngularVelocity =
       GetActorAngularVelocityInRadians(*GetOwner());
 
-  const FTransform RotationTransform = FTransform(
-      RootComponent->GetRelativeTransform().GetRotation());
+  const FQuat SensorLocalRotation =
+      RootComponent->GetRelativeTransform().GetRotation();
 
-  const auto Gyroscope = RotationTransform.TransformVectorNoScale({
+  const cg::Vector3D Gyroscope = SensorLocalRotation.RotateVector({
       AngularVelocity.x,
       AngularVelocity.y,
       AngularVelocity.z
@@ -105,7 +114,7 @@ void AInertialMeasurementUnit::BeginPlay()
 {
   Super::BeginPlay();
 
-  PrevVelocity = GetVelocity();
+  constexpr float TO_METERS = 1e-2;
+  PrevVelocity = GetOwner()->GetVelocity() * TO_METERS;
   PrevSimulationTime = GetWorld()->GetTimeSeconds();
-
 }

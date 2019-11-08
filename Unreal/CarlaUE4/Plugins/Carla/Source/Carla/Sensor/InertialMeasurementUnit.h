@@ -38,6 +38,7 @@ private:
   void BeginPlay() override;
 
   FVector PrevVelocity;
+
   float PrevSimulationTime;
 
 };
