@@ -99,7 +99,7 @@ void ACarlaGameModeBase::InitGame(
   if (!map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
   } else {
-    CurrentGeoLocation = map->GetGeoReference();
+    Episode->MapGeoLocation = map->GetGeoReference();
   }
 
 }
