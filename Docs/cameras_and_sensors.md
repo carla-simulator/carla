@@ -322,7 +322,7 @@ objects.
 | `frame`                    | int        | Frame number when the measurement took place |
 | `timestamp`                | double     | Timestamp of the measurement in simulation seconds since the beginning of the episode |
 | `transform`                | carla.Transform | Transform in world coordinates of the sensor at the time of the measurement |
-| `horizontal_angle`         | float      | Angle in XY plane of the lidar this frame (in degrees) |
+| `horizontal_angle`         | float      | Angle in XY plane of the lidar this frame (in radians) |
 | `channels`                 | int        | Number of channels (lasers) of the lidar |
 | `get_point_count(channel)` | int        | Number of points per channel captured this frame |
 | `raw_data`                 | bytes      | Array of 32-bits floats (XYZ of each point) |
@@ -457,3 +457,23 @@ objects.
 | `actor`                | carla.Actor | Actor that detected the obstacle ("self" actor) |
 | `other_actor`          | carla.Actor | Actor detected as obstacle |
 | `distance`             | float       | Distance from actor to other_actor |
+
+sensor.other.imu
+----------------
+
+This sensor, when attached to an actor, the user can access to it's accelerometer, gyroscope and compass.
+
+<h4>Output attributes</h4>
+
+This sensor produces
+[`carla.IMUMeasurement`](python_api.md#carla.IMUMeasurement)
+objects.
+
+| Sensor data attribute | Type            | Description |
+| --------------------- | --------------- | ----------- |
+| `frame`               | int             | Frame number when the measurement took place |
+| `timestamp`           | double          | Timestamp of the measurement in simulation seconds since the beginning of the episode |
+| `transform`           | carla.Transform | Transform in world |
+| `accelerometer`       | carla.Vector3D  | Measures linear acceleration in `m/s^2` |
+| `gyroscope`           | carla.Vector3D  | Measures angular velocity in `rad/sec` |
+| `compass`             | float           | Orientation with respect to the North (`(0.0, -1.0, 0.0)` in Unreal) in radians |

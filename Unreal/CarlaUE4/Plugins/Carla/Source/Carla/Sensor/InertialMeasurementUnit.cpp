@@ -84,7 +84,7 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       Accelerometer.z
   });
 
-  // Gyroscope measures angular velocity in degrees/sec
+  // Gyroscope measures angular velocity in rad/sec
   const cg::Vector3D AngularVelocity =
       GetActorAngularVelocityInRadians(*GetOwner());
 
@@ -97,7 +97,7 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       AngularVelocity.z
   });
 
-  // Magnetometer: orientation with respect to the North
+  // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
   float Compass = std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect));
 
