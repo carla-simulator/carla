@@ -45,19 +45,14 @@ namespace CollisionStageConstants {
   CollisionStage::~CollisionStage() {}
 
   void CollisionStage::Action() {
-
     auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Handle vehicles not spawned by TrafficManager.
     auto current_time = chr::system_clock::now();
     chr::duration<double> diff = current_time - last_world_actors_pass_instance;
-    ++throughput_count;
 
     // Periodically check for actors not spawned by TrafficManager.
     if (diff.count() > 1.0f) {
-
-      // std::cout << "Collision stage throughput : " << throughput_count << " frames per second" << std::endl;
-      throughput_count = 0;
 
       auto world_actors = world.GetActors()->Filter("vehicle.*");
       auto world_walker = world.GetActors()->Filter("walker.*");
@@ -99,8 +94,6 @@ namespace CollisionStageConstants {
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
-
-      // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
@@ -167,6 +160,7 @@ namespace CollisionStageConstants {
   }
 
   void CollisionStage::DataSender() {
+
     DataPacket<std::shared_ptr<CollisionToPlannerFrame>> packet{
       planner_messenger_state,
       frame_selector ? planner_frame_a : planner_frame_b

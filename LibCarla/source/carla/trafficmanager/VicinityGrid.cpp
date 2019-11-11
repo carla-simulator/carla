@@ -25,12 +25,16 @@ namespace traffic_manager {
     if (actor_to_grid_id.find(actor_id) != actor_to_grid_id.end()) {
 
       std::string old_grid_id = actor_to_grid_id.at(actor_id);
+
       // If the actor has moved into a new road/section/lane.
       if (old_grid_id != new_grid_id) {
         std::unique_lock<std::shared_timed_mutex> lock(modification_mutex);
-        // Remove actor from old grid position and update the new position.
+
+        // Update the actor's grid id.
+        actor_to_grid_id.at(actor_id) = new_grid_id;
+
+        // Remove the actor from the old grid position and update the new position.
         grid_to_actor_id.at(old_grid_id).erase(actor_id);
-        actor_to_grid_id.insert({actor_id, new_grid_id});
         if (grid_to_actor_id.find(new_grid_id) != grid_to_actor_id.end()) {
           grid_to_actor_id.at(new_grid_id).insert(actor_id);
         } else {
