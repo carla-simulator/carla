@@ -1,4 +1,5 @@
 ## Latest
+  * Added new sensor: Inertial measurement unit (IMU)
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
