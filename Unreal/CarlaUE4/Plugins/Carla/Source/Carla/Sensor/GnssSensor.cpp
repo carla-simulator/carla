@@ -29,8 +29,8 @@ void AGnssSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  carla::geom::Vector3D location = GetActorLocation();
-  location /= 100.0f;
+  constexpr float TO_METERS = 1e-2;
+  carla::geom::Vector3D location = TO_METERS * GetActorLocation();
 
   carla::geom::GeoLocation current_location = CurrentGeoLocation.Transform(location);
 
