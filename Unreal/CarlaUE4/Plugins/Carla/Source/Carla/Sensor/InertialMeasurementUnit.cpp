@@ -8,10 +8,11 @@
 #include "InertialMeasurementUnit.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include "carla/geom/Vector3D.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Vector3D.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
@@ -24,6 +25,7 @@ AInertialMeasurementUnit::AInertialMeasurementUnit(
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.TickGroup = TG_PostPhysics;
 }
 
 FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
@@ -65,10 +67,13 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
 
   // Accelerometer measures linear acceleration in m/s2
   constexpr float TO_METERS = 1e-2;
-  const FVector CurrentVelocity = GetOwner()->GetVelocity() * TO_METERS; // cm/s -> m/s
-  const float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
+
+  ACarlaWheeledVehicle *vehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
+  const FVector CurrentVelocity = vehicle->GetVehicleForwardSpeed() * vehicle->GetVehicleOrientation();
+  float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
   cg::Vector3D Accelerometer =
-      (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
+      TO_METERS * (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
+
   PrevVelocity = CurrentVelocity;
   PrevSimulationTime = CurrentSimulationTime;
 
@@ -115,6 +120,6 @@ void AInertialMeasurementUnit::BeginPlay()
   Super::BeginPlay();
 
   constexpr float TO_METERS = 1e-2;
-  PrevVelocity = GetOwner()->GetVelocity() * TO_METERS;
+  PrevVelocity = GetOwner()->GetVelocity();
   PrevSimulationTime = GetWorld()->GetTimeSeconds();
 }
