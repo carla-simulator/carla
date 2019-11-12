@@ -62,7 +62,7 @@ namespace nav {
                         _nav->GetWalkerPosition(it.first, current);
                         // check distance to the target point
                         carla::geom::Vector3D dist(target.x - current.x, target.z - current.z, target.y - current.y);
-                        if (dist.SquaredLength() <= 2) {
+                        if (dist.SquaredLength() <= 4) {
                             info.state = WALKER_IN_EVENT;
                             _nav->PauseAgent(it.first, true);
                         }
