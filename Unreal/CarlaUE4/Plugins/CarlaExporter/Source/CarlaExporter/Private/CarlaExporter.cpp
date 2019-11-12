@@ -133,59 +133,128 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 	// create the file
 	std::ofstream f(name.str());
 
+	// define the rounds
+	int rounds;
+	if (type == "all")
+		rounds = 5;
+	else
+		rounds = 1;
+
 	int offset = 1;
-	for (UObject* SelectedObject : BP_Actors)
+	for (int round = 0; round < rounds; ++round)
 	{
-		AActor* TempActor = Cast<AActor>(SelectedObject);
-		if (!TempActor) continue;
-		
-		// check the TAG (NoExport)
-		if (TempActor->ActorHasTag(FName("NoExport"))) continue;
-
-		FString ActorName = TempActor->GetName();
-
-		f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
-
-		// check type by nomenclature
-		if (ActorName.StartsWith("Road_Road"))
-			type = "road";
-		else if (ActorName.StartsWith("Road_Marking"))
-			type = "road";
-		else if (ActorName.StartsWith("Road_Curb"))
-			type = "road";
-		else if (ActorName.StartsWith("Road_Gutter"))
-			type = "road";
-		else if (ActorName.StartsWith("Road_Sidewalk"))
-			type = "sidewalk";
-		else if (ActorName.StartsWith("Road_Crosswalk"))
-			type = "crosswalk";
-		else if (ActorName.StartsWith("Road_Grass"))
-			type = "grass";
-		else
-			type = "block";
-
-		TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-		// UE_LOG(LogTemp, Warning, TEXT("Components: %d"), Components.Num());
-		for (auto *Component : Components)
+		for (UObject* SelectedObject : BP_Actors)
 		{
+			AActor* TempActor = Cast<AActor>(SelectedObject);
+			if (!TempActor) continue;
+			
+			// check the TAG (NoExport)
+			if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
-			// check if is an instanced static mesh
-			UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
-			if (comp2)
+			FString ActorName = TempActor->GetName();
+
+			// check type by nomenclature
+			if (ActorName.StartsWith("Road_Road"))
+				type = "road";
+			else if (ActorName.StartsWith("Road_Marking"))
+				type = "road";
+			else if (ActorName.StartsWith("Road_Curb"))
+				type = "road";
+			else if (ActorName.StartsWith("Road_Gutter"))
+				type = "road";
+			else if (ActorName.StartsWith("Road_Sidewalk"))
+				type = "sidewalk";
+			else if (ActorName.StartsWith("Road_Crosswalk"))
+				type = "crosswalk";
+			else if (ActorName.StartsWith("Road_Grass"))
+				type = "grass";
+			else
+				type = "block";
+
+			// check to export in this round or not
+			if (rounds > 1)
 			{
-				UBodySetup *body = comp2->GetBodySetup();
-				if (!body) continue;
-				// UE_LOG(LogTemp, Warning, TEXT("Get %d component instances"), comp2->GetInstanceCount());
+				if (type == "block" && round != 0) 
+					continue;
+				else if (type == "road" && round != 1) 
+					continue;
+				else if (type == "grass" && round != 2) 
+					continue;
+				else if (type == "sidewalk" && round != 3) 
+					continue;
+				else if (type == "crosswalk" && round != 4)
+					continue;
+			}
 
-				for (int i=0; i<comp2->GetInstanceCount(); ++i)
+			f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
+
+			TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+			// UE_LOG(LogTemp, Warning, TEXT("Components: %d"), Components.Num());
+			for (auto *Component : Components)
+			{
+
+				// check if is an instanced static mesh
+				UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
+				if (comp2)
 				{
-					f << "g instance_" << i << "\n";
+					UBodySetup *body = comp2->GetBodySetup();
+					if (!body) continue;
+					// UE_LOG(LogTemp, Warning, TEXT("Get %d component instances"), comp2->GetInstanceCount());
+
+					for (int i=0; i<comp2->GetInstanceCount(); ++i)
+					{
+						f << "g instance_" << i << "\n";
+
+						// get the component position and transform
+						FTransform InstanceTransform;
+						comp2->GetInstanceTransform(i, InstanceTransform, true);
+						FVector InstanceLocation = InstanceTransform.GetTranslation();
+
+
+						// through all convex elements
+						for (const auto &mesh : body->TriMeshes)
+						{
+							// get data
+							PxU32 nbVerts = mesh->getNbVertices();
+							const PxVec3* convexVerts = mesh->getVertices();
+							const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
+
+							// write all vertex 
+							for(PxU32 j=0;j<nbVerts;j++)
+							{
+								const PxVec3 &v = convexVerts[j];
+								FVector vec(v.x, v.y, v.z); 
+								FVector vec3 = InstanceTransform.TransformVector(vec);
+								FVector world(vec3.X, vec3.Y, vec3.Z); 
+
+								f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
+							}
+							// write all faces
+							f << "usemtl " << type << "\n";
+							for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
+							{
+								// inverse order for left hand
+								f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
+							}
+							offset += nbVerts;
+						}
+					}
+				}
+				else
+				{
+					// try as static mesh
+					UStaticMeshComponent* comp = Cast<UStaticMeshComponent>(Component);
+					if (!comp) continue;
+
+					UBodySetup *body = comp->GetBodySetup();
+					if (!body)
+						continue;
+
+					f << "g " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
 
 					// get the component position and transform
-					FTransform InstanceTransform;
-					comp2->GetInstanceTransform(i, InstanceTransform, true);
-					FVector InstanceLocation = InstanceTransform.GetTranslation();
-
+					FTransform CompTransform = comp->GetComponentTransform();
+					FVector CompLocation = CompTransform.GetTranslation();
 
 					// through all convex elements
 					for (const auto &mesh : body->TriMeshes)
@@ -200,68 +269,24 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 						{
 							const PxVec3 &v = convexVerts[j];
 							FVector vec(v.x, v.y, v.z); 
-							FVector vec3 = InstanceTransform.TransformVector(vec);
-							FVector world(vec3.X, vec3.Y, vec3.Z); 
+							FVector vec3 = CompTransform.TransformVector(vec);
+							FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
 
-							f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
+							f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
+							// f << "v " << std::fixed << world.X << " " << world.Z << " " << world.Y << "\n";
 						}
 						// write all faces
 						f << "usemtl " << type << "\n";
-						for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
+						int k = 0;
+						for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
 						{
+							// f << "f " << offset + indexBuffer[k] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k+2] << "\n";
 							// inverse order for left hand
 							f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
+							k += 3;
 						}
 						offset += nbVerts;
 					}
-				}
-			}
-			else
-			{
-				// try as static mesh
-				UStaticMeshComponent* comp = Cast<UStaticMeshComponent>(Component);
-				if (!comp) continue;
-
-				UBodySetup *body = comp->GetBodySetup();
-				if (!body)
-					continue;
-
-				f << "g " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
-
-				// get the component position and transform
-				FTransform CompTransform = comp->GetComponentTransform();
-				FVector CompLocation = CompTransform.GetTranslation();
-
-				// through all convex elements
-				for (const auto &mesh : body->TriMeshes)
-				{
-					// get data
-					PxU32 nbVerts = mesh->getNbVertices();
-					const PxVec3* convexVerts = mesh->getVertices();
-					const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
-
-					// write all vertex 
-					for(PxU32 j=0;j<nbVerts;j++)
-					{
-						const PxVec3 &v = convexVerts[j];
-						FVector vec(v.x, v.y, v.z); 
-						FVector vec3 = CompTransform.TransformVector(vec);
-						FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
-
-						f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
-						// f << "v " << std::fixed << world.X << " " << world.Z << " " << world.Y << "\n";
-					}
-					// write all faces
-					f << "usemtl " << type << "\n";
-					int k = 0;
-					for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
-					{
-						// f << "f " << offset + indexBuffer[k] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k+2] << "\n";
-						// inverse order for left hand
-						f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
-						k += 3;
-					}
-					offset += nbVerts;
 				}
 			}
 		}
