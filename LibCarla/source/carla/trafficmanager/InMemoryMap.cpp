@@ -9,7 +9,7 @@ namespace MapConstants {
   static const uint LANE_CHANGE_LOOK_AHEAD = 5u;
   // Cosine of the angle.
   static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
-  static const float GRID_SIZE = 2.0f;
+  static const float GRID_SIZE = 4.0f;
 }
   using namespace MapConstants;
 
@@ -195,15 +195,30 @@ namespace MapConstants {
     uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
     uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
 
-    if ((lane_change & change_right) > 0) {
-      WaypointPtr right_waypoint =  raw_waypoint->GetRight();
-      SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(right_waypoint->GetTransform().location);
-      reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
-    }
-    if ((lane_change & change_left) > 0) {
-      WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
-      SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(left_waypoint->GetTransform().location);
-      reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
+    try {
+      if ((lane_change & change_right) > 0) {
+        WaypointPtr right_waypoint =  raw_waypoint->GetRight();
+        SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(right_waypoint->GetTransform().location);
+        if (closest_simple_waypoint == nullptr) {
+          closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
+        }
+        reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
+      }
+      if ((lane_change & change_left) > 0) {
+        WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
+        SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(left_waypoint->GetTransform().location);
+        if (closest_simple_waypoint == nullptr) {
+          closest_simple_waypoint = GetWaypoint(left_waypoint->GetTransform().location);
+        }
+        reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
+      }
+    } catch (const std::invalid_argument &e) {
+      cg::Location loc = reference_waypoint->GetLocation();
+      carla::log_info(
+        "Unable to link lane change connection at: "
+        + std::to_string(loc.x) + " "
+        + std::to_string(loc.y) + " "
+        + std::to_string(loc.z));
     }
   }
 }
