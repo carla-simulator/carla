@@ -505,8 +505,8 @@ namespace nav {
     // flags
     params.updateFlags = 0;
     params.updateFlags |= DT_CROWD_ANTICIPATE_TURNS;
-    params.updateFlags |= DT_CROWD_OPTIMIZE_VIS;
-    params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
+    // params.updateFlags |= DT_CROWD_OPTIMIZE_VIS;
+    // params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
     params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
 
