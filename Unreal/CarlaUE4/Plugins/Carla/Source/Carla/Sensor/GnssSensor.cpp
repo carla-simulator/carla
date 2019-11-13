@@ -29,8 +29,7 @@ void AGnssSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  constexpr float TO_METERS = 1e-2;
-  carla::geom::Vector3D location = TO_METERS * GetActorLocation();
+  carla::geom::Location location = GetActorLocation();
 
   carla::geom::GeoLocation current_location = CurrentGeoLocation.Transform(location);
 
@@ -46,7 +45,6 @@ void AGnssSensor::BeginPlay()
 {
   Super::BeginPlay();
 
-  ACarlaGameModeBase* game_mode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  const UCarlaEpisode& episode = game_mode->GetCarlaEpisode();
-  CurrentGeoLocation = episode.GeoLocation();
+  const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  CurrentGeoLocation = episode->GeoLocation();
 }
