@@ -28,60 +28,60 @@ namespace sensor {
 namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Image &image) {
-    out << "Image(frame=" << image.GetFrame()
-        << ", timestamp=" << image.GetTimestamp()
-        << ", size=" << image.GetWidth() << 'x' << image.GetHeight()
+    out << "Image(frame=" << std::to_string(image.GetFrame())
+        << ", timestamp=" << std::to_string(image.GetTimestamp())
+        << ", size=" << std::to_string(image.GetWidth()) << 'x' << std::to_string(image.GetHeight())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
-    out << "LidarMeasurement(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
-        << ", number_of_points=" << meas.size()
+    out << "LidarMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", number_of_points=" << std::to_string(meas.size())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
-    out << "CollisionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "CollisionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const ObstacleDetectionEvent &meas) {
-    out << "ObstacleDetectionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "ObstacleDetectionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
-    out << "LaneInvasionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "LaneInvasionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const GnssEvent &meas) {
-    out << "GnssEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
-        << ", lat=" << meas.GetLatitude()
-        << ", lon=" << meas.GetLongitude()
-        << ", alt=" << meas.GetAltitude()
+    out << "GnssEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", lat=" << std::to_string(meas.GetLatitude())
+        << ", lon=" << std::to_string(meas.GetLongitude())
+        << ", alt=" << std::to_string(meas.GetAltitude())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const IMUMeasurement &meas) {
-    out << "IMUMeasurement(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "IMUMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", accelerometer=" << meas.GetAccelerometer()
         << ", gyroscope=" << meas.GetGyroscope()
-        << ", compass=" << meas.GetCompass()
+        << ", compass=" << std::to_string(meas.GetCompass())
         << ')';
     return out;
   }

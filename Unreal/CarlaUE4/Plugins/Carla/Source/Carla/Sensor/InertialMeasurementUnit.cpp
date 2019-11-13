@@ -48,7 +48,7 @@ void AInertialMeasurementUnit::SetOwner(AActor *Owner)
 }
 
 // Copy of FWorldObserver_GetAngularVelocity but using radiants
-static carla::geom::Vector3D GetActorAngularVelocityInRadians(AActor &Actor)
+static carla::geom::Vector3D carla_GetActorAngularVelocityInRadians(AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
   const FVector AngularVelocity =
@@ -86,7 +86,7 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
 
   // Gyroscope measures angular velocity in rad/sec
   const cg::Vector3D AngularVelocity =
-      GetActorAngularVelocityInRadians(*GetOwner());
+      carla_GetActorAngularVelocityInRadians(*GetOwner());
 
   const FQuat SensorLocalRotation =
       RootComponent->GetRelativeTransform().GetRotation();
