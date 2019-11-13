@@ -39,6 +39,4 @@ private:
 
   FVector PrevVelocity;
 
-  float PrevSimulationTime;
-
 };

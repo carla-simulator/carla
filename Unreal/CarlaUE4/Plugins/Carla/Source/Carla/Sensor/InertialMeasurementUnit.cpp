@@ -72,10 +72,9 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   const FVector CurrentVelocity = vehicle->GetVehicleForwardSpeed() * vehicle->GetVehicleOrientation();
   float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
   FVector FVectorAccelerometer =
-      TO_METERS * (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
+      TO_METERS * (CurrentVelocity - PrevVelocity) / DeltaTime;
 
   PrevVelocity = CurrentVelocity;
-  PrevSimulationTime = CurrentSimulationTime;
 
   FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
   FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
@@ -128,5 +127,4 @@ void AInertialMeasurementUnit::BeginPlay()
 
   constexpr float TO_METERS = 1e-2;
   PrevVelocity = GetOwner()->GetVelocity();
-  PrevSimulationTime = GetWorld()->GetTimeSeconds();
 }
