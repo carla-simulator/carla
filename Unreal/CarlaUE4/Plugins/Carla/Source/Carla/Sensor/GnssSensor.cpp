@@ -48,5 +48,5 @@ void AGnssSensor::BeginPlay()
   Super::BeginPlay();
 
   const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  CurrentGeoLocation = episode->GeoLocation();
+  CurrentGeoLocation = episode->GetGeoReference();
 }
