@@ -137,14 +137,11 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    Vector3D(const FVector &v) : x(v.X), y(v.Y), z(v.Z) {}
-
-    Vector3D& operator=(const FVector &rhs) {
-      x = rhs.X;
-      y = rhs.Y;
-      z = rhs.Z;
-      return *this;
-    }
+    /// These 2 methods are explicitly deleted to avoid creating them by other users,
+    /// unlike locations, some vectors have units and some don't, by removing
+    /// these methods we found several places were the conversion from cm to m was missing
+    Vector3D(const FVector &v) = delete;
+    Vector3D& operator=(const FVector &rhs) = delete;
 
     /// Return a Vector3D converted from centimeters to meters.
     Vector3D ToMeters() const {

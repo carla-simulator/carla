@@ -48,13 +48,13 @@ void AInertialMeasurementUnit::SetOwner(AActor *Owner)
 }
 
 // Copy of FWorldObserver_GetAngularVelocity but using radiants
-static carla::geom::Vector3D carla_GetActorAngularVelocityInRadians(AActor &Actor)
+static FVector carla_GetActorAngularVelocityInRadians(AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
   const FVector AngularVelocity =
       RootComponent != nullptr ?
           RootComponent->GetPhysicsAngularVelocityInRadians() :
-          FVector{0.0f, 0.0f, 0.0f};
+          FVector { 0.0f, 0.0f, 0.0f };
 
   return AngularVelocity;
 }
@@ -71,31 +71,38 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   ACarlaWheeledVehicle *vehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
   const FVector CurrentVelocity = vehicle->GetVehicleForwardSpeed() * vehicle->GetVehicleOrientation();
   float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
-  cg::Vector3D Accelerometer =
+  FVector FVectorAccelerometer =
       TO_METERS * (CurrentVelocity - PrevVelocity) / (CurrentSimulationTime - PrevSimulationTime);
 
   PrevVelocity = CurrentVelocity;
   PrevSimulationTime = CurrentSimulationTime;
 
   FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
-  Accelerometer = ImuRotation.UnrotateVector({
-      Accelerometer.x,
-      Accelerometer.y,
-      Accelerometer.z
-  });
+  FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
+
+  // Cast from FVector to our Vector3D to correctly send the data in m/s2
+  const cg::Vector3D Accelerometer (
+      FVectorAccelerometer.X,
+      FVectorAccelerometer.Y,
+      FVectorAccelerometer.Z
+  );
 
   // Gyroscope measures angular velocity in rad/sec
-  const cg::Vector3D AngularVelocity =
+  const FVector AngularVelocity =
       carla_GetActorAngularVelocityInRadians(*GetOwner());
 
   const FQuat SensorLocalRotation =
       RootComponent->GetRelativeTransform().GetRotation();
 
-  const cg::Vector3D Gyroscope = SensorLocalRotation.RotateVector({
-      AngularVelocity.x,
-      AngularVelocity.y,
-      AngularVelocity.z
-  });
+  const FVector FVectorGyroscope =
+      SensorLocalRotation.RotateVector(AngularVelocity);
+
+  // Cast from FVector to our Vector3D to correctly send the data in rad/s
+  const cg::Vector3D Gyroscope (
+      FVectorGyroscope.X,
+      FVectorGyroscope.Y,
+      FVectorGyroscope.Z
+  );
 
   // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
