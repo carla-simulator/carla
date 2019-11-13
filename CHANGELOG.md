@@ -1,5 +1,11 @@
 ## Latest
+  * Added new sensor: Inertial measurement unit (IMU)
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
+  * API changes:
+    - Lidar: `range` is now set in meters, not in centimeters
+    - Lidar: `horizontal_angle` is now received in radians, not in degrees
+  * API extensions:
+    - Added `carla.IMUMeasurement`
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Fixed pylint for python3 in travis
