@@ -8,6 +8,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Sensor/DataStream.h"
+#include "Carla/Util/RandomEngine.h"
 
 #include "GameFramework/Actor.h"
 
@@ -68,8 +69,8 @@ protected:
     return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
-  UPROPÊRTY()
-  URandomEngine* RandomEngine;
+  UPROPERTY()
+  URandomEngine *RandomEngine;
 
 private:
 
