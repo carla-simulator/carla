@@ -11,6 +11,7 @@
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
+#include "Carla/Sensor/GnssSensor.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -73,6 +74,13 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeLidarDefinition(
       const FString &Id,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeGnssDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeGnssDefinition(
       bool &Success,
       FActorDefinition &Definition);
 
@@ -188,6 +196,8 @@ public:
   static void SetCamera(const FActorDescription &Description, AShaderBasedSensor *Camera);
 
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
+
+  static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
 
   /// @}
 };

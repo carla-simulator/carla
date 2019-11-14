@@ -68,6 +68,9 @@ protected:
     return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
+  UPROPÊRTY()
+  URandomEngine* RandomEngine;
+
 private:
 
   FDataStream Stream;
