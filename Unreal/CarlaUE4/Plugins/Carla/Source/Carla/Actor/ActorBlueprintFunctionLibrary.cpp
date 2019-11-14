@@ -685,6 +685,69 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGnssDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeGnssDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+  // Latitude
+  FActorVariation StdDevLat;
+  StdDevLat.Id = TEXT("noise_lat_stddev");
+  StdDevLat.Type = EActorAttributeType::Float;
+  StdDevLat.RecommendedValues = { TEXT("0.0") };
+  StdDevLat.bRestrictToRecommended = false;
+  FActorVariation BiasLat;
+  BiasLat.Id = TEXT("noise_lat_bias");
+  BiasLat.Type = EActorAttributeType::Float;
+  BiasLat.RecommendedValues = { TEXT("0.0") };
+  BiasLat.bRestrictToRecommended = false;
+
+  // Longitude
+  FActorVariation StdDevLong;
+  StdDevLong.Id = TEXT("noise_long_stddev");
+  StdDevLong.Type = EActorAttributeType::Float;
+  StdDevLong.RecommendedValues = { TEXT("0.0") };
+  StdDevLong.bRestrictToRecommended = false;
+  FActorVariation BiasLong;
+  BiasLong.Id = TEXT("noise_long_bias");
+  BiasLong.Type = EActorAttributeType::Float;
+  BiasLong.RecommendedValues = { TEXT("0.0") };
+  BiasLong.bRestrictToRecommended = false;
+
+  // Altitude
+  FActorVariation StdDevAlt;
+  StdDevAlt.Id = TEXT("noise_alt_stddev");
+  StdDevAlt.Type = EActorAttributeType::Float;
+  StdDevAlt.RecommendedValues = { TEXT("0.0") };
+  StdDevAlt.bRestrictToRecommended = false;
+  FActorVariation BiasAlt;
+  BiasAlt.Id = TEXT("noise_alt_bias");
+  BiasAlt.Type = EActorAttributeType::Float;
+  BiasAlt.RecommendedValues = { TEXT("0.0") };
+  BiasAlt.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    StdDevLat,
+    BiasLat,
+    StdDevLong,
+    BiasLong,
+    StdDevAlt,
+    BiasAlt});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     const FVehicleParameters &Parameters,
     bool &Success,
@@ -1202,5 +1265,27 @@ void UActorBlueprintFunctionLibrary::SetLidar(
   Lidar.LowerFovLimit =
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
 }
+
+
+static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+
+void UActorBlueprintFunctionLibrary::SetGnss(
+    const FActorDescription &Description,
+    AGnssSensor *Gnss)
+{
+
+  if(Gnss == nullptr) {
+    return;
+  }
+
+  Gnss->SetLatitudeDeviation(RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f))
+  Gnss->SetLongitudeDeviation(RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f))
+  Gnss->SetAltitudeDeviation(RetrieveActorAttributeToFloat("noise_long_stddev", Description.Variations, 0.0f))
+  Gnss->SetLatitudeBias(RetrieveActorAttributeToFloat("noise_long_bias", Description.Variations, 0.0f))
+  Gnss->SetLongitudeBias(RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f))
+  Gnss->SetAltitudeBias(RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f))
+
+}
+
 
 #undef CARLA_ABFL_CHECK_ACTOR

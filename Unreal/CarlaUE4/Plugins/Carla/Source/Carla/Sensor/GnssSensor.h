@@ -32,6 +32,23 @@ public:
 
   void Tick(float DeltaSeconds) override;
 
+  void SetLatitudeDeviation(float Value);
+  void SetLongitudeDeviation(float Value);
+  void SetAltitudeDeviation(float Value);
+
+  void SetLatitudeBias(float Value);
+  void SetLongitudeBias(float Value);
+  void SetAltitudeBias(float Value);
+
+  float GetLatitudeDeviation() const;
+  float GetLongitudeDeviation() const;
+  float GetAltitudeDeviation() const;
+
+  float GetLatitudeBias() const;
+  float GetLongitudeBias() const;
+  float GetAltitudeBias() const;
+
+
 protected:
 
   virtual void BeginPlay() override;
@@ -40,5 +57,13 @@ protected:
 private:
 
   carla::geom::GeoLocation CurrentGeoLocation;
+
+  float LatitudeDeviation;
+  float LongitudeDeviation;
+  float AltitudeDeviation;
+
+  float LatitudeBias;
+  float LongitudeBias;
+  float AltitudeBias;
 
 };
