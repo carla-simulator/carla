@@ -26,11 +26,9 @@ namespace s11n {
 
     struct Data {
 
-      double latitude;
-      double longitude;
-      double altitude;
+      geom::GeoLocation geo_location;
 
-      MSGPACK_DEFINE_ARRAY(latitude, longitude, altitude)
+      MSGPACK_DEFINE_ARRAY(geo_location);
     };
 
     static Data DeserializeRawData(const RawData &message) {
@@ -40,10 +38,9 @@ namespace s11n {
     template <typename SensorT>
     static Buffer Serialize(
         const SensorT &,
-        const double &latitude,
-        const double &longitude,
-        const double &altitude) {
-      return MsgPack::Pack(Data{latitude, longitude, altitude});
+        const geom::GeoLocation &geo_location
+        ) {
+      return MsgPack::Pack(Data{geo_location});
     }
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
