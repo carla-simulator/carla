@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,6 +8,7 @@
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
@@ -28,6 +29,7 @@ class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 
 public:
 
+  /// @}
   /// ==========================================================================
   /// @name Actor definition validators
   /// ==========================================================================
@@ -81,6 +83,13 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeGnssDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeIMUDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeIMUDefinition(
       bool &Success,
       FActorDefinition &Definition);
 
@@ -198,6 +207,8 @@ public:
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+
+  static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   /// @}
 };

@@ -5,16 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "InertialMeasurementUnit.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
+
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
-#include "carla/geom/Vector3D.h"
 #include <compiler/enable-ue4-macros.h>
-
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Carla/Sensor/WorldObserver.h"
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 // Based on OpenDRIVE's lon and lat
 const FVector AInertialMeasurementUnit::CarlaNorthVector =
@@ -26,20 +25,18 @@ AInertialMeasurementUnit::AInertialMeasurementUnit(
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PostPhysics;
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
-      TEXT("other"),
-      TEXT("imu"));
+  return UActorBlueprintFunctionLibrary::MakeIMUDefinition();
 }
 
 void AInertialMeasurementUnit::Set(const FActorDescription &ActorDescription)
 {
   Super::Set(ActorDescription);
-  // Fill the parameters that the user requested
-  // Not currently needed in this sensor
+  UActorBlueprintFunctionLibrary::SetIMU(ActorDescription, this);
 }
 
 void AInertialMeasurementUnit::SetOwner(AActor *Owner)
@@ -48,7 +45,8 @@ void AInertialMeasurementUnit::SetOwner(AActor *Owner)
 }
 
 // Copy of FWorldObserver_GetAngularVelocity but using radiants
-static FVector carla_GetActorAngularVelocityInRadians(AActor &Actor)
+static FVector FIMU_GetActorAngularVelocityInRadians(
+    AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
   const FVector AngularVelocity =
@@ -57,6 +55,34 @@ static FVector carla_GetActorAngularVelocityInRadians(AActor &Actor)
           FVector { 0.0f, 0.0f, 0.0f };
 
   return AngularVelocity;
+}
+
+const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
+    const FVector &Accelerometer)
+{
+  // mean = 0.0f
+  // norm_distr => (mean, standard_deviation)
+  // Noise function = ang_vel + Bias + norm_distr
+  constexpr float Mean = 0.0f;
+  return carla::geom::Vector3D {
+      Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
+      Accelerometer.Y + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
+      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)
+  };
+}
+
+const carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscopeNoise(
+    const FVector &Gyroscope)
+{
+  // mean = 0.0f
+  // norm_distr => (mean, standard_deviation)
+  // Noise function = ang_vel + Bias + norm_distr
+  constexpr float Mean = 0.0f;
+  return carla::geom::Vector3D {
+      Gyroscope.X + BiasGyro.X + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.X),
+      Gyroscope.Y + BiasGyro.Y + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Y),
+      Gyroscope.Z + BiasGyro.Z + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Z)
+  };
 }
 
 void AInertialMeasurementUnit::Tick(float DeltaTime)
@@ -80,15 +106,12 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
 
   // Cast from FVector to our Vector3D to correctly send the data in m/s2
-  const cg::Vector3D Accelerometer (
-      FVectorAccelerometer.X,
-      FVectorAccelerometer.Y,
-      FVectorAccelerometer.Z
-  );
+  // and apply the desired noise function, in this case a normal distribution
+  const cg::Vector3D Accelerometer = ComputeAccelerometerNoise(FVectorAccelerometer);
 
   // Gyroscope measures angular velocity in rad/sec
   const FVector AngularVelocity =
-      carla_GetActorAngularVelocityInRadians(*GetOwner());
+      FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
   const FQuat SensorLocalRotation =
       RootComponent->GetRelativeTransform().GetRotation();
@@ -97,11 +120,8 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       SensorLocalRotation.RotateVector(AngularVelocity);
 
   // Cast from FVector to our Vector3D to correctly send the data in rad/s
-  const cg::Vector3D Gyroscope (
-      FVectorGyroscope.X,
-      FVectorGyroscope.Y,
-      FVectorGyroscope.Z
-  );
+  // and apply the desired noise function, in this case a normal distribution
+  const cg::Vector3D Gyroscope = ComputeGyroscopeNoise(FVectorGyroscope);
 
   // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
@@ -119,6 +139,36 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       Accelerometer,
       Gyroscope,
       Compass);
+}
+
+void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)
+{
+  StdDevAccel = Vec;
+}
+
+void AInertialMeasurementUnit::SetGyroscopeStandardDeviation(const FVector &Vec)
+{
+  StdDevGyro = Vec;
+}
+
+void AInertialMeasurementUnit::SetGyroscopeBias(const FVector &Vec)
+{
+  BiasGyro = Vec;
+}
+
+const FVector &AInertialMeasurementUnit::GetAccelerationStandardDeviation() const
+{
+  return StdDevAccel;
+}
+
+const FVector &AInertialMeasurementUnit::GetGyroscopeStandardDeviation() const
+{
+  return StdDevGyro;
+}
+
+const FVector &AInertialMeasurementUnit::GetGyroscopeBias() const
+{
+  return BiasGyro;
 }
 
 void AInertialMeasurementUnit::BeginPlay()
