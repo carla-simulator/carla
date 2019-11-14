@@ -94,7 +94,8 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  std::string opendrive_xml = TCHAR_TO_UTF8(*UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+
   boost::optional<carla::road::Map> map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));

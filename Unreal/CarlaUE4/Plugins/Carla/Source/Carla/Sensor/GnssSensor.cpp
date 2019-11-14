@@ -37,7 +37,7 @@ void AGnssSensor::Tick(float DeltaSeconds)
   double latitude = current_location.latitude;
   double longitude = current_location.longitude;
   double altitude = current_location.altitude;
-  Stream.Send(*this, latitude, longitude, altitude);
+  Stream.Send(*this, carla::geom::GeoLocation{latitude, longitude, altitude});
 
 }
 

@@ -29,7 +29,7 @@ namespace data {
       : Super(data){
 
       s11n::GnssSerializer::Data gnss_data = Serializer::DeserializeRawData(data);
-      _geo_location = {gnss_data.latitude, gnss_data.longitude, gnss_data.altitude};
+      _geo_location = gnss_data.geo_location;
 
     }
 
