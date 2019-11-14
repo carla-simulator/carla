@@ -24,12 +24,6 @@ class CARLA_API AInertialMeasurementUnit : public ASensor
 
 public:
 
-  void SetAccelerationStandardDeviation(const FVector &Vec);
-
-  void SetGyroscopeStandardDeviation(const FVector &Vec);
-
-  void SetGyroscopeBias(const FVector &Vec);
-
   AInertialMeasurementUnit(const FObjectInitializer &ObjectInitializer);
 
   static FActorDefinition GetSensorDefinition();
@@ -39,6 +33,12 @@ public:
   void SetOwner(AActor *Owner) override;
 
   void Tick(float DeltaTime) override;
+
+  void SetAccelerationStandardDeviation(const FVector &Vec);
+
+  void SetGyroscopeStandardDeviation(const FVector &Vec);
+
+  void SetGyroscopeBias(const FVector &Vec);
 
   const FVector &GetAccelerationStandardDeviation() const;
 
@@ -57,13 +57,16 @@ private:
 
   void BeginPlay() override;
 
+  /// Used to compute acceleration.
   FVector PrevVelocity;
 
-  // Noise Settings
+  /// Standard deviation for acceleration settings.
   FVector StdDevAccel;
 
+  /// Standard deviation for gyroscope settings.
   FVector StdDevGyro;
 
+  /// Bias for gyroscope settings.
   FVector BiasGyro;
 
 };
