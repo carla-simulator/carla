@@ -16,13 +16,12 @@ AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 FActorDefinition AGnssSensor::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeGenericSensorDefinition(
-    TEXT("other"),
-    TEXT("gnss"));
+  return UActorBlueprintFunctionLibrary::MakeGnssDefinition();
 }
 
 void AGnssSensor::Tick(float DeltaSeconds)
@@ -34,11 +33,68 @@ void AGnssSensor::Tick(float DeltaSeconds)
   carla::geom::GeoLocation current_location = CurrentGeoLocation.Transform(location);
 
   auto Stream = GetDataStream(*this);
-  double latitude = current_location.latitude;
-  double longitude = current_location.longitude;
-  double altitude = current_location.altitude;
+  double latitude = current_location.latitude + LatitudeBias + RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
+  double longitude = current_location.longitude + LongitudeBias + RandomEngine->GetNormalDistribution(0.0f, LongitudeDeviation);
+  double altitude = current_location.altitude + AltitudeBias + RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);;
   Stream.Send(*this, carla::geom::GeoLocation{latitude, longitude, altitude});
 
+}
+
+void AGnssSensor::SetLatitudeDeviation(float Value)
+{
+  LatitudeDeviation = Value;
+}
+
+void AGnssSensor::SetLongitudeDeviation(float Value)
+{
+  LongitudeDeviation = Value;
+}
+
+void AGnssSensor::SetAltitudeDeviation(float Value)
+{
+  AltitudeDeviation = Value;
+}
+
+
+void AGnssSensor::SetLatitudeBias(float Value)
+{
+  LatitudeBias = Value;
+}
+
+void AGnssSensor::SetLongitudeBias(float Value)
+{
+  LongitudeBias = Value;
+}
+
+void AGnssSensor::SetAltitudeBias(float Value)
+{
+  AltitudeBias = Value;
+}
+
+float AGnssSensor::GetLatitudeDeviation() const
+{
+  return LatitudeDeviation;
+}
+float AGnssSensor::GetLongitudeDeviation() const
+{
+  return LongitudeDeviation;
+}
+float AGnssSensor::GetAltitudeDeviation() const
+{
+  return AltitudeDeviation;
+}
+
+float AGnssSensor::GetLatitudeBias() const
+{
+  return LatitudeBias;
+}
+float AGnssSensor::GetLongitudeBias() const
+{
+  return LongitudeBias;
+}
+float AGnssSensor::GetAltitudeBias() const
+{
+  return AltitudeBias;
 }
 
 void AGnssSensor::BeginPlay()
