@@ -640,6 +640,97 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   return Definition;
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeIMUDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("imu"));
+  // AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // - Accelerometer Standard Deviation ----------
+  // X Component
+  FActorVariation StdDevAccelX;
+  StdDevAccelX.Id = TEXT("noise_accel_stddev_x");
+  StdDevAccelX.Type = EActorAttributeType::Float;
+  StdDevAccelX.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation StdDevAccelY;
+  StdDevAccelY.Id = TEXT("noise_accel_stddev_y");
+  StdDevAccelY.Type = EActorAttributeType::Float;
+  StdDevAccelY.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation StdDevAccelZ;
+  StdDevAccelZ.Id = TEXT("noise_accel_stddev_z");
+  StdDevAccelZ.Type = EActorAttributeType::Float;
+  StdDevAccelZ.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelZ.bRestrictToRecommended = false;
+
+  // - Gyroscope Standard Deviation --------------
+  // X Component
+  FActorVariation StdDevGyroX;
+  StdDevGyroX.Id = TEXT("noise_gyro_stddev_x");
+  StdDevGyroX.Type = EActorAttributeType::Float;
+  StdDevGyroX.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation StdDevGyroY;
+  StdDevGyroY.Id = TEXT("noise_gyro_stddev_y");
+  StdDevGyroY.Type = EActorAttributeType::Float;
+  StdDevGyroY.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation StdDevGyroZ;
+  StdDevGyroZ.Id = TEXT("noise_gyro_stddev_z");
+  StdDevGyroZ.Type = EActorAttributeType::Float;
+  StdDevGyroZ.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroZ.bRestrictToRecommended = false;
+
+  // - Gyroscope Bias ----------------------------
+  // X Component
+  FActorVariation BiasGyroX;
+  BiasGyroX.Id = TEXT("noise_gyro_bias_x");
+  BiasGyroX.Type = EActorAttributeType::Float;
+  BiasGyroX.RecommendedValues = { TEXT("0.0") };
+  BiasGyroX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation BiasGyroY;
+  BiasGyroY.Id = TEXT("noise_gyro_bias_y");
+  BiasGyroY.Type = EActorAttributeType::Float;
+  BiasGyroY.RecommendedValues = { TEXT("0.0") };
+  BiasGyroY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation BiasGyroZ;
+  BiasGyroZ.Id = TEXT("noise_gyro_bias_z");
+  BiasGyroZ.Type = EActorAttributeType::Float;
+  BiasGyroZ.RecommendedValues = { TEXT("0.0") };
+  BiasGyroZ.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    StdDevAccelX,
+    StdDevAccelY,
+    StdDevAccelZ,
+    StdDevGyroX,
+    StdDevGyroY,
+    StdDevGyroZ,
+    BiasGyroX,
+    BiasGyroY,
+    BiasGyroZ});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
     const FString &Id,
     bool &Success,
@@ -1286,6 +1377,34 @@ void UActorBlueprintFunctionLibrary::SetGnss(
       RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f));
   Gnss->SetAltitudeBias(
       RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f));
+}
+
+void UActorBlueprintFunctionLibrary::SetIMU(
+    const FActorDescription &Description,
+    AInertialMeasurementUnit *IMU)
+{
+  if (IMU == nullptr)
+  {
+    return;
+  }
+
+  IMU->SetAccelerationStandardDeviation({
+    RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)
+  });
+
+  IMU->SetGyroscopeStandardDeviation({
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)
+  });
+
+  IMU->SetGyroscopeBias({
+    RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
+  });
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
