@@ -21,9 +21,8 @@
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 
-#include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/VicinityGrid.h"
 
@@ -62,10 +61,8 @@ namespace bg = boost::geometry;
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
     /// Reference to Carla's world object.
     cc::World &world;
-    /// Map specifying selective collision avoidance rules between vehicles.
-    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision;
-    /// Map specifying distance to leading vehicle.
-    AtomicMap<ActorId, float> &distance_to_leading_vehicle;
+    /// Runtime parameterization object.
+    Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// An object used for grid binning vehicles for faster proximity detection.
@@ -111,8 +108,7 @@ namespace bg = boost::geometry;
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
         cc::World &world,
-        AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision,
-        AtomicMap<ActorId, float> &distance_to_leading_vehicle,
+        Parameters &parameters,
         cc::DebugHelper &debug_helper);
 
     ~CollisionStage();

@@ -5,7 +5,7 @@ namespace traffic_manager {
 namespace CollisionStageConstants {
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 1.5f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
   static const float EXTENSION_SQUARE_POINT = 7.0f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
@@ -19,14 +19,12 @@ namespace CollisionStageConstants {
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       cc::World &world,
-      AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> &selective_collision,
-      AtomicMap<ActorId, float> &distance_to_leading_vehicle,
+      Parameters &parameters,
       cc::DebugHelper &debug_helper)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       world(world),
-      selective_collision(selective_collision),
-      distance_to_leading_vehicle(distance_to_leading_vehicle),
+      parameters(parameters),
       debug_helper(debug_helper) {
 
     // Initializing clock for checking unregistered actors periodically.
@@ -104,21 +102,20 @@ namespace CollisionStageConstants {
         ActorId actor_id = *j;
         try {
 
-          if (actor_id != ego_actor_id &&
-              !(selective_collision.Contains(ego_actor_id) &&
-              selective_collision.GetValue(ego_actor_id)->Contains(actor_id))) {
-
-            Actor actor = nullptr;
-            if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
-              actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
-            } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
-              actor = unregistered_actors.at(actor_id);
-            }
-
-            if (NegotiateCollision(ego_actor, actor)) {
-              collision_hazard = true;
-            }
+          Actor actor = nullptr;
+          if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
+            actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
+          } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
+            actor = unregistered_actors.at(actor_id);
           }
+
+          if (actor_id != ego_actor_id &&
+              parameters.GetCollisionDetection(ego_actor, actor) &&
+              NegotiateCollision(ego_actor, actor)) {
+
+            collision_hazard = true;
+          }
+
         } catch (const std::exception &e) {
           carla::log_warning("Encountered problem while determining collision \n");
           carla::log_info("Actor might not be alive \n");
@@ -260,8 +257,9 @@ namespace CollisionStageConstants {
                          BOUNDARY_EXTENSION_MINIMUM;
       }
 
-      if (distance_to_leading_vehicle.Contains(actor->GetId())) {
-        bbox_extension = std::max(distance_to_leading_vehicle.GetValue(actor->GetId()), bbox_extension);
+      float specific_distance_margin = parameters.GetDistanceToLeadingVehicle(actor);
+      if (specific_distance_margin > 0) {
+        bbox_extension = std::max(specific_distance_margin, bbox_extension);
       }
 
       auto &waypoint_buffer =  localization_frame->at(vehicle_id_to_index.at(actor->GetId())).buffer;

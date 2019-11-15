@@ -17,9 +17,9 @@
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/TrafficDistributor.h"
@@ -70,10 +70,8 @@ namespace cc = carla::client;
     int registered_actors_state;
     /// Reference to local map-cache object.
     InMemoryMap &local_map;
-    /// Force lane change command map.
-    AtomicMap<ActorId, bool> &lane_change_command;
-    /// Auto lane change command map.
-    AtomicMap<ActorId, bool> &auto_lane_change;
+    /// Runtime parameterization object.
+    Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// Structures to hold waypoint buffers for all vehicles.
@@ -98,8 +96,7 @@ namespace cc = carla::client;
         std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
         AtomicActorSet &registered_actors,
         InMemoryMap &local_map,
-        AtomicMap<ActorId, bool> &lane_change_command,
-        AtomicMap<ActorId, bool> &auto_lane_change,
+        Parameters &parameters,
         cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
