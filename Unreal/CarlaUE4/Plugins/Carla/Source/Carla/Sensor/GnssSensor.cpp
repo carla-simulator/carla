@@ -24,6 +24,14 @@ FActorDefinition AGnssSensor::GetSensorDefinition()
   return UActorBlueprintFunctionLibrary::MakeGnssDefinition();
 }
 
+void AGnssSensor::Set(const FActorDescription &ActorDescription)
+{
+  Super::Set(ActorDescription);
+  // Fill the parameters that the user requested
+  // Not currently needed in this sensor
+  UActorBlueprintFunctionLibrary::SetGnss(ActorDescription, this);
+}
+
 void AGnssSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
@@ -33,9 +41,16 @@ void AGnssSensor::Tick(float DeltaSeconds)
   carla::geom::GeoLocation current_location = CurrentGeoLocation.Transform(location);
 
   auto Stream = GetDataStream(*this);
-  double latitude = current_location.latitude + LatitudeBias + RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
-  double longitude = current_location.longitude + LongitudeBias + RandomEngine->GetNormalDistribution(0.0f, LongitudeDeviation);
-  double altitude = current_location.altitude + AltitudeBias + RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);;
+  float lat_error = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
+  float long_error = RandomEngine->GetNormalDistribution(0.0f, LongitudeDeviation);
+  float alt_error = RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);
+
+  UE_LOG(LogCarla, Warning, TEXT("lat = %f - long = %f - alt = %f"), lat_error, long_error, alt_error);
+  UE_LOG(LogCarla, Warning, TEXT("lat_dev = %f - long_dev = %f - alt_dev = %f"), LatitudeDeviation, LongitudeDeviation, AltitudeDeviation);
+
+  double latitude = current_location.latitude + LatitudeBias + lat_error;
+  double longitude = current_location.longitude + LongitudeBias + long_error;
+  double altitude = current_location.altitude + AltitudeBias + alt_error;
   Stream.Send(*this, carla::geom::GeoLocation{latitude, longitude, altitude});
 
 }

@@ -30,6 +30,8 @@ public:
 
   static FActorDefinition GetSensorDefinition();
 
+  void Set(const FActorDescription &ActorDescription);
+
   void Tick(float DeltaSeconds) override;
 
   void SetLatitudeDeviation(float Value);
