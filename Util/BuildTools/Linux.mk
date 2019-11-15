@@ -93,6 +93,7 @@ PythonAPI.3: LibCarla.client.release
 
 PythonAPI.docs:
 	@python PythonAPI/docs/doc_gen.py
+	@cd PythonAPI/docs && python3 bp_doc_gen.py
 
 .PHONY: LibCarla
 LibCarla: LibCarla.release LibCarla.debug
