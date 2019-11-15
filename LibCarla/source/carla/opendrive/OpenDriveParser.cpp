@@ -42,7 +42,7 @@ namespace opendrive {
     parser::ProfilesParser::Parse(xml, map_builder);
     parser::TrafficGroupParser::Parse(xml, map_builder);
     parser::SignalParser::Parse(xml, map_builder);
-    // parser::ObjectParser::Parse(xml, map_builder);
+    parser::ObjectParser::Parse(xml, map_builder);
 
     return map_builder.Build();
   }
