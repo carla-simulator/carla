@@ -102,7 +102,14 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">sensor.other.gnss</font>**  
     - **Attributes:**
+        - `noise_alt_bias` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_alt_stddev` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_lat_bias` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_lat_stddev` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_lon_bias` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_lon_stddev` (_Float_)<sub>_ – Modifiable_</sub>
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">sensor.other.lane_invasion</font>**  
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
