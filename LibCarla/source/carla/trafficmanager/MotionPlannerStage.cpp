@@ -76,7 +76,7 @@ namespace PlannerConstants {
       // Increase speed if on highway.
       float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
 
-      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor);
+      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
 
       if (speed_limit > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;

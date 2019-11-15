@@ -78,7 +78,7 @@ namespace traffic_manager {
             percentage_decrease = percentage_decrease_from_speed_limit.GetValue(actor_id);
         }
 
-        return speed_limit * (1 - percentage_decrease/100);
+        return speed_limit * (1.0f - percentage_decrease/100.0f);
     }
 
     bool Parameters::GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor) {
