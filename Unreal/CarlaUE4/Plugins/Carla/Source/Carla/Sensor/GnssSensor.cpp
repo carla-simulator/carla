@@ -27,8 +27,6 @@ FActorDefinition AGnssSensor::GetSensorDefinition()
 void AGnssSensor::Set(const FActorDescription &ActorDescription)
 {
   Super::Set(ActorDescription);
-  // Fill the parameters that the user requested
-  // Not currently needed in this sensor
   UActorBlueprintFunctionLibrary::SetGnss(ActorDescription, this);
 }
 
@@ -38,7 +36,7 @@ void AGnssSensor::Tick(float DeltaSeconds)
 
   carla::geom::Location location = GetActorLocation();
 
-  carla::geom::GeoLocation current_location = CurrentGeoLocation.Transform(location);
+  carla::geom::GeoLocation current_location = CurrentGeoReference.Transform(location);
 
   auto Stream = GetDataStream(*this);
   float lat_error = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
@@ -117,5 +115,5 @@ void AGnssSensor::BeginPlay()
   Super::BeginPlay();
 
   const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  CurrentGeoLocation = episode->GetGeoReference();
+  CurrentGeoReference = episode->GetGeoReference();
 }
