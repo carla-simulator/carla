@@ -34,23 +34,22 @@ void AGnssSensor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  carla::geom::Location location = GetActorLocation();
+  carla::geom::Location Location = GetActorLocation();
 
-  carla::geom::GeoLocation current_location = CurrentGeoReference.Transform(location);
+  carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
+
+  // Compute the noise for the sensor
+  const float LatError = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
+  const float LonError = RandomEngine->GetNormalDistribution(0.0f, LongitudeDeviation);
+  const float AltError = RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);
+
+  // Apply the noise to the sensor
+  double Latitude = CurrentLocation.latitude + LatitudeBias + LatError;
+  double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
+  double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
 
   auto Stream = GetDataStream(*this);
-  float lat_error = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
-  float long_error = RandomEngine->GetNormalDistribution(0.0f, LongitudeDeviation);
-  float alt_error = RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);
-
-  UE_LOG(LogCarla, Warning, TEXT("lat = %f - long = %f - alt = %f"), lat_error, long_error, alt_error);
-  UE_LOG(LogCarla, Warning, TEXT("lat_dev = %f - long_dev = %f - alt_dev = %f"), LatitudeDeviation, LongitudeDeviation, AltitudeDeviation);
-
-  double latitude = current_location.latitude + LatitudeBias + lat_error;
-  double longitude = current_location.longitude + LongitudeBias + long_error;
-  double altitude = current_location.altitude + AltitudeBias + alt_error;
-  Stream.Send(*this, carla::geom::GeoLocation{latitude, longitude, altitude});
-
+  Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
 }
 
 void AGnssSensor::SetLatitudeDeviation(float Value)
