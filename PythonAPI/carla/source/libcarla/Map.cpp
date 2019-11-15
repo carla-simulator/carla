@@ -135,6 +135,7 @@ void export_map() {
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
+    .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
     .def(self_ns::str(self_ns::self))
   ;
 
