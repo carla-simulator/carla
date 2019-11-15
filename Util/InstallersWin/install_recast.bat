@@ -38,7 +38,7 @@ set RECAST_INSTALL=recast-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
 
-set RECAST_COMMIT="8af33f0c5ae996fe4223d2d40852c5fd06cf9f36"
+set RECAST_COMMIT="0b3b142159e91d4e9cc2a733517ad8937701d92d"
 set RECAST_BASENAME=%RECAST_SRC%
 
 
@@ -53,7 +53,7 @@ if not exist "%RECAST_SRC_DIR%" (
     cd %RECAST_SRC_DIR%
     call git reset --hard %RECAST_COMMIT%
     cd ..
-     if %errorlevel% neq 0 goto error_git
+    if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning "Recast & Detour" because already exists a folder called "%RECAST_SRC%".
 )
@@ -71,8 +71,6 @@ cmake .. -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX=%RECAST_INSTALL_DIR%^
     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
-    -DRECASTNAVIGATION_DEMO=False^
-    -DRECASTNAVIGATION_TEST=False^
     %RECAST_SRC_DIR%
 if %errorlevel%  neq 0 goto error_cmake
 
