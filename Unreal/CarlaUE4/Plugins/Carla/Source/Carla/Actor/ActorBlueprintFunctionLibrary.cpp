@@ -715,12 +715,12 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
 
   // Longitude
   FActorVariation StdDevLong;
-  StdDevLong.Id = TEXT("noise_long_stddev");
+  StdDevLong.Id = TEXT("noise_lon_stddev");
   StdDevLong.Type = EActorAttributeType::Float;
   StdDevLong.RecommendedValues = { TEXT("0.0") };
   StdDevLong.bRestrictToRecommended = false;
   FActorVariation BiasLong;
-  BiasLong.Id = TEXT("noise_long_bias");
+  BiasLong.Id = TEXT("noise_lon_bias");
   BiasLong.Type = EActorAttributeType::Float;
   BiasLong.RecommendedValues = { TEXT("0.0") };
   BiasLong.bRestrictToRecommended = false;
@@ -1266,9 +1266,6 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
 }
 
-
-static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
-
 void UActorBlueprintFunctionLibrary::SetGnss(
     const FActorDescription &Description,
     AGnssSensor *Gnss)
@@ -1280,16 +1277,15 @@ void UActorBlueprintFunctionLibrary::SetGnss(
   Gnss->SetLatitudeDeviation(
       RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f));
   Gnss->SetLongitudeDeviation(
-      RetrieveActorAttributeToFloat("noise_long_stddev", Description.Variations, 0.0f));
+      RetrieveActorAttributeToFloat("noise_lon_stddev", Description.Variations, 0.0f));
   Gnss->SetAltitudeDeviation(
       RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f));
   Gnss->SetLatitudeBias(
       RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f));
   Gnss->SetLongitudeBias(
-      RetrieveActorAttributeToFloat("noise_long_bias", Description.Variations, 0.0f));
+      RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f));
   Gnss->SetAltitudeBias(
       RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f));
 }
-
 
 #undef CARLA_ABFL_CHECK_ACTOR
