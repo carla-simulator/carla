@@ -8,6 +8,7 @@
     - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
+    - GNSS data can now be obtained with noise, check the BP library to see the values
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Fixed pylint for python3 in travis
