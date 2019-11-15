@@ -3,6 +3,8 @@
 namespace traffic_manager {
 
 namespace PlannerConstants {
+  static const float MAX_THROTTLE = 0.75f;
+  static const float MAX_BRAKE = 1.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
   static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.1f, 0.01f};
@@ -15,8 +17,7 @@ namespace PlannerConstants {
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
-      AtomicMap<ActorId, float> &vehicle_target_velocity,
-      float perc_decrease_from_limit = 20.0f,
+      Parameters &parameters,
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
       std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
       std::vector<float> lateral_parameters = LATERAL_DEFAULTS)
@@ -24,8 +25,7 @@ namespace PlannerConstants {
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       control_messenger(control_messenger),
-      vehicle_target_velocity(vehicle_target_velocity),
-      perc_decrease_from_limit(perc_decrease_from_limit),
+      parameters(parameters),
       longitudinal_parameters(longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
       lateral_parameters(lateral_parameters) {
@@ -76,20 +76,11 @@ namespace PlannerConstants {
       // Increase speed if on highway.
       float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
 
-      float dynamic_target_velocity = speed_limit - (speed_limit*perc_decrease_from_limit)/100.0f;
+      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor);
 
       if (speed_limit > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
       }
-
-      // Set vehicle specific target velocity.
-      if (vehicle_target_velocity.Contains(actor_id)) {
-        dynamic_target_velocity = vehicle_target_velocity.GetValue(actor_id);
-        if (dynamic_target_velocity > HIGHWAY_SPEED) {
-          longitudinal_parameters = highway_longitudinal_parameters;
-        }
-      }
-
 
       // State update for vehicle.
       StateEntry current_state = controller.StateUpdate(
@@ -115,7 +106,7 @@ namespace PlannerConstants {
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
         actuation_signal.throttle = 0.0f;
-        actuation_signal.brake = 1.0f;
+        actuation_signal.brake = MAX_BRAKE;
       }
 
       // Updating PID state.
@@ -125,8 +116,8 @@ namespace PlannerConstants {
       // Constructing the actuation signal.
       PlannerToControlData &message = current_control_frame->at(i);
       message.actor_id = actor_id;
-      message.throttle = actuation_signal.throttle;
-      message.brake = actuation_signal.brake;
+      message.throttle = std::min(actuation_signal.throttle, MAX_THROTTLE);
+      message.brake = std::min(actuation_signal.brake, MAX_BRAKE);
       message.steer = actuation_signal.steer;
 
     }

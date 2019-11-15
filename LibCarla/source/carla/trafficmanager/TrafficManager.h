@@ -22,6 +22,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/trafficmanager/MotionPlannerStage.h"
+#include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace traffic_manager {
@@ -63,20 +64,10 @@ namespace cc = carla::client;
     std::unique_ptr<LocalizationStage> localization_stage;
     std::unique_ptr<MotionPlannerStage> planner_stage;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
-    /// Target velocity map for individual vehicles.
-    AtomicMap<ActorId, float> vehicle_target_velocity;
-    /// Map containing a set of actors to be ignored during collision detection.
-    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
-    /// Map containing force lane change commands.
-    AtomicMap<ActorId, bool> force_lane_change;
-    /// Map containing auto lane change commands.
-    AtomicMap<ActorId, bool> auto_lane_change;
     /// Static pointer to singleton object.
     static std::unique_ptr<TrafficManager> singleton_pointer;
-    /// Singleton lifecycle management mutex.
-    // static std::mutex singleton_mutex;
-    /// Map containing distance to leading vehicle command.
-    AtomicMap<ActorId, float> distance_to_leading_vehicle;
+    /// Parameterization object.
+    Parameters parameters;
 
     /// Private constructor for singleton lifecycle management.
     TrafficManager(
@@ -104,7 +95,7 @@ namespace cc = carla::client;
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
     /// Set target velocity specific to a vehicle.
-    void SetVehicleTargetVelocity(const ActorPtr &actor, const float velocity);
+    void SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage);
 
     /// Set collision detection rules between vehicles.
     void SetCollisionDetection(const ActorPtr &reference_actor,
@@ -113,10 +104,10 @@ namespace cc = carla::client;
 
     /// Method to force lane change on a vehicle.
     /// Direction flag can be set to true for left and false for right.
-    void ForceLaneChange(const ActorPtr &actor, const bool direction);
+    void SetForceLaneChange(const ActorPtr &actor, const bool direction);
 
     /// Enable / disable automatic lane change on a vehicle.
-    void AutoLaneChange(const ActorPtr &actor, const bool enable);
+    void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
     /// Method to specify how much distance a vehicle should maintain to
     /// the leading vehicle.

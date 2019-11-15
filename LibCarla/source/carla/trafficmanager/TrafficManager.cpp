@@ -23,6 +23,8 @@ namespace traffic_manager {
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
     local_map->SetUp(0.1f);
 
+    parameters.SetGlobalPercentageBelowLimit(perc_decrease_from_limit);
+
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
     localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
     collision_planner_messenger = std::make_shared<CollisionToPlannerMessenger>();
@@ -34,11 +36,11 @@ namespace traffic_manager {
         localization_planner_messenger, localization_collision_messenger,
         localization_traffic_light_messenger,
         registered_actors, *local_map.get(),
-        force_lane_change, auto_lane_change, debug_helper);
+        parameters, debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
         localization_collision_messenger, collision_planner_messenger,
-        world, ignore_collision, distance_to_leading_vehicle, debug_helper);
+        world, parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         localization_traffic_light_messenger, traffic_light_planner_messenger);
@@ -48,8 +50,7 @@ namespace traffic_manager {
         collision_planner_messenger,
         traffic_light_planner_messenger,
         planner_control_messenger,
-        vehicle_target_velocity,
-        perc_decrease_from_limit,
+        parameters,
         longitudinal_PID_parameters,
         longitudinal_highway_PID_parameters,
         lateral_PID_parameters);
@@ -127,9 +128,9 @@ namespace traffic_manager {
     control_stage->Stop();
   }
 
-  void TrafficManager::SetVehicleTargetVelocity(const ActorPtr &actor, const float velocity) {
+  void TrafficManager::SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage) {
 
-    vehicle_target_velocity.AddEntry({actor->GetId(), velocity});
+    parameters.SetPercentageSpeedBelowLimit(actor, percentage);
   }
 
   void TrafficManager::SetCollisionDetection(
@@ -137,48 +138,21 @@ namespace traffic_manager {
       const ActorPtr &other_actor,
       const bool detect_collision) {
 
-    ActorId reference_id = reference_actor->GetId();
-    ActorId other_id = other_actor->GetId();
-
-    if (detect_collision) {
-
-      if (ignore_collision.Contains(reference_id)) {
-        std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-        if (actor_set->Contains(other_id)) {
-          actor_set->Remove({other_actor});
-        }
-      }
-    } else {
-
-      if (ignore_collision.Contains(reference_id)) {
-        std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-        if (!actor_set->Contains(other_id)) {
-          actor_set->Insert({other_actor});
-        }
-      } else {
-        std::shared_ptr<AtomicActorSet> actor_set = std::make_shared<AtomicActorSet>();
-        actor_set->Insert({other_actor});
-        auto entry = std::make_pair(reference_id, actor_set);
-        ignore_collision.AddEntry(entry);
-      }
-    }
+    parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
   }
 
-  void TrafficManager::ForceLaneChange(const ActorPtr &actor, const bool direction) {
+  void TrafficManager::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
 
-    auto entry = std::make_pair(actor->GetId(), direction);
-    force_lane_change.AddEntry(entry);
+    parameters.SetForceLaneChange(actor, direction);
   }
 
-  void TrafficManager::AutoLaneChange(const ActorPtr &actor, const bool enable) {
+  void TrafficManager::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
-    auto entry = std::make_pair(actor->GetId(), enable);
-    auto_lane_change.AddEntry(entry);
+    parameters.SetAutoLaneChange(actor, enable);
   }
 
   void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
 
-    auto entry = std::make_pair(actor->GetId(), distance);
-    distance_to_leading_vehicle.AddEntry(entry);
+    parameters.SetDistanceToLeadingVehicle(actor, distance);
   }
 }
