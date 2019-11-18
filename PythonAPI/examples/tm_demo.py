@@ -120,6 +120,11 @@ def main():
                 traffic_manager.set_distance_to_leading_vehicle(v, 6)
                 pass
 
+        time.sleep(10)
+        for v in vehicle_list:
+            traffic_manager.force_lane_change(v, True)
+
+
         while True:
             time.sleep(1)
 
