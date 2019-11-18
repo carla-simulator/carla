@@ -6,7 +6,7 @@ namespace CollisionStageConstants {
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
   static const float ZERO_AREA = 0.0001f;
   static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
-  static const float EXTENSION_SQUARE_POINT = 7.0f;
+  static const float EXTENSION_SQUARE_POINT = 7.5f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
   static const float HIGHWAY_TIME_HORIZON = 5.0f;
@@ -92,6 +92,8 @@ namespace CollisionStageConstants {
       LocalizationToCollisionData &data = localization_frame->at(i);
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
+
+      //DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
