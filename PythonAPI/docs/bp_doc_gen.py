@@ -177,7 +177,7 @@ def main():
         print("  .---------------------------------------------------.")
         print("  |       Make sure the simulator is connected!       |")
         print("  '---------------------------------------------------'\n")
-        sys.exit(1)
+        sys.exit(0)
 
     with open(os.path.join(script_path, '../../Docs/bp_library.md'), 'w') as md_file:
         md_file.write(docs)
