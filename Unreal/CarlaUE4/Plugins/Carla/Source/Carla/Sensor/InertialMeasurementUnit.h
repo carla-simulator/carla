@@ -57,9 +57,6 @@ private:
 
   void BeginPlay() override;
 
-  /// Used to compute acceleration.
-  FVector PrevVelocity;
-
   /// Standard deviation for acceleration settings.
   FVector StdDevAccel;
 
@@ -68,5 +65,10 @@ private:
 
   /// Bias for gyroscope settings.
   FVector BiasGyro;
+
+
+
+  TArray<FVector> PrevLocation;
+  float PrevDeltaTime;
 
 };
