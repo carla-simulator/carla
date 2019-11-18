@@ -67,7 +67,7 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
   return carla::geom::Vector3D {
       Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
       Accelerometer.Y + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
-      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)
+      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z) + 9.81f
   };
 }
 
@@ -93,21 +93,42 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
 
   // Accelerometer measures linear acceleration in m/s2
   constexpr float TO_METERS = 1e-2;
+  const float InvDeltaTime = 1.0f / DeltaTime;
 
   ACarlaWheeledVehicle *vehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
-  const FVector CurrentVelocity = vehicle->GetVehicleForwardSpeed() * vehicle->GetVehicleOrientation();
-  float CurrentSimulationTime = GetWorld()->GetTimeSeconds();
-  FVector FVectorAccelerometer =
-      TO_METERS * (CurrentVelocity - PrevVelocity) / DeltaTime;
 
-  PrevVelocity = CurrentVelocity;
+  cg::Vector3D Accelerometer { 0.0f, 0.0f, 0.0f };
 
-  FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
-  FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
+  if(PrevLocation.Num() < 2){
+    PrevLocation.Add(GetActorLocation());
+    PrevDeltaTime = DeltaTime;
+  } else {
+    const FVector CurrentLocation = GetActorLocation();
 
-  // Cast from FVector to our Vector3D to correctly send the data in m/s2
-  // and apply the desired noise function, in this case a normal distribution
-  const cg::Vector3D Accelerometer = ComputeAccelerometerNoise(FVectorAccelerometer);
+    const FVector y2 = PrevLocation[0];
+    const FVector y1 = PrevLocation[1];
+    const FVector y0 = CurrentLocation;
+    const float h1 = DeltaTime;
+    const float h2 = PrevDeltaTime;
+
+    const FVector a = y1 / ( h1 * h2 );
+    const FVector b = y2 / ( h2 * (h2 + h1) );
+    const FVector c = y0 / ( h1 * (h2 + h1) );
+    FVector FVectorAccelerometer = TO_METERS * -2.0f * ( a - b - c );
+
+    PrevLocation[0] = PrevLocation[1];
+    PrevLocation[1] = CurrentLocation;
+    PrevDeltaTime = DeltaTime;
+
+    FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
+    FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
+
+    // Cast from FVector to our Vector3D to correctly send the data in m/s2
+    // and apply the desired noise function, in this case a normal distribution
+    Accelerometer = ComputeAccelerometerNoise(FVectorAccelerometer);
+
+  }
+
 
   // Gyroscope measures angular velocity in rad/sec
   const FVector AngularVelocity =
@@ -176,5 +197,5 @@ void AInertialMeasurementUnit::BeginPlay()
   Super::BeginPlay();
 
   constexpr float TO_METERS = 1e-2;
-  PrevVelocity = GetOwner()->GetVelocity();
+  PrevLocation.Add(GetActorLocation());
 }
