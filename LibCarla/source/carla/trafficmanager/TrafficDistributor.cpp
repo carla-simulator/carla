@@ -101,6 +101,12 @@ namespace TrafficDistributorConstants {
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
 
+    auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
+
+    auto change_right = carla::road::element::LaneMarking::LaneChange::Right;
+    auto change_left = carla::road::element::LaneMarking::LaneChange::Left;
+    //auto change_both = carla::road::element::LaneMarking::LaneChange::Both;
+
     // Don't try to change lane if the current lane has less than two vehicles.
     if (co_lane_vehicles.size() >= 2 && !force) {
 
@@ -134,7 +140,10 @@ namespace TrafficDistributorConstants {
           // If lane change connections are available,
           // pick a direction (preferring left) and
           // announce the need for a lane change.
-          if (left_waypoint != nullptr) {
+          //if (lane_change == change_both) {
+            // Method to assign either left or right, based on road occupancy.
+          //}
+          if (left_waypoint != nullptr && lane_change == change_left) {
             traffic_manager::ActorIDSet left_lane_vehicles = GetVehicleIds({
               current_road_ids.road_id,
               current_road_ids.section_id,
@@ -144,7 +153,7 @@ namespace TrafficDistributorConstants {
               need_to_change_lane = true;
               lane_change_direction = true;
             }
-          } else if (right_waypoint != nullptr) {
+          } else if (right_waypoint != nullptr && lane_change == change_right) {
             traffic_manager::ActorIDSet right_lane_vehicles = GetVehicleIds({
               current_road_ids.road_id,
               current_road_ids.section_id,

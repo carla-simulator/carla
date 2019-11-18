@@ -46,6 +46,8 @@ namespace cg = carla::geom;
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
+    /// Reference to Carla's debug helper object.
+    cc::DebugHelper &debug_helper;
     /// Map containing the time ticket issued for vehicles.
     std::unordered_map<ActorId, TimeInstance> vehicle_last_ticket;
     /// Map containing the previous time ticket issued for junctions.
@@ -57,11 +59,15 @@ namespace cg = carla::geom;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
 
+    void DrawLight(TLS traffic_light_state, const Actor &ego_actor) const;
+
+
   public:
 
     TrafficLightStage(
         std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-        std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger);
+        std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
+        cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 
     void DataReceiver() override;
