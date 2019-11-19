@@ -17,7 +17,8 @@ public:
 
   using IdType = uint32;
 
-  enum class ActorType : uint8 {
+  enum class ActorType : uint8
+  {
     Other,
     Vehicle,
     Walker,
