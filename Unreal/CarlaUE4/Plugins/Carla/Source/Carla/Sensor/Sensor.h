@@ -47,6 +47,21 @@ public:
     return Stream.GetToken();
   }
 
+  UFUNCTION(BlueprintCallable)
+  URandomEngine *GetRandomEngine()
+  {
+    return RandomEngine;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  int32 GetSeed() const
+  {
+    return Seed;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetSeed(int32 InSeed);
+
 protected:
 
   void PostActorCreated() override;
@@ -69,8 +84,13 @@ protected:
     return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
+  /// Seed of the pseudo-random engine.
+  UPROPERTY(Category = "Random Engine", EditAnywhere)
+  int32 Seed = 123456789;
+
+  /// Random Engine used to provide noise for sensor output.
   UPROPERTY()
-  URandomEngine *RandomEngine;
+  URandomEngine *RandomEngine = nullptr;
 
 private:
 
