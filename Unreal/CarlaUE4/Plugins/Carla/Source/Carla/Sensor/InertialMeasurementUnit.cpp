@@ -15,6 +15,8 @@
 #include "carla/geom/Math.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include <limits>
+
 // Based on OpenDRIVE's lon and lat
 const FVector AInertialMeasurementUnit::CarlaNorthVector =
     FVector(0.0f, -1.0f, 0.0f);
@@ -26,6 +28,10 @@ AInertialMeasurementUnit::AInertialMeasurementUnit(
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PostPhysics;
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+  PrevLocation = { FVector::ZeroVector, FVector::ZeroVector };
+  // Initialized to something hight to minimize the artifacts
+  // when the initial values are unknown
+  PrevDeltaTime = std::numeric_limits<float>::max();
 }
 
 FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
@@ -52,7 +58,7 @@ static FVector FIMU_GetActorAngularVelocityInRadians(
   const FVector AngularVelocity =
       RootComponent != nullptr ?
           RootComponent->GetPhysicsAngularVelocityInRadians() :
-          FVector { 0.0f, 0.0f, 0.0f };
+          FVector::ZeroVector;
 
   return AngularVelocity;
 }
@@ -62,12 +68,12 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
 {
   // mean = 0.0f
   // norm_distr => (mean, standard_deviation)
-  // Noise function = ang_vel + Bias + norm_distr
+  // Noise function => acc + norm_distr
   constexpr float Mean = 0.0f;
   return carla::geom::Vector3D {
       Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
       Accelerometer.Y + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
-      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z) + 9.81f
+      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)
   };
 }
 
@@ -76,7 +82,7 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscopeNoise(
 {
   // mean = 0.0f
   // norm_distr => (mean, standard_deviation)
-  // Noise function = ang_vel + Bias + norm_distr
+  // Noise function => ang_vel + bias + norm_distr
   constexpr float Mean = 0.0f;
   return carla::geom::Vector3D {
       Gyroscope.X + BiasGyro.X + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.X),
@@ -85,52 +91,53 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscopeNoise(
   };
 }
 
-void AInertialMeasurementUnit::Tick(float DeltaTime)
+carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
+    const float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
-  namespace cg = carla::geom;
-
-  // Accelerometer measures linear acceleration in m/s2
+  // Used to convert from UE4's cm to meters
   constexpr float TO_METERS = 1e-2;
-  const float InvDeltaTime = 1.0f / DeltaTime;
+  // Earth's gravitational acceleration is approximately 9.81 m/s^2
+  constexpr float GRAVITY = 9.81f;
 
-  ACarlaWheeledVehicle *vehicle = Cast<ACarlaWheeledVehicle>(GetOwner());
+  // 2nd derivative of the polynomic (quadratic) interpolation
+  // using the point in current time and two previous steps:
+  // d2[i] = -2.0*(y1/(h1*h2)-y2/((h2+h1)*h2)-y0/(h1*(h2+h1)))
+  const FVector CurrentLocation = GetActorLocation();
 
-  cg::Vector3D Accelerometer { 0.0f, 0.0f, 0.0f };
+  const FVector Y2 = PrevLocation[0];
+  const FVector Y1 = PrevLocation[1];
+  const FVector Y0 = CurrentLocation;
+  const float H1 = DeltaTime;
+  const float H2 = PrevDeltaTime;
 
-  if(PrevLocation.Num() < 2){
-    PrevLocation.Add(GetActorLocation());
-    PrevDeltaTime = DeltaTime;
-  } else {
-    const FVector CurrentLocation = GetActorLocation();
+  const float H1AndH2 = H2 + H1;
+  const FVector A = Y1 / ( H1 * H2 );
+  const FVector B = Y2 / ( H2 * (H1AndH2) );
+  const FVector C = Y0 / ( H1 * (H1AndH2) );
+  FVector FVectorAccelerometer = TO_METERS * -2.0f * ( A - B - C );
 
-    const FVector y2 = PrevLocation[0];
-    const FVector y1 = PrevLocation[1];
-    const FVector y0 = CurrentLocation;
-    const float h1 = DeltaTime;
-    const float h2 = PrevDeltaTime;
+  // Update the previous locations
+  PrevLocation[0] = PrevLocation[1];
+  PrevLocation[1] = CurrentLocation;
+  PrevDeltaTime = DeltaTime;
 
-    const FVector a = y1 / ( h1 * h2 );
-    const FVector b = y2 / ( h2 * (h2 + h1) );
-    const FVector c = y0 / ( h1 * (h2 + h1) );
-    FVector FVectorAccelerometer = TO_METERS * -2.0f * ( a - b - c );
+  FQuat ImuRotation =
+      GetRootComponent()->GetComponentTransform().GetRotation();
+  FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
 
-    PrevLocation[0] = PrevLocation[1];
-    PrevLocation[1] = CurrentLocation;
-    PrevDeltaTime = DeltaTime;
+  // Add gravitational acceleration
+  FVectorAccelerometer.Z += GRAVITY;
 
-    FQuat ImuRotation = GetRootComponent()->GetComponentTransform().GetRotation();
-    FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
+  // Cast from FVector to our Vector3D to correctly send the data in m/s^2
+  // and apply the desired noise function, in this case a normal distribution
+  const carla::geom::Vector3D Accelerometer =
+      ComputeAccelerometerNoise(FVectorAccelerometer);
 
-    // Cast from FVector to our Vector3D to correctly send the data in m/s2
-    // and apply the desired noise function, in this case a normal distribution
-    Accelerometer = ComputeAccelerometerNoise(FVectorAccelerometer);
+  return Accelerometer;
+}
 
-  }
-
-
-  // Gyroscope measures angular velocity in rad/sec
+carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
+{
   const FVector AngularVelocity =
       FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
@@ -142,8 +149,14 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
 
   // Cast from FVector to our Vector3D to correctly send the data in rad/s
   // and apply the desired noise function, in this case a normal distribution
-  const cg::Vector3D Gyroscope = ComputeGyroscopeNoise(FVectorGyroscope);
+  const carla::geom::Vector3D Gyroscope =
+      ComputeGyroscopeNoise(FVectorGyroscope);
 
+  return Gyroscope;
+}
+
+float AInertialMeasurementUnit::ComputeCompass()
+{
   // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
   float Compass = std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect));
@@ -151,15 +164,22 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
   // Keep the angle between [0, 2pi)
   if (FVector::CrossProduct(CarlaNorthVector, ForwVect).Z > 0.0f)
   {
-    Compass = cg::Math::Pi2<float>() - Compass;
+    Compass = carla::geom::Math::Pi2<float>() - Compass;
   }
+
+  return Compass;
+}
+
+void AInertialMeasurementUnit::Tick(float DeltaTime)
+{
+  Super::Tick(DeltaTime);
 
   auto Stream = GetDataStream(*this);
   Stream.Send(
       *this,
-      Accelerometer,
-      Gyroscope,
-      Compass);
+      ComputeAccelerometer(DeltaTime),
+      ComputeGyroscope(),
+      ComputeCompass());
 }
 
 void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)
@@ -197,5 +217,4 @@ void AInertialMeasurementUnit::BeginPlay()
   Super::BeginPlay();
 
   constexpr float TO_METERS = 1e-2;
-  PrevLocation.Add(GetActorLocation());
 }

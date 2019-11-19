@@ -657,6 +657,13 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
   // AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
   // - Accelerometer Standard Deviation ----------
   // X Component
   FActorVariation StdDevAccelX;
@@ -718,6 +725,7 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
   BiasGyroZ.bRestrictToRecommended = false;
 
   Definition.Variations.Append({
+    NoiseSeed,
     StdDevAccelX,
     StdDevAccelY,
     StdDevAccelZ,
@@ -1386,6 +1394,16 @@ void UActorBlueprintFunctionLibrary::SetIMU(
   if (IMU == nullptr)
   {
     return;
+  }
+
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    IMU->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    IMU->SetSeed(IMU->GetRandomEngine()->GenerateRandomSeed());
   }
 
   IMU->SetAccelerationStandardDeviation({
