@@ -17,7 +17,7 @@ namespace sensor {
 namespace data {
 
   /// A registered collision.
-  class CollisionEvent : public SensorData  {
+  class CollisionEvent : public SensorData {
     using Super = SensorData;
   protected:
 
