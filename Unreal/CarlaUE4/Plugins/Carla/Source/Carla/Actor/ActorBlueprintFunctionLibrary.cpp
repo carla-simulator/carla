@@ -800,7 +800,14 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
-  // Latitude
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
+  // - Latitude ----------------------------------
   FActorVariation StdDevLat;
   StdDevLat.Id = TEXT("noise_lat_stddev");
   StdDevLat.Type = EActorAttributeType::Float;
@@ -812,7 +819,7 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
   BiasLat.RecommendedValues = { TEXT("0.0") };
   BiasLat.bRestrictToRecommended = false;
 
-  // Longitude
+  // - Longitude ---------------------------------
   FActorVariation StdDevLong;
   StdDevLong.Id = TEXT("noise_lon_stddev");
   StdDevLong.Type = EActorAttributeType::Float;
@@ -824,7 +831,7 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
   BiasLong.RecommendedValues = { TEXT("0.0") };
   BiasLong.bRestrictToRecommended = false;
 
-  // Altitude
+  // - Altitude ----------------------------------
   FActorVariation StdDevAlt;
   StdDevAlt.Id = TEXT("noise_alt_stddev");
   StdDevAlt.Type = EActorAttributeType::Float;
@@ -837,6 +844,7 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
   BiasAlt.bRestrictToRecommended = false;
 
   Definition.Variations.Append({
+    NoiseSeed,
     StdDevLat,
     BiasLat,
     StdDevLong,
@@ -1371,6 +1379,16 @@ void UActorBlueprintFunctionLibrary::SetGnss(
 {
   if(Gnss == nullptr) {
     return;
+  }
+
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Gnss->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Gnss->SetSeed(Gnss->GetRandomEngine()->GenerateRandomSeed());
   }
 
   Gnss->SetLatitudeDeviation(
