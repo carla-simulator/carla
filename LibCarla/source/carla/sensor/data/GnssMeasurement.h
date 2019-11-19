@@ -28,8 +28,8 @@ namespace data {
     explicit GnssMeasurement(const RawData &&data)
       : Super(data){
 
-      s11n::GnssSerializer::Data gnss_data = Serializer::DeserializeRawData(data);
-      _geo_location = gnss_data.geo_location;
+      geom::GeoLocation gnss_data = Serializer::DeserializeRawData(data);
+      _geo_location = gnss_data;
 
     }
 
