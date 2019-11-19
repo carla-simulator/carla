@@ -57,25 +57,7 @@ namespace geom {
       return !(*this == rhs);
     }
 
-    // =========================================================================
-    // -- Pack / Unpack GeoLocation --------------------------------------------
-    // =========================================================================
-    template <typename Packer>
-    void msgpack_pack(Packer& pk) const
-    {
-        clmdep_msgpack::type::make_define_array(
-            latitude,
-            longitude,
-            altitude).msgpack_pack(pk);
-    }
-    void msgpack_unpack(clmdep_msgpack::object const& o)
-    {
-        clmdep_msgpack::type::make_define_array(
-            latitude,
-            longitude,
-            altitude).msgpack_unpack(o);
-    }
-
+    MSGPACK_DEFINE_ARRAY(latitude, longitude, altitude);
   };
 
 } // namespace geom

@@ -24,15 +24,8 @@ namespace s11n {
   class GnssSerializer {
   public:
 
-    struct Data {
-
-      geom::GeoLocation geo_location;
-
-      MSGPACK_DEFINE_ARRAY(geo_location);
-    };
-
-    static Data DeserializeRawData(const RawData &message) {
-      return MsgPack::UnPack<Data>(message.begin(), message.size());
+    static geom::GeoLocation DeserializeRawData(const RawData &message) {
+      return MsgPack::UnPack<geom::GeoLocation>(message.begin(), message.size());
     }
 
     template <typename SensorT>
@@ -40,7 +33,7 @@ namespace s11n {
         const SensorT &,
         const geom::GeoLocation &geo_location
         ) {
-      return MsgPack::Pack(Data{geo_location});
+      return MsgPack::Pack(geo_location);
     }
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
