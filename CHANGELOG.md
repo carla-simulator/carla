@@ -8,10 +8,12 @@
     - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
-    - GNSS data can now be obtained with noise, check the BP library to see the values
+    - GNSS data can now be obtained with noise
+    - IMU data can now be obtained with noise
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Fixed pylint for python3 in travis
+  * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
