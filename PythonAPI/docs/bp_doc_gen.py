@@ -12,12 +12,19 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+    carla_lib_name = 'carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64')
+    sys.path.append(glob.glob('../carla/dist/%s' % carla_lib_name)[0])
 except IndexError:
-    pass
+    print('\n  [ERROR] Could not find "%s"' % carla_lib_name)
+    print('          Blueprint library docs will not be generated')
+    print("  .---------------------------------------------------.")
+    print("  |     Make sure the python client is compiled!      |")
+    print("  '---------------------------------------------------'\n")
+    # We don't provide an error to prvent Travis checks failing
+    sys.exit(0)
 
 import carla
 
@@ -177,6 +184,7 @@ def main():
         print("  .---------------------------------------------------.")
         print("  |       Make sure the simulator is connected!       |")
         print("  '---------------------------------------------------'\n")
+        # We don't provide an error to prvent Travis checks failing
         sys.exit(0)
 
     with open(os.path.join(script_path, '../../Docs/bp_library.md'), 'w') as md_file:
