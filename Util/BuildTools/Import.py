@@ -40,16 +40,25 @@ def get_packages_json_list(folder):
 
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
+    ue4_path = os.environ["UE4_ROOT"]
+    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    run = "-run=%s" % (name)
+
     if os.name == "nt":
         sys_name = "Win64"
+        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        command = [editor_path, uproject_path, run]
+        command.extend(arguments)
+        print("Commandlet:", command)
+        subprocess.check_call(command, shell=True)
     elif os.name == "posix":
         sys_name = "Linux"
-    ue4_path = os.environ["UE4_ROOT"]
-    editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
-    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
-    full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
-    print("\n[" + str(SCRIPT_NAME) + "] Running command:\n$ " + full_command + '\n')
-    subprocess.check_call([full_command], shell=True)
+        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        full_command = "%s %s %s %s" % (editor_path, uproject_path, run, " ".join(arguments))
+        print("Commandlet:", full_command)
+        subprocess.call([full_command], shell=True)
+
+
 
 
 def generate_import_setting_file(package_name, json_dirname, props, maps):
@@ -161,7 +170,7 @@ def import_assets(package_name, json_dirname, props, maps):
 
     # Import Props
     import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps)
-    commandlet_arguments = "-importSettings=\"%s\" -nosourcecontrol -replaceexisting" % import_setting_file
+    commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
@@ -232,19 +241,19 @@ def import_assets_from_json_list(json_list):
 
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
-    commandlet_arguments = "-PackageName=%s" % package_name
-    commandlet_arguments += " -OnlyPrepareMaps=%d" % only_prepare_maps
+    commandlet_arguments = ["-PackageName=%s" % package_name]
+    commandlet_arguments.append("-OnlyPrepareMaps=%d" % only_prepare_maps)
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
 def move_assets_commandlet(package_name, maps):
     commandlet_name = "MoveAssets"
-    commandlet_arguments = "-PackageName=%s" % package_name
+    commandlet_arguments = ["-PackageName=%s" % package_name]
 
     umap_names = ""
     for umap in maps:
         umap_names += umap["name"] + " "
-    commandlet_arguments += " -Maps=%s" % umap_names
+    commandlet_arguments.append("-Maps=%s" % umap_names)
 
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
@@ -253,7 +262,6 @@ def main():
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
     import_assets_from_json_list(json_list)
-
 
 if __name__ == '__main__':
     main()
