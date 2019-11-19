@@ -67,11 +67,11 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const GnssMeasurement &meas) {
-    out << "GnssMeasurement(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
-        << ", lat=" << meas.GetLatitude()
-        << ", lon=" << meas.GetLongitude()
-        << ", alt=" << meas.GetAltitude()
+    out << "GnssMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", lat=" << std::to_string(meas.GetLatitude())
+        << ", lon=" << std::to_string(meas.GetLongitude())
+        << ", alt=" << std::to_string(meas.GetAltitude())
         << ')';
     return out;
   }
