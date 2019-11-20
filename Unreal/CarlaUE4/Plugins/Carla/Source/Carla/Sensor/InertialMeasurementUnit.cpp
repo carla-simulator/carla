@@ -5,8 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Sensor/InertialMeasurementUnit.h"
 
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
@@ -66,9 +66,9 @@ static FVector FIMU_GetActorAngularVelocityInRadians(
 const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
     const FVector &Accelerometer)
 {
-  // mean = 0.0f
-  // norm_distr => (mean, standard_deviation)
-  // Noise function => acc + norm_distr
+  // Normal (or Gaussian or Gauss) distribution will be used as noise function.
+  // A mean of 0.0 is used as a first parameter, the standard deviation is
+  // determined by the client
   constexpr float Mean = 0.0f;
   return carla::geom::Vector3D {
       Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
@@ -80,9 +80,10 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
 const carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscopeNoise(
     const FVector &Gyroscope)
 {
-  // mean = 0.0f
-  // norm_distr => (mean, standard_deviation)
-  // Noise function => ang_vel + bias + norm_distr
+  // Normal (or Gaussian or Gauss) distribution and a bias will be used as
+  // noise function.
+  // A mean of 0.0 is used as a first parameter.The standard deviation and the
+  // bias are determined by the client
   constexpr float Mean = 0.0f;
   return carla::geom::Vector3D {
       Gyroscope.X + BiasGyro.X + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.X),
