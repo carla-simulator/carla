@@ -190,8 +190,6 @@ class World(object):
             self.player_max_speed = float(blueprint.get_attribute('speed').recommended_values[1])
             self.player_max_speed_fast = float(blueprint.get_attribute('speed').recommended_values[2])
         else:
-            self.player_max_speed = 1.5
-            self.player_max_speed_fast = 30
             print("No recommended values for 'speed' attribute")
         # Spawn the player.
         if self.player is not None:
@@ -384,8 +382,6 @@ class KeyboardControl(object):
             self._control.speed = .01
             self._rotation.yaw += 0.08 * milliseconds
         if keys[K_UP] or keys[K_w]:
-            print(world.player_max_speed)
-            print(world.player_max_speed_fast)
             self._control.speed = world.player_max_speed_fast if pygame.key.get_mods() & KMOD_SHIFT else world.player_max_speed
         self._control.jump = keys[K_SPACE]
         self._rotation.yaw = round(self._rotation.yaw, 1)

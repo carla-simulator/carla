@@ -16,28 +16,33 @@ namespace nav {
     class Navigation;
     class WalkerManager;
 
+    /// result of an event
     enum class EventResult : uint8_t {
         Continue,
         End,
         TimeOut
     };
 
+    /// empty event that just ignores
     struct WalkerEventIgnore {
     };
 
+    /// event to wait for a while
     struct WalkerEventWait {
         double time;
         WalkerEventWait(double duration) : time(duration) {};
     };
 
+    /// event to pause and check for near vehicles
     struct WalkerEventStopAndCheck {
         double time;
         WalkerEventStopAndCheck(double duration) : time(duration) {};
     };
 
+    /// walker event variant
     using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
 
-    // visitor class
+    /// visitor class
     class WalkerEventVisitor {
         public:
             WalkerEventVisitor(WalkerManager *manager, ActorId id, double delta) : _manager(manager), _id(id), _delta(delta) {};
