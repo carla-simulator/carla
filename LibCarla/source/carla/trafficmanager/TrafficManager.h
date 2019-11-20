@@ -66,6 +66,8 @@ namespace cc = carla::client;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
     /// Static pointer to singleton object.
     static std::unique_ptr<TrafficManager> singleton_pointer;
+    /// Static pointer to singleton client connected to localhost, 2000.
+    static std::unique_ptr<cc::Client> singleton_local_client;
     /// Parameterization object.
     Parameters parameters;
 
@@ -87,6 +89,9 @@ namespace cc = carla::client;
 
     /// Static method for singleton lifecycle management.
     static TrafficManager& GetInstance(cc::Client &client_connection);
+
+    /// Static method to get unique client connected to (localhost, 2000).
+    static cc::Client& GetUniqueLocalClient();
 
     /// This method registers a vehicle with the traffic manager.
     void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
