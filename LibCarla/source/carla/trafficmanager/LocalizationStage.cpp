@@ -100,7 +100,6 @@ namespace LocalizationConstants {
       };
 
       traffic_distributor.UpdateVehicleRoadPosition(actor_id, current_road_ids);
-
       ChangeLaneInfo lane_change_info = parameters.GetForceLaneChange(vehicle);
       bool force_lane_change = lane_change_info.change_lane;
       bool lane_change_direction = lane_change_info.direction;
@@ -111,7 +110,7 @@ namespace LocalizationConstants {
         SimpleWaypointPtr change_over_point = traffic_distributor.AssignLaneChange(
             vehicle, front_waypoint, current_road_ids,
             buffer_list, vehicle_id_to_index,
-            actor_list, force_lane_change, lane_change_direction);
+            actor_list, debug_helper, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
           waypoint_buffer.clear();

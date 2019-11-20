@@ -84,7 +84,6 @@ namespace cc = carla::client;
     std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint number_of_vehicles;
-
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
 
