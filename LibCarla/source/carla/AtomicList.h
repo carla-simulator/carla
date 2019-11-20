@@ -9,9 +9,9 @@
 #include "carla/AtomicSharedPtr.h"
 #include "carla/NonCopyable.h"
 
+#include <algorithm>
 #include <mutex>
 #include <vector>
-#include <algorithm>
 
 namespace carla {
 namespace client {
