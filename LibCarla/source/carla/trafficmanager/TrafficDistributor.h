@@ -92,11 +92,12 @@ namespace cg = carla::geom;
     GeoIds GetRoadIds(ActorId vehicle_id) const;
 
   public:
-
     TrafficDistributor();
     ~TrafficDistributor();
 
     void UpdateVehicleRoadPosition(ActorId actor_id, GeoIds road_ids);
+
+    void DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper);
 
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
     /// if Lane Change is required and possible, else returns nullptr.
@@ -109,6 +110,7 @@ namespace cg = carla::geom;
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<ActorId, uint> &vehicle_id_to_index,
         std::vector<Actor> &actor_list,
+        cc::DebugHelper &debug_helper,
         bool force = false,
         bool direction = false);
 
