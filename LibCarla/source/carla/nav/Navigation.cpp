@@ -908,7 +908,7 @@ namespace nav {
             }
             // set a new random target
             carla::geom::Location location;
-            GetRandomLocation(location, 1, nullptr);
+            GetRandomLocation(location, nullptr);
             _walkerManager.SetWalkerRoute(_mappedByIndex[i], location);
           }
         }
@@ -1058,7 +1058,7 @@ namespace nav {
   }
 
   // get a random location for navigation
-  bool Navigation::GetRandomLocation(carla::geom::Location &location, float maxHeight, dtQueryFilter * filter) const {
+  bool Navigation::GetRandomLocation(carla::geom::Location &location, dtQueryFilter * filter) const {
 
     // check if all is ready
     if (!_ready) {
