@@ -130,6 +130,9 @@ def main():
         # -------------
         # Spawn Walkers
         # -------------
+        # some settings
+        percentagePedestriansRunning = 0.1      # how many pedestrians will run
+        percentagePedestriansCrossing = 0.01    # how many pedestrians will walk through the road
         # 1. take all the random locations to spawn
         spawn_points = []
         for i in range(args.number_of_walkers):
@@ -148,7 +151,7 @@ def main():
                 walker_bp.set_attribute('is_invincible', 'false')
             # set the max speed
             if walker_bp.has_attribute('speed'):
-                if (random.random() > 0.1):
+                if (random.random() > percentagePedestriansRunning):
                     # walking
                     walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
                 else:
@@ -189,7 +192,7 @@ def main():
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         # set how many pedestrians can cross the road
-        world.set_pedestrians_cross_factor(0.01)
+        world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
         for i in range(0, len(all_id), 2):
             # start walker
             all_actors[i].start()
@@ -214,7 +217,7 @@ def main():
 
         print('\ndestroying %d walkers' % len(walkers_list))
         client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
-        
+
         time.sleep(0.5)
 
 if __name__ == '__main__':

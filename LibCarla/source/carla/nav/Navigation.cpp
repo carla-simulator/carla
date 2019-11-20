@@ -21,14 +21,13 @@ namespace carla {
 namespace nav {
 
   enum SamplePolyFlags {
-    SAMPLE_POLYFLAGS_WALK       = 0x01,   // Ability to walk (ground, grass,
-                                          // road)
+    SAMPLE_POLYFLAGS_WALK       = 0x01,   // Ability to walk (sidewalks, crosswalks)
     SAMPLE_POLYFLAGS_SWIM       = 0x02,   // Ability to swim (water).
     SAMPLE_POLYFLAGS_DOOR       = 0x04,   // Ability to move through doors.
     SAMPLE_POLYFLAGS_JUMP       = 0x08,   // Ability to jump.
     SAMPLE_POLYFLAGS_DISABLED   = 0x10,   // Disabled polygon
-  	SAMPLE_POLYFLAGS_ROAD	    	= 0x20,		// Ability to walk on road
-  	SAMPLE_POLYFLAGS_GRASS	    = 0x40,		// Ability to walk on grass
+    SAMPLE_POLYFLAGS_ROAD       = 0x20,   // Ability to walk on road
+    SAMPLE_POLYFLAGS_GRASS      = 0x40,   // Ability to walk on grass
     SAMPLE_POLYFLAGS_ALL        = 0xffff  // All abilities.
   };
 
@@ -211,7 +210,8 @@ namespace nav {
 
     // create and init
     _crowd = dtAllocCrowd();
-    if (!_crowd->init(MAX_AGENTS, AGENT_RADIUS * 20, _navMesh)) {
+    const float maxAgentRadius = AGENT_RADIUS * 20;
+    if (!_crowd->init(MAX_AGENTS, maxAgentRadius, _navMesh)) {
       logging::log("Nav: failed to create crowd");
       return;
     }
@@ -375,7 +375,7 @@ namespace nav {
     float m_straightPath[MAX_POLYS * 3];
     unsigned char m_straightPathFlags[MAX_POLYS];
     dtPolyRef m_straightPathPolys[MAX_POLYS];
-    int m_nstraightPath;
+    int m_nstraightPath = 0;
     int m_straightPathOptions = DT_STRAIGHTPATH_AREA_CROSSINGS;
 
     // polys in path
@@ -390,11 +390,8 @@ namespace nav {
     DEBUG_ASSERT(_navQuery != nullptr);
 
     // point extension
-    float m_polyPickExt[3];
-    m_polyPickExt[0] = 2;
-    m_polyPickExt[1] = 4;
-    m_polyPickExt[2] = 2;
-
+    float m_polyPickExt[3] = {2,4,2};
+    
     // get current filter from agent
     auto it = _mappedWalkersId.find(id);
     if (it == _mappedWalkersId.end())
@@ -430,7 +427,6 @@ namespace nav {
     }
 
     // get the path of points
-    m_nstraightPath = 0;
     if (m_npolys == 0) {
       return false;
     }
@@ -618,10 +614,6 @@ namespace nav {
 
     // flags
     params.updateFlags = 0;
-    // params.updateFlags |= DT_CROWD_ANTICIPATE_TURNS;
-    // params.updateFlags |= DT_CROWD_OPTIMIZE_VIS;
-    // params.updateFlags |= DT_CROWD_OPTIMIZE_TOPO;
-    // params.updateFlags |= DT_CROWD_OBSTACLE_AVOIDANCE;
     params.updateFlags |= DT_CROWD_SEPARATION;
 
     // update its oriented bounding box
@@ -690,7 +682,6 @@ namespace nav {
         _crowd->removeAgent(it->second);
       }
       _walkerManager.RemoveWalker(id);
-      logging::log("Nav: removing walker agent", id);
       // remove from mapping
       _mappedWalkersId.erase(it);
       _mappedByIndex.erase(it->second);
@@ -707,7 +698,6 @@ namespace nav {
         std::lock_guard<std::mutex> lock(_mutex);
         _crowd->removeAgent(it->second);
       }
-      // logging::log("Nav: removing vehicle agent", id);
       // remove from mapping
       _mappedVehiclesId.erase(it);
       _mappedByIndex.erase(it->second);
@@ -1080,8 +1070,8 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_ROAD | SAMPLE_POLYFLAGS_GRASS);
+      filter2.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
       filter = &filter2;
     }
 
@@ -1090,21 +1080,16 @@ namespace nav {
     float point[3] { 0.0f, 0.0f, 0.0f };
 
     {
+      dtStatus status;
       // critical section, force single thread running this
       std::lock_guard<std::mutex> lock(_mutex);
       do {
-        dtStatus status = _navQuery->findRandomPoint(filter, frand, &randomRef, point);
-        if (status == DT_SUCCESS) {
-          // set the location in Unreal coords
-          location.x = point[0];
-          location.y = point[2];
-          location.z = point[1];
-          // check for max height (to avoid roofs, it is a workaround until next version)
-          if (maxHeight == -1.0f || (maxHeight >= 0.0f && location.z <= maxHeight)) {
-            break;
-          }
-        }
-      } while (1);
+        status = _navQuery->findRandomPoint(filter, frand, &randomRef, point);
+        // set the location in Unreal coords
+        location.x = point[0];
+        location.y = point[2];
+        location.z = point[1];
+      } while (status != DT_SUCCESS);
     }
 
     return true;
@@ -1164,7 +1149,7 @@ namespace nav {
     // mark
     agent->paused = pause;
   }
-  
+
   bool Navigation::hasVehicleNear(ActorId id) {
     // get the internal index (walker or vehicle)
     auto it = _mappedWalkersId.find(id);

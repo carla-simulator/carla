@@ -30,7 +30,7 @@ namespace nav {
     SAMPLE_POLYAREA_DOOR,
     SAMPLE_POLYAREA_GRASS,
     SAMPLE_POLYAREA_JUMP,
-   	SAMPLE_POLYAREA_CROSS
+    SAMPLE_POLYAREA_CROSS
   };
 
   /// struct to send info about vehicles to the crowd
@@ -127,7 +127,7 @@ namespace nav {
 
     mutable std::mutex _mutex;
 
-    float _probabilityCrossing { 0.05f };
+    float _probabilityCrossing { 0.0f };
 
     /// assign a filter index to an agent
     void SetAgentFilter(int agentIndex, int filterIndex);
