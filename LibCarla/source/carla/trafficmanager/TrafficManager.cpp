@@ -88,6 +88,18 @@ namespace traffic_manager {
     return *singleton_pointer.get();
   }
 
+  std::unique_ptr<cc::Client> TrafficManager::singleton_local_client = nullptr;
+
+  cc::Client& TrafficManager::GetUniqueLocalClient() {
+
+    if (singleton_local_client == nullptr) {
+      cc::Client* client = new cc::Client("localhost", 2000);
+      singleton_local_client = std::unique_ptr<cc::Client>(client);
+    }
+
+    return *singleton_local_client.get();
+  }
+
   void TrafficManager::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
     registered_actors.Insert(actor_list);
   }

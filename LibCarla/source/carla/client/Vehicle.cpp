@@ -9,10 +9,15 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/TrafficLight.h"
+#include "carla/Memory.h"
 #include "carla/rpc/TrafficLightState.h"
+
+#include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
 namespace client {
+
+  using TM = traffic_manager::TrafficManager;
 
   template <typename AttributesT>
   static bool GetControlIsSticky(const AttributesT &attributes) {
@@ -29,7 +34,12 @@ namespace client {
       _is_control_sticky(GetControlIsSticky(GetAttributes())) {}
 
   void Vehicle::SetAutopilot(bool enabled) {
-    GetEpisode().Lock()->SetVehicleAutopilot(*this, enabled);
+    // GetEpisode().Lock()->SetVehicleAutopilot(*this, enabled);
+    // std::cout << "Calling SetAutopilot" << std::endl;
+    if (enabled) {
+      TM &tm = TM::GetInstance(TM::GetUniqueLocalClient());
+      tm.RegisterVehicles({carla::SharedPtr<carla::client::Actor>(this)});
+    }
   }
 
   void Vehicle::ApplyControl(const Control &control) {
