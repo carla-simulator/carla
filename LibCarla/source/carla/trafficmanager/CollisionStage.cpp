@@ -93,7 +93,7 @@ namespace CollisionStageConstants {
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
 
-      //DrawBoundary(GetGeodesicBoundary(ego_actor));
+      // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around ego actor.
       std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
