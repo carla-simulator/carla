@@ -36,9 +36,11 @@ public:
 
   void Tick(float DeltaTime) override;
 
-  const carla::geom::Vector3D ComputeAccelerometerNoise(const FVector &Accelerometer);
+  const carla::geom::Vector3D ComputeAccelerometerNoise(
+      const FVector &Accelerometer);
 
-  const carla::geom::Vector3D ComputeGyroscopeNoise(const FVector &Gyroscope);
+  const carla::geom::Vector3D ComputeGyroscopeNoise(
+      const FVector &Gyroscope);
 
   /// Accelerometer: measures linear acceleration in m/s^2
   carla::geom::Vector3D ComputeAccelerometer(const float DeltaTime);
