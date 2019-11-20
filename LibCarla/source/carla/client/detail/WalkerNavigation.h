@@ -64,7 +64,7 @@ namespace detail {
     // Get Random location in nav mesh
     boost::optional<geom::Location> GetRandomLocation() {
       geom::Location random_location(0, 0, 0);
-      if (_nav.GetRandomLocation(random_location, 1.0f))
+      if (_nav.GetRandomLocation(random_location))
         return boost::optional<geom::Location>(random_location);
       else
         return {};

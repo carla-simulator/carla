@@ -81,7 +81,7 @@ namespace detail {
   // add/update/delete all vehicles in crowd
   void WalkerNavigation::UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode) {
     std::vector<carla::nav::VehicleCollisionInfo> vehicles;
-    
+
     // get current state
     std::shared_ptr<const EpisodeState> state = episode->GetState();
 
