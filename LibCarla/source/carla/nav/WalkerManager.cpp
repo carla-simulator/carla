@@ -101,7 +101,7 @@ namespace nav {
 
         // set a new random target
         carla::geom::Location location;
-        _nav->GetRandomLocation(location, 1, nullptr);
+        _nav->GetRandomLocation(location, nullptr);
 
         // set the route
         return SetWalkerRoute(id, location);
