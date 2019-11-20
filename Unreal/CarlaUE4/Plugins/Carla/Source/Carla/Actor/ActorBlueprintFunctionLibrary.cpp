@@ -654,7 +654,6 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("imu"));
-  // AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -798,8 +797,8 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
-  AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
+
   // - Noise seed --------------------------------
   FActorVariation NoiseSeed;
   NoiseSeed.Id = TEXT("noise_seed");

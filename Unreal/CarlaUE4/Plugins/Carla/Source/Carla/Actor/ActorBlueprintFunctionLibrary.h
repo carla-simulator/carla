@@ -8,11 +8,11 @@
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
-#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
 #include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
