@@ -87,8 +87,7 @@ namespace nav {
     /// update all walkers in crowd
     void UpdateCrowd(const client::detail::EpisodeState &state);
     /// get a random location for navigation
-    bool GetRandomLocation(carla::geom::Location &location, float maxHeight = -1.0f,
-    dtQueryFilter * filter = nullptr) const;
+    bool GetRandomLocation(carla::geom::Location &location, dtQueryFilter * filter = nullptr) const;
     /// set the probability that an agent could cross the roads in its path following
     void SetPedestriansCrossFactor(float percentage);
     /// set an agent as paused for the crowd
