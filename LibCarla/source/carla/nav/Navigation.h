@@ -103,33 +103,33 @@ namespace nav {
   private:
 
     bool _ready { false };
-    std::vector<uint8_t> _binaryMesh;
+    std::vector<uint8_t> _binary_mesh;
     double _delta_seconds { 0.0 };
     /// meshes
-    dtNavMesh *_navMesh { nullptr };
-    dtNavMeshQuery *_navQuery { nullptr };
+    dtNavMesh *_nav_mesh { nullptr };
+    dtNavMeshQuery *_nav_query { nullptr };
     /// crowd
     dtCrowd *_crowd { nullptr };
     /// mapping Id
-    std::unordered_map<ActorId, int> _mappedWalkersId;
-    std::unordered_map<ActorId, int> _mappedVehiclesId;
+    std::unordered_map<ActorId, int> _mapped_walkers_id;
+    std::unordered_map<ActorId, int> _mapped_vehicles_id;
     // mapping by index also
-    std::unordered_map<int, ActorId> _mappedByIndex;
+    std::unordered_map<int, ActorId> _mapped_by_index;
     /// store walkers yaw angle from previous tick
     std::unordered_map<ActorId, float> _yaw_walkers;
     /// saves the position of each actor at intervals and check if any is blocked
-    std::unordered_map<int, carla::geom::Vector3D> _walkersBlockedPosition;
-    double _timeToUnblock { 0.0 };
+    std::unordered_map<int, carla::geom::Vector3D> _walkers_blocked_position;
+    double _time_to_unblock { 0.0 };
 
     /// walker manager for the route planning with events
-    WalkerManager _walkerManager;
+    WalkerManager _walker_manager;
 
     mutable std::mutex _mutex;
 
-    float _probabilityCrossing { 0.0f };
+    float _probability_crossing { 0.0f };
 
     /// assign a filter index to an agent
-    void SetAgentFilter(int agentIndex, int filterIndex);
+    void SetAgentFilter(int agent_index, int filter_index);
   };
 
 } // namespace nav

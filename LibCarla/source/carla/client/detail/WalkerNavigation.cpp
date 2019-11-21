@@ -89,7 +89,6 @@ namespace detail {
     for (auto &&actor : episode->GetActors()) {
       // only vehicles
       if (actor.description.id.rfind("vehicle.", 0) == 0) {
-        // logging::log("Nav: vehicle found: ", actor.description.id);
         // get the snapshot
         ActorSnapshot snapshot = state->GetActorSnapshot(actor.id);
         // add to the vector
