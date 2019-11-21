@@ -159,7 +159,7 @@ namespace nav {
         return true;
     }
 
-   	/// set the next point in the route
+    /// set the next point in the route
     bool WalkerManager::SetWalkerNextPoint(ActorId id) {
         // check
         if (_nav == nullptr)
