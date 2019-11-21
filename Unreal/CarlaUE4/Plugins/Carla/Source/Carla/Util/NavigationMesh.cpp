@@ -38,7 +38,7 @@ TArray<uint8> FNavigationMesh::Load(FString MapName)
       false,
       false);
     if (FilesFound.Num() > 0) 
-			FilePath = FilesFound[0u];
+      FilePath = FilesFound[0u];
   }
 
   TArray<uint8> Content;
