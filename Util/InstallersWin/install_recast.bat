@@ -32,15 +32,14 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set RECAST_SRC=recast-src
+set RECAST_HASH=c1391a52
+set RECAST_COMMIT=c1391a5292be27bab5e409165924e7984386e4ba
+set RECAST_SRC=recast-%RECAST_HASH%-src
 set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
-set RECAST_INSTALL=recast-install
+set RECAST_INSTALL=recast-%RECAST_HASH%-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
-
-set RECAST_COMMIT="c1391a5292be27bab5e409165924e7984386e4ba"
 set RECAST_BASENAME=%RECAST_SRC%
-
 
 if exist "%RECAST_INSTALL_DIR%" (
     goto already_build
