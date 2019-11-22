@@ -43,7 +43,7 @@ namespace traffic_manager {
         world, parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
-        localization_traffic_light_messenger, traffic_light_planner_messenger, debug_helper);
+        localization_traffic_light_messenger, traffic_light_planner_messenger, debug_helper, world);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
         localization_planner_messenger,

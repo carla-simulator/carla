@@ -1,16 +1,19 @@
 #include "TrafficLightStage.h"
+#include "iostream"
 
 namespace traffic_manager {
 
   static const uint NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
-
+  static bool initialized = false;
   TrafficLightStage::TrafficLightStage(
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      cc::DebugHelper &debug_helper)
+      cc::DebugHelper &debug_helper,
+      cc::World &world)
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
-      debug_helper(debug_helper) {
+      debug_helper(debug_helper),
+      world(world) {
 
     // Initializing output frame selector.
     frame_selector = true;
@@ -28,11 +31,24 @@ namespace traffic_manager {
 
   TrafficLightStage::~TrafficLightStage() {}
 
+  void TrafficLightStage::ResetAllTrafficLightGroups() {
+    // TO BE FINISHED
+    if (!initialized) {
+      initialized = true;
+      auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
+      for (auto tl : *world_traffic_lights.get()) {
+        auto group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
+        for (auto g : group) {
+          std::cout << g->GetId() << std::endl;
+        }
+      }
+    }
+  }
+
   void TrafficLightStage::Action() {
 
     // Selecting the output frame based on the selection key.
     auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
-
     // Looping over registered actors.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
@@ -49,7 +65,7 @@ namespace traffic_manager {
       auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
       //DrawLight(traffic_light_state, ego_actor);
-
+      ResetAllTrafficLightGroups();
       // We determine to stop if the current position of the vehicle is not a
       // junction,
       // a point on the path beyond a threshold (velocity-dependent) distance

@@ -7,6 +7,8 @@
 
 #include "carla/client/Vehicle.h"
 #include "carla/client/TrafficLight.h"
+#include "carla/client/World.h"
+#include "carla/client/ActorList.h"
 #include "carla/Memory.h"
 #include "carla/rpc/TrafficLightState.h"
 
@@ -58,16 +60,20 @@ namespace cg = carla::geom;
     std::mutex no_signal_negotiation_mutex;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
+    /// Reference to Carla's world object.
+    cc::World &world;
+
 
     void DrawLight(TLS traffic_light_state, const Actor &ego_actor) const;
-
+    void ResetAllTrafficLightGroups();
 
   public:
 
     TrafficLightStage(
         std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
         std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-        cc::DebugHelper &debug_helper);
+        cc::DebugHelper &debug_helper,
+        cc::World &world);
     ~TrafficLightStage();
 
     void DataReceiver() override;
