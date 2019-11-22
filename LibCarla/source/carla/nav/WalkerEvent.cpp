@@ -31,7 +31,7 @@ namespace nav {
             return EventResult::TimeOut;
         } else {
             // check if the agent has any vehicle around
-            if (_manager && !(_manager->GetNavigation()->hasVehicleNear(_id)))
+            if (_manager && !(_manager->GetNavigation()->hasVehicleNear(_id, 6.0f)))
                 return EventResult::End;
             else
                 return EventResult::Continue;

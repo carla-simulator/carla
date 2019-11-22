@@ -17,7 +17,7 @@ namespace nav {
     WalkerManager::~WalkerManager() {
     }
 
-	/// create a new walker route
+	// create a new walker route
     bool WalkerManager::AddWalker(ActorId id) {
         WalkerInfo info;
         info.state = WALKER_IDLE;
@@ -28,7 +28,7 @@ namespace nav {
         return true;
     }
 
-	/// remove a walker route
+	// remove a walker route
     bool WalkerManager::RemoveWalker(ActorId id) {
         // search
         auto it = _walkers.find(id);
@@ -39,7 +39,7 @@ namespace nav {
         return true;
     }
 
-	/// update all routes
+	// update all routes
     bool WalkerManager::Update(double delta) {
 
         // check all walkers
@@ -93,7 +93,7 @@ namespace nav {
         return true;
     }
 
-	/// set a new route from its current position
+	// set a new route from its current position
     bool WalkerManager::SetWalkerRoute(ActorId id) {
         // check
         if (_nav == nullptr)
@@ -107,7 +107,7 @@ namespace nav {
         return SetWalkerRoute(id, location);
     }
 
-	/// set a new route from its current position
+	// set a new route from its current position
     bool WalkerManager::SetWalkerRoute(ActorId id, carla::geom::Location to) {
         // check
         if (_nav == nullptr)
@@ -135,6 +135,7 @@ namespace nav {
         // create each point of the route
         info.route.clear();
         info.route.reserve(path.size());
+        unsigned char previous_area = SAMPLE_POLYAREA_GROUND;
         for (unsigned int i=0; i<path.size(); ++i) {
             // get the type
             switch (area[i]) {
@@ -146,12 +147,15 @@ namespace nav {
                 // stop and check
                 case SAMPLE_POLYAREA_ROAD:
                 case SAMPLE_POLYAREA_CROSS:
-                    info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]));
+                    // only if we come from a safe area (sidewalks, grass or cross)
+                    if (previous_area != SAMPLE_POLYAREA_CROSS && previous_area != SAMPLE_POLYAREA_ROAD)
+                        info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]));
                     break;
 
                 default:
                     info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
             }
+            previous_area = area[i];
         }
 
         // assign the first point to go (second in the list)
@@ -159,7 +163,7 @@ namespace nav {
         return true;
     }
 
-    /// set the next point in the route
+    // set the next point in the route
     bool WalkerManager::SetWalkerNextPoint(ActorId id) {
         // check
         if (_nav == nullptr)

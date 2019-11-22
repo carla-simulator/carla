@@ -93,7 +93,7 @@ namespace nav {
     /// set an agent as paused for the crowd
     void PauseAgent(ActorId id, bool pause);
     /// return if the agent has a vehicle near (as neighbour)
-    bool hasVehicleNear(ActorId id);
+    bool hasVehicleNear(ActorId id, float distance);
 
     dtCrowd *GetCrowd() { return _crowd; };
 
