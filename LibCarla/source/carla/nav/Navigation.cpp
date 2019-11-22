@@ -35,12 +35,8 @@ namespace nav {
     DT_CROWD_ANTICIPATE_TURNS   = 1,
     DT_CROWD_OBSTACLE_AVOIDANCE = 2,
     DT_CROWD_SEPARATION         = 4,
-    DT_CROWD_OPTIMIZE_VIS       = 8, ///< Use
-                                     ///< #dtPathCorridor::optimizePathVisibility()
-                                     ///< to optimize the agent path.
-    DT_CROWD_OPTIMIZE_TOPO      = 16, ///< Use
-                                      ///< dtPathCorridor::optimizePathTopology()
-                                      ///< to optimize the agent path.
+    DT_CROWD_OPTIMIZE_VIS       = 8,
+    DT_CROWD_OPTIMIZE_TOPO      = 16
   };
 
   // these settings are the same than in RecastBuilder, so if you change the height of the agent, 
@@ -487,7 +483,7 @@ namespace nav {
     memset(&params, 0, sizeof(params));
     params.radius = AGENT_RADIUS;
     params.height = AGENT_HEIGHT;
-    params.maxAcceleration = 80.0f;
+    params.maxAcceleration = 160.0f;
     params.maxSpeed = 1.47f;
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = params.radius * 10.0f;
@@ -547,8 +543,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 0.5f;
-    float hy = vehicle.bounding.extent.y + 0.5f;
+    float hx = vehicle.bounding.extent.x + 0.75f;
+    float hy = vehicle.bounding.extent.y + 0.75f;
     // define the 4 corners of the bounding box
     cg::Vector3D box_corner1 {-hx, -hy, 0};
     cg::Vector3D box_corner2 { hx, -hy, 0};
@@ -611,7 +607,7 @@ namespace nav {
     params.collisionQueryRange = params.radius * 20.0f;
     params.pathOptimizationRange = 0.0f;
     params.obstacleAvoidanceType = 3;
-    params.separationWeight = 100.0f;
+    params.separationWeight = 1000.0f;
 
     // flags
     params.updateFlags = 0;
@@ -1107,16 +1103,16 @@ namespace nav {
     agent->params.queryFilterType = static_cast<unsigned char>(filter_index);
   }
 
-  /// set the probability that an agent could cross the roads in its path following
-  /// percentage of 0.0f means no pedestrian can cross roads
-  /// percentage of 0.5f means 50% of all pedestrians can cross roads
-  /// percentage of 1.0f means all pedestrians can cross roads if needed
+  // set the probability that an agent could cross the roads in its path following
+  // percentage of 0.0f means no pedestrian can cross roads
+  // percentage of 0.5f means 50% of all pedestrians can cross roads
+  // percentage of 1.0f means all pedestrians can cross roads if needed
   void Navigation::SetPedestriansCrossFactor(float percentage)
   {
     _probability_crossing = percentage;
   }
 
-  /// set an agent as paused for the crowd
+  // set an agent as paused for the crowd
   void Navigation::PauseAgent(ActorId id, bool pause) {
     // check if all is ready
     if (!_ready) {
@@ -1149,7 +1145,7 @@ namespace nav {
     agent->paused = pause;
   }
 
-  bool Navigation::hasVehicleNear(ActorId id) {
+  bool Navigation::hasVehicleNear(ActorId id, float distance) {
     // get the internal index (walker or vehicle)
     auto it = _mapped_walkers_id.find(id);
     if (it == _mapped_walkers_id.end()) {
@@ -1163,7 +1159,7 @@ namespace nav {
     {
       // critical section, force single thread running this
       std::lock_guard<std::mutex> lock(_mutex);
-      result = _crowd->hasVehicleNear(it->second);
+      result = _crowd->hasVehicleNear(it->second, distance * distance);
     }
     return result;
   }
