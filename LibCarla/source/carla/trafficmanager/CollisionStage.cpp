@@ -12,6 +12,7 @@ namespace CollisionStageConstants {
   static const float HIGHWAY_TIME_HORIZON = 5.0f;
   static const float CRAWL_SPEED = 10.0f / 3.6f;
   static const float BOUNDARY_EDGE_LENGTH = 2.0f;
+  static const float MINIMUM_GRID_EXTENSION = 10.0f;
 }
   using namespace  CollisionStageConstants;
 
@@ -95,19 +96,10 @@ namespace CollisionStageConstants {
 
       // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
-      vicinity_grid.UpdateGrid(ego_actor);
-      if (vehicle_id_to_index.find(ego_actor->GetId()) == vehicle_id_to_index.end()) {
-        std::cout << " Yep, that definitely happend ! " << std::endl;
-      }
-
       // Retrieve actors around the path of the ego vehicle.
-      float bbox_extension = GetBoundingBoxExtention(ego_actor);
-      auto &waypoint_buffer =  localization_frame->at(
-        vehicle_id_to_index.at(ego_actor->GetId())).buffer;
-      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(
-        ego_actor, waypoint_buffer, bbox_extension);
-      bool collision_hazard = false;
+      std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
 
+      bool collision_hazard = false;
       // Check every actor in the vicinity if it poses a collision hazard.
       for (auto j = actor_id_list.begin(); (j != actor_id_list.end()) && !collision_hazard; ++j) {
         ActorId actor_id = *j;
@@ -119,6 +111,12 @@ namespace CollisionStageConstants {
           } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
             actor = unregistered_actors.at(actor_id);
           }
+
+          debug_helper.DrawLine(
+            ego_actor->GetLocation() + cg::Location(0, 0, 2),
+            actor->GetLocation() + cg::Location(0, 0, 2), 0.2,
+            {255u, 0u, 0u}, 0.1
+          );
 
           if (actor_id != ego_actor_id &&
               parameters.GetCollisionDetection(ego_actor, actor) &&
@@ -344,6 +342,21 @@ namespace CollisionStageConstants {
     }
 
     return bbox_extension;
+  }
+
+  std::unordered_set<ActorId> CollisionStage::GetPotentialVehicleObstacles(const Actor &ego_vehicle) {
+
+    vicinity_grid.UpdateGrid(ego_vehicle);
+    float grid_extension = std::max(GetBoundingBoxExtention(ego_vehicle), MINIMUM_GRID_EXTENSION);
+    std::unordered_set<ActorId> actor_id_list;
+
+    Buffer &waypoint_buffer =  localization_frame->at(
+      vehicle_id_to_index.at(ego_vehicle->GetId())).buffer;
+
+    actor_id_list = vicinity_grid.GetActors(
+      ego_vehicle, waypoint_buffer, grid_extension);
+
+    return actor_id_list;
   }
 
   LocationList CollisionStage::GetBoundary(const Actor &actor) const {

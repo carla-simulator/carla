@@ -102,6 +102,9 @@ namespace bg = boost::geometry;
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
     float GetBoundingBoxExtention(const Actor &ego_vehicle) const;
 
+    /// Method to retreive the set of vehicles around the path of the given vehicle.
+    std::unordered_set<ActorId> GetPotentialVehicleObstacles(const Actor &ego_vehicle);
+
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary) const;
 
