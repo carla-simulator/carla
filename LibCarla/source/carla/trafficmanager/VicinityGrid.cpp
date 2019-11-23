@@ -58,21 +58,46 @@ namespace traffic_manager {
     return {first, second};
   }
 
-  std::unordered_set<carla::ActorId> VicinityGrid::GetActors(Actor actor) {
+  std::unordered_set<carla::ActorId> VicinityGrid::GetActors(Actor actor, const Buffer& buffer, float bbox_extension) {
 
     std::pair<int, int> grid_ids = UpdateGrid(actor);
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
     std::unordered_set<ActorId> actors;
-    // Search all surrounding grids and find any vehicles in them.
-    for (int i = -1; i <= 1; ++i) {
-      for (int j = -1; j <= 1; ++j) {
 
-        std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
-        if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
-          for (auto grid_actor: grid_to_actor_id.at(grid_key)) {
-            actors.insert(grid_actor);
+    if (buffer.front()->CheckJunction()) {
+      // Search all surrounding grids and find any vehicles in them.
+      for (int i = -1; i <= 1; ++i) {
+        for (int j = -1; j <= 1; ++j) {
+
+          std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
+          if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
+            auto &grid_actor_set = grid_to_actor_id.at(grid_key);
+            actors.insert(grid_actor_set.begin(), grid_actor_set.end());
           }
+        }
+      }
+    } else {
+
+      std::unordered_set<std::string> visited_grids;
+      for (uint i = 0u;
+           !buffer.empty() &&
+           (i < buffer.size()) &&
+           (buffer.front()->DistanceSquared(buffer.at(i)->GetLocation()) < std::pow(bbox_extension, 2));
+           ++i) {
+
+        SimpleWaypointPtr simple_waypoint_ptr = buffer.at(i);
+        cg::Location loc = simple_waypoint_ptr->GetLocation();
+        int first = static_cast<int>(std::floor(loc.x / GRID_SIZE));
+        int second = static_cast<int>(std::floor(loc.y / GRID_SIZE));
+        std::string grid_key = MakeKey({first, second});
+
+        if (visited_grids.find(grid_key) == visited_grids.end() &&
+            grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
+
+          auto &grid_actor_set = grid_to_actor_id.at(grid_key);
+          actors.insert(grid_actor_set.begin(), grid_actor_set.end());
+          visited_grids.insert(grid_key);
         }
       }
     }

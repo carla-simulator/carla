@@ -32,6 +32,7 @@ namespace LocalizationConstants {
     planner_frame_selector = true;
     collision_frame_selector = true;
     previous_collision_selector = !collision_frame_selector;
+    collision_frame_ready = false;
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
@@ -203,7 +204,11 @@ namespace LocalizationConstants {
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
 
-    previous_collision_selector = collision_frame_selector;
+    if (collision_frame_selector != previous_collision_selector) {
+      previous_collision_selector = collision_frame_selector;
+      collision_frame_ready = true;
+    }
+
   }
 
   void LocalizationStage::DataReceiver() {
@@ -261,7 +266,9 @@ namespace LocalizationConstants {
     // Send data to collision stage only if it has finished
     // processing, received the previous message and started processing it.
     int collision_messenger_current_state = collision_messenger->GetState();
-    if (collision_messenger_current_state != collision_messenger_state) {
+    if ((collision_messenger_current_state != collision_messenger_state) &&
+        collision_frame_ready) {
+
       DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
         collision_messenger_state,
         collision_frame_selector ? collision_frame_a : collision_frame_b
@@ -269,6 +276,7 @@ namespace LocalizationConstants {
 
       collision_messenger_state = collision_messenger->SendData(collision_data_packet);
       collision_frame_selector = !collision_frame_selector;
+      collision_frame_ready = false;
     }
 
     // Send data to traffic light stage only if it has finished

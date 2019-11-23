@@ -79,7 +79,7 @@ namespace TrafficDistributorConstants {
     }
   }
 
-    void TrafficDistributor::DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper) {
+  void TrafficDistributor::DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper) {
     std::string str;
     if (lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
       str="Right";
@@ -134,7 +134,7 @@ namespace TrafficDistributorConstants {
 
     auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
 
-    DrawLaneChange(lane_change, vehicle, debug_helper);
+    // DrawLaneChange(lane_change, vehicle, debug_helper);
 
     auto change_right = carla::road::element::LaneMarking::LaneChange::Right;
     auto change_left = carla::road::element::LaneMarking::LaneChange::Left;

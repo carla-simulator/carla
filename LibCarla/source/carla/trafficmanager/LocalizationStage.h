@@ -45,6 +45,7 @@ namespace cc = carla::client;
     bool planner_frame_selector;
     bool collision_frame_selector;
     bool previous_collision_selector;
+    bool collision_frame_ready;
     bool traffic_light_frame_selector;
     /// Output data frames to be shared with the motion planner stage.
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
