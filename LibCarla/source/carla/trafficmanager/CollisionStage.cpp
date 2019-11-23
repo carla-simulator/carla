@@ -95,8 +95,17 @@ namespace CollisionStageConstants {
 
       // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
-      // Retrieve actors around ego actor.
-      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_actor);
+      vicinity_grid.UpdateGrid(ego_actor);
+      if (vehicle_id_to_index.find(ego_actor->GetId()) == vehicle_id_to_index.end()) {
+        std::cout << " Yep, that definitely happend ! " << std::endl;
+      }
+
+      // Retrieve actors around the path of the ego vehicle.
+      float bbox_extension = GetBoundingBoxExtention(ego_actor);
+      auto &waypoint_buffer =  localization_frame->at(
+        vehicle_id_to_index.at(ego_actor->GetId())).buffer;
+      std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(
+        ego_actor, waypoint_buffer, bbox_extension);
       bool collision_hazard = false;
 
       // Check every actor in the vicinity if it poses a collision hazard.
@@ -245,19 +254,9 @@ namespace CollisionStageConstants {
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
 
-      float velocity = actor->GetVelocity().Length();
       cg::Location vehicle_location = actor->GetLocation();
 
-      float bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
-      if (velocity > HIGHWAY_SPEED) {
-        bbox_extension = HIGHWAY_TIME_HORIZON * velocity;
-      } else if (velocity < CRAWL_SPEED) {
-        bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
-      } else {
-        bbox_extension = std::sqrt(EXTENSION_SQUARE_POINT * velocity) +
-                         velocity * TIME_HORIZON +
-                         BOUNDARY_EXTENSION_MINIMUM;
-      }
+      float bbox_extension = GetBoundingBoxExtention(actor);
 
       float specific_distance_margin = parameters.GetDistanceToLeadingVehicle(actor);
       if (specific_distance_margin > 0) {
@@ -328,6 +327,23 @@ namespace CollisionStageConstants {
 
       return bbox;
     }
+  }
+
+  float CollisionStage::GetBoundingBoxExtention(const Actor &actor) const {
+
+    float velocity = actor->GetVelocity().Length();
+    float bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
+    if (velocity > HIGHWAY_SPEED) {
+      bbox_extension = HIGHWAY_TIME_HORIZON * velocity;
+    } else if (velocity < CRAWL_SPEED) {
+      bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
+    } else {
+      bbox_extension = std::sqrt(EXTENSION_SQUARE_POINT * velocity) +
+                        velocity * TIME_HORIZON +
+                        BOUNDARY_EXTENSION_MINIMUM;
+    }
+
+    return bbox_extension;
   }
 
   LocationList CollisionStage::GetBoundary(const Actor &actor) const {
