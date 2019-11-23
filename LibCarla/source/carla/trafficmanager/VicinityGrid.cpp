@@ -78,7 +78,6 @@ namespace traffic_manager {
         }
       }
     } else {
-
       std::unordered_set<std::string> visited_grids;
       for (uint i = 0u;
            !buffer.empty() &&
