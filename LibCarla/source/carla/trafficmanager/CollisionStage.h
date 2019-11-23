@@ -99,6 +99,9 @@ namespace bg = boost::geometry;
     /// other_vehicle to pass.
     bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle) const;
 
+    /// Method to calculate the speed dependent bounding box extention for a vehicle.
+    float GetBoundingBoxExtention(const Actor &ego_vehicle) const;
+
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary) const;
 

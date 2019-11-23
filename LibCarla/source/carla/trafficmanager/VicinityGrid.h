@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
@@ -11,12 +12,17 @@
 #include "carla/geom/Location.h"
 #include "carla/rpc/Actor.h"
 
+#include "carla/trafficmanager/SimpleWaypoint.h"
+
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
+
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
+  using Buffer = std::deque<SimpleWaypointPtr>;
 
   /// This class maintains vehicle positions in grid segments.
   /// This is used in the collision stage to filter vehicles.
@@ -40,7 +46,7 @@ namespace cg = carla::geom;
     ~VicinityGrid();
 
     /// Returns a set of actors in the vicinity of a given actor.
-    std::unordered_set<ActorId> GetActors(Actor actor);
+    std::unordered_set<ActorId> GetActors(Actor actor, const Buffer& buffer, float bbox_extension);
 
     /// Updates the grid position of the given actor and returns new grid id.
     std::pair<int, int> UpdateGrid(Actor actor);
