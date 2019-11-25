@@ -54,6 +54,11 @@ def main():
         type=int,
         help='number of walkers (default: 50)')
     argparser.add_argument(
+        '-m', '--map',
+        default='Town03',
+        type=str,
+        help='Map to be loaded')
+    argparser.add_argument(
         '--safe',
         action='store_true',
         help='avoid spawning vehicles prone to accidents')
@@ -79,7 +84,7 @@ def main():
 
     try:
 
-        world = client.get_world()
+        world = client.load_world(args.map)
         blueprints = world.get_blueprint_library().filter(args.filterv)
         blueprintsWalkers = world.get_blueprint_library().filter(args.filterw)
 
