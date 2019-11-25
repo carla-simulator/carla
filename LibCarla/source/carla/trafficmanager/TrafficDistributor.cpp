@@ -109,9 +109,9 @@ namespace TrafficDistributorConstants {
     }
   }
 
-  std::shared_ptr<SimpleWaypoint> TrafficDistributor::AssignLaneChange(
+  SimpleWaypointPtr TrafficDistributor::AssignLaneChange(
       Actor vehicle,
-      std::shared_ptr<SimpleWaypoint> current_waypoint,
+      SimpleWaypointPtr current_waypoint,
       GeoIds current_road_ids,
       std::shared_ptr<BufferList> buffer_list,
       std::unordered_map<ActorId, uint> &vehicle_id_to_index,
@@ -126,22 +126,16 @@ namespace TrafficDistributorConstants {
     std::unordered_set<ActorId> co_lane_vehicles = GetVehicleIds(current_road_ids);
 
     bool need_to_change_lane = false;
-    // true -> left, false -> right
-    bool lane_change_direction;
-
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
-
     auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
 
     // DrawLaneChange(lane_change, vehicle, debug_helper);
 
     auto change_right = carla::road::element::LaneMarking::LaneChange::Right;
     auto change_left = carla::road::element::LaneMarking::LaneChange::Left;
-    auto change_both = carla::road::element::LaneMarking::LaneChange::Both;
 
-    // Don't try to change lane if the current lane has less than two vehicles.
-    if (co_lane_vehicles.size() >= 2 && !force) {
+    if (!force) {
 
       // Check if any vehicle in the current lane is blocking us.
       for (auto i = co_lane_vehicles.begin(); i != co_lane_vehicles.end() && !need_to_change_lane; ++i) {
@@ -150,7 +144,7 @@ namespace TrafficDistributorConstants {
         traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
             vehicle_id_to_index.at(same_lane_vehicle_id));
 
-        std::shared_ptr<traffic_manager::SimpleWaypoint> same_lane_vehicle_waypoint = nullptr;
+        SimpleWaypointPtr same_lane_vehicle_waypoint = nullptr;
         cg::Location same_lane_location;
         if (!other_vehicle_buffer.empty()) {
 
@@ -170,114 +164,106 @@ namespace TrafficDistributorConstants {
             (same_lane_location.Distance(vehicle_location)
             > LANE_OBSTACLE_MINIMUM_DISTANCE)) {
 
-          // If lane change connections are available,
-          // pick a direction (preferring left) and
-          // announce the need for a lane change.
-          if (left_waypoint != nullptr && (lane_change == change_left || lane_change == change_both)) {
-            traffic_manager::ActorIDSet left_lane_vehicles = GetVehicleIds({
-              current_road_ids.road_id,
-              current_road_ids.section_id,
-              left_waypoint->GetWaypoint()->GetLaneId()
-            });
-            if (co_lane_vehicles.size() - left_lane_vehicles.size() > 1) {
-              need_to_change_lane = true;
-              lane_change_direction = true;
-            }
-          } else if (right_waypoint != nullptr && (lane_change == change_right || lane_change == change_both)) {
-            traffic_manager::ActorIDSet right_lane_vehicles = GetVehicleIds({
-              current_road_ids.road_id,
-              current_road_ids.section_id,
-              right_waypoint->GetWaypoint()->GetLaneId()
-            });
-            if (co_lane_vehicles.size() - right_lane_vehicles.size() > 1) {
-              need_to_change_lane = true;
-              lane_change_direction = false;
-            }
-          }
+          need_to_change_lane = true;
         }
       }
+
     } else if (force) {
+
       need_to_change_lane = true;
-      lane_change_direction = direction;
     }
 
     // Change the distance to the target point on the target lane
     // as a function of vehicle velocity.
     float change_over_distance = std::max(vehicle_velocity, MINIMUM_LANE_CHANGE_DISTANCE);
-
     bool possible_to_lane_change = false;
-    std::shared_ptr<traffic_manager::SimpleWaypoint> change_over_point;
+    SimpleWaypointPtr change_over_point;
+
     if (need_to_change_lane) {
 
-      if (lane_change_direction) {
-        change_over_point = left_waypoint;
+      std::vector<SimpleWaypointPtr> candidate_points;
+      if (force) {
+        if (direction) {
+          candidate_points.push_back(left_waypoint);
+        } else {
+          candidate_points.push_back(right_waypoint);
+        }
       } else {
-        change_over_point = right_waypoint;
+        candidate_points.push_back(left_waypoint);
+        candidate_points.push_back(right_waypoint);
       }
 
-      if (change_over_point != nullptr) {
-        carla::road::LaneId lane_change_id = change_over_point->GetWaypoint()->GetLaneId();
-        traffic_manager::ActorIDSet target_lane_vehicles = GetVehicleIds({
-          current_road_ids.road_id,
-          current_road_ids.section_id,
-          lane_change_id
-        });
+      for (auto target_lane_wp: candidate_points) {
+        if (!possible_to_lane_change && target_lane_wp != nullptr) {
 
-        // If target lane has vehicles, check if there are any obstacles
-        // for lane change execution.
-        if (target_lane_vehicles.size() > 0 && !force) {
+          carla::road::LaneId lane_change_id = target_lane_wp->GetWaypoint()->GetLaneId();
+          traffic_manager::ActorIDSet target_lane_vehicles = GetVehicleIds({
+            current_road_ids.road_id,
+            current_road_ids.section_id,
+            lane_change_id
+          });
 
-          bool found_hazard = false;
-          for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
+          // If target lane has vehicles, check if there are any obstacles
+          // for lane change execution.
+          if (target_lane_vehicles.size() > 0 && !force) {
 
-            const ActorId &other_vehicle_id = *i;
-            traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
-                vehicle_id_to_index.at(other_vehicle_id));
+            bool found_hazard = false;
+            for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
 
-            // If a vehicle on the target lane is behind us, check if we are
-            // fast enough to execute lane change.
-            if (!other_vehicle_buffer.empty() &&
-                other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
+              const ActorId &other_vehicle_id = *i;
+              traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
+                  vehicle_id_to_index.at(other_vehicle_id));
 
-              Actor other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
-              cg::Location other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
-              float relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
+              // If a vehicle on the target lane is behind us, check if it is far enough away,
+              // and if we are fast enough to execute lane change.
+              if (!other_vehicle_buffer.empty() &&
+                  other_vehicle_buffer.front()->GetWaypoint()->GetLaneId() == lane_change_id) {
 
-              if (relative_deviation < 0) {
+                Actor other_vehicle = actor_list.at(vehicle_id_to_index.at(other_vehicle_id));
+                cg::Location other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
+                float relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
 
-                float time_to_reach_other =
-                    change_over_point->Distance(other_vehicle_location) /
-                    other_vehicle->GetVelocity().Length();
+                if (relative_deviation < 0) {
 
-                float time_to_reach_reference =
-                    change_over_point->Distance(vehicle_location) /
-                    vehicle->GetVelocity().Length();
+                  float time_to_reach_other =
+                      target_lane_wp->Distance(other_vehicle_location) /
+                      other_vehicle->GetVelocity().Length();
 
-                if (relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180) ||
-                    time_to_reach_other > (time_to_reach_reference + APPROACHING_VEHICLE_TIME_MARGIN)) {
+                  float time_to_reach_reference =
+                      target_lane_wp->Distance(vehicle_location) /
+                      vehicle->GetVelocity().Length();
 
-                  found_hazard = true;
+                  if ((relative_deviation > std::cos(M_PI * LATERAL_DETECTION_CONE / 180) ||
+                      time_to_reach_other > (time_to_reach_reference + APPROACHING_VEHICLE_TIME_MARGIN)) &&
+                      (target_lane_wp->Distance(vehicle_location) < LANE_OBSTACLE_MINIMUM_DISTANCE)) {
+
+                    found_hazard = true;
+                  }
                 }
-              }
-              // If a vehicle on the target lane is in front, check if it is far
-              // enough to perform a lane change.
-              else {
+                // If a vehicle on the target lane is in front, check if it is far
+                // enough to perform a lane change.
+                else {
 
-                auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-                if (change_over_point->Distance(other_vehicle_location) <
-                    (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
-                  found_hazard = true;
+                  auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
+                  if (target_lane_wp->Distance(other_vehicle_location) <
+                      (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
+                    found_hazard = true;
+                  }
                 }
               }
             }
-          }
 
-          if (!found_hazard) {
+            if (!found_hazard) {
+              possible_to_lane_change = true;
+            }
+
+          } else {
             possible_to_lane_change = true;
           }
 
-        } else {
-          possible_to_lane_change = true;
+          if (possible_to_lane_change) {
+            change_over_point = target_lane_wp;
+          }
         }
       }
     }
