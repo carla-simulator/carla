@@ -167,6 +167,12 @@ namespace MapConstants {
       }
     }
 
+    // Return the closest waypoint in the surrounding grids
+    // only if it is in the same horizontal plane as the requested location.
+    if (std::abs(closest_waypoint->GetLocation().z - location.z) > 1.0) { // Account for constant.
+      closest_waypoint = nullptr;
+    }
+
     return closest_waypoint;
   }
 
