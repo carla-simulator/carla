@@ -98,7 +98,7 @@ namespace cg = carla::geom;
 
     void UpdateVehicleRoadPosition(ActorId actor_id, GeoIds road_ids);
 
-    void DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper);
+    void DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper, bool init);
 
     /// Returns the shared pointer of SimpleWaypoint for Lane Change
     /// if Lane Change is required and possible, else returns nullptr.
