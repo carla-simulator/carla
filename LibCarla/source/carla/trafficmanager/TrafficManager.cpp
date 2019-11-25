@@ -141,8 +141,9 @@ namespace traffic_manager {
   }
 
   void TrafficManager::SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage) {
-
-    parameters.SetPercentageSpeedBelowLimit(actor, percentage);
+    if (percentage > 0.0f) {
+      parameters.SetPercentageSpeedBelowLimit(actor, percentage);
+    }
   }
 
   void TrafficManager::SetCollisionDetection(
@@ -164,7 +165,8 @@ namespace traffic_manager {
   }
 
   void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-
-    parameters.SetDistanceToLeadingVehicle(actor, distance);
+    if (distance > 0.0f) {
+      parameters.SetDistanceToLeadingVehicle(actor, distance);
+    }
   }
 }

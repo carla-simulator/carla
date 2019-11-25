@@ -79,33 +79,35 @@ namespace TrafficDistributorConstants {
     }
   }
 
-  void TrafficDistributor::DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper) {
-    std::string str;
-    if (lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
-      str="Right";
-      debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {255u, 0u, 0u}, 0.1f, true);
-    }
+  void TrafficDistributor::DrawLaneChange(carla::road::element::LaneMarking::LaneChange lane_change, const Actor &ego_actor, cc::DebugHelper debug_helper, bool init) {
+    if (init) {
+      std::string str;
+      if (lane_change == carla::road::element::LaneMarking::LaneChange::Right) {
+        str="Right";
+        debug_helper.DrawString(
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
+          str,
+          false,
+          {255u, 0u, 0u}, 0.1f, true);
+      }
 
-    else if (lane_change == carla::road::element::LaneMarking::LaneChange::Left){
-      str="Left";
-      debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {0u, 255u, 0u}, 0.1f, true);
-    }
+      else if (lane_change == carla::road::element::LaneMarking::LaneChange::Left){
+        str="Left";
+        debug_helper.DrawString(
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
+          str,
+          false,
+          {0u, 255u, 0u}, 0.1f, true);
+      }
 
-    else if (lane_change == carla::road::element::LaneMarking::LaneChange::Both){
-      str="Both";
-      debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {0u, 0u, 255u}, 0.1f, true);
+      else if (lane_change == carla::road::element::LaneMarking::LaneChange::Both){
+        str="Both";
+        debug_helper.DrawString(
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
+          str,
+          false,
+          {0u, 0u, 255u}, 0.1f, true);
+      }
     }
   }
 
@@ -130,10 +132,7 @@ namespace TrafficDistributorConstants {
     auto right_waypoint = current_waypoint->GetRightWaypoint();
     auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
 
-    // DrawLaneChange(lane_change, vehicle, debug_helper);
-
-    auto change_right = carla::road::element::LaneMarking::LaneChange::Right;
-    auto change_left = carla::road::element::LaneMarking::LaneChange::Left;
+    DrawLaneChange(lane_change, vehicle, debug_helper, false);
 
     if (!force) {
 
