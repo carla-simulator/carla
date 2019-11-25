@@ -55,6 +55,7 @@ namespace cg = carla::geom;
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorIDSet = std::unordered_set<traffic_manager::ActorId>;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 
   /// Returns the cross product (z component value) between the vehicle's
   /// heading
@@ -103,9 +104,9 @@ namespace cg = carla::geom;
     /// if Lane Change is required and possible, else returns nullptr.
     /// Lane change can be forced by setting the force flag and providing
     /// direction using direction flag (true -> left, false -> right)
-    std::shared_ptr<SimpleWaypoint> AssignLaneChange(
+    SimpleWaypointPtr AssignLaneChange(
         Actor vehicle,
-        std::shared_ptr<SimpleWaypoint> current_waypoint,
+        SimpleWaypointPtr current_waypoint,
         GeoIds current_road_ids,
         std::shared_ptr<BufferList> buffer_list,
         std::unordered_map<ActorId, uint> &vehicle_id_to_index,
