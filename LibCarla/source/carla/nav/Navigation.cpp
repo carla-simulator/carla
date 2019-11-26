@@ -20,17 +20,6 @@
 namespace carla {
 namespace nav {
 
-  enum SamplePolyFlags {
-    SAMPLE_POLYFLAGS_WALK       = 0x01,   // Ability to walk (sidewalks, crosswalks)
-    SAMPLE_POLYFLAGS_SWIM       = 0x02,   // Ability to swim (water).
-    SAMPLE_POLYFLAGS_DOOR       = 0x04,   // Ability to move through doors.
-    SAMPLE_POLYFLAGS_JUMP       = 0x08,   // Ability to jump.
-    SAMPLE_POLYFLAGS_DISABLED   = 0x10,   // Disabled polygon
-    SAMPLE_POLYFLAGS_ROAD       = 0x20,   // Ability to walk on road
-    SAMPLE_POLYFLAGS_GRASS      = 0x40,   // Ability to walk on grass
-    SAMPLE_POLYFLAGS_ALL        = 0xffff  // All abilities.
-  };
-
   enum UpdateFlags {
     DT_CROWD_ANTICIPATE_TURNS   = 1,
     DT_CROWD_OBSTACLE_AVOIDANCE = 2,
@@ -45,7 +34,7 @@ namespace nav {
   static const int   MAX_AGENTS = 500;
   static const int   MAX_QUERY_SEARCH_NODES = 2048;
   static const float AGENT_HEIGHT = 1.8f;
-  static const float AGENT_RADIUS = 0.4f;
+  static const float AGENT_RADIUS = 0.3f;
 
   static const float AGENT_UNBLOCK_DISTANCE = 0.5f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
@@ -217,15 +206,15 @@ namespace nav {
 
     // set different filters
     // filter 0 can not walk on roads
-    _crowd->getEditableFilter(0)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(0)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED | SAMPLE_POLYFLAGS_ROAD);
-    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
-    _crowd->getEditableFilter(0)->setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
+    _crowd->getEditableFilter(0)->setIncludeFlags(CARLA_TYPE_WALKABLE);
+    _crowd->getEditableFilter(0)->setExcludeFlags(CARLA_TYPE_ROAD);
+    _crowd->getEditableFilter(0)->setAreaCost(CARLA_AREA_ROAD, AREA_ROAD_COST);
+    _crowd->getEditableFilter(0)->setAreaCost(CARLA_AREA_GRASS, AREA_GRASS_COST);
     // filter 1 can walk on roads
-    _crowd->getEditableFilter(1)->setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(1)->setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
-    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
-    _crowd->getEditableFilter(1)->setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
+    _crowd->getEditableFilter(1)->setIncludeFlags(CARLA_TYPE_WALKABLE);
+    _crowd->getEditableFilter(1)->setExcludeFlags(CARLA_TYPE_NONE);
+    _crowd->getEditableFilter(1)->setAreaCost(CARLA_AREA_ROAD, AREA_ROAD_COST);
+    _crowd->getEditableFilter(1)->setAreaCost(CARLA_AREA_GRASS, AREA_GRASS_COST);
 
     // Setup local avoidance params to different qualities.
     dtObstacleAvoidanceParams params;
@@ -295,10 +284,10 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setAreaCost(SAMPLE_POLYAREA_ROAD, AREA_ROAD_COST);
-      filter2.setAreaCost(SAMPLE_POLYAREA_GRASS, AREA_GRASS_COST);
-      filter2.setIncludeFlags(SAMPLE_POLYFLAGS_ALL ^ SAMPLE_POLYFLAGS_DISABLED);
-      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
+      filter2.setAreaCost(CARLA_AREA_ROAD, AREA_ROAD_COST);
+      filter2.setAreaCost(CARLA_AREA_GRASS, AREA_GRASS_COST);
+      filter2.setIncludeFlags(CARLA_TYPE_WALKABLE);
+      filter2.setExcludeFlags(CARLA_TYPE_NONE);
       filter = &filter2;
     }
 
@@ -485,8 +474,7 @@ namespace nav {
     params.height = AGENT_HEIGHT;
     params.maxAcceleration = 160.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 20.0f;
-    params.pathOptimizationRange = params.radius * 10.0f;
+    params.collisionQueryRange = 10;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
 
@@ -543,8 +531,8 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 0.75f;
-    float hy = vehicle.bounding.extent.y + 0.75f;
+    float hx = vehicle.bounding.extent.x + 0.6f;
+    float hy = vehicle.bounding.extent.y + 0.6f;
     // define the 4 corners of the bounding box
     cg::Vector3D box_corner1 {-hx, -hy, 0};
     cg::Vector3D box_corner2 { hx, -hy, 0};
@@ -600,12 +588,11 @@ namespace nav {
 
     // set parameters
     memset(&params, 0, sizeof(params));
-    params.radius = AGENT_RADIUS * 2;
+    params.radius = 2;
     params.height = AGENT_HEIGHT;
     params.maxAcceleration = 0.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = params.radius * 20.0f;
-    params.pathOptimizationRange = 0.0f;
+    params.collisionQueryRange = 1;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 1000.0f;
 
@@ -959,17 +946,22 @@ namespace nav {
 
     // set its rotation
     float yaw;
-    float min = 0.2f;
+    float speed = 0.0f;
+    float min = 0.1f;
     if (agent->vel[0] < -min || agent->vel[0] > min ||
         agent->vel[2] < -min || agent->vel[2] > min) {
       yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
+      speed = sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] * agent->vel[2]);
     } else {
       yaw = atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
+      speed = sqrt(agent->dvel[0] * agent->dvel[0] + agent->dvel[1] * agent->dvel[1] + agent->dvel[2] * agent->dvel[2]);
     }
 
     // interpolate current and target angle
     float shortest_angle = fmod(yaw - _yaw_walkers[id] + 540.0f, 360.0f) - 180.0f;
-    float rotation_speed = 6.0f;
+    float per = (speed / 1.5f);
+    if (per > 1.0f) per = 1.0f;
+    float rotation_speed = per * 6.0f;
     trans.rotation.yaw = _yaw_walkers[id] +
     (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
     _yaw_walkers[id] = trans.rotation.yaw;
@@ -1065,8 +1057,8 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-      filter2.setExcludeFlags(SAMPLE_POLYFLAGS_DISABLED);
+      filter2.setIncludeFlags(CARLA_TYPE_SIDEWALK);
+      filter2.setExcludeFlags(CARLA_TYPE_NONE);
       filter = &filter2;
     }
 

@@ -23,14 +23,24 @@
 namespace carla {
 namespace nav {
 
-  enum SamplePolyAreas {
-    SAMPLE_POLYAREA_GROUND,
-    SAMPLE_POLYAREA_WATER,
-    SAMPLE_POLYAREA_ROAD,
-    SAMPLE_POLYAREA_DOOR,
-    SAMPLE_POLYAREA_GRASS,
-    SAMPLE_POLYAREA_JUMP,
-    SAMPLE_POLYAREA_CROSS
+  enum NavAreas {
+    CARLA_AREA_BLOCK = 0,
+    CARLA_AREA_SIDEWALK,
+    CARLA_AREA_CROSSWALK,
+    CARLA_AREA_ROAD,
+    CARLA_AREA_GRASS
+  };
+
+  enum SamplePolyFlags
+  {
+    CARLA_TYPE_NONE       = 0x01,
+    CARLA_TYPE_SIDEWALK   = 0x02,
+    CARLA_TYPE_CROSSWALK  = 0x04,
+    CARLA_TYPE_ROAD       = 0x08,
+    CARLA_TYPE_GRASS      = 0x10,
+    CARLA_TYPE_ALL        = 0xffff,
+
+    CARLA_TYPE_WALKABLE   = CARLA_TYPE_SIDEWALK | CARLA_TYPE_CROSSWALK | CARLA_TYPE_GRASS | CARLA_TYPE_ROAD,
   };
 
   /// struct to send info about vehicles to the crowd

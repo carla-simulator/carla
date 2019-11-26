@@ -135,20 +135,20 @@ namespace nav {
         // create each point of the route
         info.route.clear();
         info.route.reserve(path.size());
-        unsigned char previous_area = SAMPLE_POLYAREA_GROUND;
+        unsigned char previous_area = CARLA_AREA_SIDEWALK;
         for (unsigned int i=0; i<path.size(); ++i) {
             // get the type
             switch (area[i]) {
-                // random waiting
-                case SAMPLE_POLYAREA_GROUND:
+                // do nothing
+                case CARLA_AREA_SIDEWALK:
                     info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
                     break;
 
                 // stop and check
-                case SAMPLE_POLYAREA_ROAD:
-                case SAMPLE_POLYAREA_CROSS:
-                    // only if we come from a safe area (sidewalks, grass or cross)
-                    if (previous_area != SAMPLE_POLYAREA_CROSS && previous_area != SAMPLE_POLYAREA_ROAD)
+                case CARLA_AREA_ROAD:
+                case CARLA_AREA_CROSSWALK:
+                    // only if we come from a safe area (sidewalks, grass or crosswalk)
+                    if (previous_area != CARLA_AREA_CROSSWALK && previous_area != CARLA_AREA_ROAD)
                         info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]));
                     break;
 
