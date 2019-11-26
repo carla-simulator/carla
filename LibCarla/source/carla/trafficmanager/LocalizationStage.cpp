@@ -31,7 +31,6 @@ namespace LocalizationConstants {
     // Initializing various output frame selectors.
     planner_frame_selector = true;
     collision_frame_selector = true;
-    previous_collision_selector = !collision_frame_selector;
     collision_frame_ready = false;
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
@@ -191,7 +190,8 @@ namespace LocalizationConstants {
       planner_message.approaching_true_junction = approaching_junction;
 
       // Reading current messenger state of the collision stage before modifying it's frame.
-      if (collision_frame_selector != previous_collision_selector) {
+      if ((collision_messenger->GetState() != collision_messenger_state) &&
+          !collision_frame_ready) {
 
         LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
         collision_message.actor = vehicle;
@@ -204,8 +204,8 @@ namespace LocalizationConstants {
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
 
-    if (collision_frame_selector != previous_collision_selector) {
-      previous_collision_selector = collision_frame_selector;
+    if ((collision_messenger->GetState() != collision_messenger_state) &&
+        !collision_frame_ready) {
       collision_frame_ready = true;
     }
 
