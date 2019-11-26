@@ -108,6 +108,21 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `noise_lat_stddev` (_Float_)<sub>_ – Modifiable_</sub>
         - `noise_lon_bias` (_Float_)<sub>_ – Modifiable_</sub>
         - `noise_lon_stddev` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_seed` (_Int_)<sub>_ – Modifiable_</sub>
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">sensor.other.imu</font>**  
+    - **Attributes:**
+        - `noise_accel_stddev_x` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_accel_stddev_y` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_accel_stddev_z` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_bias_x` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_bias_y` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_bias_z` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_stddev_x` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_stddev_y` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_gyro_stddev_z` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_seed` (_Int_)<sub>_ – Modifiable_</sub>
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">sensor.other.lane_invasion</font>**  
