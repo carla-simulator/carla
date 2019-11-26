@@ -44,7 +44,6 @@ namespace cc = carla::client;
     /// Section keys to switch between the output data frames.
     bool planner_frame_selector;
     bool collision_frame_selector;
-    bool previous_collision_selector;
     bool collision_frame_ready;
     bool traffic_light_frame_selector;
     /// Output data frames to be shared with the motion planner stage.
