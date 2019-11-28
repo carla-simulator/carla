@@ -197,26 +197,40 @@ namespace MapConstants {
   void InMemoryMap::FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint) {
 
     WaypointPtr raw_waypoint = reference_waypoint->GetWaypoint();
-    uint8_t lane_change = static_cast<uint8_t>(raw_waypoint->GetLaneChange());
-    uint8_t change_right = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Right);
-    uint8_t change_left = static_cast<uint8_t>(carla::road::element::LaneMarking::LaneChange::Left);
+    crd::element::LaneMarking::LaneChange lane_change = raw_waypoint->GetLaneChange();
+    auto change_right = crd::element::LaneMarking::LaneChange::Right;
+    auto change_left = crd::element::LaneMarking::LaneChange::Left;
+    auto change_both = crd::element::LaneMarking::LaneChange::Both;
 
     try {
-      if ((lane_change & change_right) > 0) {
+      if (lane_change == change_right || lane_change == change_both) {
+
         WaypointPtr right_waypoint =  raw_waypoint->GetRight();
-        SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(right_waypoint->GetTransform().location);
-        if (closest_simple_waypoint == nullptr) {
-          closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
+        if (right_waypoint != nullptr &&
+            right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
+            (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
+
+          SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(right_waypoint->GetTransform().location);
+          if (closest_simple_waypoint == nullptr) {
+            closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
+          }
+          reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
         }
-        reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
       }
-      if ((lane_change & change_left) > 0) {
+
+      if (lane_change == change_left || lane_change == change_both) {
+
         WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
-        SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(left_waypoint->GetTransform().location);
-        if (closest_simple_waypoint == nullptr) {
-          closest_simple_waypoint = GetWaypoint(left_waypoint->GetTransform().location);
+        if (left_waypoint != nullptr &&
+            left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
+            (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
+
+          SimpleWaypointPtr closest_simple_waypoint = GetWaypointInVicinity(left_waypoint->GetTransform().location);
+          if (closest_simple_waypoint == nullptr) {
+            closest_simple_waypoint = GetWaypoint(left_waypoint->GetTransform().location);
+          }
+          reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
         }
-        reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
       }
     } catch (const std::invalid_argument &e) {
       cg::Location loc = reference_waypoint->GetLocation();

@@ -11,6 +11,7 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/Memory.h"
+#include "carla/road/Lane.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
@@ -18,6 +19,7 @@ namespace traffic_manager {
 
 namespace cg = carla::geom;
 namespace cc = carla::client;
+namespace crd = carla::road;
 
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
