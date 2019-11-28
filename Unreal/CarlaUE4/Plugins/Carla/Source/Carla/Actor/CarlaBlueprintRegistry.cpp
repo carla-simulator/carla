@@ -8,6 +8,11 @@
 #include "Carla/Actor/CarlaBlueprintRegistry.h"
 #include "Carla/Game/CarlaStatics.h"
 
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+
 namespace CommonAttributes {
   static const FString PATH = FPaths::ProjectContentDir();
   static const FString DEFAULT = TEXT("/Carla/Config/Default");

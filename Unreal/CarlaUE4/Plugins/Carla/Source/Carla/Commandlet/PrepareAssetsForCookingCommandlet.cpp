@@ -6,7 +6,11 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 
+#if WITH_EDITOR
+#include "FileHelpers.h"
+#endif
 #include "HAL/PlatformFilemanager.h"
+#include "UObject/ConstructorHelpers.h"
 
 UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 {
@@ -114,18 +118,12 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       }
       MeshActor->SetActorLabel(AssetName, true);
 
-      // set complex collision as simple in actor
-      UBodySetup* BodySetup = MeshComponent->GetBodySetup();
-      if (BodySetup)
-      {
-        BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
-      }
-
       // set complex collision as simple in asset
-      BodySetup = MeshAsset->BodySetup;
+      UBodySetup *BodySetup = MeshAsset->BodySetup;
       if (BodySetup)
       {
         BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
+        MeshAsset->MarkPackageDirty();
       }
 
       // rotate all meshes 180 degrees to fit with OpenDRIVE info 
@@ -223,6 +221,11 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   {
     SavePackage(PackagePath, Package);
   }
+
+  #if WITH_EDITOR
+  UEditorLoadingAndSavingUtils::SaveMap(World, PackagePath);
+  #endif
+
   return bPackageSaved;
 }
 
@@ -451,6 +454,10 @@ int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
     // Saves Package path for further use
     GeneratePackagePathFile(PackageParams.Name);
   }
+
+  #if WITH_EDITOR
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  #endif
 
   return 0;
 }
