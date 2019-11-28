@@ -174,7 +174,7 @@ namespace TrafficDistributorConstants {
 
     // Change the distance to the target point on the target lane
     // as a function of vehicle velocity.
-    float change_over_distance = std::max(vehicle_velocity, MINIMUM_LANE_CHANGE_DISTANCE);
+    float change_over_distance = std::max(2*vehicle_velocity, MINIMUM_LANE_CHANGE_DISTANCE);
     bool possible_to_lane_change = false;
     SimpleWaypointPtr change_over_point;
 
