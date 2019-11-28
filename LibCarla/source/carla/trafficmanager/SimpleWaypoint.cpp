@@ -58,7 +58,7 @@ namespace traffic_manager {
     cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
     cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
     if ((heading_vector.x * relative_vector.y - heading_vector.y * relative_vector.x) < 0) {
-      next_left_waypoint = _waypoint;
+      next_right_waypoint = _waypoint;
     } else {
       throw std::invalid_argument("Argument not on the right side!");
     }
