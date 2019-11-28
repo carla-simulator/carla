@@ -52,7 +52,7 @@ struct CARLA_API FAssetsPaths
 };
 
 UCLASS()
-class UPrepareAssetsForCookingCommandlet
+class CARLA_API UPrepareAssetsForCookingCommandlet
   : public UCommandlet
 {
   GENERATED_BODY()
