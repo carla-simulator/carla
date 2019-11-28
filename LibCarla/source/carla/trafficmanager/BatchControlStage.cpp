@@ -3,10 +3,12 @@
 namespace traffic_manager {
 
   BatchControlStage::BatchControlStage(
+      std::string stage_name,
       std::shared_ptr<PlannerToControlMessenger> messenger,
       cc::Client &carla_client)
     : messenger(messenger),
-      carla_client(carla_client) {
+      carla_client(carla_client),
+      PipelineStage(stage_name) {
 
     // Initializing messenger state.
     messenger_state = messenger->GetState();

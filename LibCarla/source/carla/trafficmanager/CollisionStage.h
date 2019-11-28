@@ -78,13 +78,6 @@ namespace bg = boost::geometry;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
 
-    /// Returns true if there is a possible collision detected between the
-    /// vehicles passed to the method.
-    /// Collision is predicted by extrapolating a boundary around the vehicle
-    /// along its trajectory and checking if it overlaps with the extrapolated
-    /// boundary of the other vehicle.
-    bool CheckOverlap(const LocationList &boundary_a, const LocationList &boundary_b) const;
-
     /// Returns the bounding box corners of the vehicle passed to the method.
     LocationList GetBoundary(const Actor &actor) const;
 
@@ -111,11 +104,12 @@ namespace bg = boost::geometry;
   public:
 
     CollisionStage(
-        std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
-        std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-        cc::World &world,
-        Parameters &parameters,
-        cc::DebugHelper &debug_helper);
+      std::string stage_name,
+      std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
+      std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
+      cc::World &world,
+      Parameters &parameters,
+      cc::DebugHelper &debug_helper);
 
     ~CollisionStage();
 

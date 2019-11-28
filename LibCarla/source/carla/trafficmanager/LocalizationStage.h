@@ -90,13 +90,14 @@ namespace cc = carla::client;
   public:
 
     LocalizationStage(
-        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-        AtomicActorSet &registered_actors,
-        InMemoryMap &local_map,
-        Parameters &parameters,
-        cc::DebugHelper &debug_helper);
+      std::string stage_name,
+      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+      AtomicActorSet &registered_actors,
+      InMemoryMap &local_map,
+      Parameters &parameters,
+      cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
 

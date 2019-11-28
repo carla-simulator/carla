@@ -6,6 +6,7 @@ namespace traffic_manager {
   static const uint NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
   static bool initialized = false;
   TrafficLightStage::TrafficLightStage(
+      std::string stage_name,
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
       cc::DebugHelper &debug_helper,
@@ -13,7 +14,8 @@ namespace traffic_manager {
     : localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       debug_helper(debug_helper),
-      world(world) {
+      world(world),
+      PipelineStage(stage_name) {
 
     // Initializing output frame selector.
     frame_selector = true;
