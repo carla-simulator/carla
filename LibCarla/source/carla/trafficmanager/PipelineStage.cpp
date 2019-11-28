@@ -2,7 +2,8 @@
 
 namespace traffic_manager {
 
-  PipelineStage::PipelineStage() {
+  PipelineStage::PipelineStage(std::string stage_name)
+    : performance_diagnostics(PerformanceDiagnostics(stage_name)) {
 
     run_stage.store(true);
     run_receiver.store(true);
@@ -53,6 +54,7 @@ namespace traffic_manager {
   void PipelineStage::ActionThreadManager() {
 
     while (run_stage.load()) {
+      performance_diagnostics.RegisterUpdate();
 
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
 

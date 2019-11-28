@@ -13,6 +13,7 @@ namespace LocalizationConstants {
   using namespace LocalizationConstants;
 
   LocalizationStage::LocalizationStage(
+      std::string stage_name,
       std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
       std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
       std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
@@ -26,7 +27,8 @@ namespace LocalizationConstants {
       registered_actors(registered_actors),
       local_map(local_map),
       parameters(parameters),
-      debug_helper(debug_helper) {
+      debug_helper(debug_helper),
+      PipelineStage(stage_name) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;

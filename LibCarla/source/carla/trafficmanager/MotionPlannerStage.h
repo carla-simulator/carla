@@ -65,14 +65,15 @@ namespace cc = carla::client;
   public:
 
     MotionPlannerStage(
-        std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
-        std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
-        std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
-        std::shared_ptr<PlannerToControlMessenger> control_messenger,
-        Parameters &parameters,
-        std::vector<float> longitudinal_parameters,
-        std::vector<float> highway_longitudinal_parameters,
-        std::vector<float> lateral_parameters);
+      std::string stage_name,
+      std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+      std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+      std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
+      std::shared_ptr<PlannerToControlMessenger> control_messenger,
+      Parameters &parameters,
+      std::vector<float> longitudinal_parameters,
+      std::vector<float> highway_longitudinal_parameters,
+      std::vector<float> lateral_parameters);
 
     ~MotionPlannerStage();
 

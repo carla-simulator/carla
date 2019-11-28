@@ -7,15 +7,18 @@
 #include <iostream>
 #include <memory>
 #include <shared_mutex>
+#include <string>
 #include <thread>
 #include <vector>
 
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/Messenger.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 namespace traffic_manager {
 
+  namespace chr = std::chrono;
   using namespace std::chrono_literals;
 
   /// This class provides base functionality and template for
@@ -44,6 +47,8 @@ namespace traffic_manager {
     std::condition_variable wake_receiver_notifier;
     std::condition_variable wake_action_notifier;
     std::condition_variable wake_sender_notifier;
+    /// Object to track stage performance.
+    PerformanceDiagnostics performance_diagnostics;
 
     /// Method to manage receiver thread.
     void ReceiverThreadManager();
@@ -69,7 +74,7 @@ namespace traffic_manager {
 
   public:
 
-    PipelineStage();
+    PipelineStage(std::string stage_name);
 
     virtual ~PipelineStage();
 

@@ -39,8 +39,9 @@ namespace cr = carla::rpc;
   public:
 
     BatchControlStage(
-        std::shared_ptr<PlannerToControlMessenger> messenger,
-        cc::Client &carla_client);
+      std::string stage_name,
+      std::shared_ptr<PlannerToControlMessenger> messenger,
+      cc::Client &carla_client);
     ~BatchControlStage();
 
     void DataReceiver() override;

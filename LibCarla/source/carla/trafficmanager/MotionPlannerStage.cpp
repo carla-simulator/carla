@@ -13,6 +13,7 @@ namespace PlannerConstants {
   using namespace PlannerConstants;
 
   MotionPlannerStage::MotionPlannerStage(
+      std::string stage_name,
       std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
@@ -28,7 +29,8 @@ namespace PlannerConstants {
       parameters(parameters),
       longitudinal_parameters(longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
-      lateral_parameters(lateral_parameters) {
+      lateral_parameters(lateral_parameters),
+      PipelineStage(stage_name) {
 
     // Initializing the output frame selector.
     frame_selector = true;

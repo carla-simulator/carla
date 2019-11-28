@@ -33,30 +33,36 @@ namespace traffic_manager {
     planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
 
     localization_stage = std::make_unique<LocalizationStage>(
-        localization_planner_messenger, localization_collision_messenger,
-        localization_traffic_light_messenger,
-        registered_actors, *local_map.get(),
-        parameters, debug_helper);
+      "Localization stage",
+      localization_planner_messenger, localization_collision_messenger,
+      localization_traffic_light_messenger,
+      registered_actors, *local_map.get(),
+      parameters, debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
-        localization_collision_messenger, collision_planner_messenger,
-        world, parameters, debug_helper);
+      "Collision stage",
+      localization_collision_messenger, collision_planner_messenger,
+      world, parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
-        localization_traffic_light_messenger, traffic_light_planner_messenger, debug_helper, world);
+      "Traffic light stage",
+      localization_traffic_light_messenger, traffic_light_planner_messenger,
+      debug_helper, world);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
-        localization_planner_messenger,
-        collision_planner_messenger,
-        traffic_light_planner_messenger,
-        planner_control_messenger,
-        parameters,
-        longitudinal_PID_parameters,
-        longitudinal_highway_PID_parameters,
-        lateral_PID_parameters);
+      "Motion planner stage",
+      localization_planner_messenger,
+      collision_planner_messenger,
+      traffic_light_planner_messenger,
+      planner_control_messenger,
+      parameters,
+      longitudinal_PID_parameters,
+      longitudinal_highway_PID_parameters,
+      lateral_PID_parameters);
 
     control_stage = std::make_unique<BatchControlStage>(
-        planner_control_messenger, client_connection);
+      "Batch control stage",
+      planner_control_messenger, client_connection);
 
     Start();
   }

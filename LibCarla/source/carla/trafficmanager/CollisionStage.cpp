@@ -18,6 +18,7 @@ namespace CollisionStageConstants {
   using namespace  CollisionStageConstants;
 
   CollisionStage::CollisionStage(
+      std::string stage_name,
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
       cc::World &world,
@@ -27,7 +28,8 @@ namespace CollisionStageConstants {
       planner_messenger(planner_messenger),
       world(world),
       parameters(parameters),
-      debug_helper(debug_helper) {
+      debug_helper(debug_helper),
+      PipelineStage(stage_name) {
 
     // Initializing clock for checking unregistered actors periodically.
     last_world_actors_pass_instance = chr::system_clock::now();
@@ -120,11 +122,11 @@ namespace CollisionStageConstants {
               < std::pow(MAX_COLLISION_RADIUS, 2)) &&
               (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-            debug_helper.DrawLine(
-              ego_location + cg::Location(0, 0, 2),
-              other_location + cg::Location(0, 0, 2),
-              0.2f, {255u, 0u, 0u}, 0.1f
-            );
+            // debug_helper.DrawLine(
+            //   ego_location + cg::Location(0, 0, 2),
+            //   other_location + cg::Location(0, 0, 2),
+            //   0.2f, {255u, 0u, 0u}, 0.1f
+            // );
 
             if (parameters.GetCollisionDetection(ego_actor, actor) &&
                 NegotiateCollision(ego_actor, actor)) {
@@ -186,54 +188,36 @@ namespace CollisionStageConstants {
   bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) const {
 
     bool hazard = false;
-    bool geodesic_overlap = false;
 
-
-    LocationList reference_geodesic_bbox = GetGeodesicBoundary(reference_vehicle);
-    LocationList other_geodesic_bbox = GetGeodesicBoundary(other_vehicle);
-
-    geodesic_overlap = CheckOverlap(reference_geodesic_bbox, other_geodesic_bbox);
-
-    Polygon reference_geodesic_polygon = GetPolygon(reference_geodesic_bbox);
-    Polygon other_geodesic_polygon = GetPolygon(other_geodesic_bbox);
+    Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
+    Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
     Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
     Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
 
     double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
     double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
 
+    cg::Vector3D reference_heading = reference_vehicle->GetTransform().GetForwardVector();
+    cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
+    cg::Vector3D reference_to_other = other_vehicle->GetLocation() - reference_vehicle->GetLocation();
+    cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
+
+    float inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+    float inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+
     // Whichever vehicle's path is farthest away from the other vehicle gets
     // priority to move.
-    if (geodesic_overlap &&
-        reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic) {
+    if (inter_geodesic_distance < 0.1 &&
+        ((inter_bbox_distance > 0.1 &&
+         reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic) ||
+         (inter_bbox_distance < 0.1 &&
+          cg::Math::Dot(reference_heading, reference_to_other) >
+          cg::Math::Dot(other_heading, other_to_reference)))) {
+
       hazard = true;
     }
 
     return hazard;
-  }
-
-  bool CollisionStage::CheckOverlap(
-      const LocationList &boundary_a,
-      const LocationList &boundary_b) const {
-
-    bool overlap = false;
-    if (boundary_a.size() > 0 && boundary_b.size() > 0) {
-
-      Polygon reference_polygon = GetPolygon(boundary_a);
-      Polygon other_polygon = GetPolygon(boundary_b);
-
-      std::deque<Polygon> output;
-      bg::intersection(reference_polygon, other_polygon, output);
-
-      for (uint j = 0u; j < output.size() && !overlap; ++j) {
-        Polygon &p = output.at(j);
-        if (bg::area(p) > ZERO_AREA) {
-          overlap = true;
-        }
-      }
-    }
-
-    return overlap;
   }
 
   traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) const {
