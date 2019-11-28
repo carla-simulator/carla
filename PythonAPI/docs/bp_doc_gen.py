@@ -12,12 +12,19 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+    carla_lib_name = 'carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64')
+    sys.path.append(glob.glob('../carla/dist/%s' % carla_lib_name)[0])
 except IndexError:
-    pass
+    print('\n  [ERROR] Could not find "%s"' % carla_lib_name)
+    print('          Blueprint library docs will not be generated')
+    print("  .---------------------------------------------------.")
+    print("  |     Make sure the python client is compiled!      |")
+    print("  '---------------------------------------------------'\n")
+    # We don't provide an error to prvent Travis checks failing
+    sys.exit(0)
 
 import carla
 
@@ -107,11 +114,12 @@ class MarkdownFile:
         return join(['```', language, '\n', self.list_depth(), buf, '\n', self.list_depth(), '```\n'])
 
 
-def main():
+def generate_pb_docs():
     """Generates markdown file"""
+
+    print('Generating API blueprint documentation...')
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)
-
     world = client.get_world()
 
     bp_dict = {}
@@ -141,10 +149,10 @@ def main():
 
     md.textn("\nHere is an example code for printing all actor blueprints and their attributes:")
     md.textn(md.code_block("blueprints = [bp for bp in world.get_blueprint_library().filter('*')]\n"
-                           "for blueprint in blueprints:\n"
-                           "   print(blueprint.id)\n"
-                           "   for attr in blueprint:\n"
-                           "       print('  - {}'.format(attr))", "py"))
+                        "for blueprint in blueprints:\n"
+                        "   print(blueprint.id)\n"
+                        "   for attr in blueprint:\n"
+                        "       print('  - {}'.format(attr))", "py"))
     md.textn("Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).")
 
     for key, value in bp_dict.items(): # bp types, bp's
@@ -164,14 +172,24 @@ def main():
     return md.data()
 
 
-if __name__ == '__main__':
+def main():
+
+    script_path = os.path.dirname(os.path.abspath(__file__))
 
     try:
+        docs = generate_pb_docs()
 
-        script_path = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(script_path, '../../Docs/bp_library.md'), 'w') as md_file:
-            md_file.write(main())
-        print("Done!")
+    except RuntimeError:
+        print("\n  [ERROR] Can't establish connection with the simulator")
+        print("  .---------------------------------------------------.")
+        print("  |       Make sure the simulator is connected!       |")
+        print("  '---------------------------------------------------'\n")
+        # We don't provide an error to prvent Travis checks failing
+        sys.exit(0)
 
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
+    with open(os.path.join(script_path, '../../Docs/bp_library.md'), 'w') as md_file:
+        md_file.write(docs)
+    print("Done!")
+
+if __name__ == '__main__':
+    main()

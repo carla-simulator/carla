@@ -9,7 +9,6 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/client/Actor.h"
-#include "carla/client/GnssSensor.h"
 #include "carla/client/LaneInvasionSensor.h"
 #include "carla/client/ServerSideSensor.h"
 #include "carla/client/TrafficLight.h"
@@ -75,8 +74,6 @@ namespace detail {
     auto init = ActorInitializer{description, episode};
     if (description.description.id == "sensor.other.lane_invasion") {
       return MakeActorImpl<LaneInvasionSensor>(std::move(init), gc);
-    } else if (description.description.id == "sensor.other.gnss") {
-      return MakeActorImpl<GnssSensor>(std::move(init), gc);
     } else if (description.HasAStream()) {
       return MakeActorImpl<ServerSideSensor>(std::move(init), gc);
     } else if (StringUtil::StartsWith(description.description.id, "vehicle.")) {

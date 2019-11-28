@@ -17,6 +17,8 @@
 #include "carla/sensor/s11n/CollisionEventSerializer.h"
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
+#include "carla/sensor/s11n/IMUSerializer.h"
+#include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
 #include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
@@ -25,6 +27,7 @@
 class ACollisionSensor;
 class ADepthCamera;
 class AGnssSensor;
+class AInertialMeasurementUnit;
 class ALaneInvasionSensor;
 class AObstacleDetectionSensor;
 class ARayCastLidar;
@@ -46,10 +49,11 @@ namespace sensor {
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
+    std::pair<AInertialMeasurementUnit *, s11n::IMUSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
-    std::pair<AGnssSensor *, s11n::NoopSerializer>,
+    std::pair<AGnssSensor *, s11n::GnssSerializer>,
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>
   >;
@@ -67,6 +71,7 @@ namespace sensor {
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/LaneInvasionSensor.h"

@@ -11,11 +11,12 @@
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
+#include <carla/sensor/data/IMUMeasurement.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
-#include <carla/sensor/data/GnssEvent.h>
+#include <carla/sensor/data/GnssMeasurement.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -27,50 +28,60 @@ namespace sensor {
 namespace data {
 
   std::ostream &operator<<(std::ostream &out, const Image &image) {
-    out << "Image(frame=" << image.GetFrame()
-        << ", timestamp=" << image.GetTimestamp()
-        << ", size=" << image.GetWidth() << 'x' << image.GetHeight()
+    out << "Image(frame=" << std::to_string(image.GetFrame())
+        << ", timestamp=" << std::to_string(image.GetTimestamp())
+        << ", size=" << std::to_string(image.GetWidth()) << 'x' << std::to_string(image.GetHeight())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
-    out << "LidarMeasurement(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
-        << ", number_of_points=" << meas.size()
+    out << "LidarMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", number_of_points=" << std::to_string(meas.size())
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const CollisionEvent &meas) {
-    out << "CollisionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "CollisionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const ObstacleDetectionEvent &meas) {
-    out << "ObstacleDetectionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "ObstacleDetectionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", other_actor=" << meas.GetOtherActor()
         << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const LaneInvasionEvent &meas) {
-    out << "LaneInvasionEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
+    out << "LaneInvasionEvent(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ')';
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const GnssEvent &meas) {
-    out << "GnssEvent(frame=" << meas.GetFrame()
-        << ", timestamp=" << meas.GetTimestamp()
-        << ", lat=" << meas.GetLatitude()
-        << ", lon=" << meas.GetLongitude()
-        << ", alt=" << meas.GetAltitude()
+  std::ostream &operator<<(std::ostream &out, const GnssMeasurement &meas) {
+    out << "GnssMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", lat=" << std::to_string(meas.GetLatitude())
+        << ", lon=" << std::to_string(meas.GetLongitude())
+        << ", alt=" << std::to_string(meas.GetAltitude())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const IMUMeasurement &meas) {
+    out << "IMUMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", accelerometer=" << meas.GetAccelerometer()
+        << ", gyroscope=" << meas.GetGyroscope()
+        << ", compass=" << std::to_string(meas.GetCompass())
         << ')';
     return out;
   }
@@ -229,10 +240,17 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::GnssEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssEvent>>("GnssEvent", no_init)
-    .add_property("latitude", &csd::GnssEvent::GetLatitude)
-    .add_property("longitude", &csd::GnssEvent::GetLongitude)
-    .add_property("altitude", &csd::GnssEvent::GetAltitude)
+  class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
+    .add_property("latitude", &csd::GnssMeasurement::GetLatitude)
+    .add_property("longitude", &csd::GnssMeasurement::GetLongitude)
+    .add_property("altitude", &csd::GnssMeasurement::GetAltitude)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
+    .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer)
+    .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope)
+    .add_property("compass", &csd::IMUMeasurement::GetCompass)
     .def(self_ns::str(self_ns::self))
   ;
 }
