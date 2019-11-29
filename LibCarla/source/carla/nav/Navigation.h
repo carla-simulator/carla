@@ -103,7 +103,9 @@ namespace nav {
     /// set an agent as paused for the crowd
     void PauseAgent(ActorId id, bool pause);
     /// return if the agent has a vehicle near (as neighbour)
-    bool hasVehicleNear(ActorId id, float distance);
+    bool HasVehicleNear(ActorId id, float distance);
+    /// make agent look at some location
+    bool SetWalkerLookAt(ActorId id, carla::geom::Location location);
 
     dtCrowd *GetCrowd() { return _crowd; };
 

@@ -951,10 +951,10 @@ namespace nav {
     if (agent->vel[0] < -min || agent->vel[0] > min ||
         agent->vel[2] < -min || agent->vel[2] > min) {
       yaw = atan2f(agent->vel[2], agent->vel[0]) * (180.0f / static_cast<float>(M_PI));
-      speed = sqrt(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] * agent->vel[2]);
+      speed = sqrtf(agent->vel[0] * agent->vel[0] + agent->vel[1] * agent->vel[1] + agent->vel[2] * agent->vel[2]);
     } else {
       yaw = atan2f(agent->dvel[2], agent->dvel[0]) * (180.0f / static_cast<float>(M_PI));
-      speed = sqrt(agent->dvel[0] * agent->dvel[0] + agent->dvel[1] * agent->dvel[1] + agent->dvel[2] * agent->dvel[2]);
+      speed = sqrtf(agent->dvel[0] * agent->dvel[0] + agent->dvel[1] * agent->dvel[1] + agent->dvel[2] * agent->dvel[2]);
     }
 
     // interpolate current and target angle
@@ -1062,10 +1062,10 @@ namespace nav {
       filter = &filter2;
     }
 
-    // search
+    // we will try up to 10 rounds, otherwise we failed to find a good location
     dtPolyRef random_ref { 0 };
     float point[3] { 0.0f, 0.0f, 0.0f };
-
+    int rounds = 10;
     {
       dtStatus status;
       // critical section, force single thread running this
@@ -1073,13 +1073,16 @@ namespace nav {
       do {
         status = _nav_query->findRandomPoint(filter, frand, &random_ref, point);
         // set the location in Unreal coords
-        location.x = point[0];
-        location.y = point[2];
-        location.z = point[1];
-      } while (status != DT_SUCCESS);
+        if (status == DT_SUCCESS) {
+          location.x = point[0];
+          location.y = point[2];
+          location.z = point[1];
+        }
+        --rounds;
+      } while (status != DT_SUCCESS && rounds > 0);
     }
 
-    return true;
+    return (rounds > 0);
   }
 
   // assign a filter index to an agent
@@ -1137,7 +1140,7 @@ namespace nav {
     agent->paused = pause;
   }
 
-  bool Navigation::hasVehicleNear(ActorId id, float distance) {
+  bool Navigation::HasVehicleNear(ActorId id, float distance) {
     // get the internal index (walker or vehicle)
     auto it = _mapped_walkers_id.find(id);
     if (it == _mapped_walkers_id.end()) {
@@ -1151,9 +1154,46 @@ namespace nav {
     {
       // critical section, force single thread running this
       std::lock_guard<std::mutex> lock(_mutex);
-      result = _crowd->hasVehicleNear(it->second, distance * distance);
+      result = _crowd->hasVehicleNear(it->second, distance * distance, false);
     }
     return result;
+  }
+
+  /// make agent look at some location
+  bool Navigation::SetWalkerLookAt(ActorId id, carla::geom::Location location) {
+    // get the internal index (walker or vehicle)
+    auto it = _mapped_walkers_id.find(id);
+    if (it == _mapped_walkers_id.end()) {
+      it = _mapped_vehicles_id.find(id);
+      if (it == _mapped_vehicles_id.end()) {
+        return false;
+      }
+    }
+
+    dtCrowdAgent *agent;
+    {
+      // critical section, force single thread running this
+      std::lock_guard<std::mutex> lock(_mutex);
+      agent = _crowd->getEditableAgent(it->second);
+    }
+
+    // get the position
+    float x = (location.x - agent->npos[0]) * 0.0001f;
+    float y = (location.y - agent->npos[2]) * 0.0001f;
+    float z = (location.z - agent->npos[1]) * 0.0001f;
+
+    // set its velocity
+    agent->vel[0] = x;
+    agent->vel[2] = y;
+    agent->vel[1] = z;
+    agent->nvel[0] = x;
+    agent->nvel[2] = y;
+    agent->nvel[1] = z;
+    agent->dvel[0] = x;
+    agent->dvel[2] = y;
+    agent->dvel[1] = z;
+
+    return true;
   }
 
 } // namespace nav
