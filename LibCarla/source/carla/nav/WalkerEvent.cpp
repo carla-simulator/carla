@@ -31,10 +31,16 @@ namespace nav {
             return EventResult::TimeOut;
         } else {
             // check if the agent has any vehicle around
-            if (_manager && !(_manager->GetNavigation()->hasVehicleNear(_id, 6.0f)))
+            if (_manager && !(_manager->GetNavigation()->HasVehicleNear(_id, 6.0f)))
                 return EventResult::End;
             else
+            {
+                // make look at the next point to go
+                carla::geom::Location location;
+                if (_manager->GetWalkerNextPoint(_id, location))
+                    _manager->GetNavigation()->SetWalkerLookAt(_id, location);
                 return EventResult::Continue;
+            }
         }
     }
 

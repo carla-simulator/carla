@@ -63,6 +63,9 @@ namespace nav {
 
     /// set the next point in the route
     bool SetWalkerNextPoint(ActorId id);
+  
+    /// get the next point in the route
+    bool GetWalkerNextPoint(ActorId id, carla::geom::Location &location);
 
     /// return the navigation object
     Navigation *GetNavigation() { return _nav; };
