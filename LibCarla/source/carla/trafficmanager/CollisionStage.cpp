@@ -122,11 +122,11 @@ namespace CollisionStageConstants {
               < std::pow(MAX_COLLISION_RADIUS, 2)) &&
               (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-            // debug_helper.DrawLine(
-            //   ego_location + cg::Location(0, 0, 2),
-            //   other_location + cg::Location(0, 0, 2),
-            //   0.2f, {255u, 0u, 0u}, 0.1f
-            // );
+            debug_helper.DrawLine(
+              ego_location + cg::Location(0, 0, 2),
+              other_location + cg::Location(0, 0, 2),
+              0.2f, {255u, 0u, 0u}, 0.1f
+            );
 
             if (parameters.GetCollisionDetection(ego_actor, actor) &&
                 NegotiateCollision(ego_actor, actor)) {
