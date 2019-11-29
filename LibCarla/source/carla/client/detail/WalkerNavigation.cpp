@@ -38,7 +38,7 @@ namespace detail {
     CheckIfWalkerExist(*walkers, *state);
 
     // add/update/delete all vehicles in crowd
-    UpdateVehiclesInCrowd(episode);
+    UpdateVehiclesInCrowd(episode, false);
 
     // update crowd in navigation module
     _nav.UpdateCrowd(*state);
@@ -79,7 +79,7 @@ namespace detail {
   }
 
   // add/update/delete all vehicles in crowd
-  void WalkerNavigation::UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode) {
+  void WalkerNavigation::UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode, bool show_debug) {
     std::vector<carla::nav::VehicleCollisionInfo> vehicles;
 
     // get current state
@@ -98,6 +98,70 @@ namespace detail {
 
     // update the vehicles found
     _nav.UpdateVehicles(vehicles);
+
+    // optional debug info
+    if (show_debug) {
+      if (_nav.GetCrowd() == nullptr) return;
+      
+      // draw bounding boxes for debug
+      for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
+        // get the agent
+        const dtCrowdAgent *agent = _nav.GetCrowd()->getAgent(i);
+        if (agent && agent->params.useObb) {
+          // draw for debug
+          carla::geom::Location p1, p2, p3, p4;
+          p1.x = agent->params.obb[0];
+          p1.z = agent->params.obb[1];
+          p1.y = agent->params.obb[2];
+          p2.x = agent->params.obb[3];
+          p2.z = agent->params.obb[4];
+          p2.y = agent->params.obb[5];
+          p3.x = agent->params.obb[6];
+          p3.z = agent->params.obb[7];
+          p3.y = agent->params.obb[8];
+          p4.x = agent->params.obb[9];
+          p4.z = agent->params.obb[10];
+          p4.y = agent->params.obb[11];
+          carla::rpc::DebugShape line1;
+          line1.life_time = 0.01f;
+          line1.persistent_lines = false;
+          // line 1
+          line1.primitive = carla::rpc::DebugShape::Line {p1, p2, 0.2f};
+          line1.color = { 0, 255, 0 };
+          _client.DrawDebugShape(line1);
+          // line 2
+          line1.primitive = carla::rpc::DebugShape::Line {p2, p3, 0.2f};
+          line1.color = { 255, 0, 0 };
+          _client.DrawDebugShape(line1);
+          // line 3
+          line1.primitive = carla::rpc::DebugShape::Line {p3, p4, 0.2f};
+          line1.color = { 0, 0, 255 };
+          _client.DrawDebugShape(line1);
+          // line 4
+          line1.primitive = carla::rpc::DebugShape::Line {p4, p1, 0.2f};
+          line1.color = { 255, 255, 0 };
+          _client.DrawDebugShape(line1);
+        }
+      }
+
+      // draw some text for debug
+      for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
+        // get the agent
+        const dtCrowdAgent *agent = _nav.GetCrowd()->getAgent(i);
+        if (agent) {
+          // draw for debug
+          carla::geom::Location p1(agent->npos[0], agent->npos[2], agent->npos[1] + 1);
+          std::ostringstream out;
+          out << *reinterpret_cast<const float *>(&agent->params.userData);
+          carla::rpc::DebugShape text;
+          text.life_time = 0.01f;
+          text.persistent_lines = false;
+          text.primitive = carla::rpc::DebugShape::String {p1, out.str(), false};
+          text.color = { 0, 255, 0 };
+          _client.DrawDebugShape(text);
+        }
+      }
+    }
   }
 
 } // namespace detail
