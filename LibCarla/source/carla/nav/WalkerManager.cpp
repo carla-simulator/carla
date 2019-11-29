@@ -198,6 +198,29 @@ namespace nav {
         return true;
     }
 
+    // get the next point in the route
+    bool WalkerManager::GetWalkerNextPoint(ActorId id, carla::geom::Location &location) {
+        // check
+        if (_nav == nullptr)
+            return false;
+
+        // search
+        auto it = _walkers.find(id);
+        if (it == _walkers.end())
+            return false;
+
+        // get it
+        WalkerInfo &info = it->second;
+
+        // check the end
+        if (info.currentIndex < info.route.size()) {
+            location = info.route[info.currentIndex].location;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     EventResult WalkerManager::ExecuteEvent(ActorId id, WalkerInfo &info, double delta) {
         // go to the event
         WalkerRoutePoint &rp = info.route[info.currentIndex];
