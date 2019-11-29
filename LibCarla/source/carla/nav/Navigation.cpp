@@ -531,12 +531,13 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // get the bounding box extension plus some space around
-    float hx = vehicle.bounding.extent.x + 0.6f;
-    float hy = vehicle.bounding.extent.y + 0.6f;
+    float marge = 0.8f;
+    float hx = vehicle.bounding.extent.x + marge;
+    float hy = vehicle.bounding.extent.y + marge;
     // define the 4 corners of the bounding box
     cg::Vector3D box_corner1 {-hx, -hy, 0};
-    cg::Vector3D box_corner2 { hx, -hy, 0};
-    cg::Vector3D box_corner3 { hx,  hy, 0};
+    cg::Vector3D box_corner2 { hx + 0.2f, -hy, 0};
+    cg::Vector3D box_corner3 { hx + 0.2f,  hy, 0};
     cg::Vector3D box_corner4 {-hx,  hy, 0};
     // rotate the points
     float angle = cg::Math::ToRadians(vehicle.transform.rotation.yaw);
@@ -592,9 +593,9 @@ namespace nav {
     params.height = AGENT_HEIGHT;
     params.maxAcceleration = 0.0f;
     params.maxSpeed = 1.47f;
-    params.collisionQueryRange = 1;
-    params.obstacleAvoidanceType = 3;
-    params.separationWeight = 1000.0f;
+    params.collisionQueryRange = 0;
+    params.obstacleAvoidanceType = 0;
+    params.separationWeight = 100.0f;
 
     // flags
     params.updateFlags = 0;
