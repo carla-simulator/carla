@@ -103,7 +103,7 @@ namespace detail {
     /// check a few walkers and if they don't exist then remove from the crowd
     void CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state);
     /// add/update/delete all vehicles in crowd
-    void UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode);
+    void UpdateVehiclesInCrowd(std::shared_ptr<Episode> episode, bool show_debug = false);
   };
 
 } // namespace detail
