@@ -34,7 +34,7 @@ You have different options:
 - **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`][recommendedlink].
 Just press the `Win` button and search for `x64`
 (be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this
-Command Prompt can change depending on the lenguage you have Visual Studio installed.
+Command Prompt can change depending on the language you have Visual Studio installed.
 - [Enable a 64-Bit Visual C++ Toolset on the Command Line][toolsetlink] 
 (the instructions will depend on the version of VS that you have).
 
