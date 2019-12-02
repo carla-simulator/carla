@@ -477,7 +477,7 @@ namespace nav {
     params.collisionQueryRange = 10;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
-
+    
     // set if the agent can cross roads or not
     if (frand() <= _probability_crossing) {
       params.queryFilterType = 1;
