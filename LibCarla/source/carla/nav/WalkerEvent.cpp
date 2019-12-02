@@ -30,8 +30,17 @@ namespace nav {
         if (event.time <= 0.0) {
             return EventResult::TimeOut;
         } else {
+            // calculate the direction to look for vehicles
+            carla::geom::Location currentUnrealPos;
+            carla::geom::Location crosswalkEnd;
+            carla::geom::Location direction;
+            _manager->GetNavigation()->GetWalkerPosition(_id, currentUnrealPos);
+            _manager->GetWalkerCrosswalkEnd(_id, crosswalkEnd);
+            direction.x = crosswalkEnd.x - currentUnrealPos.x;
+            direction.y = crosswalkEnd.y - currentUnrealPos.y;
+            direction.z = crosswalkEnd.z - currentUnrealPos.z;
             // check if the agent has any vehicle around
-            if (_manager && !(_manager->GetNavigation()->HasVehicleNear(_id, 6.0f)))
+            if (_manager && !(_manager->GetNavigation()->HasVehicleNear(_id, 6.0f, direction))) {
                 return EventResult::End;
             } else {
                 return EventResult::Continue;
