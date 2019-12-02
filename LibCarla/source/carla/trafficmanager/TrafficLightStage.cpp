@@ -11,11 +11,11 @@ namespace traffic_manager {
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
       cc::DebugHelper &debug_helper,
       cc::World &world)
-    : localization_messenger(localization_messenger),
+    : PipelineStage(stage_name),
+      localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       debug_helper(debug_helper),
-      world(world),
-      PipelineStage(stage_name) {
+      world(world) {
 
     // Initializing output frame selector.
     frame_selector = true;
