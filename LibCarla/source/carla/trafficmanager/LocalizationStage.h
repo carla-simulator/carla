@@ -84,8 +84,20 @@ namespace cc = carla::client;
     std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint number_of_vehicles;
+    /// Structure to keep track of overlapping waypoints between vehicles.
+    using WaypointOverlap = std::unordered_map<uint64_t, std::unordered_set<carla::ActorId>>;
+    WaypointOverlap waypoint_overlap_tracker;
+
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
+    /// Methods to update WaypointOverlap map.
+    void UpdateOverlap(uint64_t waypoint_id, carla::ActorId actor_id);
+    void RemoveOverlap(uint64_t waypoint_id, carla::ActorId actor_id);
+    /// Method to get the set of vehicles overlapping a waypoint.
+    std::unordered_set<carla::ActorId> GetOverlappingActors(uint64_t waypoint_id);
+    /// Methods to modify waypoint buffer.
+    void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
+    void PopWaypoint(Buffer& buffer, ActorId actor_id);
 
   public:
 

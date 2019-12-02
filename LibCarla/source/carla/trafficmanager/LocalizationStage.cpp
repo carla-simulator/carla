@@ -77,7 +77,8 @@ namespace LocalizationConstants {
         float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
-          waypoint_buffer.pop_front();
+
+          PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
             dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
           }
@@ -90,7 +91,7 @@ namespace LocalizationConstants {
         if (closest_waypoint == nullptr) {
           closest_waypoint = local_map.GetWaypoint(vehicle_location);
         }
-        waypoint_buffer.push_back(closest_waypoint);
+        PushWaypoint(waypoint_buffer, actor_id, closest_waypoint);
       }
 
       // Assign a lane change.
@@ -115,8 +116,15 @@ namespace LocalizationConstants {
             actor_list, debug_helper, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
-          waypoint_buffer.clear();
-          waypoint_buffer.push_back(change_over_point);
+          for (auto swp: waypoint_buffer) {
+            RemoveOverlap(swp->GetId(), actor_id);
+          }
+          uint number_of_pops = waypoint_buffer.size();
+          for (uint i = 0; i < number_of_pops; ++i) {
+            PopWaypoint(waypoint_buffer, actor_id);
+          }
+
+          PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
 
@@ -131,7 +139,7 @@ namespace LocalizationConstants {
           selection_index = static_cast<uint>(rand()) % next_waypoints.size();
         }
 
-        waypoint_buffer.push_back(next_waypoints.at(selection_index));
+        PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
       }
 
       // Generating output.
@@ -211,6 +219,108 @@ namespace LocalizationConstants {
       collision_frame_ready = true;
     }
 
+  }
+
+  void LocalizationStage::PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint) {
+
+    uint64_t waypoint_id = waypoint->GetId();
+    buffer.push_back(waypoint);
+    UpdateOverlap(waypoint_id, actor_id);
+
+    if ((collision_messenger->GetState() != collision_messenger_state) &&
+        !collision_frame_ready) {
+
+      auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
+      uint vehicle_index = vehicle_id_to_index.at(actor_id);
+
+      auto& current_actors = current_collision_frame->at(vehicle_index).overlapping_actors;
+      auto new_overlapping_actors = GetOverlappingActors(waypoint_id);
+      std::unordered_set<ActorId> actor_set_difference;
+
+      std::set_difference(
+        new_overlapping_actors.begin(), new_overlapping_actors.end(),
+        current_actors.begin(), current_actors.end(),
+        std::inserter(actor_set_difference, actor_set_difference.end())
+      );
+
+      for (auto new_actor_id: actor_set_difference) {
+
+        current_actors.insert(new_actor_id);
+        current_collision_frame->at(
+          vehicle_id_to_index.at(new_actor_id)).overlapping_actors.insert(actor_id);
+      }
+    }
+  }
+
+  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
+
+    uint64_t removed_waypoint_id = buffer.front()->GetId();
+    buffer.pop_front();
+    RemoveOverlap(removed_waypoint_id, actor_id);
+
+    if (!buffer.empty() &&
+        (collision_messenger->GetState() != collision_messenger_state) &&
+        !collision_frame_ready) {
+
+      auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
+      uint vehicle_index = vehicle_id_to_index.at(actor_id);
+
+      auto& current_actors = current_collision_frame->at(vehicle_index).overlapping_actors;
+      auto new_overlapping_actors = GetOverlappingActors(buffer.front()->GetId());
+      std::unordered_set<ActorId> actor_set_difference;
+
+      std::set_difference(
+        current_actors.begin(), current_actors.end(),
+        new_overlapping_actors.begin(), new_overlapping_actors.end(),
+        std::inserter(actor_set_difference, actor_set_difference.end())
+      );
+
+      for (auto new_actor_id: actor_set_difference) {
+
+        current_actors.erase(new_actor_id);
+        current_collision_frame->at(
+          vehicle_id_to_index.at(new_actor_id)).overlapping_actors.erase(actor_id);
+      }
+    }
+  }
+
+  void LocalizationStage::UpdateOverlap(uint64_t waypoint_id, carla::ActorId actor_id) {
+
+    if (waypoint_overlap_tracker.find(waypoint_id) != waypoint_overlap_tracker.end()) {
+
+      auto& actor_id_set = waypoint_overlap_tracker.at(waypoint_id);
+      if (actor_id_set.find(actor_id) == actor_id_set.end()) {
+        actor_id_set.insert(actor_id);
+      }
+    } else {
+
+      waypoint_overlap_tracker.insert({waypoint_id, {actor_id}});
+    }
+
+  }
+
+  void LocalizationStage::RemoveOverlap(uint64_t waypoint_id, carla::ActorId actor_id) {
+
+    if (waypoint_overlap_tracker.find(waypoint_id) != waypoint_overlap_tracker.end()) {
+
+      auto& actor_id_set = waypoint_overlap_tracker.at(waypoint_id);
+      if (actor_id_set.find(actor_id) != actor_id_set.end()) {
+        actor_id_set.erase(actor_id);
+      }
+
+      if (actor_id_set.size() == 0) {
+        waypoint_overlap_tracker.erase(waypoint_id);
+      }
+    }
+  }
+
+  std::unordered_set<carla::ActorId> LocalizationStage::GetOverlappingActors(uint64_t waypoint_id) {
+
+    if (waypoint_overlap_tracker.find(waypoint_id) != waypoint_overlap_tracker.end()) {
+      return waypoint_overlap_tracker.at(waypoint_id);
+    } else {
+      return std::unordered_set<carla::ActorId>();
+    }
   }
 
   void LocalizationStage::DataReceiver() {
