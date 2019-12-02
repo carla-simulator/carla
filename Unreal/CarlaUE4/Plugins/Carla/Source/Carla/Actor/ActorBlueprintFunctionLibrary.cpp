@@ -630,16 +630,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
-FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
-    const FString &Id)
-{
-  FActorDefinition Definition;
-  bool Success;
-  MakeLidarDefinition(Id, Success, Definition);
-  check(Success);
-  return Definition;
-}
-
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;
@@ -736,6 +726,44 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
     BiasGyroZ});
 
   Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRadarDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRadarDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
+  AddVariationsForSensor(Definition);
+
+  // - Resolution --------------------------------
+  FActorVariation Resolution;
+  Resolution.Id = TEXT("resolution");
+  Resolution.Type = EActorAttributeType::Int;
+  Resolution.RecommendedValues = { TEXT("100") };
+  Resolution.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({Resolution});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeLidarDefinition(Id, Success, Definition);
+  check(Success);
+  return Definition;
 }
 
 void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
@@ -1440,6 +1468,20 @@ void UActorBlueprintFunctionLibrary::SetIMU(
     RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
     RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
   });
+}
+
+void UActorBlueprintFunctionLibrary::SetRadar(
+    const FActorDescription &Description,
+    ARadar *Radar)
+{
+  if (Radar == nullptr)
+  {
+    return;
+  }
+
+  Radar->SetResolution(
+    RetrieveActorAttributeToInt("resolution", Description.Variations, 100)
+  );
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
