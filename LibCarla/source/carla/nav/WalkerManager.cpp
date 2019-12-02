@@ -141,7 +141,7 @@ namespace nav {
             switch (area[i]) {
                 // do nothing
                 case CARLA_AREA_SIDEWALK:
-                    info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
+                    info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]), area[i]);
                     break;
 
                 // stop and check
@@ -149,11 +149,11 @@ namespace nav {
                 case CARLA_AREA_CROSSWALK:
                     // only if we come from a safe area (sidewalks, grass or crosswalk)
                     if (previous_area != CARLA_AREA_CROSSWALK && previous_area != CARLA_AREA_ROAD)
-                        info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]));
+                        info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]), area[i]);
                     break;
 
                 default:
-                    info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]));
+                    info.route.emplace_back(WalkerEventIgnore(), std::move(path[i]), area[i]);
             }
             previous_area = area[i];
         }
@@ -219,6 +219,32 @@ namespace nav {
         } else {
             return false;
         }
+    }
+
+    bool WalkerManager::GetWalkerCrosswalkEnd(ActorId id, carla::geom::Location &location) {
+        // check
+        if (_nav == nullptr)
+            return false;
+
+        // search
+        auto it = _walkers.find(id);
+        if (it == _walkers.end())
+            return false;
+
+        // get it
+        WalkerInfo &info = it->second;
+
+        // check the end of current crosswalk
+        unsigned int pos = info.currentIndex;
+        while (pos < info.route.size()) {
+            if (info.route[pos].areaType != CARLA_AREA_CROSSWALK) {
+                location = info.route[pos].location;
+                return true;
+            }
+            ++pos;
+        }
+
+        return false;
     }
 
     EventResult WalkerManager::ExecuteEvent(ActorId id, WalkerInfo &info, double delta) {
