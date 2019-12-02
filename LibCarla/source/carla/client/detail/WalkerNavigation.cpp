@@ -151,14 +151,16 @@ namespace detail {
         if (agent) {
           // draw for debug
           carla::geom::Location p1(agent->npos[0], agent->npos[2], agent->npos[1] + 1);
-          std::ostringstream out;
-          out << *reinterpret_cast<const float *>(&agent->params.userData);
-          carla::rpc::DebugShape text;
-          text.life_time = 0.01f;
-          text.persistent_lines = false;
-          text.primitive = carla::rpc::DebugShape::String {p1, out.str(), false};
-          text.color = { 0, 255, 0 };
-          _client.DrawDebugShape(text);
+          if (agent->params.userData) {
+            std::ostringstream out;
+            out << *(reinterpret_cast<const float *>(agent->params.userData));
+            carla::rpc::DebugShape text;
+            text.life_time = 0.01f;
+            text.persistent_lines = false;
+            text.primitive = carla::rpc::DebugShape::String {p1, out.str(), false};
+            text.color = { 0, 255, 0 };
+            _client.DrawDebugShape(text);
+          }
         }
       }
     }
