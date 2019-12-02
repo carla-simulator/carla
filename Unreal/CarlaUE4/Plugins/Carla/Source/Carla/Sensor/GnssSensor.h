@@ -18,7 +18,7 @@
 #include "GnssSensor.generated.h"
 
 /// Gnss sensor representation
-/// The actual position calculation is done one client side
+/// The actual position calculation is done one server side
 UCLASS()
 class CARLA_API AGnssSensor : public ASensor
 {
@@ -50,11 +50,9 @@ public:
   float GetLongitudeBias() const;
   float GetAltitudeBias() const;
 
-
 protected:
 
   virtual void BeginPlay() override;
-
 
 private:
 
@@ -67,5 +65,4 @@ private:
   float LatitudeBias;
   float LongitudeBias;
   float AltitudeBias;
-
 };
