@@ -27,7 +27,8 @@ namespace nav {
     struct WalkerRoutePoint {
         WalkerEvent event;
         carla::geom::Location location;
-        WalkerRoutePoint(WalkerEvent ev, carla::geom::Location loc) : event(ev), location(loc) {};
+        unsigned char areaType;
+        WalkerRoutePoint(WalkerEvent ev, carla::geom::Location loc, unsigned char area) : event(ev), location(loc), areaType(area) {};
     };
 
     struct WalkerInfo {
@@ -67,6 +68,9 @@ namespace nav {
     /// get the next point in the route
     bool GetWalkerNextPoint(ActorId id, carla::geom::Location &location);
 
+    /// get the point in the route that end current crosswalk
+    bool GetWalkerCrosswalkEnd(ActorId id, carla::geom::Location &location);
+    
     /// return the navigation object
     Navigation *GetNavigation() { return _nav; };
 

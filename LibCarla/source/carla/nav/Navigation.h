@@ -105,7 +105,7 @@ namespace nav {
     /// return if the agent has a vehicle near (as neighbour)
     bool HasVehicleNear(ActorId id, float distance, carla::geom::Location direction);
     /// make agent look at some location
-    bool SetWalkerLookAt(ActorId id,  carla::geom::Location location);
+    bool SetWalkerLookAt(ActorId id, carla::geom::Location location);
 
     dtCrowd *GetCrowd() { return _crowd; };
 
