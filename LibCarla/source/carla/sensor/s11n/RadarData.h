@@ -16,8 +16,8 @@ namespace s11n {
 
   struct RadarDetection {
     float velocity; // m/s
-    float azimuth;  // deg
-    float altitude; // deg
+    float azimuth;  // rad
+    float altitude; // rad
     float depth;    // m
   };
 

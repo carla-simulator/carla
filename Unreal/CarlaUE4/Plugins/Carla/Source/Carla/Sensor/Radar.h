@@ -37,6 +37,12 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetFOVAndSteps(float NewFov, int NewSteps);
 
+  UFUNCTION(BlueprintCallable, Category = "Radar")
+  void SetDistance(float NewDistance);
+
+  UFUNCTION(BlueprintCallable, Category = "Radar")
+  void SetOverture(float NewOverture);
+
 protected:
 
   void BeginPlay() override;
@@ -56,13 +62,13 @@ protected:
   int Steps;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
-  bool ShowDebug = true;
+  bool ShowDebug = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition="ShowDebug"))
   int ShowDebugDelay = 5;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition="ShowDebug"))
-  bool ShowDebugLines = false;
+  bool ShowDebugLines = true;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug & ShowDebugLines"))
   bool ShowCompleteLines = true;
@@ -75,9 +81,15 @@ protected:
 
 private:
 
+  void CalculateCurrentVelocity(const float DeltaTime);
+
   void PreCalculateCosSin();
 
+  void PreCalculateLineTraceIncrement();
+
   void SendLineTraces(float DeltaSeconds);
+
+  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector);
 
   struct CosSinData
   {
@@ -87,18 +99,23 @@ private:
 
   TArray<CosSinData> PreCalculatedCosSin;
 
-  TArray<FHitResult> DetectedActors;
-
   FRadarData RadarData;
 
   // TODO: parameterize collision layer included
   FCollisionObjectQueryParams LineTraceObjectQueryParams;
   FCollisionQueryParams LineTraceQueryParams;
 
+  // Current Radar Velocity
+  FVector CurrentVelocity;
+
   /// Used to compute the velocity of the radar
   FVector PrevLocation;
 
   UWorld* World;
+
+  float LineTraceIncrement;
+
+  float AngleIncrement;
 
   UPROPERTY(EditAnywhere)
   int Resolution;
