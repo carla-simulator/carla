@@ -22,15 +22,15 @@ namespace PlannerConstants {
       std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
       std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
       std::vector<float> lateral_parameters = LATERAL_DEFAULTS)
-    : localization_messenger(localization_messenger),
+    : PipelineStage(stage_name),
+      localization_messenger(localization_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       control_messenger(control_messenger),
       parameters(parameters),
       longitudinal_parameters(longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
-      lateral_parameters(lateral_parameters),
-      PipelineStage(stage_name) {
+      lateral_parameters(lateral_parameters) {
 
     // Initializing the output frame selector.
     frame_selector = true;

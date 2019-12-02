@@ -4,7 +4,6 @@ namespace traffic_manager {
 
 namespace CollisionStageConstants {
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
-  static const float ZERO_AREA = 0.0001f;
   static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
   static const float EXTENSION_SQUARE_POINT = 7.5f;
   static const float TIME_HORIZON = 0.5f;
@@ -24,12 +23,12 @@ namespace CollisionStageConstants {
       cc::World &world,
       Parameters &parameters,
       cc::DebugHelper &debug_helper)
-    : localization_messenger(localization_messenger),
+    : PipelineStage(stage_name),
+      localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
       world(world),
       parameters(parameters),
-      debug_helper(debug_helper),
-      PipelineStage(stage_name) {
+      debug_helper(debug_helper){
 
     // Initializing clock for checking unregistered actors periodically.
     last_world_actors_pass_instance = chr::system_clock::now();
@@ -203,8 +202,8 @@ namespace CollisionStageConstants {
     cg::Vector3D reference_to_other = other_vehicle->GetLocation() - reference_vehicle->GetLocation();
     cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
 
-    float inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-    float inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+    auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+    auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
 
     // Whichever vehicle's path is farthest away from the other vehicle gets
     // priority to move.

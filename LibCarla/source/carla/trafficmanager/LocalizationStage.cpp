@@ -21,14 +21,14 @@ namespace LocalizationConstants {
       InMemoryMap &local_map,
       Parameters &parameters,
       cc::DebugHelper &debug_helper)
-    : planner_messenger(planner_messenger),
+    : PipelineStage(stage_name),
+      planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
       traffic_light_messenger(traffic_light_messenger),
       registered_actors(registered_actors),
       local_map(local_map),
       parameters(parameters),
-      debug_helper(debug_helper),
-      PipelineStage(stage_name) {
+      debug_helper(debug_helper) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;

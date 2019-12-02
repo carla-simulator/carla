@@ -6,9 +6,9 @@ namespace traffic_manager {
       std::string stage_name,
       std::shared_ptr<PlannerToControlMessenger> messenger,
       cc::Client &carla_client)
-    : messenger(messenger),
-      carla_client(carla_client),
-      PipelineStage(stage_name) {
+    : PipelineStage(stage_name),
+      messenger(messenger),
+      carla_client(carla_client) {
 
     // Initializing messenger state.
     messenger_state = messenger->GetState();
