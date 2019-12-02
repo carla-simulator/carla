@@ -1141,7 +1141,7 @@ namespace nav {
     agent->paused = pause;
   }
 
-  bool Navigation::HasVehicleNear(ActorId id, float distance) {
+  bool Navigation::HasVehicleNear(ActorId id, float distance, carla::geom::Location direction) {
     // get the internal index (walker or vehicle)
     auto it = _mapped_walkers_id.find(id);
     if (it == _mapped_walkers_id.end()) {
@@ -1151,11 +1151,12 @@ namespace nav {
       }
     }
 
+    float dir[3] = { direction.x, direction.z, direction.y };
     bool result;
     {
       // critical section, force single thread running this
       std::lock_guard<std::mutex> lock(_mutex);
-      result = _crowd->hasVehicleNear(it->second, distance * distance, false);
+      result = _crowd->hasVehicleNear(it->second, distance * distance, dir, false);
     }
     return result;
   }
