@@ -42,6 +42,7 @@ namespace cc = carla::client;
   struct LocalizationToCollisionData {
     carla::SharedPtr<cc::Actor> actor;
     Buffer buffer;
+    std::unordered_set<carla::ActorId> overlapping_actors;
   };
 
   /// Type of data sent by the collision stage to the motion planner stage.

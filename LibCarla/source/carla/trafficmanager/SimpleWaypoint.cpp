@@ -19,6 +19,10 @@ namespace traffic_manager {
     return waypoint;
   }
 
+  uint64_t SimpleWaypoint::GetId() const {
+    return waypoint->GetId();
+  }
+
   SimpleWaypointPtr SimpleWaypoint::GetLeftWaypoint() {
     return next_left_waypoint;
   }

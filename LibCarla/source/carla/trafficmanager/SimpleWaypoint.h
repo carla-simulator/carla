@@ -49,6 +49,9 @@ namespace cg = carla::geom;
     /// Returns the vector along the waypoint's direction.
     cg::Vector3D GetForwardVector() const;
 
+    /// Returns the unique id for the waypoint.
+    uint64_t GetId() const;
+
     /// This method is used to set the next waypoints.
     uint SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
