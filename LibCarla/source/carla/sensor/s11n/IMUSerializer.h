@@ -6,7 +6,7 @@
 
 #pragma once
 
-// #include "carla/Buffer.h"
+#include "carla/Buffer.h"
 #include "carla/Memory.h"
 #include "carla/sensor/RawData.h"
 
