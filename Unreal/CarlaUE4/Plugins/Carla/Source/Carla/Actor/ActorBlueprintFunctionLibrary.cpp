@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -744,14 +744,31 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
   AddVariationsForSensor(Definition);
 
-  // - Resolution --------------------------------
-  FActorVariation Resolution;
-  Resolution.Id = TEXT("resolution");
-  Resolution.Type = EActorAttributeType::Int;
-  Resolution.RecommendedValues = { TEXT("100") };
-  Resolution.bRestrictToRecommended = false;
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("30") };
+  FOV.bRestrictToRecommended = false;
 
-  Definition.Variations.Append({Resolution});
+  FActorVariation Steps;
+  Steps.Id = TEXT("steps");
+  Steps.Type = EActorAttributeType::Int;
+  Steps.RecommendedValues = { TEXT("10") };
+  Steps.bRestrictToRecommended = false;
+
+  FActorVariation Far;
+  Far.Id = TEXT("far");
+  Far.Type = EActorAttributeType::Float;
+  Far.RecommendedValues = { TEXT("100") };
+  Far.bRestrictToRecommended = false;
+
+  FActorVariation Aperture;
+  Aperture.Id = TEXT("aperture");
+  Aperture.Type = EActorAttributeType::Int;
+  Aperture.RecommendedValues = { TEXT("10") };
+  Aperture.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({FOV, Steps, Far, Aperture});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1261,8 +1278,8 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 /// -- Helpers to set Actors ---------------------------------------------------
 /// ============================================================================
 
-// Here we do different checks when we are in editor, because we don't want the
-// editor crashing while people is testing new actor definitions.
+// Here we do different checks when we are in editor because we don't want the
+// editor crashing while people are testing new actor definitions.
 #if WITH_EDITOR
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr)                    \
   if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill())     \
@@ -1404,10 +1421,7 @@ void UActorBlueprintFunctionLibrary::SetGnss(
     const FActorDescription &Description,
     AGnssSensor *Gnss)
 {
-  if(Gnss == nullptr) {
-    return;
-  }
-
+  CARLA_ABFL_CHECK_ACTOR(Gnss);
   if (Description.Variations.Contains("noise_seed"))
   {
     Gnss->SetSeed(
@@ -1436,11 +1450,7 @@ void UActorBlueprintFunctionLibrary::SetIMU(
     const FActorDescription &Description,
     AInertialMeasurementUnit *IMU)
 {
-  if (IMU == nullptr)
-  {
-    return;
-  }
-
+  CARLA_ABFL_CHECK_ACTOR(IMU);
   if (Description.Variations.Contains("noise_seed"))
   {
     IMU->SetSeed(
@@ -1474,14 +1484,16 @@ void UActorBlueprintFunctionLibrary::SetRadar(
     const FActorDescription &Description,
     ARadar *Radar)
 {
-  if (Radar == nullptr)
-  {
-    return;
-  }
+  CARLA_ABFL_CHECK_ACTOR(Radar);
+  constexpr float TO_CENTIMETERS = 1e2;
 
-  Radar->SetResolution(
-    RetrieveActorAttributeToInt("resolution", Description.Variations, 100)
-  );
+  Radar->SetFOVAndSteps(
+    RetrieveActorAttributeToFloat("fov", Description.Variations, 30.0f),
+    RetrieveActorAttributeToInt("steps", Description.Variations, 10));
+  Radar->SetDistance(
+    RetrieveActorAttributeToFloat("far", Description.Variations, 100.0f) * TO_CENTIMETERS);
+  Radar->SetAperture(
+    RetrieveActorAttributeToInt("aperture", Description.Variations, 10));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
