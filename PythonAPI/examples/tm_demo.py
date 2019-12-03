@@ -24,7 +24,6 @@ except IndexError:
     pass
 import carla
 
-
 def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
@@ -66,6 +65,35 @@ def main():
         traffic_manager = None
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter(args.filter)
+        debug = world.debug
+        traffic_lights = world.get_actors().filter('*traffic_light*')
+        list_of_all_groups = []
+        all_groups_without_first_elem = []
+        list_of_ids = []
+
+        for tl in traffic_lights:
+            if tl.id not in list_of_ids:
+                tl_group = tl.get_group_traffic_lights()
+                for tl_g in tl_group:
+                    list_of_ids.append(tl_g.id)
+                if tl_group not in list_of_all_groups:
+                    list_of_all_groups.append(tl_group)
+                    all_groups_without_first_elem.extend(tl_group[1:len(tl_group)])
+
+        def show_tl_count_down(duration=30, indefinite=False):
+            end_time = time.time() + duration
+            color_dict = {
+                'Red':carla.Color(255, 0, 0),
+                'Yellow':carla.Color(255, 255, 0),
+                'Green':carla.Color(0, 255, 0)
+            }
+            while time.time() < end_time or indefinite:
+                for tl_group in list_of_all_groups:
+                    for tl in tl_group:
+                        debug.draw_string(tl.get_location() + carla.Location(0, 0, 5),
+                                        str(tl.get_elapsed_time())[:4], False,
+                                        color_dict[tl.get_state().name], 0.01)
+                    time.sleep(0.002)
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
@@ -121,9 +149,17 @@ def main():
                 pass
 
         time.sleep(10)
+        print("Time to lane change!")
+
         for v in vehicle_list:
             traffic_manager.force_lane_change(v, True)
 
+        show_tl_count_down(10)
+        print("Time to reset the lights!")
+        start = time.time()
+        traffic_manager.reset_traffic_lights()
+        print("Total time needed: " + str(time.time() - start))
+        show_tl_count_down(15)
 
         while True:
             time.sleep(1)

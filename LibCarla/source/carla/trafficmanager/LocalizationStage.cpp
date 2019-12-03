@@ -463,19 +463,19 @@ namespace LocalizationConstants {
     bool need_to_change_lane = false;
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
-    auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
+    //auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
 
     if (!force) {
 
       auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
-      uint vehicle_index = vehicle_id_to_index.at(actor_id);
+      //uint vehicle_index = vehicle_id_to_index.at(actor_id);
 
-      ActorIdSet overlapping_vehicles = GetOverlappingVehicles(actor_id);
+      auto blocking_vehicles = GetOverlappingVehicles(actor_id);
 
       // Check if any vehicle in the current lane is blocking us.
       bool abort_lane_change = false;
-      for (auto i = overlapping_vehicles.begin();
-           i != overlapping_vehicles.end() && !abort_lane_change;
+      for (auto i = blocking_vehicles.begin();
+           i != blocking_vehicles.end() && !abort_lane_change;
            ++i) {
 
         const ActorId &other_vehicle_id = *i;
