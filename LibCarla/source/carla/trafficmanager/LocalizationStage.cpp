@@ -119,8 +119,8 @@ namespace LocalizationConstants {
           for (auto swp: waypoint_buffer) {
             RemoveOverlap(swp->GetId(), actor_id);
           }
-          uint number_of_pops = waypoint_buffer.size();
-          for (uint i = 0; i < number_of_pops; ++i) {
+          auto number_of_pops = waypoint_buffer.size();
+          for (uint j = 0; j < number_of_pops; ++j) {
             PopWaypoint(waypoint_buffer, actor_id);
           }
 

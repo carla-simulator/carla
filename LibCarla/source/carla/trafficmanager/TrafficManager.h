@@ -31,6 +31,7 @@ namespace cc = carla::client;
 
   using ActorPtr = carla::SharedPtr<cc::Actor>;
   using TLS = carla::rpc::TrafficLightState;
+  using TLGroup = std::vector<carla::SharedPtr<cc::TrafficLight>>;
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers.
@@ -120,7 +121,7 @@ namespace cc = carla::client;
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
     /// Method to check if traffic lights are frozen.
-    bool CheckAllFrozen(std::vector<cc::TrafficLight> tl_to_freeze);
+    bool CheckAllFrozen(TLGroup tl_to_freeze);
 
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
