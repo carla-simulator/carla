@@ -48,7 +48,7 @@ namespace traffic_manager {
     traffic_light_stage = std::make_unique<TrafficLightStage>(
       "Traffic light stage",
       localization_traffic_light_messenger, traffic_light_planner_messenger,
-      debug_helper, world);
+      debug_helper);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
       "Motion planner stage",
@@ -179,7 +179,7 @@ namespace traffic_manager {
 
   bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
     for (auto& elem : tl_to_freeze) {
-      if (!elem->IsFrozen() or elem->GetState() != TLS::Red) {
+      if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
         return false;
       }
     }
@@ -188,18 +188,16 @@ namespace traffic_manager {
 
   void TrafficManager::ResetAllTrafficLights() {
     auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
+    std::cout << "hi ";
+
     std::vector<TLGroup> list_of_all_groups;
     TLGroup tl_to_freeze;
     std::vector<carla::ActorId> list_of_ids;
-
     for (auto tl : *world_traffic_lights.get()) {
-      if (std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end()) {
+      if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
           TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
           list_of_all_groups.push_back(tl_group);
-          // tl_group is a std::vector<boost::shared_ptr<carla::client::TrafficLight>
           for (unsigned i=0; i<tl_group.size(); i++) {
-              // tlg is a boost::shared_ptr<carla::client::TrafficLight>
-              // tlg->Id is a carla::ActorId
               list_of_ids.push_back(tl_group.at(i).get()->GetId());
               if(i!=0) {
                   tl_to_freeze.push_back(tl_group.at(i));
@@ -208,9 +206,13 @@ namespace traffic_manager {
         }
       }
 
+    std::cout << "hello ";
+    for (auto i = list_of_ids.begin(); i != list_of_ids.end(); ++i)
+      std::cout << *i << ' ';
+
     for (TLGroup& tl_group : list_of_all_groups) {
       tl_group.front()->SetState(TLS::Green);
-      std::for_each(tl_group.begin() +1, tl_group.end(),
+      std::for_each(tl_group.begin()+1, tl_group.end(),
                     [] (auto& tl) {tl->SetState(TLS::Red);});
     }
 

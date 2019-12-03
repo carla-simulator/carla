@@ -60,12 +60,9 @@ namespace cg = carla::geom;
     std::mutex no_signal_negotiation_mutex;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
-    /// Reference to Carla's world object.
-    cc::World &world;
 
 
     void DrawLight(TLS traffic_light_state, const Actor &ego_actor) const;
-    void ResetAllTrafficLightGroups();
 
   public:
 
@@ -73,8 +70,7 @@ namespace cg = carla::geom;
       std::string stage_name,
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      cc::DebugHelper &debug_helper,
-      cc::World &world);
+      cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 
     void DataReceiver() override;

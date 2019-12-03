@@ -4,18 +4,16 @@
 namespace traffic_manager {
 
   static const uint NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
-  static bool initialized = false;
+
   TrafficLightStage::TrafficLightStage(
       std::string stage_name,
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      cc::DebugHelper &debug_helper,
-      cc::World &world)
+      cc::DebugHelper &debug_helper)
     : PipelineStage(stage_name),
       localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
-      debug_helper(debug_helper),
-      world(world) {
+      debug_helper(debug_helper){
 
     // Initializing output frame selector.
     frame_selector = true;
@@ -32,20 +30,6 @@ namespace traffic_manager {
   }
 
   TrafficLightStage::~TrafficLightStage() {}
-
-  void TrafficLightStage::ResetAllTrafficLightGroups() {
-    // TO BE FINISHED
-    if (!initialized) {
-      initialized = true;
-      auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-      for (auto tl : *world_traffic_lights.get()) {
-        auto group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-        for (auto g : group) {
-          std::cout << g->GetId() << std::endl;
-        }
-      }
-    }
-  }
 
   void TrafficLightStage::Action() {
 
@@ -67,7 +51,7 @@ namespace traffic_manager {
       auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
       //DrawLight(traffic_light_state, ego_actor);
-      ResetAllTrafficLightGroups();
+
       // We determine to stop if the current position of the vehicle is not a
       // junction,
       // a point on the path beyond a threshold (velocity-dependent) distance
