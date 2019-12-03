@@ -11,7 +11,7 @@ namespace CollisionStageConstants {
   static const float HIGHWAY_TIME_HORIZON = 5.0f;
   static const float CRAWL_SPEED = 10.0f / 3.6f;
   static const float BOUNDARY_EDGE_LENGTH = 2.0f;
-  static const float MINIMUM_GRID_EXTENSION = 10.0f;
+  //static const float MINIMUM_GRID_EXTENSION = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
 }
   using namespace  CollisionStageConstants;

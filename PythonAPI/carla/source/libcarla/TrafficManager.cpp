@@ -23,7 +23,8 @@ void export_trafficmanager() {
         .def("set_collision_detection", &traffic_manager::TrafficManager::SetCollisionDetection)
         .def("force_lane_change", &traffic_manager::TrafficManager::SetForceLaneChange)
         .def("set_auto_lane_change", &traffic_manager::TrafficManager::SetAutoLaneChange)
-        .def("set_distance_to_leading_vehicle", &traffic_manager::TrafficManager::SetDistanceToLeadingVehicle);
+        .def("set_distance_to_leading_vehicle", &traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
+        .def("reset_traffic_lights", &traffic_manager::TrafficManager::ResetAllTrafficLights);
 
     def("GetTrafficManager", &traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
 
