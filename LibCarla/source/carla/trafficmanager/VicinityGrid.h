@@ -46,7 +46,7 @@ namespace traffic_manager {
     ~VicinityGrid();
 
     /// Returns a set of actors in the vicinity of a given actor.
-    std::unordered_set<ActorId> GetActors(Actor actor, const Buffer& buffer, float bbox_extension);
+    std::unordered_set<ActorId> GetActors(Actor actor);
 
     /// Updates the grid position of the given actor and returns new grid id.
     std::pair<int, int> UpdateGrid(Actor actor);

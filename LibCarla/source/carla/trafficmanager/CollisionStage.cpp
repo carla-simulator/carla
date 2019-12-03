@@ -99,8 +99,7 @@ namespace CollisionStageConstants {
       // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around the path of the ego vehicle.
-      // std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
-      std::unordered_set<ActorId>& actor_id_list = data.overlapping_actors;
+      std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
 
       bool collision_hazard = false;
       // Check every actor in the vicinity if it poses a collision hazard.
@@ -122,11 +121,11 @@ namespace CollisionStageConstants {
               < std::pow(MAX_COLLISION_RADIUS, 2)) &&
               (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-            debug_helper.DrawLine(
-              ego_location + cg::Location(0, 0, 2),
-              other_location + cg::Location(0, 0, 2),
-              0.2f, {255u, 0u, 0u}, 0.1f
-            );
+            // debug_helper.DrawLine(
+            //   ego_location + cg::Location(0, 0, 2),
+            //   other_location + cg::Location(0, 0, 2),
+            //   0.2f, {255u, 0u, 0u}, 0.1f
+            // );
 
             if (parameters.GetCollisionDetection(ego_actor, actor) &&
                 NegotiateCollision(ego_actor, actor)) {
@@ -189,32 +188,85 @@ namespace CollisionStageConstants {
 
     bool hazard = false;
 
-    Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
-    Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
-    Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
-    Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
+    auto& data_packet = localization_frame->at(vehicle_id_to_index.at(reference_vehicle->GetId()));
+    Buffer& waypoint_buffer = data_packet.buffer;
 
-    double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-    double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+    auto& other_packet = localization_frame->at(vehicle_id_to_index.at(other_vehicle->GetId()));
+    Buffer& other_buffer = other_packet.buffer;
+
+    cg::Location reference_location = reference_vehicle->GetLocation();
+    cg::Location other_location = other_vehicle->GetLocation();
 
     cg::Vector3D reference_heading = reference_vehicle->GetTransform().GetForwardVector();
-    cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
-    cg::Vector3D reference_to_other = other_vehicle->GetLocation() - reference_vehicle->GetLocation();
-    cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
+    cg::Vector3D reference_to_other = other_location - reference_location;
+    reference_to_other = reference_to_other.MakeUnitVector();
 
-    auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-    auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+    auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
+    auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
 
-    // Whichever vehicle's path is farthest away from the other vehicle gets
-    // priority to move.
-    if (inter_geodesic_distance < 0.1 &&
-        ((inter_bbox_distance > 0.1 &&
-         reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic) ||
-         (inter_bbox_distance < 0.1 &&
-          cg::Math::Dot(reference_heading, reference_to_other) >
-          cg::Math::Dot(other_heading, other_to_reference)))) {
+    if (waypoint_buffer.front()->CheckJunction() &&
+        reference_vehicle_ptr->GetTrafficLightState() != TLS::Red &&
+        other_buffer.front()->CheckJunction() &&
+        other_vehicle_ptr->GetTrafficLightState() != TLS::Red) {
 
-      hazard = true;
+      Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
+      Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
+      Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
+      Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
+
+      double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+      double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+
+      auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+      auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+
+      cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
+      cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
+      other_to_reference = other_to_reference.MakeUnitVector();
+
+      // Whichever vehicle's path is farthest away from the other vehicle gets
+      // priority to move.
+      if (inter_geodesic_distance < 0.1
+          &&
+          (
+            (
+              inter_bbox_distance > 0.1
+              &&
+              reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
+            )
+            ||
+            (
+              inter_bbox_distance < 0.1
+              &&
+              cg::Math::Dot(reference_heading, reference_to_other) > cg::Math::Dot(other_heading, other_to_reference)
+            )
+          )
+        ) {
+
+        hazard = true;
+      }
+    } else if (!waypoint_buffer.front()->CheckJunction()) {
+
+      float reference_vehicle_length = reference_vehicle_ptr->GetBoundingBox().extent.x;
+      float other_vehicle_length = other_vehicle_ptr->GetBoundingBox().extent.x;
+      float vehicle_length_sum = reference_vehicle_length + other_vehicle_length;
+
+      float bbox_extension_length = GetBoundingBoxExtention(reference_vehicle);
+
+      if ((cg::Math::Dot(reference_heading, reference_to_other) > 0) &&
+          (cg::Math::DistanceSquared(reference_location, other_location) <
+           std::pow(bbox_extension_length+vehicle_length_sum, 2))) {
+
+        hazard = true;
+      }
+    }
+
+    if (hazard) {
+      debug_helper.DrawArrow(
+        reference_location + cg::Location(0, 0, 2),
+        other_location + cg::Location(0, 0, 2), 0.2f,
+        0.2f, {255u, 0u, 0u}, 0.1f
+      );
     }
 
     return hazard;
@@ -335,14 +387,17 @@ namespace CollisionStageConstants {
   std::unordered_set<ActorId> CollisionStage::GetPotentialVehicleObstacles(const Actor &ego_vehicle) {
 
     vicinity_grid.UpdateGrid(ego_vehicle);
-    float grid_extension = std::max(GetBoundingBoxExtention(ego_vehicle), MINIMUM_GRID_EXTENSION);
+
+    auto& data_packet = localization_frame->at(vehicle_id_to_index.at(ego_vehicle->GetId()));
+    Buffer &waypoint_buffer =  data_packet.buffer;
+
     std::unordered_set<ActorId> actor_id_list;
 
-    Buffer &waypoint_buffer =  localization_frame->at(
-      vehicle_id_to_index.at(ego_vehicle->GetId())).buffer;
-
-    actor_id_list = vicinity_grid.GetActors(
-      ego_vehicle, waypoint_buffer, grid_extension);
+    if (waypoint_buffer.front()->CheckJunction()) {
+      actor_id_list = vicinity_grid.GetActors(ego_vehicle);
+    } else {
+      actor_id_list = data_packet.overlapping_actors;
+    }
 
     return actor_id_list;
   }
