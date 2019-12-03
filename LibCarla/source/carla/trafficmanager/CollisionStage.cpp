@@ -261,13 +261,13 @@ namespace CollisionStageConstants {
       }
     }
 
-    if (hazard) {
-      debug_helper.DrawArrow(
-        reference_location + cg::Location(0, 0, 2),
-        other_location + cg::Location(0, 0, 2), 0.2f,
-        0.2f, {255u, 0u, 0u}, 0.1f
-      );
-    }
+    // if (hazard) {
+    //   debug_helper.DrawArrow(
+    //     reference_location + cg::Location(0, 0, 2),
+    //     other_location + cg::Location(0, 0, 2), 0.2f,
+    //     0.2f, {255u, 0u, 0u}, 0.1f
+    //   );
+    // }
 
     return hazard;
   }
