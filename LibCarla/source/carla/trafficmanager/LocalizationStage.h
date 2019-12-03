@@ -22,12 +22,13 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
-#include "carla/trafficmanager/TrafficDistributor.h"
 
 namespace traffic_manager {
 
 namespace cc = carla::client;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using ActorId = carla::ActorId;
+  using ActorIdSet = std::unordered_set<ActorId>;
 
   /// This class is responsible for maintaining a horizon of waypoints ahead
   /// of the vehicle for it to follow.
@@ -77,27 +78,40 @@ namespace cc = carla::client;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
-    /// Object used to keep track of vehicles according to their map position,
-    /// determine and execute lane changes.
-    TrafficDistributor traffic_distributor;
     /// Map connecting actor ids to indices of data arrays.
-    std::unordered_map<carla::ActorId, uint> vehicle_id_to_index;
+    std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint number_of_vehicles;
     /// Structure to keep track of overlapping waypoints between vehicles.
-    using WaypointOverlap = std::unordered_map<uint64_t, std::unordered_set<carla::ActorId>>;
+    using WaypointOverlap = std::unordered_map<uint64_t, ActorIdSet>;
     WaypointOverlap waypoint_overlap_tracker;
+    /// Structure to keep track of vehicles with overlapping paths.
+    std::unordered_map<ActorId, ActorIdSet> overlapping_vehicles;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
     /// Methods to update WaypointOverlap map.
-    void UpdateOverlap(uint64_t waypoint_id, carla::ActorId actor_id);
-    void RemoveOverlap(uint64_t waypoint_id, carla::ActorId actor_id);
+    void UpdateOverlappingWaypoint(uint64_t waypoint_id, ActorId actor_id);
+    void RemoveOverlappingWaypoint(uint64_t waypoint_id, ActorId actor_id);
     /// Method to get the set of vehicles overlapping a waypoint.
-    std::unordered_set<carla::ActorId> GetOverlappingActors(uint64_t waypoint_id);
+    ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
     /// Methods to modify waypoint buffer.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
+    /// Returns the cross product (z component value) between the vehicle's
+    /// heading
+    /// vector and the vector along the direction to the next target waypoint on
+    /// the horizon.
+    float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
+    /// Returns the dot product between the vehicle's heading vector and
+    /// the vector along the direction to the next target waypoint on the horizon.
+    float DeviationDotProduct(Actor actor, const cg::Location &target_location);
+    /// Method to determine lane change and obtain target lane waypoint.
+    SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
+    /// Methods to update, remove and retrieve vehicles with overlapping vehicles.
+    void UpdateOverlappingVehicle(ActorId actor_id, ActorId other_id);
+    void RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id);
+    ActorIdSet GetOverlappingVehicles(ActorId actor_id);
 
   public:
 
