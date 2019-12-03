@@ -36,31 +36,15 @@ void FCarlaExporterModule::StartupModule()
 	PluginCommands = MakeShareable(new FUICommandList);
 
 	PluginCommands->MapAction(
-		FCarlaExporterCommands::Get().PluginActionExportAsBlock,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedBlock),
-		FCanExecuteAction());
-	PluginCommands->MapAction(
-		FCarlaExporterCommands::Get().PluginActionExportAsCross,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedCross),
-		FCanExecuteAction());
-	PluginCommands->MapAction(
-		FCarlaExporterCommands::Get().PluginActionExportAsSide,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedSide),
-		FCanExecuteAction());
-	PluginCommands->MapAction(
-		FCarlaExporterCommands::Get().PluginActionExportAsRoad,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedRoad),
-		FCanExecuteAction());
-	PluginCommands->MapAction(
 		FCarlaExporterCommands::Get().PluginActionExportAll,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedAll),
+		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClicked),
 		FCanExecuteAction());
 		
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	
 	{
 		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
+		MenuExtender->AddMenuExtension("FileActors", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
 
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
@@ -82,27 +66,7 @@ void FCarlaExporterModule::ShutdownModule()
 	FCarlaExporterCommands::Unregister();
 }
 
-void FCarlaExporterModule::PluginButtonClickedBlock()
-{
-	PluginButtonClicked("block");
-}
-void FCarlaExporterModule::PluginButtonClickedRoad()
-{
-	PluginButtonClicked("road");
-}
-void FCarlaExporterModule::PluginButtonClickedSide()
-{
-	PluginButtonClicked("sidewalk");
-}
-void FCarlaExporterModule::PluginButtonClickedCross()
-{
-	PluginButtonClicked("crosswalk");
-}
-void FCarlaExporterModule::PluginButtonClickedAll()
-{
-	PluginButtonClicked("all");
-}
-void FCarlaExporterModule::PluginButtonClicked(std::string type)
+void FCarlaExporterModule::PluginButtonClicked()
 {
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	if (!World) return;
@@ -111,36 +75,29 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 	TArray<UObject*> BP_Actors;
 	USelection* CurrentSelection = GEditor->GetSelectedActors();
 	int32 SelectionNum = CurrentSelection->GetSelectedObjects(AActor::StaticClass(), BP_Actors);
-	bool useNomenclature = (type == "all");
-
-	// if no selection, then exit if we need selection
-	if (SelectionNum == 0 && type != "all")
-		return;
 
 	// if no selection, then get all objects
 	if (SelectionNum == 0)
 	{
 		// for (TObjectIterator<UStaticMeshComponent> it; it; ++it)
 		for (TActorIterator<AActor> it(World); it; ++it)
-				BP_Actors.Add(Cast<UObject>(*it));
+			BP_Actors.Add(Cast<UObject>(*it));
 	}
 
 	// get target path
 	FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
 	// build final name
 	std::ostringstream name;
-	name << TCHAR_TO_UTF8(*Path) << "/" << TCHAR_TO_UTF8(*World->GetMapName()) << "_" << type << ".obj";
+	name << TCHAR_TO_UTF8(*Path) << "/" << TCHAR_TO_UTF8(*World->GetMapName()) << ".obj";
 	// create the file
 	std::ofstream f(name.str());
 
 	// define the rounds
 	int rounds;
-	if (type == "all")
-		rounds = 5;
-	else
-		rounds = 1;
-
+	rounds = 5;
+	
 	int offset = 1;
+	std::string type;
 	for (int round = 0; round < rounds; ++round)
 	{
 		for (UObject* SelectedObject : BP_Actors)
@@ -189,7 +146,6 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 			f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
 
 			TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-			// UE_LOG(LogTemp, Warning, TEXT("Components: %d"), Components.Num());
 			for (auto *Component : Components)
 			{
 
@@ -199,7 +155,6 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 				{
 					UBodySetup *body = comp2->GetBodySetup();
 					if (!body) continue;
-					// UE_LOG(LogTemp, Warning, TEXT("Get %d component instances"), comp2->GetInstanceCount());
 
 					for (int i=0; i<comp2->GetInstanceCount(); ++i)
 					{
@@ -273,14 +228,12 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 							FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
 
 							f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
-							// f << "v " << std::fixed << world.X << " " << world.Z << " " << world.Y << "\n";
 						}
 						// write all faces
 						f << "usemtl " << type << "\n";
 						int k = 0;
 						for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
 						{
-							// f << "f " << offset + indexBuffer[k] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k+2] << "\n";
 							// inverse order for left hand
 							f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
 							k += 3;
@@ -296,21 +249,12 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
 {
-	//Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginAction);
-	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsBlock);
-	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsRoad);
-	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsSide);
-	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsCross);
 	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAll);
 }
 
 void FCarlaExporterModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
 	//Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginAction);
-	// Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginActionExportAsBlock);
-	// Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginActionExportAsRoad);
-	// Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginActionExportAsSide);
-	// Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginActionExportAsCross);
 }
 
 #undef LOCTEXT_NAMESPACE

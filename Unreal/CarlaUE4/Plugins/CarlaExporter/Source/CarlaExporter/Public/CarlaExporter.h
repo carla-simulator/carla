@@ -18,12 +18,7 @@ public:
 	virtual void ShutdownModule() override;
 	
 	/** This function will be bound to Command. */
-	void PluginButtonClicked(std::string type);
-	void PluginButtonClickedBlock();
-	void PluginButtonClickedRoad();
-	void PluginButtonClickedSide();
-	void PluginButtonClickedCross();
-	void PluginButtonClickedAll();
+	void PluginButtonClicked();
 	
 private:
 
