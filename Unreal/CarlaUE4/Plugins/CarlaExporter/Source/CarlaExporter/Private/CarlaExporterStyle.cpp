@@ -46,12 +46,7 @@ TSharedRef< FSlateStyleSet > FCarlaExporterStyle::Create()
 	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("CarlaExporterStyle"));
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("CarlaExporter")->GetBaseDir() / TEXT("Resources"));
 
-	Style->Set("CarlaExporter.PluginAction", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
-	Style->Set("CarlaExporter.PluginActionExportAsBlock", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
-	Style->Set("CarlaExporter.PluginActionExportAsRoad", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
-	Style->Set("CarlaExporter.PluginActionExportAsSide", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
-	Style->Set("CarlaExporter.PluginActionExportAsCross", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
-	Style->Set("CarlaExporter.PluginActionExportAll", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
+	// Style->Set("CarlaExporter.PluginActionExportAll", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 
 	return Style;
 }

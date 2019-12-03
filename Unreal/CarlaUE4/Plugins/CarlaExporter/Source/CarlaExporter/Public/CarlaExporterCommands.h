@@ -19,10 +19,5 @@ public:
 	virtual void RegisterCommands() override;
 
 public:
-	// TSharedPtr< FUICommandInfo > PluginAction;
-	TSharedPtr< FUICommandInfo > PluginActionExportAsBlock;
-	TSharedPtr< FUICommandInfo > PluginActionExportAsRoad;
-	TSharedPtr< FUICommandInfo > PluginActionExportAsSide;
-	TSharedPtr< FUICommandInfo > PluginActionExportAsCross;
 	TSharedPtr< FUICommandInfo > PluginActionExportAll;
 };
