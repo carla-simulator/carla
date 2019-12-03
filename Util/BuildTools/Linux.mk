@@ -139,3 +139,7 @@ deploy:
 
 pretty:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Prettify.sh $(ARGS)
+
+build.utils:
+	@chmod +x ${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
