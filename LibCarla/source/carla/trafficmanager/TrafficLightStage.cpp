@@ -72,14 +72,17 @@ namespace traffic_manager {
       // junction,
       // a point on the path beyond a threshold (velocity-dependent) distance
       // is inside the junction and there is a red or yellow light.
-      if (ego_vehicle->IsAtTrafficLight() &&
+      if (!closest_waypoint->CheckJunction() &&
+          look_ahead_point->CheckJunction() &&
+          ego_vehicle->IsAtTrafficLight() &&
           traffic_light_state != TLS::Green) {
 
         traffic_light_hazard = true;
+        // DrawLight(traffic_light_state, ego_vehicle);
       }
       // Handle entry negotiation at non-signalised junction.
       else if (!ego_vehicle->IsAtTrafficLight() &&
-          traffic_light_state != TLS::Green) {
+               traffic_light_state != TLS::Green) {
 
         std::lock_guard<std::mutex> lock(no_signal_negotiation_mutex);
 

@@ -265,7 +265,7 @@ namespace LocalizationConstants {
       auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
       uint vehicle_index = vehicle_id_to_index.at(actor_id);
 
-      auto& current_actors = current_collision_frame->at(vehicle_index).overlapping_actors;
+      auto current_actors = GetOverlappingActors(removed_waypoint_id);
       auto new_overlapping_actors = GetOverlappingActors(buffer.front()->GetId());
       std::unordered_set<ActorId> actor_set_difference;
 
