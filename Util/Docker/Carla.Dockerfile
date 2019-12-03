@@ -10,6 +10,8 @@ RUN cd /home/ue4 && \
   cd /home/ue4/carla && \
   ./Update.sh && \
   make CarlaUE4Editor && \
+  make PythonAPI && \
+  make build.utils && \
   make package && \
   rm -r /home/ue4/carla/Dist
 
