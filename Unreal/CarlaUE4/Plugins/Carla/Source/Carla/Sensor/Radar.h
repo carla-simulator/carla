@@ -32,8 +32,6 @@ public:
 
   void Set(const FActorDescription &Description) override;
 
-  void SetResolution(int Value);
-
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetFOVAndSteps(float NewFov, int NewSteps);
 
@@ -41,7 +39,7 @@ public:
   void SetDistance(float NewDistance);
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
-  void SetOverture(float NewOverture);
+  void SetAperture(int NewAperture);
 
 protected:
 
@@ -56,13 +54,13 @@ protected:
   float FOV;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
-  int Overture;
+  int Aperture;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
   int Steps;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
-  bool ShowDebug = false;
+  bool ShowDebug = true;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition="ShowDebug"))
   int ShowDebugDelay = 5;
@@ -71,10 +69,10 @@ protected:
   bool ShowDebugLines = true;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug & ShowDebugLines"))
-  bool ShowCompleteLines = true;
+  bool ShowCompleteLines = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug & ShowDebugLines"))
-  float LineThickness = 10.0f;
+  float LineThickness = 4.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug"))
   bool ShowDebugHits = true;
@@ -101,9 +99,7 @@ private:
 
   FRadarData RadarData;
 
-  // TODO: parameterize collision layer included
-  FCollisionObjectQueryParams LineTraceObjectQueryParams;
-  FCollisionQueryParams LineTraceQueryParams;
+  FCollisionQueryParams TraceParams;
 
   // Current Radar Velocity
   FVector CurrentVelocity;
@@ -117,9 +113,5 @@ private:
 
   float AngleIncrement;
 
-  UPROPERTY(EditAnywhere)
-  int Resolution;
-
   int CurrentDebugDelay = 0;
-
 };

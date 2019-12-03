@@ -19,23 +19,15 @@ ARadar::ARadar(const FObjectInitializer& ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
 
-  Distance = 5000.0f;
-  FOV = 30.0f;
-
-  Overture = 10;
-  Steps = 10;
+  TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bReturnPhysicalMaterial = false;
 }
 
 void ARadar::Set(const FActorDescription &ActorDescription)
 {
   Super::Set(ActorDescription);
   UActorBlueprintFunctionLibrary::SetRadar(ActorDescription, this);
-}
-
-void ARadar::SetResolution(int Value)
-{
-  Resolution = Value;
-  RadarData.SetResolution(Resolution);
 }
 
 void ARadar::SetFOVAndSteps(float NewFov, int NewSteps)
@@ -52,9 +44,9 @@ void ARadar::SetDistance(float NewDistance)
   PreCalculateLineTraceIncrement();
 }
 
-void ARadar::SetOverture(float NewOverture)
+void ARadar::SetAperture(int NewAperture)
 {
-  Overture = NewOverture;
+  Aperture = NewAperture;
   PreCalculateLineTraceIncrement();
 }
 
@@ -67,18 +59,6 @@ void ARadar::BeginPlay()
   PrevLocation = GetActorLocation();
 
   PreCalculateCosSin();
-
-  // Prepare LineTrace params
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_Vehicle);
-  LineTraceObjectQueryParams.AddObjectTypesToQuery(ECC_Destructible);
-
-  LineTraceQueryParams.bTraceComplex = false;
-  LineTraceQueryParams.AddIgnoredActor(this);
-
 }
 
 void ARadar::Tick(const float DeltaTime)
@@ -91,11 +71,6 @@ void ARadar::Tick(const float DeltaTime)
 
   RadarData.Reset();
   SendLineTraces(DeltaTime);
-
-  // RadarData usage example:
-  //RadarData.Reset();
-  //css::RadarDetection Detection = {0.0f, 0.0f, 0.0f, 0.0f};
-  //RadarData.WriteDetection(Detection);
 
   auto DataStream = GetDataStream(*this);
   DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
@@ -111,7 +86,6 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
   PrevLocation = RadarLocation;
 }
 
-
 void ARadar::PreCalculateCosSin()
 {
   AngleIncrement = FMath::DegreesToRadians(360.0f / Steps);
@@ -119,20 +93,24 @@ void ARadar::PreCalculateCosSin()
   for(int i=0; i < Steps; i++)
   {
     float Sin, Cos;
-    FMath::SinCos(&Sin, &Cos, AngleIncrement * i );
+    FMath::SinCos(&Sin, &Cos, AngleIncrement * i);
     PreCalculatedCosSin.Add({Cos, Sin});
   }
 }
 
 void ARadar::PreCalculateLineTraceIncrement()
 {
-  LineTraceIncrement =
-    FMath::Tan(FMath::DegreesToRadians(FOV * 0.5f)) * Distance / (Overture + 1);
+  // Compute and set the total amount of rays
+  uint32 TotalRayNumber = (Steps * Aperture) + 1u;
+  RadarData.SetResolution(TotalRayNumber);
+  LineTraceIncrement = FMath::Tan(
+      FMath::DegreesToRadians(FOV * 0.5f)) * Distance / (Aperture + 1);
 }
 
 void ARadar::SendLineTraces(float DeltaSeconds)
 {
-  FHitResult OutHit;
+  constexpr float TO_METERS = 1e-2;
+  FHitResult OutHit(ForceInit);
 
   const FVector RadarLocation = GetActorLocation();
   const FVector ForwardVector = GetActorForwardVector();
@@ -140,21 +118,19 @@ void ARadar::SendLineTraces(float DeltaSeconds)
   FVector WorldForwardVector = ForwardVector * Distance;
   FVector EndLocation = RadarLocation + WorldForwardVector;
 
-  // The center should be a single line
-  bool Hitted = World->LineTraceSingleByObjectType(
+  bool Hitted = World->LineTraceSingleByChannel(
     OutHit,
     RadarLocation,
     EndLocation,
-    LineTraceObjectQueryParams,
-    LineTraceQueryParams
+    ECC_MAX,
+    TraceParams,
+    FCollisionResponseParams::DefaultResponseParam
   );
 
-  //UE_LOG(LogCarla, Error, TEXT("================================================"));
   if (Hitted)
   {
     const float RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector);
-    RadarData.WriteDetection({RelativeVelocity, 0.0f, 0.0f, OutHit.Distance});
-    //UE_LOG(LogCarla, Error, TEXT("%s"), *OutHit.Actor->GetName());
+    RadarData.WriteDetection({RelativeVelocity, 0.0f, 0.0f, OutHit.Distance * TO_METERS});
   }
 
   for(int j = 0; j < Steps; j++)
@@ -163,21 +139,21 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
     EndLocation = RadarLocation + WorldForwardVector;
 
-    for(int i = 1; i <= Overture; i++)
+    for(int i = 1; i <= Aperture; i++)
     {
       EndLocation += FVector(0.0f, CosSin.Cos, CosSin.Sin) * LineTraceIncrement;
 
-      Hitted = World->LineTraceSingleByObjectType(
+      Hitted = World->LineTraceSingleByChannel(
           OutHit,
           RadarLocation,
           EndLocation,
-          LineTraceObjectQueryParams,
-          LineTraceQueryParams
-        );
+          ECC_MAX,
+          TraceParams,
+          FCollisionResponseParams::DefaultResponseParam
+      );
 
       TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
       if (Hitted && HittedActor.Get()) {
-
         const float RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector);
 
         float Azimuth;
@@ -193,28 +169,29 @@ void ARadar::SendLineTraces(float DeltaSeconds)
           RelativeVelocity,
           FMath::DegreesToRadians(Azimuth),
           FMath::DegreesToRadians(Elevation),
-          OutHit.Distance
+          OutHit.Distance * TO_METERS
         });
-
-        //UE_LOG(LogCarla, Warning, TEXT("%s"), *HittedActor->GetName());
-
       }
 
-
+      // TODO: delete debug?
       if(ShowDebug && CurrentDebugDelay == ShowDebugDelay)
       {
-
         if(ShowDebugLines)
         {
-          DrawDebugLine(World, RadarLocation, (Hitted && !ShowCompleteLines) ? OutHit.ImpactPoint: EndLocation, FColor::Cyan, false, 0.5f, 0, LineThickness);
+          DrawDebugLine(
+              World,
+              RadarLocation,
+              (Hitted && !ShowCompleteLines) ? OutHit.ImpactPoint: EndLocation,
+              FColor::Cyan,
+              false,
+              0.4f,
+              0,
+              LineThickness);
         }
 
-        if(Hitted)
+        if(Hitted && ShowDebugHits)
         {
-          if(ShowDebugHits)
-          {
-            DrawDebugSphere(World, OutHit.ImpactPoint, 25.0f, 6, FColor::Red, false, 0.5f, 0);
-          }
+          DrawDebugSphere(World, OutHit.ImpactPoint, 25.0f, 6, FColor::Red, false, 0.5f, 0);
         }
       }
     }
@@ -224,15 +201,14 @@ void ARadar::SendLineTraces(float DeltaSeconds)
   if(CurrentDebugDelay > ShowDebugDelay) {
     CurrentDebugDelay = 0;
   }
-
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector) {
   // Calculate Doppler speed
   // 𝐹𝑑 = 2𝑉 (𝐹0/𝑐) cos(𝜃)
-  //  𝐹𝑑 = Doppler shift (Hz)
+  // 𝐹𝑑 = Doppler shift (Hz)
   //  𝑉 = Velocity
-  //  𝐹0 = Original wave frequency (Hz)
+  // 𝐹0 = Original wave frequency (Hz)
   //  𝑐 = Speed of light
   //  θ = Offset angle of sensor relative to direction of object motion
   // 𝐹0 = 35.5 ± 0.1 𝐺𝐻 ;
