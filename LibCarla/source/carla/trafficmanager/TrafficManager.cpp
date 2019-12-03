@@ -177,8 +177,8 @@ namespace traffic_manager {
     }
   }
 
-  bool TrafficManager::CheckAllFrozen(std::vector<cc::TrafficLight> tl_to_freeze) {
-    for (auto elem : tl_to_freeze) {
+  bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
+    for (auto& elem : tl_to_freeze) {
       if (!elem->IsFrozen() or elem->GetState() != TLS::Red) {
         return false;
       }
@@ -188,34 +188,34 @@ namespace traffic_manager {
 
   void TrafficManager::ResetAllTrafficLights() {
     auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-    std::vector<std::vector<cc::TrafficLight>> list_of_all_groups;
-    std::vector<cc::TrafficLight> tl_to_freeze;
+    std::vector<TLGroup> list_of_all_groups;
+    TLGroup tl_to_freeze;
     std::vector<carla::ActorId> list_of_ids;
 
     for (auto tl : *world_traffic_lights.get()) {
-        if (std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end()) {
-            auto tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-            list_of_all_groups.push_back(tl_group.at(0).get());
-            // tl_group is a std::vector<boost::shared_ptr<carla::client::TrafficLight>
-            for (unsigned i=0; i<tl_group.size(); i++) {
-                // tlg is a boost::shared_ptr<carla::client::TrafficLight>
-                // tlg->Id is a carla::ActorId
-                list_of_ids.push_back(tl_group.at(i).get()->GetId());
-                if(i!=0) {
-                    tl_to_freeze.push_back(tl_group.at(i).get());
-                }
+      if (std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end()) {
+          TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
+          list_of_all_groups.push_back(tl_group);
+          // tl_group is a std::vector<boost::shared_ptr<carla::client::TrafficLight>
+          for (unsigned i=0; i<tl_group.size(); i++) {
+              // tlg is a boost::shared_ptr<carla::client::TrafficLight>
+              // tlg->Id is a carla::ActorId
+              list_of_ids.push_back(tl_group.at(i).get()->GetId());
+              if(i!=0) {
+                  tl_to_freeze.push_back(tl_group.at(i));
               }
-          }
+            }
+        }
       }
-    for (auto &tl_group : list_of_all_groups) {
-      tl_group.begin()->SetState(TLS::Green);
-      for (auto tl = std::next(tl_group.begin(),1); tl != tl_group.end(); ++tl) {
-        tl->SetState(TLS::Red);
-      }
+
+    for (TLGroup& tl_group : list_of_all_groups) {
+      tl_group.front()->SetState(TLS::Green);
+      std::for_each(tl_group.begin() +1, tl_group.end(),
+                    [] (auto& tl) {tl->SetState(TLS::Red);});
     }
+
     while (!CheckAllFrozen(tl_to_freeze)) {
-      for (auto tln : tl_to_freeze) {
+      for (auto& tln : tl_to_freeze) {
           tln->SetState(TLS::Red);
           tln->Freeze(true);
       }
