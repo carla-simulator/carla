@@ -1,7 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "CarlaExporter.h"
-#include "CarlaExporterStyle.h"
 #include "CarlaExporterCommands.h"
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
@@ -28,9 +27,6 @@ void FCarlaExporterModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	
-	FCarlaExporterStyle::Initialize();
-	FCarlaExporterStyle::ReloadTextures();
-
 	FCarlaExporterCommands::Register();
 	
 	PluginCommands = MakeShareable(new FUICommandList);
@@ -61,8 +57,6 @@ void FCarlaExporterModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-	FCarlaExporterStyle::Shutdown();
-
 	FCarlaExporterCommands::Unregister();
 }
 
