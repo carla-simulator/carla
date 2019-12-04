@@ -91,8 +91,8 @@ def main():
                 for tl_group in list_of_all_groups:
                     for tl in tl_group:
                         debug.draw_string(tl.get_location() + carla.Location(0, 0, 5),
-                                        str(tl.get_elapsed_time())[:4], False,
-                                        color_dict[tl.get_state().name], 0.01)
+                                          str(tl.get_elapsed_time())[:4], False,
+                                          color_dict[tl.get_state().name], 0.01)
                     time.sleep(0.002)
 
         if args.safe:
@@ -138,21 +138,15 @@ def main():
 
         traffic_manager.register_vehicles(vehicle_vec)
 
-        # Arbitrarily setting some vehicle velocities to 15kmph
-        time.sleep(1)
+        # Arbitrarily setting some vehicle velocities to 15% below max speed.
+        time.sleep(5)
         for v in vehicle_list:
             if (v.id % 2 == 0):
-                traffic_manager.set_vehicle_target_velocity(v, 15.0/3.6)
+                traffic_manager.set_vehicle_target_velocity(v, 15.0)
                 traffic_manager.set_distance_to_leading_vehicle(v, 3)
             else:
                 traffic_manager.set_distance_to_leading_vehicle(v, 6)
                 pass
-
-        time.sleep(10)
-        print("Time to lane change!")
-
-        for v in vehicle_list:
-            traffic_manager.force_lane_change(v, True)
 
         show_tl_count_down(10)
         print("Time to reset the lights!")

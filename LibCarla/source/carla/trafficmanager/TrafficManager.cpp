@@ -188,7 +188,6 @@ namespace traffic_manager {
 
   void TrafficManager::ResetAllTrafficLights() {
     auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-    std::cout << "hi ";
 
     std::vector<TLGroup> list_of_all_groups;
     TLGroup tl_to_freeze;
@@ -205,10 +204,6 @@ namespace traffic_manager {
             }
         }
       }
-
-    std::cout << "hello ";
-    for (auto i = list_of_ids.begin(); i != list_of_ids.end(); ++i)
-      std::cout << *i << ' ';
 
     for (TLGroup& tl_group : list_of_all_groups) {
       tl_group.front()->SetState(TLS::Green);
