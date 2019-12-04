@@ -6,6 +6,8 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <ctime>
+#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -26,6 +28,7 @@
 
 namespace traffic_manager {
 
+using namespace std::chrono;
 namespace cc = carla::client;
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
@@ -85,9 +88,17 @@ namespace cc = carla::client;
     uint number_of_vehicles;
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
+    /// Map of all vehicles' idle time
+    std::unordered_map<ActorId, chr::time_point<chr::_V2::system_clock, chr::nanoseconds>> idle_time;
+
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
+    /// Methods for idle vehicle elimination.
+    void ResetIdleTime(Actor actor);
+    bool CheckIdleTime(Actor actor);
+    bool KillVehicle(Actor actor);
+
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
     /// Methods to modify waypoint buffer and track traffic.

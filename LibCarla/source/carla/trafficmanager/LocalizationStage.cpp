@@ -65,6 +65,12 @@ namespace LocalizationConstants {
       cg::Location vehicle_location = vehicle->GetLocation();
       float vehicle_velocity = vehicle->GetVelocity().Length();
 
+      //TODO: Improve search so it doesn't do it every loop..
+      auto search = idle_time.find(actor_id);
+      if (search == idle_time.end()) {
+        idle_time[actor_id] = chr::system_clock::now();
+      }
+
       float horizon_size = std::max(
           WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
           MINIMUM_HORIZON_LENGTH);
@@ -73,11 +79,16 @@ namespace LocalizationConstants {
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-
+        bool was_killed = CheckIdleTime(vehicle);
+        if (was_killed) {
+          std::cout << "I should be dead!" << std::endl;
+          continue;
+        }
         float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
 
+          ResetIdleTime(vehicle);
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
             dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
@@ -195,7 +206,7 @@ namespace LocalizationConstants {
         collision_message.actor = vehicle;
         collision_message.buffer = waypoint_buffer;
         collision_message.overlapping_actors = track_traffic.GetOverlappingVehicles(actor_id);
-      }
+          }
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
@@ -209,6 +220,37 @@ namespace LocalizationConstants {
       collision_frame_ready = true;
     }
 
+  }
+
+  void LocalizationStage::ResetIdleTime(Actor actor) {
+    idle_time[actor->GetId()] = chr::system_clock::now();
+  }
+
+  bool LocalizationStage::CheckIdleTime(Actor actor) {
+    chr::duration<float> time_difference = chr::system_clock::now() - idle_time[actor->GetId()];
+    if (time_difference.count() > 60.0f) { // 60 seconds
+      std::cout << "The time difference is: " << time_difference.count() << "for actor id: " << actor->GetId() << std::endl;
+      // TODO: Kill it and don't break stuff. Right now, it breaks stuff.
+      return KillVehicle(actor);
+    }
+    return false;
+  }
+
+  bool LocalizationStage::KillVehicle(Actor actor) {
+    // TODO: Fix this properly, either here or in another (and probably better) loop.
+    auto print_id = actor->GetId();
+    std::vector<boost::shared_ptr<carla::client::Actor>> to_remove;
+    to_remove.push_back(actor);
+    registered_actors.Remove(to_remove);
+    bool was_killed = to_remove.at(0).get()->Destroy();
+
+    if (was_killed) {
+      std::cout << "Successfully killed vehicle with actor id = " << print_id << std::endl;
+    }
+    else {
+      std::cout << "Something went wrong while killing vehicle with actor id = " << print_id << std::endl;
+    }
+    return was_killed;
   }
 
   void LocalizationStage::DataReceiver() {
@@ -352,8 +394,6 @@ namespace LocalizationConstants {
     }
   }
 
-
-
   SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, bool force, bool direction) {
 
     ActorId actor_id = vehicle->GetId();
@@ -387,9 +427,9 @@ namespace LocalizationConstants {
         cg::Location other_location = other_current_waypoint->GetLocation();
 
         debug_helper.DrawArrow(
-          vehicle_location + cg::Location(0,0,4),
-          other_location + cg::Location(0,0,4),
-          0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
+           vehicle_location + cg::Location(0,0,4),
+           other_location + cg::Location(0,0,4),
+           0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
 
         // Check if there is another vehicle in the front within
         // a threshold distance and current position not in a junction.
