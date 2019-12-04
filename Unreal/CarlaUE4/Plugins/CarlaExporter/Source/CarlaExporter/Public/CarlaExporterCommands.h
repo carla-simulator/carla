@@ -24,4 +24,5 @@ public:
 	TSharedPtr< FUICommandInfo > PluginActionExportAsRoad;
 	TSharedPtr< FUICommandInfo > PluginActionExportAsSide;
 	TSharedPtr< FUICommandInfo > PluginActionExportAsCross;
+	TSharedPtr< FUICommandInfo > PluginActionExportAll;
 };
