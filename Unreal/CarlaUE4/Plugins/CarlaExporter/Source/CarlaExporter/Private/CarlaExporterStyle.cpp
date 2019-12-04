@@ -51,6 +51,7 @@ TSharedRef< FSlateStyleSet > FCarlaExporterStyle::Create()
 	Style->Set("CarlaExporter.PluginActionExportAsRoad", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 	Style->Set("CarlaExporter.PluginActionExportAsSide", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 	Style->Set("CarlaExporter.PluginActionExportAsCross", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
+	Style->Set("CarlaExporter.PluginActionExportAll", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 
 	return Style;
 }
