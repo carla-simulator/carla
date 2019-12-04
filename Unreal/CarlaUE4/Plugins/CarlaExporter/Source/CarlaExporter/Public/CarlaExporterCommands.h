@@ -4,14 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Framework/Commands/Commands.h"
-#include "CarlaExporterStyle.h"
+#include "EditorStyleSet.h"
 
 class FCarlaExporterCommands : public TCommands<FCarlaExporterCommands>
 {
 public:
 
 	FCarlaExporterCommands()
-		: TCommands<FCarlaExporterCommands>(TEXT("CarlaExporter"), NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"), NAME_None, FCarlaExporterStyle::GetStyleSetName())
+		: TCommands<FCarlaExporterCommands>(
+			TEXT("CarlaExporter"), 
+			NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"), 
+			NAME_None, 
+			FEditorStyle::GetStyleSetName())
 	{
 	}
 
