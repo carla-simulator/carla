@@ -88,14 +88,8 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
 
 void ARadar::PreCalculateCosSin()
 {
-  AngleIncrement = FMath::DegreesToRadians(360.0f / Steps);
-  PreCalculatedCosSin.Empty(Steps);
-  for(int i=0; i < Steps; i++)
-  {
-    float Sin, Cos;
-    FMath::SinCos(&Sin, &Cos, AngleIncrement * i);
-    PreCalculatedCosSin.Add({Cos, Sin});
-  }
+  float AngleIncrement = FMath::DegreesToRadians(360.0f / Steps);
+  FMath::SinCos(&CosSinIncrement.Y, &CosSinIncrement.X, AngleIncrement);
 }
 
 void ARadar::PreCalculateLineTraceIncrement()
@@ -112,11 +106,17 @@ void ARadar::SendLineTraces(float DeltaSeconds)
   constexpr float TO_METERS = 1e-2;
   FHitResult OutHit(ForceInit);
 
-  const FVector RadarLocation = GetActorLocation();
-  const FVector ForwardVector = GetActorForwardVector();
+  const FVector& RadarLocation = GetActorLocation();
+  const FVector& ForwardVector = GetActorForwardVector();
+  const FTransform& ActorTransform = GetActorTransform();
+  const FRotator& TransformRotator = ActorTransform.Rotator();
+  const FVector TransformXAxis = ActorTransform.GetUnitAxis(EAxis::X);
+  const FVector TransformYAxis = ActorTransform.GetUnitAxis(EAxis::Y);
+  const FVector TransformZAxis = ActorTransform.GetUnitAxis(EAxis::Z);
 
-  FVector WorldForwardVector = ForwardVector * Distance;
+  const FVector WorldForwardVector = ForwardVector * Distance;
   FVector EndLocation = RadarLocation + WorldForwardVector;
+  FVector2D CurrentCosSin = {1.0f, 0.0f};
 
   bool Hitted = World->LineTraceSingleByChannel(
     OutHit,
@@ -135,13 +135,13 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
   for(int j = 0; j < Steps; j++)
   {
-    const CosSinData& CosSin = PreCalculatedCosSin[j];
-
     EndLocation = RadarLocation + WorldForwardVector;
 
     for(int i = 1; i <= Aperture; i++)
     {
-      EndLocation += FVector(0.0f, CosSin.Cos, CosSin.Sin) * LineTraceIncrement;
+      FVector Rotation = TransformRotator.RotateVector({0.0f, CurrentCosSin.X, CurrentCosSin.Y});
+
+      EndLocation += Rotation * LineTraceIncrement;
 
       Hitted = World->LineTraceSingleByChannel(
           OutHit,
@@ -154,21 +154,20 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
       TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
       if (Hitted && HittedActor.Get()) {
+
         const float RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector);
 
-        float Azimuth;
-        float Elevation;
-        UKismetMathLibrary::GetAzimuthAndElevation(
-          (EndLocation - RadarLocation),
-          GetActorTransform(),
-          Azimuth,
-          Elevation
+        FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
+          (EndLocation - RadarLocation).GetSafeNormal() * Distance,
+          TransformXAxis,
+          TransformYAxis,
+          TransformZAxis
         );
 
         RadarData.WriteDetection({
           RelativeVelocity,
-          FMath::DegreesToRadians(Azimuth),
-          FMath::DegreesToRadians(Elevation),
+          AzimuthAndElevation.X,
+          AzimuthAndElevation.Y,
           OutHit.Distance * TO_METERS
         });
       }
@@ -195,12 +194,19 @@ void ARadar::SendLineTraces(float DeltaSeconds)
         }
       }
     }
+
+    float NewCos = CosSinIncrement.X * CurrentCosSin.X - CosSinIncrement.Y * CurrentCosSin.Y;
+    float NewSin = CosSinIncrement.Y * CurrentCosSin.X + CosSinIncrement.X * CurrentCosSin.Y;
+    CurrentCosSin.X = NewCos;
+    CurrentCosSin.Y = NewSin;
   }
 
+  // TODO: delete debug?
   CurrentDebugDelay++;
   if(CurrentDebugDelay > ShowDebugDelay) {
     CurrentDebugDelay = 0;
   }
+
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector) {
@@ -223,7 +229,11 @@ float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector&
 
   TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
   FVector TargetVelocity = TO_METERS * HittedActor->GetVelocity();
-  const float V = TargetVelocity.ProjectOnTo(CurrentVelocity).Size();
+  float V = 0.0f;
+  if(!TargetVelocity.IsZero())
+  {
+    V = TargetVelocity.ProjectOnTo(CurrentVelocity).Size();
+  }
   const float CosTheta = FVector::DotProduct(HittedActor->GetActorForwardVector(), ForwardVector);
   const float Fd = Fd_CONSTANT * V * CosTheta;
   const float RelativeVelocity = Fd / (FDeltaOutput * KMPH_TO_MPS);
