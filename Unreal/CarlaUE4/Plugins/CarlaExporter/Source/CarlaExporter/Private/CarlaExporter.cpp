@@ -15,6 +15,7 @@
 #include "PxTriangleMesh.h"
 #include "PxVec3.h"
 #include "LevelEditor.h"
+#include "EngineUtils.h"
 
 #include <fstream>
 #include <sstream>
@@ -49,6 +50,10 @@ void FCarlaExporterModule::StartupModule()
 	PluginCommands->MapAction(
 		FCarlaExporterCommands::Get().PluginActionExportAsRoad,
 		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedRoad),
+		FCanExecuteAction());
+	PluginCommands->MapAction(
+		FCarlaExporterCommands::Get().PluginActionExportAll,
+		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClickedAll),
 		FCanExecuteAction());
 		
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
@@ -87,34 +92,44 @@ void FCarlaExporterModule::PluginButtonClickedRoad()
 }
 void FCarlaExporterModule::PluginButtonClickedSide()
 {
-	PluginButtonClicked("side");
+	PluginButtonClicked("sidewalk");
 }
 void FCarlaExporterModule::PluginButtonClickedCross()
 {
-	PluginButtonClicked("cross");
+	PluginButtonClicked("crosswalk");
+}
+void FCarlaExporterModule::PluginButtonClickedAll()
+{
+	PluginButtonClicked("all");
 }
 void FCarlaExporterModule::PluginButtonClicked(std::string type)
 {
-	TArray<UObject*> BP_Actors;
-	TArray<AStaticMeshActor*> ActorsToSelect;
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	if (!World) return;
 
+	// get all selected objects (if any)
+	TArray<UObject*> BP_Actors;
 	USelection* CurrentSelection = GEditor->GetSelectedActors();
 	int32 SelectionNum = CurrentSelection->GetSelectedObjects(AActor::StaticClass(), BP_Actors);
-	UWorld* World = GEditor->GetEditorWorldContext().World();
+	bool useNomenclature = (type == "all");
 
-	if (!World)
+	// if no selection, then exit if we need selection
+	if (SelectionNum == 0 && type != "all")
 		return;
 
+	// if no selection, then get all objects
 	if (SelectionNum == 0)
-		return;
-
-	//GEditor->SelectNone(true,true);
+	{
+		// for (TObjectIterator<UStaticMeshComponent> it; it; ++it)
+		for (TActorIterator<AActor> it(World); it; ++it)
+				BP_Actors.Add(Cast<UObject>(*it));
+	}
 
 	// get target path
 	FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
 	// build final name
 	std::ostringstream name;
-	name << TCHAR_TO_UTF8(*Path) << "exported_" << type << ".obj";
+	name << TCHAR_TO_UTF8(*Path) << "/" << TCHAR_TO_UTF8(*World->GetMapName()) << "_" << type << ".obj";
 	// create the file
 	std::ofstream f(name.str());
 
@@ -123,8 +138,31 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 	{
 		AActor* TempActor = Cast<AActor>(SelectedObject);
 		if (!TempActor) continue;
+		
+		// check the TAG (NoExport)
+		if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
-		f << "o " << TCHAR_TO_ANSI(*(TempActor->GetName())) << "\n";
+		FString ActorName = TempActor->GetName();
+
+		f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
+
+		// check type by nomenclature
+		if (ActorName.StartsWith("Road_Road"))
+			type = "road";
+		else if (ActorName.StartsWith("Road_Marking"))
+			type = "road";
+		else if (ActorName.StartsWith("Road_Curb"))
+			type = "road";
+		else if (ActorName.StartsWith("Road_Gutter"))
+			type = "road";
+		else if (ActorName.StartsWith("Road_Sidewalk"))
+			type = "sidewalk";
+		else if (ActorName.StartsWith("Road_Crosswalk"))
+			type = "crosswalk";
+		else if (ActorName.StartsWith("Road_Grass"))
+			type = "grass";
+		else
+			type = "block";
 
 		TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
 		// UE_LOG(LogTemp, Warning, TEXT("Components: %d"), Components.Num());
@@ -165,7 +203,7 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 							FVector vec3 = InstanceTransform.TransformVector(vec);
 							FVector world(vec3.X, vec3.Y, vec3.Z); 
 
-							f << "v " << std::fixed << InstanceLocation.X + world.X << " " << InstanceLocation.Z + world.Z << " " << InstanceLocation.Y + world.Y << "\n";
+							f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
 						}
 						// write all faces
 						f << "usemtl " << type << "\n";
@@ -210,8 +248,8 @@ void FCarlaExporterModule::PluginButtonClicked(std::string type)
 						FVector vec3 = CompTransform.TransformVector(vec);
 						FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
 
-						// f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
-						f << "v " << std::fixed << world.X << " " << world.Z << " " << world.Y << "\n";
+						f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
+						// f << "v " << std::fixed << world.X << " " << world.Z << " " << world.Y << "\n";
 					}
 					// write all faces
 					f << "usemtl " << type << "\n";
@@ -238,6 +276,7 @@ void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
 	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsRoad);
 	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsSide);
 	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAsCross);
+	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAll);
 }
 
 void FCarlaExporterModule::AddToolbarExtension(FToolBarBuilder& Builder)

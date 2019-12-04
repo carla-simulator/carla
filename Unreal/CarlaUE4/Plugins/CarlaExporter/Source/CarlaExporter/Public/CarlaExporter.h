@@ -23,6 +23,7 @@ public:
 	void PluginButtonClickedRoad();
 	void PluginButtonClickedSide();
 	void PluginButtonClickedCross();
+	void PluginButtonClickedAll();
 	
 private:
 
