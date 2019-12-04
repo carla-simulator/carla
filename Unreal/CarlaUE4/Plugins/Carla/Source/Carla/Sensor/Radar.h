@@ -89,14 +89,6 @@ private:
 
   float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector);
 
-  struct CosSinData
-  {
-    float Cos = 0.0f;
-    float Sin = 0.0f;
-  };
-
-  TArray<CosSinData> PreCalculatedCosSin;
-
   FRadarData RadarData;
 
   FCollisionQueryParams TraceParams;
@@ -107,11 +99,15 @@ private:
   /// Used to compute the velocity of the radar
   FVector PrevLocation;
 
+  FVector2D CosSinIncrement;
+
   UWorld* World;
 
   float LineTraceIncrement;
 
-  float AngleIncrement;
-
   int CurrentDebugDelay = 0;
+
+
+
+
 };
