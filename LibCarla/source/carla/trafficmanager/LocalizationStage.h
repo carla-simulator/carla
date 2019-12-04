@@ -18,6 +18,7 @@
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/InMemoryMap.h"
+#include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
@@ -82,36 +83,16 @@ namespace cc = carla::client;
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint number_of_vehicles;
-    /// Structure to keep track of overlapping waypoints between vehicles.
-    using WaypointOverlap = std::unordered_map<uint64_t, ActorIdSet>;
-    WaypointOverlap waypoint_overlap_tracker;
-    /// Structure to keep track of vehicles with overlapping paths.
-    std::unordered_map<ActorId, ActorIdSet> overlapping_vehicles;
+    /// Object for tracking paths of the traffic vehicles.
+    TrackTraffic track_traffic;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
-    /// Methods to update WaypointOverlap map.
-    void UpdateOverlappingWaypoint(uint64_t waypoint_id, ActorId actor_id);
-    void RemoveOverlappingWaypoint(uint64_t waypoint_id, ActorId actor_id);
-    /// Method to get the set of vehicles overlapping a waypoint.
-    ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
-    /// Methods to modify waypoint buffer.
-    void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
-    void PopWaypoint(Buffer& buffer, ActorId actor_id);
-    /// Returns the cross product (z component value) between the vehicle's
-    /// heading
-    /// vector and the vector along the direction to the next target waypoint on
-    /// the horizon.
-    float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
-    /// Returns the dot product between the vehicle's heading vector and
-    /// the vector along the direction to the next target waypoint on the horizon.
-    float DeviationDotProduct(Actor actor, const cg::Location &target_location);
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
-    /// Methods to update, remove and retrieve vehicles with overlapping vehicles.
-    void UpdateOverlappingVehicle(ActorId actor_id, ActorId other_id);
-    void RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id);
-    ActorIdSet GetOverlappingVehicles(ActorId actor_id);
+    /// Methods to modify waypoint buffer and track traffic.
+    void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
+    void PopWaypoint(Buffer& buffer, ActorId actor_id);
 
   public:
 
