@@ -181,16 +181,23 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
 }
 
-float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector) {
-  // Calculate Doppler speed
-  // 𝐹𝑑 = 2𝑉 (𝐹0/𝑐) cos(𝜃)
-  // 𝐹𝑑 = Doppler shift (Hz)
-  //  𝑉 = Velocity
-  // 𝐹0 = Original wave frequency (Hz)
-  //  𝑐 = Speed of light
-  //  θ = Offset angle of sensor relative to direction of object motion
-  // 𝐹0 = 35.5 ± 0.1 𝐺𝐻 ;
-  //  The frequency of the output increases by 105.8 ± 0.3 Hz for every mph (65.74 ± 0.19 Hz per kph) of velocity
+float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector)
+{
+  /**
+   *  Calculate Doppler speed
+   *
+   * Fd = 2V (F0 / c) cos(Theta)
+   *   Fd     = Doppler shift (Hz)
+   *   V      = Velocity
+   *   F0     = Original wave frequency (Hz)
+   *   c      = Speef of light
+   *   Theta  = Offset angle of sensor relative to direction of object motion
+   *   F0     = 35.5 +- 0.1 GHz
+   *
+   * The frequency of the ouput increases by 105.8 +- 0.3 Hz for every mph
+   *   (65.74 +- 0.19 Hz per Kmph) of velocity
+   *
+   */
 
   constexpr float TO_METERS = 1e-2;
   constexpr float KMPH_TO_MPS = 3600.0f / 1000.0f;
