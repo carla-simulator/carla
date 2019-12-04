@@ -59,24 +59,6 @@ protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
   int Steps;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
-  bool ShowDebug = true;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition="ShowDebug"))
-  int ShowDebugDelay = 5;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition="ShowDebug"))
-  bool ShowDebugLines = true;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug & ShowDebugLines"))
-  bool ShowCompleteLines = false;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug & ShowDebugLines"))
-  float LineThickness = 4.0f;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug", meta=(EditCondition= "ShowDebug"))
-  bool ShowDebugHits = true;
-
 private:
 
   void CalculateCurrentVelocity(const float DeltaTime);
@@ -104,10 +86,5 @@ private:
   UWorld* World;
 
   float LineTraceIncrement;
-
-  int CurrentDebugDelay = 0;
-
-
-
 
 };

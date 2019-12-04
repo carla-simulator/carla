@@ -171,40 +171,12 @@ void ARadar::SendLineTraces(float DeltaSeconds)
           OutHit.Distance * TO_METERS
         });
       }
-
-      // TODO: delete debug?
-      if(ShowDebug && CurrentDebugDelay == ShowDebugDelay)
-      {
-        if(ShowDebugLines)
-        {
-          DrawDebugLine(
-              World,
-              RadarLocation,
-              (Hitted && !ShowCompleteLines) ? OutHit.ImpactPoint: EndLocation,
-              FColor::Cyan,
-              false,
-              0.4f,
-              0,
-              LineThickness);
-        }
-
-        if(Hitted && ShowDebugHits)
-        {
-          DrawDebugSphere(World, OutHit.ImpactPoint, 25.0f, 6, FColor::Red, false, 0.5f, 0);
-        }
-      }
     }
 
     float NewCos = CosSinIncrement.X * CurrentCosSin.X - CosSinIncrement.Y * CurrentCosSin.Y;
     float NewSin = CosSinIncrement.Y * CurrentCosSin.X + CosSinIncrement.X * CurrentCosSin.Y;
     CurrentCosSin.X = NewCos;
     CurrentCosSin.Y = NewSin;
-  }
-
-  // TODO: delete debug?
-  CurrentDebugDelay++;
-  if(CurrentDebugDelay > ShowDebugDelay) {
-    CurrentDebugDelay = 0;
   }
 
 }
