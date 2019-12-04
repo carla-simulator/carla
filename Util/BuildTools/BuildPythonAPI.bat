@@ -139,6 +139,7 @@ rem ============================================================================
     echo %FILE_N% [ERROR] An error ocurred while executing the py.
     echo %FILE_N% [ERROR] Possible causes:
     echo %FILE_N% [ERROR]  - Make sure "py" is installed.
+    echo %FILE_N% [ERROR]  - py = python launcher. This utility is bundled with Python installation but not installed by default.
     echo %FILE_N% [ERROR]  - Make sure it is available on your Windows "py".
     goto bad_exit
 
