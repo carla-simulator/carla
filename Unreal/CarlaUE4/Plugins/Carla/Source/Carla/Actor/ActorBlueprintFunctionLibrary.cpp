@@ -768,7 +768,13 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   Aperture.RecommendedValues = { TEXT("10") };
   Aperture.bRestrictToRecommended = false;
 
-  Definition.Variations.Append({FOV, Steps, Far, Aperture});
+  FActorVariation PointLossPercentage;
+  PointLossPercentage.Id = TEXT("point_loss_percentage");
+  PointLossPercentage.Type = EActorAttributeType::Float;
+  PointLossPercentage.RecommendedValues = { TEXT("0.7") };
+  PointLossPercentage.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({FOV, Steps, Far, Aperture, PointLossPercentage});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1494,6 +1500,8 @@ void UActorBlueprintFunctionLibrary::SetRadar(
     RetrieveActorAttributeToFloat("far", Description.Variations, 100.0f) * TO_CENTIMETERS);
   Radar->SetAperture(
     RetrieveActorAttributeToInt("aperture", Description.Variations, 10));
+  Radar->SetPointLossPercentage(
+    RetrieveActorAttributeToFloat("point_loss_percentage", Description.Variations, 0.7));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
