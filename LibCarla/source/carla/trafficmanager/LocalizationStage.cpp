@@ -9,6 +9,8 @@ namespace LocalizationConstants {
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
+  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.93969f;
 }
   using namespace LocalizationConstants;
 
@@ -422,21 +424,16 @@ namespace LocalizationConstants {
     float vehicle_velocity = vehicle->GetVelocity().Length();
 
     Buffer& waypoint_buffer = buffer_list->at(vehicle_id_to_index.at(actor_id));
-    SimpleWaypointPtr current_waypoint = waypoint_buffer.front();
+    SimpleWaypointPtr& current_waypoint = waypoint_buffer.front();
 
     bool need_to_change_lane = false;
     auto left_waypoint = current_waypoint->GetLeftWaypoint();
     auto right_waypoint = current_waypoint->GetRightWaypoint();
-    //auto lane_change = current_waypoint->GetWaypoint()->GetLaneChange();
 
     if (!force) {
 
-      auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
-      //uint vehicle_index = vehicle_id_to_index.at(actor_id);
-
       auto blocking_vehicles = track_traffic.GetOverlappingVehicles(actor_id);
 
-      // Check if any vehicle in the current lane is blocking us.
       bool abort_lane_change = false;
       for (auto i = blocking_vehicles.begin();
            i != blocking_vehicles.end() && !abort_lane_change;
@@ -448,25 +445,44 @@ namespace LocalizationConstants {
         cg::Location other_location = other_current_waypoint->GetLocation();
 
         debug_helper.DrawArrow(
-           vehicle_location + cg::Location(0,0,4),
-           other_location + cg::Location(0,0,4),
-           0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
+          vehicle_location + cg::Location(0,0,4),
+          other_location + cg::Location(0,0,4),
+          0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
 
-        // Check if there is another vehicle in the front within
-        // a threshold distance and current position not in a junction.
-        if (!current_waypoint->CheckJunction()) {
-          if (other_vehicle_id != actor_id &&
-              DeviationDotProduct(vehicle, other_location) > 0.0f &&
-              // Account for these constants and make them speed dependent.
-              other_location.Distance(vehicle_location) < 20.f &&
-              other_location.Distance(vehicle_location) > 10.0f) {
+        bool distant_lane_availability = false;
+        auto other_neighbouring_lanes = {other_current_waypoint->GetLeftWaypoint(),
+                                         other_current_waypoint->GetRightWaypoint()};
 
-            need_to_change_lane = true;
-          } else if (DeviationDotProduct(vehicle, other_location) > 0.0f &&
-                     other_location.Distance(vehicle_location) < 10.0f) {
+        for (auto& candidate_lane_wp: other_neighbouring_lanes) {
+          if (candidate_lane_wp != nullptr &&
+              track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0) {
+            distant_lane_availability = true;
+          }
+        }
 
-            need_to_change_lane = false;
-            abort_lane_change = true;
+        cg::Vector3D reference_heading = current_waypoint->GetForwardVector();
+        cg::Vector3D other_heading = other_current_waypoint->GetForwardVector();
+
+        if (other_vehicle_id != actor_id &&
+            !current_waypoint->CheckJunction() &&
+            !other_current_waypoint->CheckJunction() &&
+            cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE) {
+
+          float squared_vehicle_distance = cg::Math::DistanceSquared(other_location, vehicle_location);
+          float deviation_dot = DeviationDotProduct(vehicle, other_location);
+
+          if (deviation_dot > 0.0f) {
+
+            if (distant_lane_availability &&
+                squared_vehicle_distance > std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
+
+              need_to_change_lane = true;
+            } else if (squared_vehicle_distance < std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
+
+              need_to_change_lane = false;
+              abort_lane_change = true;
+            }
+
           }
         }
       }
@@ -495,50 +511,17 @@ namespace LocalizationConstants {
       }
 
       for (auto target_lane_wp: candidate_points) {
-        if (!possible_to_lane_change && target_lane_wp != nullptr) {
+        if (!force &&
+            !possible_to_lane_change &&
+            target_lane_wp != nullptr &&
+            track_traffic.GetPassingVehicles(target_lane_wp->GetId()).size() == 0) {
 
-          auto target_lane_vehicles = track_traffic.GetPassingVehicles(target_lane_wp->GetId());
+          possible_to_lane_change = true;
+          change_over_point = target_lane_wp;
+        } else if (force) {
 
-          // If target lane has vehicles, check if there are any obstacles
-          // for lane change execution.
-          if (target_lane_vehicles.size() > 0 && !force) {
-
-            bool found_hazard = false;
-            for (auto i = target_lane_vehicles.begin(); i != target_lane_vehicles.end() && !found_hazard; ++i) {
-
-              const ActorId &other_vehicle_id = *i;
-              traffic_manager::Buffer &other_vehicle_buffer = buffer_list->at(
-                  vehicle_id_to_index.at(other_vehicle_id));
-              cg::Location other_vehicle_location = other_vehicle_buffer.front()->GetLocation();
-              float relative_deviation = DeviationDotProduct(vehicle, other_vehicle_location);
-
-              // If there is a vehicle approaching from behind, do not change lane.
-              if (relative_deviation < 0.0f) {
-                found_hazard = true;
-              }
-              // If a vehicle on the target lane is in front, check if it is far
-              // enough to perform a lane change.
-              else {
-
-                auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-                if (target_lane_wp->Distance(other_vehicle_location) <
-                    (1.0 + change_over_distance + vehicle_reference->GetBoundingBox().extent.x * 2)) {
-                  found_hazard = true;
-                }
-              }
-            }
-
-            if (!found_hazard) {
-              possible_to_lane_change = true;
-            }
-
-          } else {
-            possible_to_lane_change = true;
-          }
-
-          if (possible_to_lane_change) {
-            change_over_point = target_lane_wp;
-          }
+          possible_to_lane_change = true;
+          change_over_point = target_lane_wp;
         }
       }
     }
