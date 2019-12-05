@@ -1,5 +1,6 @@
 ## Latest
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
+  * Added exporter plugin for UE4 to allow export meshes ready for Recast calculation.
   * Added new sensor: Inertial measurement unit (IMU)
   * Added new sensor: Radar
   * Moved GNSS sensor from client to server side
