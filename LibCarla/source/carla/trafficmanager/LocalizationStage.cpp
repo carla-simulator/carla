@@ -204,10 +204,10 @@ namespace LocalizationConstants {
 
           cg::Location buffer_front_loc = waypoint_buffer.front()->GetLocation();
           cg::Location buffer_mid_lock = waypoint_buffer.at(
-            static_cast<int>(std::floor(waypoint_buffer.size()/2)))->GetLocation();
+            static_cast<unsigned long>(std::floor(waypoint_buffer.size()/2)))->GetLocation();
           cg::Location buffer_back_loc = waypoint_buffer.back()->GetLocation();
 
-          float squared_buffer_length = std::pow(buffer_front_loc.Distance(buffer_mid_lock)
+          double squared_buffer_length = std::pow(buffer_front_loc.Distance(buffer_mid_lock)
                                         + buffer_mid_lock.Distance(buffer_back_loc), 2);
 
           if (cg::Math::DistanceSquared(vehicle_location, tracking_location) > squared_buffer_length) {
