@@ -413,7 +413,13 @@ namespace LocalizationConstants {
         track_traffic.RemoveOverlappingVehicle(actor_id, old_actor_id);
         track_traffic.RemoveOverlappingVehicle(old_actor_id, actor_id);
       }
+    } else {
 
+      ActorIdSet currently_tracked_vehicles = track_traffic.GetOverlappingVehicles(actor_id);
+      for (auto& tracked_id: currently_tracked_vehicles) {
+        track_traffic.RemoveOverlappingVehicle(actor_id, tracked_id);
+        track_traffic.RemoveOverlappingVehicle(tracked_id, actor_id);
+      }
     }
   }
 
@@ -444,10 +450,10 @@ namespace LocalizationConstants {
         SimpleWaypointPtr& other_current_waypoint = other_buffer.front();
         cg::Location other_location = other_current_waypoint->GetLocation();
 
-        debug_helper.DrawArrow(
-          vehicle_location + cg::Location(0,0,4),
-          other_location + cg::Location(0,0,4),
-          0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
+        // debug_helper.DrawArrow(
+        //   vehicle_location + cg::Location(0,0,4),
+        //   other_location + cg::Location(0,0,4),
+        //   0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
 
         bool distant_lane_availability = false;
         auto other_neighbouring_lanes = {other_current_waypoint->GetLeftWaypoint(),
