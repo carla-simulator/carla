@@ -76,7 +76,7 @@ private:
 
   void SendLineTraces(float DeltaSeconds);
 
-  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector);
+  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector);
 
   FRadarData RadarData;
 
@@ -93,5 +93,7 @@ private:
   UWorld* World;
 
   float LineTraceIncrement;
+
+  FVector debugCarVelocity = FVector::ZeroVector;
 
 };
