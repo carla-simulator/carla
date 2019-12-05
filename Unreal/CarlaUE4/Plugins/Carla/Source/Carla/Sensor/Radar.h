@@ -41,6 +41,9 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetAperture(int NewAperture);
 
+  UFUNCTION(BlueprintCallable, Category = "Radar")
+  void SetPointLossPercentage(float NewLossPercentage);
+
 protected:
 
   void BeginPlay() override;
@@ -58,6 +61,10 @@ protected:
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
   int Steps;
+
+  /// Noise threshold [0.0, 1.0] of rays that will be
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Detection")
+  float PointLossPercentage;
 
 private:
 

@@ -19,6 +19,8 @@ ARadar::ARadar(const FObjectInitializer& ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
 
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+
   TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
   TraceParams.bTraceComplex = true;
   TraceParams.bReturnPhysicalMaterial = false;
@@ -48,6 +50,11 @@ void ARadar::SetAperture(int NewAperture)
 {
   Aperture = NewAperture;
   PreCalculateLineTraceIncrement();
+}
+
+void ARadar::SetPointLossPercentage(float NewLossPercentage)
+{
+  PointLossPercentage = NewLossPercentage;
 }
 
 void ARadar::BeginPlay()
@@ -142,6 +149,15 @@ void ARadar::SendLineTraces(float DeltaSeconds)
       FVector Rotation = TransformRotator.RotateVector({0.0f, CurrentCosSin.X, CurrentCosSin.Y});
 
       EndLocation += Rotation * LineTraceIncrement;
+
+      // PointLossPercentage is in range [0.0 - 1.0]
+      // e.g: If PointLossPercentage is 0.7, the 70% of the rays are lost
+      // TODO: Improve the performance precalculating the noise probabilty offline
+      if (RandomEngine->GetBoolWithWeight(PointLossPercentage))
+      {
+        // Do not compute the current ray
+        continue;
+      }
 
       Hitted = World->LineTraceSingleByChannel(
           OutHit,
