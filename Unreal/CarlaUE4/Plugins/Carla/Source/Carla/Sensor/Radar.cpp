@@ -85,11 +85,8 @@ void ARadar::Tick(const float DeltaTime)
 
 void ARadar::CalculateCurrentVelocity(const float DeltaTime)
 {
-  // Calculate Current Radar Velocity
-  // Used to convert from UE4's cm to meters
-  constexpr float TO_METERS = 1e-2;
   const FVector RadarLocation = GetActorLocation();
-  CurrentVelocity = TO_METERS * (RadarLocation - PrevLocation) / DeltaTime;
+  CurrentVelocity = (RadarLocation - PrevLocation) / DeltaTime;
   PrevLocation = RadarLocation;
 }
 
@@ -136,7 +133,7 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
   if (Hitted)
   {
-    const float RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector);
+    const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation, ForwardVector);
     RadarData.WriteDetection({RelativeVelocity, 0.0f, 0.0f, OutHit.Distance * TO_METERS});
   }
 
@@ -171,7 +168,7 @@ void ARadar::SendLineTraces(float DeltaSeconds)
       TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
       if (Hitted && HittedActor.Get()) {
 
-        const float RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector);
+        const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation, ForwardVector);
 
         FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
           (EndLocation - RadarLocation).GetSafeNormal() * Distance,
@@ -197,41 +194,16 @@ void ARadar::SendLineTraces(float DeltaSeconds)
 
 }
 
-float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector)
+float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector)
 {
-  /**
-   *  Calculate Doppler speed
-   *
-   * Fd = 2V (F0 / c) cos(Theta)
-   *   Fd     = Doppler shift (Hz)
-   *   V      = Velocity
-   *   F0     = Original wave frequency (Hz)
-   *   c      = Speef of light
-   *   Theta  = Offset angle of sensor relative to direction of object motion
-   *   F0     = 35.5 +- 0.1 GHz
-   *
-   * The frequency of the ouput increases by 105.8 +- 0.3 Hz for every mph
-   *   (65.74 +- 0.19 Hz per Kmph) of velocity
-   *
-   */
-
   constexpr float TO_METERS = 1e-2;
-  constexpr float KMPH_TO_MPS = 3600.0f / 1000.0f;
-  constexpr float F0 = 35.5e9;
-  constexpr float FDeltaOutput = 62.1;
-  constexpr float LIGHT_SPEED = 3e8;
-  constexpr float Fd_CONSTANT = 2.0f * (F0 / LIGHT_SPEED);
 
   TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
-  FVector TargetVelocity = TO_METERS * HittedActor->GetVelocity();
-  float V = 0.0f;
-  if(!TargetVelocity.IsZero())
-  {
-    V = TargetVelocity.ProjectOnTo(CurrentVelocity).Size();
-  }
-  const float CosTheta = FVector::DotProduct(HittedActor->GetActorForwardVector(), ForwardVector);
-  const float Fd = Fd_CONSTANT * V * CosTheta;
-  const float RelativeVelocity = Fd / (FDeltaOutput * KMPH_TO_MPS);
+  FVector TargetVelocity = HittedActor->GetVelocity();
+  FVector TargetLocation = OutHit.ImpactPoint;
+  FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();
+  const FVector DeltaVelocity = (TargetVelocity - CurrentVelocity);
+  const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, ForwardVector);
 
-  return RelativeVelocity;
+  return V;
 }
