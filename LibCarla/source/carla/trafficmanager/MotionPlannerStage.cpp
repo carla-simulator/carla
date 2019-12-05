@@ -4,8 +4,10 @@ namespace traffic_manager {
 
 namespace PlannerConstants {
   static const float MAX_THROTTLE = 0.75f;
+  static const float CRAWL_THROTTLE = 0.409f;
   static const float MAX_BRAKE = 1.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float CRAWL_SPEED = 10 / 3.6f;
   static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
   static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.1f, 0.01f};
   static const std::vector<float> LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
@@ -118,7 +120,11 @@ namespace PlannerConstants {
       // Constructing the actuation signal.
       PlannerToControlData &message = current_control_frame->at(i);
       message.actor_id = actor_id;
-      message.throttle = std::min(actuation_signal.throttle, MAX_THROTTLE);
+      if (current_velocity > CRAWL_SPEED) {
+        message.throttle = std::min(actuation_signal.throttle, MAX_THROTTLE);
+      } else {
+        message.throttle = std::min(actuation_signal.throttle, CRAWL_THROTTLE);
+      }
       message.brake = std::min(actuation_signal.brake, MAX_BRAKE);
       message.steer = actuation_signal.steer;
 
