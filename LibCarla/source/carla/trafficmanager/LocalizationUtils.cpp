@@ -108,13 +108,4 @@ namespace traffic_manager {
     }
   }
 
-  void TrackTraffic::RecordPassingVehicles(uint64_t waypoint_id) {
-
-      actor_id_set_record = GetPassingVehicles(waypoint_id);
-  }
-
-  ActorIdSet TrackTraffic::GetPreviousPassingVehicles() {
-
-      return actor_id_set_record;
-  }
 }

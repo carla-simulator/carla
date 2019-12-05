@@ -40,10 +40,6 @@ namespace traffic_manager {
         void RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id);
         ActorIdSet GetOverlappingVehicles(ActorId actor_id);
 
-        /// Method to record the set of vehicles passing through a waypoint
-        /// and retrieve it later.
-        void RecordPassingVehicles(uint64_t waypoint_id);
-        ActorIdSet GetPreviousPassingVehicles();
     };
 
     /// Returns the cross product (z component value) between the vehicle's
