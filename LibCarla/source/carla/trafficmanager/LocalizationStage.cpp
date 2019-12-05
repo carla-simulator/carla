@@ -192,6 +192,29 @@ namespace LocalizationConstants {
         }
       }
 
+      // Clean up tracking list by remove vehicles that are too far away.
+      ActorIdSet current_tracking_list = track_traffic.GetOverlappingVehicles(actor_id);
+      for (ActorId tracking_id: current_tracking_list) {
+        if (!waypoint_buffer.empty()) {
+
+          cg::Location tracking_location = actor_list.at(
+            vehicle_id_to_index.at(tracking_id))->GetLocation();
+
+          cg::Location buffer_front_loc = waypoint_buffer.front()->GetLocation();
+          cg::Location buffer_mid_lock = waypoint_buffer.at(
+            static_cast<int>(std::floor(waypoint_buffer.size()/2)))->GetLocation();
+          cg::Location buffer_back_loc = waypoint_buffer.back()->GetLocation();
+
+          float squared_buffer_length = std::pow(buffer_front_loc.Distance(buffer_mid_lock)
+                                        + buffer_mid_lock.Distance(buffer_back_loc), 2);
+
+          if (cg::Math::DistanceSquared(vehicle_location, tracking_location) > squared_buffer_length) {
+            track_traffic.RemoveOverlappingVehicle(actor_id, tracking_id);
+            track_traffic.RemoveOverlappingVehicle(tracking_id, actor_id);
+          }
+        }
+      }
+
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
@@ -372,9 +395,8 @@ namespace LocalizationConstants {
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
 
     if (!buffer.empty()) {
-      // Need to make this more robust.
 
-      ActorIdSet current_actors = track_traffic.GetPreviousPassingVehicles();
+      ActorIdSet current_actors = track_traffic.GetPassingVehicles(removed_waypoint_id);
       ActorIdSet new_overlapping_actors = track_traffic.GetPassingVehicles(buffer.front()->GetId());
       ActorIdSet actor_set_difference;
 
@@ -390,7 +412,6 @@ namespace LocalizationConstants {
         track_traffic.RemoveOverlappingVehicle(old_actor_id, actor_id);
       }
 
-      track_traffic.RecordPassingVehicles(removed_waypoint_id);
     }
   }
 
@@ -508,11 +529,10 @@ namespace LocalizationConstants {
             }
 
             if (!found_hazard) {
-
               possible_to_lane_change = true;
             }
-          } else {
 
+          } else {
             possible_to_lane_change = true;
           }
 
