@@ -16,9 +16,9 @@ public:
 
   FCarlaExporterCommands()
     : TCommands<FCarlaExporterCommands>(
-      TEXT("CarlaExporter"), 
-      NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"), 
-      NAME_None, 
+      TEXT("CarlaExporter"),
+      NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"),
+      NAME_None,
       FEditorStyle::GetStyleSetName())
   {
   }
