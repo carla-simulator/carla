@@ -15,6 +15,8 @@ namespace carla {
 namespace sensor {
 namespace data {
 
+  /// Measurement produced by a Radar. Consists of an array of RadarDetection.
+  /// A RadarDetection contains 4 floats: velocity, azimuth, altitude and depth
   class RadarMeasurement : public Array<s11n::RadarDetection> {
     using Super = Array<s11n::RadarDetection>;
   protected:
