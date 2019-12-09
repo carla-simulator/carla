@@ -66,7 +66,7 @@ private:
 
   void CalculateCurrentVelocity(const float DeltaTime);
 
-  void SendLineTraces();
+  void SendLineTraces(float DeltaTime);
 
   float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector);
 
@@ -74,7 +74,6 @@ private:
 
   FCollisionQueryParams TraceParams;
 
-  /// Current Radar Velocity
   FVector CurrentVelocity;
 
   /// Used to compute the velocity of the radar
