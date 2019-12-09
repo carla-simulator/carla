@@ -33,16 +33,16 @@ public:
   void Set(const FActorDescription &Description) override;
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
-  void SetFOVAndSteps(float NewFov, int NewSteps);
+  void SetHorizontalFOV(float NewHorizontalFOV);
+
+  UFUNCTION(BlueprintCallable, Category = "Radar")
+  void SetVerticalFOV(float NewVerticalFOV);
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetDistance(float NewDistance);
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
-  void SetAperture(int NewAperture);
-
-  UFUNCTION(BlueprintCallable, Category = "Radar")
-  void SetPointLossPercentage(float NewLossPercentage);
+  void SetPointsPerSecond(int NewPointsPerSecond);
 
 protected:
 
@@ -54,27 +54,19 @@ protected:
   float Distance;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
-  float FOV;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
-  int Aperture;
+  float HorizontalFOV;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
-  int Steps;
+  float VerticalFOV;
 
-  /// Noise threshold [0.0, 1.0] of rays that will be
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Detection")
-  float PointLossPercentage;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
+  int PointsPerSecond;
 
 private:
 
   void CalculateCurrentVelocity(const float DeltaTime);
 
-  void PreCalculateCosSin();
-
-  void PreCalculateLineTraceIncrement();
-
-  void SendLineTraces(float DeltaSeconds);
+  void SendLineTraces();
 
   float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector);
 
@@ -82,18 +74,12 @@ private:
 
   FCollisionQueryParams TraceParams;
 
-  // Current Radar Velocity
+  /// Current Radar Velocity
   FVector CurrentVelocity;
 
   /// Used to compute the velocity of the radar
   FVector PrevLocation;
 
-  FVector2D CosSinIncrement;
-
   UWorld* World;
-
-  float LineTraceIncrement;
-
-  FVector debugCarVelocity = FVector::ZeroVector;
 
 };
