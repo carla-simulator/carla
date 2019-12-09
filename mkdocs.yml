@@ -24,6 +24,7 @@ nav:
   - 'Running without display and selecting GPUs': 'carla_headless.md'
   - 'Running in a Docker': 'carla_docker.md'
   - "How to create and import a new map": 'how_to_make_a_new_map.md'
+  - "How to generate pedestrian navigation": 'how_to_generate_pedestrians_navigation.md'
   - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
   - "Creating standalone asset packages for distribution": 'asset_packages_for_dist.md'
   - "How to record and replay": 'recorder_and_playback.md'
