@@ -9,6 +9,8 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "carla/geom/Math.h"
+
 FActorDefinition ARadar::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeRadarDefinition();
@@ -45,12 +47,12 @@ void  ARadar::SetVerticalFOV(float NewVerticalFOV)
   VerticalFOV = NewVerticalFOV;
 }
 
-void ARadar::SetDistance(float NewDistance)
+void ARadar::SetRange(float NewRange)
 {
-  Distance = NewDistance;
+  Range = NewRange;
 }
 
-void ARadar::SetPointsPerSecond(float NewPointsPerSecond)
+void ARadar::SetPointsPerSecond(int NewPointsPerSecond)
 {
   PointsPerSecond = NewPointsPerSecond;
   RadarData.SetResolution(PointsPerSecond);
@@ -99,13 +101,13 @@ void ARadar::SendLineTraces()
   const FVector TransformZAxis = ActorTransform.GetUnitAxis(EAxis::Z);
 
   // Maximun radar radius in horizontal and vertical direction
-  const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Distance;
-  const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Distance;
+  const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Range;
+  const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Range;
 
-  for (int i = 0; i < NumPoints; i++)
+  for (int i = 0; i < PointsPerSecond; i++)
   {
     float Radius = RandomEngine->GetUniformFloat();
-    float Angle = RandomEngine->GetUniformFloatInRange(0.0f, 2.0f * Math.PI);
+    float Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
     float Sin, Cos;
     FMath::SinCos(&Sin, &Cos, Angle);
     FVector Rotation = TransformRotator.RotateVector({
@@ -113,7 +115,7 @@ void ARadar::SendLineTraces()
       MaxRx * Radius * Cos,
       MaxRy * Radius * Sin
     });
-    FVector EndLocation = Rotation * Distance;
+    FVector EndLocation = Rotation * Range;
 
     bool Hitted = World->LineTraceSingleByChannel(
       OutHit,
@@ -130,7 +132,7 @@ void ARadar::SendLineTraces()
       const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation, ForwardVector);
 
       FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
-        (EndLocation - RadarLocation).GetSafeNormal() * Distance,
+        (EndLocation - RadarLocation).GetSafeNormal() * Range,
         TransformXAxis,
         TransformYAxis,
         TransformZAxis
@@ -144,7 +146,6 @@ void ARadar::SendLineTraces()
       });
     }
   }
-
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector)

@@ -219,6 +219,4 @@ public:
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   static void SetRadar(const FActorDescription &Description, ARadar *Radar);
-
-  /// @}
 };

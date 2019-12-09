@@ -39,7 +39,7 @@ public:
   void SetVerticalFOV(float NewVerticalFOV);
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
-  void SetDistance(float NewDistance);
+  void SetRange(float NewRange);
 
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetPointsPerSecond(int NewPointsPerSecond);
@@ -51,7 +51,7 @@ protected:
   virtual void Tick(float DeltaTime) override;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
-  float Distance;
+  float Range;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
   float HorizontalFOV;
