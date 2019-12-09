@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,12 +11,15 @@
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
+#include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class ASceneCaptureSensor;
+class AShaderBasedSensor;
 struct FLidarDescription;
 
 UCLASS()
@@ -26,6 +29,7 @@ class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 
 public:
 
+  /// @}
   /// ==========================================================================
   /// @name Actor definition validators
   /// ==========================================================================
@@ -72,6 +76,20 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeLidarDefinition(
       const FString &Id,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeGnssDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeGnssDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeIMUDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeIMUDefinition(
       bool &Success,
       FActorDefinition &Definition);
 
@@ -184,8 +202,13 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor *Camera);
+  static void SetCamera(const FActorDescription &Description, AShaderBasedSensor *Camera);
 
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
+
+  static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+
+  static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   /// @}
 };

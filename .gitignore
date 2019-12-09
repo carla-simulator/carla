@@ -2,6 +2,7 @@ Build
 Dist
 Doxygen
 Deprecated/PythonClient/dist
+TrafficManager/build
 Util/Build
 Install
 

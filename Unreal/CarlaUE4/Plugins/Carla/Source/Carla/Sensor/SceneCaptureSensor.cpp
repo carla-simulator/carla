@@ -10,6 +10,7 @@
 #include "Carla/Game/CarlaStatics.h"
 
 #include "Components/DrawFrustumComponent.h"
+#include "Engine/Classes/Engine/Scene.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -389,6 +390,30 @@ float ASceneCaptureSensor::GetWhiteTint() const
   return CaptureComponent2D->PostProcessSettings.WhiteTint;
 }
 
+void ASceneCaptureSensor::SetChromAberrIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.SceneFringeIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetChromAberrIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.SceneFringeIntensity;
+}
+
+void ASceneCaptureSensor::SetChromAberrOffset(float Offset)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset = Offset;
+}
+
+float ASceneCaptureSensor::GetChromAberrOffset() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
@@ -466,13 +491,6 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
-    // Depth of field
-    PostProcessSettings.bOverride_DepthOfFieldMethod = true;
-    PostProcessSettings.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_CircleDOF;
-    PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
-
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
     PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
@@ -508,6 +526,34 @@ namespace SceneCaptureSensor_local_ns {
     // Color Grading
     PostProcessSettings.bOverride_WhiteTemp = true;
     PostProcessSettings.bOverride_WhiteTint = true;
+
+    // Chromatic Aberration
+    PostProcessSettings.bOverride_SceneFringeIntensity = true;
+    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
+
+    // Ambient Occlusion
+    PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
+    PostProcessSettings.AmbientOcclusionIntensity = 0.5f;
+    PostProcessSettings.bOverride_AmbientOcclusionRadius	= true;
+    PostProcessSettings.AmbientOcclusionRadius = 100.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionStaticFraction = true;
+    PostProcessSettings.AmbientOcclusionStaticFraction = 1.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionFadeDistance = true;
+    PostProcessSettings.AmbientOcclusionFadeDistance = 50000.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionPower	= true;
+    PostProcessSettings.AmbientOcclusionPower = 2.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionBias = true;
+    PostProcessSettings.AmbientOcclusionBias	= 3.0f;
+    PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
+    PostProcessSettings.AmbientOcclusionQuality = 100.0f;
+
+    // Bloom
+    PostProcessSettings.bOverride_BloomMethod = true;
+    PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
+    PostProcessSettings.bOverride_BloomIntensity = true;
+    PostProcessSettings.BloomIntensity = 0.3f;
+    PostProcessSettings.bOverride_BloomThreshold = true;
+    PostProcessSettings.BloomThreshold = -1.0f;
   }
 
   // Remove the show flags that might interfere with post-processing effects

@@ -10,6 +10,23 @@
 
 #include "ShaderBasedSensor.generated.h"
 
+/// A shader parameter value to change when the material
+/// instance is available.
+USTRUCT(BlueprintType)
+struct CARLA_API FShaderFloatParameterValue
+{
+  GENERATED_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int ShaderIndex;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FName ParameterName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  float Value = 0.0f;
+};
+
 /// A shader in AShaderBasedSensor.
 USTRUCT(BlueprintType)
 struct CARLA_API FSensorShader
@@ -17,7 +34,7 @@ struct CARLA_API FSensorShader
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UMaterial *PostProcessMaterial = nullptr;
+  UMaterialInstanceDynamic *PostProcessMaterial = nullptr;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float Weight = 1.0f;
@@ -40,12 +57,15 @@ public:
     EnablePostProcessingEffects(false);
   }
 
-  /// Load the UMaterial at the given @a Path and append it to the list of
-  /// shaders with @a Weight.
+  void Set(const FActorDescription &ActorDescription) override;
+
+  /// Load the UMaterialInstanceDynamic at the given @a Path and
+  /// append it to the list of shaders with @a Weight.
   ///
   /// @return Whether it succeeded.
   UFUNCTION(BlueprintCallable)
-  bool LoadPostProcessingMaterial(const FString &Path, float Weight = 1.0f);
+  // bool LoadPostProcessingMaterial(const FString &Path, float Weight = 1.0f);
+  bool AddPostProcessingMaterial(const FString &Path);
 
   /// Add a post-processing shader.
   UFUNCTION(BlueprintCallable)
@@ -54,12 +74,20 @@ public:
     Shaders.Add(Shader);
   }
 
+  void SetFloatShaderParameter(uint8_t ShaderIndex, const FName &ParameterName, float Value);
+
 protected:
 
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
 
 private:
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY()
+  TArray<UMaterial*> MaterialsFound;
+
+  UPROPERTY()
   TArray<FSensorShader> Shaders;
+
+  UPROPERTY()
+  TArray<FShaderFloatParameterValue> FloatShaderParams;
 };

@@ -26,14 +26,15 @@ And for the **props** folder, we will need the following files:
 
 Additionally, we have to create a **JSON file inside the package** that will contain information
 about its assets. The file extension must be `.json`. We recommend the JSON file to have the same
-name as the package name in order to keep it organized. 
+name as the package name in order to keep it organized.
 **Please, keep in mind that the name of this file will used as the name of the distribution package**.
 
 The content of this JSON file should be similar to the following:
 
 ```json
 {
-  "maps": [{
+  "maps": [
+    {
       "name": "MyTown01",
       "source": "./MapToImport01/MapToImport01.fbx",
       "use_carla_materials": true,
@@ -46,7 +47,8 @@ The content of this JSON file should be similar to the following:
       "xodr": "./MapToImport02/MapToImport02.xodr"
     }
   ],
-  "props": [{
+  "props": [
+    {
       "name": "MyProp01",
       "size": "medium",
       "source": "./AssetsToImport/PropToImport01/PropToImport01.fbx",
@@ -100,7 +102,7 @@ name and, if so, it will create separate mesh files inside Unreal for each diffe
     - `Vegetation`
     - `Vehicles`
     - `Walls`
-    
+
     Note that if the tag is not spelled correctly, it will interpret it as `None` value by default.
 
 To sum up, the `Import` folder should have this similar structure:
