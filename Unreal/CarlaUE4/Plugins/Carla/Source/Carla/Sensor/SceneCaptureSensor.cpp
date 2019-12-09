@@ -491,13 +491,6 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
-    // Depth of field
-    PostProcessSettings.bOverride_DepthOfFieldMethod = true;
-    PostProcessSettings.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_CircleDOF;
-    PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
-
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
     PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
@@ -540,7 +533,7 @@ namespace SceneCaptureSensor_local_ns {
 
     // Ambient Occlusion
     PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
-    PostProcessSettings.AmbientOcclusionIntensity = 0.8f;
+    PostProcessSettings.AmbientOcclusionIntensity = 0.5f;
     PostProcessSettings.bOverride_AmbientOcclusionRadius	= true;
     PostProcessSettings.AmbientOcclusionRadius = 100.0f;
     PostProcessSettings.bOverride_AmbientOcclusionStaticFraction = true;
@@ -550,16 +543,15 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_AmbientOcclusionPower	= true;
     PostProcessSettings.AmbientOcclusionPower = 2.0f;
     PostProcessSettings.bOverride_AmbientOcclusionBias = true;
-    PostProcessSettings.AmbientOcclusionBias	= 1.0f;
+    PostProcessSettings.AmbientOcclusionBias	= 3.0f;
     PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
     PostProcessSettings.AmbientOcclusionQuality = 100.0f;
-
 
     // Bloom
     PostProcessSettings.bOverride_BloomMethod = true;
     PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
     PostProcessSettings.bOverride_BloomIntensity = true;
-    PostProcessSettings.BloomIntensity = 1.0f;
+    PostProcessSettings.BloomIntensity = 0.3f;
     PostProcessSettings.bOverride_BloomThreshold = true;
     PostProcessSettings.BloomThreshold = -1.0f;
   }

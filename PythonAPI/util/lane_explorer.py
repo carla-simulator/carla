@@ -44,7 +44,7 @@ def draw_transform(debug, trans, col=carla.Color(255, 0, 0), lt=-1):
         x=trans.location.x + math.cos(pitch_in_rad) * math.cos(yaw_in_rad),
         y=trans.location.y + math.cos(pitch_in_rad) * math.sin(yaw_in_rad),
         z=trans.location.z + math.sin(pitch_in_rad))
-    debug.draw_arrow(trans.location, p1, thickness=0.05, arrow_size=1.0, color=col, life_time=lt)
+    debug.draw_arrow(trans.location, p1, thickness=0.05, arrow_size=0.1, color=col, life_time=lt)
 
 
 def draw_waypoint_union(debug, w0, w1, color=carla.Color(255, 0, 0), lt=5):
@@ -75,6 +75,10 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-i', '--info',
+        action='store_true',
+        help='Show text information')
     argparser.add_argument(
         '-x',
         default=0.0,
@@ -142,13 +146,13 @@ def main():
             potential_w.remove(next_w)
 
             # Render some nice information, notice that you can't see the strings if you are using an editor camera
-            draw_waypoint_info(debug, current_w, trail_life_time)
+            if args.info:
+                draw_waypoint_info(debug, current_w, trail_life_time)
             draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, trail_life_time)
             draw_transform(debug, current_w.transform, white, trail_life_time)
 
             # print the remaining waypoints
             for p in potential_w:
-                debug.draw_string(p.transform.location, str(p.lane_id), False, orange, trail_life_time)
                 draw_waypoint_union(debug, current_w, p, red, trail_life_time)
                 draw_transform(debug, p.transform, white, trail_life_time)
 
