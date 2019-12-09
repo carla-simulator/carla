@@ -414,7 +414,7 @@ an initial geo reference location defined within the OpenDRIVE map definition.
 <h4>Output attributes</h4>
 
 This sensor produces
-[`carla.GnssEvent`](python_api.md#carla.GnssEvent)
+[`carla.GnssMeasurement`](python_api.md#carla.GnssMeasurement)
 objects.
 
 | Sensor data attribute  | Type        | Description |

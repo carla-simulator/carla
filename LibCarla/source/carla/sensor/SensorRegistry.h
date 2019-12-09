@@ -18,6 +18,7 @@
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
+#include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
 #include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
@@ -32,6 +33,7 @@ class AObstacleDetectionSensor;
 class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
+class ARssSensor;
 class FWorldObserver;
 
 namespace carla {
@@ -52,8 +54,9 @@ namespace sensor {
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
-    std::pair<AGnssSensor *, s11n::NoopSerializer>,
+    std::pair<AGnssSensor *, s11n::GnssSerializer>,
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
+    std::pair<ARssSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>
   >;
 
@@ -74,6 +77,7 @@ namespace sensor {
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/LaneInvasionSensor.h"
+#include "Carla/Sensor/RssSensor.h"
 #include "Carla/Sensor/ObstacleDetectionSensor.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
