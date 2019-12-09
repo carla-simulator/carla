@@ -27,8 +27,6 @@ ARadar::ARadar(const FObjectInitializer& ObjectInitializer)
   TraceParams.bTraceComplex = true;
   TraceParams.bReturnPhysicalMaterial = false;
 
-  // TODO: default params
-
 }
 
 void ARadar::Set(const FActorDescription &ActorDescription)
@@ -74,7 +72,7 @@ void ARadar::Tick(const float DeltaTime)
   CalculateCurrentVelocity(DeltaTime);
 
   RadarData.Reset();
-  SendLineTraces();
+  SendLineTraces(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
   DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
@@ -87,7 +85,7 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
   PrevLocation = RadarLocation;
 }
 
-void ARadar::SendLineTraces()
+void ARadar::SendLineTraces(float DeltaTime)
 {
 
   constexpr float TO_METERS = 1e-2;
@@ -103,21 +101,23 @@ void ARadar::SendLineTraces()
   // Maximun radar radius in horizontal and vertical direction
   const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Range;
   const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Range;
+  const int NumPoints = (int)(PointsPerSecond * DeltaTime);
 
-  for (int i = 0; i < PointsPerSecond; i++)
+  for (int i = 0; i < NumPoints; i++)
   {
-    float Radius = RandomEngine->GetUniformFloat();
-    float Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
+    const float Radius = RandomEngine->GetUniformFloat();
+    const float Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
+
     float Sin, Cos;
     FMath::SinCos(&Sin, &Cos, Angle);
-    FVector Rotation = TransformRotator.RotateVector({
-      0.0f,
+
+    const FVector EndLocation = RadarLocation + TransformRotator.RotateVector({
+      Range,
       MaxRx * Radius * Cos,
       MaxRy * Radius * Sin
     });
-    FVector EndLocation = Rotation * Range;
 
-    bool Hitted = World->LineTraceSingleByChannel(
+    const bool Hitted = World->LineTraceSingleByChannel(
       OutHit,
       RadarLocation,
       EndLocation,
@@ -126,12 +126,12 @@ void ARadar::SendLineTraces()
       FCollisionResponseParams::DefaultResponseParam
     );
 
-    TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
+    const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
     if (Hitted && HittedActor.Get()) {
 
       const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation, ForwardVector);
 
-      FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
+      const FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
         (EndLocation - RadarLocation).GetSafeNormal() * Range,
         TransformXAxis,
         TransformYAxis,
@@ -152,10 +152,10 @@ float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector&
 {
   constexpr float TO_METERS = 1e-2;
 
-  TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
-  FVector TargetVelocity = HittedActor->GetVelocity();
-  FVector TargetLocation = OutHit.ImpactPoint;
-  FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();
+  const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
+  const FVector TargetVelocity = HittedActor->GetVelocity();
+  const FVector TargetLocation = OutHit.ImpactPoint;
+  const FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();
   const FVector DeltaVelocity = (TargetVelocity - CurrentVelocity);
   const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, ForwardVector);
 
