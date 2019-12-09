@@ -96,8 +96,6 @@ namespace CollisionStageConstants {
       Actor ego_actor = data.actor;
       ActorId ego_actor_id = ego_actor->GetId();
 
-      // DrawBoundary(GetGeodesicBoundary(ego_actor));
-
       // Retrieve actors around the path of the ego vehicle.
       std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
 
@@ -120,12 +118,6 @@ namespace CollisionStageConstants {
               (cg::Math::DistanceSquared(ego_location, other_location)
               < std::pow(MAX_COLLISION_RADIUS, 2)) &&
               (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
-
-            // debug_helper.DrawLine(
-            //   ego_location + cg::Location(0, 0, 2),
-            //   other_location + cg::Location(0, 0, 2),
-            //   0.2f, {255u, 0u, 0u}, 0.1f
-            // );
 
             if (parameters.GetCollisionDetection(ego_actor, actor) &&
                 NegotiateCollision(ego_actor, actor)) {
@@ -205,9 +197,7 @@ namespace CollisionStageConstants {
     auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
 
     if (waypoint_buffer.front()->CheckJunction() &&
-        reference_vehicle_ptr->GetTrafficLightState() != TLS::Red &&
-        other_buffer.front()->CheckJunction() &&
-        other_vehicle_ptr->GetTrafficLightState() != TLS::Red) {
+        other_buffer.front()->CheckJunction()) {
 
       Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
       Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
@@ -245,6 +235,7 @@ namespace CollisionStageConstants {
 
         hazard = true;
       }
+
     } else if (!waypoint_buffer.front()->CheckJunction()) {
 
       float reference_vehicle_length = reference_vehicle_ptr->GetBoundingBox().extent.x;
@@ -260,14 +251,6 @@ namespace CollisionStageConstants {
         hazard = true;
       }
     }
-
-    // if (hazard) {
-    //   debug_helper.DrawArrow(
-    //     reference_location + cg::Location(0, 0, 2),
-    //     other_location + cg::Location(0, 0, 2), 0.2f,
-    //     0.2f, {255u, 0u, 0u}, 0.1f
-    //   );
-    // }
 
     return hazard;
   }
