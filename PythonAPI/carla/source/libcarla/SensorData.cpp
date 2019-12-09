@@ -281,11 +281,14 @@ void export_sensor_data() {
 
   class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::RadarMeasurement>)
-    .def("get_point_count", &csd::RadarMeasurement::GetDetectionAmount)
+    .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount)
     .def("__len__", &csd::RadarMeasurement::size)
     .def("__iter__", iterator<csd::RadarMeasurement>())
     .def("__getitem__", +[](const csd::RadarMeasurement &self, size_t pos) -> css::RadarDetection {
       return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::RadarMeasurement &self, size_t pos, const css::RadarDetection &detection) {
+      self.at(pos) = detection;
     })
     .def(self_ns::str(self_ns::self))
   ;

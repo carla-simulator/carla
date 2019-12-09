@@ -1,6 +1,7 @@
 ## Latest
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added new sensor: Inertial measurement unit (IMU)
+  * Added new sensor: Radar
   * Moved GNSS sensor from client to server side
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
@@ -9,6 +10,7 @@
     - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
+    - Added `carla.RadarMeasurement` and `carla.RadarDetection`
     - GNSS data can now be obtained with noise
     - IMU data can now be obtained with noise
   * Updated manual_control.py with a lens disortion effect example
