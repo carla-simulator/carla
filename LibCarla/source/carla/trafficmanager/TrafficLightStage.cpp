@@ -50,7 +50,6 @@ namespace traffic_manager {
 
       auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
-      //DrawLight(traffic_light_state, ego_actor);
 
       // We determine to stop if the current position of the vehicle is not a
       // junction,
@@ -62,10 +61,11 @@ namespace traffic_manager {
           traffic_light_state != TLS::Green) {
 
         traffic_light_hazard = true;
-        // DrawLight(traffic_light_state, ego_vehicle);
       }
       // Handle entry negotiation at non-signalised junction.
-      else if (!ego_vehicle->IsAtTrafficLight() &&
+      else if (!closest_waypoint->CheckJunction() &&
+               look_ahead_point->CheckJunction() &&
+               !ego_vehicle->IsAtTrafficLight() &&
                traffic_light_state != TLS::Green) {
 
         std::lock_guard<std::mutex> lock(no_signal_negotiation_mutex);
