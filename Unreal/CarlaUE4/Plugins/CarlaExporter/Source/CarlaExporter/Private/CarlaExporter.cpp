@@ -30,29 +30,29 @@ static const FName CarlaExporterTabName("CarlaExporter");
 void FCarlaExporterModule::StartupModule()
 {
   // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-  
+
   FCarlaExporterCommands::Register();
-  
+
   PluginCommands = MakeShareable(new FUICommandList);
 
   PluginCommands->MapAction(
     FCarlaExporterCommands::Get().PluginActionExportAll,
     FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClicked),
     FCanExecuteAction());
-    
+
   FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-  
+
   {
     TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
     MenuExtender->AddMenuExtension("FileActors", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
 
     LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
   }
-  
+
   {
     TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
     ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddToolbarExtension));
-    
+
     LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
   }
 }
@@ -93,7 +93,7 @@ void FCarlaExporterModule::PluginButtonClicked()
   // define the rounds
   int rounds;
   rounds = 5;
-  
+
   int offset = 1;
   std::string type;
   for (int round = 0; round < rounds; ++round)
@@ -102,7 +102,7 @@ void FCarlaExporterModule::PluginButtonClicked()
     {
       AActor* TempActor = Cast<AActor>(SelectedObject);
       if (!TempActor) continue;
-      
+
       // check the TAG (NoExport)
       if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
@@ -129,13 +129,13 @@ void FCarlaExporterModule::PluginButtonClicked()
       // check to export in this round or not
       if (rounds > 1)
       {
-        if (type == "block" && round != 0) 
+        if (type == "block" && round != 0)
           continue;
-        else if (type == "road" && round != 1) 
+        else if (type == "road" && round != 1)
           continue;
-        else if (type == "grass" && round != 2) 
+        else if (type == "grass" && round != 2)
           continue;
-        else if (type == "sidewalk" && round != 3) 
+        else if (type == "sidewalk" && round != 3)
           continue;
         else if (type == "crosswalk" && round != 4)
           continue;
@@ -172,13 +172,13 @@ void FCarlaExporterModule::PluginButtonClicked()
               const PxVec3* convexVerts = mesh->getVertices();
               const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
 
-              // write all vertex 
+              // write all vertex
               for(PxU32 j=0;j<nbVerts;j++)
               {
                 const PxVec3 &v = convexVerts[j];
-                FVector vec(v.x, v.y, v.z); 
+                FVector vec(v.x, v.y, v.z);
                 FVector vec3 = InstanceTransform.TransformVector(vec);
-                FVector world(vec3.X, vec3.Y, vec3.Z); 
+                FVector world(vec3.X, vec3.Y, vec3.Z);
 
                 f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
               }
@@ -217,13 +217,13 @@ void FCarlaExporterModule::PluginButtonClicked()
             const PxVec3* convexVerts = mesh->getVertices();
             const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
 
-            // write all vertex 
+            // write all vertex
             for(PxU32 j=0;j<nbVerts;j++)
             {
               const PxVec3 &v = convexVerts[j];
-              FVector vec(v.x, v.y, v.z); 
+              FVector vec(v.x, v.y, v.z);
               FVector vec3 = CompTransform.TransformVector(vec);
-              FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
+              FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
 
               f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
             }
@@ -256,5 +256,5 @@ void FCarlaExporterModule::AddToolbarExtension(FToolBarBuilder& Builder)
 }
 
 #undef LOCTEXT_NAMESPACE
-  
+
 IMPLEMENT_MODULE(FCarlaExporterModule, CarlaExporter)
