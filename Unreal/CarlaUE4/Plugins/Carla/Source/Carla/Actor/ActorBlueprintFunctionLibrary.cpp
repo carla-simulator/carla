@@ -744,37 +744,35 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
   AddVariationsForSensor(Definition);
 
-  FActorVariation FOV;
-  FOV.Id = TEXT("fov");
-  FOV.Type = EActorAttributeType::Float;
-  FOV.RecommendedValues = { TEXT("30") };
-  FOV.bRestrictToRecommended = false;
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("30") };
+  HorizontalFOV.bRestrictToRecommended = false;
 
-  FActorVariation Steps;
-  Steps.Id = TEXT("steps");
-  Steps.Type = EActorAttributeType::Int;
-  Steps.RecommendedValues = { TEXT("10") };
-  Steps.bRestrictToRecommended = false;
+  FActorVariation VerticalFOV;
+  VerticalFOV.Id = TEXT("vertical_fov");
+  VerticalFOV.Type = EActorAttributeType::Float;
+  VerticalFOV.RecommendedValues = { TEXT("30") };
+  VerticalFOV.bRestrictToRecommended = false;
 
-  FActorVariation Far;
-  Far.Id = TEXT("far");
-  Far.Type = EActorAttributeType::Float;
-  Far.RecommendedValues = { TEXT("100") };
-  Far.bRestrictToRecommended = false;
+  FActorVariation Range;
+  Range.Id = TEXT("range");
+  Range.Type = EActorAttributeType::Float;
+  Range.RecommendedValues = { TEXT("100") };
+  Range.bRestrictToRecommended = false;
 
-  FActorVariation Aperture;
-  Aperture.Id = TEXT("aperture");
-  Aperture.Type = EActorAttributeType::Int;
-  Aperture.RecommendedValues = { TEXT("10") };
-  Aperture.bRestrictToRecommended = false;
+  FActorVariation PointsPerSecond;
+  PointsPerSecond.Id = TEXT("points_per_second");
+  PointsPerSecond.Type = EActorAttributeType::Int;
+  PointsPerSecond.RecommendedValues = { TEXT("1500") };
+  PointsPerSecond.bRestrictToRecommended = false;
 
-  FActorVariation PointLossPercentage;
-  PointLossPercentage.Id = TEXT("point_loss_percentage");
-  PointLossPercentage.Type = EActorAttributeType::Float;
-  PointLossPercentage.RecommendedValues = { TEXT("0.95") };
-  PointLossPercentage.bRestrictToRecommended = false;
-
-  Definition.Variations.Append({FOV, Steps, Far, Aperture, PointLossPercentage});
+  Definition.Variations.Append({
+    HorizontalFOV,
+    VerticalFOV,
+    Range,
+    PointsPerSecond});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1493,15 +1491,14 @@ void UActorBlueprintFunctionLibrary::SetRadar(
   CARLA_ABFL_CHECK_ACTOR(Radar);
   constexpr float TO_CENTIMETERS = 1e2;
 
-  Radar->SetFOVAndSteps(
-    RetrieveActorAttributeToFloat("fov", Description.Variations, 30.0f),
-    RetrieveActorAttributeToInt("steps", Description.Variations, 10));
-  Radar->SetDistance(
-    RetrieveActorAttributeToFloat("far", Description.Variations, 100.0f) * TO_CENTIMETERS);
-  Radar->SetAperture(
-    RetrieveActorAttributeToInt("aperture", Description.Variations, 10));
-  Radar->SetPointLossPercentage(
-    RetrieveActorAttributeToFloat("point_loss_percentage", Description.Variations, 0.95));
+  Radar->SetHorizontalFOV(
+    RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+  Radar->SetVerticalFOV(
+    RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+  Radar->SetRange(
+    RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+  Radar->SetPointsPerSecond(
+    RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
