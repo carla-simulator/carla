@@ -543,7 +543,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_AmbientOcclusionPower	= true;
     PostProcessSettings.AmbientOcclusionPower = 2.0f;
     PostProcessSettings.bOverride_AmbientOcclusionBias = true;
-    PostProcessSettings.AmbientOcclusionBias	= 1.0f;
+    PostProcessSettings.AmbientOcclusionBias	= 3.0f;
     PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
     PostProcessSettings.AmbientOcclusionQuality = 100.0f;
 
