@@ -47,6 +47,7 @@ namespace LocalizationConstants {
     traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
     // Initializing the registered actors container state.
     registered_actors_state = -1;
+
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -204,11 +205,11 @@ namespace LocalizationConstants {
 
           cg::Location buffer_front_loc = waypoint_buffer.front()->GetLocation();
           cg::Location buffer_mid_lock = waypoint_buffer.at(
-            static_cast<unsigned long>(std::floor(waypoint_buffer.size()/2)))->GetLocation();
+            static_cast<uint>(std::floor(waypoint_buffer.size()/2)))->GetLocation();
           cg::Location buffer_back_loc = waypoint_buffer.back()->GetLocation();
 
           double squared_buffer_length = std::pow(buffer_front_loc.Distance(buffer_mid_lock)
-                                        + buffer_mid_lock.Distance(buffer_back_loc), 2);
+                                         + buffer_mid_lock.Distance(buffer_back_loc), 2);
 
           if (cg::Math::DistanceSquared(vehicle_location, tracking_location) > squared_buffer_length) {
             track_traffic.RemoveOverlappingVehicle(actor_id, tracking_id);
@@ -373,7 +374,7 @@ namespace LocalizationConstants {
     buffer.push_back(waypoint);
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
 
-    ActorIdSet current_actors = track_traffic.GetPassingVehicles(actor_id);
+    ActorIdSet current_actors = track_traffic.GetOverlappingVehicles(actor_id);
     ActorIdSet new_overlapping_actors = track_traffic.GetPassingVehicles(waypoint_id);
     ActorIdSet actor_set_difference;
 
@@ -449,11 +450,6 @@ namespace LocalizationConstants {
         Buffer& other_buffer = buffer_list->at(vehicle_id_to_index.at(other_vehicle_id));
         SimpleWaypointPtr& other_current_waypoint = other_buffer.front();
         cg::Location other_location = other_current_waypoint->GetLocation();
-
-        // debug_helper.DrawArrow(
-        //   vehicle_location + cg::Location(0,0,4),
-        //   other_location + cg::Location(0,0,4),
-        //   0.2f, 0.2f, {0u, 0u, 255u}, 0.1f);
 
         bool distant_lane_availability = false;
         auto other_neighbouring_lanes = {other_current_waypoint->GetLeftWaypoint(),
@@ -531,9 +527,6 @@ namespace LocalizationConstants {
         }
       }
     }
-
-    // debug_helper.DrawString(vehicle_location + cg::Location(0,0,2),
-    //                         std::to_string(need_to_change_lane), false, {255u, 0u, 0u}, 0.1f);
 
     if (need_to_change_lane && possible_to_lane_change) {
       auto starting_point = change_over_point;
