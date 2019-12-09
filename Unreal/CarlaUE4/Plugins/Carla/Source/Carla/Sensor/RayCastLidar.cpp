@@ -6,8 +6,11 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/geom/Math.h"
+#include <compiler/enable-ue4-macros.h>
 
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
@@ -84,7 +87,8 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
 
   check(ChannelCount == LaserAngles.Num());
 
-  const float CurrentHorizontalAngle = LidarMeasurement.GetHorizontalAngle();
+  const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
+      LidarMeasurement.GetHorizontalAngle());
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
@@ -103,7 +107,8 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
     }
   }
 
-  const float HorizontalAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f);
+  const float HorizontalAngle = carla::geom::Math::ToRadians(
+      std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 

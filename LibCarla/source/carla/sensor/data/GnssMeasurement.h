@@ -8,23 +8,34 @@
 #include "carla/geom/GeoLocation.h"
 #include "carla/sensor/SensorData.h"
 
+#include "carla/sensor/s11n/GnssSerializer.h"
+
 namespace carla {
 namespace sensor {
 namespace data {
 
-  /// A change of GNSS data.
-  class GnssEvent : public SensorData {
+  /// A change of GNSS Measurement.
+  class GnssMeasurement : public SensorData {
+
+    using Super = SensorData;
+
+  protected:
+
+    using Serializer = s11n::GnssSerializer;
+
+    friend Serializer;
+
+    explicit GnssMeasurement(const RawData &&data)
+      : Super(data){
+
+      geom::GeoLocation gnss_data = Serializer::DeserializeRawData(data);
+      _geo_location = gnss_data;
+
+    }
+
   public:
 
-    explicit GnssEvent(
-        size_t frame,
-        double timestamp,
-        const rpc::Transform &sensor_transform,
-        const geom::GeoLocation &geo_location)
-      : SensorData(frame, timestamp, sensor_transform),
-        _geo_location(geo_location) {}
-
-    const geom::GeoLocation &GetGeoLocation() const {
+    geom::GeoLocation GetGeoLocation() const {
       return _geo_location;
     }
 
@@ -43,6 +54,7 @@ namespace data {
   private:
 
     geom::GeoLocation _geo_location;
+
   };
 
 } // namespace data

@@ -1317,19 +1317,35 @@ Return number of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this [ca
 
 ---
 
-## carla.GnssEvent<a name="carla.GnssEvent"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
+## carla.GnssMeasurement<a name="carla.GnssMeasurement"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
 Gnss sensor data.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.GnssEvent.latitude"></a>**<font color="#f8805a">latitude</font>** (_float_)  
+- <a name="carla.GnssMeasurement.latitude"></a>**<font color="#f8805a">latitude</font>** (_float_)  
 North/South value of a point on the map.  
-- <a name="carla.GnssEvent.longitude"></a>**<font color="#f8805a">longitude</font>** (_float_)  
+- <a name="carla.GnssMeasurement.longitude"></a>**<font color="#f8805a">longitude</font>** (_float_)  
 West/East value of a point on the map.  
-- <a name="carla.GnssEvent.altitude"></a>**<font color="#f8805a">altitude</font>** (_float_)  
+- <a name="carla.GnssMeasurement.altitude"></a>**<font color="#f8805a">altitude</font>** (_float_)  
 Height regarding ground level.  
 
 <h3>Methods</h3>
-- <a name="carla.GnssEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.GnssMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.IMUMeasurement<a name="carla.IMUMeasurement"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
+IMU sensor data regarding the sensor World's transformation.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Measures linear acceleration in `m/s^2`.  
+- <a name="carla.IMUMeasurement.gyroscope"></a>**<font color="#f8805a">gyroscope</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Measures angular velocity in `rad/sec`.  
+- <a name="carla.IMUMeasurement.compass"></a>**<font color="#f8805a">compass</font>** (_float_)  
+Orientation with respect to the North (`(0.0, -1.0, 0.0)` in Unreal) in radians.  
+
+<h3>Methods</h3>
+- <a name="carla.IMUMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1387,7 +1403,7 @@ Lidar sensor measurement data.
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle that the Lidar has rotated at the time of the measurement.  
+Horizontal angle that the Lidar has rotated at the time of the measurement (in radians).  
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers.  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  

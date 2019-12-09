@@ -14,7 +14,7 @@ namespace pointcloud {
   void PointCloudIO::WriteHeader(std::ostream &out, size_t number_of_points) {
     out << "ply\n"
            "format ascii 1.0\n"
-           "element vertex " << number_of_points << "\n"
+           "element vertex " << std::to_string(number_of_points) << "\n"
            "property float32 x\n"
            "property float32 y\n"
            "property float32 z\n"

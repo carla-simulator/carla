@@ -6,7 +6,6 @@
 
 #include <carla/PythonUtil.h>
 #include <carla/client/ClientSideSensor.h>
-#include <carla/client/GnssSensor.h>
 #include <carla/client/LaneInvasionSensor.h>
 #include <carla/client/Sensor.h>
 #include <carla/client/ServerSideSensor.h>
@@ -41,8 +40,4 @@ void export_sensor() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::GnssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::GnssSensor>>
-      ("GnssSensor", no_init)
-    .def(self_ns::str(self_ns::self))
-  ;
 }

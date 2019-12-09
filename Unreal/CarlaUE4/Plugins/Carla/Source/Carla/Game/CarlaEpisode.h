@@ -18,6 +18,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
+#include <carla/geom/GeoLocation.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/streaming/Server.h>
@@ -104,6 +105,12 @@ public:
   /// Return the list of recommended spawn points for vehicles.
   UFUNCTION(BlueprintCallable)
   TArray<FTransform> GetRecommendedSpawnPoints() const;
+
+  /// Return the GeoLocation point of the map loaded
+  const carla::geom::GeoLocation &GetGeoReference() const
+  {
+    return MapGeoReference;
+  }
 
   // ===========================================================================
   // -- Retrieve special actors ------------------------------------------------
@@ -313,4 +320,6 @@ private:
   AWeather *Weather = nullptr;
 
   ACarlaRecorder *Recorder = nullptr;
+
+  carla::geom::GeoLocation MapGeoReference;
 };
