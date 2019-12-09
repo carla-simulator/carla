@@ -29,232 +29,232 @@ static const FName CarlaExporterTabName("CarlaExporter");
 
 void FCarlaExporterModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	
-	FCarlaExporterCommands::Register();
-	
-	PluginCommands = MakeShareable(new FUICommandList);
+  // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+  
+  FCarlaExporterCommands::Register();
+  
+  PluginCommands = MakeShareable(new FUICommandList);
 
-	PluginCommands->MapAction(
-		FCarlaExporterCommands::Get().PluginActionExportAll,
-		FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClicked),
-		FCanExecuteAction());
-		
-	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-	
-	{
-		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension("FileActors", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
+  PluginCommands->MapAction(
+    FCarlaExporterCommands::Get().PluginActionExportAll,
+    FExecuteAction::CreateRaw(this, &FCarlaExporterModule::PluginButtonClicked),
+    FCanExecuteAction());
+    
+  FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+  
+  {
+    TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
+    MenuExtender->AddMenuExtension("FileActors", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
 
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
-	}
-	
-	{
-		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddToolbarExtension));
-		
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
-	}
+    LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
+  }
+  
+  {
+    TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+    ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddToolbarExtension));
+    
+    LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
+  }
 }
 
 void FCarlaExporterModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-	FCarlaExporterCommands::Unregister();
+  // This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
+  // we call this function before unloading the module.
+  FCarlaExporterCommands::Unregister();
 }
 
 void FCarlaExporterModule::PluginButtonClicked()
 {
-	UWorld* World = GEditor->GetEditorWorldContext().World();
-	if (!World) return;
+  UWorld* World = GEditor->GetEditorWorldContext().World();
+  if (!World) return;
 
-	// get all selected objects (if any)
-	TArray<UObject*> BP_Actors;
-	USelection* CurrentSelection = GEditor->GetSelectedActors();
-	int32 SelectionNum = CurrentSelection->GetSelectedObjects(AActor::StaticClass(), BP_Actors);
+  // get all selected objects (if any)
+  TArray<UObject*> BP_Actors;
+  USelection* CurrentSelection = GEditor->GetSelectedActors();
+  int32 SelectionNum = CurrentSelection->GetSelectedObjects(AActor::StaticClass(), BP_Actors);
 
-	// if no selection, then get all objects
-	if (SelectionNum == 0)
-	{
-		// for (TObjectIterator<UStaticMeshComponent> it; it; ++it)
-		for (TActorIterator<AActor> it(World); it; ++it)
-			BP_Actors.Add(Cast<UObject>(*it));
-	}
+  // if no selection, then get all objects
+  if (SelectionNum == 0)
+  {
+    // for (TObjectIterator<UStaticMeshComponent> it; it; ++it)
+    for (TActorIterator<AActor> it(World); it; ++it)
+      BP_Actors.Add(Cast<UObject>(*it));
+  }
 
-	// get target path
-	FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
-	// build final name
-	std::ostringstream name;
-	name << TCHAR_TO_UTF8(*Path) << "/" << TCHAR_TO_UTF8(*World->GetMapName()) << ".obj";
-	// create the file
-	std::ofstream f(name.str());
+  // get target path
+  FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
+  // build final name
+  std::ostringstream name;
+  name << TCHAR_TO_UTF8(*Path) << "/" << TCHAR_TO_UTF8(*World->GetMapName()) << ".obj";
+  // create the file
+  std::ofstream f(name.str());
 
-	// define the rounds
-	int rounds;
-	rounds = 5;
-	
-	int offset = 1;
-	std::string type;
-	for (int round = 0; round < rounds; ++round)
-	{
-		for (UObject* SelectedObject : BP_Actors)
-		{
-			AActor* TempActor = Cast<AActor>(SelectedObject);
-			if (!TempActor) continue;
-			
-			// check the TAG (NoExport)
-			if (TempActor->ActorHasTag(FName("NoExport"))) continue;
+  // define the rounds
+  int rounds;
+  rounds = 5;
+  
+  int offset = 1;
+  std::string type;
+  for (int round = 0; round < rounds; ++round)
+  {
+    for (UObject* SelectedObject : BP_Actors)
+    {
+      AActor* TempActor = Cast<AActor>(SelectedObject);
+      if (!TempActor) continue;
+      
+      // check the TAG (NoExport)
+      if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
-			FString ActorName = TempActor->GetName();
+      FString ActorName = TempActor->GetName();
 
-			// check type by nomenclature
-			if (ActorName.StartsWith("Road_Road"))
-				type = "road";
-			else if (ActorName.StartsWith("Road_Marking"))
-				type = "road";
-			else if (ActorName.StartsWith("Road_Curb"))
-				type = "road";
-			else if (ActorName.StartsWith("Road_Gutter"))
-				type = "road";
-			else if (ActorName.StartsWith("Road_Sidewalk"))
-				type = "sidewalk";
-			else if (ActorName.StartsWith("Road_Crosswalk"))
-				type = "crosswalk";
-			else if (ActorName.StartsWith("Road_Grass"))
-				type = "grass";
-			else
-				type = "block";
+      // check type by nomenclature
+      if (ActorName.StartsWith("Road_Road"))
+        type = "road";
+      else if (ActorName.StartsWith("Road_Marking"))
+        type = "road";
+      else if (ActorName.StartsWith("Road_Curb"))
+        type = "road";
+      else if (ActorName.StartsWith("Road_Gutter"))
+        type = "road";
+      else if (ActorName.StartsWith("Road_Sidewalk"))
+        type = "sidewalk";
+      else if (ActorName.StartsWith("Road_Crosswalk"))
+        type = "crosswalk";
+      else if (ActorName.StartsWith("Road_Grass"))
+        type = "grass";
+      else
+        type = "block";
 
-			// check to export in this round or not
-			if (rounds > 1)
-			{
-				if (type == "block" && round != 0) 
-					continue;
-				else if (type == "road" && round != 1) 
-					continue;
-				else if (type == "grass" && round != 2) 
-					continue;
-				else if (type == "sidewalk" && round != 3) 
-					continue;
-				else if (type == "crosswalk" && round != 4)
-					continue;
-			}
+      // check to export in this round or not
+      if (rounds > 1)
+      {
+        if (type == "block" && round != 0) 
+          continue;
+        else if (type == "road" && round != 1) 
+          continue;
+        else if (type == "grass" && round != 2) 
+          continue;
+        else if (type == "sidewalk" && round != 3) 
+          continue;
+        else if (type == "crosswalk" && round != 4)
+          continue;
+      }
 
-			f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
+      f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
 
-			TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-			for (auto *Component : Components)
-			{
+      TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+      for (auto *Component : Components)
+      {
 
-				// check if is an instanced static mesh
-				UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
-				if (comp2)
-				{
-					UBodySetup *body = comp2->GetBodySetup();
-					if (!body) continue;
+        // check if is an instanced static mesh
+        UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
+        if (comp2)
+        {
+          UBodySetup *body = comp2->GetBodySetup();
+          if (!body) continue;
 
-					for (int i=0; i<comp2->GetInstanceCount(); ++i)
-					{
-						f << "g instance_" << i << "\n";
+          for (int i=0; i<comp2->GetInstanceCount(); ++i)
+          {
+            f << "g instance_" << i << "\n";
 
-						// get the component position and transform
-						FTransform InstanceTransform;
-						comp2->GetInstanceTransform(i, InstanceTransform, true);
-						FVector InstanceLocation = InstanceTransform.GetTranslation();
+            // get the component position and transform
+            FTransform InstanceTransform;
+            comp2->GetInstanceTransform(i, InstanceTransform, true);
+            FVector InstanceLocation = InstanceTransform.GetTranslation();
 
 
-						// through all convex elements
-						for (const auto &mesh : body->TriMeshes)
-						{
-							// get data
-							PxU32 nbVerts = mesh->getNbVertices();
-							const PxVec3* convexVerts = mesh->getVertices();
-							const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
+            // through all convex elements
+            for (const auto &mesh : body->TriMeshes)
+            {
+              // get data
+              PxU32 nbVerts = mesh->getNbVertices();
+              const PxVec3* convexVerts = mesh->getVertices();
+              const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
 
-							// write all vertex 
-							for(PxU32 j=0;j<nbVerts;j++)
-							{
-								const PxVec3 &v = convexVerts[j];
-								FVector vec(v.x, v.y, v.z); 
-								FVector vec3 = InstanceTransform.TransformVector(vec);
-								FVector world(vec3.X, vec3.Y, vec3.Z); 
+              // write all vertex 
+              for(PxU32 j=0;j<nbVerts;j++)
+              {
+                const PxVec3 &v = convexVerts[j];
+                FVector vec(v.x, v.y, v.z); 
+                FVector vec3 = InstanceTransform.TransformVector(vec);
+                FVector world(vec3.X, vec3.Y, vec3.Z); 
 
-								f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
-							}
-							// write all faces
-							f << "usemtl " << type << "\n";
-							for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
-							{
-								// inverse order for left hand
-								f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
-							}
-							offset += nbVerts;
-						}
-					}
-				}
-				else
-				{
-					// try as static mesh
-					UStaticMeshComponent* comp = Cast<UStaticMeshComponent>(Component);
-					if (!comp) continue;
+                f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
+              }
+              // write all faces
+              f << "usemtl " << type << "\n";
+              for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
+              {
+                // inverse order for left hand
+                f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
+              }
+              offset += nbVerts;
+            }
+          }
+        }
+        else
+        {
+          // try as static mesh
+          UStaticMeshComponent* comp = Cast<UStaticMeshComponent>(Component);
+          if (!comp) continue;
 
-					UBodySetup *body = comp->GetBodySetup();
-					if (!body)
-						continue;
+          UBodySetup *body = comp->GetBodySetup();
+          if (!body)
+            continue;
 
-					f << "g " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
+          f << "g " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
 
-					// get the component position and transform
-					FTransform CompTransform = comp->GetComponentTransform();
-					FVector CompLocation = CompTransform.GetTranslation();
+          // get the component position and transform
+          FTransform CompTransform = comp->GetComponentTransform();
+          FVector CompLocation = CompTransform.GetTranslation();
 
-					// through all convex elements
-					for (const auto &mesh : body->TriMeshes)
-					{
-						// get data
-						PxU32 nbVerts = mesh->getNbVertices();
-						const PxVec3* convexVerts = mesh->getVertices();
-						const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
+          // through all convex elements
+          for (const auto &mesh : body->TriMeshes)
+          {
+            // get data
+            PxU32 nbVerts = mesh->getNbVertices();
+            const PxVec3* convexVerts = mesh->getVertices();
+            const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
 
-						// write all vertex 
-						for(PxU32 j=0;j<nbVerts;j++)
-						{
-							const PxVec3 &v = convexVerts[j];
-							FVector vec(v.x, v.y, v.z); 
-							FVector vec3 = CompTransform.TransformVector(vec);
-							FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
+            // write all vertex 
+            for(PxU32 j=0;j<nbVerts;j++)
+            {
+              const PxVec3 &v = convexVerts[j];
+              FVector vec(v.x, v.y, v.z); 
+              FVector vec3 = CompTransform.TransformVector(vec);
+              FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z); 
 
-							f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
-						}
-						// write all faces
-						f << "usemtl " << type << "\n";
-						int k = 0;
-						for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
-						{
-							// inverse order for left hand
-							f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
-							k += 3;
-						}
-						offset += nbVerts;
-					}
-				}
-			}
-		}
-	}
-	f.close();
+              f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
+            }
+            // write all faces
+            f << "usemtl " << type << "\n";
+            int k = 0;
+            for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
+            {
+              // inverse order for left hand
+              f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
+              k += 3;
+            }
+            offset += nbVerts;
+          }
+        }
+      }
+    }
+  }
+  f.close();
 }
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
 {
-	Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAll);
+  Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAll);
 }
 
 void FCarlaExporterModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
-	//Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginAction);
+  //Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginAction);
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+  
 IMPLEMENT_MODULE(FCarlaExporterModule, CarlaExporter)

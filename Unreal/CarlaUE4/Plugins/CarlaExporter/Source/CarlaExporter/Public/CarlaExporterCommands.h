@@ -14,18 +14,18 @@ class FCarlaExporterCommands : public TCommands<FCarlaExporterCommands>
 {
 public:
 
-	FCarlaExporterCommands()
-		: TCommands<FCarlaExporterCommands>(
-			TEXT("CarlaExporter"), 
-			NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"), 
-			NAME_None, 
-			FEditorStyle::GetStyleSetName())
-	{
-	}
+  FCarlaExporterCommands()
+    : TCommands<FCarlaExporterCommands>(
+      TEXT("CarlaExporter"), 
+      NSLOCTEXT("Contexts", "CarlaExporter", "CarlaExporter Plugin"), 
+      NAME_None, 
+      FEditorStyle::GetStyleSetName())
+  {
+  }
 
-	// TCommands<> interface
-	virtual void RegisterCommands() override;
+  // TCommands<> interface
+  virtual void RegisterCommands() override;
 
 public:
-	TSharedPtr< FUICommandInfo > PluginActionExportAll;
+  TSharedPtr< FUICommandInfo > PluginActionExportAll;
 };
