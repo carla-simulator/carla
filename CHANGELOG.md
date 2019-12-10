@@ -23,6 +23,7 @@
   * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
 
