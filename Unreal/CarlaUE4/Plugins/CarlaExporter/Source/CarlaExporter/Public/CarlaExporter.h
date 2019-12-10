@@ -17,16 +17,15 @@ class FCarlaExporterModule : public IModuleInterface
 {
 public:
 
-  /** IModuleInterface implementation */
+  /// IModuleInterface implementation
   virtual void StartupModule() override;
   virtual void ShutdownModule() override;
 
-  /** This function will be bound to Command. */
+  /// This function will be bound to Command.
   void PluginButtonClicked();
 
 private:
 
-  void AddToolbarExtension(FToolBarBuilder& Builder);
   void AddMenuExtension(FMenuBuilder& Builder);
 
 private:
