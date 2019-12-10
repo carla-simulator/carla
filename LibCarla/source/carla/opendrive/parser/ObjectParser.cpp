@@ -19,17 +19,17 @@ namespace parser {
   void ObjectParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
-  
+
     std::vector<road::element::CrosswalkPoint> points;
-    
+
     for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
 
-      // parse all objects 
+      // parse all objects
       pugi::xml_node node_objects = node_road.child("objects");
       if (node_objects) {
 
         for (pugi::xml_node node_object : node_objects.children("object")) {
-          
+
           // type Crosswalk
           std::string type = node_object.attribute("type").as_string();
           if (type == "crosswalk") {
@@ -47,7 +47,7 @@ namespace parser {
             // get road id
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
-            
+
             // create the object
             map_builder.AddRoadObjectCrosswalk(road,
                 node_object.attribute("name").as_string(),
@@ -65,7 +65,7 @@ namespace parser {
           }
         }
       }
-    }  
+    }
   }
 } // namespace parser
 } // namespace opendrive

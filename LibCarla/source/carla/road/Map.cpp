@@ -108,7 +108,7 @@ namespace road {
       const T container,
       const double s,
       const LaneId lane_id) {
-    
+
     // lane_id can't be 0
     RELEASE_ASSERT(lane_id != 0);
 
@@ -261,7 +261,7 @@ namespace road {
 
     float lane_width = 0.0f;
     float lane_tangent = 0.0f;
-    
+
     if (waypoint.lane_id < 0) {
       // right lane
       const auto side_lanes = MakeListView(
@@ -415,7 +415,7 @@ namespace road {
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
-        } 
+        }
       }
     }
     return result;
