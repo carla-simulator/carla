@@ -14,6 +14,8 @@
 
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/PipelineStage.h"
+#include "carla/trafficmanager/Parameters.h"
+
 
 namespace traffic_manager {
 
@@ -48,6 +50,8 @@ namespace cg = carla::geom;
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger;
+    /// Runtime parameterization object.
+    Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// Map containing the time ticket issued for vehicles.
@@ -70,6 +74,7 @@ namespace cg = carla::geom;
       std::string stage_name,
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
+      Parameters &parameters,
       cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 

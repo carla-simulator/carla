@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdlib.h>
 
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"

@@ -7,11 +7,13 @@ namespace traffic_manager {
       std::vector<float> longitudinal_PID_parameters,
       std::vector<float> longitudinal_highway_PID_parameters,
       std::vector<float> lateral_PID_parameters,
-      float perc_decrease_from_limit,
+      std::vector<float> lateral_highway_PID_parameters,
+      float perc_difference_from_limit,
       cc::Client &client_connection)
     : longitudinal_PID_parameters(longitudinal_PID_parameters),
       longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
       lateral_PID_parameters(lateral_PID_parameters),
+      lateral_highway_PID_parameters(lateral_highway_PID_parameters),
       client_connection(client_connection),
       world(client_connection.GetWorld()),
       debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
@@ -24,7 +26,7 @@ namespace traffic_manager {
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
     local_map->SetUp(0.1f);
 
-    parameters.SetGlobalPercentageBelowLimit(perc_decrease_from_limit);
+    parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
     localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
@@ -48,7 +50,7 @@ namespace traffic_manager {
     traffic_light_stage = std::make_unique<TrafficLightStage>(
       "Traffic light stage",
       localization_traffic_light_messenger, traffic_light_planner_messenger,
-      debug_helper);
+      parameters, debug_helper);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
       "Motion planner stage",
@@ -59,7 +61,8 @@ namespace traffic_manager {
       parameters,
       longitudinal_PID_parameters,
       longitudinal_highway_PID_parameters,
-      lateral_PID_parameters);
+      lateral_PID_parameters,
+      lateral_highway_PID_parameters);
 
     control_stage = std::make_unique<BatchControlStage>(
       "Batch control stage",
@@ -80,13 +83,14 @@ namespace traffic_manager {
     if (singleton_pointer == nullptr) {
 
       std::vector<float> longitudinal_param = {0.1f, 0.15f, 0.01f};
-      std::vector<float> longitudinal_highway_param = {5.0f, 0.09f, 0.01f};
+      std::vector<float> longitudinal_highway_param = {5.0f, 0.1f, 0.01f};
       std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      float perc_decrease_from_limit = 20.0f;
+      std::vector<float> lateral_highway_param = {3.0f, 0.0f, 20.0f};
+      float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
-        longitudinal_param, longitudinal_highway_param, lateral_param,
-        perc_decrease_from_limit, client_connection
+        longitudinal_param, longitudinal_highway_param, lateral_param, lateral_highway_param,
+        perc_difference_from_limit, client_connection
       );
 
       singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);
@@ -113,6 +117,10 @@ namespace traffic_manager {
 
   void TrafficManager::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
     registered_actors.Remove(actor_list);
+  }
+
+  void TrafficManager::DestroyVehicle(const ActorPtr &actor) {
+    registered_actors.Destroy(actor);
   }
 
   void TrafficManager::Start() {
@@ -147,10 +155,12 @@ namespace traffic_manager {
     control_stage->Stop();
   }
 
-  void TrafficManager::SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage) {
-    if (percentage > 0.0f) {
-      parameters.SetPercentageSpeedBelowLimit(actor, percentage);
-    }
+  void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+      parameters.SetPercentageSpeedDifference(actor, percentage);
+  }
+
+  void TrafficManager::SetGlobalPercentageSpeedDifference(const float percentage) {
+      parameters.SetGlobalPercentageSpeedDifference(percentage);
   }
 
   void TrafficManager::SetCollisionDetection(
@@ -172,10 +182,20 @@ namespace traffic_manager {
   }
 
   void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-    if (distance > 0.0f) {
-      parameters.SetDistanceToLeadingVehicle(actor, distance);
-    }
+
+    parameters.SetDistanceToLeadingVehicle(actor, distance);
   }
+
+  void TrafficManager::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+
+    parameters.SetPercentageIgnoreActors(actor, perc);
+  }
+
+  void TrafficManager::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
+
+    parameters.SetPercentageRunningLight(actor, perc);
+  }
+
 
   bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
     for (auto& elem : tl_to_freeze) {

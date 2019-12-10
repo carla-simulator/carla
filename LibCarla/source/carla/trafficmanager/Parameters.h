@@ -24,9 +24,9 @@ namespace traffic_manager {
     private:
 
         /// Target velocity map for individual vehicles.
-        AtomicMap<ActorId, float> percentage_decrease_from_speed_limit;
-        /// Global target velocity.
-        float global_percentage_decrease_from_limit = 0;
+        AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
+        /// Global target velocity limit % difference.
+        float global_percentage_difference_from_limit = 0;
         /// Map containing a set of actors to be ignored during collision detection.
         AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
         /// Map containing distance to leading vehicle command.
@@ -35,16 +35,21 @@ namespace traffic_manager {
         AtomicMap<ActorId, ChangeLaneInfo> force_lane_change;
         /// Map containing auto lane change commands.
         AtomicMap<ActorId, bool> auto_lane_change;
+        /// Map containing % of running a traffic light.
+        AtomicMap<ActorId, float> perc_run_traffic_light;
+        /// Map containing % of ignoring actors.
+        AtomicMap<ActorId, float> perc_ignore_actors;
+
 
     public:
         Parameters();
         ~Parameters();
 
         /// Set target velocity specific to a vehicle.
-        void SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage);
+        void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
         /// Set global target velocity.
-        void SetGlobalPercentageBelowLimit(float percentage_below_limit);
+        void SetGlobalPercentageSpeedDifference(float const percentage);
 
         /// Set collision detection rules between vehicles.
         void SetCollisionDetection(const ActorPtr &reference_actor,
@@ -76,6 +81,18 @@ namespace traffic_manager {
 
         /// Method to query distance to leading vehicle for a given vehicle.
         float GetDistanceToLeadingVehicle(const ActorPtr &actor);
+
+        /// Method to set % to run any traffic light.
+        void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+        /// Method to set % to ignore any actor.
+        void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
+
+        /// Method to get % to run any traffic light.
+        float GetPercentageRunningLight(const ActorPtr &actor);
+
+        /// Method to get % to ignore any actor.
+        float GetPercentageIgnoreActors(const ActorPtr &actor);
 
         };
 }
