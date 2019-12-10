@@ -1,4 +1,5 @@
 ## Latest
+  * The 'make import' process now rename the assets accordingly and set complex collision as simple
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added exporter plugin for UE4 to allow export meshes ready for Recast calculation.
   * Support for OpenGL and Vulkan in docker + headless mode
