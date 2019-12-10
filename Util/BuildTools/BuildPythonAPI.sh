@@ -16,8 +16,9 @@ USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean]"
 REMOVE_INTERMEDIATE=false
 BUILD_FOR_PYTHON2=false
 BUILD_FOR_PYTHON3=false
+BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,py2,py3,clean -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -35,6 +36,9 @@ while true; do
       shift ;;
     --py3 )
       BUILD_FOR_PYTHON3=true;
+      shift ;;
+    --rss )
+      BUILD_RSS_VARIANT=true;
       shift ;;
     --clean )
       REMOVE_INTERMEDIATE=true;
@@ -73,6 +77,10 @@ fi
 # ==============================================================================
 # -- Build API -----------------------------------------------------------------
 # ==============================================================================
+
+if ${BUILD_RSS_VARIANT} ; then
+  export BUILD_RSS_VARIANT=${BUILD_RSS_VARIANT}
+fi
 
 if ${BUILD_FOR_PYTHON2} ; then
 

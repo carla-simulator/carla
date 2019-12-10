@@ -16,8 +16,9 @@ import sys
 
 def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
+
     library_dirs = ['dependencies/lib']
-    libraries = []
+    libraries = ['jpeg', 'tiff']
 
     sources = ['source/libcarla/libcarla.cpp']
 
@@ -50,12 +51,16 @@ def get_libcarla_extensions():
                 '-Wconversion', '-Wfloat-overflow-conversion',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
+            if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
+                print('Building AD RSS variant.')
+                extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad-rss.a')]
+
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
-                extra_link_args += ['-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
             else:
-                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                libraries += ['png']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
