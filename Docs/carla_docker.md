@@ -2,8 +2,9 @@
 
 This tutorial is designed for:
 
-  * People that want to run CARLA without needing to install all dependencies.
+  * People that want to run CARLA without needing to install all dependencies
   * Recommended solution to run multiple CARLA servers and perform GPU mapping
+  * People who don't need to render the full simulation (the server is headless)
 
 This tutorial was tested in Ubuntu 16.04 and using NVIDIA 396.37 drivers.
 This method requires a version of NVIDIA drivers >=390.

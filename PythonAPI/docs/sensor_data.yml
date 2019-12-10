@@ -282,4 +282,76 @@
     - def_name: __str__
       doc: >
     # --------------------------------------
+
+  - class_name: RadarMeasurement
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Measurement produced by a Radar. Consists of an array of carla.RadarDetection.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: raw_data
+      type: bytes
+      doc: >
+        List of carla.RadarDetection.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_detection_count
+      doc: >
+        Retrieve the number of carla.RadarDetection that are generated.
+    # --------------------------------------
+    - def_name: __len__
+      doc: >
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+    # --------------------------------------
+    - def_name: __getitem__
+      params:
+      - param_name: pos
+        type: int
+      doc: >
+    # --------------------------------------
+    - def_name: __setitem__
+      params:
+      - param_name: pos
+        type: int
+      - param_name: detection
+        type: carla.RadarDetection
+      doc: >
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
+
+  - class_name: RadarDetection
+    # - DESCRIPTION ------------------------
+    doc: >
+      Data contained by a carla.RadarMeasurement. Represents an object detection produced by the Radar sensor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: velocity
+      type: float
+      doc: >
+        The velocity of the detected object towards the sensor in meters per second.
+    # --------------------------------------
+    - var_name: azimuth
+      type: float
+      doc: >
+        Azimuth angle of the detection in radians
+    # --------------------------------------
+    - var_name: altitude
+      type: float
+      doc: >
+        Altitude angle of the detection in radians
+    # --------------------------------------
+    - var_name: depth
+      type: float
+      doc: >
+        Distance in meters from the sensor to the detection position.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      doc: >
+    # --------------------------------------
 ...
