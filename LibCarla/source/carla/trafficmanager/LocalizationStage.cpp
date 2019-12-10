@@ -82,11 +82,6 @@ namespace LocalizationConstants {
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        bool was_killed = CheckIdleTime(vehicle);
-        if (was_killed) {
-          std::cout << "I should be dead!" << std::endl;
-          continue;
-        }
         float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
@@ -163,6 +158,24 @@ namespace LocalizationConstants {
         dot_product *= -1;
       }
 
+      /* Calculate the distance between the car and the trajectory (TODO: Use in the PID)
+      auto Vehicle = boost::static_pointer_cast<cc::Vehicle>(vehicle);
+      // Calculate the parameters of the line
+      cg::Vector3D velocity = Vehicle->GetVelocity();
+      velocity.z = 0;
+      cg::Location trajectory_location_ini = waypoint_buffer.front()->GetLocation();
+      trajectory_location_ini.z = 0;
+      cg::Location trajectory_location_fin = target_location;
+      trajectory_location_fin.z = 0;
+      cg::Vector3D trajectory_vector = trajectory_location_fin - trajectory_location_ini;
+      float a = trajectory_vector.x;
+      float b = -trajectory_vector.y;
+      float c = b*trajectory_location_ini.y - a*trajectory_location_ini.x;
+      // Distance from the vehicle to the desired trajectory
+      float distance = (a*vehicle_location.x + b*vehicle_location.y + c) /
+                        std::sqrt(std::pow(a,2.0f)+std::pow(b,2.0f));*/
+      float distance = 0; // TODO: use in PID
+
       // Filtering out false junctions on highways.
       // On highways, if there is only one possible path and the section is
       // marked as intersection, ignore it.
@@ -222,6 +235,7 @@ namespace LocalizationConstants {
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
       planner_message.deviation = dot_product;
+      planner_message.distance = distance;
       planner_message.approaching_true_junction = approaching_junction;
 
       // Reading current messenger state of the collision stage before modifying it's frame.
@@ -246,37 +260,30 @@ namespace LocalizationConstants {
       collision_frame_ready = true;
     }
 
+    for (uint i = 0u; i < actor_list.size(); ++i) {
+      CheckIdleTime(actor_list.at(i));
+    }
+
   }
 
   void LocalizationStage::ResetIdleTime(Actor actor) {
     idle_time[actor->GetId()] = chr::system_clock::now();
   }
 
-  bool LocalizationStage::CheckIdleTime(Actor actor) {
+  void LocalizationStage::CheckIdleTime(Actor actor) {
     chr::duration<float> time_difference = chr::system_clock::now() - idle_time[actor->GetId()];
     if (time_difference.count() > 60.0f) { // 60 seconds
-      std::cout << "The time difference is: " << time_difference.count() << "for actor id: " << actor->GetId() << std::endl;
+      std::cout << "The time difference is: " << time_difference.count() << "s for actor id: " << actor->GetId() << std::endl;
       // TODO: Kill it and don't break stuff. Right now, it breaks stuff.
-      return KillVehicle(actor);
     }
-    return false;
   }
 
-  bool LocalizationStage::KillVehicle(Actor actor) {
+  void LocalizationStage::KillVehicle(Actor actor) {
     // TODO: Fix this properly, either here or in another (and probably better) loop.
-    auto print_id = actor->GetId();
     std::vector<boost::shared_ptr<carla::client::Actor>> to_remove;
     to_remove.push_back(actor);
-    registered_actors.Remove(to_remove);
-    bool was_killed = to_remove.at(0).get()->Destroy();
-
-    if (was_killed) {
-      std::cout << "Successfully killed vehicle with actor id = " << print_id << std::endl;
-    }
-    else {
-      std::cout << "Something went wrong while killing vehicle with actor id = " << print_id << std::endl;
-    }
-    return was_killed;
+    //registered_actors.Destroy(to_remove);
+    debug_helper.DrawString(actor->GetLocation() + cg::Location(0,0,2), "I should be dead.", false, {255u, 0u, 0u}, 0.1f);
   }
 
   void LocalizationStage::DataReceiver() {

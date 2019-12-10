@@ -9,10 +9,12 @@ namespace traffic_manager {
       std::string stage_name,
       std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
       std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
+      Parameters &parameters,
       cc::DebugHelper &debug_helper)
     : PipelineStage(stage_name),
       localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
+      parameters(parameters),
       debug_helper(debug_helper){
 
     // Initializing output frame selector.
@@ -50,6 +52,14 @@ namespace traffic_manager {
 
       auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
+      // Generate number between 0 and 100
+      int r = rand() % 101;
+
+      // Set to green if random number is lower than percentage, default is 0
+      if (parameters.GetPercentageRunningLight(boost::shared_ptr<cc::Actor>(ego_actor)) > r)
+        traffic_light_state = TLS::Green;
+
+      //DrawLight(traffic_light_state, ego_actor);
 
       // We determine to stop if the current position of the vehicle is not a
       // junction,

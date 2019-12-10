@@ -96,8 +96,8 @@ namespace cc = carla::client;
     void DrawBuffer(Buffer &buffer);
     /// Methods for idle vehicle elimination.
     void ResetIdleTime(Actor actor);
-    bool CheckIdleTime(Actor actor);
-    bool KillVehicle(Actor actor);
+    void CheckIdleTime(Actor actor);
+    void KillVehicle(Actor actor);
 
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);

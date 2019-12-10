@@ -100,37 +100,51 @@ namespace CollisionStageConstants {
       std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
 
       bool collision_hazard = false;
+
+      // Generate number between 0 and 100
+      int r = rand() % 101;
+
+      // Continue only if random number is lower than our %, default is 0.
+      if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
       // Check every actor in the vicinity if it poses a collision hazard.
-      for (auto j = actor_id_list.begin(); (j != actor_id_list.end()) && !collision_hazard; ++j) {
-        ActorId actor_id = *j;
-        try {
+        for (auto j = actor_id_list.begin(); (j != actor_id_list.end()) && !collision_hazard; ++j) {
+          ActorId actor_id = *j;
+          try {
 
-          Actor actor = nullptr;
-          if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
-            actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
-          } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
-            actor = unregistered_actors.at(actor_id);
-          }
-
-          cg::Location ego_location = ego_actor->GetLocation();
-          cg::Location other_location = actor->GetLocation();
-          if (actor_id != ego_actor_id &&
-              (cg::Math::DistanceSquared(ego_location, other_location)
-              < std::pow(MAX_COLLISION_RADIUS, 2)) &&
-              (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
-
-            if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                NegotiateCollision(ego_actor, actor)) {
-
-              collision_hazard = true;
+            Actor actor = nullptr;
+            if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
+              actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
+            } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
+              actor = unregistered_actors.at(actor_id);
             }
+
+            cg::Location ego_location = ego_actor->GetLocation();
+            cg::Location other_location = actor->GetLocation();
+
+            if (actor_id != ego_actor_id &&
+                (cg::Math::DistanceSquared(ego_location, other_location)
+                < std::pow(MAX_COLLISION_RADIUS, 2)) &&
+                (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
+
+              // debug_helper.DrawLine(
+              //   ego_location + cg::Location(0, 0, 2),
+              //   other_location + cg::Location(0, 0, 2),
+              //   0.2f, {255u, 0u, 0u}, 0.1f
+              // );
+
+              if (parameters.GetCollisionDetection(ego_actor, actor) &&
+                  NegotiateCollision(ego_actor, actor)) {
+
+                collision_hazard = true;
+              }
+            }
+
+          } catch (const std::exception &e) {
+            carla::log_warning("Encountered problem while determining collision \n");
+            carla::log_info("Actor might not be alive \n");
           }
 
-        } catch (const std::exception &e) {
-          carla::log_warning("Encountered problem while determining collision \n");
-          carla::log_info("Actor might not be alive \n");
         }
-
       }
 
       CollisionToPlannerData &message = current_planner_frame->at(i);
