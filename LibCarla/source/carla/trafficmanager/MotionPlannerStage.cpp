@@ -10,7 +10,7 @@ namespace PlannerConstants {
   static const float CRAWL_SPEED = 10 / 3.6f;
   static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
   static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.1f, 0.01f};
-  static const std::vector<float> LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
+  static const std::vector<float> URBAN_LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
   static const std::vector<float> HIGHWAY_LATERAL_DEFAULTS = {3.0f, 0.0f, 20.0f};
 }
   using namespace PlannerConstants;
@@ -22,9 +22,9 @@ namespace PlannerConstants {
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
       Parameters &parameters,
-      std::vector<float> longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
+      std::vector<float> urban_longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
       std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
-      std::vector<float> lateral_parameters = LATERAL_DEFAULTS,
+      std::vector<float> urban_lateral_parameters = URBAN_LATERAL_DEFAULTS,
       std::vector<float> highway_lateral_parameters = HIGHWAY_LATERAL_DEFAULTS)
     : PipelineStage(stage_name),
       localization_messenger(localization_messenger),
@@ -32,9 +32,9 @@ namespace PlannerConstants {
       traffic_light_messenger(traffic_light_messenger),
       control_messenger(control_messenger),
       parameters(parameters),
-      longitudinal_parameters(longitudinal_parameters),
+      urban_longitudinal_parameters(urban_longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
-      lateral_parameters(lateral_parameters),
+      urban_lateral_parameters(urban_lateral_parameters),
       highway_lateral_parameters(highway_lateral_parameters){
 
     // Initializing the output frame selector.
@@ -90,6 +90,9 @@ namespace PlannerConstants {
       if (speed_limit > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
         lateral_parameters = highway_lateral_parameters;
+      } else {
+        longitudinal_parameters = urban_longitudinal_parameters;
+        lateral_parameters = urban_lateral_parameters;
       }
 
       // State update for vehicle.
