@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -630,6 +630,153 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeIMUDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("imu"));
+  AddVariationsForSensor(Definition);
+
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
+  // - Accelerometer Standard Deviation ----------
+  // X Component
+  FActorVariation StdDevAccelX;
+  StdDevAccelX.Id = TEXT("noise_accel_stddev_x");
+  StdDevAccelX.Type = EActorAttributeType::Float;
+  StdDevAccelX.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation StdDevAccelY;
+  StdDevAccelY.Id = TEXT("noise_accel_stddev_y");
+  StdDevAccelY.Type = EActorAttributeType::Float;
+  StdDevAccelY.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation StdDevAccelZ;
+  StdDevAccelZ.Id = TEXT("noise_accel_stddev_z");
+  StdDevAccelZ.Type = EActorAttributeType::Float;
+  StdDevAccelZ.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelZ.bRestrictToRecommended = false;
+
+  // - Gyroscope Standard Deviation --------------
+  // X Component
+  FActorVariation StdDevGyroX;
+  StdDevGyroX.Id = TEXT("noise_gyro_stddev_x");
+  StdDevGyroX.Type = EActorAttributeType::Float;
+  StdDevGyroX.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation StdDevGyroY;
+  StdDevGyroY.Id = TEXT("noise_gyro_stddev_y");
+  StdDevGyroY.Type = EActorAttributeType::Float;
+  StdDevGyroY.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation StdDevGyroZ;
+  StdDevGyroZ.Id = TEXT("noise_gyro_stddev_z");
+  StdDevGyroZ.Type = EActorAttributeType::Float;
+  StdDevGyroZ.RecommendedValues = { TEXT("0.0") };
+  StdDevGyroZ.bRestrictToRecommended = false;
+
+  // - Gyroscope Bias ----------------------------
+  // X Component
+  FActorVariation BiasGyroX;
+  BiasGyroX.Id = TEXT("noise_gyro_bias_x");
+  BiasGyroX.Type = EActorAttributeType::Float;
+  BiasGyroX.RecommendedValues = { TEXT("0.0") };
+  BiasGyroX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation BiasGyroY;
+  BiasGyroY.Id = TEXT("noise_gyro_bias_y");
+  BiasGyroY.Type = EActorAttributeType::Float;
+  BiasGyroY.RecommendedValues = { TEXT("0.0") };
+  BiasGyroY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation BiasGyroZ;
+  BiasGyroZ.Id = TEXT("noise_gyro_bias_z");
+  BiasGyroZ.Type = EActorAttributeType::Float;
+  BiasGyroZ.RecommendedValues = { TEXT("0.0") };
+  BiasGyroZ.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    NoiseSeed,
+    StdDevAccelX,
+    StdDevAccelY,
+    StdDevAccelZ,
+    StdDevGyroX,
+    StdDevGyroY,
+    StdDevGyroZ,
+    BiasGyroX,
+    BiasGyroY,
+    BiasGyroZ});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRadarDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRadarDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
+  AddVariationsForSensor(Definition);
+
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("30") };
+  HorizontalFOV.bRestrictToRecommended = false;
+
+  FActorVariation VerticalFOV;
+  VerticalFOV.Id = TEXT("vertical_fov");
+  VerticalFOV.Type = EActorAttributeType::Float;
+  VerticalFOV.RecommendedValues = { TEXT("30") };
+  VerticalFOV.bRestrictToRecommended = false;
+
+  FActorVariation Range;
+  Range.Id = TEXT("range");
+  Range.Type = EActorAttributeType::Float;
+  Range.RecommendedValues = { TEXT("100") };
+  Range.bRestrictToRecommended = false;
+
+  FActorVariation PointsPerSecond;
+  PointsPerSecond.Id = TEXT("points_per_second");
+  PointsPerSecond.Type = EActorAttributeType::Int;
+  PointsPerSecond.RecommendedValues = { TEXT("1500") };
+  PointsPerSecond.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    HorizontalFOV,
+    VerticalFOV,
+    Range,
+    PointsPerSecond});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
     const FString &Id)
 {
@@ -657,7 +804,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   FActorVariation Range;
   Range.Id = TEXT("range");
   Range.Type = EActorAttributeType::Float;
-  Range.RecommendedValues = { TEXT("1000.0") };
+  Range.RecommendedValues = { TEXT("10.0") }; // 10 meters
   // Points per second.
   FActorVariation PointsPerSecond;
   PointsPerSecond.Id = TEXT("points_per_second");
@@ -681,6 +828,77 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
 
   Definition.Variations.Append(
       {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeGnssDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeGnssDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
+  AddVariationsForSensor(Definition);
+
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
+  // - Latitude ----------------------------------
+  FActorVariation StdDevLat;
+  StdDevLat.Id = TEXT("noise_lat_stddev");
+  StdDevLat.Type = EActorAttributeType::Float;
+  StdDevLat.RecommendedValues = { TEXT("0.0") };
+  StdDevLat.bRestrictToRecommended = false;
+  FActorVariation BiasLat;
+  BiasLat.Id = TEXT("noise_lat_bias");
+  BiasLat.Type = EActorAttributeType::Float;
+  BiasLat.RecommendedValues = { TEXT("0.0") };
+  BiasLat.bRestrictToRecommended = false;
+
+  // - Longitude ---------------------------------
+  FActorVariation StdDevLong;
+  StdDevLong.Id = TEXT("noise_lon_stddev");
+  StdDevLong.Type = EActorAttributeType::Float;
+  StdDevLong.RecommendedValues = { TEXT("0.0") };
+  StdDevLong.bRestrictToRecommended = false;
+  FActorVariation BiasLong;
+  BiasLong.Id = TEXT("noise_lon_bias");
+  BiasLong.Type = EActorAttributeType::Float;
+  BiasLong.RecommendedValues = { TEXT("0.0") };
+  BiasLong.bRestrictToRecommended = false;
+
+  // - Altitude ----------------------------------
+  FActorVariation StdDevAlt;
+  StdDevAlt.Id = TEXT("noise_alt_stddev");
+  StdDevAlt.Type = EActorAttributeType::Float;
+  StdDevAlt.RecommendedValues = { TEXT("0.0") };
+  StdDevAlt.bRestrictToRecommended = false;
+  FActorVariation BiasAlt;
+  BiasAlt.Id = TEXT("noise_alt_bias");
+  BiasAlt.Type = EActorAttributeType::Float;
+  BiasAlt.RecommendedValues = { TEXT("0.0") };
+  BiasAlt.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    NoiseSeed,
+    StdDevLat,
+    BiasLat,
+    StdDevLong,
+    BiasLong,
+    StdDevAlt,
+    BiasAlt});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1064,8 +1282,8 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 /// -- Helpers to set Actors ---------------------------------------------------
 /// ============================================================================
 
-// Here we do different checks when we are in editor, because we don't want the
-// editor crashing while people is testing new actor definitions.
+// Here we do different checks when we are in editor because we don't want the
+// editor crashing while people are testing new actor definitions.
 #if WITH_EDITOR
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr)                    \
   if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill())     \
@@ -1188,10 +1406,11 @@ void UActorBlueprintFunctionLibrary::SetLidar(
     const FActorDescription &Description,
     FLidarDescription &Lidar)
 {
+  constexpr float TO_CENTIMETERS = 1e2;
   Lidar.Channels =
       RetrieveActorAttributeToInt("channels", Description.Variations, Lidar.Channels);
   Lidar.Range =
-      RetrieveActorAttributeToFloat("range", Description.Variations, Lidar.Range);
+      RetrieveActorAttributeToFloat("range", Description.Variations, 10.0f) * TO_CENTIMETERS;
   Lidar.PointsPerSecond =
       RetrieveActorAttributeToInt("points_per_second", Description.Variations, Lidar.PointsPerSecond);
   Lidar.RotationFrequency =
@@ -1200,6 +1419,86 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
   Lidar.LowerFovLimit =
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
+}
+
+void UActorBlueprintFunctionLibrary::SetGnss(
+    const FActorDescription &Description,
+    AGnssSensor *Gnss)
+{
+  CARLA_ABFL_CHECK_ACTOR(Gnss);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Gnss->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Gnss->SetSeed(Gnss->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  Gnss->SetLatitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f));
+  Gnss->SetLongitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lon_stddev", Description.Variations, 0.0f));
+  Gnss->SetAltitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f));
+  Gnss->SetLatitudeBias(
+      RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f));
+  Gnss->SetLongitudeBias(
+      RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f));
+  Gnss->SetAltitudeBias(
+      RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f));
+}
+
+void UActorBlueprintFunctionLibrary::SetIMU(
+    const FActorDescription &Description,
+    AInertialMeasurementUnit *IMU)
+{
+  CARLA_ABFL_CHECK_ACTOR(IMU);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    IMU->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    IMU->SetSeed(IMU->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  IMU->SetAccelerationStandardDeviation({
+    RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)
+  });
+
+  IMU->SetGyroscopeStandardDeviation({
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)
+  });
+
+  IMU->SetGyroscopeBias({
+    RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
+    RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
+  });
+}
+
+void UActorBlueprintFunctionLibrary::SetRadar(
+    const FActorDescription &Description,
+    ARadar *Radar)
+{
+  CARLA_ABFL_CHECK_ACTOR(Radar);
+  constexpr float TO_CENTIMETERS = 1e2;
+
+  Radar->SetHorizontalFOV(
+    RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+  Radar->SetVerticalFOV(
+    RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+  Radar->SetRange(
+    RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+  Radar->SetPointsPerSecond(
+    RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
