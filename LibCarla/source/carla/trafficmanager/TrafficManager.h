@@ -43,6 +43,7 @@ namespace cc = carla::client;
     std::vector<float> longitudinal_PID_parameters;
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
+    std::vector<float> lateral_highway_PID_parameters;
     /// Set of all actors registered with traffic manager.
     AtomicActorSet registered_actors;
     /// Pointer to local map cache.
@@ -78,6 +79,7 @@ namespace cc = carla::client;
         std::vector<float> longitudinal_PID_parameters,
         std::vector<float> longitudinal_highway_PID_parameters,
         std::vector<float> lateral_PID_parameters,
+        std::vector<float> lateral_highway_PID_parameters,
         float perc_decrease_from_limit,
         cc::Client &client_connection);
 
@@ -101,8 +103,14 @@ namespace cc = carla::client;
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
+    /// This method kills a vehicle.
+    void DestroyVehicle(const ActorPtr &actor);
+
     /// Set target velocity specific to a vehicle.
-    void SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage);
+    void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
+
+    /// Set global target velocity.
+    void SetGlobalPercentageSpeedDifference(float const percentage);
 
     /// Set collision detection rules between vehicles.
     void SetCollisionDetection(const ActorPtr &reference_actor,
@@ -119,6 +127,12 @@ namespace cc = carla::client;
     /// Method to specify how much distance a vehicle should maintain to
     /// the leading vehicle.
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
+
+    /// Method to specify the % chance of ignoring collisions with other actors
+    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
+
+    /// Method to specify the % chance of running a red light
+    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);

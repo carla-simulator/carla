@@ -1,4 +1,5 @@
 #include "Parameters.h"
+#include <random>
 
 namespace traffic_manager {
 
@@ -6,14 +7,12 @@ namespace traffic_manager {
 
     Parameters::~Parameters() {}
 
-    void Parameters::SetPercentageSpeedBelowLimit(const ActorPtr &actor, const float percentage) {
-
-        percentage_decrease_from_speed_limit.AddEntry({actor->GetId(), percentage});
+    void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+        percentage_difference_from_speed_limit.AddEntry({actor->GetId(), percentage});
     }
 
-    void Parameters::SetGlobalPercentageBelowLimit(float percentage_below_limit) {
-
-        global_percentage_decrease_from_limit = percentage_below_limit;
+    void Parameters::SetGlobalPercentageSpeedDifference(const float percentage) {
+        global_percentage_difference_from_limit = percentage;
     }
 
     void Parameters::SetCollisionDetection(
@@ -62,9 +61,10 @@ namespace traffic_manager {
     }
 
     void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-
-        auto entry = std::make_pair(actor->GetId(), distance);
-        distance_to_leading_vehicle.AddEntry(entry);
+        if (distance > 0.0f) {
+            auto entry = std::make_pair(actor->GetId(), distance);
+            distance_to_leading_vehicle.AddEntry(entry);
+        }
     }
 
     float Parameters::GetVehicleTargetVelocity(const ActorPtr &actor) {
@@ -72,27 +72,27 @@ namespace traffic_manager {
         ActorId actor_id = actor->GetId();
         auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
         float speed_limit = vehicle->GetSpeedLimit();
-        float percentage_decrease = global_percentage_decrease_from_limit;
+        float percentage_difference = global_percentage_difference_from_limit;
 
-        if (percentage_decrease_from_speed_limit.Contains(actor_id)) {
-            percentage_decrease = percentage_decrease_from_speed_limit.GetValue(actor_id);
+        if (percentage_difference_from_speed_limit.Contains(actor_id)) {
+            percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
         }
 
-        return speed_limit * (1.0f - percentage_decrease/100.0f);
+        return speed_limit * (1.0f - percentage_difference/100.0f);
     }
 
     bool Parameters::GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor) {
 
         ActorId reference_actor_id = reference_actor->GetId();
         ActorId other_actor_id = other_actor->GetId();
-        bool ignore = true;
+        bool avoid_collision = true;
 
         if (ignore_collision.Contains(reference_actor_id) &&
             ignore_collision.GetValue(reference_actor_id)->Contains(other_actor_id)) {
-            ignore = false;
+            avoid_collision = false;
         }
 
-        return ignore;
+        return avoid_collision;
     }
 
     ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
@@ -131,6 +131,44 @@ namespace traffic_manager {
         }
 
         return distance_margin;
+    }
+
+    void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
+        if (perc > 0.0f) {
+            auto entry = std::make_pair(actor->GetId(), perc);
+            perc_run_traffic_light.AddEntry(entry);
+        }
+    }
+
+    void Parameters::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+        if (perc > 0.0f) {
+            auto entry = std::make_pair(actor->GetId(), perc);
+            perc_ignore_actors.AddEntry(entry);
+        }
+    }
+
+    float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
+
+        ActorId actor_id = actor->GetId();
+        float percentage = 0.0f;
+
+        if (perc_run_traffic_light.Contains(actor_id)) {
+            percentage = perc_run_traffic_light.GetValue(actor_id);
+        }
+
+        return percentage;
+    }
+
+    float Parameters::GetPercentageIgnoreActors(const ActorPtr &actor) {
+
+        ActorId actor_id = actor->GetId();
+        float percentage = 0.0f;
+
+        if (perc_ignore_actors.Contains(actor_id)) {
+            percentage = perc_ignore_actors.GetValue(actor_id);
+        }
+
+        return percentage;
     }
 
 }

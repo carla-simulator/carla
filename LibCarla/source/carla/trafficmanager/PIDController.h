@@ -19,9 +19,11 @@ namespace chr = std::chrono;
   /// Structure to hold the controller state.
   struct StateEntry {
     float deviation;
+    float distance;
     float velocity;
     TimeInstance time_instance;
     float deviation_integral;
+    float distance_integral;
     float velocity_integral;
   };
 
@@ -42,6 +44,7 @@ namespace chr = std::chrono;
         float current_velocity,
         float target_velocity,
         float angular_deviation,
+        float distance,
         TimeInstance current_time);
 
     /// This method calculates the actuation signals based on the resent state

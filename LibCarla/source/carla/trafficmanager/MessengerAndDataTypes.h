@@ -27,6 +27,7 @@ namespace cc = carla::client;
   struct LocalizationToPlannerData {
     carla::SharedPtr<cc::Actor> actor;
     float deviation;
+    float distance;
     bool approaching_true_junction;
   };
 

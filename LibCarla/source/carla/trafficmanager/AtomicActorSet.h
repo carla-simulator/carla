@@ -53,6 +53,14 @@ namespace cc = carla::client;
             ++state_counter;
         }
 
+        void Destroy(ActorPtr actor) {
+
+            std::lock_guard<std::mutex> lock(modification_mutex);
+            actor_set.erase(actor->GetId());
+            actor->Destroy();
+            ++state_counter;
+        }
+
         int GetState() {
 
             std::lock_guard<std::mutex> lock(modification_mutex);

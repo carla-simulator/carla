@@ -142,7 +142,7 @@ def main():
         time.sleep(5)
         for v in vehicle_list:
             if (v.id % 2 == 0):
-                traffic_manager.set_vehicle_target_velocity(v, 15.0)
+                traffic_manager.set_vehicle_max_speed_difference(v, 30.0)
                 traffic_manager.set_distance_to_leading_vehicle(v, 3)
             else:
                 traffic_manager.set_distance_to_leading_vehicle(v, 6)
