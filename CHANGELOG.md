@@ -1,4 +1,5 @@
 ## Latest
+  * The 'make import' process now rename the assets accordingly and set complex collision as simple
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added new sensor: Inertial measurement unit (IMU)
   * Added new sensor: Radar
