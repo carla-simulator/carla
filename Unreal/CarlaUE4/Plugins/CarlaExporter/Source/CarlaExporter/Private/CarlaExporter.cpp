@@ -27,6 +27,15 @@ static const FName CarlaExporterTabName("CarlaExporter");
 
 #define LOCTEXT_NAMESPACE "FCarlaExporterModule"
 
+enum AreaType
+{
+  ROAD,
+  GRASS,
+  SIDEWALK,
+  CROSSWALK,
+  BLOCK
+};
+
 void FCarlaExporterModule::StartupModule()
 {
   // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -44,16 +53,12 @@ void FCarlaExporterModule::StartupModule()
 
   {
     TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-    MenuExtender->AddMenuExtension("FileActors", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
+    MenuExtender->AddMenuExtension("FileActors",
+      EExtensionHook::After,
+      PluginCommands,
+      FMenuExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddMenuExtension));
 
     LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
-  }
-
-  {
-    TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-    ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FCarlaExporterModule::AddToolbarExtension));
-
-    LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
   }
 }
 
@@ -77,7 +82,6 @@ void FCarlaExporterModule::PluginButtonClicked()
   // if no selection, then get all objects
   if (SelectionNum == 0)
   {
-    // for (TObjectIterator<UStaticMeshComponent> it; it; ++it)
     for (TActorIterator<AActor> it(World); it; ++it)
       BP_Actors.Add(Cast<UObject>(*it));
   }
@@ -94,8 +98,11 @@ void FCarlaExporterModule::PluginButtonClicked()
   int rounds;
   rounds = 5;
 
+  // we need to scale the meshes (Unreal uses 'cm', Recast uses 'm')
+  constexpr float TO_METERS = 0.01f;
+
   int offset = 1;
-  std::string type;
+  AreaType areaType;
   for (int round = 0; round < rounds; ++round)
   {
     for (UObject* SelectedObject : BP_Actors)
@@ -110,34 +117,34 @@ void FCarlaExporterModule::PluginButtonClicked()
 
       // check type by nomenclature
       if (ActorName.StartsWith("Road_Road"))
-        type = "road";
+        areaType = AreaType::ROAD;
       else if (ActorName.StartsWith("Road_Marking"))
-        type = "road";
+        areaType = AreaType::ROAD;
       else if (ActorName.StartsWith("Road_Curb"))
-        type = "road";
+        areaType = AreaType::ROAD;
       else if (ActorName.StartsWith("Road_Gutter"))
-        type = "road";
+        areaType = AreaType::ROAD;
       else if (ActorName.StartsWith("Road_Sidewalk"))
-        type = "sidewalk";
+        areaType = AreaType::SIDEWALK;
       else if (ActorName.StartsWith("Road_Crosswalk"))
-        type = "crosswalk";
+        areaType = AreaType::CROSSWALK;
       else if (ActorName.StartsWith("Road_Grass"))
-        type = "grass";
+        areaType = AreaType::GRASS;
       else
-        type = "block";
+        areaType = AreaType::BLOCK;
 
       // check to export in this round or not
       if (rounds > 1)
       {
-        if (type == "block" && round != 0)
+        if (areaType == AreaType::BLOCK && round != 0)
           continue;
-        else if (type == "road" && round != 1)
+        else if (areaType == AreaType::ROAD && round != 1)
           continue;
-        else if (type == "grass" && round != 2)
+        else if (areaType == AreaType::GRASS && round != 2)
           continue;
-        else if (type == "sidewalk" && round != 3)
+        else if (areaType == AreaType::SIDEWALK && round != 3)
           continue;
-        else if (type == "crosswalk" && round != 4)
+        else if (areaType == AreaType::CROSSWALK && round != 4)
           continue;
       }
 
@@ -180,10 +187,18 @@ void FCarlaExporterModule::PluginButtonClicked()
                 FVector vec3 = InstanceTransform.TransformVector(vec);
                 FVector world(vec3.X, vec3.Y, vec3.Z);
 
-                f << "v " << std::fixed << (InstanceLocation.X + world.X) * 0.01f << " " << (InstanceLocation.Z + world.Z) * 0.01f << " " << (InstanceLocation.Y + world.Y) * 0.01f << "\n";
+                f << "v " << std::fixed << (InstanceLocation.X + world.X) * TO_METERS << " " << (InstanceLocation.Z + world.Z) * TO_METERS << " " << (InstanceLocation.Y + world.Y) * TO_METERS << "\n";
+              }
+              // set the material in function of the area type
+              switch (areaType)
+              {
+                case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
+                case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
+                case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
+                case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
+                case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
               }
               // write all faces
-              f << "usemtl " << type << "\n";
               for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
               {
                 // inverse order for left hand
@@ -225,10 +240,18 @@ void FCarlaExporterModule::PluginButtonClicked()
               FVector vec3 = CompTransform.TransformVector(vec);
               FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
 
-              f << "v " << std::fixed << world.X * 0.01f << " " << world.Z * 0.01f << " " << world.Y * 0.01f << "\n";
+              f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
+            }
+            // set the material in function of the area type
+            switch (areaType)
+            {
+              case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
+              case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
+              case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
+              case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
+              case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
             }
             // write all faces
-            f << "usemtl " << type << "\n";
             int k = 0;
             for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
             {
@@ -248,11 +271,6 @@ void FCarlaExporterModule::PluginButtonClicked()
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
 {
   Builder.AddMenuEntry(FCarlaExporterCommands::Get().PluginActionExportAll);
-}
-
-void FCarlaExporterModule::AddToolbarExtension(FToolBarBuilder& Builder)
-{
-  //Builder.AddToolBarButton(FCarlaExporterCommands::Get().PluginAction);
 }
 
 #undef LOCTEXT_NAMESPACE
