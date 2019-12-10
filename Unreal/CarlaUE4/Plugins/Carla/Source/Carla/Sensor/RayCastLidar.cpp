@@ -53,7 +53,7 @@ void ARayCastLidar::CreateLasers()
   for(auto i = 0u; i < NumberOfLasers; ++i)
   {
     const float VerticalAngle =
-      Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
+        Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
     LaserAngles.Emplace(VerticalAngle);
   }
 }
