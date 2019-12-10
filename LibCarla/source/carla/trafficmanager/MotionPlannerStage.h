@@ -54,10 +54,12 @@ namespace cc = carla::client;
     /// Run time parameterization object.
     Parameters &parameters;
     /// Configuration parameters for the PID controller.
-    std::vector<float> longitudinal_parameters;
+    std::vector<float> urban_longitudinal_parameters;
     std::vector<float> highway_longitudinal_parameters;
-    std::vector<float> lateral_parameters;
+    std::vector<float> urban_lateral_parameters;
     std::vector<float> highway_lateral_parameters;
+    std::vector<float> longitudinal_parameters;
+    std::vector<float> lateral_parameters;
     /// Controller object.
     PIDController controller;
     /// Number of vehicles registered with the traffic manager.
