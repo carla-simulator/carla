@@ -24,6 +24,7 @@
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Fixed assertion bug when using LibCarla
+  * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
 
