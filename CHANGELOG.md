@@ -3,6 +3,7 @@
   * Added new sensor: Inertial measurement unit (IMU)
   * Added new sensor: Radar
   * Moved GNSS sensor from client to server side
+  * New Python API function added (map.get_crosswalks()) that return a list with all points that define the crosswalk zones from OpenDRIVE file
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
