@@ -1,21 +1,30 @@
 ## Latest
-  * Replay Carla server communication via PythonAPI mock (for CI or other automated tests without server running)
+  * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added new sensor: Inertial measurement unit (IMU)
+  * Added new sensor: Radar
+  * Moved GNSS sensor from client to server side
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
     - Lidar: `horizontal_angle` is now received in radians, not in degrees
+    - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
+    - Added `carla.RadarMeasurement` and `carla.RadarDetection`
+    - GNSS data can now be obtained with noise
+    - IMU data can now be obtained with noise
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Fixed pylint for python3 in travis
+  * Replay Carla server communication via PythonAPI mock (for CI or other automated tests without server running)
+  * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
   * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
 

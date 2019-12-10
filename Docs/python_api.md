@@ -715,6 +715,24 @@ Save the OpenDRIVE of the current map to disk.
 
 ---
 
+## carla.RadarDetection<a name="carla.RadarDetection"></a> <sub><sup>_class_</sup></sub>
+Data contained by a [carla.RadarMeasurement](#carla.RadarMeasurement). Represents an object detection produced by the Radar sensor.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RadarDetection.velocity"></a>**<font color="#f8805a">velocity</font>** (_float_)  
+The velocity of the detected object towards the sensor in meters per second.  
+- <a name="carla.RadarDetection.azimuth"></a>**<font color="#f8805a">azimuth</font>** (_float_)  
+Azimuth angle of the detection in radians.  
+- <a name="carla.RadarDetection.altitude"></a>**<font color="#f8805a">altitude</font>** (_float_)  
+Altitude angle of the detection in radians.  
+- <a name="carla.RadarDetection.depth"></a>**<font color="#f8805a">depth</font>** (_float_)  
+Distance in meters from the sensor to the detection position.  
+
+<h3>Methods</h3>
+- <a name="carla.RadarDetection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
 Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
@@ -1475,6 +1493,29 @@ Get obstacle distance.
 
 <h3>Methods</h3>
 - <a name="carla.ObstacleDetectionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RadarMeasurement<a name="carla.RadarMeasurement"></a><sub><sup>([carla.SensorData](#carla.SensorData))</sup></sub> <sub><sup>_class_</sup></sub>
+Measurement produced by a Radar. Consists of an array of [carla.RadarDetection](#carla.RadarDetection).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+List of [carla.RadarDetection](#carla.RadarDetection).  
+
+<h3>Methods</h3>
+- <a name="carla.RadarMeasurement.get_detection_count"></a>**<font color="#7fb800">get_detection_count</font>**(<font color="#00a6ed">**self**</font>)  
+Retrieve the number of [carla.RadarDetection](#carla.RadarDetection) that are generated.  
+- <a name="carla.RadarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.RadarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.RadarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+    - **Parameters:**
+        - `pos` (_int_)  
+- <a name="carla.RadarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**detection**</font>)  
+    - **Parameters:**
+        - `pos` (_int_)  
+        - `detection` (_[carla.RadarDetection](#carla.RadarDetection)_)  
+- <a name="carla.RadarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
