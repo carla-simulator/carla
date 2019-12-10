@@ -86,7 +86,7 @@ namespace road {
       const double t,
       const double zOffset,
       const double hdg,
-      const double pitch,   
+      const double pitch,
       const double roll,
       const std::string orientation,
       const double width,
