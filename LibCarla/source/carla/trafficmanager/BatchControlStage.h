@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <memory>
@@ -13,8 +19,8 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cr = carla::rpc;
+  namespace cc = carla::client;
+  namespace cr = carla::rpc;
 
   /// This class receives actuation signals (throttle, brake, steer)
   /// from MotionPlannerStage class and communicates these signals to
@@ -39,9 +45,9 @@ namespace cr = carla::rpc;
   public:
 
     BatchControlStage(
-      std::string stage_name,
-      std::shared_ptr<PlannerToControlMessenger> messenger,
-      cc::Client &carla_client);
+        std::string stage_name,
+        std::shared_ptr<PlannerToControlMessenger> messenger,
+        cc::Client &carla_client);
     ~BatchControlStage();
 
     void DataReceiver() override;
@@ -52,4 +58,4 @@ namespace cr = carla::rpc;
 
   };
 
-}
+} // namespace traffic_manager

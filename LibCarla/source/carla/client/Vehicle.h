@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -7,12 +7,13 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
-#include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
 namespace client {
+
   class TrafficLight;
 
   class Vehicle : public Actor {

@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <stdexcept>
@@ -11,8 +17,8 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
 
   /// This is a simple wrapper class on Carla's waypoint object.
@@ -88,4 +94,4 @@ namespace cg = carla::geom;
 
   };
 
-}
+} // namespace traffic_manager

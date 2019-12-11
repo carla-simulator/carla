@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "BatchControlStage.h"
 
 namespace traffic_manager {
@@ -25,8 +31,8 @@ namespace traffic_manager {
 
       cr::VehicleControl vehicle_control;
 
-      PlannerToControlData &element = data_frame->at(i);
-      carla::ActorId actor_id = element.actor_id;
+      const PlannerToControlData &element = data_frame->at(i);
+      const carla::ActorId actor_id = element.actor_id;
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
@@ -61,4 +67,5 @@ namespace traffic_manager {
     // Limiting updates to 100 frames per second.
     std::this_thread::sleep_for(10ms);
   }
-}
+
+} // namespace traffic_manager

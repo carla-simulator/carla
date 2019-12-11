@@ -1,13 +1,19 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <ctime>
 #include <deque>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
-#include <ctime>
-#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -28,8 +34,8 @@
 
 namespace traffic_manager {
 
-using namespace std::chrono;
-namespace cc = carla::client;
+  using namespace std::chrono;
+  namespace cc = carla::client;
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
   using ActorIdSet = std::unordered_set<ActorId>;
@@ -95,13 +101,8 @@ namespace cc = carla::client;
     /// Map of all vehicles' idle time
     std::unordered_map<ActorId, chr::time_point<chr::_V2::system_clock, chr::nanoseconds>> idle_time;
 
-
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
-    /// Methods for idle vehicle elimination.
-    /* void ResetIdleTime(Actor actor);
-    void CheckIdleTime(Actor actor);
-    void KillVehicle(Actor actor);*/
 
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
@@ -112,14 +113,14 @@ namespace cc = carla::client;
   public:
 
     LocalizationStage(
-      std::string stage_name,
-      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-      AtomicActorSet &registered_actors,
-      InMemoryMap &local_map,
-      Parameters &parameters,
-      cc::DebugHelper &debug_helper);
+        std::string stage_name,
+        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+        AtomicActorSet &registered_actors,
+        InMemoryMap &local_map,
+        Parameters &parameters,
+        cc::DebugHelper &debug_helper);
 
     ~LocalizationStage();
 
@@ -131,4 +132,4 @@ namespace cc = carla::client;
 
   };
 
-}
+} // namespace traffic_manager

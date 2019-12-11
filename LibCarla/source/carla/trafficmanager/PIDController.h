@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <chrono>
@@ -6,7 +12,7 @@
 
 namespace traffic_manager {
 
-namespace chr = std::chrono;
+  namespace chr = std::chrono;
   using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
 
   /// Structure to hold the actuation signals.
@@ -57,4 +63,4 @@ namespace chr = std::chrono;
 
   };
 
-}
+} // namespace traffic_manager

@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "SimpleWaypoint.h"
 
 namespace traffic_manager {
@@ -48,9 +54,9 @@ namespace traffic_manager {
 
   void SimpleWaypoint::SetLeftWaypoint(SimpleWaypointPtr _waypoint) {
 
-    cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
-    cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
-    if ((heading_vector.x * relative_vector.y - heading_vector.y * relative_vector.x) > 0) {
+    const cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
+    const cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
+    if ((heading_vector.x * relative_vector.y - heading_vector.y * relative_vector.x) > 0.0f) {
       next_left_waypoint = _waypoint;
     } else {
       throw std::invalid_argument("Argument not on the left side!");
@@ -59,9 +65,9 @@ namespace traffic_manager {
 
   void SimpleWaypoint::SetRightWaypoint(SimpleWaypointPtr _waypoint) {
 
-    cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
-    cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
-    if ((heading_vector.x * relative_vector.y - heading_vector.y * relative_vector.x) < 0) {
+    const cg::Vector3D heading_vector = waypoint->GetTransform().GetForwardVector();
+    const cg::Vector3D relative_vector = GetLocation() - _waypoint->GetLocation();
+    if ((heading_vector.x * relative_vector.y - heading_vector.y * relative_vector.x) < 0.0f) {
       next_right_waypoint = _waypoint;
     } else {
       throw std::invalid_argument("Argument not on the right side!");
@@ -92,4 +98,4 @@ namespace traffic_manager {
     return (next_waypoints.size() > 1);
   }
 
-}
+} // namespace traffic_manager

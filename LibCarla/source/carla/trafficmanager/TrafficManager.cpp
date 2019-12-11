@@ -1,4 +1,11 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "TrafficManager.h"
+
 #include "carla/client/TrafficLight.h"
 
 namespace traffic_manager {
@@ -19,10 +26,10 @@ namespace traffic_manager {
       debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
 
     using WorldMap = carla::SharedPtr<cc::Map>;
-    WorldMap world_map = world.GetMap();
-    auto dao = CarlaDataAccessLayer(world_map);
+    const WorldMap world_map = world.GetMap();
+    const auto dao = CarlaDataAccessLayer(world_map);
     using Topology = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
-    Topology topology = dao.GetTopology();
+    const Topology topology = dao.GetTopology();
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
     local_map->SetUp(0.1f);
 
@@ -36,38 +43,38 @@ namespace traffic_manager {
     planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
 
     localization_stage = std::make_unique<LocalizationStage>(
-      "Localization stage",
-      localization_planner_messenger, localization_collision_messenger,
-      localization_traffic_light_messenger,
-      registered_actors, *local_map.get(),
-      parameters, debug_helper);
+        "Localization stage",
+        localization_planner_messenger, localization_collision_messenger,
+        localization_traffic_light_messenger,
+        registered_actors, *local_map.get(),
+        parameters, debug_helper);
 
     collision_stage = std::make_unique<CollisionStage>(
-      "Collision stage",
-      localization_collision_messenger, collision_planner_messenger,
-      world, parameters, debug_helper);
+        "Collision stage",
+        localization_collision_messenger, collision_planner_messenger,
+        world, parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
-      "Traffic light stage",
-      localization_traffic_light_messenger, traffic_light_planner_messenger,
-      parameters, debug_helper);
+        "Traffic light stage",
+        localization_traffic_light_messenger, traffic_light_planner_messenger,
+        parameters, debug_helper);
 
     planner_stage = std::make_unique<MotionPlannerStage>(
-      "Motion planner stage",
-      localization_planner_messenger,
-      collision_planner_messenger,
-      traffic_light_planner_messenger,
-      planner_control_messenger,
-      parameters,
-      longitudinal_PID_parameters,
-      longitudinal_highway_PID_parameters,
-      lateral_PID_parameters,
-      lateral_highway_PID_parameters,
-      debug_helper);
+        "Motion planner stage",
+        localization_planner_messenger,
+        collision_planner_messenger,
+        traffic_light_planner_messenger,
+        planner_control_messenger,
+        parameters,
+        longitudinal_PID_parameters,
+        longitudinal_highway_PID_parameters,
+        lateral_PID_parameters,
+        lateral_highway_PID_parameters,
+        debug_helper);
 
     control_stage = std::make_unique<BatchControlStage>(
-      "Batch control stage",
-      planner_control_messenger, client_connection);
+        "Batch control stage",
+        planner_control_messenger, client_connection);
 
     Start();
   }
@@ -79,15 +86,14 @@ namespace traffic_manager {
   std::unique_ptr<TrafficManager> TrafficManager::singleton_pointer = nullptr;
 
   TrafficManager& TrafficManager::GetInstance(cc::Client &client_connection) {
-    // std::lock_guard<std::mutex> lock(singleton_mutex);
 
     if (singleton_pointer == nullptr) {
 
-      std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
-      std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
-      std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
-      float perc_difference_from_limit = 30.0f;
+      const std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
+      const std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
+      const std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
+      const std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
+      const float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
         longitudinal_param, longitudinal_highway_param, lateral_param, lateral_highway_param,
@@ -157,11 +163,11 @@ namespace traffic_manager {
   }
 
   void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-      parameters.SetPercentageSpeedDifference(actor, percentage);
+    parameters.SetPercentageSpeedDifference(actor, percentage);
   }
 
   void TrafficManager::SetGlobalPercentageSpeedDifference(const float percentage) {
-      parameters.SetGlobalPercentageSpeedDifference(percentage);
+    parameters.SetGlobalPercentageSpeedDifference(percentage);
   }
 
   void TrafficManager::SetCollisionDetection(
@@ -208,35 +214,37 @@ namespace traffic_manager {
   }
 
   void TrafficManager::ResetAllTrafficLights() {
-    auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
+    const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
 
     std::vector<TLGroup> list_of_all_groups;
     TLGroup tl_to_freeze;
     std::vector<carla::ActorId> list_of_ids;
     for (auto tl : *world_traffic_lights.get()) {
       if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-          TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-          list_of_all_groups.push_back(tl_group);
-          for (unsigned i=0; i<tl_group.size(); i++) {
-              list_of_ids.push_back(tl_group.at(i).get()->GetId());
-              if(i!=0) {
-                  tl_to_freeze.push_back(tl_group.at(i));
-              }
-            }
+        const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
+        list_of_all_groups.push_back(tl_group);
+        for (uint i=0u; i<tl_group.size(); i++) {
+          list_of_ids.push_back(tl_group.at(i).get()->GetId());
+          if(i!=0u) {
+            tl_to_freeze.push_back(tl_group.at(i));
+          }
         }
       }
+    }
 
     for (TLGroup& tl_group : list_of_all_groups) {
       tl_group.front()->SetState(TLS::Green);
-      std::for_each(tl_group.begin()+1, tl_group.end(),
-                    [] (auto& tl) {tl->SetState(TLS::Red);});
+      std::for_each(
+          tl_group.begin()+1, tl_group.end(),
+          [] (auto& tl) {tl->SetState(TLS::Red);});
     }
 
     while (!CheckAllFrozen(tl_to_freeze)) {
       for (auto& tln : tl_to_freeze) {
-          tln->SetState(TLS::Red);
-          tln->Freeze(true);
+        tln->SetState(TLS::Red);
+        tln->Freeze(true);
       }
     }
   }
-}
+
+} // namespace traffic_manager

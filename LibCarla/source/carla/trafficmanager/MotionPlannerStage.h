@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <chrono>
@@ -14,8 +20,8 @@
 
 namespace traffic_manager {
 
-namespace chr = std::chrono;
-namespace cc = carla::client;
+  namespace chr = std::chrono;
+  namespace cc = carla::client;
 
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::rpc::ActorId;
@@ -71,17 +77,17 @@ namespace cc = carla::client;
   public:
 
     MotionPlannerStage(
-      std::string stage_name,
-      std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
-      std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
-      std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
-      std::shared_ptr<PlannerToControlMessenger> control_messenger,
-      Parameters &parameters,
-      std::vector<float> longitudinal_parameters,
-      std::vector<float> highway_longitudinal_parameters,
-      std::vector<float> lateral_parameters,
-      std::vector<float> highway_lateral_parameters,
-      cc::DebugHelper &debug_helper);
+        std::string stage_name,
+        std::shared_ptr<LocalizationToPlannerMessenger> localization_messenger,
+        std::shared_ptr<CollisionToPlannerMessenger> collision_messenger,
+        std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
+        std::shared_ptr<PlannerToControlMessenger> control_messenger,
+        Parameters &parameters,
+        std::vector<float> longitudinal_parameters,
+        std::vector<float> highway_longitudinal_parameters,
+        std::vector<float> lateral_parameters,
+        std::vector<float> highway_lateral_parameters,
+        cc::DebugHelper &debug_helper);
 
     ~MotionPlannerStage();
 
@@ -95,4 +101,4 @@ namespace cc = carla::client;
 
   };
 
-}
+} // namespace traffic_manager

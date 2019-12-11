@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <chrono>
@@ -5,23 +11,23 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "carla/client/Vehicle.h"
-#include "carla/client/TrafficLight.h"
-#include "carla/client/World.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/TrafficLight.h"
+#include "carla/client/Vehicle.h"
+#include "carla/client/World.h"
 #include "carla/Memory.h"
 #include "carla/rpc/TrafficLightState.h"
 
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
-#include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/PipelineStage.h"
 
 
 namespace traffic_manager {
 
-namespace chr = std::chrono;
-namespace cc = carla::client;
-namespace cg = carla::geom;
+  namespace chr = std::chrono;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
@@ -71,11 +77,11 @@ namespace cg = carla::geom;
   public:
 
     TrafficLightStage(
-      std::string stage_name,
-      std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
-      std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
-      Parameters &parameters,
-      cc::DebugHelper &debug_helper);
+        std::string stage_name,
+        std::shared_ptr<LocalizationToTrafficLightMessenger> localization_messenger,
+        std::shared_ptr<TrafficLightToPlannerMessenger> planner_messenger,
+        Parameters &parameters,
+        cc::DebugHelper &debug_helper);
     ~TrafficLightStage();
 
     void DataReceiver() override;
@@ -86,4 +92,4 @@ namespace cg = carla::geom;
 
   };
 
-}
+} // namespace traffic_manager

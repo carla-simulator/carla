@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "VicinityGrid.h"
 
 namespace traffic_manager {
@@ -14,17 +20,17 @@ namespace traffic_manager {
 
   std::pair<int, int> VicinityGrid::UpdateGrid(Actor actor) {
 
-    ActorId actor_id = actor->GetId();
-    cg::Location location = actor->GetLocation();
-    int first = static_cast<int>(std::floor(location.x / GRID_SIZE));
-    int second = static_cast<int>(std::floor(location.y / GRID_SIZE));
+    const ActorId actor_id = actor->GetId();
+    const cg::Location location = actor->GetLocation();
+    const int first = static_cast<int>(std::floor(location.x / GRID_SIZE));
+    const int second = static_cast<int>(std::floor(location.y / GRID_SIZE));
 
-    std::string new_grid_id = MakeKey({first, second});
+    const std::string new_grid_id = MakeKey({first, second});
 
     // If the actor exists in the grid.
     if (actor_to_grid_id.find(actor_id) != actor_to_grid_id.end()) {
 
-      std::string old_grid_id = actor_to_grid_id.at(actor_id);
+      const std::string old_grid_id = actor_to_grid_id.at(actor_id);
 
       // If the actor has moved into a new road/section/lane.
       if (old_grid_id != new_grid_id) {
@@ -60,7 +66,7 @@ namespace traffic_manager {
 
   std::unordered_set<carla::ActorId> VicinityGrid::GetActors(Actor actor) {
 
-    std::pair<int, int> grid_ids = UpdateGrid(actor);
+    const std::pair<int, int> grid_ids = UpdateGrid(actor);
 
     std::shared_lock<std::shared_timed_mutex> lock(modification_mutex);
     std::unordered_set<ActorId> actors;
@@ -69,9 +75,9 @@ namespace traffic_manager {
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
-        std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
+        const std::string grid_key = MakeKey({grid_ids.first + i, grid_ids.second + j});
         if (grid_to_actor_id.find(grid_key) != grid_to_actor_id.end()) {
-          auto &grid_actor_set = grid_to_actor_id.at(grid_key);
+          const auto &grid_actor_set = grid_to_actor_id.at(grid_key);
           actors.insert(grid_actor_set.begin(), grid_actor_set.end());
         }
       }
@@ -81,9 +87,9 @@ namespace traffic_manager {
   }
 
   void VicinityGrid::EraseActor(ActorId actor_id) {
-    std::string grid_key = actor_to_grid_id.at(actor_id);
+    const std::string grid_key = actor_to_grid_id.at(actor_id);
     actor_to_grid_id.erase(actor_id);
     grid_to_actor_id.at(grid_key).erase(actor_id);
   }
 
-}
+} // namespace traffic_manager
