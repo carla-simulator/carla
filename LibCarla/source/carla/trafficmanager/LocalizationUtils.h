@@ -48,6 +48,6 @@ namespace traffic_manager {
     float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
     /// Returns the dot product between the vehicle's heading vector and
     /// the vector along the direction to the next target waypoint on the horizon.
-    float DeviationDotProduct(Actor actor, const cg::Location &target_location);
+    float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset=false);
 
 }
