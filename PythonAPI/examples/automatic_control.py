@@ -727,8 +727,8 @@ class CameraManager(object):
                 if blp.has_attribute('gamma'):
                     blp.set_attribute('gamma', str(gamma_correction))
             elif item[0].startswith('sensor.lidar'):
-                bp.set_attribute('range', '50')
-            item.append(bp)
+                blp.set_attribute('range', '50')
+            item.append(blp)
         self.index = None
 
     def toggle_camera(self):
