@@ -45,6 +45,12 @@ def main():
         type=int,
         help='number of vehicles (default: 10)')
     argparser.add_argument(
+        '-w', '--number-of-walkers',
+        metavar='W',
+        default=50,
+        type=int,
+        help='number of walkers (default: 50)')
+    argparser.add_argument(
         '--safe',
         action='store_true',
         help='avoid spawning vehicles prone to accidents')
@@ -53,11 +59,19 @@ def main():
         metavar='PATTERN',
         default='vehicle.*',
         help='vehicles filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--filterw',
+        metavar='PATTERN',
+        default='walker.pedestrian.*',
+        help='pedestrians filter (default: "walker.pedestrian.*")')
+
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    vehicle_list = []
+    vehicles_list = []
+    walkers_list = []
+    all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(2.0)
 
@@ -65,35 +79,8 @@ def main():
         traffic_manager = None
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter(args.filter)
+        blueprints_walkers = world.get_blueprint_library().filter(args.filterw)
         debug = world.debug
-        traffic_lights = world.get_actors().filter('*traffic_light*')
-        list_of_all_groups = []
-        all_groups_without_first_elem = []
-        list_of_ids = []
-
-        for tl in traffic_lights:
-            if tl.id not in list_of_ids:
-                tl_group = tl.get_group_traffic_lights()
-                for tl_g in tl_group:
-                    list_of_ids.append(tl_g.id)
-                if tl_group not in list_of_all_groups:
-                    list_of_all_groups.append(tl_group)
-                    all_groups_without_first_elem.extend(tl_group[1:len(tl_group)])
-
-        def show_tl_count_down(duration=30, indefinite=False):
-            end_time = time.time() + duration
-            color_dict = {
-                'Red':carla.Color(255, 0, 0),
-                'Yellow':carla.Color(255, 255, 0),
-                'Green':carla.Color(0, 255, 0)
-            }
-            while time.time() < end_time or indefinite:
-                for tl_group in list_of_all_groups:
-                    for tl in tl_group:
-                        debug.draw_string(tl.get_location() + carla.Location(0, 0, 5),
-                                          str(tl.get_elapsed_time())[:4], False,
-                                          color_dict[tl.get_state().name], 0.01)
-                    time.sleep(0.002)
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
@@ -109,6 +96,9 @@ def main():
             msg = 'Requested %d vehicles, but could only find %d spawn points'
             logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
             args.number_of_vehicles = number_of_spawn_points
+
+        # @todo cannot import these directly.
+        SpawnActor = carla.command.SpawnActor
 
         # --------------
         # Spawn vehicles
@@ -126,15 +116,69 @@ def main():
                 blueprint.set_attribute('driver_id', driver_id)
             blueprint.set_attribute('role_name', 'autopilot')
             vehicle = world.try_spawn_actor(blueprint, transform)
-            vehicle_list.append(vehicle)
+            vehicles_list.append(vehicle)
 
-        print('Spawned %d vehicles, press Ctrl+C to exit.\n' % (len(vehicle_list)))
+        # -------------
+        # Spawn Walkers
+        # -------------
+        # 1. take all the random locations to spawn
+        spawn_points = []
+        for i in range(args.number_of_walkers):
+            spawn_point = carla.Transform()
+            loc = world.get_random_location_from_navigation()
+            if (loc != None):
+                spawn_point.location = loc
+                spawn_points.append(spawn_point)
+        # 2. we spawn the walker object
+        batch = []
+        for spawn_point in spawn_points:
+            walker_bp = random.choice(blueprints_walkers)
+            # set as not invencible
+            if walker_bp.has_attribute('is_invincible'):
+                walker_bp.set_attribute('is_invincible', 'false')
+            batch.append(SpawnActor(walker_bp, spawn_point))
+        results = client.apply_batch_sync(batch, True)
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list.append({"id": results[i].actor_id})
+        # 3. we spawn the walker controller
+        batch = []
+        walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+        for i in range(len(walkers_list)):
+            batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+        results = client.apply_batch_sync(batch, True)
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list[i]["con"] = results[i].actor_id
+        # 4. we put altogether the walkers and controllers id to get the objects from their id
+        for i in range(len(walkers_list)):
+            all_id.append(walkers_list[i]["con"])
+            all_id.append(walkers_list[i]["id"])
+        all_actors = world.get_actors(all_id)
+
+        # wait for a tick to ensure client receives the last transform of the walkers we have just created
+        world.wait_for_tick()
+
+        # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
+        for i in range(0, len(all_id), 2):
+            # start walker
+            all_actors[i].start()
+            # set walk to random point
+            all_actors[i].go_to_location(world.get_random_location_from_navigation())
+            # random max speed
+            all_actors[i].set_max_speed(1 + random.random()/2)    # max speed between 1 and 1.5 (default is 1.4 m/s)
+
+        print('Spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
         traffic_manager = carla.GetTrafficManager(client)
         time.sleep(1)
 
         vehicle_vec = carla.TM_ActorList()
-        vehicle_vec.extend(vehicle_list)
+        vehicle_vec.extend(vehicles_list)
 
         traffic_manager.register_vehicles(vehicle_vec)
 
@@ -145,8 +189,15 @@ def main():
         if traffic_manager:
             del traffic_manager
 
-        print('Destroying %d vehicles.\n' % len(vehicle_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in vehicle_list])
+        print('Destroying %d vehicles.\n' % len(vehicles_list))
+        client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
+
+        # stop walker controllers (list is [controler, actor, controller, actor ...])
+        for i in range(0, len(all_id), 2):
+            all_actors[i].stop()
+
+        print('\ndestroying %d walkers' % len(walkers_list))
+        client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
 
 
 if __name__ == '__main__':

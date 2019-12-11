@@ -9,7 +9,7 @@ namespace LocalizationConstants {
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 4.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
-  static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 20.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.93969f;
 }
   using namespace LocalizationConstants;
