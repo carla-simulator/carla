@@ -64,6 +64,9 @@ namespace cc = carla::client;
     PIDController controller;
     /// Number of vehicles registered with the traffic manager.
     uint number_of_vehicles;
+    /// Reference to Carla's debug helper object.
+    cc::DebugHelper &debug_helper;
+
 
   public:
 
@@ -77,7 +80,8 @@ namespace cc = carla::client;
       std::vector<float> longitudinal_parameters,
       std::vector<float> highway_longitudinal_parameters,
       std::vector<float> lateral_parameters,
-      std::vector<float> highway_lateral_parameters);
+      std::vector<float> highway_lateral_parameters,
+      cc::DebugHelper &debug_helper);
 
     ~MotionPlannerStage();
 
@@ -86,6 +90,8 @@ namespace cc = carla::client;
     void Action() override;
 
     void DataSender() override;
+
+    void DrawPIDValues(const boost::shared_ptr<cc::Vehicle> vehicle, const float throttle, const float brake);
 
   };
 

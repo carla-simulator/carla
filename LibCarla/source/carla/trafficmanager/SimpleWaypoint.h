@@ -83,6 +83,9 @@ namespace cg = carla::geom;
     /// Returns true if the object's waypoint belongs to an intersection.
     bool CheckJunction() const;
 
+    /// Returns true if the object's waypoint belongs to an intersection (Doesn't use OpenDrive).
+    bool CheckIntersection() const;
+
   };
 
 }

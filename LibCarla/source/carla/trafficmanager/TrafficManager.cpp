@@ -62,7 +62,8 @@ namespace traffic_manager {
       longitudinal_PID_parameters,
       longitudinal_highway_PID_parameters,
       lateral_PID_parameters,
-      lateral_highway_PID_parameters);
+      lateral_highway_PID_parameters,
+      debug_helper);
 
     control_stage = std::make_unique<BatchControlStage>(
       "Batch control stage",
@@ -82,10 +83,10 @@ namespace traffic_manager {
 
     if (singleton_pointer == nullptr) {
 
-      std::vector<float> longitudinal_param = {0.1f, 0.15f, 0.01f};
-      std::vector<float> longitudinal_highway_param = {5.0f, 0.1f, 0.01f};
+      std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
+      std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
       std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      std::vector<float> lateral_highway_param = {3.0f, 0.0f, 20.0f};
+      std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
       float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(

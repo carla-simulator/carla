@@ -86,6 +86,10 @@ namespace cc = carla::client;
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint number_of_vehicles;
+    /// Used to only calculate the extended buffer once at junctions
+    std::map<carla::ActorId, bool> approached;
+    /// Final Waypoint of the bounding box at intersections, amps to their respective IDs
+    std::map<carla::ActorId, SimpleWaypointPtr> final_points;
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
     /// Map of all vehicles' idle time
@@ -95,9 +99,9 @@ namespace cc = carla::client;
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
     /// Methods for idle vehicle elimination.
-    void ResetIdleTime(Actor actor);
+    /* void ResetIdleTime(Actor actor);
     void CheckIdleTime(Actor actor);
-    void KillVehicle(Actor actor);
+    void KillVehicle(Actor actor);*/
 
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);

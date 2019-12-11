@@ -138,30 +138,8 @@ def main():
 
         traffic_manager.register_vehicles(vehicle_vec)
 
-        # Arbitrarily setting some vehicle velocities to 15% below max speed.
-        time.sleep(5)
-        for v in vehicle_list:
-            if (v.id % 2 == 0):
-                traffic_manager.set_vehicle_max_speed_difference(v, 30.0)
-                traffic_manager.set_distance_to_leading_vehicle(v, 3)
-            else:
-                traffic_manager.set_distance_to_leading_vehicle(v, 6)
-                pass
-
-        show_tl_count_down(10)
-        print("Time to reset the lights!")
-        start = time.time()
-        traffic_manager.reset_traffic_lights()
-        print("Total time needed: " + str(time.time() - start))
-        show_tl_count_down(15)
-
         while True:
             time.sleep(1)
-
-    except Exception as e:
-
-        print(e)
-        print("Stopping TrafficManager!")
 
     finally:
         if traffic_manager:
