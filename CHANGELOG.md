@@ -1,6 +1,9 @@
 ## Latest
+  * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Added new sensor: Inertial measurement unit (IMU)
+  * Added new sensor: Radar
   * Moved GNSS sensor from client to server side
+  * New Python API function added (map.get_crosswalks()) that return a list with all points that define the crosswalk zones from OpenDRIVE file
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
@@ -8,6 +11,7 @@
     - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
   * API extensions:
     - Added `carla.IMUMeasurement`
+    - Added `carla.RadarMeasurement` and `carla.RadarDetection`
     - GNSS data can now be obtained with noise
     - IMU data can now be obtained with noise
   * Updated manual_control.py with a lens disortion effect example
@@ -20,6 +24,7 @@
   * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
 

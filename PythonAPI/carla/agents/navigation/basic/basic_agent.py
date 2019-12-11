@@ -122,3 +122,9 @@ class BasicAgent(Agent):
 
         return control
 
+    def done(self):
+        """
+        Check whether the agent has reached its destination.
+        :return bool
+        """
+        return self._local_planner.done()
