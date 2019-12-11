@@ -80,7 +80,6 @@ def main():
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter(args.filter)
         blueprints_walkers = world.get_blueprint_library().filter(args.filterw)
-        debug = world.debug
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
