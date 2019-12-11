@@ -21,7 +21,6 @@ pipeline {
             steps {
                 sh 'make LibCarla'
                 sh 'make PythonAPI'
-                sh 'make TrafficManager'
                 sh 'make CarlaUE4Editor'
                 sh 'make examples'
             }
