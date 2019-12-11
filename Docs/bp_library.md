@@ -136,6 +136,14 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `only_dynamics` (_Bool_)<sub>_ – Modifiable_</sub>
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">sensor.other.radar</font>**  
+    - **Attributes:**
+        - `horizontal_fov` (_Float_)<sub>_ – Modifiable_</sub>
+        - `points_per_second` (_Int_)<sub>_ – Modifiable_</sub>
+        - `range` (_Float_)<sub>_ – Modifiable_</sub>
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
+        - `vertical_fov` (_Float_)<sub>_ – Modifiable_</sub>
 
 ### static
 - **<font color="#498efc">static.prop.advertisement</font>**  

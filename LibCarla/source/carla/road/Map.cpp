@@ -12,6 +12,7 @@
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
+#include "carla/road/element/RoadObjectCrosswalk.h"
 #include "carla/geom/Math.h"
 
 #include <stdexcept>
@@ -107,6 +108,10 @@ namespace road {
       const T container,
       const double s,
       const LaneId lane_id) {
+
+    // lane_id can't be 0
+    RELEASE_ASSERT(lane_id != 0);
+
     const bool negative_lane_id = lane_id < 0;
     double dist = 0.0;
     double tangent = 0.0;
@@ -240,9 +245,6 @@ namespace road {
   }
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
-    // lane_id can't be 0
-    RELEASE_ASSERT(waypoint.lane_id != 0);
-
     const auto &road = _data.GetRoad(waypoint.road_id);
 
     // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
@@ -259,6 +261,7 @@ namespace road {
 
     float lane_width = 0.0f;
     float lane_tangent = 0.0f;
+
     if (waypoint.lane_id < 0) {
       // right lane
       const auto side_lanes = MakeListView(
@@ -267,7 +270,7 @@ namespace road {
           ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
       lane_width = static_cast<float>(computed_width.first);
       lane_tangent = static_cast<float>(computed_width.second);
-    } else {
+    } else if (waypoint.lane_id > 0) {
       // left lane
       const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
       const auto computed_width =
@@ -361,6 +364,61 @@ namespace road {
       const geom::Location &origin,
       const geom::Location &destination) const {
     return LaneCrossingCalculator::Calculate(*this, origin, destination);
+  }
+
+  std::vector<geom::Location> Map::GetAllCrosswalkZones() const {
+    std::vector<geom::Location> result;
+
+     for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<const RoadObjectCrosswalk *> crosswalks = road.GetObjects<RoadObjectCrosswalk>();
+      if (crosswalks.size() > 0) {
+        for (auto crosswalk : crosswalks) {
+          // waypoint only at start position
+          std::vector<geom::Location> points;
+          Waypoint waypoint;
+          geom::Transform base;
+          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
+            // get the section with the center lane
+            for (const auto &lane : section.GetLanes()) {
+              // is the center line
+              if (lane.first == 0) {
+                // get the center point
+                waypoint.road_id = pair.first;
+                waypoint.section_id = section.GetId();
+                waypoint.lane_id = 0;
+                waypoint.s = crosswalk->GetS();
+                base = ComputeTransform(waypoint);
+              }
+            }
+          }
+
+          // move perpendicular ('t')
+          geom::Transform pivot = base;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
+          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
+          pivot.TransformPoint(v);
+          // restore pivot position and orientation
+          pivot = base;
+          pivot.location = v;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // calculate all the corners
+          for (auto corner : crosswalk->GetPoints()) {
+            geom::Vector3D v2(static_cast<float>(corner.u), static_cast<float>(corner.v), static_cast<float>(corner.z));
+            // set the width larger to contact with the sidewalk (in case they have gutter area)
+            if (corner.u < 0)
+              v2.x -= 1.0f;
+            else
+              v2.x += 1.0f;
+            pivot.TransformPoint(v2);
+            result.push_back(v2);
+          }
+        }
+      }
+    }
+    return result;
   }
 
   // ===========================================================================

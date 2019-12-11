@@ -247,8 +247,18 @@ def serialize_records(records, system_specs, filename):
                                                                            record['fps_std'])
                 fd.write(s)
 
+        s = "|  |  |  |  | **{:03.2f}** | **{:03.2f}** |\n".format(*get_total(records))
+        fd.write(s)
+
         s = "Table: {}.\n".format(system_specs)
         fd.write(s)
+
+
+def get_total(records):
+    record_vals = [item for sublist in records.values() for item in sublist]
+    total_mean_fps = sum([r['fps_mean'] for r in record_vals]) / len(record_vals)
+    total_mean_std = sum([r['fps_std'] for r in record_vals]) / len(record_vals)
+    return total_mean_fps, total_mean_std
 
 
 def get_system_specs():

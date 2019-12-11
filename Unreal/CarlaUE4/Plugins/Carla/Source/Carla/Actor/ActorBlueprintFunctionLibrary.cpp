@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -630,16 +630,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
-FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
-    const FString &Id)
-{
-  FActorDefinition Definition;
-  bool Success;
-  MakeLidarDefinition(Id, Success, Definition);
-  check(Success);
-  return Definition;
-}
-
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;
@@ -736,6 +726,65 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
     BiasGyroZ});
 
   Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRadarDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRadarDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
+  AddVariationsForSensor(Definition);
+
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("30") };
+  HorizontalFOV.bRestrictToRecommended = false;
+
+  FActorVariation VerticalFOV;
+  VerticalFOV.Id = TEXT("vertical_fov");
+  VerticalFOV.Type = EActorAttributeType::Float;
+  VerticalFOV.RecommendedValues = { TEXT("30") };
+  VerticalFOV.bRestrictToRecommended = false;
+
+  FActorVariation Range;
+  Range.Id = TEXT("range");
+  Range.Type = EActorAttributeType::Float;
+  Range.RecommendedValues = { TEXT("100") };
+  Range.bRestrictToRecommended = false;
+
+  FActorVariation PointsPerSecond;
+  PointsPerSecond.Id = TEXT("points_per_second");
+  PointsPerSecond.Type = EActorAttributeType::Int;
+  PointsPerSecond.RecommendedValues = { TEXT("1500") };
+  PointsPerSecond.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    HorizontalFOV,
+    VerticalFOV,
+    Range,
+    PointsPerSecond});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
+    const FString &Id)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeLidarDefinition(Id, Success, Definition);
+  check(Success);
+  return Definition;
 }
 
 void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
@@ -1233,8 +1282,8 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 /// -- Helpers to set Actors ---------------------------------------------------
 /// ============================================================================
 
-// Here we do different checks when we are in editor, because we don't want the
-// editor crashing while people is testing new actor definitions.
+// Here we do different checks when we are in editor because we don't want the
+// editor crashing while people are testing new actor definitions.
 #if WITH_EDITOR
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr)                    \
   if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill())     \
@@ -1376,10 +1425,7 @@ void UActorBlueprintFunctionLibrary::SetGnss(
     const FActorDescription &Description,
     AGnssSensor *Gnss)
 {
-  if(Gnss == nullptr) {
-    return;
-  }
-
+  CARLA_ABFL_CHECK_ACTOR(Gnss);
   if (Description.Variations.Contains("noise_seed"))
   {
     Gnss->SetSeed(
@@ -1408,11 +1454,7 @@ void UActorBlueprintFunctionLibrary::SetIMU(
     const FActorDescription &Description,
     AInertialMeasurementUnit *IMU)
 {
-  if (IMU == nullptr)
-  {
-    return;
-  }
-
+  CARLA_ABFL_CHECK_ACTOR(IMU);
   if (Description.Variations.Contains("noise_seed"))
   {
     IMU->SetSeed(
@@ -1440,6 +1482,23 @@ void UActorBlueprintFunctionLibrary::SetIMU(
     RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
     RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
   });
+}
+
+void UActorBlueprintFunctionLibrary::SetRadar(
+    const FActorDescription &Description,
+    ARadar *Radar)
+{
+  CARLA_ABFL_CHECK_ACTOR(Radar);
+  constexpr float TO_CENTIMETERS = 1e2;
+
+  Radar->SetHorizontalFOV(
+    RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+  Radar->SetVerticalFOV(
+    RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+  Radar->SetRange(
+    RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+  Radar->SetPointsPerSecond(
+    RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR

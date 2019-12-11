@@ -20,6 +20,8 @@
 #include "carla/road/element/RoadInfoMarkTypeLine.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoVisitor.h"
+#include "carla/road/element/RoadObjectCrosswalk.h"
+#include "carla/road/element/RoadObjectVisitor.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/general/Validity.h"
 #include "carla/road/signal/Signal.h"
@@ -43,6 +45,11 @@ namespace road {
       info.first->_info = InformationSet(std::move(info.second));
     }
 
+    for (auto &&info : _temp_road_object_container) {
+      DEBUG_ASSERT(info.first != nullptr);
+      info.first->_objects = ObjectSet(std::move(info.second));
+    }
+
     for (auto &&info : _temp_lane_info_container) {
       DEBUG_ASSERT(info.first != nullptr);
       info.first->_info = InformationSet(std::move(info.second));
@@ -50,6 +57,7 @@ namespace road {
 
     // remove temporal already used information
     _temp_road_info_container.clear();
+    _temp_road_object_container.clear();
     _temp_lane_info_container.clear();
 
     // _map_data is a memeber of MapBuilder so you must especify if
@@ -69,6 +77,24 @@ namespace road {
     DEBUG_ASSERT(road != nullptr);
     auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
     _temp_road_info_container[road].emplace_back(std::move(elevation));
+  }
+
+  void MapBuilder::AddRoadObjectCrosswalk(
+      Road *road,
+      const std::string name,
+      const double s,
+      const double t,
+      const double zOffset,
+      const double hdg,
+      const double pitch,
+      const double roll,
+      const std::string orientation,
+      const double width,
+      const double length,
+      const std::vector<road::element::CrosswalkPoint> points) {
+    DEBUG_ASSERT(road != nullptr);
+    auto cross = std::make_unique<RoadObjectCrosswalk>(s, name, t, zOffset, hdg, pitch, roll, std::move(orientation), width, length, std::move(points));
+    _temp_road_object_container[road].emplace_back(std::move(cross));
   }
 
   // called from lane parser

@@ -67,7 +67,6 @@ void AGnssSensor::SetAltitudeDeviation(float Value)
   AltitudeDeviation = Value;
 }
 
-
 void AGnssSensor::SetLatitudeBias(float Value)
 {
   LatitudeBias = Value;

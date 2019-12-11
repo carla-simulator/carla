@@ -224,6 +224,10 @@
         type: list
         doc: >
           A list of commands to execute in batch. For a list of commands available see function above apply_batch().
+      - param_name: due_tick_cue
+        type: bool
+        doc: >
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_.
       return: list
       doc: >
         This function executes the whole list of commands on a single simulation

@@ -229,6 +229,11 @@
       doc: >
         Find actor by id, return None if not found.
     # --------------------------------------
+    - def_name: get_random_location_from_navigation
+      return: carla.Location
+      doc: >
+        Retrieve a random location to be used as a destination for walkers in carla.WalkerAIController.go_to_location. See [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
+    # --------------------------------------
     - def_name: get_actors
       return: carla.ActorList
       doc: >

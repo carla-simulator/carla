@@ -65,6 +65,8 @@ namespace client {
 
     const geom::GeoLocation &GetGeoReference() const;
 
+    std::vector<geom::Location> GetAllCrosswalkZones() const;
+
   private:
 
     const rpc::MapInfo _description;
