@@ -21,6 +21,7 @@
   * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
+  * Added IMU and Radar realtime visualization in `manual_control.py`
   * Fixed client_bounding_boxes.py example script
   * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
