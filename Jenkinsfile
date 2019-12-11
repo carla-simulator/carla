@@ -53,7 +53,7 @@ pipeline {
         stage('Package') {
             steps {
                 sh 'make package'
-                sh 'make package ARGS="--packages=Town06,Town07 --clean-intermediate"'
+                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
             }
             post {
                 always {
