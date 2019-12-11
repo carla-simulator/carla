@@ -19,19 +19,29 @@ namespace traffic_manager {
         }
     }
 
-    float DeviationDotProduct(Actor actor, const cg::Location &target_location) {
+    float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset) {
 
         cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
         heading_vector.z = 0;
         heading_vector = heading_vector.MakeUnitVector();
-        cg::Location next_vector = target_location - actor->GetLocation();
+        cg::Location next_vector;
+
+        if (!rear_offset) {
+          next_vector = target_location - actor->GetLocation();
+        } else {
+          auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor);
+          float vehicle_half_length = vehicle_ptr->GetBoundingBox().extent.x;
+          next_vector = target_location - (cg::Location(-1* vehicle_half_length * heading_vector)
+                                           + vehicle_ptr->GetLocation());
+        }
+
         next_vector.z = 0;
         if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
-        next_vector = next_vector.MakeUnitVector();
-        float dot_product = cg::Math::Dot(next_vector, heading_vector);
-        return dot_product;
+          next_vector = next_vector.MakeUnitVector();
+          float dot_product = cg::Math::Dot(next_vector, heading_vector);
+          return dot_product;
         } else {
-        return 0;
+          return 0;
         }
     }
 

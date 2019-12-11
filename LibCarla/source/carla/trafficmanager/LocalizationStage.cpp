@@ -6,7 +6,7 @@ namespace LocalizationConstants {
   static const float WAYPOINT_TIME_HORIZON = 3.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-  static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.0f;
+  static const float TARGET_WAYPOINT_HORIZON_LENGTH = 4.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
@@ -82,14 +82,14 @@ namespace LocalizationConstants {
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
+        float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
 
           //ResetIdleTime(vehicle);
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
+            dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
           }
         }
       }
@@ -538,7 +538,7 @@ namespace LocalizationConstants {
 
     if (need_to_change_lane && possible_to_lane_change) {
       auto starting_point = change_over_point;
-      while (change_over_point->DistanceSquared(starting_point) < change_over_distance &&
+      while (change_over_point->DistanceSquared(starting_point) < std::pow(change_over_distance, 2) &&
              !change_over_point->CheckJunction()) {
         change_over_point = change_over_point->GetNextWaypoint()[0];
       }
