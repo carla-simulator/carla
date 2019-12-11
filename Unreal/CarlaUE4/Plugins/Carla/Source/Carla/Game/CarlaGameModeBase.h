@@ -77,4 +77,5 @@ private:
 
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
+
 };

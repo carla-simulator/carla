@@ -1,8 +1,19 @@
 ## Latest
+  * Added new sensor: Inertial measurement unit (IMU)
+  * Moved GNSS sensor from client to server side
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
+  * API changes:
+    - Lidar: `range` is now set in meters, not in centimeters
+    - Lidar: `horizontal_angle` is now received in radians, not in degrees
+    - GNSS: `carla.GnssEvent` renamed to `carla.GnssMeasurement`
+  * API extensions:
+    - Added `carla.IMUMeasurement`
+    - GNSS data can now be obtained with noise
+    - IMU data can now be obtained with noise
   * Updated manual_control.py with a lens disortion effect example
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Fixed pylint for python3 in travis
+  * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script

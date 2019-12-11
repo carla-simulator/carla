@@ -651,6 +651,7 @@ class LaneInvasionSensor(object):
         text = ['%r' % str(x).split()[-1] for x in lane_types]
         self.hud.notification('Crossed line %s' % ' and '.join(text))
 
+
 # ==============================================================================
 # -- GnssSensor --------------------------------------------------------
 # ==============================================================================
@@ -726,7 +727,7 @@ class CameraManager(object):
                 for attr_name, attr_value in item[3].items():
                     bp.set_attribute(attr_name, attr_value)
             elif item[0].startswith('sensor.lidar'):
-                bp.set_attribute('range', '5000')
+                bp.set_attribute('range', '50')
             item.append(bp)
         self.index = None
 
