@@ -75,6 +75,8 @@ namespace road {
         const geom::Location &origin,
         const geom::Location &destination) const;
 
+    std::vector<geom::Location> GetAllCrosswalkZones() const;
+
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================

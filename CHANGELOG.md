@@ -7,6 +7,7 @@
     * They will try to avoid vehicles
     * They can walk only through sidewalks, and cross the road through the crosswalk zones defined
     * A user defined % of pedestrians will be allowed to cross roads freely.
+  * New Python API function added (map.get_crosswalks()) that return a list with all points that define the crosswalk zones from OpenDRIVE file
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
@@ -24,7 +25,6 @@
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
   * Fixed client_bounding_boxes.py example script
-  * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
