@@ -130,7 +130,7 @@ namespace CollisionStageConstants {
               //   ego_location + cg::Location(0, 0, 2),
               //   other_location + cg::Location(0, 0, 2),
               //   0.2f, {255u, 0u, 0u}, 0.1f
-              // );
+              // ); THE PROBLEM IS SOMEWHERE HERE WITH COLLISIONS, IT RETURNS FALSE FOR COLLISION HAZARD
 
               if (parameters.GetCollisionDetection(ego_actor, actor) &&
                   NegotiateCollision(ego_actor, actor)) {
@@ -387,10 +387,10 @@ namespace CollisionStageConstants {
 
     auto& data_packet = localization_frame->at(vehicle_id_to_index.at(ego_vehicle->GetId()));
     Buffer &waypoint_buffer =  data_packet.buffer;
+    float velocity = ego_vehicle->GetVelocity().Length();
+    std::unordered_set<ActorId> actor_id_list = data_packet.overlapping_actors;
 
-    std::unordered_set<ActorId> actor_id_list;
-
-    if (waypoint_buffer.front()->CheckJunction()) {
+    if (waypoint_buffer.front()->CheckJunction() && velocity < HIGHWAY_SPEED) {
       actor_id_list = vicinity_grid.GetActors(ego_vehicle);
     } else {
       actor_id_list = data_packet.overlapping_actors;

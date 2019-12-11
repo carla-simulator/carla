@@ -86,7 +86,7 @@ namespace LocalizationConstants {
 
         while (dot_product <= 0 && !waypoint_buffer.empty()) {
 
-          ResetIdleTime(vehicle);
+          //ResetIdleTime(vehicle);
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
             dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation());
@@ -195,7 +195,7 @@ namespace LocalizationConstants {
       }
 
       bool approaching_junction = false;
-      if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
+      if (waypoint_buffer.front()->CheckJunction() || (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction()))) {
         if (speed_limit > HIGHWAY_SPEED) {
           for (uint j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
@@ -260,22 +260,22 @@ namespace LocalizationConstants {
       collision_frame_ready = true;
     }
 
-    for (uint i = 0u; i < actor_list.size(); ++i) {
-      CheckIdleTime(actor_list.at(i));
-    }
+    //for (uint i = 0u; i < actor_list.size(); ++i) {
+    //  CheckIdleTime(actor_list.at(i));
+    //}
 
   }
 
-  void LocalizationStage::ResetIdleTime(Actor actor) {
+  /*void LocalizationStage::ResetIdleTime(Actor actor) {
     idle_time[actor->GetId()] = chr::system_clock::now();
   }
 
   void LocalizationStage::CheckIdleTime(Actor actor) {
     chr::duration<float> time_difference = chr::system_clock::now() - idle_time[actor->GetId()];
-    if (time_difference.count() > 60.0f) { // 60 seconds
-      std::cout << "The time difference is: " << time_difference.count() << "s for actor id: " << actor->GetId() << std::endl;
+    //if (time_difference.count() > 60.0f) { // 60 seconds
+      //std::cout << "The time difference is: " << time_difference.count() << "s for actor id: " << actor->GetId() << std::endl;
       // TODO: Kill it and don't break stuff. Right now, it breaks stuff.
-    }
+    //}
   }
 
   void LocalizationStage::KillVehicle(Actor actor) {
@@ -284,7 +284,7 @@ namespace LocalizationConstants {
     to_remove.push_back(actor);
     //registered_actors.Destroy(to_remove);
     debug_helper.DrawString(actor->GetLocation() + cg::Location(0,0,2), "I should be dead.", false, {255u, 0u, 0u}, 0.1f);
-  }
+  }*/
 
   void LocalizationStage::DataReceiver() {
 
@@ -464,7 +464,8 @@ namespace LocalizationConstants {
 
         for (auto& candidate_lane_wp: other_neighbouring_lanes) {
           if (candidate_lane_wp != nullptr &&
-              track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0) {
+              track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
+              vehicle_velocity < HIGHWAY_SPEED) {
             distant_lane_availability = true;
           }
         }
