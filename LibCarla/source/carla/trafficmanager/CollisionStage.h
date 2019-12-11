@@ -1,12 +1,18 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <algorithm>
 #include <cmath>
 #include <deque>
+#include <stdlib.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <stdlib.h>
 
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
@@ -30,10 +36,10 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
-namespace chr = std::chrono;
-namespace bg = boost::geometry;
+  namespace cc = carla::client;
+  namespace cg = carla::geom;
+  namespace chr = std::chrono;
+  namespace bg = boost::geometry;
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
@@ -107,12 +113,12 @@ namespace bg = boost::geometry;
   public:
 
     CollisionStage(
-      std::string stage_name,
-      std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
-      std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-      cc::World &world,
-      Parameters &parameters,
-      cc::DebugHelper &debug_helper);
+        std::string stage_name,
+        std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
+        std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
+        cc::World &world,
+        Parameters &parameters,
+        cc::DebugHelper &debug_helper);
 
     ~CollisionStage();
 
@@ -124,4 +130,4 @@ namespace bg = boost::geometry;
 
   };
 
-}
+} // namespace traffic_manager

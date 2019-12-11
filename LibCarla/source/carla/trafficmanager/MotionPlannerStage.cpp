@@ -1,11 +1,19 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "MotionPlannerStage.h"
 
 namespace traffic_manager {
 
 namespace PlannerConstants {
-  static const float HIGHWAY_SPEED = 50 / 3.6f;
 
-}
+  static const float HIGHWAY_SPEED = 50.0f / 3.6f;
+
+} // namespace PlannerConstants
+
   using namespace PlannerConstants;
 
   MotionPlannerStage::MotionPlannerStage(
@@ -52,25 +60,25 @@ namespace PlannerConstants {
   void MotionPlannerStage::Action() {
 
     // Selecting an output frame.
-    auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
+    const auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
 
     // Looping over all vehicles.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
-      LocalizationToPlannerData &localization_data = localization_frame->at(i);
-      Actor actor = localization_data.actor;
-      float current_deviation = localization_data.deviation;
-      float current_distance = localization_data.distance;
+      const LocalizationToPlannerData &localization_data = localization_frame->at(i);
+      const Actor actor = localization_data.actor;
+      const float current_deviation = localization_data.deviation;
+      const float current_distance = localization_data.distance;
 
-      ActorId actor_id = actor->GetId();
+      const ActorId actor_id = actor->GetId();
 
-      auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-      float current_velocity = vehicle->GetVelocity().Length();
+      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+      const float current_velocity = vehicle->GetVelocity().Length();
 
-      auto current_time = chr::system_clock::now();
+      const auto current_time = chr::system_clock::now();
 
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-        auto initial_state = StateEntry{0.0f, 0.0f, 0.0f, chr::system_clock::now(), 0.0f, 0.0f, 0.0f};
+        const auto initial_state = StateEntry{0.0f, 0.0f, 0.0f, chr::system_clock::now(), 0.0f, 0.0f, 0.0f};
         pid_state_map.insert({actor_id, initial_state});
       }
 
@@ -79,9 +87,9 @@ namespace PlannerConstants {
       previous_state = pid_state_map.at(actor_id);
 
       // Increase speed if on highway.
-      float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
+      const float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
 
-      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
+      const float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
 
       if (speed_limit > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
@@ -130,28 +138,27 @@ namespace PlannerConstants {
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
-      //DrawPIDValues(vehicle, actuation_signal.throttle, actuation_signal.brake);
     }
   }
 
   void MotionPlannerStage::DataReceiver() {
 
-    auto localization_packet = localization_messenger->ReceiveData(localization_messenger_state);
+    const auto localization_packet = localization_messenger->ReceiveData(localization_messenger_state);
     localization_frame = localization_packet.data;
     localization_messenger_state = localization_packet.id;
 
     // Block on receive call only if new data is available on the messenger.
-    int collision_messenger_current_state = collision_messenger->GetState();
+    const int collision_messenger_current_state = collision_messenger->GetState();
     if (collision_messenger_current_state != collision_messenger_state) {
-      auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
+      const auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
       collision_frame = collision_packet.data;
       collision_messenger_state = collision_packet.id;
     }
 
     // Block on receive call only if new data is available on the messenger.
-    int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
+    const int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
     if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
-      auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);
+      const auto traffic_light_packet = traffic_light_messenger->ReceiveData(traffic_light_messenger_state);
       traffic_light_frame = traffic_light_packet.data;
       traffic_light_messenger_state = traffic_light_packet.id;
     }
@@ -170,15 +177,16 @@ namespace PlannerConstants {
   void MotionPlannerStage::DataSender() {
 
     DataPacket<std::shared_ptr<PlannerToControlFrame>> data_packet = {
-      control_messenger_state,
-      frame_selector ? control_frame_a : control_frame_b
-    };
+        control_messenger_state,
+        frame_selector ? control_frame_a : control_frame_b
+      };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);
   }
 
   void MotionPlannerStage::DrawPIDValues(const boost::shared_ptr<cc::Vehicle> vehicle, const float throttle, const float brake) {
-    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0,0,2), std::to_string(throttle), false, {0u, 255u, 0u}, 0.005f);
-    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0,0,4), std::to_string(brake), false, {255u, 0u, 0u}, 0.005f);
+    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0.0f,0.0f,2.0f), std::to_string(throttle), false, {0u, 255u, 0u}, 0.005f);
+    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0.0f,0.0f,4.0f), std::to_string(brake), false, {255u, 0u, 0u}, 0.005f);
   }
-}
+
+} // namespace traffic_manager

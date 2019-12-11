@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <vector>
@@ -8,7 +14,7 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
+  namespace cc = carla::client;
 
   /// This class is responsible for retrieving data from the server.
   class CarlaDataAccessLayer {
@@ -28,4 +34,4 @@ namespace cc = carla::client;
 
   };
 
-}
+} // namespace traffic_manager

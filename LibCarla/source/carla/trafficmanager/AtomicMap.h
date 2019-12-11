@@ -1,42 +1,52 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <mutex>
 #include <unordered_map>
 
-template <typename Key, typename Value>
-class AtomicMap {
+namespace traffic_manager {
 
-  private:
+  template <typename Key, typename Value>
+  class AtomicMap {
 
-  std::mutex map_mutex;
-  std::unordered_map<Key, Value> map;
+    private:
 
-  public:
+    std::mutex map_mutex;
+    std::unordered_map<Key, Value> map;
 
-  AtomicMap() {}
+    public:
 
-  void AddEntry(const std::pair<Key, Value> &entry) {
+    AtomicMap() {}
 
-    std::lock_guard<std::mutex> lock(map_mutex);
-    map.insert(entry);
-  }
+    void AddEntry(const std::pair<Key, Value> &entry) {
 
-  bool Contains(const Key &key) {
+      std::lock_guard<std::mutex> lock(map_mutex);
+      map.insert(entry);
+    }
 
-    std::lock_guard<std::mutex> lock(map_mutex);
-    return map.find(key) != map.end();
-  }
+    bool Contains(const Key &key) {
 
-  Value &GetValue(const Key &key) {
+      std::lock_guard<std::mutex> lock(map_mutex);
+      return map.find(key) != map.end();
+    }
 
-    std::lock_guard<std::mutex> lock(map_mutex);
-    return map.at(key);
-  }
+    Value &GetValue(const Key &key) {
 
-  void RemoveEntry(const Key &key) {
+      std::lock_guard<std::mutex> lock(map_mutex);
+      return map.at(key);
+    }
 
-    std::lock_guard<std::mutex> lock(map_mutex);
-    map.erase(key);
-  }
+    void RemoveEntry(const Key &key) {
 
-};
+      std::lock_guard<std::mutex> lock(map_mutex);
+      map.erase(key);
+    }
+
+  };
+
+} // namespace traffic_manager

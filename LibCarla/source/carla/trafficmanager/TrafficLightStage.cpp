@@ -1,5 +1,12 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include <iostream>
+
 #include "TrafficLightStage.h"
-#include "iostream"
 
 namespace traffic_manager {
 
@@ -36,30 +43,28 @@ namespace traffic_manager {
   void TrafficLightStage::Action() {
 
     // Selecting the output frame based on the selection key.
-    auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
+    const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
     // Looping over registered actors.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
       bool traffic_light_hazard = false;
-      LocalizationToTrafficLightData &data = localization_frame->at(i);
-      Actor ego_actor = data.actor;
-      ActorId ego_actor_id = ego_actor->GetId();
-      SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
-      SimpleWaypointPtr look_ahead_point = data.junction_look_ahead_waypoint;
+      const LocalizationToTrafficLightData &data = localization_frame->at(i);
+      const Actor ego_actor = data.actor;
+      const ActorId ego_actor_id = ego_actor->GetId();
+      const SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
+      const SimpleWaypointPtr look_ahead_point = data.junction_look_ahead_waypoint;
 
-      JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
-      TimeInstance current_time = chr::system_clock::now();
+      const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
+      const TimeInstance current_time = chr::system_clock::now();
 
-      auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
+      const auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
       // Generate number between 0 and 100
-      int r = rand() % 101;
+      const int r = rand() % 101;
 
       // Set to green if random number is lower than percentage, default is 0
       if (parameters.GetPercentageRunningLight(boost::shared_ptr<cc::Actor>(ego_actor)) > r)
         traffic_light_state = TLS::Green;
-
-      //DrawLight(traffic_light_state, ego_actor);
 
       // We determine to stop if the current position of the vehicle is not a
       // junction,
@@ -96,8 +101,8 @@ namespace traffic_manager {
             need_to_issue_new_ticket = true;
           } else {
 
-            TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
-            chr::duration<double> diff = current_time - previous_ticket;
+            const TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
+            const chr::duration<double> diff = current_time - previous_ticket;
             if (diff.count() > NO_SIGNAL_PASSTHROUGH_INTERVAL) {
               need_to_issue_new_ticket = true;
             }
@@ -110,8 +115,8 @@ namespace traffic_manager {
             if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
 
               TimeInstance &last_ticket = junction_last_ticket.at(junction_id);
-              chr::duration<double> diff = current_time - last_ticket;
-              if (diff.count() > 0) {
+              const chr::duration<double> diff = current_time - last_ticket;
+              if (diff.count() > 0.0) {
                 last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
               } else {
                 last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
@@ -131,9 +136,9 @@ namespace traffic_manager {
         }
 
         // If current time is behind ticket time, then do not enter junction.
-        TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
-        chr::duration<double> diff = current_ticket - current_time;
-        if (diff.count() > 0) {
+        const TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
+        const chr::duration<double> diff = current_ticket - current_time;
+        if (diff.count() > 0.0) {
           traffic_light_hazard = true;
         }
       }
@@ -145,7 +150,7 @@ namespace traffic_manager {
   }
 
   void TrafficLightStage::DataReceiver() {
-    auto packet = localization_messenger->ReceiveData(localization_messenger_state);
+    const auto packet = localization_messenger->ReceiveData(localization_messenger_state);
     localization_frame = packet.data;
     localization_messenger_state = packet.id;
 
@@ -162,10 +167,10 @@ namespace traffic_manager {
 
   void TrafficLightStage::DataSender() {
 
-    DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
-      planner_messenger_state,
-      frame_selector ? planner_frame_a : planner_frame_b
-    };
+    const DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
+        planner_messenger_state,
+        frame_selector ? planner_frame_a : planner_frame_b
+      };
     frame_selector = !frame_selector;
     planner_messenger_state = planner_messenger->SendData(packet);
   }
@@ -175,28 +180,29 @@ namespace traffic_manager {
     if (traffic_light_state == TLS::Green) {
       str="Green";
       debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {0u, 255u, 0u}, 0.1f, true);
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          str,
+          false,
+          {0u, 255u, 0u}, 0.1f, true);
     }
 
     else if (traffic_light_state == TLS::Yellow) {
       str="Yellow";
       debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {255u, 255u, 0u}, 0.1f, true);
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          str,
+          false,
+          {255u, 255u, 0u}, 0.1f, true);
     }
 
     else {
       str="Red";
       debug_helper.DrawString(
-        cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1),
-        str,
-        false,
-        {255u, 0u, 0u}, 0.1f, true);
+          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          str,
+          false,
+          {255u, 0u, 0u}, 0.1f, true);
     }
   }
-}
+
+} // namespace traffic_manager
