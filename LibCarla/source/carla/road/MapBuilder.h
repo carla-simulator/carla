@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/road/Map.h"
+#include "carla/road/element/RoadObjectCrosswalk.h"
 
 #include <boost/optional.hpp>
 
@@ -107,6 +108,20 @@ namespace road {
         const double b,
         const double c,
         const double d);
+
+    void AddRoadObjectCrosswalk(
+        Road *road,
+        const std::string name,
+        const double s,
+        const double t,
+        const double zOffset,
+        const double hdg,
+        const double pitch,
+        const double roll,
+        const std::string orientation,
+        const double width,
+        const double length,
+        const std::vector<road::element::CrosswalkPoint> points);
 
     // void AddRoadLateralSuperElevation(
     //     Road* road,
@@ -353,6 +368,9 @@ namespace road {
     /// built, so they can be added all together.
     std::unordered_map<Road *, std::vector<std::unique_ptr<element::RoadInfo>>>
     _temp_road_info_container;
+
+    std::unordered_map<Road *, std::vector<std::unique_ptr<element::RoadObject>>>
+    _temp_road_object_container;
 
     std::unordered_map<Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
     _temp_lane_info_container;
