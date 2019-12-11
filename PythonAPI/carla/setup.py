@@ -18,7 +18,7 @@ def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
 
     library_dirs = ['dependencies/lib']
-    libraries = ['jpeg', 'tiff']
+    libraries = []
 
     sources = ['source/libcarla/libcarla.cpp']
 

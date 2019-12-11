@@ -163,7 +163,7 @@ float AInertialMeasurementUnit::ComputeCompass()
   float Compass = std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect));
 
   // Keep the angle between [0, 2pi)
-  if (FVector::CrossProduct(CarlaNorthVector, ForwVect).Z > 0.0f)
+  if (FVector::CrossProduct(CarlaNorthVector, ForwVect).Z < 0.0f)
   {
     Compass = carla::geom::Math::Pi2<float>() - Compass;
   }
