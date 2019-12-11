@@ -213,9 +213,7 @@ namespace CollisionStageConstants {
     auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
 
     if (waypoint_buffer.front()->CheckJunction() &&
-        reference_vehicle_ptr->GetTrafficLightState() != TLS::Red &&
-        other_buffer.front()->CheckJunction() &&
-        other_vehicle_ptr->GetTrafficLightState() != TLS::Red) {
+        other_buffer.front()->CheckJunction()) {
 
       Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
       Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
