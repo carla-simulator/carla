@@ -117,6 +117,12 @@ namespace client {
     /// @return The id of the frame that this call started.
     uint64_t Tick();
 
+    /// set the probability that an agent could cross the roads in its path following
+    /// percentage of 0.0f means no pedestrian can cross roads
+    /// percentage of 0.5f means 50% of all pedestrians can cross roads
+    /// percentage of 1.0f means all pedestrians can cross roads if needed
+    void SetPedestriansCrossFactor(float percentage);
+
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};
     }
