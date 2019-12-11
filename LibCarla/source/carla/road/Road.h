@@ -10,6 +10,7 @@
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/InformationSet.h"
+#include "carla/road/ObjectSet.h"
 #include "carla/road/Junction.h"
 #include "carla/road/LaneSection.h"
 #include "carla/road/LaneSectionMap.h"
@@ -17,6 +18,7 @@
 #include "carla/road/RoadTypes.h"
 #include "carla/road/element/Geometry.h"
 #include "carla/road/element/RoadInfo.h"
+#include "carla/road/element/RoadObject.h"
 #include "carla/road/signal/Signal.h"
 #include "carla/road/signal/SignalReference.h"
 
@@ -113,6 +115,16 @@ namespace road {
       return _info.GetInfo<T>(s);
     }
 
+    template <typename T>
+    const T *GetObject(const double s) const {
+      return _objects.GetObject<T>(s);
+    }
+
+    template <typename T>
+    std::vector<const T *> GetObjects() const {
+      return _objects.GetObjects<T>();
+    }
+
     auto GetLaneSections() const {
       return MakeListView(
           iterator::make_map_values_const_iterator(_lane_sections.begin()),
@@ -198,6 +210,9 @@ namespace road {
     std::unordered_map<SignId, signal::Signal> _signals;
 
     std::unordered_map<SignRefId, signal::SignalReference> _sign_ref;
+
+    ObjectSet _objects;
+
   };
 
 } // road
