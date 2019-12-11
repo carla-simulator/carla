@@ -3,15 +3,8 @@
 namespace traffic_manager {
 
 namespace PlannerConstants {
-  static const float MAX_THROTTLE = 0.75f;
-  static const float CRAWL_THROTTLE = 0.409f;
-  static const float MAX_BRAKE = 1.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
-  static const float CRAWL_SPEED = 10 / 3.6f;
-  static const std::vector<float> URBAN_LONGITUDINAL_DEFAULTS = {0.1f, 0.15f, 0.01f};
-  static const std::vector<float> HIGHWAY_LONGITUDINAL_DEFAULTS = {5.0f, 0.1f, 0.01f};
-  static const std::vector<float> URBAN_LATERAL_DEFAULTS = {10.0f, 0.0f, 0.1f};
-  static const std::vector<float> HIGHWAY_LATERAL_DEFAULTS = {3.0f, 0.0f, 20.0f};
+
 }
   using namespace PlannerConstants;
 
@@ -22,10 +15,11 @@ namespace PlannerConstants {
       std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_messenger,
       std::shared_ptr<PlannerToControlMessenger> control_messenger,
       Parameters &parameters,
-      std::vector<float> urban_longitudinal_parameters = URBAN_LONGITUDINAL_DEFAULTS,
-      std::vector<float> highway_longitudinal_parameters = HIGHWAY_LONGITUDINAL_DEFAULTS,
-      std::vector<float> urban_lateral_parameters = URBAN_LATERAL_DEFAULTS,
-      std::vector<float> highway_lateral_parameters = HIGHWAY_LATERAL_DEFAULTS)
+      std::vector<float> urban_longitudinal_parameters,
+      std::vector<float> highway_longitudinal_parameters,
+      std::vector<float> urban_lateral_parameters,
+      std::vector<float> highway_lateral_parameters,
+      cc::DebugHelper &debug_helper)
     : PipelineStage(stage_name),
       localization_messenger(localization_messenger),
       collision_messenger(collision_messenger),
@@ -35,7 +29,8 @@ namespace PlannerConstants {
       urban_longitudinal_parameters(urban_longitudinal_parameters),
       highway_longitudinal_parameters(highway_longitudinal_parameters),
       urban_lateral_parameters(urban_lateral_parameters),
-      highway_lateral_parameters(highway_lateral_parameters){
+      highway_lateral_parameters(highway_lateral_parameters),
+      debug_helper(debug_helper){
 
     // Initializing the output frame selector.
     frame_selector = true;
@@ -71,6 +66,7 @@ namespace PlannerConstants {
 
       auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       float current_velocity = vehicle->GetVelocity().Length();
+
       auto current_time = chr::system_clock::now();
 
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
@@ -120,7 +116,7 @@ namespace PlannerConstants {
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
         actuation_signal.throttle = 0.0f;
-        actuation_signal.brake = MAX_BRAKE;
+        actuation_signal.brake = 1.0f;
       }
 
       // Updating PID state.
@@ -128,16 +124,13 @@ namespace PlannerConstants {
       state = current_state;
 
       // Constructing the actuation signal.
+
       PlannerToControlData &message = current_control_frame->at(i);
       message.actor_id = actor_id;
-      if (current_velocity > CRAWL_SPEED) {
-        message.throttle = std::min(actuation_signal.throttle, MAX_THROTTLE);
-      } else {
-        message.throttle = std::min(actuation_signal.throttle, CRAWL_THROTTLE);
-      }
-      message.brake = std::min(actuation_signal.brake, MAX_BRAKE);
+      message.throttle = actuation_signal.throttle;
+      message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
-
+      //DrawPIDValues(vehicle, actuation_signal.throttle, actuation_signal.brake);
     }
   }
 
@@ -182,5 +175,10 @@ namespace PlannerConstants {
     };
     frame_selector = !frame_selector;
     control_messenger_state = control_messenger->SendData(data_packet);
+  }
+
+  void MotionPlannerStage::DrawPIDValues(const boost::shared_ptr<cc::Vehicle> vehicle, const float throttle, const float brake) {
+    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0,0,2), std::to_string(throttle), false, {0u, 255u, 0u}, 0.005f);
+    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0,0,4), std::to_string(brake), false, {255u, 0u, 0u}, 0.005f);
   }
 }
