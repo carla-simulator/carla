@@ -412,8 +412,12 @@ void FCarlaServer::FPimpl::BindActions()
 
     FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
     FVector CurrentLocation = CurrentTransform.GetLocation();
+    NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
 
-    NewLocation.Z = CurrentLocation.Z;
+    // if difference between Z position is small, then we keep current, otherwise we set the new one 
+    // (to avoid Z fighting position and falling pedestrians)
+    if (NewLocation.Z - CurrentLocation.Z < 100.0f)
+      NewLocation.Z = CurrentLocation.Z;
 
     NewTransform.SetLocation(NewLocation);
 

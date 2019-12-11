@@ -21,11 +21,25 @@ TArray<uint8> FNavigationMesh::Load(FString MapName)
     }
 #endif // WITH_EDITOR
 
-  const FString FilePath =
+  FString FilePath =
       FPaths::ProjectContentDir() +
       TEXT("Carla/Maps/Nav/") +
-      MapName +
-      TEXT(".bin");
+      MapName + TEXT(".bin");
+
+  auto &FileManager = IFileManager::Get();
+  if (!FileManager.FileExists(*FilePath))
+  {
+    TArray<FString> FilesFound;
+    FileManager.FindFilesRecursive(
+      FilesFound,
+      *FPaths::ProjectContentDir(),
+      *(MapName + TEXT(".bin")),
+      true,
+      false,
+      false);
+    if (FilesFound.Num() > 0) 
+      FilePath = FilesFound[0u];
+  }
 
   TArray<uint8> Content;
   UE_LOG(LogCarla, Log, TEXT("Loading Navigation Mesh file '%s'"), *FilePath);

@@ -73,7 +73,7 @@ namespace detail {
         // Tick navigation.
         auto navigation = self->_navigation.load();
         if (navigation != nullptr) {
-          navigation->Tick(*next);
+          navigation->Tick(self);
         }
 
         // Call user callbacks.

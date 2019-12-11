@@ -5,6 +5,7 @@
   * Added new sensor: Radar
   * Moved GNSS sensor from client to server side
   * New Python API function added (map.get_crosswalks()) that return a list with all points that define the crosswalk zones from OpenDRIVE file
+  * Improved pedestrians navigation
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
@@ -21,6 +22,7 @@
   * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
+  * Added IMU and Radar realtime visualization in `manual_control.py`
   * Fixed client_bounding_boxes.py example script
   * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets

@@ -182,6 +182,13 @@ namespace detail {
     return navigation->GetRandomLocation();
   }
 
+  void Simulator::SetPedestriansCrossFactor(float percentage) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->SetPedestriansCrossFactor(percentage);
+  }
+
   // ===========================================================================
   // -- General operations with actors -----------------------------------------
   // ===========================================================================

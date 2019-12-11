@@ -14,6 +14,7 @@
 #include "carla/client/detail/CachedActorList.h"
 #include "carla/client/detail/CallbackList.h"
 #include "carla/client/detail/EpisodeState.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/rpc/EpisodeInfo.h"
 
 #include <vector>
@@ -23,7 +24,6 @@ namespace client {
 namespace detail {
 
   class Client;
-  class WalkerNavigation;
 
   /// Holds the current episode, and the current episode state.
   ///
@@ -77,6 +77,12 @@ namespace detail {
 
     void RemoveOnTickEvent(size_t id) {
       _on_tick_callbacks.Remove(id);
+    }
+
+    void SetPedestriansCrossFactor(float percentage) {
+      auto nav = _navigation.load();
+      DEBUG_ASSERT(nav != nullptr);
+      nav->SetPedestriansCrossFactor(percentage);
     }
 
   private:
