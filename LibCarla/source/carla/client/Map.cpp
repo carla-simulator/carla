@@ -97,5 +97,9 @@ namespace client {
     return _map.GetGeoReference();
   }
 
+  std::vector<geom::Location> Map::GetAllCrosswalkZones() const{
+    return _map.GetAllCrosswalkZones();
+  }
+
 } // namespace client
 } // namespace carla
