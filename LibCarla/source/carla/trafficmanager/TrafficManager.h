@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <algorithm>
@@ -27,7 +33,7 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
+  namespace cc = carla::client;
 
   using ActorPtr = carla::SharedPtr<cc::Actor>;
   using TLS = carla::rpc::TrafficLightState;
@@ -113,9 +119,10 @@ namespace cc = carla::client;
     void SetGlobalPercentageSpeedDifference(float const percentage);
 
     /// Set collision detection rules between vehicles.
-    void SetCollisionDetection(const ActorPtr &reference_actor,
-                               const ActorPtr &other_actor,
-                               const bool detect_collision);
+    void SetCollisionDetection(
+        const ActorPtr &reference_actor,
+        const ActorPtr &other_actor,
+        const bool detect_collision);
 
     /// Method to force lane change on a vehicle.
     /// Direction flag can be set to true for left and false for right.
@@ -145,4 +152,4 @@ namespace cc = carla::client;
 
   };
 
-}
+} // namespace traffic_manager

@@ -1,3 +1,9 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 
 #include <memory>
@@ -12,7 +18,7 @@
 
 namespace traffic_manager {
 
-namespace cc = carla::client;
+  namespace cc = carla::client;
 
   /// Convenience typing.
 
@@ -82,4 +88,5 @@ namespace cc = carla::client;
   using LocalizationToTrafficLightMessenger = Messenger<std::shared_ptr<LocalizationToTrafficLightFrame>>;
   using CollisionToPlannerMessenger = Messenger<std::shared_ptr<CollisionToPlannerFrame>>;
   using TrafficLightToPlannerMessenger = Messenger<std::shared_ptr<TrafficLightToPlannerFrame>>;
-}
+
+} // namespace traffic_manager

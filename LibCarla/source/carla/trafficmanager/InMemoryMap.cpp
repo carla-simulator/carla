@@ -1,8 +1,15 @@
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "InMemoryMap.h"
 
 namespace traffic_manager {
 
 namespace MapConstants {
+
   // Very important that this is less than 10^-4.
   static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
@@ -10,7 +17,9 @@ namespace MapConstants {
   // Cosine of the angle.
   static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
   static const float GRID_SIZE = 4.0f;
-}
+
+} // namespace MapConstants
+
   using namespace MapConstants;
 
   InMemoryMap::InMemoryMap(TopologyList topology) {
@@ -23,7 +32,8 @@ namespace MapConstants {
     NodeList entry_node_list;
     NodeList exit_node_list;
 
-    auto distance_squared = [](cg::Location l1, cg::Location l2) {
+    auto distance_squared =
+        [](cg::Location l1, cg::Location l2) {
           return cg::Math::DistanceSquared(l1, l2);
         };
     auto square = [](float input) {return std::pow(input, 2);};
@@ -32,10 +42,10 @@ namespace MapConstants {
     for (auto &pair : _topology) {
 
       // Looping through every topology segment.
-      WaypointPtr begin_waypoint = pair.first;
-      WaypointPtr end_waypoint = pair.second;
-      cg::Location begin_location = begin_waypoint->GetTransform().location;
-      cg::Location end_location = end_waypoint->GetTransform().location;
+      const WaypointPtr begin_waypoint = pair.first;
+      const WaypointPtr end_waypoint = pair.second;
+      const cg::Location begin_location = begin_waypoint->GetTransform().location;
+      const cg::Location end_location = end_waypoint->GetTransform().location;
 
       if (distance_squared(begin_location, end_location) > square(ZERO_LENGTH)) {
 
@@ -66,7 +76,7 @@ namespace MapConstants {
     }
 
     // Linking segments.
-    uint i = 0, j = 0;
+    uint i = 0u, j = 0u;
     for (SimpleWaypointPtr end_point : exit_node_list) {
       for (SimpleWaypointPtr begin_point : entry_node_list) {
         if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) and i != j) {
@@ -81,10 +91,10 @@ namespace MapConstants {
     // Loop through all exit nodes of topology segments,
     // connect any dangling endpoints to the nearest entry point
     // of another topology segment.
-    i = 0;
+    i = 0u;
     for (auto &end_point : exit_node_list) {
       if (end_point->GetNextWaypoint().size() == 0) {
-        j = 0;
+        j = 0u;
         float min_distance = INFINITE_DISTANCE;
         SimpleWaypointPtr closest_connection;
         for (auto &begin_point : entry_node_list) {
@@ -95,13 +105,13 @@ namespace MapConstants {
           }
           ++j;
         }
-        cg::Vector3D end_point_vector = end_point->GetForwardVector();
+        const cg::Vector3D end_point_vector = end_point->GetForwardVector();
         cg::Vector3D relative_vector = closest_connection->GetLocation() - end_point->GetLocation();
         relative_vector = relative_vector.MakeUnitVector();
-        float relative_dot = cg::Math::Dot(end_point_vector, relative_vector);
+        const float relative_dot = cg::Math::Dot(end_point_vector, relative_vector);
         if (relative_dot < LANE_CHANGE_ANGULAR_THRESHOLD) {
           uint count = LANE_CHANGE_LOOK_AHEAD;
-          while (count > 0) {
+          while (count > 0u) {
             closest_connection = closest_connection->GetNextWaypoint()[0];
             --count;
           }
@@ -113,8 +123,8 @@ namespace MapConstants {
 
     // Localizing waypoints into grids.
     for (auto &simple_waypoint: dense_topology) {
-      cg::Location loc = simple_waypoint->GetLocation();
-      std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y));
+      const cg::Location loc = simple_waypoint->GetLocation();
+      const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y));
       if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
         waypoint_grid.insert({grid_key, {simple_waypoint}});
       } else {
@@ -140,7 +150,7 @@ namespace MapConstants {
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {
 
-    std::pair<int, int> grid_ids = MakeGridId(location.x, location.y);
+    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y);
     SimpleWaypointPtr closest_waypoint = nullptr;
     float closest_distance = INFINITE_DISTANCE;
 
@@ -148,10 +158,10 @@ namespace MapConstants {
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
-        std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
+        const std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
         if (waypoint_grid.find(grid_key) != waypoint_grid.end()) {
 
-          auto& waypoint_set = waypoint_grid.at(grid_key);
+          const auto& waypoint_set = waypoint_grid.at(grid_key);
           if (closest_waypoint == nullptr) {
             closest_waypoint = *waypoint_set.begin();
           }
@@ -183,7 +193,7 @@ namespace MapConstants {
     SimpleWaypointPtr closest_waypoint;
     float min_distance = INFINITE_DISTANCE;
     for (auto &simple_waypoint : dense_topology) {
-      float current_distance = simple_waypoint->DistanceSquared(location);
+      const float current_distance = simple_waypoint->DistanceSquared(location);
       if (current_distance < min_distance) {
         min_distance = current_distance;
         closest_waypoint = simple_waypoint;
@@ -198,16 +208,16 @@ namespace MapConstants {
 
   void InMemoryMap::FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint) {
 
-    WaypointPtr raw_waypoint = reference_waypoint->GetWaypoint();
-    crd::element::LaneMarking::LaneChange lane_change = raw_waypoint->GetLaneChange();
-    auto change_right = crd::element::LaneMarking::LaneChange::Right;
-    auto change_left = crd::element::LaneMarking::LaneChange::Left;
-    auto change_both = crd::element::LaneMarking::LaneChange::Both;
+    const WaypointPtr raw_waypoint = reference_waypoint->GetWaypoint();
+    const crd::element::LaneMarking::LaneChange lane_change = raw_waypoint->GetLaneChange();
+    const auto change_right = crd::element::LaneMarking::LaneChange::Right;
+    const auto change_left = crd::element::LaneMarking::LaneChange::Left;
+    const auto change_both = crd::element::LaneMarking::LaneChange::Both;
 
     try {
       if (lane_change == change_right || lane_change == change_both) {
 
-        WaypointPtr right_waypoint =  raw_waypoint->GetRight();
+        const WaypointPtr right_waypoint =  raw_waypoint->GetRight();
         if (right_waypoint != nullptr &&
             right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
             (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
@@ -222,7 +232,7 @@ namespace MapConstants {
 
       if (lane_change == change_left || lane_change == change_both) {
 
-        WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
+        const WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
         if (left_waypoint != nullptr &&
             left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
             (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
@@ -237,10 +247,11 @@ namespace MapConstants {
     } catch (const std::invalid_argument &e) {
       cg::Location loc = reference_waypoint->GetLocation();
       carla::log_info(
-        "Unable to link lane change connection at: "
-        + std::to_string(loc.x) + " "
-        + std::to_string(loc.y) + " "
-        + std::to_string(loc.z));
+          "Unable to link lane change connection at: "
+          + std::to_string(loc.x) + " "
+          + std::to_string(loc.y) + " "
+          + std::to_string(loc.z));
     }
   }
-}
+
+} // namespace traffic_manager
