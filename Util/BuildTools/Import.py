@@ -267,9 +267,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
     # process each map
     for umap in maps:
 
-        # get source and target names (package name only)
-        head, tail = os.path.split(umap["source"])
-        source_name = tail.replace(".fbx", "")
+        # get the target name
         target_name = umap["name"]
 
         # copy the XODR file into docker utils folder
@@ -294,10 +292,10 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
         # make the conversion
         if os.name == "nt":
-            subprocess.call(["%s\\build.bat" % folder, target_name], cwd=folder, shell=True)
+            subprocess.call(["build.bat", target_name], cwd=folder, shell=True)
         else:
-            subprocess.call(["chmod +x %s/build.sh" % folder], cwd=folder, shell=True)
-            subprocess.call(["%s/build.sh" % folder, target_name], cwd=folder, shell=True)
+            subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
+            subprocess.call("./build.sh %s" % target_name, cwd=folder, shell=True)
 
         # copy the binary file
         nav_folder_target = os.path.join(
