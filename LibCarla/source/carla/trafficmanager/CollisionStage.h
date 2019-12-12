@@ -83,9 +83,9 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// An object used to keep track of time between checking for all world
     /// actors.
-    chr::time_point<chr::_V2::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
+    chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
-    uint number_of_vehicles;
+    uint64_t number_of_vehicles;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
     LocationList GetBoundary(const Actor &actor) const;

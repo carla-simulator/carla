@@ -98,7 +98,7 @@ namespace CollisionStageConstants {
     }
 
     // Looping over registered actors.
-    for (uint i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
 
       const LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;
@@ -165,7 +165,7 @@ namespace CollisionStageConstants {
       // This map also provides us the additional benefit of being able to
       // quickly identify
       // if a vehicle id is registered with the traffic manager or not.
-      uint index = 0u;
+      uint64_t index = 0u;
       for (auto &element: *localization_frame.get()) {
         vehicle_id_to_index.insert({element.actor->GetId(), index++});
       }
@@ -301,7 +301,7 @@ namespace CollisionStageConstants {
       const float length = vehicle->GetBoundingBox().extent.x;
 
       SimpleWaypointPtr boundary_start = waypoint_buffer.front();
-      uint boundary_start_index = 0u;
+      uint64_t boundary_start_index = 0u;
       while (boundary_start->DistanceSquared(vehicle_location) < std::pow(length, 2) &&
              boundary_start_index < waypoint_buffer.size() -1) {
         boundary_start = waypoint_buffer.at(boundary_start_index);
@@ -314,7 +314,7 @@ namespace CollisionStageConstants {
       // At non-signalized junctions, we extend the boundary across the junction
       // and in all other situations, boundary length is velocity-dependent.
       bool reached_distance = false;
-      for (uint j = boundary_start_index; !reached_distance && (j < waypoint_buffer.size()); ++j) {
+      for (uint64_t j = boundary_start_index; !reached_distance && (j < waypoint_buffer.size()); ++j) {
 
         if (boundary_start->DistanceSquared(current_point) > std::pow(bbox_extension, 2)) {
           reached_distance = true;
@@ -432,7 +432,7 @@ namespace CollisionStageConstants {
   }
 
   void CollisionStage::DrawBoundary(const LocationList &boundary) const {
-    for (uint i = 0u; i < boundary.size(); ++i) {
+    for (uint64_t i = 0u; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0.0f, 0.0f, 1.0f),
           boundary[(i + 1) % boundary.size()] + cg::Location(0.0f, 0.0f, 1.0f),
