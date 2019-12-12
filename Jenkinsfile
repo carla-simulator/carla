@@ -78,6 +78,7 @@ pipeline {
         stage('Deploy') {
             when { anyOf { branch "master"; buildingTag() } }
             steps {
+                sh 'git checkout .'
                 sh 'make deploy ARGS="--replace-latest --docker-push"'
             }
         }
