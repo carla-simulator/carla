@@ -7,7 +7,8 @@ Util/Build
 Install
 
 /ExportedMaps
-/Import/*/
+/Import/*
+!/Import/README.md
 
 *.VC.db
 *.VC.opendb
