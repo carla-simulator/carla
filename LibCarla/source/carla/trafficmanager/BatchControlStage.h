@@ -40,7 +40,7 @@ namespace traffic_manager {
     /// Array to hold command batch.
     std::shared_ptr<std::vector<cr::Command>> commands;
     /// Number of vehicles registered with the traffic manager.
-    uint number_of_vehicles;
+    uint64_t number_of_vehicles;
 
   public:
 

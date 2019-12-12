@@ -91,7 +91,7 @@ namespace traffic_manager {
     /// Map connecting actor ids to indices of data arrays.
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
-    uint number_of_vehicles;
+    uint64_t number_of_vehicles;
     /// Used to only calculate the extended buffer once at junctions
     std::map<carla::ActorId, bool> approached;
     /// Final Waypoint of the bounding box at intersections, amps to their respective IDs
@@ -99,7 +99,7 @@ namespace traffic_manager {
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
     /// Map of all vehicles' idle time
-    std::unordered_map<ActorId, chr::time_point<chr::_V2::system_clock, chr::nanoseconds>> idle_time;
+    std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);

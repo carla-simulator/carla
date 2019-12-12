@@ -69,7 +69,7 @@ namespace traffic_manager {
     /// Controller object.
     PIDController controller;
     /// Number of vehicles registered with the traffic manager.
-    uint number_of_vehicles;
+    uint64_t number_of_vehicles;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
 

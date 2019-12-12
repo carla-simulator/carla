@@ -223,7 +223,7 @@ namespace traffic_manager {
       if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
         const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
         list_of_all_groups.push_back(tl_group);
-        for (uint i=0u; i<tl_group.size(); i++) {
+        for (uint64_t i=0u; i<tl_group.size(); i++) {
           list_of_ids.push_back(tl_group.at(i).get()->GetId());
           if(i!=0u) {
             tl_to_freeze.push_back(tl_group.at(i));
