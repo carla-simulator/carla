@@ -70,7 +70,7 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
     // Looping over registered actors.
-    for (uint i = 0u; i < actor_list.size(); ++i) {
+    for (uint64_t i = 0u; i < actor_list.size(); ++i) {
 
       const Actor vehicle = actor_list.at(i);
       const ActorId actor_id = vehicle->GetId();
@@ -125,7 +125,7 @@ namespace LocalizationConstants {
 
         if (change_over_point != nullptr) {
           auto number_of_pops = waypoint_buffer.size();
-          for (uint j = 0u; j < number_of_pops; ++j) {
+          for (uint64_t j = 0u; j < number_of_pops; ++j) {
             PopWaypoint(waypoint_buffer, actor_id);
           }
 
@@ -138,7 +138,7 @@ namespace LocalizationConstants {
           <= std::pow(horizon_size, 2)) {
 
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-        uint selection_index = 0u;
+        uint64_t selection_index = 0u;
         // Pseudo-randomized path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
           selection_index = static_cast<uint>(rand()) % next_waypoints.size();
@@ -151,7 +151,7 @@ namespace LocalizationConstants {
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
       SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
-      for (uint j = 0u;
+      for (uint64_t j = 0u;
           (j < waypoint_buffer.size()) &&
           (waypoint_buffer.front()->DistanceSquared(target_waypoint)
           < std::pow(target_point_distance, 2));
@@ -176,8 +176,8 @@ namespace LocalizationConstants {
       const float look_ahead_distance = std::max(2.0f * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
 
       SimpleWaypointPtr look_ahead_point = waypoint_buffer.front();
-      uint look_ahead_index = 0u;
-      for (uint j = 0u;
+      uint64_t look_ahead_index = 0u;
+      for (uint64_t j = 0u;
           (waypoint_buffer.front()->DistanceSquared(look_ahead_point)
           < std::pow(look_ahead_distance, 2)) &&
           (j < waypoint_buffer.size());
@@ -189,7 +189,7 @@ namespace LocalizationConstants {
       bool approaching_junction = false;
       if (waypoint_buffer.front()->CheckJunction() || (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction()))) {
         if (speed_limit > HIGHWAY_SPEED) {
-          for (uint j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
+          for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
             if (swp->GetNextWaypoint().size() > 1) {
               approaching_junction = true;
@@ -264,7 +264,7 @@ namespace LocalizationConstants {
 
       actor_list = registered_actors.GetList();
 
-      uint index = 0u;
+      uint64_t index = 0u;
       for (auto &actor: actor_list) {
 
         vehicle_id_to_index.insert({actor->GetId(), index});
@@ -339,7 +339,7 @@ namespace LocalizationConstants {
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
 
-    for (uint i = 0u; i < buffer.size() && i < 5; ++i) {
+    for (uint64_t i = 0u; i < buffer.size() && i < 5; ++i) {
       debug_helper.DrawPoint(buffer.at(i)->GetLocation(), 0.1f, {255u, 0u, 0u}, 0.5f);
     }
   }

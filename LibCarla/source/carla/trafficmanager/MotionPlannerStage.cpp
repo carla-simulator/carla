@@ -63,7 +63,7 @@ namespace PlannerConstants {
     const auto current_control_frame = frame_selector ? control_frame_a : control_frame_b;
 
     // Looping over all vehicles.
-    for (uint i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
 
       const LocalizationToPlannerData &localization_data = localization_frame->at(i);
       const Actor actor = localization_data.actor;

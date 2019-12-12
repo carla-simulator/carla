@@ -27,7 +27,7 @@ namespace traffic_manager {
   void BatchControlStage::Action() {
 
     // Looping over registered actors.
-    for (uint i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
 
       cr::VehicleControl vehicle_control;
 

@@ -45,7 +45,7 @@ namespace traffic_manager {
     return waypoint->GetTransform().rotation.GetForwardVector();
   }
 
-  uint SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
+  uint64_t SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
     for (auto &simple_waypoint: waypoints) {
       next_waypoints.push_back(simple_waypoint);
     }

@@ -21,11 +21,11 @@ namespace traffic_manager {
     /// Stage name.
     std::string stage_name;
     /// Throughput clock.
-    chr::time_point<chr::_V2::system_clock, chr::nanoseconds> throughput_clock;
+    chr::time_point<chr::system_clock, chr::nanoseconds> throughput_clock;
     /// Throughput counter.
-    uint throughput_counter;
+    uint64_t throughput_counter;
     /// Inter-update clock.
-    chr::time_point<chr::_V2::system_clock, chr::nanoseconds> inter_update_clock;
+    chr::time_point<chr::system_clock, chr::nanoseconds> inter_update_clock;
     /// Inter-update duration.
     chr::duration<float> inter_update_duration;
 

@@ -35,7 +35,7 @@ namespace traffic_manager {
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using TrafficLight = carla::SharedPtr<cc::TrafficLight>;
   using TLS = carla::rpc::TrafficLightState;
-  using TimeInstance = chr::time_point<chr::_V2::system_clock, chr::nanoseconds>;
+  using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 
   /// This class provides the information about the Traffic Lights at the
   /// junctions.
@@ -69,7 +69,7 @@ namespace traffic_manager {
     /// No signal negotiation mutex.
     std::mutex no_signal_negotiation_mutex;
     /// Number of vehicles registered with the traffic manager.
-    uint number_of_vehicles;
+    uint64_t number_of_vehicles;
 
 
     void DrawLight(TLS traffic_light_state, const Actor &ego_actor) const;

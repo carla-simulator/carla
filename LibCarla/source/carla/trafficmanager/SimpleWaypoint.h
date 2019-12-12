@@ -59,7 +59,7 @@ namespace traffic_manager {
     uint64_t GetId() const;
 
     /// This method is used to set the next waypoints.
-    uint SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
+    uint64_t SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
     /// This method is used to set the closest left waypoint for a lane change.
     void SetLeftWaypoint(SimpleWaypointPtr waypoint);
