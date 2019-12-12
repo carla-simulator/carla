@@ -79,7 +79,7 @@ namespace MapConstants {
     uint64_t i = 0u, j = 0u;
     for (SimpleWaypointPtr end_point : exit_node_list) {
       for (SimpleWaypointPtr begin_point : entry_node_list) {
-        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) and i != j) {
+        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) && i != j) {
           end_point->SetNextWaypoint({begin_point});
         }
         ++j;
@@ -99,7 +99,7 @@ namespace MapConstants {
         SimpleWaypointPtr closest_connection;
         for (auto &begin_point : entry_node_list) {
           float new_distance = end_point->DistanceSquared(begin_point);
-          if (new_distance < min_distance and i != j) {
+          if (new_distance < min_distance && i != j) {
             min_distance = new_distance;
             closest_connection = begin_point;
           }

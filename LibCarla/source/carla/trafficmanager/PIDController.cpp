@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "PIDController.h"
+#include <algorithm>
 
 namespace traffic_manager {
 
