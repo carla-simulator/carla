@@ -16,6 +16,7 @@
 #include "carla/trafficmanager/Messenger.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -90,3 +91,4 @@ namespace traffic_manager {
   using TrafficLightToPlannerMessenger = Messenger<std::shared_ptr<TrafficLightToPlannerFrame>>;
 
 } // namespace traffic_manager
+} // namespace carla

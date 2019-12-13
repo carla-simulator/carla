@@ -32,6 +32,7 @@
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   using namespace std::chrono;
@@ -133,3 +134,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

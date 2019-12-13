@@ -8,6 +8,7 @@
 
 #include "Parameters.h"
 
+namespace carla {
 namespace traffic_manager {
 
 Parameters::Parameters() {}
@@ -179,3 +180,4 @@ float Parameters::GetPercentageIgnoreActors(const ActorPtr &actor) {
 }
 
 } // namespace traffic_manager
+} // namespace carla

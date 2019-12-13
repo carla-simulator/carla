@@ -176,10 +176,8 @@ def main():
         traffic_manager = carla.GetTrafficManager(client)
         time.sleep(1)
 
-        vehicle_vec = carla.TM_ActorList()
-        vehicle_vec.extend(vehicles_list)
-
-        traffic_manager.register_vehicles(vehicle_vec)
+        for v in vehicles_list:
+            v.set_autopilot(True)
 
         while True:
             time.sleep(1)

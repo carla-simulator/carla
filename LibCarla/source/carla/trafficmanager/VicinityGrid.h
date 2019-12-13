@@ -20,6 +20,7 @@
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -63,3 +64,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

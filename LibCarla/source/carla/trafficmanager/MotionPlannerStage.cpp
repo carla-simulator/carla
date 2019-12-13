@@ -6,6 +6,7 @@
 
 #include "MotionPlannerStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
 namespace PlannerConstants {
@@ -190,3 +191,4 @@ namespace PlannerConstants {
   }
 
 } // namespace traffic_manager
+} // namespace carla
