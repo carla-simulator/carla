@@ -36,7 +36,7 @@ namespace client {
   void Vehicle::SetAutopilot(bool enabled) {
     if (enabled) {
       TM &tm = TM::GetInstance(TM::GetUniqueLocalClient());
-      tm.RegisterVehicles({carla::SharedPtr<carla::client::Actor>(this)});
+      tm.RegisterVehicles({shared_from_this()});
     }
   }
 
