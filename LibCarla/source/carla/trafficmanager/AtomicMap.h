@@ -9,6 +9,7 @@
 #include <mutex>
 #include <unordered_map>
 
+namespace carla {
 namespace traffic_manager {
 
   template <typename Key, typename Value>
@@ -50,3 +51,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

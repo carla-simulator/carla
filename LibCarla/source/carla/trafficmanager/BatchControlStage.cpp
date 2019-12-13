@@ -6,6 +6,7 @@
 
 #include "BatchControlStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
   BatchControlStage::BatchControlStage(
@@ -69,3 +70,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

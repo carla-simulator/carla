@@ -6,6 +6,7 @@
 
 #include "carla/trafficmanager/PerformanceDiagnostics.h"
 
+namespace carla {
 namespace traffic_manager {
 
   PerformanceDiagnostics::PerformanceDiagnostics(std::string stage_name)
@@ -37,3 +38,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

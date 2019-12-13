@@ -6,6 +6,7 @@
 
 #include "VicinityGrid.h"
 
+namespace carla {
 namespace traffic_manager {
 
   static const float GRID_SIZE = 10.0f;
@@ -93,3 +94,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

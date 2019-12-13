@@ -6,6 +6,7 @@
 
 #include "LocalizationStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
 namespace LocalizationConstants {
@@ -519,3 +520,4 @@ namespace LocalizationConstants {
   }
 
 } // namespace traffic_manager
+} // namespace carla

@@ -13,6 +13,7 @@
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -58,3 +59,4 @@ namespace traffic_manager {
   float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset=false);
 
 } // namespace traffic_manager
+} // namespace carla

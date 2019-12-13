@@ -17,6 +17,7 @@
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -59,3 +60,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

@@ -6,6 +6,7 @@
 
 #include "CollisionStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
 namespace CollisionStageConstants {
@@ -441,3 +442,4 @@ namespace CollisionStageConstants {
   }
 
 } // namespace traffic_manager
+} // namespace carla

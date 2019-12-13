@@ -10,6 +10,7 @@
 #include <cmath>
 #include <vector>
 
+namespace carla {
 namespace traffic_manager {
 
   namespace chr = std::chrono;
@@ -64,3 +65,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

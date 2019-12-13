@@ -8,6 +8,7 @@
 
 #include "TrafficLightStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
   static const uint64_t NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
@@ -206,3 +207,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla
