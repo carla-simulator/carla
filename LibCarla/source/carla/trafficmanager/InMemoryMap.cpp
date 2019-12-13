@@ -6,6 +6,7 @@
 
 #include "InMemoryMap.h"
 
+namespace carla {
 namespace traffic_manager {
 
 namespace MapConstants {
@@ -255,3 +256,4 @@ namespace MapConstants {
   }
 
 } // namespace traffic_manager
+} // namespace carla

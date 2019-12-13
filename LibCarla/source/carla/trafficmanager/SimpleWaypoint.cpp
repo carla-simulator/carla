@@ -6,6 +6,7 @@
 
 #include "SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
@@ -99,3 +100,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

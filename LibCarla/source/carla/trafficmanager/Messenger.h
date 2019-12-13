@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <mutex>
 
+namespace carla {
 namespace traffic_manager {
 
   using namespace std::chrono_literals;
@@ -104,3 +105,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

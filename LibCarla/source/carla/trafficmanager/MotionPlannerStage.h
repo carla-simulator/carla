@@ -18,6 +18,7 @@
 #include "carla/trafficmanager/PIDController.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace chr = std::chrono;
@@ -102,3 +103,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

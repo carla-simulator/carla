@@ -6,6 +6,7 @@
 
 #include "PipelineStage.h"
 
+namespace carla {
 namespace traffic_manager {
 
   PipelineStage::PipelineStage(std::string stage_name)
@@ -106,3 +107,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

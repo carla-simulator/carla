@@ -15,6 +15,7 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -95,3 +96,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

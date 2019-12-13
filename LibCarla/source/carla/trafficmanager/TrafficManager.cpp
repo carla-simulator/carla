@@ -8,6 +8,7 @@
 
 #include "carla/client/TrafficLight.h"
 
+namespace carla {
 namespace traffic_manager {
 
   TrafficManager::TrafficManager(
@@ -248,3 +249,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

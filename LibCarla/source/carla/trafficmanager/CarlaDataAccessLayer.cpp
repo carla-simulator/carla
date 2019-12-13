@@ -6,6 +6,7 @@
 
 #include "CarlaDataAccessLayer.h"
 
+namespace carla {
 namespace traffic_manager {
 
   CarlaDataAccessLayer::CarlaDataAccessLayer(carla::SharedPtr<cc::Map> _world_map) {
@@ -17,3 +18,4 @@ namespace traffic_manager {
     return world_map->GetTopology();
   }
 } // namespace traffic_manager
+} // namespace carla

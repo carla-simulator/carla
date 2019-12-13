@@ -21,6 +21,7 @@
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cg = carla::geom;
@@ -78,3 +79,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla

@@ -6,6 +6,7 @@
 
 #include "carla/trafficmanager/LocalizationUtils.h"
 
+namespace carla {
 namespace traffic_manager {
 
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location) {
@@ -124,3 +125,4 @@ namespace traffic_manager {
   }
 
 } // namespace traffic_manager
+} // namespace carla

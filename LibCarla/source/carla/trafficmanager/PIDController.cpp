@@ -7,6 +7,7 @@
 #include "PIDController.h"
 #include <algorithm>
 
+namespace carla {
 namespace traffic_manager {
 
 namespace PIDControllerConstants {
@@ -91,3 +92,4 @@ namespace PIDControllerConstants {
   }
 
 } // namespace traffic_manager
+} // namespace carla

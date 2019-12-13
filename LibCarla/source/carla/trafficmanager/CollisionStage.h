@@ -34,6 +34,7 @@
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/VicinityGrid.h"
 
+namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
@@ -131,3 +132,4 @@ namespace traffic_manager {
   };
 
 } // namespace traffic_manager
+} // namespace carla
