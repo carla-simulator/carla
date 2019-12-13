@@ -34,6 +34,15 @@ namespace traffic_manager {
     local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
     local_map->SetUp(0.1f);
 
+    // ---------- configuring simulation to fixed time step synchronous execution ------------- //
+
+    auto world_settings = world.GetSettings();
+    world_settings.fixed_delta_seconds = 0.05f;
+    world_settings.synchronous_mode = true;
+    world.ApplySettings(world_settings);
+
+    // ---------------------------------------------------------------------------------------- //
+
     parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
     localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
