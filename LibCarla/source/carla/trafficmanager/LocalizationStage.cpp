@@ -310,7 +310,7 @@ namespace LocalizationConstants {
 
     // Send data to collision stage only if it has finished
     // processing, received the previous message and started processing it.
-    int collision_messenger_current_state = collision_messenger->GetState();
+    // int collision_messenger_current_state = collision_messenger->GetState();
     // if ((collision_messenger_current_state != collision_messenger_state) &&
     //     collision_frame_ready) {
 
