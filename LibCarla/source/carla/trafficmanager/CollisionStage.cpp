@@ -62,7 +62,7 @@ namespace CollisionStageConstants {
     const chr::duration<double> diff = current_time - last_world_actors_pass_instance;
 
     // Periodically check for actors not spawned by TrafficManager.
-    if (diff.count() > 1.0f) {
+    if (diff.count() > 0.5f) {
 
       const auto world_actors = world.GetActors()->Filter("vehicle.*");
       const auto world_walker = world.GetActors()->Filter("walker.*");
@@ -81,29 +81,32 @@ namespace CollisionStageConstants {
           unregistered_actors.insert({unregistered_id, walker});
         }
       }
-      // Regularly update unregistered actors.
-      std::vector<ActorId> actor_ids_to_erase;
-      for (auto actor_info: unregistered_actors) {
-        if (actor_info.second->IsAlive()) {
-          vicinity_grid.UpdateGrid(actor_info.second);
-        } else {
-          vicinity_grid.EraseActor(actor_info.first);
-          actor_ids_to_erase.push_back(actor_info.first);
-        }
-      }
-      for (auto actor_id: actor_ids_to_erase) {
-        unregistered_actors.erase(actor_id);
-      }
 
       last_world_actors_pass_instance = current_time;
     }
 
+    // Regularly update unregistered actors.
+    std::vector<ActorId> actor_ids_to_erase;
+    for (auto actor_info: unregistered_actors) {
+      if (actor_info.second->IsAlive()) {
+        vicinity_grid.UpdateGrid(actor_info.second);
+      } else {
+        vicinity_grid.EraseActor(actor_info.first);
+        actor_ids_to_erase.push_back(actor_info.first);
+      }
+    }
+    for (auto actor_id: actor_ids_to_erase) {
+      unregistered_actors.erase(actor_id);
+    }
+
     // Looping over registered actors.
-    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
+    for (uint i = 0u; i < number_of_vehicles; ++i) {
 
       const LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
+
+      DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around the path of the ego vehicle.
       std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
@@ -197,12 +200,6 @@ namespace CollisionStageConstants {
 
     bool hazard = false;
 
-    auto& data_packet = localization_frame->at(vehicle_id_to_index.at(reference_vehicle->GetId()));
-    Buffer& waypoint_buffer = data_packet.buffer;
-
-    auto& other_packet = localization_frame->at(vehicle_id_to_index.at(other_vehicle->GetId()));
-    Buffer& other_buffer = other_packet.buffer;
-
     const cg::Location reference_location = reference_vehicle->GetLocation();
     const cg::Location other_location = other_vehicle->GetLocation();
 
@@ -213,52 +210,33 @@ namespace CollisionStageConstants {
     const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
     const auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
 
-    if (waypoint_buffer.front()->CheckJunction() &&
-        other_buffer.front()->CheckJunction()) {
+    const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
+    const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
+    const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
+    const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
 
-      const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
-      const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
-      const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
-      const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
+    const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+    const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
 
-      const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-      const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+    const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+    const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
 
-      const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-      const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+    const cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
+    cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
+    other_to_reference = other_to_reference.MakeUnitVector();
 
-      const cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
-      cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
-      other_to_reference = other_to_reference.MakeUnitVector();
+    // Whichever vehicle's path is farthest away from the other vehicle gets
+    // priority to move.
+    if (inter_geodesic_distance < 0.1 &&
+        ((
+          inter_bbox_distance > 0.1 &&
+          reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
+        ) || (
+          inter_bbox_distance < 0.1 &&
+          cg::Math::Dot(reference_heading, reference_to_other) > cg::Math::Dot(other_heading, other_to_reference)
+        )) ) {
 
-      // Whichever vehicle's path is farthest away from the other vehicle gets
-      // priority to move.
-      if (inter_geodesic_distance < 0.1 &&
-          ((
-            inter_bbox_distance > 0.1 &&
-            reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
-          ) || (
-            inter_bbox_distance < 0.1 &&
-            cg::Math::Dot(reference_heading, reference_to_other) > cg::Math::Dot(other_heading, other_to_reference)
-          )) ) {
-
-        hazard = true;
-      }
-
-    } else if (!waypoint_buffer.front()->CheckJunction()) {
-
-      const float reference_vehicle_length = reference_vehicle_ptr->GetBoundingBox().extent.x;
-      const float other_vehicle_length = other_vehicle_ptr->GetBoundingBox().extent.x;
-      const float vehicle_length_sum = reference_vehicle_length + other_vehicle_length;
-
-      const float bbox_extension_length = GetBoundingBoxExtention(reference_vehicle);
-
-      if ((cg::Math::Dot(reference_heading, reference_to_other) > 0.0f) &&
-          (cg::Math::DistanceSquared(reference_location, other_location) <
-           std::pow(bbox_extension_length+vehicle_length_sum, 2))) {
-
-        hazard = true;
-      }
+      hazard = true;
     }
 
     return hazard;
@@ -299,7 +277,7 @@ namespace CollisionStageConstants {
       LocationList right_boundary;
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       const float width = vehicle->GetBoundingBox().extent.y;
-      const float length = vehicle->GetBoundingBox().extent.x;
+      const float length = vehicle->GetBoundingBox().extent.x*2;
 
       SimpleWaypointPtr boundary_start = waypoint_buffer.front();
       uint64_t boundary_start_index = 0u;
@@ -378,19 +356,10 @@ namespace CollisionStageConstants {
   }
 
   std::unordered_set<ActorId> CollisionStage::GetPotentialVehicleObstacles(const Actor &ego_vehicle) {
+    // This method is probably redundant
 
     vicinity_grid.UpdateGrid(ego_vehicle);
-
-    const auto& data_packet = localization_frame->at(vehicle_id_to_index.at(ego_vehicle->GetId()));
-    const Buffer &waypoint_buffer =  data_packet.buffer;
-    const float velocity = ego_vehicle->GetVelocity().Length();
-    std::unordered_set<ActorId> actor_id_list = data_packet.overlapping_actors;
-
-    if (waypoint_buffer.front()->CheckJunction() && velocity < HIGHWAY_SPEED) {
-      actor_id_list = vicinity_grid.GetActors(ego_vehicle);
-    } else {
-      actor_id_list = data_packet.overlapping_actors;
-    }
+    std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_vehicle);
 
     return actor_id_list;
   }

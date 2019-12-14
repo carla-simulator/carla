@@ -233,7 +233,8 @@ namespace LocalizationConstants {
       planner_message.approaching_true_junction = approaching_junction;
 
       // Reading current messenger state of the collision stage before modifying it's frame.
-      if ((collision_messenger->GetState() != collision_messenger_state) &&
+      if (
+          // (collision_messenger->GetState() != collision_messenger_state) &&
           !collision_frame_ready) {
 
         LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
@@ -248,8 +249,9 @@ namespace LocalizationConstants {
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
 
-    if ((collision_messenger->GetState() != collision_messenger_state)
-        && !collision_frame_ready) {
+    if (
+        // (collision_messenger->GetState() != collision_messenger_state) &&
+        !collision_frame_ready) {
 
       collision_frame_ready = true;
     }
