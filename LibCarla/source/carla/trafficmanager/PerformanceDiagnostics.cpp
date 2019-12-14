@@ -25,6 +25,9 @@ namespace traffic_manager {
     const chr::duration<float> throughput_count_duration = current_time - throughput_clock;
     if (throughput_count_duration.count() > 1.0f) {
 
+      std::cout << "Stage: " + stage_name + ", throughput: " << throughput_counter
+                << ", avg. cycle duration: " << inter_update_duration.count() << std::endl;
+
       throughput_clock = current_time;
       throughput_counter = 0u;
     } else {

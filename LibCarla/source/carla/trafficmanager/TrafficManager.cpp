@@ -101,8 +101,8 @@ namespace traffic_manager {
 
       const std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
       const std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
-      const std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      const std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
+      const std::vector<float> lateral_param = {4.0f, 0.0f, 0.2f};
+      const std::vector<float> lateral_highway_param = {1.0f, 0.0f, 0.3f};
       const float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(

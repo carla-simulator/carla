@@ -68,7 +68,7 @@ namespace traffic_manager {
     }
 
     // Limiting updates to 100 frames per second.
-    std::this_thread::sleep_for(10ms);
+    // std::this_thread::sleep_for(10ms);
   }
 
 } // namespace traffic_manager
