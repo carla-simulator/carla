@@ -150,11 +150,11 @@ namespace PlannerConstants {
 
     // Block on receive call only if new data is available on the messenger.
     const int collision_messenger_current_state = collision_messenger->GetState();
-    if (collision_messenger_current_state != collision_messenger_state) {
+    // if (collision_messenger_current_state != collision_messenger_state) {
       const auto collision_packet = collision_messenger->ReceiveData(collision_messenger_state);
       collision_frame = collision_packet.data;
       collision_messenger_state = collision_packet.id;
-    }
+    // }
 
     // Block on receive call only if new data is available on the messenger.
     const int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
