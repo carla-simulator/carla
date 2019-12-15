@@ -99,5 +99,23 @@ namespace traffic_manager {
     return (next_waypoints.size() > 1);
   }
 
+  void SimpleWaypoint::SetGeodesicGridId(GeoGridId _geodesic_grid_id) {
+    geodesic_grid_id = _geodesic_grid_id;
+  }
+
+  GeoGridId SimpleWaypoint::GetGeodesicGridId() {
+    GeoGridId grid_id;
+    if (waypoint->IsJunction()) {
+      grid_id = waypoint->GetJunctionId();
+    } else {
+      grid_id = geodesic_grid_id;
+    }
+    return grid_id;
+  }
+
+  GeoGridId SimpleWaypoint::GetJunctionId() const {
+    return waypoint->GetJunctionId();
+  }
+
 } // namespace traffic_manager
 } // namespace carla

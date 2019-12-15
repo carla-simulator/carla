@@ -57,6 +57,8 @@ namespace CollisionStageConstants {
   void CollisionStage::Action() {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
+// ------------------------------- Move to localization utils ------------------------- //
+
     // Handle vehicles not spawned by TrafficManager.
     const auto current_time = chr::system_clock::now();
     const chr::duration<double> diff = current_time - last_world_actors_pass_instance;
@@ -98,6 +100,7 @@ namespace CollisionStageConstants {
     for (auto actor_id: actor_ids_to_erase) {
       unregistered_actors.erase(actor_id);
     }
+// ----------------------------------------------------------------------------------------------- //
 
     // Looping over registered actors.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
@@ -109,8 +112,7 @@ namespace CollisionStageConstants {
       DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around the path of the ego vehicle.
-      std::unordered_set<ActorId> actor_id_list = GetPotentialVehicleObstacles(ego_actor);
-
+      std::unordered_set<ActorId>& actor_id_list = data.overlapping_actors;
       bool collision_hazard = false;
 
       // Generate number between 0 and 100
@@ -353,15 +355,6 @@ namespace CollisionStageConstants {
     }
 
     return bbox_extension;
-  }
-
-  std::unordered_set<ActorId> CollisionStage::GetPotentialVehicleObstacles(const Actor &ego_vehicle) {
-    // This method is probably redundant
-
-    vicinity_grid.UpdateGrid(ego_vehicle);
-    std::unordered_set<ActorId> actor_id_list = vicinity_grid.GetActors(ego_vehicle);
-
-    return actor_id_list;
   }
 
   LocationList CollisionStage::GetBoundary(const Actor &actor) const {
