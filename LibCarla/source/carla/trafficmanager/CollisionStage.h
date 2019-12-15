@@ -32,7 +32,6 @@
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
-#include "carla/trafficmanager/VicinityGrid.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -75,8 +74,6 @@ namespace traffic_manager {
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
-    /// An object used for grid binning vehicles for faster proximity detection.
-    VicinityGrid vicinity_grid;
     /// The map used to connect actor ids to the array index of data frames.
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
     /// A structure used to keep track of actors spawned outside of traffic
@@ -104,9 +101,6 @@ namespace traffic_manager {
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
     float GetBoundingBoxExtention(const Actor &ego_vehicle) const;
-
-    /// Method to retreive the set of vehicles around the path of the given vehicle.
-    std::unordered_set<ActorId> GetPotentialVehicleObstacles(const Actor &ego_vehicle);
 
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary) const;

@@ -53,24 +53,48 @@ namespace traffic_manager {
 
   TrackTraffic::TrackTraffic() {}
 
-  void TrackTraffic::UpdateOverlappingVehicle(ActorId actor_id, ActorId other_id) {
+  void TrackTraffic::UpdateGridPosition(ActorId actor_id, SimpleWaypointPtr waypoint) {
 
-    if (overlapping_vehicles.find(actor_id) != overlapping_vehicles.end()) {
-      ActorIdSet& actor_set = overlapping_vehicles.at(actor_id);
-      if (actor_set.find(other_id) == actor_set.end()) {
-        actor_set.insert(other_id);
+    GeoGridId new_geo_grid_id = waypoint->GetGeodesicGridId();
+
+    if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
+      auto& grid_ids = actor_to_grids.at(actor_id);
+      if (grid_id.find(new_geo_grid_id) == grid_ids.end()) {
+        grid_ids.insert(new_geo_grid_id);
       }
     } else {
-      overlapping_vehicles.insert({actor_id, {other_id}});
+      actor_to_grids.insert({actor_id, {new_geo_grid_id}});
+    }
+
+    if (grid_to_actors.find(new_geo_grid_id) != grid_to_actors.end()) {
+      ActorIdSet& actor_set = grid_to_actors.at(new_geo_grid_id);
+      if (actor_set.find(actor_id) == actor_set.end()) {
+        actor_set.insert(actor_id);
+      }
+    } else {
+      grid_to_actors.insert({new_geo_grid_id, {actor_id}});
     }
   }
 
-  void TrackTraffic::RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id) {
+  void TrackTraffic::RemoveGridPosition(ActorId actor_id, SimpleWaypointPtr removed_waypoint,
+                                        SimpleWaypointPtr remaining_waypoint) {
+    
+    GeoGridId removed_grid_id = removed_waypoint->GetGeodesicGridId();
+    GeoGridId remaining_grid_id = remaining_waypoint->GetGeodesicGridId();
 
-    if (overlapping_vehicles.find(actor_id) != overlapping_vehicles.end()) {
-      ActorIdSet& actor_set = overlapping_vehicles.at(actor_id);
+    if (removed_grid_id != remaining_grid_id) {
+      if (actor_to_grids.find(actor_id) != actor_to_grids.end() {
+        auto& grid_ids = actor_to_grids.at(actor_id);
+        if (grid_ids.find(removed_grid_id) != grid_ids.end()) {
+          grid_ids.erase(removed_grid_id);
+        }
+      }
+    }
+
+    if (grid_to_actors.find(removed_grid_id) != grid_to_actors.end()) {
+      ActorIdSet& actor_set = grid_to_actors.at(new_geo_grid_id);
       if (actor_set.find(actor_id) != actor_set.end()) {
-        actor_set.erase(other_id);
+        actor_set.erase(actor_id);
       }
     }
   }

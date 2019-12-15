@@ -9,6 +9,7 @@
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
 #include "carla/geom/Location.h"
+#include "carla/road/RoadTypes.h"
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
@@ -23,6 +24,7 @@ namespace traffic_manager {
   using ActorIdSet = std::unordered_set<ActorId>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using Buffer = std::deque<SimpleWaypointPtr>;
+  using GeoGridId = carla::road::JuncId;
 
   class TrackTraffic{
 
@@ -34,6 +36,10 @@ namespace traffic_manager {
     std::unordered_map<ActorId, ActorIdSet> overlapping_vehicles;
     /// Stored vehicle id set record.
     ActorIdSet actor_id_set_record;
+    /// Geodesic grids occupied by actors's paths.
+    std::unordered_map<ActorId, std::unordered_set<GeoGridId>> actor_to_grids;
+    /// Actors currently passing through grids.
+    std::unordered_map<GeoGridId, ActorIdSet> gird_to_actors;
 
   public:
     TrackTraffic();
@@ -43,9 +49,12 @@ namespace traffic_manager {
     void RemovePassingVehicle(uint64_t waypoint_id, ActorId actor_id);
     ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
 
-    /// Methods to update, remove and retrieve vehicles with overlapping vehicles.
-    void UpdateOverlappingVehicle(ActorId actor_id, ActorId other_id);
-    void RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id);
+    /// Method update grid position of vhehicles based on waypoints being added.
+    void UpdateGridPosition(ActorId actor_id, SimpleWaypointPtr waypoint);
+    /// Method to remove vehicle from grid associated with the waypoint.
+    void RemoveGridPosition(ActorId actor_id, SimpleWaypointPtr removed_waypoint,
+                            SimpleWaypointPtr remaining_waypoint);
+    /// Method to retreive vehicles with paths sharing common geodesic grids.
     ActorIdSet GetOverlappingVehicles(ActorId actor_id);
 
   };

@@ -18,7 +18,7 @@ namespace MapConstants {
   // Cosine of the angle.
   static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
   static const float GRID_SIZE = 4.0f;
-
+  static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 } // namespace MapConstants
 
   using namespace MapConstants;
@@ -40,6 +40,7 @@ namespace MapConstants {
     auto square = [](float input) {return std::pow(input, 2);};
 
     // Creating dense topology.
+    GeoGridId geodesic_grid_id_counter = -1;
     for (auto &pair : _topology) {
 
       // Looping through every topology segment.
@@ -47,12 +48,15 @@ namespace MapConstants {
       const WaypointPtr end_waypoint = pair.second;
       const cg::Location begin_location = begin_waypoint->GetTransform().location;
       const cg::Location end_location = end_waypoint->GetTransform().location;
+      cg::Location grid_edge_location = begin_location;
 
+      ++geodesic_grid_id_counter;
       if (distance_squared(begin_location, end_location) > square(ZERO_LENGTH)) {
 
         // Adding entry waypoint.
         WaypointPtr current_waypoint = begin_waypoint;
         dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
+        dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
 
         entry_node_list.push_back(dense_topology.back());
 
@@ -64,12 +68,20 @@ namespace MapConstants {
           SimpleWaypointPtr previous_wp = dense_topology.back();
           dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
 
+          if (distance_squared(grid_edge_location, dense_topology.back()->GetLocation()) >
+              square(MAX_GEODESIC_GRID_LENGTH)) {
+            ++geodesic_grid_id_counter;
+            grid_edge_location = dense_topology.back()->GetLocation();
+          }
+          dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
+
           previous_wp->SetNextWaypoint({dense_topology.back()});
         }
 
         // Adding exit waypoint.
         SimpleWaypointPtr previous_wp = dense_topology.back();
         dense_topology.push_back(std::make_shared<SimpleWaypoint>(end_waypoint));
+        dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
 
         previous_wp->SetNextWaypoint({dense_topology.back()});
         exit_node_list.push_back(dense_topology.back());

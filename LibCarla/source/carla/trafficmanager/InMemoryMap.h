@@ -18,6 +18,7 @@
 #include "carla/geom/Math.h"
 #include "carla/Memory.h"
 #include "carla/road/Lane.h"
+#include "carla/road/RoadTypes.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
@@ -32,6 +33,7 @@ namespace traffic_manager {
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
+  using GeoGridId = crd::JuncId;
 
   /// This class builds a discretized local map-cache.
   /// Instantiate the class with map topology from the simulator

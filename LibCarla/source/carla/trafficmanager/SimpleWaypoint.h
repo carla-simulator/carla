@@ -14,6 +14,7 @@
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
+#include "carla/road/RoadTypes.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -21,6 +22,7 @@ namespace traffic_manager {
   namespace cc = carla::client;
   namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
+  using GeoGridId = carla::road::JuncId;
 
   /// This is a simple wrapper class on Carla's waypoint object.
   /// The class is used to represent discrete samples of the world map.
@@ -38,6 +40,8 @@ namespace traffic_manager {
     SimpleWaypointPtr next_left_waypoint;
     /// Pointer to right lane change waypoint.
     SimpleWaypointPtr next_right_waypoint;
+    /// Integer placing the waypoint into a geodesic grid.
+    GeoGridId geodesic_grid_id = 0;
 
   public:
 
@@ -73,6 +77,13 @@ namespace traffic_manager {
 
     /// This method is used to get the closest right waypoint for a lane change.
     SimpleWaypointPtr GetRightWaypoint();
+
+    /// Accessor methods for geodesic grid id.
+    void SetGeodesicGridId(GeoGridId _geodesic_grid_id);
+    GeoGridId GetGeodesicGridId();
+
+    /// Metod to retreive junction id of the waypoint.
+    GeoGridId GetJunctionId() const;
 
     /// Calculates the distance from the object's waypoint to the passed
     /// location.
