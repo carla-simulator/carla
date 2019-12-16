@@ -204,7 +204,6 @@ namespace CollisionStageConstants {
   }
 
   LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor) const {
-
     const LocationList bbox = GetBoundary(actor);
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
@@ -282,6 +281,7 @@ namespace CollisionStageConstants {
 
       return bbox;
     }
+
   }
 
   float CollisionStage::GetBoundingBoxExtention(const Actor &actor) const {

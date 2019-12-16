@@ -91,6 +91,14 @@ namespace traffic_manager {
   }
 
   TrafficManager::~TrafficManager() {
+    // -------- configuring simulation to variable time step, asynchronous execution ---------- //
+
+    auto world_settings = world.GetSettings();
+    world_settings.fixed_delta_seconds = 0.0f;
+    world_settings.synchronous_mode = false;
+    world.ApplySettings(world_settings);
+
+    // ---------------------------------------------------------------------------------------- //
     Stop();
   }
 
