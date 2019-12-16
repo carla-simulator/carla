@@ -68,17 +68,12 @@ namespace traffic_manager {
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
-    /// Reference to Carla's world object.
-    cc::World &world;
     /// Runtime parameterization object.
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// The map used to connect actor ids to the array index of data frames.
     std::unordered_map<ActorId, uint> vehicle_id_to_index;
-    /// A structure used to keep track of actors spawned outside of traffic
-    /// manager.
-    std::unordered_map<ActorId, Actor> unregistered_actors;
     /// An object used to keep track of time between checking for all world
     /// actors.
     chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
@@ -111,7 +106,6 @@ namespace traffic_manager {
         std::string stage_name,
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-        cc::World &world,
         Parameters &parameters,
         cc::DebugHelper &debug_helper);
 

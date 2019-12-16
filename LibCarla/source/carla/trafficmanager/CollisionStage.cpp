@@ -29,13 +29,11 @@ namespace CollisionStageConstants {
       std::string stage_name,
       std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
       std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-      cc::World &world,
       Parameters &parameters,
       cc::DebugHelper &debug_helper)
     : PipelineStage(stage_name),
       localization_messenger(localization_messenger),
       planner_messenger(planner_messenger),
-      world(world),
       parameters(parameters),
       debug_helper(debug_helper){
 
@@ -57,51 +55,6 @@ namespace CollisionStageConstants {
   void CollisionStage::Action() {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
-// ------------------------------- Move to localization utils ------------------------- //
-
-    // Handle vehicles not spawned by TrafficManager.
-    const auto current_time = chr::system_clock::now();
-    const chr::duration<double> diff = current_time - last_world_actors_pass_instance;
-
-    // Periodically check for actors not spawned by TrafficManager.
-    if (diff.count() > 0.5f) {
-
-      const auto world_actors = world.GetActors()->Filter("vehicle.*");
-      const auto world_walker = world.GetActors()->Filter("walker.*");
-      // Scanning for vehicles.
-      for (auto actor: *world_actors.get()) {
-        const auto unregistered_id = actor->GetId();
-        if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
-            unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, actor});
-        }
-      }
-      // Scanning for pedestrians.
-      for (auto walker: *world_walker.get()) {
-        const auto unregistered_id = walker->GetId();
-        if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, walker});
-        }
-      }
-
-      last_world_actors_pass_instance = current_time;
-    }
-
-    // Regularly update unregistered actors.
-    std::vector<ActorId> actor_ids_to_erase;
-    for (auto actor_info: unregistered_actors) {
-      if (actor_info.second->IsAlive()) {
-        vicinity_grid.UpdateGrid(actor_info.second);
-      } else {
-        vicinity_grid.EraseActor(actor_info.first);
-        actor_ids_to_erase.push_back(actor_info.first);
-      }
-    }
-    for (auto actor_id: actor_ids_to_erase) {
-      unregistered_actors.erase(actor_id);
-    }
-// ----------------------------------------------------------------------------------------------- //
-
     // Looping over registered actors.
     for (uint i = 0u; i < number_of_vehicles; ++i) {
 
@@ -112,7 +65,6 @@ namespace CollisionStageConstants {
       DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around the path of the ego vehicle.
-      std::unordered_set<ActorId>& actor_id_list = data.overlapping_actors;
       bool collision_hazard = false;
 
       // Generate number between 0 and 100
@@ -121,17 +73,10 @@ namespace CollisionStageConstants {
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
       // Check every actor in the vicinity if it poses a collision hazard.
-        for (auto j = actor_id_list.begin(); (j != actor_id_list.end()) && !collision_hazard; ++j) {
-          const ActorId actor_id = *j;
+        for (auto j = data.overlapping_actors.begin(); (j != data.overlapping_actors.end()) && !collision_hazard; ++j) {
+          const Actor actor = j->second;
+          const ActorId actor_id = j->first;
           try {
-
-            Actor actor = nullptr;
-            if (vehicle_id_to_index.find(actor_id) != vehicle_id_to_index.end()) {
-              actor = localization_frame->at(vehicle_id_to_index.at(actor_id)).actor;
-            } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
-              actor = unregistered_actors.at(actor_id);
-            }
-
             const cg::Location ego_location = ego_actor->GetLocation();
             const cg::Location other_location = actor->GetLocation();
 
