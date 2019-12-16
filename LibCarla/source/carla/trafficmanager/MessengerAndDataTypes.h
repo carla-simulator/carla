@@ -28,11 +28,14 @@ namespace traffic_manager {
   /// Alias used for the list of buffers in the localization stage.
   using BufferList = std::vector<Buffer>;
 
+  using Actor = carla::SharedPtr<cc::Actor>;
+  using ActorId = carla::ActorId;
+
   /// Data types.
 
   /// Type of data sent by the localization stage to the motion planner stage.
   struct LocalizationToPlannerData {
-    carla::SharedPtr<cc::Actor> actor;
+    Actor actor;
     float deviation;
     float distance;
     bool approaching_true_junction;
@@ -48,9 +51,9 @@ namespace traffic_manager {
 
   /// Type of data sent by the localization stage to the collision stage.
   struct LocalizationToCollisionData {
-    carla::SharedPtr<cc::Actor> actor;
+    Actor actor;
     Buffer buffer;
-    std::unordered_set<carla::ActorId> overlapping_actors;
+    std::unordered_map<ActorId, Actor> overlapping_actors;
   };
 
   /// Type of data sent by the collision stage to the motion planner stage.
@@ -60,7 +63,7 @@ namespace traffic_manager {
 
   /// Type of data sent by the localization stage to the traffic light stage.
   struct LocalizationToTrafficLightData {
-    carla::SharedPtr<cc::Actor> actor;
+    Actor actor;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
   };

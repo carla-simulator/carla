@@ -57,12 +57,13 @@ namespace traffic_manager {
         localization_planner_messenger, localization_collision_messenger,
         localization_traffic_light_messenger,
         registered_actors, *local_map.get(),
-        parameters, debug_helper);
+        parameters, debug_helper,
+        world);
 
     collision_stage = std::make_unique<CollisionStage>(
         "Collision stage",
         localization_collision_messenger, collision_planner_messenger,
-        world, parameters, debug_helper);
+        parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         "Traffic light stage",

@@ -86,6 +86,8 @@ namespace traffic_manager {
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
+    /// Carla world object;
+    cc::World& world;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
@@ -101,6 +103,13 @@ namespace traffic_manager {
     TrackTraffic track_traffic;
     /// Map of all vehicles' idle time
     std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
+    /// Counter to track unregistered actors' scan interval.
+    uint unregistered_scan_duration = 0;
+    /// A structure used to keep track of actors spawned outside of traffic
+    /// manager.
+    std::unordered_map<ActorId, Actor> unregistered_actors;
+    /// Structure to keep track of the closest waypoint for unregistered actors.
+    std::unordered_map<ActorId, SimpleWaypointPtr> unregistered_waypoints;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
@@ -110,6 +119,8 @@ namespace traffic_manager {
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
+    /// Method to scan for unregistered actors and update their grid positioning.
+    void ScanUnregisteredVehicles();
 
   public:
 
@@ -121,7 +132,8 @@ namespace traffic_manager {
         AtomicActorSet &registered_actors,
         InMemoryMap &local_map,
         Parameters &parameters,
-        cc::DebugHelper &debug_helper);
+        cc::DebugHelper &debug_helper,
+        cc::World& world);
 
     ~LocalizationStage();
 
