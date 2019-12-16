@@ -17,6 +17,7 @@
 #include <thread>
 #include <vector>
 
+#include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/Messenger.h"
@@ -54,6 +55,8 @@ namespace traffic_manager {
     std::condition_variable wake_receiver_notifier;
     std::condition_variable wake_action_notifier;
     std::condition_variable wake_sender_notifier;
+    /// Stage name string.
+    std::string stage_name;
     /// Object to track stage performance.
     PerformanceDiagnostics performance_diagnostics;
 
