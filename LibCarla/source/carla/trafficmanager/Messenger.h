@@ -78,8 +78,8 @@ namespace traffic_manager {
       while (state_counter.load() == old_state && !stop_messenger.load()) {
         receive_condition.wait_for(lock, 1ms, [=] {return state_counter.load() != old_state;});
       }
-      state_counter.store(state_counter.load() + 1);
       DataPacket<Data> packet = {state_counter.load(), data};
+      state_counter.store(state_counter.load() + 1);
       send_condition.notify_one();
 
       return packet;

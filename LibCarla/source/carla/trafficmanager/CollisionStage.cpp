@@ -81,10 +81,6 @@ namespace CollisionStageConstants {
             const cg::Location ego_location = ego_actor->GetLocation();
             const cg::Location other_location = actor->GetLocation();
 
-            debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
-                                   other_location + cg::Location(0, 0, 2),
-                                   0.5f, 0.5f, {255u, 0u, 255u}, 0.1f);
-
             if (actor_id != ego_actor_id &&
                 (cg::Math::DistanceSquared(ego_location, other_location)
                 < std::pow(MAX_COLLISION_RADIUS, 2)) &&
@@ -107,7 +103,6 @@ namespace CollisionStageConstants {
 
       CollisionToPlannerData &message = current_planner_frame->at(i);
       message.hazard = collision_hazard;
-
     }
   }
 
@@ -159,36 +154,60 @@ namespace CollisionStageConstants {
     cg::Vector3D reference_to_other = other_location - reference_location;
     reference_to_other = reference_to_other.MakeUnitVector();
 
-    const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
-    const auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
-
-    const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
-    const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
-    const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
-    const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
-
-    const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-    const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
-
-    const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-    const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
-
     const cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
     cg::Vector3D other_to_reference = reference_vehicle->GetLocation() - other_vehicle->GetLocation();
     other_to_reference = other_to_reference.MakeUnitVector();
 
-    // Whichever vehicle's path is farthest away from the other vehicle gets
-    // priority to move.
-    if (inter_geodesic_distance < 0.1 &&
-        ((
-          inter_bbox_distance > 0.1 &&
-          reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
-        ) || (
-          inter_bbox_distance < 0.1 &&
-          cg::Math::Dot(reference_heading, reference_to_other) > cg::Math::Dot(other_heading, other_to_reference)
-        )) ) {
+    const auto &waypoint_buffer =  localization_frame->at(
+      vehicle_id_to_index.at(reference_vehicle->GetId())).buffer;
+    const SimpleWaypointPtr& reference_front_wp = waypoint_buffer.front();
 
-      hazard = true;
+    const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
+    const auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
+
+    float reference_vehicle_length = reference_vehicle_ptr->GetBoundingBox().extent.x * 1.414f;
+    float other_vehicle_length = other_vehicle_ptr->GetBoundingBox().extent.x * 1.414f;
+    float inter_vehicle_length = reference_vehicle_length + other_vehicle_length;
+
+    if (!(!reference_front_wp->CheckJunction() &&
+        cg::Math::Dot(reference_heading, reference_to_other) < 0) &&
+
+        !(reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
+        reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
+
+        !(!reference_front_wp->CheckJunction() &&
+        cg::Math::Dot(reference_heading, reference_to_other) > 0 &&
+        (cg::Math::DistanceSquared(reference_location, other_location) >
+        std::pow(GetBoundingBoxExtention(reference_vehicle) + inter_vehicle_length, 2)))) {
+
+      const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
+      const auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
+
+      const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
+      const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));
+      const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle));
+      const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle));
+
+      const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+      const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+
+      const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+      const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+
+      // Whichever vehicle's path is farthest away from the other vehicle gets
+      // priority to move.
+      if (inter_geodesic_distance < 0.1 &&
+          ((inter_bbox_distance > 0.1 &&
+            reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
+            ) || (
+            inter_bbox_distance < 0.1 &&
+            (cg::Math::Dot(reference_heading, reference_to_other) >
+            cg::Math::Dot(other_heading, other_to_reference))
+          ))
+      ) {
+
+        hazard = true;
+      }
     }
 
     return hazard;

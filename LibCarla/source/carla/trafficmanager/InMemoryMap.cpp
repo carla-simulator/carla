@@ -41,8 +41,6 @@ namespace MapConstants {
 
     // Creating dense topology.
     GeoGridId geodesic_grid_id_counter = -1;
-    cg::Location grid_begin_location;
-    cg::Location grid_end_location;
     for (auto &pair : _topology) {
 
       // Looping through every topology segment.
