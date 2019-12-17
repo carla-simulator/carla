@@ -27,6 +27,7 @@
   * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
+  * Fixed an error in `automatic_control.py` failing because the `Num Lock` key
   * Fixed client_bounding_boxes.py example script
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
