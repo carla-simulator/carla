@@ -80,6 +80,7 @@ namespace traffic_manager {
                                         SimpleWaypointPtr remaining_waypoint) {
 
     if (removed_waypoint != nullptr) {
+
       GeoGridId removed_grid_id = removed_waypoint->GetGeodesicGridId();
       GeoGridId remaining_grid_id;
       if (remaining_waypoint != nullptr) {
@@ -135,6 +136,21 @@ namespace traffic_manager {
       }
       actor_to_grids.erase(actor_id);
     }
+  }
+
+  std::unordered_set<GeoGridId> TrackTraffic::GetGridIds(ActorId actor_id) {
+
+    std::unordered_set<GeoGridId> grid_ids;
+
+    if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
+      grid_ids = actor_to_grids.at(actor_id);
+    }
+
+    return grid_ids;
+  }
+
+  std::unordered_map<GeoGridId, ActorIdSet>& TrackTraffic::GetGridActors() {
+    return grid_to_actors;
   }
 
   void TrackTraffic::UpdatePassingVehicle(uint64_t waypoint_id, ActorId actor_id) {

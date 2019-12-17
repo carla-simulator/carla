@@ -61,8 +61,9 @@ namespace CollisionStageConstants {
       const LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
+      const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
 
-      DrawBoundary(GetGeodesicBoundary(ego_actor));
+      // DrawBoundary(GetGeodesicBoundary(ego_actor));
 
       // Retrieve actors around the path of the ego vehicle.
       bool collision_hazard = false;
@@ -73,12 +74,16 @@ namespace CollisionStageConstants {
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
       // Check every actor in the vicinity if it poses a collision hazard.
-        for (auto j = data.overlapping_actors.begin(); (j != data.overlapping_actors.end()) && !collision_hazard; ++j) {
+        for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
           const Actor actor = j->second;
           const ActorId actor_id = j->first;
           try {
             const cg::Location ego_location = ego_actor->GetLocation();
             const cg::Location other_location = actor->GetLocation();
+
+            debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
+                                   other_location + cg::Location(0, 0, 2),
+                                   0.5f, 0.5f, {255u, 0u, 255u}, 0.1f);
 
             if (actor_id != ego_actor_id &&
                 (cg::Math::DistanceSquared(ego_location, other_location)
@@ -143,7 +148,7 @@ namespace CollisionStageConstants {
     planner_messenger_state = planner_messenger->SendData(packet);
   }
 
-  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) const {
+  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) {
 
     bool hazard = false;
 
@@ -189,7 +194,7 @@ namespace CollisionStageConstants {
     return hazard;
   }
 
-  traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) const {
+  traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) {
 
     std::string boundary_polygon_wkt;
     for (const cg::Location &location: boundary) {
@@ -203,7 +208,8 @@ namespace CollisionStageConstants {
     return boundary_polygon;
   }
 
-  LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor) const {
+  LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor) {
+
     const LocationList bbox = GetBoundary(actor);
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
@@ -284,7 +290,7 @@ namespace CollisionStageConstants {
 
   }
 
-  float CollisionStage::GetBoundingBoxExtention(const Actor &actor) const {
+  float CollisionStage::GetBoundingBoxExtention(const Actor &actor) {
 
     const float velocity = actor->GetVelocity().Length();
     float bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
@@ -302,7 +308,7 @@ namespace CollisionStageConstants {
     return bbox_extension;
   }
 
-  LocationList CollisionStage::GetBoundary(const Actor &actor) const {
+  LocationList CollisionStage::GetBoundary(const Actor &actor) {
     const auto actor_type = actor->GetTypeId();
 
     cg::BoundingBox bbox;
@@ -339,7 +345,7 @@ namespace CollisionStageConstants {
     };
   }
 
-  void CollisionStage::DrawBoundary(const LocationList &boundary) const {
+  void CollisionStage::DrawBoundary(const LocationList &boundary) {
     for (uint64_t i = 0u; i < boundary.size(); ++i) {
       debug_helper.DrawLine(
           boundary[i] + cg::Location(0.0f, 0.0f, 1.0f),

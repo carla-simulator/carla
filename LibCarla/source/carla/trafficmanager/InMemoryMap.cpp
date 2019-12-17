@@ -41,6 +41,8 @@ namespace MapConstants {
 
     // Creating dense topology.
     GeoGridId geodesic_grid_id_counter = -1;
+    cg::Location grid_begin_location;
+    cg::Location grid_end_location;
     for (auto &pair : _topology) {
 
       // Looping through every topology segment.
@@ -151,6 +153,8 @@ namespace MapConstants {
         FindAndLinkLaneChange(simple_waypoint);
       }
     }
+
+    MakeGeodesiGridCenters();
   }
 
   std::pair<int, int> InMemoryMap::MakeGridId (float x, float y) {
@@ -265,6 +269,28 @@ namespace MapConstants {
           + std::to_string(loc.y) + " "
           + std::to_string(loc.z));
     }
+  }
+
+  void InMemoryMap::MakeGeodesiGridCenters() {
+    for (auto& swp: dense_topology) {
+      GeoGridId ggid = swp->CheckJunction()? swp->GetJunctionId(): swp->GetGeodesicGridId();
+      if (geodesic_grid_center.find(ggid) == geodesic_grid_center.end()) {
+        geodesic_grid_center.insert({ggid, swp->GetLocation()});
+      } else {
+        cg::Location& grid_loc = geodesic_grid_center.at(ggid);
+        grid_loc = (grid_loc + swp->GetLocation())/2;
+      }
+    }
+  }
+
+  cg::Location InMemoryMap::GetGeodesicGridCenter(GeoGridId ggid) {
+    cg::Location grid_center;
+    if (geodesic_grid_center.find(ggid) != geodesic_grid_center.end()) {
+      grid_center = geodesic_grid_center.at(ggid);
+    } else {
+      grid_center = cg::Location();
+    }
+    return grid_center;
   }
 
 } // namespace traffic_manager
