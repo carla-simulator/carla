@@ -58,6 +58,10 @@ namespace traffic_manager {
     ActorIdSet GetOverlappingVehicles(ActorId actor_id);
     /// Method to delete actor data from tracking.
     void DeleteActor(ActorId actor_id);
+
+    std::unordered_set<GeoGridId> GetGridIds(ActorId actor_id);
+
+    std::unordered_map<GeoGridId, ActorIdSet>& GetGridActors();
   };
 
   /// Returns the cross product (z component value) between the vehicle's

@@ -49,6 +49,8 @@ namespace traffic_manager {
     NodeList dense_topology;
     /// Grid localization map for all waypoints in the system.
     std::unordered_map<std::string, std::unordered_set<SimpleWaypointPtr>> waypoint_grid;
+    /// Geodesic grid topology.
+    std::unordered_map<GeoGridId, cg::Location> geodesic_grid_center;
 
     /// Method to generate the grid ids for given co-ordinates.
     std::pair<int, int> MakeGridId(float x, float y);
@@ -77,6 +79,9 @@ namespace traffic_manager {
     /// This method returns the full list of discrete samples of the map in the
     /// local cache.
     NodeList GetDenseTopology() const;
+
+    void MakeGeodesiGridCenters();
+    cg::Location GetGeodesicGridCenter(GeoGridId ggid);
 
   };
 

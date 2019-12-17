@@ -31,6 +31,7 @@
 
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
 namespace carla {
@@ -79,26 +80,28 @@ namespace traffic_manager {
     chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
+    /// Snippet profiler for measuring execution time.
+    SnippetProfiler snippet_profiler;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor &actor) const;
+    LocationList GetBoundary(const Actor &actor);
 
     /// Returns the extrapolated bounding box of the vehicle along its
     /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor &actor) const;
+    LocationList GetGeodesicBoundary(const Actor &actor);
 
     /// Method to construct a boost polygon object.
-    Polygon GetPolygon(const LocationList &boundary) const;
+    Polygon GetPolygon(const LocationList &boundary);
 
     /// The method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle) const;
+    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle);
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
-    float GetBoundingBoxExtention(const Actor &ego_vehicle) const;
+    float GetBoundingBoxExtention(const Actor &ego_vehicle);
 
     /// A simple method used to draw bounding boxes around vehicles
-    void DrawBoundary(const LocationList &boundary) const;
+    void DrawBoundary(const LocationList &boundary);
 
   public:
 
