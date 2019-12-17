@@ -62,7 +62,6 @@ namespace traffic_manager {
   void PipelineStage::ActionThreadManager() {
 
     while (run_stage.load()) {
-      performance_diagnostics.RegisterUpdate();
 
       std::unique_lock<std::mutex> lock(thread_coordination_mutex);
 
@@ -76,7 +75,9 @@ namespace traffic_manager {
       // Run action.
       if (run_stage.load()) {
         try {
+          performance_diagnostics.RegisterUpdate(true);
           Action();
+          performance_diagnostics.RegisterUpdate(false);
         } catch(const std::exception& e) {
           carla::log_error("Encountered exception while running action of stage : "
                            + stage_name + e.what() + '\n');

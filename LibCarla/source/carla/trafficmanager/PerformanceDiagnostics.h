@@ -33,7 +33,7 @@ namespace traffic_manager {
   public:
     PerformanceDiagnostics(std::string name);
 
-    void RegisterUpdate();
+    void RegisterUpdate(bool begin_or_end);
   };
 
 } // namespace traffic_manager
