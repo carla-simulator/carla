@@ -84,8 +84,6 @@ def main():
         blueprints = world.get_blueprint_library().filter(args.filterv)
         blueprintsWalkers = world.get_blueprint_library().filter(args.filterw)
 
-        traffic_manager = carla.GetTrafficManager(client)
-
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
             blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
@@ -209,8 +207,6 @@ def main():
             world.wait_for_tick()
 
     finally:
-        if traffic_manager:
-            del traffic_manager
 
         print('\ndestroying %d vehicles' % len(vehicles_list))
         client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
