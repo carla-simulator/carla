@@ -48,7 +48,6 @@ namespace LocalizationConstants {
     // Initializing various output frame selectors.
     planner_frame_selector = true;
     collision_frame_selector = true;
-    collision_frame_ready = false;
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
@@ -216,7 +215,6 @@ namespace LocalizationConstants {
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
       collision_message.buffer = waypoint_buffer;
-
       collision_message.overlapping_actors.clear();
       ActorIdSet overlapping_actor_set = track_traffic.GetOverlappingVehicles(actor_id);
       for (ActorId overlapping_actor_id: overlapping_actor_set) {
@@ -229,29 +227,11 @@ namespace LocalizationConstants {
         collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
       }
 
-      // auto grid_ids = track_traffic.GetGridIds(actor_id);
-      // for (auto grid_id: grid_ids) {
-      //   debug_helper.DrawLine(vehicle_location + cg::Location(0, 0, 2),
-      //                         local_map.GetGeodesicGridCenter(grid_id),
-      //                         0.5f, {0u, 255u, 0u}, 0.1f);
-      // }
-
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
-
-    // auto& grid_actor_map = track_traffic.GetGridActors();
-    // for (auto& grid_actors: grid_actor_map) {
-    //   if (grid_actors.second.size() > 0) {
-    //     for (auto& grid_actor_id: grid_actors.second) {
-    //       debug_helper.DrawLine(actor_list.at(vehicle_id_to_index.at(grid_actor_id))->GetLocation() + cg::Location(0, 0, 2),
-    //                             local_map.GetGeodesicGridCenter(grid_actors.first),
-    //                             0.5f, {0u, 0u, 255u}, 0.1f);
-    //     }
-    //   }
-    // }
 
   }
 
@@ -307,16 +287,13 @@ namespace LocalizationConstants {
     planner_frame_selector = !planner_frame_selector;
     planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-    // Send data to collision stage only if it has finished
-    // processing, received the previous message and started processing it.
 
     const DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
-        collision_messenger_state,
-        collision_frame_selector ? collision_frame_a : collision_frame_b
-      };
-
-    collision_messenger_state = collision_messenger->SendData(collision_data_packet);
+      collision_messenger_state,
+      collision_frame_selector ? collision_frame_a : collision_frame_b
+    };
     collision_frame_selector = !collision_frame_selector;
+    collision_messenger_state = collision_messenger->SendData(collision_data_packet);
 
     // Send data to traffic light stage only if it has finished
     // processing, received the previous message and started processing it.
