@@ -76,6 +76,7 @@ namespace traffic_manager {
 
     void Stop() {
       stop_messenger.store(true);
+      d_queue.clear();
     }
 
   };

@@ -15,8 +15,7 @@ namespace traffic_manager {
       cc::Client &carla_client)
     : PipelineStage(stage_name),
       messenger(messenger),
-      carla_client(carla_client),
-      world(carla_client.GetWorld()) {
+      carla_client(carla_client) {
 
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
@@ -62,8 +61,12 @@ namespace traffic_manager {
 
     if (commands != nullptr) {
       carla_client.ApplyBatch(*commands.get());
-      world.Tick();
+
     }
+
+    // Limiting updates to 100 frames per second.
+    std::this_thread::sleep_for(10ms);
+
   }
 
 } // namespace traffic_manager

@@ -40,8 +40,6 @@ namespace traffic_manager {
     std::shared_ptr<std::vector<cr::Command>> commands;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
-    /// Carla world object.
-    cc::World world;
 
   public:
 
