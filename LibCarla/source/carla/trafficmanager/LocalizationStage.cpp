@@ -378,7 +378,7 @@ namespace LocalizationConstants {
     const auto left_waypoint = current_waypoint->GetLeftWaypoint();
     const auto right_waypoint = current_waypoint->GetRightWaypoint();
 
-    if (!force) {
+    if (!force && current_waypoint != nullptr) {
 
       const auto blocking_vehicles = track_traffic.GetOverlappingVehicles(actor_id);
 
@@ -402,41 +402,41 @@ namespace LocalizationConstants {
           const auto other_neighbouring_lanes = {
               other_current_waypoint->GetLeftWaypoint(),
               other_current_waypoint->GetRightWaypoint()};
-
-          for (auto& candidate_lane_wp: other_neighbouring_lanes) {
-            if (candidate_lane_wp != nullptr &&
-                track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
-                vehicle_velocity < HIGHWAY_SPEED) {
-              distant_lane_availability = true;
-            }
-          }
-
-          const cg::Vector3D reference_heading = current_waypoint->GetForwardVector();
-          const cg::Vector3D other_heading = other_current_waypoint->GetForwardVector();
-
-          if (other_vehicle_id != actor_id &&
-              !current_waypoint->CheckJunction() &&
-              !other_current_waypoint->CheckJunction() &&
-              cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE) {
-
-            const float squared_vehicle_distance = cg::Math::DistanceSquared(other_location, vehicle_location);
-            const float deviation_dot = DeviationDotProduct(vehicle, other_location);
-
-            if (deviation_dot > 0.0f) {
-
-              if (distant_lane_availability &&
-                  squared_vehicle_distance > std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
-
-                need_to_change_lane = true;
-              } else if (squared_vehicle_distance < std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
-
-                need_to_change_lane = false;
-                abort_lane_change = true;
+          if (other_current_waypoint != nullptr) {
+            for (auto& candidate_lane_wp: other_neighbouring_lanes) {
+              if (candidate_lane_wp != nullptr &&
+                  track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
+                  vehicle_velocity < HIGHWAY_SPEED) {
+                distant_lane_availability = true;
               }
+            }
 
+            const cg::Vector3D reference_heading = current_waypoint->GetForwardVector();
+            const cg::Vector3D other_heading = other_current_waypoint->GetForwardVector();
+
+            if (other_vehicle_id != actor_id &&
+                !current_waypoint->CheckJunction() &&
+                !other_current_waypoint->CheckJunction() &&
+                cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE) {
+
+              const float squared_vehicle_distance = cg::Math::DistanceSquared(other_location, vehicle_location);
+              const float deviation_dot = DeviationDotProduct(vehicle, other_location);
+
+              if (deviation_dot > 0.0f) {
+
+                if (distant_lane_availability &&
+                    squared_vehicle_distance > std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
+
+                  need_to_change_lane = true;
+                } else if (squared_vehicle_distance < std::pow(MINIMUM_LANE_CHANGE_DISTANCE, 2)) {
+
+                  need_to_change_lane = false;
+                  abort_lane_change = true;
+                }
+
+              }
             }
           }
-
         }
       }
 
