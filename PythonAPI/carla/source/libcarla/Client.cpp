@@ -4,9 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/PythonUtil.h>
-#include <carla/client/Client.h>
-#include <carla/client/World.h>
+#include "carla/PythonUtil.h"
+#include "carla/client/Client.h"
+#include "carla/client/World.h"
+#include "carla/Logging.h"
+#include "carla/rpc/ActorId.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 #include <boost/python/stl_iterator.hpp>
 
@@ -43,9 +46,69 @@ static auto ApplyBatchCommandsSync(
       boost::python::stl_input_iterator<CommandType>(commands),
       boost::python::stl_input_iterator<CommandType>()};
   boost::python::list result;
-  for (auto &response : self.ApplyBatchSync(std::move(cmds), do_tick)) {
+  auto responses = self.ApplyBatchSync(cmds, do_tick);
+  for (auto &response : responses) {
     result.append(std::move(response));
   }
+  // check for autopilot command
+  carla::traffic_manager::TrafficManager *tm = nullptr;
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable;
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable;
+  for (size_t i=0; i<cmds.size(); ++i) {
+    if (!responses[i].HasError()) {
+
+      bool isAutopilot = false;
+      bool autopilotValue = false;
+
+      // check SpawnActor command
+      if (cmds[i].command.type() == typeid(carla::rpc::Command::SpawnActor)) {
+        // check inside 'do_after'
+        auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmds[i].command);
+        for (auto &cmd : spawn.do_after) {
+          if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
+            autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
+            isAutopilot = true;
+          }
+        }
+      }
+
+      // check SetAutopilot command
+      if (cmds[i].command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
+        autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmds[i].command).enabled;
+        isAutopilot = true;
+      }
+
+      // check if found any SetAutopilot command
+      if (isAutopilot) {
+        // get the id
+        carla::rpc::ActorId id = static_cast<carla::rpc::ActorId>(responses[i].Get());
+        // get traffic manager instance
+        if (!tm) {
+          tm = &carla::traffic_manager::TrafficManager::GetInstance(
+            carla::traffic_manager::TrafficManager::GetUniqueLocalClient());
+        }
+        // get all actors
+        carla::SharedPtr<carla::client::Actor> actor;
+        if (tm) {
+          actor = tm->GetWorld().GetActor(id);
+        }
+        // check to enable or disable
+        if (actor) {
+          if (autopilotValue) {
+            vehicles_to_enable.push_back(actor);
+          } else {
+            vehicles_to_disable.push_back(actor);
+          }
+        }
+      }
+    }
+  }
+  // check if any autopilot command was sent
+  if ((vehicles_to_enable.size() || vehicles_to_disable.size()) && tm) {
+    tm->RegisterVehicles(vehicles_to_enable);
+    tm->UnregisterVehicles(vehicles_to_disable);
+  }
+
   return result;
 }
 

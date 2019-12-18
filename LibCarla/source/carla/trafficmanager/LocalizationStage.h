@@ -88,7 +88,7 @@ namespace traffic_manager {
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
     /// Map connecting actor ids to indices of data arrays.
-    std::unordered_map<ActorId, uint> vehicle_id_to_index;
+    std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint64_t number_of_vehicles;
     /// Used to only calculate the extended buffer once at junctions
@@ -100,7 +100,7 @@ namespace traffic_manager {
     /// Map of all vehicles' idle time
     std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
     /// Counter to track unregistered actors' scan interval.
-    uint unregistered_scan_duration = 0;
+    uint64_t unregistered_scan_duration = 0;
     /// A structure used to keep track of actors spawned outside of traffic
     /// manager.
     std::unordered_map<ActorId, Actor> unregistered_actors;

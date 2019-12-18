@@ -51,7 +51,7 @@ namespace CollisionStageConstants {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over registered actors.
-    for (uint i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;
@@ -122,7 +122,7 @@ namespace CollisionStageConstants {
       // vehicles.
       if (number_of_vehicles != (*localization_frame.get()).size()) {
 
-        number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
+        number_of_vehicles = static_cast<uint64_t>((*localization_frame.get()).size());
         // Allocating output arrays to be shared with motion planner stage.
         planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
         planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
