@@ -148,6 +148,9 @@ namespace traffic_manager {
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
 
+    /// Return the world object
+    const cc::World &GetWorld() { return world; };
+
     /// Destructor.
     ~TrafficManager();
 
