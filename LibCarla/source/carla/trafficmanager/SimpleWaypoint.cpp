@@ -50,7 +50,7 @@ namespace traffic_manager {
     for (auto &simple_waypoint: waypoints) {
       next_waypoints.push_back(simple_waypoint);
     }
-    return static_cast<uint>(waypoints.size());
+    return static_cast<uint64_t>(waypoints.size());
   }
 
   void SimpleWaypoint::SetLeftWaypoint(SimpleWaypointPtr _waypoint) {

@@ -122,7 +122,7 @@ namespace CollisionStageConstants {
       // vehicles.
       if (number_of_vehicles != (*localization_frame.get()).size()) {
 
-        number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
+        number_of_vehicles = static_cast<uint64_t>((*localization_frame.get()).size());
         // Allocating output arrays to be shared with motion planner stage.
         planner_frame_a = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
         planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
