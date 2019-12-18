@@ -141,7 +141,7 @@ namespace LocalizationConstants {
         uint64_t selection_index = 0u;
         // Pseudo-randomized path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
-          selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
 
         PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
@@ -248,7 +248,7 @@ namespace LocalizationConstants {
     // Allocating new containers for the changed number of registered vehicles.
     if (number_of_vehicles != actor_list.size()) {
 
-      number_of_vehicles = static_cast<uint>(actor_list.size());
+      number_of_vehicles = static_cast<uint64_t>(actor_list.size());
       // Allocating the buffer lists.
       buffer_list = std::make_shared<BufferList>(number_of_vehicles);
       // Allocating output frames to be shared with the motion planner stage.

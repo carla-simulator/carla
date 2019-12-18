@@ -148,7 +148,7 @@ namespace PlannerConstants {
     if (localization_frame != nullptr &&
         number_of_vehicles != (*localization_frame.get()).size()) {
 
-      number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
+      number_of_vehicles = static_cast<uint64_t>((*localization_frame.get()).size());
       // Allocate output frames.
       control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
       control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);

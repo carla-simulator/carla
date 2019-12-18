@@ -88,7 +88,7 @@ namespace traffic_manager {
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
     /// Map connecting actor ids to indices of data arrays.
-    std::unordered_map<ActorId, uint> vehicle_id_to_index;
+    std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint64_t number_of_vehicles;
     /// Used to only calculate the extended buffer once at junctions
