@@ -50,10 +50,6 @@ namespace CollisionStageConstants {
   void CollisionStage::Action() {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
-    // sleep(1);
-    // std::cout << "Collision stage starting operation on : " << localization_frame << std::endl;
-    // sleep(1);
-
     // Looping over registered actors.
     for (uint i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
@@ -80,6 +76,10 @@ namespace CollisionStageConstants {
             const cg::Location ego_location = ego_actor->GetLocation();
             const cg::Location other_location = actor->GetLocation();
 
+            // debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
+            //                        other_location  + cg::Location(0, 0, 2),
+            //                        0.5f, 0.5f, {255u, 0u, 255u}, 0.1f);
+
             if (actor_id != ego_actor_id &&
                 (cg::Math::DistanceSquared(ego_location, other_location)
                 < std::pow(MAX_COLLISION_RADIUS, 2)) &&
@@ -103,8 +103,6 @@ namespace CollisionStageConstants {
       CollisionToPlannerData &message = current_planner_frame->at(i);
       message.hazard = collision_hazard;
     }
-
-    // std::cout << "Collision stage finished operation on : " << localization_frame << std::endl;
   }
 
   void CollisionStage::DataReceiver() {

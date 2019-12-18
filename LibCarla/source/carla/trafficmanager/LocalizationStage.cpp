@@ -68,9 +68,6 @@ namespace LocalizationConstants {
     const auto current_traffic_light_frame =
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
-    // sleep(1);
-    // std::cout << "Localization stage starting operation on : " << current_collision_frame << std::endl;
-    // sleep(1);
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -230,8 +227,6 @@ namespace LocalizationConstants {
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
-
-    // std::cout << "Localization stage finished operation on : " << current_collision_frame << std::endl;
   }
 
   void LocalizationStage::DataReceiver() {
@@ -318,9 +313,12 @@ namespace LocalizationConstants {
     if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
       unregistered_scan_duration = 0;
 
+      snippet_profiler.MeasureExecutionTime("Fetching world actors", true);
       const auto world_actors = world.GetActors()->Filter("vehicle.*");
       const auto world_walker = world.GetActors()->Filter("walker.*");
+      snippet_profiler.MeasureExecutionTime("Fetching world actors", false);
       // Scanning for vehicles.
+      snippet_profiler.MeasureExecutionTime("Adding unregistered actors", true);
       for (auto actor: *world_actors.get()) {
         const auto unregistered_id = actor->GetId();
         if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
@@ -335,14 +333,22 @@ namespace LocalizationConstants {
           unregistered_actors.insert({unregistered_id, walker});
         }
       }
+      snippet_profiler.MeasureExecutionTime("Adding unregistered actors", false);
     }
 
+    snippet_profiler.MeasureExecutionTime("Updating grids for unregistered actors", true);
     // Regularly update unregistered actors.
     std::vector<ActorId> actor_ids_to_erase;
     for (auto& actor_info: unregistered_actors) {
       if (actor_info.second->IsAlive()) {
         cg::Location actor_location = actor_info.second->GetLocation();
-        SimpleWaypointPtr nearest_waypoint = local_map.GetWaypointInVicinity(actor_location);
+        SimpleWaypointPtr nearest_waypoint = nullptr;
+        const auto unregistered_type = actor_info.second->GetTypeId();
+        if (unregistered_type[0] == 'v') {
+          nearest_waypoint = local_map.GetWaypointInVicinity(actor_location);
+        } else if (unregistered_type[0] == 'w') {
+          nearest_waypoint = local_map.GetPedWaypoint(actor_location);
+        }
         if (nearest_waypoint == nullptr) {
           nearest_waypoint = local_map.GetWaypoint(actor_location);
         }
@@ -360,6 +366,7 @@ namespace LocalizationConstants {
         actor_ids_to_erase.push_back(actor_info.first);
       }
     }
+    snippet_profiler.MeasureExecutionTime("Updating grids for unregistered actors", false);
     for (auto actor_id: actor_ids_to_erase) {
       unregistered_actors.erase(actor_id);
     }

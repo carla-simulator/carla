@@ -43,7 +43,7 @@ namespace traffic_manager {
 
     private:
 
-    TimePoint print_clock = chr::system_clock::now();
+    std::unordered_map<std::string, TimePoint> print_clocks;
     std::unordered_map<std::string, TimePoint> snippet_clocks;
     std::unordered_map<std::string, chr::duration<float>> snippet_durations;
 
@@ -53,6 +53,9 @@ namespace traffic_manager {
 
     void MeasureExecutionTime(std::string snippet_name, bool begin_or_end) {
 
+      if (print_clocks.find(snippet_name) == print_clocks.end()) {
+        print_clocks.insert({snippet_name, chr::system_clock::now()});
+      }
       if (snippet_clocks.find(snippet_name) == snippet_clocks.end()) {
         snippet_clocks.insert({snippet_name, TimePoint()});
       }
@@ -61,6 +64,7 @@ namespace traffic_manager {
       }
 
       TimePoint current_time = chr::system_clock::now();
+      TimePoint& print_clock = print_clocks.at(snippet_name);
       TimePoint& snippet_clock = snippet_clocks.at(snippet_name);
       chr::duration<float>& snippet_duration = snippet_durations.at(snippet_name);
 

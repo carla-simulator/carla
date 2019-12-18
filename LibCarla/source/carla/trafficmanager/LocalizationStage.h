@@ -31,6 +31,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -105,6 +106,8 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Structure to keep track of the closest waypoint for unregistered actors.
     std::unordered_map<ActorId, SimpleWaypointPtr> unregistered_waypoints;
+    /// Code snippet execution time profiler.
+    SnippetProfiler snippet_profiler;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);

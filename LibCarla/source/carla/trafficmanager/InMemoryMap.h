@@ -48,12 +48,15 @@ namespace traffic_manager {
     /// interpolation of sparse topology.
     NodeList dense_topology;
     /// Grid localization map for all waypoints in the system.
-    std::unordered_map<std::string, std::unordered_set<SimpleWaypointPtr>> waypoint_grid;
+    using WaypointGrid = std::unordered_map<std::string, std::unordered_set<SimpleWaypointPtr>>;
+    WaypointGrid waypoint_grid;
+    /// Larger localization map for all waypoints to be used for localizing pedestrians.
+    WaypointGrid ped_waypoint_grid;
     /// Geodesic grid topology.
     std::unordered_map<GeoGridId, cg::Location> geodesic_grid_center;
 
     /// Method to generate the grid ids for given co-ordinates.
-    std::pair<int, int> MakeGridId(float x, float y);
+    std::pair<int, int> MakeGridId(float x, float y, bool vehicle_or_pedestrian);
 
     /// Method to generate map key for waypoint_grid.
     std::string MakeGridKey(std::pair<int, int> gird_id);
@@ -75,6 +78,8 @@ namespace traffic_manager {
 
     /// This method returns closest waypoint in the vicinity of the given co-ordinates.
     SimpleWaypointPtr GetWaypointInVicinity(cg::Location location);
+
+    SimpleWaypointPtr GetPedWaypoint(cg::Location location);
 
     /// This method returns the full list of discrete samples of the map in the
     /// local cache.
