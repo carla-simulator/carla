@@ -19,7 +19,7 @@ namespace LocalizationConstants {
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 20.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.93969f;
-  static const uint UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
+  static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
 
 } // namespace LocalizationConstants
 

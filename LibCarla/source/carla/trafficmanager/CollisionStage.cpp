@@ -51,7 +51,7 @@ namespace CollisionStageConstants {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over registered actors.
-    for (uint i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;

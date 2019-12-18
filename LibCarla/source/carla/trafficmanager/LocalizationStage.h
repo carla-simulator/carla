@@ -100,7 +100,7 @@ namespace traffic_manager {
     /// Map of all vehicles' idle time
     std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
     /// Counter to track unregistered actors' scan interval.
-    uint unregistered_scan_duration = 0;
+    uint64_t unregistered_scan_duration = 0;
     /// A structure used to keep track of actors spawned outside of traffic
     /// manager.
     std::unordered_map<ActorId, Actor> unregistered_actors;
