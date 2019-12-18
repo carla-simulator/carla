@@ -18,8 +18,6 @@ namespace traffic_manager {
       carla_client(carla_client),
       world(carla_client.GetWorld()) {
 
-    // Initializing messenger state.
-    messenger_state = messenger->GetState();
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
   }
@@ -29,7 +27,7 @@ namespace traffic_manager {
   void BatchControlStage::Action() {
 
     // Looping over registered actors.
-    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles && data_frame != nullptr; ++i) {
 
       cr::VehicleControl vehicle_control;
 
@@ -45,9 +43,7 @@ namespace traffic_manager {
 
   void BatchControlStage::DataReceiver() {
 
-    auto packet = messenger->ReceiveData(messenger_state);
-    data_frame = packet.data;
-    messenger_state = packet.id;
+    data_frame = messenger->Peek();
 
     // Allocating new containers for the changed number of registered vehicles.
     if (data_frame != nullptr &&
@@ -62,13 +58,12 @@ namespace traffic_manager {
 
   void BatchControlStage::DataSender() {
 
+    messenger->Pop();
+
     if (commands != nullptr) {
       carla_client.ApplyBatch(*commands.get());
       world.Tick();
     }
-
-    // Limiting updates to 100 frames per second.
-    // std::this_thread::sleep_for(10ms);
   }
 
 } // namespace traffic_manager

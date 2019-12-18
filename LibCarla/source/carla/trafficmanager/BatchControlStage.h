@@ -30,8 +30,6 @@ namespace traffic_manager {
 
   private:
 
-    /// Variable to remember messenger state.
-    int messenger_state;
     /// Pointer to frame received from MotionPlanner.
     std::shared_ptr<PlannerToControlFrame> data_frame;
     /// Pointer to a messenger from MotionPlanner.
