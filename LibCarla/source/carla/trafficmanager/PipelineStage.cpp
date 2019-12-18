@@ -12,104 +12,35 @@ namespace traffic_manager {
   PipelineStage::PipelineStage(std::string stage_name)
     : stage_name(stage_name),
       performance_diagnostics(PerformanceDiagnostics(stage_name)) {
-
-    run_stage.store(true);
-    run_receiver.store(true);
-    run_action.store(false);
-    run_sender.store(false);
+    run_stage.store(false);
   }
 
   PipelineStage::~PipelineStage() {}
 
   void PipelineStage::Start() {
+    run_stage.store(true);
+    worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
 
-    data_receiver = std::make_unique<std::thread>(&PipelineStage::ReceiverThreadManager, this);
-    action_thread = std::make_unique<std::thread>(&PipelineStage::ActionThreadManager, this);
-    data_sender = std::make_unique<std::thread>(&PipelineStage::SenderThreadManager, this);
   }
 
   void PipelineStage::Stop() {
-
     run_stage.store(false);
-    data_receiver->join();
-    action_thread->join();
-    data_sender->join();
   }
 
-  void PipelineStage::ReceiverThreadManager() {
-
-    while (run_stage.load()) {
-      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-      // Wait for notification from sender thread and
-      // break waiting if the stage is stopped.
-      while (!run_receiver.load() && run_stage.load()) {
-        wake_receiver_notifier.wait_for(lock, 1ms, [=] {return run_receiver.load();});
-      }
-      lock.unlock();
-      run_receiver.store(false);
+  void PipelineStage::Update() {
+    while (run_stage.load()){
+      // Receive data.
+      DataReceiver();
 
       // Receive data.
       if (run_stage.load()) {
-        DataReceiver();
+        Action();
       }
 
-      // Notify action thread.
-      run_action.store(true);
-      wake_action_notifier.notify_one();
-    }
-  }
-
-  void PipelineStage::ActionThreadManager() {
-
-    while (run_stage.load()) {
-
-      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-
-      // Wait for notification from receiver thread.
-      while (!run_action.load() && run_stage.load()) {
-        wake_action_notifier.wait_for(lock, 1ms, [=] {return run_action.load();});
-      }
-      lock.unlock();
-      run_action.store(false);
-
-      // Run action.
-      if (run_stage.load()) {
-        try {
-          performance_diagnostics.RegisterUpdate(true);
-          Action();
-          performance_diagnostics.RegisterUpdate(false);
-        } catch(const std::exception& e) {
-          carla::log_error("Encountered exception while running action of stage : "
-                           + stage_name + e.what() + '\n');
-        }
-      }
-
-      // Notify sender.
-      run_sender.store(true);
-      wake_sender_notifier.notify_one();
-    }
-  }
-
-  void PipelineStage::SenderThreadManager() {
-
-    while (run_stage.load()) {
-      std::unique_lock<std::mutex> lock(thread_coordination_mutex);
-
-      // Wait for notification from action thread.
-      while (!run_sender.load() && run_stage.load()) {
-        wake_sender_notifier.wait_for(lock, 1ms, [=] {return run_sender.load();});
-      }
-      lock.unlock();
-      run_sender.store(false);
-
-      // Send data.
+      // Receive data.
       if (run_stage.load()) {
         DataSender();
       }
-
-      // Notify receiver.
-      run_receiver.store(true);
-      wake_receiver_notifier.notify_one();
     }
   }
 
