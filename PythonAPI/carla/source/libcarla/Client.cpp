@@ -54,7 +54,7 @@ static auto ApplyBatchCommandsSync(
   carla::traffic_manager::TrafficManager *tm = nullptr;
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable;
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable;
-  for (int i=0; i<cmds.size(); ++i) {
+  for (size_t i=0; i<cmds.size(); ++i) {
     if (!responses[i].HasError()) {
 
       bool isAutopilot = false;
@@ -104,7 +104,7 @@ static auto ApplyBatchCommandsSync(
     }
   }
   // check if any autopilot command was sent
-  if (vehicles_to_enable.size() || vehicles_to_disable.size() && tm) {
+  if ((vehicles_to_enable.size() || vehicles_to_disable.size()) && tm) {
     tm->RegisterVehicles(vehicles_to_enable);
     tm->UnregisterVehicles(vehicles_to_disable);
   }
