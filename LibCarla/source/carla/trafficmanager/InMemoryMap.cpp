@@ -18,6 +18,7 @@ namespace MapConstants {
   // Cosine of the angle.
   static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
   static const float GRID_SIZE = 4.0f;
+  static const float PED_GRID_SIZE = 10.0f;
   static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 } // namespace MapConstants
 
@@ -137,11 +138,17 @@ namespace MapConstants {
     // Localizing waypoints into grids.
     for (auto &simple_waypoint: dense_topology) {
       const cg::Location loc = simple_waypoint->GetLocation();
-      const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y));
+      const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
       if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
         waypoint_grid.insert({grid_key, {simple_waypoint}});
       } else {
         waypoint_grid.at(grid_key).insert(simple_waypoint);
+      }
+      const std::string ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
+      if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
+        ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
+      } else {
+        ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
       }
     }
 
@@ -155,8 +162,12 @@ namespace MapConstants {
     MakeGeodesiGridCenters();
   }
 
-  std::pair<int, int> InMemoryMap::MakeGridId (float x, float y) {
-    return {static_cast<int>(std::floor(x/GRID_SIZE)), static_cast<int>(std::floor(y/GRID_SIZE))};
+  std::pair<int, int> InMemoryMap::MakeGridId (float x, float y, bool vehicle_or_pedestrian) {
+    if (vehicle_or_pedestrian) {
+      return {static_cast<int>(std::floor(x/GRID_SIZE)), static_cast<int>(std::floor(y/GRID_SIZE))};
+    } else {
+      return {static_cast<int>(std::floor(x/PED_GRID_SIZE)), static_cast<int>(std::floor(y/PED_GRID_SIZE))};
+    }
   }
 
   std::string InMemoryMap::MakeGridKey (std::pair<int , int> grid_key) {
@@ -165,7 +176,7 @@ namespace MapConstants {
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {
 
-    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y);
+    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, true);
     SimpleWaypointPtr closest_waypoint = nullptr;
     float closest_distance = INFINITE_DISTANCE;
 
@@ -198,6 +209,38 @@ namespace MapConstants {
         std::abs(closest_waypoint->GetLocation().z - location.z) > 1.0) { // Account for constant.
 
       closest_waypoint = nullptr;
+    }
+
+    return closest_waypoint;
+  }
+
+  SimpleWaypointPtr InMemoryMap::GetPedWaypoint(cg::Location location) {
+
+    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, false);
+    SimpleWaypointPtr closest_waypoint = nullptr;
+    float closest_distance = INFINITE_DISTANCE;
+
+    // Search all surrounding grids for closest waypoint.
+    for (int i = -1; i <= 1; ++i) {
+      for (int j = -1; j <= 1; ++j) {
+
+        const std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
+        if (ped_waypoint_grid.find(grid_key) != ped_waypoint_grid.end()) {
+
+          const auto& waypoint_set = ped_waypoint_grid.at(grid_key);
+          if (closest_waypoint == nullptr) {
+            closest_waypoint = *waypoint_set.begin();
+          }
+
+          for (auto &simple_waypoint: waypoint_set) {
+
+            if (simple_waypoint->DistanceSquared(location) < std::pow(closest_distance, 2)) {
+              closest_waypoint = simple_waypoint;
+              closest_distance = simple_waypoint->DistanceSquared(location);
+            }
+          }
+        }
+      }
     }
 
     return closest_waypoint;
