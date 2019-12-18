@@ -38,11 +38,6 @@ namespace traffic_manager {
 
     /// Selection key to switch between the output frames.
     bool frame_selector;
-    /// Variables to remember messenger states.
-    int localization_messenger_state;
-    int control_messenger_state;
-    int collision_messenger_state;
-    int traffic_light_messenger_state;
     /// Pointers to data frames to be shared with the batch control stage
     std::shared_ptr<PlannerToControlFrame> control_frame_a;
     std::shared_ptr<PlannerToControlFrame> control_frame_b;

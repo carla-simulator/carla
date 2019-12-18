@@ -52,14 +52,8 @@ namespace LocalizationConstants {
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
 
-    // Initializing messenger states to initiate data writes
-    // preemptively since this is the first stage in the pipeline.
-    planner_messenger_state = planner_messenger->GetState() - 1;
-    collision_messenger_state = collision_messenger->GetState() - 1;
-    traffic_light_messenger_state = traffic_light_messenger->GetState() - 1;
     // Initializing the registered actors container state.
     registered_actors_state = -1;
-
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -73,6 +67,10 @@ namespace LocalizationConstants {
     const auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
     const auto current_traffic_light_frame =
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
+
+    // sleep(1);
+    // std::cout << "Localization stage starting operation on : " << current_collision_frame << std::endl;
+    // sleep(1);
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -233,6 +231,7 @@ namespace LocalizationConstants {
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     }
 
+    // std::cout << "Localization stage finished operation on : " << current_collision_frame << std::endl;
   }
 
   void LocalizationStage::DataReceiver() {
@@ -243,14 +242,11 @@ namespace LocalizationConstants {
     if (registered_actors_state != registered_actors.GetState()) {
 
       actor_list = registered_actors.GetList();
-
       uint64_t index = 0u;
       for (auto &actor: actor_list) {
-
         vehicle_id_to_index.insert({actor->GetId(), index});
         ++index;
       }
-
       registered_actors_state = registered_actors.GetState();
     }
 
@@ -275,38 +271,15 @@ namespace LocalizationConstants {
 
   void LocalizationStage::DataSender() {
 
-    // Since send/receive calls on messenger objects can block if the other
-    // end hasn't received/sent data, choose to block on only those stages
-    // which takes the most priority (which needs the highest rate of data feed)
-    // to run the system well.
-
-    const DataPacket<std::shared_ptr<LocalizationToPlannerFrame>> planner_data_packet = {
-      planner_messenger_state,
-      planner_frame_selector ? planner_frame_a : planner_frame_b
-    };
+    planner_messenger->Push(planner_frame_selector ? planner_frame_a : planner_frame_b);
     planner_frame_selector = !planner_frame_selector;
-    planner_messenger_state = planner_messenger->SendData(planner_data_packet);
 
-
-    const DataPacket<std::shared_ptr<LocalizationToCollisionFrame>> collision_data_packet = {
-      collision_messenger_state,
-      collision_frame_selector ? collision_frame_a : collision_frame_b
-    };
+    const auto current_collision_frame = collision_frame_selector ? collision_frame_a : collision_frame_b;
+    collision_messenger->Push(current_collision_frame);
     collision_frame_selector = !collision_frame_selector;
-    collision_messenger_state = collision_messenger->SendData(collision_data_packet);
 
-    // Send data to traffic light stage only if it has finished
-    // processing, received the previous message and started processing it.
-    const int traffic_light_messenger_current_state = traffic_light_messenger->GetState();
-    if (traffic_light_messenger_current_state != traffic_light_messenger_state) {
-      const DataPacket<std::shared_ptr<LocalizationToTrafficLightFrame>> traffic_light_data_packet = {
-          traffic_light_messenger_state,
-          traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b
-        };
-
-      traffic_light_messenger_state = traffic_light_messenger->SendData(traffic_light_data_packet);
-      traffic_light_frame_selector = !traffic_light_frame_selector;
-    }
+    traffic_light_messenger->Push(traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b);
+    traffic_light_frame_selector = !traffic_light_frame_selector;
   }
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {

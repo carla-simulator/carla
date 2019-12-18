@@ -41,11 +41,6 @@ namespace CollisionStageConstants {
     last_world_actors_pass_instance = chr::system_clock::now();
     // Initializing output array selector.
     frame_selector = true;
-    // Initializing messenger states.
-    localization_messenger_state = localization_messenger->GetState();
-    // Initializing this messenger to preemptively write since it precedes
-    // motion planner stage.
-    planner_messenger_state = planner_messenger->GetState() - 1;
     // Initializing the number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
   }
@@ -55,10 +50,14 @@ namespace CollisionStageConstants {
   void CollisionStage::Action() {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
-    // Looping over registered actors.
-    for (uint i = 0u; i < number_of_vehicles; ++i) {
+    // sleep(1);
+    // std::cout << "Collision stage starting operation on : " << localization_frame << std::endl;
+    // sleep(1);
 
-      const LocalizationToCollisionData &data = localization_frame->at(i);
+    // Looping over registered actors.
+    for (uint i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
+
+      LocalizationToCollisionData &data = localization_frame->at(i);
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
@@ -104,12 +103,12 @@ namespace CollisionStageConstants {
       CollisionToPlannerData &message = current_planner_frame->at(i);
       message.hazard = collision_hazard;
     }
+
+    // std::cout << "Collision stage finished operation on : " << localization_frame << std::endl;
   }
 
   void CollisionStage::DataReceiver() {
-    const auto packet = localization_messenger->ReceiveData(localization_messenger_state);
-    localization_frame = packet.data;
-    localization_messenger_state = packet.id;
+    localization_frame = localization_messenger->Peek();
 
     if (localization_frame != nullptr) {
       // Connecting actor ids to their position indices on data arrays.
@@ -135,12 +134,10 @@ namespace CollisionStageConstants {
 
   void CollisionStage::DataSender() {
 
-    const DataPacket<std::shared_ptr<CollisionToPlannerFrame>> packet{
-      planner_messenger_state,
-      frame_selector ? planner_frame_a : planner_frame_b
-    };
+    localization_messenger->Pop();
+
+    planner_messenger->Push(frame_selector ? planner_frame_a : planner_frame_b);
     frame_selector = !frame_selector;
-    planner_messenger_state = planner_messenger->SendData(packet);
   }
 
   bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) {
@@ -179,9 +176,6 @@ namespace CollisionStageConstants {
         cg::Math::Dot(reference_heading, reference_to_other) > 0 &&
         (cg::Math::DistanceSquared(reference_location, other_location) >
         std::pow(GetBoundingBoxExtention(reference_vehicle) + inter_vehicle_length, 2)))) {
-
-      const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
-      const auto other_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(other_vehicle);
 
       const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle));
       const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle));

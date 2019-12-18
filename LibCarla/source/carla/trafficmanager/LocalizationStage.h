@@ -49,10 +49,6 @@ namespace traffic_manager {
 
   private:
 
-    /// Variables to remember messenger states.
-    int planner_messenger_state;
-    int collision_messenger_state;
-    int traffic_light_messenger_state;
     /// Section keys to switch between the output data frames.
     bool planner_frame_selector;
     bool collision_frame_selector;
