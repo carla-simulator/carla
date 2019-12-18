@@ -76,10 +76,11 @@ def main():
     client.set_timeout(2.0)
 
     try:
-        traffic_manager = None
         world = client.get_world()
         blueprints = world.get_blueprint_library().filter(args.filterv)
         blueprintsWalkers = world.get_blueprint_library().filter(args.filterw)
+
+        traffic_manager = carla.GetTrafficManager(client)
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
@@ -193,7 +194,6 @@ def main():
 
         print('Spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
-        traffic_manager = carla.GetTrafficManager(client)
         time.sleep(1)
 
         for v in vehicles_list:
