@@ -44,27 +44,36 @@ namespace traffic_manager {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
       while (!d_queue.empty() && !stop_messenger.load()) {
-        send_condition.wait_for(lock, 1ms, [=] {return d_queue.empty();});
+        send_condition.wait_for(lock, 1ms, [=] {
+          return (d_queue.empty() && stop_messenger.load());
+        });
       }
-      d_queue.push_front(data);
-      receive_condition.notify_one();
+      if(!stop_messenger.load()){
+        d_queue.push_front(data);
+        receive_condition.notify_one();
+      }
     }
 
     Data Peek() {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
       while (d_queue.empty() && !stop_messenger.load()) {
-        receive_condition.wait_for(lock, 1ms, [=] {return !d_queue.empty();});
+        receive_condition.wait_for(lock, 1ms, [=] {
+          return (!d_queue.empty() && stop_messenger.load());
+        });
       }
-      Data data = d_queue.back();
 
-      return data;
+      if(!stop_messenger.load()) {
+        Data data = d_queue.back();
+        return data;
+      }
+      return Data();
     }
 
     void Pop() {
 
       std::unique_lock<std::mutex> lock(data_modification_mutex);
-      if (!d_queue.empty()) {
+      if (!(d_queue.empty() && stop_messenger.load())) {
         d_queue.pop_back();
         send_condition.notify_one();
       }
@@ -77,6 +86,8 @@ namespace traffic_manager {
     void Stop() {
       stop_messenger.store(true);
       d_queue.clear();
+      send_condition.notify_one();
+      receive_condition.notify_one();
     }
 
   };

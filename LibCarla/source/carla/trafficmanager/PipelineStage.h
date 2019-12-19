@@ -40,6 +40,8 @@ namespace traffic_manager {
     std::atomic<bool> run_stage;
     /// Stage name string.
     std::string stage_name;
+
+  private:
     /// Object to track stage performance.
     PerformanceDiagnostics performance_diagnostics;
 
