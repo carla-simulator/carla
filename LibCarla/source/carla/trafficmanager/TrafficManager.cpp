@@ -95,7 +95,7 @@ namespace traffic_manager {
       const std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
       const std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
       const std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      const std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
+      const std::vector<float> lateral_highway_param = {5.0f, 0.0f, 2.0f};
       const float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
@@ -129,9 +129,9 @@ namespace traffic_manager {
     registered_actors.Remove(actor_list);
   }
 
-  void TrafficManager::DestroyVehicle(const ActorPtr &actor) {
-    registered_actors.Destroy(actor);
-  }
+  //void TrafficManager::DestroyVehicle(const ActorPtr &actor) {
+  //  registered_actors.Destroy(actor);
+  //}
 
   void TrafficManager::Start() {
 

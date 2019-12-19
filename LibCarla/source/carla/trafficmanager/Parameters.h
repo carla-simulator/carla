@@ -18,6 +18,7 @@ namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
+  namespace cg = carla::geom;
   using ActorPtr = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
 
