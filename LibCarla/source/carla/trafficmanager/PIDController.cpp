@@ -41,7 +41,10 @@ namespace PIDControllerConstants {
 
     // Calculating dt for 'D' and 'I' controller components.
     const chr::duration<float> duration = current_state.time_instance - previous_state.time_instance;
-    const float dt = duration.count();
+    (void) duration; //const float dt = duration.count(); Remove.
+
+    // PID will be stable only over 20 FPS.
+    const float dt = 1/20.0f;
 
     // Calculating integrals.
     current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
@@ -86,7 +89,7 @@ namespace PIDControllerConstants {
         lateral_parameters[2] * (present_state.deviation -
         previous_state.deviation) / dt;
 
-    steer = std::max(-1.0f, std::min(steer, 1.0f));
+    steer = std::max(-0.8f, std::min(steer, 0.8f));
 
     return ActuationSignal{throttle, brake, steer};
   }

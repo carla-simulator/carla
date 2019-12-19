@@ -84,12 +84,11 @@ namespace PlannerConstants {
       traffic_manager::StateEntry previous_state;
       previous_state = pid_state_map.at(actor_id);
 
-      // Increase speed if on highway.
-      const float speed_limit = vehicle->GetSpeedLimit() / 3.6f;
+      // Change PID parameters if on highway.
 
       const float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
 
-      if (speed_limit > HIGHWAY_SPEED) {
+      if (current_velocity > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
         lateral_parameters = highway_lateral_parameters;
       } else {
