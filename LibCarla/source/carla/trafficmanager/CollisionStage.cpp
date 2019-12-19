@@ -20,7 +20,8 @@ namespace CollisionStageConstants {
   static const float CRAWL_SPEED = 10.0f / 3.6f;
   static const float BOUNDARY_EDGE_LENGTH = 2.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
-
+  static const float MIN_COLLISION_RADIUS = 15.0f;
+  static const float WALKER_TIME_EXTENSION = 2.0f;
 } // namespace CollisionStageConstants
 
   using namespace CollisionStageConstants;
@@ -76,9 +77,9 @@ namespace CollisionStageConstants {
             const cg::Location ego_location = ego_actor->GetLocation();
             const cg::Location other_location = actor->GetLocation();
 
-            // debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
-            //                        other_location  + cg::Location(0, 0, 2),
-            //                        0.5f, 0.5f, {255u, 0u, 255u}, 0.1f);
+            // Collision checks increase with speed (Official formula used)
+            float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
+            collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
 
             if (actor_id != ego_actor_id &&
                 (cg::Math::DistanceSquared(ego_location, other_location)
@@ -202,6 +203,8 @@ namespace CollisionStageConstants {
       }
     }
 
+    const auto actor_type = other_vehicle->GetTypeId();
+
     return hazard;
   }
 
@@ -320,40 +323,41 @@ namespace CollisionStageConstants {
   }
 
   LocationList CollisionStage::GetBoundary(const Actor &actor) {
+
     const auto actor_type = actor->GetTypeId();
+    cg::Location location = actor->GetLocation();
+    cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
+    heading_vector.z = 0.0f;
+    heading_vector = heading_vector.MakeUnitVector();
 
     cg::BoundingBox bbox;
-    cg::Location location;
-    cg::Vector3D heading_vector;
-
+    float forward_extension = 0.0f;
     if (actor_type[0] == 'v') {
-
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       bbox = vehicle->GetBoundingBox();
-      location = vehicle->GetLocation();
-      heading_vector = vehicle->GetTransform().GetForwardVector();
     } else if (actor_type[0] == 'w') {
-
       const auto walker = boost::static_pointer_cast<cc::Walker>(actor);
       bbox = walker->GetBoundingBox();
-      location = walker->GetLocation();
-      heading_vector = walker->GetTransform().GetForwardVector();
+      // Extend the pedestrians bbox to "predict" where they'll be and avoid collisions.
+      forward_extension = walker->GetVelocity().Length() * WALKER_TIME_EXTENSION;
     }
 
     const cg::Vector3D extent = bbox.extent;
-    heading_vector.z = 0.0f;
     const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
+
+    const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
+    const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
 
     // Four corners of the vehicle in top view clockwise order (left-handed
     // system).
-    const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
-    const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
-    return {
-        location + cg::Location(x_boundary_vector - y_boundary_vector),
-        location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
-        location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
-        location + cg::Location(x_boundary_vector + y_boundary_vector),
+    LocationList bbox_boundary = {
+      location + cg::Location(heading_vector * (extent.x + forward_extension) - y_boundary_vector),
+      location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
+      location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
+      location + cg::Location(heading_vector * (extent.x + forward_extension) + y_boundary_vector),
     };
+
+    return bbox_boundary;
   }
 
   void CollisionStage::DrawBoundary(const LocationList &boundary) {

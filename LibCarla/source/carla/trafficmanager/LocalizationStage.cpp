@@ -313,12 +313,9 @@ namespace LocalizationConstants {
     if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
       unregistered_scan_duration = 0;
 
-      snippet_profiler.MeasureExecutionTime("Fetching world actors", true);
       const auto world_actors = world.GetActors()->Filter("vehicle.*");
       const auto world_walker = world.GetActors()->Filter("walker.*");
-      snippet_profiler.MeasureExecutionTime("Fetching world actors", false);
       // Scanning for vehicles.
-      snippet_profiler.MeasureExecutionTime("Adding unregistered actors", true);
       for (auto actor: *world_actors.get()) {
         const auto unregistered_id = actor->GetId();
         if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
@@ -333,10 +330,8 @@ namespace LocalizationConstants {
           unregistered_actors.insert({unregistered_id, walker});
         }
       }
-      snippet_profiler.MeasureExecutionTime("Adding unregistered actors", false);
     }
 
-    snippet_profiler.MeasureExecutionTime("Updating grids for unregistered actors", true);
     // Regularly update unregistered actors.
     std::vector<ActorId> actor_ids_to_erase;
     for (auto& actor_info: unregistered_actors) {
@@ -366,7 +361,6 @@ namespace LocalizationConstants {
         actor_ids_to_erase.push_back(actor_info.first);
       }
     }
-    snippet_profiler.MeasureExecutionTime("Updating grids for unregistered actors", false);
     for (auto actor_id: actor_ids_to_erase) {
       unregistered_actors.erase(actor_id);
     }
