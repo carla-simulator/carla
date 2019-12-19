@@ -34,7 +34,9 @@ namespace traffic_manager {
 
       // Receive data.
       if (run_stage.load()) {
+        performance_diagnostics.RegisterUpdate(true);
         Action();
+        performance_diagnostics.RegisterUpdate(false);
       }
 
       // Receive data.
