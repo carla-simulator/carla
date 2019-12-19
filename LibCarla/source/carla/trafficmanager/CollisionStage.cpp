@@ -202,9 +202,6 @@ namespace CollisionStageConstants {
         hazard = true;
       }
     }
-
-    const auto actor_type = other_vehicle->GetTypeId();
-
     return hazard;
   }
 
