@@ -151,18 +151,18 @@ namespace traffic_manager {
 
   void TrafficManager::Stop() {
 
+    localization_stage->Stop();
+    collision_stage->Stop();
+    traffic_light_stage->Stop();
+    planner_stage->Stop();
+    control_stage->Stop();
+
     localization_collision_messenger->Stop();
     localization_traffic_light_messenger->Stop();
     localization_planner_messenger->Stop();
     collision_planner_messenger->Stop();
     traffic_light_planner_messenger->Stop();
     planner_control_messenger->Stop();
-
-    localization_stage->Stop();
-    collision_stage->Stop();
-    traffic_light_stage->Stop();
-    planner_stage->Stop();
-    control_stage->Stop();
   }
 
   void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {

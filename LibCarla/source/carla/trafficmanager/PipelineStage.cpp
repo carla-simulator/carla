@@ -15,12 +15,14 @@ namespace traffic_manager {
     run_stage.store(false);
   }
 
-  PipelineStage::~PipelineStage() {}
+  PipelineStage::~PipelineStage() {
+    worker_thread->join();
+    worker_thread.release();
+  }
 
   void PipelineStage::Start() {
     run_stage.store(true);
     worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
-
   }
 
   void PipelineStage::Stop() {
@@ -33,16 +35,17 @@ namespace traffic_manager {
       DataReceiver();
 
       // Receive data.
-      if (run_stage.load()) {
+      if(run_stage.load()){
         performance_diagnostics.RegisterUpdate(true);
         Action();
         performance_diagnostics.RegisterUpdate(false);
       }
 
       // Receive data.
-      if (run_stage.load()) {
+      if(run_stage.load()) {
         DataSender();
       }
+
     }
   }
 
