@@ -32,7 +32,6 @@ void export_trafficmanager() {
       .def("set_auto_lane_change", &carla::traffic_manager::TrafficManager::SetAutoLaneChange)
       .def("set_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
       .def("reset_traffic_lights", &carla::traffic_manager::TrafficManager::ResetAllTrafficLights)
-      .def("destroy_vehicle", &carla::traffic_manager::TrafficManager::DestroyVehicle)
       .def("ignore_actors_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreActors)
       .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight);
 
