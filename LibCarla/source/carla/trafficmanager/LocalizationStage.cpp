@@ -11,14 +11,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 3.0f;
+  static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
-  static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-  static const float TARGET_WAYPOINT_HORIZON_LENGTH = 4.0f;
+  static const float TARGET_WAYPOINT_TIME_HORIZON = 1.5f;
+  static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
-  static const float MINIMUM_LANE_CHANGE_DISTANCE = 20.0f;
-  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.93969f;
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 30.0f;
+  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.7f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
 
 } // namespace LocalizationConstants
@@ -371,6 +371,7 @@ namespace LocalizationConstants {
     const ActorId actor_id = vehicle->GetId();
     const cg::Location vehicle_location = vehicle->GetLocation();
     const float vehicle_velocity = vehicle->GetVelocity().Length();
+    const float speed_limit = boost::static_pointer_cast<cc::Vehicle>(vehicle)->GetSpeedLimit();
 
     const Buffer& waypoint_buffer = buffer_list->at(vehicle_id_to_index.at(actor_id));
     const SimpleWaypointPtr& current_waypoint = waypoint_buffer.front();
@@ -407,7 +408,7 @@ namespace LocalizationConstants {
               for (auto& candidate_lane_wp: other_neighbouring_lanes) {
                 if (candidate_lane_wp != nullptr &&
                     track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
-                    vehicle_velocity < HIGHWAY_SPEED) {
+                    speed_limit < HIGHWAY_SPEED) {
                   distant_lane_availability = true;
                 }
               }
