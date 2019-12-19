@@ -455,9 +455,9 @@ namespace LocalizationConstants {
 
       std::vector<SimpleWaypointPtr> candidate_points;
       if (force) {
-        if (direction) {
+        if (direction && left_waypoint != nullptr) {
           candidate_points.push_back(left_waypoint);
-        } else {
+        } else if (!direction && right_waypoint != nullptr) {
           candidate_points.push_back(right_waypoint);
         }
       } else {
