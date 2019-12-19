@@ -1,5 +1,5 @@
 ## CARLA 0.9.7
-
+  * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Support for OpenGL and Vulkan in docker + headless mode
   * Added new sensor: Inertial measurement unit (IMU)
