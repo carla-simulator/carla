@@ -10,7 +10,7 @@ namespace carla {
 namespace traffic_manager {
 
 namespace LocalizationConstants {
-  const static uint BUFFER_STEP_THROUGH = 10u;
+  const static uint64_t BUFFER_STEP_THROUGH = 10u;
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -126,7 +126,7 @@ namespace LocalizationConstants {
     if (!buffer.empty()) {
       uint64_t buffer_size = buffer.size();
       uint64_t step_size = static_cast<uint64_t>(std::floor(buffer_size/BUFFER_STEP_THROUGH));
-      for (uint i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
+      for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
         GeoGridId ggid = buffer.at(std::min(i* step_size, buffer_size-1u))->GetGeodesicGridId();
         current_grids.insert(ggid);
 

@@ -18,6 +18,7 @@ namespace MapConstants {
   static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 } // namespace MapConstants
 
+  namespace cg = carla::geom;
   using namespace MapConstants;
 
   InMemoryMap::InMemoryMap(RawNodeList _raw_dense_topology) {
@@ -80,7 +81,7 @@ namespace MapConstants {
 
         // Placing intra-segment connections.
         cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
-        for (uint i=0; i< segment_waypoints.size() -1; ++i) {
+        for (uint64_t i=0; i< segment_waypoints.size() -1; ++i) {
 
           // Assigning grid id.
           if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
