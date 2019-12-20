@@ -93,7 +93,7 @@ namespace traffic_manager {
       const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
       const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
       const std::vector<float> lateral_param = {10.0f, 0.02f, 1.0f};
-      const std::vector<float> lateral_highway_param = {9.0f, 0.2f, 1.0f};
+      const std::vector<float> lateral_highway_param = {9.0f, 0.02f, 1.0f};
       const float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
@@ -149,18 +149,19 @@ namespace traffic_manager {
 
   void TrafficManager::Stop() {
 
-    localization_stage->Stop();
-    collision_stage->Stop();
-    traffic_light_stage->Stop();
-    planner_stage->Stop();
-    control_stage->Stop();
-
     localization_collision_messenger->Stop();
     localization_traffic_light_messenger->Stop();
     localization_planner_messenger->Stop();
     collision_planner_messenger->Stop();
     traffic_light_planner_messenger->Stop();
     planner_control_messenger->Stop();
+
+    localization_stage->Stop();
+    collision_stage->Stop();
+    traffic_light_stage->Stop();
+    planner_stage->Stop();
+    control_stage->Stop();
+
   }
 
   void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {

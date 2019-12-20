@@ -11,14 +11,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 5.0f;
+  static const float WAYPOINT_TIME_HORIZON = 3.5f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
-  static const float TARGET_WAYPOINT_TIME_HORIZON = 1.5f;
+  static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 30.0f;
-  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.7f;
+  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.8f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
 
 } // namespace LocalizationConstants
