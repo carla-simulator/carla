@@ -113,9 +113,8 @@ namespace PlannerConstants {
           lateral_parameters);
 
       // In case of collision or traffic light
-      if ((collision_frame != nullptr && traffic_light_frame != nullptr) &&
-          (collision_frame->at(i).hazard ||
-          traffic_light_frame->at(i).traffic_light_hazard)) {
+      if ((collision_frame != nullptr && collision_frame->at(i).hazard) ||
+          (traffic_light_frame != nullptr && traffic_light_frame->at(i).traffic_light_hazard)) {
 
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;

@@ -33,6 +33,7 @@ namespace traffic_manager {
   using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
+  using RawNodeList = std::vector<WaypointPtr>;
   using GeoGridId = crd::JuncId;
 
   /// This class builds a discretized local map-cache.
@@ -43,7 +44,7 @@ namespace traffic_manager {
   private:
 
     /// Object to hold sparse topology received by the constructor.
-    TopologyList _topology;
+    RawNodeList raw_dense_topology;
     /// Structure to hold all custom waypoint objects after
     /// interpolation of sparse topology.
     NodeList dense_topology;
@@ -66,12 +67,12 @@ namespace traffic_manager {
 
   public:
 
-    InMemoryMap(TopologyList topology);
+    InMemoryMap(RawNodeList _raw_dense_topology);
     ~InMemoryMap();
 
     /// This method constructs the local map with a resolution of
     /// sampling_resolution.
-    void SetUp(float sampling_resolution);
+    void SetUp();
 
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;

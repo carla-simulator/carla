@@ -22,6 +22,10 @@ namespace traffic_manager {
     return next_waypoints;
   }
 
+  std::vector<SimpleWaypointPtr> SimpleWaypoint::GetPreviousWaypoint() const {
+    return previous_waypoints;
+  }
+
   WaypointPtr SimpleWaypoint::GetWaypoint() const {
     return waypoint;
   }
@@ -49,6 +53,13 @@ namespace traffic_manager {
   uint64_t SimpleWaypoint::SetNextWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
     for (auto &simple_waypoint: waypoints) {
       next_waypoints.push_back(simple_waypoint);
+    }
+    return static_cast<uint64_t>(waypoints.size());
+  }
+
+  uint64_t SimpleWaypoint::SetPreviousWaypoint(const std::vector<SimpleWaypointPtr> &waypoints) {
+    for (auto &simple_waypoint: waypoints) {
+      previous_waypoints.push_back(simple_waypoint);
     }
     return static_cast<uint64_t>(waypoints.size());
   }

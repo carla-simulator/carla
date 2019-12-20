@@ -14,9 +14,7 @@ namespace MapConstants {
   // Very important that this is less than 10^-4.
   static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-  static const uint64_t LANE_CHANGE_LOOK_AHEAD = 5u;
   // Cosine of the angle.
-  static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
   static const float GRID_SIZE = 4.0f;
   static const float PED_GRID_SIZE = 10.0f;
   static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
@@ -24,12 +22,12 @@ namespace MapConstants {
 
   using namespace MapConstants;
 
-  InMemoryMap::InMemoryMap(TopologyList topology) {
-    _topology = topology;
+  InMemoryMap::InMemoryMap(RawNodeList _raw_dense_topology) {
+    raw_dense_topology = _raw_dense_topology;
   }
   InMemoryMap::~InMemoryMap() {}
 
-  void InMemoryMap::SetUp(float sampling_resolution) {
+  void InMemoryMap::SetUp() {
 
     NodeList entry_node_list;
     NodeList exit_node_list;
@@ -40,53 +38,54 @@ namespace MapConstants {
         };
     auto square = [](float input) {return std::pow(input, 2);};
 
-    // Creating dense topology.
-    GeoGridId geodesic_grid_id_counter = -1;
-    for (auto &pair : _topology) {
-
-      // Looping through every topology segment.
-      const WaypointPtr begin_waypoint = pair.first;
-      const WaypointPtr end_waypoint = pair.second;
-      const cg::Location begin_location = begin_waypoint->GetTransform().location;
-      const cg::Location end_location = end_waypoint->GetTransform().location;
-      cg::Location grid_edge_location = begin_location;
-
-      ++geodesic_grid_id_counter;
-      if (distance_squared(begin_location, end_location) > square(ZERO_LENGTH)) {
-
-        // Adding entry waypoint.
-        WaypointPtr current_waypoint = begin_waypoint;
-        dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
-        dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
-
-        entry_node_list.push_back(dense_topology.back());
-
-        // Populating waypoints from begin_waypoint to end_waypoint.
-        while (distance_squared(current_waypoint->GetTransform().location,
-            end_location) > square(sampling_resolution)) {
-
-          current_waypoint = current_waypoint->GetNext(sampling_resolution)[0];
-          SimpleWaypointPtr previous_wp = dense_topology.back();
-          dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
-
-          if (distance_squared(grid_edge_location, dense_topology.back()->GetLocation()) >
-              square(MAX_GEODESIC_GRID_LENGTH)) {
-            ++geodesic_grid_id_counter;
-            grid_edge_location = dense_topology.back()->GetLocation();
-          }
-          dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
-
-          previous_wp->SetNextWaypoint({dense_topology.back()});
-        }
-
-        // Adding exit waypoint.
-        SimpleWaypointPtr previous_wp = dense_topology.back();
-        dense_topology.push_back(std::make_shared<SimpleWaypoint>(end_waypoint));
-        dense_topology.back()->SetGeodesicGridId(geodesic_grid_id_counter);
-
-        previous_wp->SetNextWaypoint({dense_topology.back()});
-        exit_node_list.push_back(dense_topology.back());
+    // Consuming the raw dense topology from cc::Map into SimpleWaypoints.
+    std::map<std::pair<crd::RoadId, crd::LaneId>, std::vector<SimpleWaypointPtr>> segment_map;
+    for (auto& waypoint_ptr: raw_dense_topology) {
+      dense_topology.push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      auto road_id = waypoint_ptr->GetRoadId();
+      auto lane_id = waypoint_ptr->GetLaneId();
+      if (segment_map.find({road_id, lane_id}) != segment_map.end()) {
+        segment_map.at({road_id, lane_id}).push_back(dense_topology.back());
+      } else {
+        segment_map.insert({{road_id, lane_id}, {dense_topology.back()}});
       }
+    }
+
+    auto compare_s = [] (const SimpleWaypointPtr& swp1, const SimpleWaypointPtr& swp2) {
+      return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
+    };
+
+    GeoGridId geodesic_grid_id_counter = -1;
+    for (auto& segment: segment_map) {
+
+      // Generating geodesic grid ids.
+      ++geodesic_grid_id_counter;
+
+      // Ordering waypoints to be consecutive.
+      auto& segment_waypoints = segment.second;
+      std::sort(segment_waypoints.begin(), segment_waypoints.end(), compare_s);
+
+      // Registering segment end points.
+      entry_node_list.push_back(segment_waypoints.front());
+      exit_node_list.push_back(segment_waypoints.back());
+
+      // Placing intra-segment connections.
+      cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
+      for (uint i=0; i< segment_waypoints.size() -1; ++i) {
+
+        // Assigning grid id.
+        if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
+            square(MAX_GEODESIC_GRID_LENGTH)) {
+          ++geodesic_grid_id_counter;
+          grid_edge_location = segment_waypoints.at(i)->GetLocation();
+        }
+        segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
+
+        segment_waypoints.at(i)->SetNextWaypoint({segment_waypoints.at(i+1)});
+        segment_waypoints.at(i+1)->SetPreviousWaypoint({segment_waypoints.at(i)});
+      }
+      segment_waypoints.back()->SetGeodesicGridId(geodesic_grid_id_counter);
+
     }
 
     // Linking segments.
@@ -95,42 +94,9 @@ namespace MapConstants {
       for (SimpleWaypointPtr begin_point : entry_node_list) {
         if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) && i != j) {
           end_point->SetNextWaypoint({begin_point});
+          begin_point->SetPreviousWaypoint({end_point});
         }
         ++j;
-      }
-      ++i;
-    }
-
-    // Tying up loose ends.
-    // Loop through all exit nodes of topology segments,
-    // connect any dangling endpoints to the nearest entry point
-    // of another topology segment.
-    i = 0u;
-    for (auto &end_point : exit_node_list) {
-      if (end_point->GetNextWaypoint().size() == 0) {
-        j = 0u;
-        float min_distance = INFINITE_DISTANCE;
-        SimpleWaypointPtr closest_connection;
-        for (auto &begin_point : entry_node_list) {
-          float new_distance = end_point->DistanceSquared(begin_point);
-          if (new_distance < min_distance && i != j) {
-            min_distance = new_distance;
-            closest_connection = begin_point;
-          }
-          ++j;
-        }
-        const cg::Vector3D end_point_vector = end_point->GetForwardVector();
-        cg::Vector3D relative_vector = closest_connection->GetLocation() - end_point->GetLocation();
-        relative_vector = relative_vector.MakeUnitVector();
-        const float relative_dot = cg::Math::Dot(end_point_vector, relative_vector);
-        if (relative_dot < LANE_CHANGE_ANGULAR_THRESHOLD) {
-          uint64_t count = LANE_CHANGE_LOOK_AHEAD;
-          while (count > 0u) {
-            closest_connection = closest_connection->GetNextWaypoint()[0];
-            --count;
-          }
-        }
-        end_point->SetNextWaypoint({closest_connection});
       }
       ++i;
     }

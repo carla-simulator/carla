@@ -58,8 +58,7 @@ namespace CollisionStageConstants {
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
-
-      // DrawBoundary(GetGeodesicBoundary(ego_actor));
+      const cg::Location ego_location = ego_actor->GetLocation();
 
       // Retrieve actors around the path of the ego vehicle.
       bool collision_hazard = false;
@@ -69,14 +68,18 @@ namespace CollisionStageConstants {
 
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
-      // Check every actor in the vicinity if it poses a collision hazard.
+
+        // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
           const Actor actor = j->second;
           const ActorId actor_id = j->first;
-          try {
-            const cg::Location ego_location = ego_actor->GetLocation();
-            const cg::Location other_location = actor->GetLocation();
+          const cg::Location other_location = actor->GetLocation();
 
+          // debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 3),
+          //                        other_location + cg::Location(0, 0, 3),
+          //                        0.05f, 0.05f, {255u, 255u, 0u}, 0.1f);
+
+          try {
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
@@ -168,8 +171,8 @@ namespace CollisionStageConstants {
     if (!(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) < 0) &&
 
-        !(reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
-        reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
+        // !(reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
+        // reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
 
         !(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) > 0 &&

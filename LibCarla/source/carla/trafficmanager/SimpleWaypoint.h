@@ -36,6 +36,8 @@ namespace traffic_manager {
     WaypointPtr waypoint;
     /// List of pointers to next connecting waypoints.
     std::vector<SimpleWaypointPtr> next_waypoints;
+    /// List of pointers to previous connecting waypoints.
+    std::vector<SimpleWaypointPtr> previous_waypoints;
     /// Pointer to left lane change waypoint.
     SimpleWaypointPtr next_left_waypoint;
     /// Pointer to right lane change waypoint.
@@ -57,6 +59,9 @@ namespace traffic_manager {
     /// Returns the list of next waypoints.
     std::vector<SimpleWaypointPtr> GetNextWaypoint() const;
 
+    /// Returns the list of previous waypoints.
+    std::vector<SimpleWaypointPtr> GetPreviousWaypoint() const;
+
     /// Returns the vector along the waypoint's direction.
     cg::Vector3D GetForwardVector() const;
 
@@ -65,6 +70,9 @@ namespace traffic_manager {
 
     /// This method is used to set the next waypoints.
     uint64_t SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
+
+    /// This method is used to set the previous waypoints.
+    uint64_t SetPreviousWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
     /// This method is used to set the closest left waypoint for a lane change.
     void SetLeftWaypoint(SimpleWaypointPtr waypoint);

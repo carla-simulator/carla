@@ -147,6 +147,18 @@ namespace LocalizationConstants {
         PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
       }
 
+      // Updating geodesic grid position for actor.
+      track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
+
+      // -------------------------------------------------- //
+      // auto v_ggids = track_traffic.GetGridIds(actor_id);
+      // std::string ggid_string;
+      // for (auto v_ggid: v_ggids) {
+      //   ggid_string += (" " + std::to_string(v_ggid));
+      // }
+      // debug_helper.DrawString(vehicle_location, ggid_string, false, {255u, 0u, 0u}, 0.1f);
+      // -------------------------------------------------- //
+
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
@@ -187,7 +199,8 @@ namespace LocalizationConstants {
       }
 
       bool approaching_junction = false;
-      if (waypoint_buffer.front()->CheckJunction() || (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction()))) {
+      if (waypoint_buffer.front()->CheckJunction() ||
+          (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction()))) {
         if (speed_limit > HIGHWAY_SPEED) {
           for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
@@ -199,6 +212,7 @@ namespace LocalizationConstants {
           approaching_junction = true;
         }
       }
+
 
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
@@ -289,8 +303,6 @@ namespace LocalizationConstants {
     const uint64_t waypoint_id = waypoint->GetId();
     buffer.push_back(waypoint);
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
-
-    track_traffic.UpdateGridPosition(actor_id, waypoint);
   }
 
   void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
@@ -300,11 +312,6 @@ namespace LocalizationConstants {
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
     buffer.pop_front();
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
-
-    if (!buffer.empty()) {
-      remaining_waypoint = buffer.front();
-    }
-    track_traffic.RemoveGridPosition(actor_id, removed_waypoint, remaining_waypoint);
   }
 
   void LocalizationStage::ScanUnregisteredVehicles() {
@@ -354,8 +361,8 @@ namespace LocalizationConstants {
         } else {
           unregistered_waypoints.insert({actor_info.first, nearest_waypoint});
         }
-        track_traffic.UpdateGridPosition(actor_info.first, nearest_waypoint);
-        track_traffic.RemoveGridPosition(actor_info.first, previous_waypoint, nearest_waypoint);
+        // track_traffic.UpdateGridPosition(actor_info.first, nearest_waypoint);
+        // track_traffic.RemoveGridPosition(actor_info.first, previous_waypoint, nearest_waypoint);
       } else {
         track_traffic.DeleteActor(actor_info.first);
         actor_ids_to_erase.push_back(actor_info.first);

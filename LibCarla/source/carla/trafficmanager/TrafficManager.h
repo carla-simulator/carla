@@ -23,7 +23,6 @@
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/BatchControlStage.h"
-#include "carla/trafficmanager/CarlaDataAccessLayer.h"
 #include "carla/trafficmanager/CollisionStage.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationStage.h"
