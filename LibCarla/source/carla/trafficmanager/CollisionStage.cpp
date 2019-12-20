@@ -59,6 +59,8 @@ namespace CollisionStageConstants {
       const ActorId ego_actor_id = ego_actor->GetId();
       const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
       const cg::Location ego_location = ego_actor->GetLocation();
+      const SimpleWaypointPtr& closest_point = data.closest_waypoint;
+      const SimpleWaypointPtr& junction_look_ahead = data.junction_look_ahead_waypoint;
 
       // Retrieve actors around the path of the ego vehicle.
       bool collision_hazard = false;
@@ -75,10 +77,6 @@ namespace CollisionStageConstants {
           const ActorId actor_id = j->first;
           const cg::Location other_location = actor->GetLocation();
 
-          // debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 3),
-          //                        other_location + cg::Location(0, 0, 3),
-          //                        0.05f, 0.05f, {255u, 255u, 0u}, 0.1f);
-
           try {
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
@@ -90,7 +88,7 @@ namespace CollisionStageConstants {
                 (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
               if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                  NegotiateCollision(ego_actor, actor)) {
+                  NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
 
                 collision_hazard = true;
               }
@@ -142,7 +140,9 @@ namespace CollisionStageConstants {
     frame_selector = !frame_selector;
   }
 
-  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) {
+  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle,
+                                          const SimpleWaypointPtr& closest_point,
+                                          const SimpleWaypointPtr& junction_look_ahead) {
 
     bool hazard = false;
 
@@ -171,8 +171,9 @@ namespace CollisionStageConstants {
     if (!(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) < 0) &&
 
-        // !(reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
-        // reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
+        !(!closest_point->CheckJunction() && junction_look_ahead->CheckJunction() &&
+        reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
+        reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
 
         !(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) > 0 &&

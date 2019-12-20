@@ -234,6 +234,8 @@ namespace LocalizationConstants {
         }
         collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
       }
+      collision_message.closest_waypoint = waypoint_buffer.front();
+      collision_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
