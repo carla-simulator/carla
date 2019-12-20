@@ -15,11 +15,13 @@ namespace LocalizationConstants {
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
-  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
+  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 25.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.8f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
+  static const float JUNCTION_IGNORE_THRESHOLD = 35;
+  static const float UNJUNCTION_IGNORE_THRESHOLD = 65;  // Used to ignore roundabouts (Just a quick "patch")
 
 } // namespace LocalizationConstants
 
@@ -54,6 +56,14 @@ namespace LocalizationConstants {
 
     // Initializing the registered actors container state.
     registered_actors_state = -1;
+
+    for (uint i = 0u; i < actor_list.size(); ++i) {
+      
+      Actor vehicle = actor_list.at(i);
+      ActorId actor_id = vehicle->GetId();
+      approached[actor_id] = false;
+      final_safe_points[actor_id] = nullptr;
+    }
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -187,8 +197,8 @@ namespace LocalizationConstants {
       }
 
       bool approaching_junction = false;
-      if (waypoint_buffer.front()->CheckJunction() || (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction()))) {
-        if (speed_limit > HIGHWAY_SPEED) {
+      if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
+        if (speed_limit > HIGHWAY_SPEED*3.6f) {
           for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
             if (swp->GetNextWaypoint().size() > 1) {
@@ -197,6 +207,20 @@ namespace LocalizationConstants {
           }
         } else {
           approaching_junction = true;
+        }
+      }
+
+      if (!approaching_junction){
+        final_safe_points[actor_id] = nullptr;
+        approached[actor_id] = false;
+      }
+
+      if (approaching_junction){ 
+        SimpleWaypointPtr final_point = nullptr;
+        final_point = GetSafeLocationAfterJunction(vehicle, waypoint_buffer); 
+        if(final_point != nullptr){
+          approached[actor_id] = true;
+          final_safe_points[actor_id] = final_point;
         }
       }
 
@@ -220,6 +244,7 @@ namespace LocalizationConstants {
           actor_ptr = unregistered_actors.at(overlapping_actor_id);
         }
         collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
+        collision_message.safe_point_after_junction = final_safe_points[actor_id];
       }
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
@@ -280,7 +305,7 @@ namespace LocalizationConstants {
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
 
     for (uint64_t i = 0u; i < buffer.size() && i < 5; ++i) {
-      debug_helper.DrawPoint(buffer.at(i)->GetLocation(), 0.1f, {255u, 0u, 0u}, 0.5f);
+      debug_helper.DrawPoint(buffer.at(i)->GetLocation(), 0.1f, {255u, 0u, 0u}, 0.2f);
     }
   }
 
@@ -492,6 +517,112 @@ namespace LocalizationConstants {
     } else {
       return nullptr;
     }
+  }
+
+SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &actor, Buffer &waypoint_buffer){
+
+    // Get the length of the car
+    auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+    float length = vehicle->GetBoundingBox().extent.x;
+
+    // First Waypoint before the junction
+    SimpleWaypointPtr initial_point;
+    uint initial_index = 0;
+    // First Waypoint after the junction
+    SimpleWaypointPtr safe_point = nullptr;
+    uint safe_index = 0;
+    uint junction_counter = 0;
+    // Vehicle position after the junction
+    SimpleWaypointPtr final_point = nullptr;
+    uint final_index = 0;
+    uint unjunction_counter = 0;
+    // Safe space after the junction
+    float safe_distance = length;
+    // Multiple junction detection. (Currrently deactivated)
+    // bool extend_buffer = true;
+
+    for (uint j = 0u; j < waypoint_buffer.size(); ++j){
+      if (waypoint_buffer.at(j)->CheckJunction()){
+        initial_point = waypoint_buffer.at(j);
+        initial_index = j;
+        break;
+      }
+    }
+
+    // 2) Search for the end of the intersection (if it is in the buffer)
+    for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
+      junction_counter++;
+      if (!waypoint_buffer.at(i)->CheckJunction()){
+        safe_point = waypoint_buffer.at(i);
+        safe_index = i;
+        break;
+      }
+    }
+
+    // If it hasn't been found, extend the buffer
+    if(safe_point == nullptr){
+      while (waypoint_buffer.back()->CheckJunction()) {
+
+          junction_counter++;
+          std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+          uint selection_index = 0u;
+          if (next_waypoints.size() > 1) {
+            selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+          }
+
+          waypoint_buffer.push_back(next_waypoints.at(selection_index));
+        }
+      // Save the last one
+      safe_point = waypoint_buffer.back();
+    }
+
+    // 3) Search for final_point (again, if it is in the buffer)
+    if (safe_index != 0){
+      for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+        if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
+          final_point = waypoint_buffer.at(k);
+          final_index = k;
+          break;
+        }
+      }
+    }
+
+    // If it hasn't been found, extend the buffer
+    if(final_point == nullptr){
+      while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
+
+        // Record the last point as a safe one and safe it
+        std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+        uint selection_index = 0u;
+        // Pseudo-randomized path selection if found more than one choice.
+        if (next_waypoints.size() > 1) {
+          selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+        }
+
+        //safe_point = waypoint_buffer.back()->GetNextWaypoint().front();
+        waypoint_buffer.push_back(next_waypoints.at(selection_index));
+      }
+      final_point = waypoint_buffer.back();
+    }
+    
+    // 4) Ignore roundabouts
+    SimpleWaypointPtr roundabout_point = final_point->GetNextWaypoint().front();
+
+    while (unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD){
+      if (roundabout_point->CheckJunction()){
+        break;
+      }
+      roundabout_point = roundabout_point->GetNextWaypoint().front();
+      unjunction_counter++;
+    }
+
+    // 5) Ignore small junctions 
+    if (junction_counter < JUNCTION_IGNORE_THRESHOLD ||
+        unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD){
+      final_point = nullptr;
+    }
+
+    return final_point;
   }
 
 } // namespace traffic_manager
