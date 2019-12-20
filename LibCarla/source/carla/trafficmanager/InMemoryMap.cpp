@@ -14,7 +14,6 @@ namespace MapConstants {
   // Very important that this is less than 10^-4.
   static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-  // Cosine of the angle.
   static const float GRID_SIZE = 4.0f;
   static const float PED_GRID_SIZE = 10.0f;
   static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
@@ -89,32 +88,54 @@ namespace MapConstants {
     }
 
     // Linking segments.
-    uint64_t i = 0u, j = 0u;
     for (SimpleWaypointPtr end_point : exit_node_list) {
       for (SimpleWaypointPtr begin_point : entry_node_list) {
-        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) && i != j) {
+        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) &&
+            end_point->GetWaypoint()->GetRoadId() != begin_point->GetWaypoint()->GetRoadId() &&
+            end_point->GetWaypoint()->GetLaneId() != begin_point->GetWaypoint()->GetLaneId()) {
           end_point->SetNextWaypoint({begin_point});
           begin_point->SetPreviousWaypoint({end_point});
         }
-        ++j;
       }
-      ++i;
+    }
+
+    // Tying up loose ends.
+    // Loop through all exit nodes of topology segments,
+    // connect any dangling endpoints to the nearest entry point
+    // of another topology segment.
+    for (auto &end_point : exit_node_list) {
+      if (end_point->GetNextWaypoint().size() == 0) {
+        float min_distance = INFINITE_DISTANCE;
+        SimpleWaypointPtr closest_connection;
+        for (auto &begin_point : entry_node_list) {
+          float new_distance = end_point->DistanceSquared(begin_point);
+          if (new_distance < min_distance &&
+              end_point->GetWaypoint()->GetRoadId() != begin_point->GetWaypoint()->GetRoadId() &&
+              end_point->GetWaypoint()->GetLaneId() != begin_point->GetWaypoint()->GetLaneId()) {
+            min_distance = new_distance;
+            closest_connection = begin_point;
+          }
+        }
+        end_point->SetNextWaypoint({closest_connection});
+      }
     }
 
     // Localizing waypoints into grids.
     for (auto &simple_waypoint: dense_topology) {
-      const cg::Location loc = simple_waypoint->GetLocation();
-      const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
-      if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
-        waypoint_grid.insert({grid_key, {simple_waypoint}});
-      } else {
-        waypoint_grid.at(grid_key).insert(simple_waypoint);
-      }
-      const std::string ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
-      if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
-        ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
-      } else {
-        ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
+      if (simple_waypoint != nullptr) {
+        const cg::Location loc = simple_waypoint->GetLocation();
+        const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
+        if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
+          waypoint_grid.insert({grid_key, {simple_waypoint}});
+        } else {
+          waypoint_grid.at(grid_key).insert(simple_waypoint);
+        }
+        const std::string ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
+        if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
+          ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
+        } else {
+          ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
+        }
       }
     }
 

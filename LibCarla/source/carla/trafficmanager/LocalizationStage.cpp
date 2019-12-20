@@ -143,7 +143,7 @@ namespace LocalizationConstants {
         if (next_waypoints.size() > 1) {
           selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
-
+        std::cout << "Stuck here?" << std::endl;
         PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
       }
 
