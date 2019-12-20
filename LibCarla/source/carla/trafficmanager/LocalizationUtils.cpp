@@ -59,6 +59,47 @@ namespace LocalizationConstants {
 
   TrackTraffic::TrackTraffic() {}
 
+  void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint) {
+
+    // Add actor entry if not present.
+    if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
+      actor_to_grids.insert({actor_id, {}});
+    }
+
+    std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+
+    // Clear current actor from all grids containing current actor.
+    for (auto& grid_id: current_grids) {
+      if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+        ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
+        if (actor_ids.find(actor_id) != actor_ids.end()) {
+          actor_ids.erase(actor_id);
+        }
+      }
+    }
+
+    // Clear all grids current actor is tracking.
+    current_grids.clear();
+
+    // Step through buffer and update grid list for actor and actor list for grids.
+    if (waypoint != nullptr) {
+
+      GeoGridId ggid = waypoint->GetGeodesicGridId();
+      current_grids.insert(ggid);
+
+      // Add grid entry if not present.
+      if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
+        grid_to_actors.insert({ggid, {}});
+      }
+
+      ActorIdSet& actor_ids = grid_to_actors.at(ggid);
+      if (actor_ids.find(actor_id) == actor_ids.end()) {
+        actor_ids.insert(actor_id);
+      }
+    }
+  }
+
+
   void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer& buffer) {
 
     // Add actor entry if not present.

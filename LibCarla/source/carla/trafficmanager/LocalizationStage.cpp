@@ -143,21 +143,20 @@ namespace LocalizationConstants {
         if (next_waypoints.size() > 1) {
           selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
-        std::cout << "Stuck here?" << std::endl;
-        PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
+        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
+        if (next_wp == nullptr) {
+          for (auto& wp: next_waypoints) {
+            if (wp != nullptr) {
+              next_wp = wp;
+              break;
+            }
+          }
+        }
+        PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
 
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-
-      // -------------------------------------------------- //
-      // auto v_ggids = track_traffic.GetGridIds(actor_id);
-      // std::string ggid_string;
-      // for (auto v_ggid: v_ggids) {
-      //   ggid_string += (" " + std::to_string(v_ggid));
-      // }
-      // debug_helper.DrawString(vehicle_location, ggid_string, false, {255u, 0u, 0u}, 0.1f);
-      // -------------------------------------------------- //
 
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -354,15 +353,7 @@ namespace LocalizationConstants {
         if (nearest_waypoint == nullptr) {
           nearest_waypoint = local_map.GetWaypoint(actor_location);
         }
-        SimpleWaypointPtr previous_waypoint = nullptr;
-        if (unregistered_waypoints.find(actor_info.first) != unregistered_waypoints.end()) {
-          previous_waypoint = unregistered_waypoints.at(actor_info.first);
-          unregistered_waypoints.at(actor_info.first) = nearest_waypoint;
-        } else {
-          unregistered_waypoints.insert({actor_info.first, nearest_waypoint});
-        }
-        // track_traffic.UpdateGridPosition(actor_info.first, nearest_waypoint);
-        // track_traffic.RemoveGridPosition(actor_info.first, previous_waypoint, nearest_waypoint);
+        track_traffic.UpdateUnregisteredGridPosition(actor_info.first, nearest_waypoint);
       } else {
         track_traffic.DeleteActor(actor_info.first);
         actor_ids_to_erase.push_back(actor_info.first);

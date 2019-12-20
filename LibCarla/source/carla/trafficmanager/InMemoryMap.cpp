@@ -12,7 +12,6 @@ namespace traffic_manager {
 namespace MapConstants {
 
   // Very important that this is less than 10^-4.
-  static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
   static const float GRID_SIZE = 4.0f;
   static const float PED_GRID_SIZE = 10.0f;
@@ -40,13 +39,12 @@ namespace MapConstants {
     // Consuming the raw dense topology from cc::Map into SimpleWaypoints.
     std::map<std::pair<crd::RoadId, crd::LaneId>, std::vector<SimpleWaypointPtr>> segment_map;
     for (auto& waypoint_ptr: raw_dense_topology) {
-      dense_topology.push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
       auto road_id = waypoint_ptr->GetRoadId();
       auto lane_id = waypoint_ptr->GetLaneId();
       if (segment_map.find({road_id, lane_id}) != segment_map.end()) {
-        segment_map.at({road_id, lane_id}).push_back(dense_topology.back());
+        segment_map.at({road_id, lane_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
       } else {
-        segment_map.insert({{road_id, lane_id}, {dense_topology.back()}});
+        segment_map.insert({{road_id, lane_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
       }
     }
 
@@ -64,59 +62,43 @@ namespace MapConstants {
       auto& segment_waypoints = segment.second;
       std::sort(segment_waypoints.begin(), segment_waypoints.end(), compare_s);
 
-      // Registering segment end points.
-      entry_node_list.push_back(segment_waypoints.front());
-      exit_node_list.push_back(segment_waypoints.back());
+      if (segment_waypoints.front()->DistanceSquared(segment_waypoints.back()) > square(0.1f)) {
 
-      // Placing intra-segment connections.
-      cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
-      for (uint i=0; i< segment_waypoints.size() -1; ++i) {
+        SimpleWaypointPtr first_point = segment_waypoints.at(0);
+        SimpleWaypointPtr second_point = segment_waypoints.at(1);
+        cg::Vector3D first_to_second = second_point->GetLocation() - first_point->GetLocation();
+        first_to_second = first_to_second.MakeUnitVector();
+        cg::Vector3D first_heading = first_point->GetForwardVector();
 
-        // Assigning grid id.
-        if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
-            square(MAX_GEODESIC_GRID_LENGTH)) {
-          ++geodesic_grid_id_counter;
-          grid_edge_location = segment_waypoints.at(i)->GetLocation();
+        if (cg::Math::Dot(first_heading, first_to_second) < 0.0f) {
+          std::reverse(segment_waypoints.begin(), segment_waypoints.end());
         }
-        segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
 
-        segment_waypoints.at(i)->SetNextWaypoint({segment_waypoints.at(i+1)});
-        segment_waypoints.at(i+1)->SetPreviousWaypoint({segment_waypoints.at(i)});
-      }
-      segment_waypoints.back()->SetGeodesicGridId(geodesic_grid_id_counter);
+        // Registering segment end points.
+        entry_node_list.push_back(segment_waypoints.front());
+        exit_node_list.push_back(segment_waypoints.back());
 
-    }
+        // Placing intra-segment connections.
+        cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
+        for (uint i=0; i< segment_waypoints.size() -1; ++i) {
 
-    // Linking segments.
-    for (SimpleWaypointPtr end_point : exit_node_list) {
-      for (SimpleWaypointPtr begin_point : entry_node_list) {
-        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) &&
-            end_point->GetWaypoint()->GetRoadId() != begin_point->GetWaypoint()->GetRoadId() &&
-            end_point->GetWaypoint()->GetLaneId() != begin_point->GetWaypoint()->GetLaneId()) {
-          end_point->SetNextWaypoint({begin_point});
-          begin_point->SetPreviousWaypoint({end_point});
-        }
-      }
-    }
-
-    // Tying up loose ends.
-    // Loop through all exit nodes of topology segments,
-    // connect any dangling endpoints to the nearest entry point
-    // of another topology segment.
-    for (auto &end_point : exit_node_list) {
-      if (end_point->GetNextWaypoint().size() == 0) {
-        float min_distance = INFINITE_DISTANCE;
-        SimpleWaypointPtr closest_connection;
-        for (auto &begin_point : entry_node_list) {
-          float new_distance = end_point->DistanceSquared(begin_point);
-          if (new_distance < min_distance &&
-              end_point->GetWaypoint()->GetRoadId() != begin_point->GetWaypoint()->GetRoadId() &&
-              end_point->GetWaypoint()->GetLaneId() != begin_point->GetWaypoint()->GetLaneId()) {
-            min_distance = new_distance;
-            closest_connection = begin_point;
+          // Assigning grid id.
+          if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
+              square(MAX_GEODESIC_GRID_LENGTH)) {
+            ++geodesic_grid_id_counter;
+            grid_edge_location = segment_waypoints.at(i)->GetLocation();
           }
+          segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
+
+          segment_waypoints.at(i)->SetNextWaypoint({segment_waypoints.at(i+1)});
+          segment_waypoints.at(i+1)->SetPreviousWaypoint({segment_waypoints.at(i)});
         }
-        end_point->SetNextWaypoint({closest_connection});
+        segment_waypoints.back()->SetGeodesicGridId(geodesic_grid_id_counter);
+
+        // Adding to processed dense topology.
+        for (auto swp: segment_waypoints) {
+          dense_topology.push_back(swp);
+        }
       }
     }
 
@@ -137,6 +119,20 @@ namespace MapConstants {
           ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
         }
       }
+    }
+
+    // Linking segments.
+    uint64_t i = 0u, j = 0u;
+    for (SimpleWaypointPtr end_point : exit_node_list) {
+      j = 0u;
+      for (SimpleWaypointPtr begin_point: entry_node_list) {
+        if ((end_point->DistanceSquared(begin_point) < square(2.0f)) && (i != j)) {
+          end_point->SetNextWaypoint({begin_point});
+          begin_point->SetPreviousWaypoint({end_point});
+        }
+      ++j;
+      }
+      ++i;
     }
 
     // Linking lane change connections.

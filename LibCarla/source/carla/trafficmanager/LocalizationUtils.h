@@ -50,6 +50,7 @@ namespace traffic_manager {
     ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
 
     void UpdateGridPosition(const ActorId actor_id, const Buffer& buffer);
+    void UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint);
 
     ActorIdSet GetOverlappingVehicles(ActorId actor_id);
 
