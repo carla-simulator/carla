@@ -21,7 +21,7 @@ namespace CollisionStageConstants {
   static const float BOUNDARY_EDGE_LENGTH = 2.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float MIN_COLLISION_RADIUS = 15.0f;
-  static const float WALKER_TIME_EXTENSION = 2.0f;
+  static const float WALKER_TIME_EXTENSION = 1.5f;
 } // namespace CollisionStageConstants
 
   using namespace CollisionStageConstants;
