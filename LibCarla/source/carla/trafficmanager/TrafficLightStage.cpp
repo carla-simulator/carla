@@ -61,11 +61,8 @@ namespace traffic_manager {
         traffic_light_state = TLS::Green;
 
       // We determine to stop if the current position of the vehicle is not a
-      // junction,
-      // a point on the path beyond a threshold (velocity-dependent) distance
-      // is inside the junction and there is a red or yellow light.
+      // junction and there is a red or yellow light.
       if (!closest_waypoint->CheckJunction() &&
-          look_ahead_point->CheckJunction() &&
           ego_vehicle->IsAtTrafficLight() &&
           traffic_light_state != TLS::Green) {
 

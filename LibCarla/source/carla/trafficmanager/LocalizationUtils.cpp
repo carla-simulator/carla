@@ -9,6 +9,12 @@
 namespace carla {
 namespace traffic_manager {
 
+namespace LocalizationConstants {
+  const static uint64_t BUFFER_STEP_THROUGH = 10u;
+} // namespace LocalizationConstants
+
+  using namespace LocalizationConstants;
+
   float DeviationCrossProduct(Actor actor, const cg::Location &target_location) {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
@@ -53,53 +59,85 @@ namespace traffic_manager {
 
   TrackTraffic::TrackTraffic() {}
 
-  void TrackTraffic::UpdateGridPosition(ActorId actor_id, SimpleWaypointPtr waypoint) {
+  void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint) {
 
-    GeoGridId new_geo_grid_id = waypoint->GetGeodesicGridId();
-
-    if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
-      auto& grid_ids = actor_to_grids.at(actor_id);
-      if (grid_ids.find(new_geo_grid_id) == grid_ids.end()) {
-        grid_ids.insert(new_geo_grid_id);
-      }
-    } else {
-      actor_to_grids.insert({actor_id, {new_geo_grid_id}});
+    // Add actor entry if not present.
+    if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
+      actor_to_grids.insert({actor_id, {}});
     }
 
-    if (grid_to_actors.find(new_geo_grid_id) != grid_to_actors.end()) {
-      ActorIdSet& actor_set = grid_to_actors.at(new_geo_grid_id);
-      if (actor_set.find(actor_id) == actor_set.end()) {
-        actor_set.insert(actor_id);
+    std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+
+    // Clear current actor from all grids containing current actor.
+    for (auto& grid_id: current_grids) {
+      if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+        ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
+        if (actor_ids.find(actor_id) != actor_ids.end()) {
+          actor_ids.erase(actor_id);
+        }
       }
-    } else {
-      grid_to_actors.insert({new_geo_grid_id, {actor_id}});
+    }
+
+    // Clear all grids current actor is tracking.
+    current_grids.clear();
+
+    // Step through buffer and update grid list for actor and actor list for grids.
+    if (waypoint != nullptr) {
+
+      GeoGridId ggid = waypoint->GetGeodesicGridId();
+      current_grids.insert(ggid);
+
+      // Add grid entry if not present.
+      if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
+        grid_to_actors.insert({ggid, {}});
+      }
+
+      ActorIdSet& actor_ids = grid_to_actors.at(ggid);
+      if (actor_ids.find(actor_id) == actor_ids.end()) {
+        actor_ids.insert(actor_id);
+      }
     }
   }
 
-  void TrackTraffic::RemoveGridPosition(ActorId actor_id, SimpleWaypointPtr removed_waypoint,
-                                        SimpleWaypointPtr remaining_waypoint) {
 
-    if (removed_waypoint != nullptr) {
+  void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer& buffer) {
 
-      GeoGridId removed_grid_id = removed_waypoint->GetGeodesicGridId();
-      GeoGridId remaining_grid_id;
-      if (remaining_waypoint != nullptr) {
-        remaining_grid_id = remaining_waypoint->GetGeodesicGridId();
+    // Add actor entry if not present.
+    if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
+      actor_to_grids.insert({actor_id, {}});
+    }
+
+    std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+
+    // Clear current actor from all grids containing current actor.
+    for (auto& grid_id: current_grids) {
+      if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+        ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
+        if (actor_ids.find(actor_id) != actor_ids.end()) {
+          actor_ids.erase(actor_id);
+        }
       }
+    }
 
-      if (remaining_waypoint == nullptr || removed_grid_id != remaining_grid_id) {
-        if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
-          auto& grid_ids = actor_to_grids.at(actor_id);
-          if (grid_ids.find(removed_grid_id) != grid_ids.end()) {
-            grid_ids.erase(removed_grid_id);
-          }
+    // Clear all grids current actor is tracking.
+    current_grids.clear();
+
+    // Step through buffer and update grid list for actor and actor list for grids.
+    if (!buffer.empty()) {
+      uint64_t buffer_size = buffer.size();
+      uint64_t step_size = static_cast<uint64_t>(std::floor(buffer_size/BUFFER_STEP_THROUGH));
+      for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
+        GeoGridId ggid = buffer.at(std::min(i* step_size, buffer_size-1u))->GetGeodesicGridId();
+        current_grids.insert(ggid);
+
+        // Add grid entry if not present.
+        if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
+          grid_to_actors.insert({ggid, {}});
         }
 
-        if (grid_to_actors.find(removed_grid_id) != grid_to_actors.end()) {
-          ActorIdSet& actor_set = grid_to_actors.at(removed_grid_id);
-          if (actor_set.find(actor_id) != actor_set.end()) {
-            actor_set.erase(actor_id);
-          }
+        ActorIdSet& actor_ids = grid_to_actors.at(ggid);
+        if (actor_ids.find(actor_id) == actor_ids.end()) {
+          actor_ids.insert(actor_id);
         }
       }
     }
@@ -149,7 +187,7 @@ namespace traffic_manager {
     return grid_ids;
   }
 
-  std::unordered_map<GeoGridId, ActorIdSet>& TrackTraffic::GetGridActors() {
+  std::unordered_map<GeoGridId, ActorIdSet> TrackTraffic::GetGridActors() {
     return grid_to_actors;
   }
 

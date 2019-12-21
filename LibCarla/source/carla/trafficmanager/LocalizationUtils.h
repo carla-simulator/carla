@@ -49,19 +49,16 @@ namespace traffic_manager {
     void RemovePassingVehicle(uint64_t waypoint_id, ActorId actor_id);
     ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
 
-    /// Method update grid position of vehicles based on waypoints being added.
-    void UpdateGridPosition(ActorId actor_id, SimpleWaypointPtr waypoint);
-    /// Method to remove vehicle from grid associated with the waypoint.
-    void RemoveGridPosition(ActorId actor_id, SimpleWaypointPtr removed_waypoint,
-                            SimpleWaypointPtr remaining_waypoint);
-    /// Method to retreive vehicles with paths sharing common geodesic grids.
+    void UpdateGridPosition(const ActorId actor_id, const Buffer& buffer);
+    void UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint);
+
     ActorIdSet GetOverlappingVehicles(ActorId actor_id);
     /// Method to delete actor data from tracking.
     void DeleteActor(ActorId actor_id);
 
     std::unordered_set<GeoGridId> GetGridIds(ActorId actor_id);
 
-    std::unordered_map<GeoGridId, ActorIdSet>& GetGridActors();
+    std::unordered_map<GeoGridId, ActorIdSet> GetGridActors();
   };
 
   /// Returns the cross product (z component value) between the vehicle's

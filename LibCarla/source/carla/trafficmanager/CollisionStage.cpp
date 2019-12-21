@@ -12,7 +12,7 @@ namespace traffic_manager {
 namespace CollisionStageConstants {
 
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
-  static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
+  static const float BOUNDARY_EXTENSION_MINIMUM = 1.0f;
   static const float EXTENSION_SQUARE_POINT = 7.5f;
   static const float TIME_HORIZON = 0.5f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
@@ -58,8 +58,9 @@ namespace CollisionStageConstants {
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
-
-      // DrawBoundary(GetGeodesicBoundary(ego_actor));
+      const cg::Location ego_location = ego_actor->GetLocation();
+      const SimpleWaypointPtr& closest_point = data.closest_waypoint;
+      const SimpleWaypointPtr& junction_look_ahead = data.junction_look_ahead_waypoint;
 
       // Retrieve actors around the path of the ego vehicle.
       bool collision_hazard = false;
@@ -69,32 +70,31 @@ namespace CollisionStageConstants {
 
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
-      // Check every actor in the vicinity if it poses a collision hazard.
+
+        // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
           const Actor actor = j->second;
           const ActorId actor_id = j->first;
-          try {
-            const cg::Location ego_location = ego_actor->GetLocation();
-            const cg::Location other_location = actor->GetLocation();
+          const cg::Location other_location = actor->GetLocation();
 
+          try {
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
+            // Temporary fix to (0,0,0) bug
+            if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0){
+              if (actor_id != ego_actor_id &&
+                  (cg::Math::DistanceSquared(ego_location, other_location)
+                  < std::pow(MAX_COLLISION_RADIUS, 2)) &&
+                  (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-            if (actor_id != ego_actor_id &&
-                (cg::Math::DistanceSquared(ego_location, other_location)
-                < std::pow(MAX_COLLISION_RADIUS, 2)) &&
-                (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
-
-              if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                  NegotiateCollision(ego_actor, actor)) {
-
-                collision_hazard = true;
+                if (parameters.GetCollisionDetection(ego_actor, actor) &&
+                    NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
+                    collision_hazard = true;
+                  }
+                }
               }
-            }
-
           } catch (const std::exception &e) {
-            carla::log_warning("Encountered problem while determining collision \n");
             carla::log_info("Actor might not be alive \n");
           }
 
@@ -139,7 +139,9 @@ namespace CollisionStageConstants {
     frame_selector = !frame_selector;
   }
 
-  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle) {
+  bool CollisionStage::NegotiateCollision(const Actor &reference_vehicle, const Actor &other_vehicle,
+                                          const SimpleWaypointPtr& closest_point,
+                                          const SimpleWaypointPtr& junction_look_ahead) {
 
     bool hazard = false;
 
@@ -168,7 +170,8 @@ namespace CollisionStageConstants {
     if (!(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) < 0) &&
 
-        !(reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
+        !(!closest_point->CheckJunction() && junction_look_ahead->CheckJunction() &&
+        reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
         reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
 
         !(!reference_front_wp->CheckJunction() &&
@@ -342,16 +345,16 @@ namespace CollisionStageConstants {
     const cg::Vector3D extent = bbox.extent;
     const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
 
-    const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
-    const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
+    const cg::Vector3D x_boundary_vector = heading_vector * (extent.x + forward_extension);
+    const cg::Vector3D y_boundary_vector = perpendicular_vector * (extent.y + forward_extension);
 
     // Four corners of the vehicle in top view clockwise order (left-handed
     // system).
     LocationList bbox_boundary = {
-      location + cg::Location(heading_vector * (extent.x + forward_extension) - y_boundary_vector),
+      location + cg::Location(x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
-      location + cg::Location(heading_vector * (extent.x + forward_extension) + y_boundary_vector),
+      location + cg::Location(x_boundary_vector + y_boundary_vector),
     };
 
     return bbox_boundary;
