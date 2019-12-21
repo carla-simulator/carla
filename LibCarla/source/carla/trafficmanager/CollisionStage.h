@@ -31,8 +31,8 @@
 
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 #include "carla/trafficmanager/PipelineStage.h"
-#include "carla/trafficmanager/VicinityGrid.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -56,9 +56,6 @@ namespace traffic_manager {
 
   private:
 
-    /// Variables to remember messenger states.
-    int localization_messenger_state;
-    int planner_messenger_state;
     /// Selection key for switching between output frames.
     bool frame_selector;
     /// Pointer to data received from localization stage.
@@ -69,47 +66,41 @@ namespace traffic_manager {
     /// Pointers to messenger objects.
     std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
     std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
-    /// Reference to Carla's world object.
-    cc::World &world;
     /// Runtime parameterization object.
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
-    /// An object used for grid binning vehicles for faster proximity detection.
-    VicinityGrid vicinity_grid;
     /// The map used to connect actor ids to the array index of data frames.
-    std::unordered_map<ActorId, uint> vehicle_id_to_index;
-    /// A structure used to keep track of actors spawned outside of traffic
-    /// manager.
-    std::unordered_map<ActorId, Actor> unregistered_actors;
+    std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
     /// An object used to keep track of time between checking for all world
     /// actors.
     chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
+    /// Snippet profiler for measuring execution time.
+    SnippetProfiler snippet_profiler;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor &actor) const;
+    LocationList GetBoundary(const Actor &actor);
 
     /// Returns the extrapolated bounding box of the vehicle along its
     /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor &actor) const;
+    LocationList GetGeodesicBoundary(const Actor &actor);
 
     /// Method to construct a boost polygon object.
-    Polygon GetPolygon(const LocationList &boundary) const;
+    Polygon GetPolygon(const LocationList &boundary);
 
     /// The method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle) const;
+    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
+                            const SimpleWaypointPtr& closest_point,
+                            const SimpleWaypointPtr& junction_look_ahead);
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
-    float GetBoundingBoxExtention(const Actor &ego_vehicle) const;
-
-    /// Method to retreive the set of vehicles around the path of the given vehicle.
-    std::unordered_set<ActorId> GetPotentialVehicleObstacles(const Actor &ego_vehicle);
+    float GetBoundingBoxExtention(const Actor &ego_vehicle);
 
     /// A simple method used to draw bounding boxes around vehicles
-    void DrawBoundary(const LocationList &boundary) const;
+    void DrawBoundary(const LocationList &boundary);
 
   public:
 
@@ -117,7 +108,6 @@ namespace traffic_manager {
         std::string stage_name,
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-        cc::World &world,
         Parameters &parameters,
         cc::DebugHelper &debug_helper);
 

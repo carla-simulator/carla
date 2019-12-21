@@ -17,6 +17,7 @@
 #include <thread>
 #include <vector>
 
+#include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/Messenger.h"
@@ -34,37 +35,17 @@ namespace traffic_manager {
 
   private:
 
-    /// Pointer to receiver thread instance.
-    std::unique_ptr<std::thread> data_receiver;
-    /// Pointer to sender thread instance.
-    std::unique_ptr<std::thread> data_sender;
-    /// Pointer to worker thread instance.
-    std::unique_ptr<std::thread> action_thread;
-    /// Flag to allow/block receiver.
-    std::atomic<bool> run_receiver;
-    /// Flag to allow/block sender.
-    std::atomic<bool> run_sender;
-    /// Flag to allow/block workers.
-    std::atomic<bool> run_action;
+    std::unique_ptr<std::thread> worker_thread;
     /// Flag to start/stop stage.
     std::atomic<bool> run_stage;
-    /// Mutex used to co-ordinate between receiver, workers, and sender.
-    std::mutex thread_coordination_mutex;
-    /// Variables to conditionally block receiver, workers, and sender.
-    std::condition_variable wake_receiver_notifier;
-    std::condition_variable wake_action_notifier;
-    std::condition_variable wake_sender_notifier;
+    /// Stage name string.
+    std::string stage_name;
+
+  private:
     /// Object to track stage performance.
     PerformanceDiagnostics performance_diagnostics;
 
-    /// Method to manage receiver thread.
-    void ReceiverThreadManager();
-
-    /// Method to manage worker threads.
-    void ActionThreadManager();
-
-    /// Method to manage sender thread.
-    void SenderThreadManager();
+    void Update();
 
   protected:
 

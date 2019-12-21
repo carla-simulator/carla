@@ -23,7 +23,6 @@
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/BatchControlStage.h"
-#include "carla/trafficmanager/CarlaDataAccessLayer.h"
 #include "carla/trafficmanager/CollisionStage.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationStage.h"
@@ -110,8 +109,8 @@ namespace traffic_manager {
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
-    /// This method kills a vehicle.
-    void DestroyVehicle(const ActorPtr &actor);
+    /// This method kills a vehicle. (Not working right now)
+    /// void DestroyVehicle(const ActorPtr &actor);
 
     /// Set target velocity specific to a vehicle.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
@@ -147,6 +146,9 @@ namespace traffic_manager {
 
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
+
+    /// Return the world object
+    const cc::World &GetWorld() { return world; };
 
     /// Destructor.
     ~TrafficManager();

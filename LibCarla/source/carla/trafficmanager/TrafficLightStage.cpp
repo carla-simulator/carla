@@ -28,13 +28,6 @@ namespace traffic_manager {
     // Initializing output frame selector.
     frame_selector = true;
 
-    // Initializing messenger state.
-    localization_messenger_state = localization_messenger->GetState();
-
-    // Initializing this messenger state to preemptively write
-    // since this stage precedes motion planner stage.
-    planner_messenger_state = planner_messenger->GetState() - 1;
-
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
   }
@@ -46,7 +39,7 @@ namespace traffic_manager {
     // Selecting the output frame based on the selection key.
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
     // Looping over registered actors.
-    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
       bool traffic_light_hazard = false;
       const LocalizationToTrafficLightData &data = localization_frame->at(i);
@@ -68,11 +61,8 @@ namespace traffic_manager {
         traffic_light_state = TLS::Green;
 
       // We determine to stop if the current position of the vehicle is not a
-      // junction,
-      // a point on the path beyond a threshold (velocity-dependent) distance
-      // is inside the junction and there is a red or yellow light.
+      // junction and there is a red or yellow light.
       if (!closest_waypoint->CheckJunction() &&
-          look_ahead_point->CheckJunction() &&
           ego_vehicle->IsAtTrafficLight() &&
           traffic_light_state != TLS::Green) {
 
@@ -151,15 +141,13 @@ namespace traffic_manager {
   }
 
   void TrafficLightStage::DataReceiver() {
-    const auto packet = localization_messenger->ReceiveData(localization_messenger_state);
-    localization_frame = packet.data;
-    localization_messenger_state = packet.id;
+    localization_frame = localization_messenger->Peek();
 
     // Allocating new containers for the changed number of registered vehicles.
     if (localization_frame != nullptr &&
         number_of_vehicles != (*localization_frame.get()).size()) {
 
-      number_of_vehicles = static_cast<uint>((*localization_frame.get()).size());
+      number_of_vehicles = static_cast<uint64_t>((*localization_frame.get()).size());
       // Allocating output frames.
       planner_frame_a = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);
@@ -168,12 +156,10 @@ namespace traffic_manager {
 
   void TrafficLightStage::DataSender() {
 
-    const DataPacket<std::shared_ptr<TrafficLightToPlannerFrame>> packet{
-        planner_messenger_state,
-        frame_selector ? planner_frame_a : planner_frame_b
-      };
+    localization_messenger->Pop();
+
+    planner_messenger->Push(frame_selector ? planner_frame_a : planner_frame_b);
     frame_selector = !frame_selector;
-    planner_messenger_state = planner_messenger->SendData(packet);
   }
 
   void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor) const {

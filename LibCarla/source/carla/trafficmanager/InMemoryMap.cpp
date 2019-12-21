@@ -11,24 +11,21 @@ namespace traffic_manager {
 
 namespace MapConstants {
 
-  // Very important that this is less than 10^-4.
-  static const float ZERO_LENGTH = 0.0001f;
   static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-  static const uint64_t LANE_CHANGE_LOOK_AHEAD = 5u;
-  // Cosine of the angle.
-  static const float LANE_CHANGE_ANGULAR_THRESHOLD = 0.5f;
   static const float GRID_SIZE = 4.0f;
-
+  static const float PED_GRID_SIZE = 10.0f;
+  static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 } // namespace MapConstants
 
+  namespace cg = carla::geom;
   using namespace MapConstants;
 
-  InMemoryMap::InMemoryMap(TopologyList topology) {
-    _topology = topology;
+  InMemoryMap::InMemoryMap(RawNodeList _raw_dense_topology) {
+    raw_dense_topology = _raw_dense_topology;
   }
   InMemoryMap::~InMemoryMap() {}
 
-  void InMemoryMap::SetUp(float sampling_resolution) {
+  void InMemoryMap::SetUp() {
 
     NodeList entry_node_list;
     NodeList exit_node_list;
@@ -39,98 +36,103 @@ namespace MapConstants {
         };
     auto square = [](float input) {return std::pow(input, 2);};
 
-    // Creating dense topology.
-    for (auto &pair : _topology) {
+    // Consuming the raw dense topology from cc::Map into SimpleWaypoints.
+    std::map<std::pair<crd::RoadId, crd::LaneId>, std::vector<SimpleWaypointPtr>> segment_map;
+    for (auto& waypoint_ptr: raw_dense_topology) {
+      auto road_id = waypoint_ptr->GetRoadId();
+      auto lane_id = waypoint_ptr->GetLaneId();
+      if (segment_map.find({road_id, lane_id}) != segment_map.end()) {
+        segment_map.at({road_id, lane_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      } else {
+        segment_map.insert({{road_id, lane_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
+      }
+    }
 
-      // Looping through every topology segment.
-      const WaypointPtr begin_waypoint = pair.first;
-      const WaypointPtr end_waypoint = pair.second;
-      const cg::Location begin_location = begin_waypoint->GetTransform().location;
-      const cg::Location end_location = end_waypoint->GetTransform().location;
+    auto compare_s = [] (const SimpleWaypointPtr& swp1, const SimpleWaypointPtr& swp2) {
+      return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
+    };
 
-      if (distance_squared(begin_location, end_location) > square(ZERO_LENGTH)) {
+    GeoGridId geodesic_grid_id_counter = -1;
+    for (auto& segment: segment_map) {
 
-        // Adding entry waypoint.
-        WaypointPtr current_waypoint = begin_waypoint;
-        dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
+      // Generating geodesic grid ids.
+      ++geodesic_grid_id_counter;
 
-        entry_node_list.push_back(dense_topology.back());
+      // Ordering waypoints to be consecutive.
+      auto& segment_waypoints = segment.second;
+      std::sort(segment_waypoints.begin(), segment_waypoints.end(), compare_s);
 
-        // Populating waypoints from begin_waypoint to end_waypoint.
-        while (distance_squared(current_waypoint->GetTransform().location,
-            end_location) > square(sampling_resolution)) {
+      if (segment_waypoints.front()->DistanceSquared(segment_waypoints.back()) > square(0.1f)) {
 
-          current_waypoint = current_waypoint->GetNext(sampling_resolution)[0];
-          SimpleWaypointPtr previous_wp = dense_topology.back();
-          dense_topology.push_back(std::make_shared<SimpleWaypoint>(current_waypoint));
+        SimpleWaypointPtr first_point = segment_waypoints.at(0);
+        SimpleWaypointPtr second_point = segment_waypoints.at(1);
+        cg::Vector3D first_to_second = second_point->GetLocation() - first_point->GetLocation();
+        first_to_second = first_to_second.MakeUnitVector();
+        cg::Vector3D first_heading = first_point->GetForwardVector();
 
-          previous_wp->SetNextWaypoint({dense_topology.back()});
+        if (cg::Math::Dot(first_heading, first_to_second) < 0.0f) {
+          std::reverse(segment_waypoints.begin(), segment_waypoints.end());
         }
 
-        // Adding exit waypoint.
-        SimpleWaypointPtr previous_wp = dense_topology.back();
-        dense_topology.push_back(std::make_shared<SimpleWaypoint>(end_waypoint));
+        // Registering segment end points.
+        entry_node_list.push_back(segment_waypoints.front());
+        exit_node_list.push_back(segment_waypoints.back());
 
-        previous_wp->SetNextWaypoint({dense_topology.back()});
-        exit_node_list.push_back(dense_topology.back());
+        // Placing intra-segment connections.
+        cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
+        for (uint64_t i=0; i< segment_waypoints.size() -1; ++i) {
+
+          // Assigning grid id.
+          if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
+              square(MAX_GEODESIC_GRID_LENGTH)) {
+            ++geodesic_grid_id_counter;
+            grid_edge_location = segment_waypoints.at(i)->GetLocation();
+          }
+          segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
+
+          segment_waypoints.at(i)->SetNextWaypoint({segment_waypoints.at(i+1)});
+          segment_waypoints.at(i+1)->SetPreviousWaypoint({segment_waypoints.at(i)});
+        }
+        segment_waypoints.back()->SetGeodesicGridId(geodesic_grid_id_counter);
+
+        // Adding to processed dense topology.
+        for (auto swp: segment_waypoints) {
+          dense_topology.push_back(swp);
+        }
+      }
+    }
+
+    // Localizing waypoints into grids.
+    for (auto &simple_waypoint: dense_topology) {
+      if (simple_waypoint != nullptr) {
+        const cg::Location loc = simple_waypoint->GetLocation();
+        const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
+        if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
+          waypoint_grid.insert({grid_key, {simple_waypoint}});
+        } else {
+          waypoint_grid.at(grid_key).insert(simple_waypoint);
+        }
+        const std::string ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
+        if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
+          ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
+        } else {
+          ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
+        }
       }
     }
 
     // Linking segments.
     uint64_t i = 0u, j = 0u;
     for (SimpleWaypointPtr end_point : exit_node_list) {
-      for (SimpleWaypointPtr begin_point : entry_node_list) {
-        if (end_point->DistanceSquared(begin_point) < square(ZERO_LENGTH) && i != j) {
+      j = 0u;
+      for (SimpleWaypointPtr begin_point: entry_node_list) {
+        if ((end_point->DistanceSquared(begin_point) < square(2.0f)) && (i != j)) {
           end_point->SetNextWaypoint({begin_point});
+          begin_point->SetPreviousWaypoint({end_point});
         }
-        ++j;
+      ++j;
       }
       ++i;
-    }
-
-    // Tying up loose ends.
-    // Loop through all exit nodes of topology segments,
-    // connect any dangling endpoints to the nearest entry point
-    // of another topology segment.
-    i = 0u;
-    for (auto &end_point : exit_node_list) {
-      if (end_point->GetNextWaypoint().size() == 0) {
-        j = 0u;
-        float min_distance = INFINITE_DISTANCE;
-        SimpleWaypointPtr closest_connection;
-        for (auto &begin_point : entry_node_list) {
-          float new_distance = end_point->DistanceSquared(begin_point);
-          if (new_distance < min_distance && i != j) {
-            min_distance = new_distance;
-            closest_connection = begin_point;
-          }
-          ++j;
-        }
-        const cg::Vector3D end_point_vector = end_point->GetForwardVector();
-        cg::Vector3D relative_vector = closest_connection->GetLocation() - end_point->GetLocation();
-        relative_vector = relative_vector.MakeUnitVector();
-        const float relative_dot = cg::Math::Dot(end_point_vector, relative_vector);
-        if (relative_dot < LANE_CHANGE_ANGULAR_THRESHOLD) {
-          uint64_t count = LANE_CHANGE_LOOK_AHEAD;
-          while (count > 0u) {
-            closest_connection = closest_connection->GetNextWaypoint()[0];
-            --count;
-          }
-        }
-        end_point->SetNextWaypoint({closest_connection});
-      }
-      ++i;
-    }
-
-    // Localizing waypoints into grids.
-    for (auto &simple_waypoint: dense_topology) {
-      const cg::Location loc = simple_waypoint->GetLocation();
-      const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y));
-      if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
-        waypoint_grid.insert({grid_key, {simple_waypoint}});
-      } else {
-        waypoint_grid.at(grid_key).insert(simple_waypoint);
-      }
     }
 
     // Linking lane change connections.
@@ -139,10 +141,26 @@ namespace MapConstants {
         FindAndLinkLaneChange(simple_waypoint);
       }
     }
+
+    // Linking any unconnected segments.
+    for (auto& swp: dense_topology) {
+      if (swp->GetNextWaypoint().size() == 0) {
+        SimpleWaypointPtr nearest_sample = GetWaypointInVicinity(swp->GetLocation()
+            + cg::Location(swp->GetForwardVector() * 0.2f));
+        swp->SetNextWaypoint({nearest_sample});
+        nearest_sample->SetPreviousWaypoint({swp});
+      }
+    }
+
+    MakeGeodesiGridCenters();
   }
 
-  std::pair<int, int> InMemoryMap::MakeGridId (float x, float y) {
-    return {static_cast<int>(std::floor(x/GRID_SIZE)), static_cast<int>(std::floor(y/GRID_SIZE))};
+  std::pair<int, int> InMemoryMap::MakeGridId (float x, float y, bool vehicle_or_pedestrian) {
+    if (vehicle_or_pedestrian) {
+      return {static_cast<int>(std::floor(x/GRID_SIZE)), static_cast<int>(std::floor(y/GRID_SIZE))};
+    } else {
+      return {static_cast<int>(std::floor(x/PED_GRID_SIZE)), static_cast<int>(std::floor(y/PED_GRID_SIZE))};
+    }
   }
 
   std::string InMemoryMap::MakeGridKey (std::pair<int , int> grid_key) {
@@ -151,7 +169,7 @@ namespace MapConstants {
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {
 
-    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y);
+    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, true);
     SimpleWaypointPtr closest_waypoint = nullptr;
     float closest_distance = INFINITE_DISTANCE;
 
@@ -184,6 +202,38 @@ namespace MapConstants {
         std::abs(closest_waypoint->GetLocation().z - location.z) > 1.0) { // Account for constant.
 
       closest_waypoint = nullptr;
+    }
+
+    return closest_waypoint;
+  }
+
+  SimpleWaypointPtr InMemoryMap::GetPedWaypoint(cg::Location location) {
+
+    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, false);
+    SimpleWaypointPtr closest_waypoint = nullptr;
+    float closest_distance = INFINITE_DISTANCE;
+
+    // Search all surrounding grids for closest waypoint.
+    for (int i = -1; i <= 1; ++i) {
+      for (int j = -1; j <= 1; ++j) {
+
+        const std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
+        if (ped_waypoint_grid.find(grid_key) != ped_waypoint_grid.end()) {
+
+          const auto& waypoint_set = ped_waypoint_grid.at(grid_key);
+          if (closest_waypoint == nullptr) {
+            closest_waypoint = *waypoint_set.begin();
+          }
+
+          for (auto &simple_waypoint: waypoint_set) {
+
+            if (simple_waypoint->DistanceSquared(location) < std::pow(closest_distance, 2)) {
+              closest_waypoint = simple_waypoint;
+              closest_distance = simple_waypoint->DistanceSquared(location);
+            }
+          }
+        }
+      }
     }
 
     return closest_waypoint;
@@ -253,6 +303,28 @@ namespace MapConstants {
           + std::to_string(loc.y) + " "
           + std::to_string(loc.z));
     }
+  }
+
+  void InMemoryMap::MakeGeodesiGridCenters() {
+    for (auto& swp: dense_topology) {
+      GeoGridId ggid = swp->CheckJunction()? swp->GetJunctionId(): swp->GetGeodesicGridId();
+      if (geodesic_grid_center.find(ggid) == geodesic_grid_center.end()) {
+        geodesic_grid_center.insert({ggid, swp->GetLocation()});
+      } else {
+        cg::Location& grid_loc = geodesic_grid_center.at(ggid);
+        grid_loc = (grid_loc + swp->GetLocation())/2;
+      }
+    }
+  }
+
+  cg::Location InMemoryMap::GetGeodesicGridCenter(GeoGridId ggid) {
+    cg::Location grid_center;
+    if (geodesic_grid_center.find(ggid) != geodesic_grid_center.end()) {
+      grid_center = geodesic_grid_center.at(ggid);
+    } else {
+      grid_center = cg::Location();
+    }
+    return grid_center;
   }
 
 } // namespace traffic_manager
