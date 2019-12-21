@@ -18,22 +18,29 @@ namespace traffic_manager {
     inter_update_duration = chr::duration<float>(0);
   }
 
-  void PerformanceDiagnostics::RegisterUpdate() {
+  void PerformanceDiagnostics::RegisterUpdate(bool begin_or_end) {
 
     const auto current_time = chr::system_clock::now();
 
-    const chr::duration<float> throughput_count_duration = current_time - throughput_clock;
-    if (throughput_count_duration.count() > 1.0f) {
+    if (begin_or_end) {
+      const chr::duration<float> throughput_count_duration = current_time - throughput_clock;
+      if (throughput_count_duration.count() > 1.0f) {
 
-      throughput_clock = current_time;
-      throughput_counter = 0u;
+        //std::cout << "Stage: " + stage_name + ", throughput: " << throughput_counter
+        //          << ", avg. cycle duration: " << 1000* inter_update_duration.count()
+        //          << " ms" << std::endl;
+
+        throughput_clock = current_time;
+        throughput_counter = 0u;
+      } else {
+
+        ++throughput_counter;
+      }
+
+      inter_update_clock = current_time;
     } else {
-
-      ++throughput_counter;
-
       const chr::duration<float> last_update_duration = current_time - inter_update_clock;
       inter_update_duration = (inter_update_duration + last_update_duration) / 2.0f;
-      inter_update_clock = current_time;
     }
   }
 

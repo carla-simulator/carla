@@ -31,6 +31,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -49,14 +50,9 @@ namespace traffic_manager {
 
   private:
 
-    /// Variables to remember messenger states.
-    int planner_messenger_state;
-    int collision_messenger_state;
-    int traffic_light_messenger_state;
     /// Section keys to switch between the output data frames.
     bool planner_frame_selector;
     bool collision_frame_selector;
-    bool collision_frame_ready;
     bool traffic_light_frame_selector;
     /// Output data frames to be shared with the motion planner stage.
     std::shared_ptr<LocalizationToPlannerFrame> planner_frame_a;
@@ -86,11 +82,13 @@ namespace traffic_manager {
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
+    /// Carla world object;
+    cc::World& world;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
     /// Map connecting actor ids to indices of data arrays.
-    std::unordered_map<ActorId, uint> vehicle_id_to_index;
+    std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
     /// Number of vehicles currently registered with the traffic manager.
     uint64_t number_of_vehicles;
     /// Used to only calculate the extended buffer once at junctions
@@ -101,6 +99,13 @@ namespace traffic_manager {
     TrackTraffic track_traffic;
     /// Map of all vehicles' idle time
     std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
+    /// Counter to track unregistered actors' scan interval.
+    uint64_t unregistered_scan_duration = 0;
+    /// A structure used to keep track of actors spawned outside of traffic
+    /// manager.
+    std::unordered_map<ActorId, Actor> unregistered_actors;
+    /// Code snippet execution time profiler.
+    SnippetProfiler snippet_profiler;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
@@ -110,6 +115,8 @@ namespace traffic_manager {
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
+    /// Method to scan for unregistered actors and update their grid positioning.
+    void ScanUnregisteredVehicles();
 
   public:
 
@@ -121,7 +128,8 @@ namespace traffic_manager {
         AtomicActorSet &registered_actors,
         InMemoryMap &local_map,
         Parameters &parameters,
-        cc::DebugHelper &debug_helper);
+        cc::DebugHelper &debug_helper,
+        cc::World& world);
 
     ~LocalizationStage();
 

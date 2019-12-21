@@ -16,11 +16,13 @@ Parameters::Parameters() {}
 Parameters::~Parameters() {}
 
 void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-  percentage_difference_from_speed_limit.AddEntry({actor->GetId(), percentage});
+  float new_percentage = std::min(100.0f,percentage);
+  percentage_difference_from_speed_limit.AddEntry({actor->GetId(), new_percentage});
 }
 
 void Parameters::SetGlobalPercentageSpeedDifference(const float percentage) {
-  global_percentage_difference_from_limit = percentage;
+  float new_percentage = std::min(100.0f,percentage);
+  global_percentage_difference_from_limit = new_percentage;
 }
 
 void Parameters::SetCollisionDetection(
@@ -69,10 +71,10 @@ void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 }
 
 void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-  if (distance > 0.0f) {
-    const auto entry = std::make_pair(actor->GetId(), distance);
-    distance_to_leading_vehicle.AddEntry(entry);
-  }
+  
+  float new_distance = std::max(0.0f,distance);
+  const auto entry = std::make_pair(actor->GetId(), new_distance);
+  distance_to_leading_vehicle.AddEntry(entry);
 }
 
 float Parameters::GetVehicleTargetVelocity(const ActorPtr &actor) {
@@ -142,17 +144,17 @@ float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
-  if (perc > 0.0f) {
-    const auto entry = std::make_pair(actor->GetId(), perc);
-    perc_run_traffic_light.AddEntry(entry);
-  }
+  
+  float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
+  const auto entry = std::make_pair(actor->GetId(), new_perc);
+  perc_run_traffic_light.AddEntry(entry);
 }
 
 void Parameters::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-  if (perc > 0.0f) {
-    const auto entry = std::make_pair(actor->GetId(), perc);
-    perc_ignore_actors.AddEntry(entry);
-  }
+
+  float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
+  const auto entry = std::make_pair(actor->GetId(), new_perc);
+  perc_ignore_actors.AddEntry(entry);
 }
 
 float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {

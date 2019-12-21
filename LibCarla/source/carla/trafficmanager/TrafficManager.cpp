@@ -28,11 +28,9 @@ namespace traffic_manager {
 
     using WorldMap = carla::SharedPtr<cc::Map>;
     const WorldMap world_map = world.GetMap();
-    const auto dao = CarlaDataAccessLayer(world_map);
-    using Topology = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
-    const Topology topology = dao.GetTopology();
-    local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-    local_map->SetUp(0.1f);
+    const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
+    local_map = std::make_shared<traffic_manager::InMemoryMap>(raw_dense_topology);
+    local_map->SetUp();
 
     parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
@@ -48,12 +46,13 @@ namespace traffic_manager {
         localization_planner_messenger, localization_collision_messenger,
         localization_traffic_light_messenger,
         registered_actors, *local_map.get(),
-        parameters, debug_helper);
+        parameters, debug_helper,
+        world);
 
     collision_stage = std::make_unique<CollisionStage>(
         "Collision stage",
         localization_collision_messenger, collision_planner_messenger,
-        world, parameters, debug_helper);
+        parameters, debug_helper);
 
     traffic_light_stage = std::make_unique<TrafficLightStage>(
         "Traffic light stage",
@@ -81,6 +80,7 @@ namespace traffic_manager {
   }
 
   TrafficManager::~TrafficManager() {
+
     Stop();
   }
 
@@ -90,10 +90,10 @@ namespace traffic_manager {
 
     if (singleton_pointer == nullptr) {
 
-      const std::vector<float> longitudinal_param = {2.0f, 0.15f, 0.01f};
-      const std::vector<float> longitudinal_highway_param = {4.0f, 0.15f, 0.01f};
-      const std::vector<float> lateral_param = {10.0f, 0.0f, 0.1f};
-      const std::vector<float> lateral_highway_param = {6.0f, 0.0f, 0.3f};
+      const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
+      const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
+      const std::vector<float> lateral_param = {10.0f, 0.02f, 1.0f};
+      const std::vector<float> lateral_highway_param = {9.0f, 0.02f, 1.0f};
       const float perc_difference_from_limit = 30.0f;
 
       TrafficManager* tm_ptr = new TrafficManager(
@@ -127,10 +127,6 @@ namespace traffic_manager {
     registered_actors.Remove(actor_list);
   }
 
-  void TrafficManager::DestroyVehicle(const ActorPtr &actor) {
-    registered_actors.Destroy(actor);
-  }
-
   void TrafficManager::Start() {
 
     localization_collision_messenger->Start();
@@ -161,6 +157,7 @@ namespace traffic_manager {
     traffic_light_stage->Stop();
     planner_stage->Stop();
     control_stage->Stop();
+
   }
 
   void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {

@@ -7,8 +7,11 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/World.h"
 #include "carla/geom/Location.h"
+#include "carla/road/RoadTypes.h"
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
@@ -23,6 +26,7 @@ namespace traffic_manager {
   using ActorIdSet = std::unordered_set<ActorId>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using Buffer = std::deque<SimpleWaypointPtr>;
+  using GeoGridId = carla::road::JuncId;
 
   class TrackTraffic{
 
@@ -30,10 +34,12 @@ namespace traffic_manager {
     /// Structure to keep track of overlapping waypoints between vehicles.
     using WaypointOverlap = std::unordered_map<uint64_t, ActorIdSet>;
     WaypointOverlap waypoint_overlap_tracker;
-    /// Structure to keep track of vehicles with overlapping paths.
-    std::unordered_map<ActorId, ActorIdSet> overlapping_vehicles;
     /// Stored vehicle id set record.
     ActorIdSet actor_id_set_record;
+    /// Geodesic grids occupied by actors's paths.
+    std::unordered_map<ActorId, std::unordered_set<GeoGridId>> actor_to_grids;
+    /// Actors currently passing through grids.
+    std::unordered_map<GeoGridId, ActorIdSet> grid_to_actors;
 
   public:
     TrackTraffic();
@@ -43,11 +49,16 @@ namespace traffic_manager {
     void RemovePassingVehicle(uint64_t waypoint_id, ActorId actor_id);
     ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
 
-    /// Methods to update, remove and retrieve vehicles with overlapping vehicles.
-    void UpdateOverlappingVehicle(ActorId actor_id, ActorId other_id);
-    void RemoveOverlappingVehicle(ActorId actor_id, ActorId other_id);
-    ActorIdSet GetOverlappingVehicles(ActorId actor_id);
+    void UpdateGridPosition(const ActorId actor_id, const Buffer& buffer);
+    void UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint);
 
+    ActorIdSet GetOverlappingVehicles(ActorId actor_id);
+    /// Method to delete actor data from tracking.
+    void DeleteActor(ActorId actor_id);
+
+    std::unordered_set<GeoGridId> GetGridIds(ActorId actor_id);
+
+    std::unordered_map<GeoGridId, ActorIdSet> GetGridActors();
   };
 
   /// Returns the cross product (z component value) between the vehicle's

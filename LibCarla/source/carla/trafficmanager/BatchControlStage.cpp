@@ -17,8 +17,6 @@ namespace traffic_manager {
       messenger(messenger),
       carla_client(carla_client) {
 
-    // Initializing messenger state.
-    messenger_state = messenger->GetState();
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
   }
@@ -28,7 +26,7 @@ namespace traffic_manager {
   void BatchControlStage::Action() {
 
     // Looping over registered actors.
-    for (uint64_t i = 0u; i < number_of_vehicles; ++i) {
+    for (uint64_t i = 0u; i < number_of_vehicles && data_frame != nullptr; ++i) {
 
       cr::VehicleControl vehicle_control;
 
@@ -44,15 +42,13 @@ namespace traffic_manager {
 
   void BatchControlStage::DataReceiver() {
 
-    auto packet = messenger->ReceiveData(messenger_state);
-    data_frame = packet.data;
-    messenger_state = packet.id;
+    data_frame = messenger->Peek();
 
     // Allocating new containers for the changed number of registered vehicles.
     if (data_frame != nullptr &&
         number_of_vehicles != (*data_frame.get()).size()) {
 
-      number_of_vehicles = static_cast<uint>((*data_frame.get()).size());
+      number_of_vehicles = static_cast<uint64_t>((*data_frame.get()).size());
       // Allocating array for command batching.
       commands = std::make_shared<std::vector<cr::Command>>(number_of_vehicles);
     }
@@ -61,12 +57,16 @@ namespace traffic_manager {
 
   void BatchControlStage::DataSender() {
 
+    messenger->Pop();
+
     if (commands != nullptr) {
       carla_client.ApplyBatch(*commands.get());
+
     }
 
     // Limiting updates to 100 frames per second.
     std::this_thread::sleep_for(10ms);
+
   }
 
 } // namespace traffic_manager

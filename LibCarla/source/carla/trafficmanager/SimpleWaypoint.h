@@ -14,6 +14,7 @@
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
+#include "carla/road/RoadTypes.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -21,6 +22,7 @@ namespace traffic_manager {
   namespace cc = carla::client;
   namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
+  using GeoGridId = carla::road::JuncId;
 
   /// This is a simple wrapper class on Carla's waypoint object.
   /// The class is used to represent discrete samples of the world map.
@@ -34,10 +36,14 @@ namespace traffic_manager {
     WaypointPtr waypoint;
     /// List of pointers to next connecting waypoints.
     std::vector<SimpleWaypointPtr> next_waypoints;
+    /// List of pointers to previous connecting waypoints.
+    std::vector<SimpleWaypointPtr> previous_waypoints;
     /// Pointer to left lane change waypoint.
     SimpleWaypointPtr next_left_waypoint;
     /// Pointer to right lane change waypoint.
     SimpleWaypointPtr next_right_waypoint;
+    /// Integer placing the waypoint into a geodesic grid.
+    GeoGridId geodesic_grid_id = 0;
 
   public:
 
@@ -53,6 +59,9 @@ namespace traffic_manager {
     /// Returns the list of next waypoints.
     std::vector<SimpleWaypointPtr> GetNextWaypoint() const;
 
+    /// Returns the list of previous waypoints.
+    std::vector<SimpleWaypointPtr> GetPreviousWaypoint() const;
+
     /// Returns the vector along the waypoint's direction.
     cg::Vector3D GetForwardVector() const;
 
@@ -61,6 +70,9 @@ namespace traffic_manager {
 
     /// This method is used to set the next waypoints.
     uint64_t SetNextWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
+
+    /// This method is used to set the previous waypoints.
+    uint64_t SetPreviousWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
     /// This method is used to set the closest left waypoint for a lane change.
     void SetLeftWaypoint(SimpleWaypointPtr waypoint);
@@ -73,6 +85,13 @@ namespace traffic_manager {
 
     /// This method is used to get the closest right waypoint for a lane change.
     SimpleWaypointPtr GetRightWaypoint();
+
+    /// Accessor methods for geodesic grid id.
+    void SetGeodesicGridId(GeoGridId _geodesic_grid_id);
+    GeoGridId GetGeodesicGridId();
+
+    /// Metod to retreive junction id of the waypoint.
+    GeoGridId GetJunctionId() const;
 
     /// Calculates the distance from the object's waypoint to the passed
     /// location.
