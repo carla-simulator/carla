@@ -143,6 +143,16 @@ namespace MapConstants {
       }
     }
 
+    // Linking any unconnected segments.
+    for (auto& swp: dense_topology) {
+      if (swp->GetNextWaypoint().size() == 0) {
+        SimpleWaypointPtr nearest_sample = GetWaypointInVicinity(swp->GetLocation()
+            + cg::Location(swp->GetForwardVector() * 0.2f));
+        swp->SetNextWaypoint({nearest_sample});
+        nearest_sample->SetPreviousWaypoint({swp});
+      }
+    }
+
     MakeGeodesiGridCenters();
   }
 

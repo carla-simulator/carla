@@ -81,21 +81,20 @@ namespace CollisionStageConstants {
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
+            // Temporary fix to (0,0,0) bug
+            if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0){
+              if (actor_id != ego_actor_id &&
+                  (cg::Math::DistanceSquared(ego_location, other_location)
+                  < std::pow(MAX_COLLISION_RADIUS, 2)) &&
+                  (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-            if (actor_id != ego_actor_id &&
-                (cg::Math::DistanceSquared(ego_location, other_location)
-                < std::pow(MAX_COLLISION_RADIUS, 2)) &&
-                (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
-
-              if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                  NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
-
-                collision_hazard = true;
+                if (parameters.GetCollisionDetection(ego_actor, actor) &&
+                    NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
+                    collision_hazard = true;
+                  }
+                }
               }
-            }
-
           } catch (const std::exception &e) {
-            carla::log_warning("Encountered problem while determining collision \n");
             carla::log_info("Actor might not be alive \n");
           }
 
@@ -346,16 +345,16 @@ namespace CollisionStageConstants {
     const cg::Vector3D extent = bbox.extent;
     const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
 
-    const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
-    const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
+    const cg::Vector3D x_boundary_vector = heading_vector * (extent.x + forward_extension);
+    const cg::Vector3D y_boundary_vector = perpendicular_vector * (extent.y + forward_extension);
 
     // Four corners of the vehicle in top view clockwise order (left-handed
     // system).
     LocationList bbox_boundary = {
-      location + cg::Location(heading_vector * (extent.x + forward_extension) - y_boundary_vector),
+      location + cg::Location(x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
-      location + cg::Location(heading_vector * (extent.x + forward_extension) + y_boundary_vector),
+      location + cg::Location(x_boundary_vector + y_boundary_vector),
     };
 
     return bbox_boundary;
