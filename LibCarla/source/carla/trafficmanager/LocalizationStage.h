@@ -106,8 +106,6 @@ namespace traffic_manager {
     /// A structure used to keep track of actors spawned outside of traffic
     /// manager.
     std::unordered_map<ActorId, Actor> unregistered_actors;
-    /// Structure to keep track of the closest waypoint for unregistered actors.
-    std::unordered_map<ActorId, SimpleWaypointPtr> unregistered_waypoints;
     /// Code snippet execution time profiler.
     SnippetProfiler snippet_profiler;
 
@@ -124,7 +122,6 @@ namespace traffic_manager {
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
-    
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
 

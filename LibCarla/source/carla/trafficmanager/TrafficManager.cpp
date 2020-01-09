@@ -28,11 +28,9 @@ namespace traffic_manager {
 
     using WorldMap = carla::SharedPtr<cc::Map>;
     const WorldMap world_map = world.GetMap();
-    const auto dao = CarlaDataAccessLayer(world_map);
-    using Topology = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
-    const Topology topology = dao.GetTopology();
-    local_map = std::make_shared<traffic_manager::InMemoryMap>(topology);
-    local_map->SetUp(0.1f);
+    const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
+    local_map = std::make_shared<traffic_manager::InMemoryMap>(raw_dense_topology);
+    local_map->SetUp();
 
     parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
@@ -129,10 +127,6 @@ namespace traffic_manager {
     registered_actors.Remove(actor_list);
   }
 
-  //void TrafficManager::DestroyVehicle(const ActorPtr &actor) {
-  //  registered_actors.Destroy(actor);
-  //}
-
   void TrafficManager::Start() {
 
     localization_collision_messenger->Start();
@@ -163,6 +157,7 @@ namespace traffic_manager {
     traffic_light_stage->Stop();
     planner_stage->Stop();
     control_stage->Stop();
+
   }
 
   void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {

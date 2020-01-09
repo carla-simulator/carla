@@ -11,14 +11,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 3.5f;
+  static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
-  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 3.0f;
+  static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50 / 3.6f;
-  static const float MINIMUM_LANE_CHANGE_DISTANCE = 25.0f;
-  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.8f;
+  static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
+  static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
   static const float JUNCTION_IGNORE_THRESHOLD = 35;
   static const float UNJUNCTION_IGNORE_THRESHOLD = 65;  // Used to ignore roundabouts (Just a quick "patch")
@@ -153,9 +153,20 @@ namespace LocalizationConstants {
         if (next_waypoints.size() > 1) {
           selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
-
-        PushWaypoint(waypoint_buffer, actor_id, next_waypoints.at(selection_index));
+        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
+        if (next_wp == nullptr) {
+          for (auto& wp: next_waypoints) {
+            if (wp != nullptr) {
+              next_wp = wp;
+              break;
+            }
+          }
+        }
+        PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
+
+      // Updating geodesic grid position for actor.
+      track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
 
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
@@ -246,6 +257,8 @@ namespace LocalizationConstants {
         collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
         collision_message.safe_point_after_junction = final_safe_points[actor_id];
       }
+      collision_message.closest_waypoint = waypoint_buffer.front();
+      collision_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
@@ -314,8 +327,6 @@ namespace LocalizationConstants {
     const uint64_t waypoint_id = waypoint->GetId();
     buffer.push_back(waypoint);
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
-
-    track_traffic.UpdateGridPosition(actor_id, waypoint);
   }
 
   void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
@@ -325,11 +336,6 @@ namespace LocalizationConstants {
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
     buffer.pop_front();
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
-
-    if (!buffer.empty()) {
-      remaining_waypoint = buffer.front();
-    }
-    track_traffic.RemoveGridPosition(actor_id, removed_waypoint, remaining_waypoint);
   }
 
   void LocalizationStage::ScanUnregisteredVehicles() {
@@ -372,15 +378,7 @@ namespace LocalizationConstants {
         if (nearest_waypoint == nullptr) {
           nearest_waypoint = local_map.GetWaypoint(actor_location);
         }
-        SimpleWaypointPtr previous_waypoint = nullptr;
-        if (unregistered_waypoints.find(actor_info.first) != unregistered_waypoints.end()) {
-          previous_waypoint = unregistered_waypoints.at(actor_info.first);
-          unregistered_waypoints.at(actor_info.first) = nearest_waypoint;
-        } else {
-          unregistered_waypoints.insert({actor_info.first, nearest_waypoint});
-        }
-        track_traffic.UpdateGridPosition(actor_info.first, nearest_waypoint);
-        track_traffic.RemoveGridPosition(actor_info.first, previous_waypoint, nearest_waypoint);
+        track_traffic.UpdateUnregisteredGridPosition(actor_info.first, nearest_waypoint);
       } else {
         track_traffic.DeleteActor(actor_info.first);
         actor_ids_to_erase.push_back(actor_info.first);
