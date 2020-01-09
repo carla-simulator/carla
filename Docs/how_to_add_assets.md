@@ -6,7 +6,7 @@ Adding a vehicle
 Follow [Art Guide][artlink] for creating the Skeletal Mesh and Physics Asset. And
 [Vehicles User Guide][userguide] for the rest.
 
-[artlink]: https://docs.unrealengine.com/latest/INT/Engine/Physics/Vehicles/VehcileContentCreation/index.html
+[artlink]: https://docs.unrealengine.com/en-US/Engine/Physics/Vehicles/VehicleContentCreation/index.html
 [userguide]: https://docs.unrealengine.com/latest/INT/Engine/Physics/Vehicles/VehicleUserGuide/
 
 !!! important
