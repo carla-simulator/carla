@@ -71,7 +71,7 @@ namespace CollisionStageConstants {
 
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
-      // Check every actor in the vicinity if it poses a collision hazard.
+        // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
           const Actor actor = j->second;
           const ActorId actor_id = j->first;
@@ -372,7 +372,7 @@ namespace CollisionStageConstants {
 
     return bbox_boundary;
   }
-  
+
   bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &actor){
     
     bool safe_junction = true;

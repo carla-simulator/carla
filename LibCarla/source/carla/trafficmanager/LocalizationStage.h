@@ -93,10 +93,8 @@ namespace traffic_manager {
     uint64_t number_of_vehicles;
     /// Used to only calculate the extended buffer once at junctions
     std::map<carla::ActorId, bool> approached;
-    /// Point used to know if the junction has free space after its end
+    /// Point used to know if the junction has free space after its end, mapped to their respective actor id
     std::map<carla::ActorId, SimpleWaypointPtr> final_safe_points;
-    /// Final Waypoint of the bounding box at intersections, amps to their respective IDs
-    cg::Location final_location;
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
     /// Map of all vehicles' idle time
@@ -115,8 +113,8 @@ namespace traffic_manager {
     /// Method to determine lane change and obtain target lane waypoint.
     SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
 
-    // When near an intersection, extends the buffer throughout all the intersection
-    // Returns a SimpleWaypointPtr, which is the end of the collision bounding box
+    // When near an intersection, extends the buffer throughout all the
+    // intersection to see if there is space after it
     SimpleWaypointPtr GetSafeLocationAfterJunction(const Actor &actor, Buffer &waypoint_buffer);
 
     /// Methods to modify waypoint buffer and track traffic.

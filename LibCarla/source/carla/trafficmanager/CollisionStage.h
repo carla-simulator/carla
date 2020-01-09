@@ -105,7 +105,6 @@ namespace traffic_manager {
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary);
 
-
   public:
 
     CollisionStage(
