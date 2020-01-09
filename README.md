@@ -9,7 +9,7 @@ CARLA Simulator
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://forum.carla.org)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
-[![dev](Docs/img/btn/dev.png)]https://groups.google.com/a/osvf.org/forum/#!forum/carla-developers)
+[![dev](Docs/img/btn/dev.png)](https://groups.google.com/a/osvf.org/forum/#!forum/carla-developers)
 
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has
