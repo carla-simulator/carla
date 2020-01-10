@@ -221,18 +221,34 @@ namespace LocalizationConstants {
         }
       }
 
-      if (!approaching_junction){
+      // Reset the variables when no longer approaching an intersection
+      if (!approaching_junction && approached[actor_id]){
         final_safe_points[actor_id] = nullptr;
         approached[actor_id] = false;
       }
 
-      if (approaching_junction){ 
+      // Only do once, when the intersection has just been seen.
+      if (approaching_junction && !approached[actor_id]){
+
         SimpleWaypointPtr final_point = nullptr;
-        final_point = GetSafeLocationAfterJunction(vehicle, waypoint_buffer); 
+        final_point = GetSafeLocationAfterJunction(vehicle, waypoint_buffer);
         if(final_point != nullptr){
           approached[actor_id] = true;
           final_safe_points[actor_id] = final_point;
+          approaching_junction = false;
         }
+      }
+
+      /*for(uint j = 0u; j < waypoint_buffer.size(); j++){
+        if (waypoint_buffer.at(j)->GetWaypoint()->IsJunction()){
+          debug_helper.DrawPoint(waypoint_buffer.at(j)->GetLocation(),0.1f,{0u,0u,255u,},0.1f);
+        } else {
+          debug_helper.DrawPoint(waypoint_buffer.at(j)->GetLocation(),0.1f,{0u,255u,255u,},0.1f);
+        }
+      }*/
+
+      if (approaching_junction){
+        debug_helper.DrawString(vehicle->GetLocation(),"Approaching",false,{255u,0u,0u},0.05f);
       }
 
       // Editing output frames.
@@ -318,7 +334,11 @@ namespace LocalizationConstants {
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
 
     for (uint64_t i = 0u; i < buffer.size() && i < 5; ++i) {
-      debug_helper.DrawPoint(buffer.at(i)->GetLocation(), 0.1f, {255u, 0u, 0u}, 0.2f);
+      if(buffer.at(i)->GetWaypoint()->IsJunction()){
+        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 0.05f);
+      } else {
+        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 0.05f);
+      }
     }
   }
 
@@ -471,7 +491,7 @@ namespace LocalizationConstants {
       need_to_change_lane = true;
     }
 
-    const float change_over_distance = std::max(2.0f*vehicle_velocity, 10.0f);
+    const float change_over_distance =  cg::Math::Clamp(1.5f*vehicle_velocity, 3.0f, 20.0f);
     bool possible_to_lane_change = false;
     SimpleWaypointPtr change_over_point = nullptr;
 
@@ -511,6 +531,12 @@ namespace LocalizationConstants {
              !change_over_point->CheckJunction()) {
         change_over_point = change_over_point->GetNextWaypoint()[0];
       }
+
+      // Reset this variable if needed
+      if (approached[actor_id]){
+        approached[actor_id] = false;
+      }
+
       return change_over_point;
     } else {
       return nullptr;
