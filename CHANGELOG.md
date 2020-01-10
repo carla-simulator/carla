@@ -1,3 +1,6 @@
+## latest
+  * Fixed Low/Epic quality settings transition
+
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
