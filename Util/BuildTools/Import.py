@@ -312,7 +312,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             os.makedirs(nav_folder_target)
 
         nav_path_source = os.path.join(folder, "%s.bin" % target_name)
-        if (os.path.exists(nav_path_source)):
+        if os.path.exists(nav_path_source):
             nav_path_target = os.path.join(nav_folder_target, "%s.bin" % target_name)
             print('Copying "' + nav_path_source + '" to "' + nav_path_target + '"')
             shutil.copy2(nav_path_source, nav_path_target)
