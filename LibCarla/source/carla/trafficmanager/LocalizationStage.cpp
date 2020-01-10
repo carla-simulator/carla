@@ -64,6 +64,19 @@ namespace LocalizationConstants {
       approached[actor_id] = false;
       final_safe_points[actor_id] = nullptr;
     }
+
+    auto waypointlist = local_map.GetDenseTopology();
+    /*for (uint j = 0u; j < waypointlist.size();j++){
+      if (j%5 == 0){  
+        SimpleWaypointPtr waypoint = waypointlist.at(j);
+        //auto waypoint: waypointlist){
+        if(waypoint->GetWaypoint()->IsJunction()){
+          debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 100.0f);
+        } else {
+          debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 100.0f);
+        }
+      }
+    }*/
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -239,13 +252,7 @@ namespace LocalizationConstants {
         }
       }
 
-      /*for(uint j = 0u; j < waypoint_buffer.size(); j++){
-        if (waypoint_buffer.at(j)->GetWaypoint()->IsJunction()){
-          debug_helper.DrawPoint(waypoint_buffer.at(j)->GetLocation(),0.1f,{0u,0u,255u,},0.1f);
-        } else {
-          debug_helper.DrawPoint(waypoint_buffer.at(j)->GetLocation(),0.1f,{0u,255u,255u,},0.1f);
-        }
-      }*/
+      DrawBuffer(waypoint_buffer);
 
       if (approaching_junction){
         debug_helper.DrawString(vehicle->GetLocation(),"Approaching",false,{255u,0u,0u},0.05f);
@@ -333,7 +340,7 @@ namespace LocalizationConstants {
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
 
-    for (uint64_t i = 0u; i < buffer.size() && i < 5; ++i) {
+    for (uint64_t i = 0u; i < buffer.size(); ++i) {
       if(buffer.at(i)->GetWaypoint()->IsJunction()){
         debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 0.05f);
       } else {
@@ -561,7 +568,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     uint final_index = 0;
     uint unjunction_counter = 0;
     // Safe space after the junction
-    float safe_distance = length;
+    float safe_distance = 1.5f*length;
     // Multiple junction detection. (Currrently deactivated)
     // bool extend_buffer = true;
 
@@ -603,6 +610,8 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     // 3) Search for final_point (again, if it is in the buffer)
     if (safe_index != 0){
       for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+
+        unjunction_counter++;
         if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
           final_point = waypoint_buffer.at(k);
           final_index = k;
@@ -615,6 +624,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     if(final_point == nullptr){
       while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
 
+        unjunction_counter++;
         // Record the last point as a safe one and safe it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint selection_index = 0u;
@@ -630,6 +640,8 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     }
     
     // 4) Ignore roundabouts
+    // Done by ignoring the whole intersection if two intersections are very close by
+    // Unintentionally ignores some at Town 07
     SimpleWaypointPtr roundabout_point = final_point->GetNextWaypoint().front();
 
     while (unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD){
@@ -641,8 +653,8 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     }
 
     // 5) Ignore small junctions 
-    if (junction_counter < JUNCTION_IGNORE_THRESHOLD ||
-        unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD){
+    if (junction_counter < JUNCTION_IGNORE_THRESHOLD /*||
+        unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD*/){
       final_point = nullptr;
     }
 
