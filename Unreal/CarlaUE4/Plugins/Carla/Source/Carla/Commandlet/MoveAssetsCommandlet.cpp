@@ -26,9 +26,12 @@ namespace SSTags {
   static const FString TERRAIN    = TEXT("Terrain");
 
   // RoadRunner Tags
-  static const FString R_ROAD     = TEXT("RoadNode");
+  // static const FString R_ROAD     = TEXT("RoadNode");
+  // static const FString R_TERRAIN  = TEXT("Terrain");
+  // static const FString R_MARKING  = TEXT("MarkingNode");
+  static const FString R_ROAD     = TEXT("Road_Road");
   static const FString R_TERRAIN  = TEXT("Terrain");
-  static const FString R_MARKING  = TEXT("MarkingNode");
+  static const FString R_MARKING  = TEXT("Road_Marking");
 }
 
 FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) const
