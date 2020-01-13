@@ -55,6 +55,10 @@ namespace CollisionStageConstants {
     for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
+      if (!data.actor->IsAlive()) {
+        continue;
+      }
+
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const std::unordered_map<ActorId, Actor> overlapping_actors = data.overlapping_actors;
@@ -73,11 +77,11 @@ namespace CollisionStageConstants {
 
         // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
-          const Actor actor = j->second;
-          const ActorId actor_id = j->first;
-          const cg::Location other_location = actor->GetLocation();
-
           try {
+            const Actor actor = j->second;
+            const ActorId actor_id = j->first;
+            const cg::Location other_location = actor->GetLocation();
+
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
@@ -114,6 +118,7 @@ namespace CollisionStageConstants {
       // This map also provides us the additional benefit of being able to
       // quickly identify
       // if a vehicle id is registered with the traffic manager or not.
+      vehicle_id_to_index.clear();
       uint64_t index = 0u;
       for (auto &element: *localization_frame.get()) {
         vehicle_id_to_index.insert({element.actor->GetId(), index++});

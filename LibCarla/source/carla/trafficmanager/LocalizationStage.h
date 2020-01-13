@@ -106,6 +106,8 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Code snippet execution time profiler.
     SnippetProfiler snippet_profiler;
+    /// Boolean to check whether the idle time of a registered vehicle needs to be updated.
+    bool update_idle_time = false;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);

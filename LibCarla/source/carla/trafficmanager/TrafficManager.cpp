@@ -127,6 +127,12 @@ namespace traffic_manager {
     registered_actors.Remove(actor_list);
   }
 
+  void TrafficManager::DestroyVehicles(const std::vector<ActorPtr> &actor_list) {
+    for (auto& a: actor_list) {
+      registered_actors.Destroy(a);
+    }
+  }
+
   void TrafficManager::Start() {
 
     localization_collision_messenger->Start();

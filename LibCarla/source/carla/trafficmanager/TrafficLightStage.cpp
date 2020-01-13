@@ -43,6 +43,10 @@ namespace traffic_manager {
 
       bool traffic_light_hazard = false;
       const LocalizationToTrafficLightData &data = localization_frame->at(i);
+      if (!data.actor->IsAlive()) {
+        continue;
+      }
+
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
