@@ -65,18 +65,6 @@ namespace LocalizationConstants {
       approached[actor_id] = false;
       final_safe_points[actor_id] = nullptr;
     }
-
-    /*auto waypointlist = local_map.GetDenseTopology();
-    for (uint j = 0u; j < waypointlist.size();j++){
-      if (j%5 == 0){  
-        SimpleWaypointPtr waypoint = waypointlist.at(j);
-        if(waypoint->CheckJunction()){
-          debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 100.0f);
-        } else {
-          debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 100.0f);
-        }
-      }
-    }*/
   }
 
   LocalizationStage::~LocalizationStage() {}
