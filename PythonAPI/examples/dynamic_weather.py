@@ -46,7 +46,7 @@ class Sun(object):
         self._t %= 2.0 * math.pi
         self.azimuth += 0.25 * delta_seconds
         self.azimuth %= 360.0
-        self.altitude = 35.0 * (math.sin(self._t) + 1.0)
+        self.altitude = -35.0 * (math.sin(self._t) + 1.0)
 
     def __str__(self):
         return 'Sun(%.2f, %.2f)' % (self.azimuth, self.altitude)
