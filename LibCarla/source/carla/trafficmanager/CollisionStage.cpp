@@ -94,7 +94,7 @@ namespace CollisionStageConstants {
                   if(parameters.GetCollisionDetection(ego_actor, actor) &&
                     !IsLocationAfterJunctionSafe(ego_actor,actor)){
                   
-                    debug_helper.DrawString(ego_actor->GetLocation(),"Stopping",false,{0u,255u,255u},0.1f);
+                    //debug_helper.DrawString(ego_actor->GetLocation(),"Stopping",false,{0u,255u,255u},0.1f);
                     collision_hazard = true;
                     break;
                   }
@@ -408,7 +408,7 @@ namespace CollisionStageConstants {
           location + cg::Location(x_boundary_vector + y_boundary_vector),
         };
 
-        DrawBoundary(ego_actor_boundary);
+        // DrawBoundary(ego_actor_boundary);
 
         const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
         const Polygon other_polygon = GetPolygon(GetBoundary(actor));

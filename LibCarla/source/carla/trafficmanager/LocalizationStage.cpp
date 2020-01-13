@@ -21,7 +21,8 @@ namespace LocalizationConstants {
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
   static const float JUNCTION_IGNORE_THRESHOLD = 35;
-  static const float UNJUNCTION_IGNORE_THRESHOLD = 65;  // Used to ignore roundabouts (Just a quick "patch")
+  static const float LOW_UNJUNCTION_IGNORE_THRESHOLD = 20;  // Used to ignore roundabouts (Just a quick "patch")
+  static const float HIGH_UNJUNCTION_IGNORE_THRESHOLD = 70;  // Used to ignore roundabouts (Just a quick "patch")
 
 } // namespace LocalizationConstants
 
@@ -65,12 +66,11 @@ namespace LocalizationConstants {
       final_safe_points[actor_id] = nullptr;
     }
 
-    auto waypointlist = local_map.GetDenseTopology();
-    /*for (uint j = 0u; j < waypointlist.size();j++){
+    /*auto waypointlist = local_map.GetDenseTopology();
+    for (uint j = 0u; j < waypointlist.size();j++){
       if (j%5 == 0){  
         SimpleWaypointPtr waypoint = waypointlist.at(j);
-        //auto waypoint: waypointlist){
-        if(waypoint->GetWaypoint()->IsJunction()){
+        if(waypoint->CheckJunction()){
           debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 100.0f);
         } else {
           debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 100.0f);
@@ -246,16 +246,10 @@ namespace LocalizationConstants {
         SimpleWaypointPtr final_point = nullptr;
         final_point = GetSafeLocationAfterJunction(vehicle, waypoint_buffer);
         if(final_point != nullptr){
-          approached[actor_id] = true;
           final_safe_points[actor_id] = final_point;
           approaching_junction = false;
+          approached[actor_id] = true;
         }
-      }
-
-      DrawBuffer(waypoint_buffer);
-
-      if (approaching_junction){
-        debug_helper.DrawString(vehicle->GetLocation(),"Approaching",false,{255u,0u,0u},0.05f);
       }
 
       // Editing output frames.
@@ -611,7 +605,9 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     if (safe_index != 0){
       for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
 
-        unjunction_counter++;
+        if (!waypoint_buffer.at(k)->CheckJunction()){
+          unjunction_counter++;
+        }
         if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
           final_point = waypoint_buffer.at(k);
           final_index = k;
@@ -624,7 +620,9 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     if(final_point == nullptr){
       while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
 
-        unjunction_counter++;
+        if (!waypoint_buffer.back()->CheckJunction()){
+          unjunction_counter++;
+        }
         // Record the last point as a safe one and safe it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint selection_index = 0u;
@@ -644,7 +642,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     // Unintentionally ignores some at Town 07
     SimpleWaypointPtr roundabout_point = final_point->GetNextWaypoint().front();
 
-    while (unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD){
+    while (unjunction_counter < HIGH_UNJUNCTION_IGNORE_THRESHOLD){
       if (roundabout_point->CheckJunction()){
         break;
       }
@@ -652,9 +650,14 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
       unjunction_counter++;
     }
 
-    // 5) Ignore small junctions 
-    if (junction_counter < JUNCTION_IGNORE_THRESHOLD /*||
-        unjunction_counter < UNJUNCTION_IGNORE_THRESHOLD*/){
+    // 5) Ignore small junctions and roundabouts
+    // Also missignores some intersections 
+    if (junction_counter < JUNCTION_IGNORE_THRESHOLD){
+      final_point = nullptr;
+    }
+
+    if (LOW_UNJUNCTION_IGNORE_THRESHOLD < unjunction_counter &&
+        unjunction_counter < HIGH_UNJUNCTION_IGNORE_THRESHOLD) {
       final_point = nullptr;
     }
 
