@@ -87,7 +87,7 @@ class Weather(object):
     def tick(self, delta_seconds):
         self._sun.tick(delta_seconds)
         self._storm.tick(delta_seconds)
-        self.weather.cloudyness = self._storm.clouds
+        self.weather.cloudiness = self._storm.clouds
         self.weather.precipitation = self._storm.rain
         self.weather.precipitation_deposits = self._storm.puddles
         self.weather.wind_intensity = self._storm.wind
