@@ -547,7 +547,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     uint junction_counter = 0;
     // Vehicle position after the junction
     SimpleWaypointPtr final_point = nullptr;
-    uint final_index = 0;
     uint unjunction_counter = 0;
     // Safe space after the junction
     float safe_distance = 1.5f*length;
@@ -556,7 +555,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
 
     for (uint j = 0u; j < waypoint_buffer.size(); ++j){
       if (waypoint_buffer.at(j)->CheckJunction()){
-        initial_point = waypoint_buffer.at(j);
         initial_index = j;
         break;
       }
@@ -598,7 +596,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
         }
         if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
           final_point = waypoint_buffer.at(k);
-          final_index = k;
           break;
         }
       }
