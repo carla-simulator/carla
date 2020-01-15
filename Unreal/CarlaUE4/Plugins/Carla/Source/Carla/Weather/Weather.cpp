@@ -16,7 +16,7 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
 
 void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 {
-  Weather = InWeather;
+  SetWeather(InWeather);
 
 #ifdef CARLA_WEATHER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Changing weather:"));
@@ -33,4 +33,9 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 
   // Call the blueprint that actually changes the weather.
   RefreshWeather(Weather);
+}
+
+void AWeather::SetWeather(const FWeatherParameters &InWeather)
+{
+  Weather = InWeather;
 }
