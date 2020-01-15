@@ -20,7 +20,9 @@ namespace LocalizationConstants {
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
-  static const float BLOCKED_TIME_THRESHOLD = 60.0;
+  static const float BLOCKED_TIME_THRESHOLD = 90.0f;
+  static const float ELAPSED_TIME_BETWEEN_DESTROY = 10.0f;
+  static const float DISTANCE_TRAVELLED_BLOCKAGE_THRESHOLD = 2.0f;
 
 } // namespace LocalizationConstants
 
@@ -55,6 +57,10 @@ namespace LocalizationConstants {
 
     // Initializing the registered actors container state.
     registered_actors_state = -1;
+
+    // Initializing maximum idle time to null.
+    maximum_idle_time = std::make_pair(nullptr, chr::system_clock::now());
+    time_last_actor_removed = chr::system_clock::now();
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -79,10 +85,9 @@ namespace LocalizationConstants {
       const float vehicle_velocity = vehicle->GetVelocity().Length();
 
       //TODO: Improve search so it doesn't do it every loop..
-      update_idle_time = false;
       auto search = idle_time.find(actor_id);
       if (search == idle_time.end()) {
-        idle_time[actor_id] = chr::system_clock::now();
+        idle_time.insert({actor_id, std::make_pair(chr::system_clock::now(), vehicle_location)});
       }
 
       const float horizon_size = std::max(
@@ -243,27 +248,47 @@ namespace LocalizationConstants {
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
     
-      // Checking idle time of the actor. 
-      if (update_idle_time) {
-        idle_time[actor_id] = chr::system_clock::now();
-      } else {
-        // Checking if the actor needs to be destroyed.
-        auto start = idle_time[actor_id];
-        auto end = chr::system_clock::now();
-        auto duration = chr::duration_cast<chr::seconds>(end - start).count();
-        
-        if (duration > BLOCKED_TIME_THRESHOLD / 2.0) {
-          debug_helper.DrawString(vehicle_location, std::to_string(duration), false, {255u, 0u, 0u}, 0.2f);
-        }
-        
-        if (duration > BLOCKED_TIME_THRESHOLD) {
-          std::cout << "Destory actor: id-> " << actor_id << " idle_time->" << duration << " counter-> " << vehicle.use_count() << std::endl;
-          track_traffic.DeleteActor(actor_id);
-          registered_actors.Destroy(vehicle);
-
-          idle_time.erase(actor_id);
-        }
+      // Checking whether distance travelled is bigger than the threshold to update idle time.
+      if (vehicle_location.Distance(idle_time[actor_id].second) > DISTANCE_TRAVELLED_BLOCKAGE_THRESHOLD) {
+        idle_time.erase(actor_id);
+        idle_time.insert({actor_id, std::make_pair(chr::system_clock::now(), vehicle_location)});
       }
+
+      // Checking maximum idle time.
+      if (maximum_idle_time.first == nullptr || maximum_idle_time.second > idle_time[actor_id].first) {
+        maximum_idle_time = std::make_pair(vehicle, idle_time[actor_id].first);
+      }
+
+      // Debugging
+      auto d1 = chr::duration_cast<chr::seconds>(chr::system_clock::now() - idle_time[actor_id].first).count();
+      auto d2 = vehicle_location.Distance(idle_time[actor_id].second);
+      if (d1 > BLOCKED_TIME_THRESHOLD / 2.0f) {
+        std::string debug_message = std::to_string(d1) + " " + std::to_string(d2);
+        debug_helper.DrawString(vehicle_location, debug_message, false, {255u, 0u, 0u}, 0.25);
+      }
+    }
+
+    // Checking actor to be removed.
+    if (maximum_idle_time.first != nullptr) {
+      auto start = idle_time[maximum_idle_time.first->GetId()].first;
+      auto end = chr::system_clock::now();
+      auto duration = chr::duration_cast<chr::seconds>(end - start).count();
+      auto last_remove_elapsed_time = chr::duration_cast<chr::seconds>(end - time_last_actor_removed).count();
+
+      if (duration > BLOCKED_TIME_THRESHOLD && last_remove_elapsed_time >= ELAPSED_TIME_BETWEEN_DESTROY) {
+        auto actor = maximum_idle_time.first;
+        auto actor_id = actor->GetId();
+
+        std::cout << "Destroy vehicle. Id->" << actor_id << " Idle time->" << duration << std::endl;
+        std::cout << "Total vehicles: " << registered_actors.GetList().size() - 1 << std::endl;
+
+        track_traffic.DeleteActor(actor_id);
+        registered_actors.Destroy(actor);
+
+        idle_time.erase(actor_id);
+        time_last_actor_removed = chr::system_clock::now();
+      }
+      maximum_idle_time = std::make_pair(nullptr, chr::system_clock::now());
     }
   }
 
@@ -328,9 +353,6 @@ namespace LocalizationConstants {
     const uint64_t waypoint_id = waypoint->GetId();
     buffer.push_back(waypoint);
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
-
-    // Buffer modified. Idle time needs to be modified.
-    update_idle_time = true;
   }
 
   void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
@@ -340,9 +362,6 @@ namespace LocalizationConstants {
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
     buffer.pop_front();
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
-
-    // Buffer modified. Idle time needs to be modified.
-    update_idle_time = true;
   }
 
   void LocalizationStage::ScanUnregisteredVehicles() {

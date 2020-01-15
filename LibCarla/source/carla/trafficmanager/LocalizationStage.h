@@ -97,8 +97,12 @@ namespace traffic_manager {
     std::map<carla::ActorId, SimpleWaypointPtr> final_points;
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
-    /// Map of all vehicles' idle time
-    std::unordered_map<ActorId, chr::time_point<chr::system_clock, chr::nanoseconds>> idle_time;
+    /// Map of all vehicles' idle time and location.
+    std::unordered_map<ActorId, std::pair<chr::time_point<chr::system_clock, chr::nanoseconds>, const cg::Location>> idle_time;
+    /// Structure to hold the actor with the maximum idle time at each iteration.
+    std::pair<Actor, chr::time_point<chr::system_clock, chr::nanoseconds>> maximum_idle_time;
+    /// Time of the last actor removed.
+    chr::time_point<chr::system_clock, chr::nanoseconds> time_last_actor_removed;
     /// Counter to track unregistered actors' scan interval.
     uint64_t unregistered_scan_duration = 0;
     /// A structure used to keep track of actors spawned outside of traffic
@@ -106,9 +110,7 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Code snippet execution time profiler.
     SnippetProfiler snippet_profiler;
-    /// Boolean to check whether the idle time of a registered vehicle needs to be updated.
-    bool update_idle_time = false;
-
+    
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
 
