@@ -133,6 +133,7 @@ namespace PlannerConstants {
       // Constructing the actuation signal.
 
       PlannerToControlData &message = current_control_frame->at(i);
+      message.actor_id = actor_id;
       message.actor = actor;
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
