@@ -84,6 +84,11 @@ def main():
         type=float,
         help='Fog Distance')
     argparser.add_argument(
+        '--wetness', '-wet',
+        default=None,
+        type=float,
+        help='Wetness')
+    argparser.add_argument(
         '-s',
         default=1.0,
         type=float,
@@ -121,24 +126,25 @@ def main():
     ##  Weather  ##
     if args.weather is not None:
         if args.weather == 'clear':
-            weather.cloudyness = 7.0
+            weather.cloudiness = 7.0
             weather.precipitation = 0.0
             weather.precipitation_deposits = 0.0
             weather.wind_intensity = 5.0
             run_dynamic_simulation = False
         elif args.weather == 'overcast':
-            weather.cloudyness = 80.0
+            weather.cloudiness = 80.0
             weather.precipitation = 0.0
             weather.precipitation_deposits = 0.0
             weather.wind_intensity = 50.0
             run_dynamic_simulation = False
         elif args.weather == 'rain':
-            weather.cloudyness = 100.0
+            weather.cloudiness = 100.0
             weather.precipitation = 80.0
             weather.precipitation_deposits = 90.0
             weather.wind_intensity = 100.0
-            weather.fog = 20.0
-            weather.fogdist = 30.0
+            weather.fog_density = 20.0
+            weather.fog_distance = 30.0
+            weather.wetness = 100.0
             run_dynamic_simulation = False
         else:
             print("[ERROR]: Command [--weather | -w] ´" + args.weather + "´ not known")
@@ -156,7 +162,7 @@ def main():
         run_dynamic_simulation = False
 
     if args.clouds is not None:
-        weather.cloudyness = args.clouds
+        weather.cloudiness = args.clouds
         run_dynamic_simulation = False
 
     if args.rain is not None:
@@ -172,11 +178,15 @@ def main():
         run_dynamic_simulation = False
 
     if args.fog is not None:
-        weather.fog = args.fog
+        weather.fog_density = args.fog
         run_dynamic_simulation = False
 
     if args.fogdist is not None:
-        weather.fogdist = args.fogdist
+        weather.fog_distance = args.fogdist
+        run_dynamic_simulation = False
+
+    if args.wetness is not None:
+        weather.wetness = args.wetness
         run_dynamic_simulation = False
 
     if run_dynamic_simulation:
@@ -188,7 +198,7 @@ def main():
         while True:
             timestamp = world.wait_for_tick(seconds=30.0).timestamp
             elapsed_time += timestamp.delta_seconds
-            if elapsed_time > update_freq:
+            if elapsed_time > update_freq:                
                 # tick -> speed_factor * elapsed_time
                 delta_time = speed_factor * elapsed_time
                 total_time += delta_time
@@ -202,22 +212,25 @@ def main():
                 weather.sun_azimuth_angle += delta_time * 0.5
                 weather.sun_azimuth_angle %= 360.0
 
-                weather.cloudyness = max(0, sin(total_time/10) * 100)
+                weather.cloudiness = max(0, sin(total_time/10) * 100)
 
                 weather.precipitation = max(0, sin(total_time/20) * 150 - 50)
                 weather.precipitation_deposits = max(0, sin(total_time/20) * 130 - 30)
+                weather.wetness = max(0, sin(total_time/15) * 150 - 50)
                 weather.wind_intensity = max(30, sin(total_time/20) * 150 - 50)
 
 
 
 
-                info_str = '\r' + str('Altitude: {:6.2f} Azimuth: {:6.2f} Clouds: {:4.2f} Wind: {:4.2f} Rain: {:4.2f} Puddles: {:4.2f}'.format(
-                        weather.sun_altitude_angle * -1.0,
-                        weather.sun_azimuth_angle,
-                        weather.cloudyness,
-                        weather.wind_intensity,
-                        weather.precipitation,
-                        weather.precipitation_deposits)) + 12 * ' '
+                info_str = '\r' + str('Altitude: {:6.2f} Azimuth: {:6.2f} Clouds: {:4.2f} Wind: {:4.2f} Rain: {:4.2f} Puddles: {:4.2f} Wetness: {:4.2f} FogDensity: {:4.2f}'.format(
+                    weather.sun_altitude_angle,
+                    weather.sun_azimuth_angle,
+                    weather.cloudiness,
+                    weather.wind_intensity,
+                    weather.precipitation,
+                    weather.precipitation_deposits,
+                    weather.wetness,
+                    weather.fog_density)) + 5 * ' '
 
                 sys.stdout.write(info_str)
                 sys.stdout.flush()
