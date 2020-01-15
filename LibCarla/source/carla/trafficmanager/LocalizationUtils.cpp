@@ -15,12 +15,12 @@ namespace LocalizationConstants {
 
   using namespace LocalizationConstants;
 
-  float DeviationCrossProduct(Actor actor, const cg::Location &target_location) {
+  float DeviationCrossProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location) {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0.0f;
     heading_vector = heading_vector.MakeUnitVector();
-    cg::Location next_vector = target_location - actor->GetLocation();
+    cg::Location next_vector = target_location - vehicle_location;
     next_vector.z = 0.0f;
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
@@ -31,7 +31,7 @@ namespace LocalizationConstants {
     }
   }
 
-  float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset) {
+  float DeviationDotProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location, bool rear_offset) {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0.0f;
@@ -39,12 +39,12 @@ namespace LocalizationConstants {
     cg::Location next_vector;
 
     if (!rear_offset) {
-      next_vector = target_location - actor->GetLocation();
+      next_vector = target_location - vehicle_location;
     } else {
       const auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor);
       const float vehicle_half_length = vehicle_ptr->GetBoundingBox().extent.x;
       next_vector = target_location - (cg::Location(-1* vehicle_half_length * heading_vector)
-                                        + vehicle_ptr->GetLocation());
+                                        + vehicle_location);
     }
 
     next_vector.z = 0.0f;
