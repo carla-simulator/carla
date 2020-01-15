@@ -91,13 +91,13 @@ namespace LocalizationConstants {
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
+        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
 
         while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
+            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
           }
         }
       }
@@ -121,7 +121,7 @@ namespace LocalizationConstants {
           !front_waypoint->CheckJunction()) {
 
         SimpleWaypointPtr change_over_point = AssignLaneChange(
-            vehicle, force_lane_change, lane_change_direction);
+            vehicle, vehicle_location, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
           auto number_of_pops = waypoint_buffer.size();
@@ -170,8 +170,8 @@ namespace LocalizationConstants {
         target_waypoint = waypoint_buffer.at(j);
       }
       const cg::Location target_location = target_waypoint->GetLocation();
-      float dot_product = DeviationDotProduct(vehicle, target_location);
-      float cross_product = DeviationCrossProduct(vehicle, target_location);
+      float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
+      float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
       dot_product = 1.0f - dot_product;
       if (cross_product < 0.0f) {
         dot_product *= -1.0f;
@@ -365,10 +365,9 @@ namespace LocalizationConstants {
     }
   }
 
-  SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, bool force, bool direction) {
+  SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, const cg::Location &vehicle_location, bool force, bool direction) {
 
     const ActorId actor_id = vehicle->GetId();
-    const cg::Location vehicle_location = vehicle->GetLocation();
     const float vehicle_velocity = vehicle->GetVelocity().Length();
     const float speed_limit = boost::static_pointer_cast<cc::Vehicle>(vehicle)->GetSpeedLimit();
 
@@ -421,7 +420,7 @@ namespace LocalizationConstants {
                   cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE) {
 
                 const float squared_vehicle_distance = cg::Math::DistanceSquared(other_location, vehicle_location);
-                const float deviation_dot = DeviationDotProduct(vehicle, other_location);
+                const float deviation_dot = DeviationDotProduct(vehicle, vehicle_location, other_location);
 
                 if (deviation_dot > 0.0f) {
 

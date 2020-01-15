@@ -81,11 +81,11 @@ namespace traffic_manager {
     SnippetProfiler snippet_profiler;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor &actor);
+    LocationList GetBoundary(const Actor &actor, const cg::Location &location);
 
     /// Returns the extrapolated bounding box of the vehicle along its
     /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor &actor);
+    LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location);
 
     /// Method to construct a boost polygon object.
     Polygon GetPolygon(const LocationList &boundary);
@@ -93,6 +93,7 @@ namespace traffic_manager {
     /// The method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
     bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
+                            const cg::Location &reference_location, const cg::Location &other_location,
                             const SimpleWaypointPtr& closest_point,
                             const SimpleWaypointPtr& junction_look_ahead);
 

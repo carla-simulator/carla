@@ -165,10 +165,10 @@ namespace PlannerConstants {
 
   void MotionPlannerStage::DrawPIDValues(const boost::shared_ptr<cc::Vehicle> vehicle,
                                          const float throttle, const float brake) {
-
-    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0.0f,0.0f,2.0f),
+    auto vehicle_location = vehicle->GetLocation();
+    debug_helper.DrawString(vehicle_location + cg::Location(0.0f,0.0f,2.0f),
                             std::to_string(throttle), false, {0u, 255u, 0u}, 0.005f);
-    debug_helper.DrawString(vehicle->GetLocation() + cg::Location(0.0f,0.0f,4.0f),
+    debug_helper.DrawString(vehicle_location + cg::Location(0.0f,0.0f,4.0f),
                             std::to_string(brake), false, {255u, 0u, 0u}, 0.005f);
   }
 

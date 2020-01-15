@@ -111,7 +111,7 @@ namespace traffic_manager {
     void DrawBuffer(Buffer &buffer);
 
     /// Method to determine lane change and obtain target lane waypoint.
-    SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
+    SimpleWaypointPtr AssignLaneChange(Actor vehicle, const cg::Location &vehicle_location, bool force, bool direction);
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);

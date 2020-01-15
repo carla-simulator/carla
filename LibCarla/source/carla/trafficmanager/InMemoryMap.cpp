@@ -83,10 +83,11 @@ namespace MapConstants {
         for (uint64_t i=0; i< segment_waypoints.size() -1; ++i) {
 
           // Assigning grid id.
-          if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
+          auto seg_location = segment_waypoints.at(i)->GetLocation();
+          if (distance_squared(grid_edge_location, seg_location) >
               square(MAX_GEODESIC_GRID_LENGTH)) {
             ++geodesic_grid_id_counter;
-            grid_edge_location = segment_waypoints.at(i)->GetLocation();
+            grid_edge_location = seg_location;
           }
           segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
 
