@@ -46,6 +46,16 @@ namespace client {
     return result;
   }
 
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetPrevious(double distance) const {
+    auto waypoints = _parent->GetMap().GetPrevious(_waypoint, distance);
+    std::vector<SharedPtr<Waypoint>> result;
+    result.reserve(waypoints.size());
+    for (auto &waypoint : waypoints) {
+      result.emplace_back(SharedPtr<Waypoint>(new Waypoint(_parent, std::move(waypoint))));
+    }
+    return result;
+  }
+
   SharedPtr<Waypoint> Waypoint::GetRight() const {
     auto right_lane_waypoint =
         _parent->GetMap().GetRight(_waypoint);

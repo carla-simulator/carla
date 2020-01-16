@@ -66,6 +66,8 @@ namespace client {
     road::Lane::LaneType GetType() const;
 
     std::vector<SharedPtr<Waypoint>> GetNext(double distance) const;
+    
+    std::vector<SharedPtr<Waypoint>> GetPrevious(double distance) const;
 
     SharedPtr<Waypoint> GetRight() const;
 
