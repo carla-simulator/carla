@@ -134,6 +134,9 @@ namespace CollisionStageConstants {
         planner_frame_b = std::make_shared<CollisionToPlannerFrame>(number_of_vehicles);
       }
     }
+
+    // Cleaning geodesic boundaries from last iteration.
+    geodesic_boundaries.clear();
   }
 
   void CollisionStage::DataSender() {
@@ -229,6 +232,10 @@ namespace CollisionStageConstants {
 
   LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor) {
 
+    if (geodesic_boundaries.find(actor->GetId()) != geodesic_boundaries.end()) {
+      return geodesic_boundaries.at(actor->GetId());
+    }
+
     const LocationList bbox = GetBoundary(actor);
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
@@ -301,9 +308,11 @@ namespace CollisionStageConstants {
       geodesic_boundary.insert(geodesic_boundary.end(), bbox.begin(), bbox.end());
       geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
 
+      geodesic_boundaries.insert({actor->GetId(), geodesic_boundary});
       return geodesic_boundary;
     } else {
 
+      geodesic_boundaries.insert({actor->GetId(), bbox});
       return bbox;
     }
 

@@ -77,6 +77,8 @@ namespace traffic_manager {
     chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
+    /// Structure to hold the geodesic boundaries during one iteration.
+    std::unordered_map<ActorId, LocationList> geodesic_boundaries;
     /// Snippet profiler for measuring execution time.
     SnippetProfiler snippet_profiler;
 
