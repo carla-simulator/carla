@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -26,7 +27,7 @@ namespace traffic_manager {
   /// Alias for waypoint buffer used in the localization stage.
   using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
   /// Alias used for the list of buffers in the localization stage.
-  using BufferList = std::vector<Buffer>;
+  using BufferList = std::unordered_map<carla::ActorId, Buffer>;
 
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
