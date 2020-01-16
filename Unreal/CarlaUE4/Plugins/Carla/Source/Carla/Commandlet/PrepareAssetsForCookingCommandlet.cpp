@@ -222,10 +222,6 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
     SavePackage(PackagePath, Package);
   }
 
-  #if WITH_EDITOR
-  UEditorLoadingAndSavingUtils::SaveMap(World, PackagePath);
-  #endif
-
   return bPackageSaved;
 }
 
@@ -320,11 +316,6 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath,
       FPackageName::GetMapPackageExtension());
 
-  if (FPaths::FileExists(*PackageFileName))
-  {
-    // Will not save package if it already exists
-    return false;
-  }
   return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 }
