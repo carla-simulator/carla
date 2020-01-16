@@ -494,6 +494,39 @@ namespace road {
     return result;
   }
 
+  std::vector<Waypoint> Map::GetPrevious(
+      const Waypoint waypoint,
+      const double distance) const {
+    RELEASE_ASSERT(distance > 0.0);
+    const auto &lane = GetLane(waypoint);
+    const bool forward = !(waypoint.lane_id <= 0);
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      Waypoint result = waypoint;
+      result.s += signed_distance;
+      result.s += forward ? -EPSILON : EPSILON;
+      RELEASE_ASSERT(result.s > 0.0);
+      return { result };
+    }
+
+    // If we run out of remaining_lane_length we have to go to the successors.
+    std::vector<Waypoint> result;
+    for (const auto &successor : GetSuccessors(waypoint)) {
+      DEBUG_ASSERT(
+          successor.road_id != waypoint.road_id ||
+          successor.section_id != waypoint.section_id ||
+          successor.lane_id != waypoint.lane_id);
+      result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+    }
+    return result;
+  }
+
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
