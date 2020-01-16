@@ -58,6 +58,9 @@ namespace LocalizationConstants {
     // Initializing the registered actors container state.
     registered_actors_state = -1;
 
+    // Initializing buffer lists.
+    buffer_list = std::make_shared<BufferList>();
+
     // Initializing maximum idle time to null.
     maximum_idle_time = std::make_pair(nullptr, chr::system_clock::now());
     time_last_actor_removed = chr::system_clock::now();
@@ -94,7 +97,10 @@ namespace LocalizationConstants {
           WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
           MINIMUM_HORIZON_LENGTH);
 
-      Buffer &waypoint_buffer = buffer_list->at(i);
+      if (buffer_list->find(actor_id) == buffer_list->end()) {
+        buffer_list->insert({actor_id, Buffer()});
+      }
+      Buffer &waypoint_buffer = buffer_list->at(actor_id);
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
@@ -279,13 +285,13 @@ namespace LocalizationConstants {
         auto actor = maximum_idle_time.first;
         auto actor_id = actor->GetId();
 
-        std::cout << "Destroy vehicle. Id->" << actor_id << " Idle time->" << duration << std::endl;
-        std::cout << "Total vehicles: " << registered_actors.GetList().size() - 1 << std::endl;
+        std::cout << "Destroy vehicle. Id->" << actor_id << " Idle time->" << duration << " Elapsed time->" << last_remove_elapsed_time << " Total vehicles->" << registered_actors.GetList().size() - 1 << std::endl;
 
         track_traffic.DeleteActor(actor_id);
         registered_actors.Destroy(actor);
 
         idle_time.erase(actor_id);
+        buffer_list->erase(actor_id);
         time_last_actor_removed = chr::system_clock::now();
       }
       maximum_idle_time = std::make_pair(nullptr, chr::system_clock::now());
@@ -313,8 +319,7 @@ namespace LocalizationConstants {
     if (number_of_vehicles != actor_list.size()) {
 
       number_of_vehicles = static_cast<uint64_t>(actor_list.size());
-      // Allocating the buffer lists.
-      buffer_list = std::make_shared<BufferList>(number_of_vehicles);
+
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
@@ -422,7 +427,7 @@ namespace LocalizationConstants {
     const float vehicle_velocity = vehicle->GetVelocity().Length();
     const float speed_limit = boost::static_pointer_cast<cc::Vehicle>(vehicle)->GetSpeedLimit();
 
-    const Buffer& waypoint_buffer = buffer_list->at(vehicle_id_to_index.at(actor_id));
+    const Buffer& waypoint_buffer = buffer_list->at(actor_id);
     const SimpleWaypointPtr& current_waypoint = waypoint_buffer.front();
 
     bool need_to_change_lane = false;
@@ -443,7 +448,10 @@ namespace LocalizationConstants {
         // This is totally ignoring unregistered actors during lane changes.
         // Need to fix this. Only a temporary solution.
         if (vehicle_id_to_index.find(other_vehicle_id) != vehicle_id_to_index.end()) {
-          const Buffer& other_buffer = buffer_list->at(vehicle_id_to_index.at(other_vehicle_id));
+          if (buffer_list->find(other_vehicle_id) == buffer_list->end()) {
+            buffer_list->insert({other_vehicle_id, Buffer()});
+          }
+          const Buffer& other_buffer = buffer_list->at(other_vehicle_id);
 
           if (!other_buffer.empty()) {
             const SimpleWaypointPtr& other_current_waypoint = other_buffer.front();
