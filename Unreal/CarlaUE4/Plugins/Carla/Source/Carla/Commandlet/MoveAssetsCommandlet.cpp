@@ -100,12 +100,6 @@ void MoveFiles(const TArray<UObject *> &Assets, const FString &DestPath)
     new(AssetsAndNames) FAssetRenameData(Asset, DestPath, Asset->GetName());
   }
 
-  std::cerr << "These are the assets we are going to move: " << std::endl;
-  for (const auto& asset: AssetsAndNames) {
-    std::cerr << "\tFrom: " << TCHAR_TO_ANSI(*asset.OldObjectPath.GetAssetPathString()) << std::endl;
-    std::cerr << "\tTo: " << TCHAR_TO_ANSI(*asset.NewObjectPath.GetAssetPathString()) << std::endl;
-  }
-
   if (AssetsAndNames.Num() > 0)
   {
     AssetToolsModule.Get().RenameAssetsWithDialog(AssetsAndNames);
@@ -135,7 +129,6 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     AssetDataMap.Add(Paths, {});
   }
 
-  std::cerr << "Time to move " << MapContents.Num() << " assets." << std::endl;
 
   for (const auto &MapAsset : MapContents)
   {
@@ -146,16 +139,11 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     FString AssetName;
     MapAsset.AssetName.ToString(AssetName);
 
-    std::cerr << "Moving Object: " << TCHAR_TO_ANSI(*ObjectName) << std::endl;
-    std::cerr << "Moving Asset: " << TCHAR_TO_ANSI(*AssetName) << std::endl;
 
     if (SrcPath.Len())
     {
 
       const FString CurrentPackageName = MeshAsset->GetOutermost()->GetName();
-
-      std::cerr << "Package name: " << TCHAR_TO_ANSI(*CurrentPackageName) << std::endl;
-      std::cerr << "Source path: " << TCHAR_TO_ANSI(*SrcPath) << std::endl;
 
       if (!ensure(CurrentPackageName.StartsWith(SrcPath)))
       {
@@ -195,7 +183,6 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   for (const auto &Elem : AssetDataMap)
   {
     FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;
-    std::cerr << "Now moving all " << TCHAR_TO_ANSI(*Elem.Key) << " to " << TCHAR_TO_ANSI(*DestPath) << std::endl;
     MoveFiles(Elem.Value, DestPath);
   }
 }
