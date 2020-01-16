@@ -236,7 +236,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
     SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-    # Copy the pakcage config file to package
+    # Copy the package config file to package
     mkdir -p "$(dirname ${SUBST_FILE})" && cp "${PACKAGE_FILE}" "$_"
 
     # Copy the OpenDRIVE .xodr files to package
@@ -253,8 +253,22 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
         SUBST_FILE="${XODR_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-        # Copy the pakcage config file to package
+        # Copy the package config file to package
         mkdir -p "$(dirname ${SUBST_FILE})" && cp "${XODR_FILE}" "$_"
+
+      fi
+
+      # binary files for navigation
+      BIN_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
+      MAP_NAME=${BIN_FILE_PATH##*/}
+      BIN_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print -quit)
+
+      if [ -f "${BIN_FILE}" ] ; then
+
+        SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
+
+        # Copy the package config file to package
+        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
 
       fi
 

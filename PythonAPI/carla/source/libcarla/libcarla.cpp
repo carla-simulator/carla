@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -186,6 +186,11 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Weather.cpp"
 #include "World.cpp"
 #include "Commands.cpp"
+#include "TrafficManager.cpp"
+
+#ifdef LIBCARLA_RSS_ENABLED
+#include "AdRss.cpp"
+#endif
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
@@ -204,4 +209,8 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_client();
   export_exception();
   export_commands();
+  export_trafficmanager();
+  #ifdef LIBCARLA_RSS_ENABLED
+  export_ad_rss();
+  #endif
 }

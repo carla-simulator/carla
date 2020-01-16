@@ -59,12 +59,6 @@ check.PythonAPI.2: PythonAPI.2
 check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api-3 $(ARGS)
 
-.PHONY: TrafficManager
-TrafficManager: LibCarla.client.release
-	@rm -rf TrafficManager/build
-	@mkdir TrafficManager/build
-	@cd TrafficManager/build && cmake -DLIBCARLA_LOCATION=${LIBCARLA_ROOT_FOLDER} -DCARLA_LOCATION=${CARLA_ROOT_FOLDER} .. && make -j
-
 benchmark: LibCarla.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --benchmark $(ARGS)
 	@cat profiler.csv
@@ -91,6 +85,15 @@ PythonAPI.2: LibCarla.client.release
 PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
+PythonAPI.rss: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss
+
+PythonAPI.rss.2: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --rss
+
+PythonAPI.rss.3: LibCarla.client.rss.release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss
+
 PythonAPI.docs:
 	@python PythonAPI/docs/doc_gen.py
 	@cd PythonAPI/docs && python3 bp_doc_gen.py
@@ -113,11 +116,23 @@ LibCarla.client.debug: setup
 LibCarla.client.release: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
 
+LibCarla.client.rss: LibCarla.client.rss.debug LibCarla.client.rss.release
+LibCarla.client.rss.debug: setup ad-rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss
+LibCarla.client.rss.release: setup ad-rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
+
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh
+
+ad-rss:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
 
 deploy:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)
 
 pretty:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Prettify.sh $(ARGS)
+
+build.utils:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh

@@ -1,6 +1,19 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-client)
 
+option (BUILD_RSS_VARIANT "Enables ad-rss-lib based RSS components" OFF)
+
+if (BUILD_RSS_VARIANT)
+  find_package(ad-rss-lib CONFIG REQUIRED)
+  get_target_property(ad-rss-lib_file ad-rss-lib LOCATION)
+  install(FILES ${ad-rss-lib_file} DESTINATION lib)
+  get_target_property(ad-rss-lib_include_dirs ad-rss-lib INTERFACE_INCLUDE_DIRECTORIES)
+  foreach(dir ${ad-rss-lib_include_dirs})
+    file(GLOB ad-rss-lib_includes "${dir}/*")
+    install(DIRECTORY ${ad-rss-lib_includes} DESTINATION include/system)
+  endforeach()
+endif()
+
 # Install Recast&Detour libraries
 install(DIRECTORY "${RECAST_INCLUDE_PATH}/recast" DESTINATION include/system)
 file(GLOB libcarla_carla_recastlib "${RECAST_LIB_PATH}/*.*")
@@ -129,6 +142,14 @@ file(GLOB libcarla_carla_rpc_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_rpc_sources}")
 install(FILES ${libcarla_carla_rpc_sources} DESTINATION include/carla/rpc)
 
+if (BUILD_RSS_VARIANT)
+  file(GLOB libcarla_carla_rss_sources
+      "${libcarla_source_path}/carla/rss/*.cpp"
+      "${libcarla_source_path}/carla/rss/*.h")
+  set(libcarla_sources "${libcarla_sources};${libcarla_carla_rss_sources}")
+  install(FILES ${libcarla_carla_rss_sources} DESTINATION include/carla/rss)
+endif()
+
 file(GLOB libcarla_carla_sensor_sources
     "${libcarla_source_path}/carla/sensor/*.cpp"
     "${libcarla_source_path}/carla/sensor/*.h")
@@ -189,9 +210,16 @@ file(GLOB libcarla_pugixml_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
 
+file(GLOB libcarla_carla_trafficmanager_sources
+    "${libcarla_source_path}/carla/trafficmanager/*.cpp"
+    "${libcarla_source_path}/carla/trafficmanager/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
+install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
+
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
+
 if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_client STATIC ${libcarla_sources})
@@ -200,6 +228,11 @@ if (LIBCARLA_BUILD_RELEASE)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
+
+  if (BUILD_RSS_VARIANT)
+    target_compile_definitions(carla_client PRIVATE RSS_ENABLED)
+    target_link_libraries(carla_client ad-rss-lib)
+  endif()
 
   install(TARGETS carla_client DESTINATION lib)
 
@@ -232,6 +265,11 @@ if (LIBCARLA_BUILD_DEBUG)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
+
+  if (BUILD_RSS_VARIANT)
+    target_compile_definitions(carla_client_debug PRIVATE RSS_ENABLED)
+    target_link_libraries(carla_client_debug ad-rss-lib)
+  endif()
 
   install(TARGETS carla_client_debug DESTINATION lib)
 

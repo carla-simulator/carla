@@ -11,7 +11,15 @@ export INSTALLATION_DIR=$(ROOT_PATH)Build/
 help:
 	@type "${CARLA_BUILD_TOOLS_FOLDER}\Windows.mk.help"
 
+# use PHONY to force next line as command and avoid conflict with folders of the same name
+.PHONY: import
+import: server
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Import.py"
+
 launch: LibCarla
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
+
+launch-only:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
 
 package: PythonAPI

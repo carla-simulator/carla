@@ -8,6 +8,7 @@
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
 #include "ConstructorHelpers.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 bool AShaderBasedSensor::AddPostProcessingMaterial(const FString &Path)
 {
