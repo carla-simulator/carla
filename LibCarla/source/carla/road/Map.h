@@ -90,6 +90,9 @@ namespace road {
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
     std::vector<Waypoint> GetNext(Waypoint waypoint, double distance) const;
+    /// Return the list of waypoints at @a distance in the reversed direction 
+    /// that a vehicle at @a waypoint could drive to.
+    std::vector<Waypoint> GetPrevious(Waypoint waypoint, double distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
     boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
