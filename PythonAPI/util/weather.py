@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 import glob
 import os
 import sys
@@ -120,7 +123,7 @@ def main():
             weather.sun_azimuth_angle = 100
             run_dynamic_simulation = False
         else:
-            print("[ERROR]: Command [--sun | -s] ´" + args.sun + "´ not known")
+            print("[ERROR]: Command [--sun | -s] '" + args.sun + "' not known")
             sys.exit(1)
 
     ##  Weather  ##
@@ -147,7 +150,7 @@ def main():
             weather.wetness = 100.0
             run_dynamic_simulation = False
         else:
-            print("[ERROR]: Command [--weather | -w] ´" + args.weather + "´ not known")
+            print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
 
 
