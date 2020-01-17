@@ -129,7 +129,6 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     AssetDataMap.Add(Paths, {});
   }
 
-
   for (const auto &MapAsset : MapContents)
   {
     // Get AssetName
