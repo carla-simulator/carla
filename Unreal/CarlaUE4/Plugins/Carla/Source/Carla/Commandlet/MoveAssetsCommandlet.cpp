@@ -29,6 +29,16 @@ namespace SSTags {
   // static const FString R_ROAD     = TEXT("RoadNode");
   // static const FString R_TERRAIN  = TEXT("Terrain");
   // static const FString R_MARKING  = TEXT("MarkingNode");
+
+  // Updated RoadRunner Tags to handle multi-layers maps.
+  //
+  // RoadRunner's mesh naming convention seems to be the following:
+  // mapName_meshType_meshSubtype_layerNumberNode
+  //
+  // Where meshType is a larger geographical tag (e.g. "Road", "Terrain") and
+  // meshSubType is a denomination of the tag (e.g. "Road", "Gutter", "Ground")
+  //
+  // Meaning that "RoadNode" and "MarkingNode" won't match with the current names.
   static const FString R_ROAD     = TEXT("Road_Road");
   static const FString R_TERRAIN  = TEXT("Terrain");
   static const FString R_MARKING  = TEXT("Road_Marking");
@@ -117,7 +127,6 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   {
     AssetDataMap.Add(Paths, {});
   }
-
 
   for (const auto &MapAsset : MapContents)
   {
