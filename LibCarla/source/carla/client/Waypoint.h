@@ -69,6 +69,10 @@ namespace client {
     
     std::vector<SharedPtr<Waypoint>> GetPrevious(double distance) const;
 
+    std::vector<SharedPtr<Waypoint>> GetNextUntilLaneEnd(double distance) const;
+    
+    std::vector<SharedPtr<Waypoint>> GetPreviousUntilLaneStart(double distance) const;
+
     SharedPtr<Waypoint> GetRight() const;
 
     SharedPtr<Waypoint> GetLeft() const;
