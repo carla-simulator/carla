@@ -517,7 +517,7 @@ namespace road {
 
     // If we run out of remaining_lane_length we have to go to the successors.
     std::vector<Waypoint> result;
-    for (const auto &successor : GetSuccessors(waypoint)) {
+    for (const auto &successor : GetPredecessors(waypoint)) {
       DEBUG_ASSERT(
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
