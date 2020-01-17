@@ -130,7 +130,6 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
     FString AssetName;
     MapAsset.AssetName.ToString(AssetName);
 
-
     if (SrcPath.Len())
     {
 
