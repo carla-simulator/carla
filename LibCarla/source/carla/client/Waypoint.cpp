@@ -56,6 +56,44 @@ namespace client {
     return result;
   }
 
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetNextUntilLaneEnd(double distance) const{
+    std::vector<SharedPtr<Waypoint>> result;
+    std::vector<SharedPtr<Waypoint>> next = GetNext(distance);
+    bool isThereNext = true;
+    while(isThereNext){
+      isThereNext = false;
+      for(auto & w : next){
+        if(w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()){
+          result.emplace_back(w);
+          isThereNext = true;
+        }
+      }
+      if(result.size()){
+        next = result.back()->GetNext(distance);
+      }
+    }
+    return result;
+  }
+
+std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double distance) const{
+    std::vector<SharedPtr<Waypoint>> result;
+    std::vector<SharedPtr<Waypoint>> next = GetPrevious(distance);
+    bool isThereNext = true;
+    while(isThereNext){
+      isThereNext = false;
+      for(auto & w : next){
+        if(w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()){
+          result.emplace_back(w);
+          isThereNext = true;
+        }
+      }
+      if(result.size()){
+        next = result.back()->GetPrevious(distance);
+      }
+    }
+    return result;
+  }
+
   SharedPtr<Waypoint> Waypoint::GetRight() const {
     auto right_lane_waypoint =
         _parent->GetMap().GetRight(_waypoint);
