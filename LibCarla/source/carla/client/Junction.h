@@ -36,7 +36,6 @@ public:
 
   private:
     friend class Map;
-
     Junction(SharedPtr<const Map> parent, const road::Junction* junction);
 
     SharedPtr<const Map> _parent;

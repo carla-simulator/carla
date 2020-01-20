@@ -17,100 +17,94 @@
 
 #include <boost/optional.hpp>
 
-namespace carla
-{
-namespace client
-{
+namespace carla {
+namespace client {
 
-class Map;
-class Junction;
+  class Map;
+  class Junction;
 
-class Waypoint
+  class Waypoint
     : public EnableSharedFromThis<Waypoint>,
-      private NonCopyable
-{
-public:
-  ~Waypoint();
-
-  /// Returns an unique Id identifying this waypoint.
-  ///
-  /// The Id takes into account OpenDrive's road Id, lane Id, and s distance
-  /// on its road segment up to half-centimetre precision.
-  uint64_t GetId() const
+    private NonCopyable
   {
-    return std::hash<road::element::Waypoint>()(_waypoint);
-  }
+  public:
 
-  auto GetRoadId() const
-  {
-    return _waypoint.road_id;
-  }
+    ~Waypoint();
 
-  auto GetSectionId() const
-  {
-    return _waypoint.section_id;
-  }
+    /// Returns an unique Id identifying this waypoint.
+    ///
+    /// The Id takes into account OpenDrive's road Id, lane Id, and s distance
+    /// on its road segment up to half-centimetre precision.
+    uint64_t GetId() const {
+      return std::hash<road::element::Waypoint>()(_waypoint);
+    }
 
-  auto GetLaneId() const
-  {
-    return _waypoint.lane_id;
-  }
+    auto GetRoadId() const {
+      return _waypoint.road_id;
+    }
 
-  auto GetDistance() const
-  {
-    return _waypoint.s;
-  }
+    auto GetSectionId() const {
+      return _waypoint.section_id;
+    }
 
-  const geom::Transform &GetTransform() const
-  {
-    return _transform;
-  }
+    auto GetLaneId() const {
+      return _waypoint.lane_id;
+    }
 
-  road::JuncId GetJunctionId() const;
+    auto GetDistance() const {
+      return _waypoint.s;
+    }
 
-  bool IsJunction() const;
+    const geom::Transform &GetTransform() const {
+      return _transform;
+    }
 
-  double GetLaneWidth() const;
+    road::JuncId GetJunctionId() const;
 
-  road::Lane::LaneType GetType() const;
+    bool IsJunction() const;
 
-  std::vector<SharedPtr<Waypoint>> GetNext(double distance) const;
+    double GetLaneWidth() const;
 
-  std::vector<SharedPtr<Waypoint>> GetPrevious(double distance) const;
+    road::Lane::LaneType GetType() const;
 
-  std::vector<SharedPtr<Waypoint>> GetNextUntilLaneEnd(double distance) const;
+    std::vector<SharedPtr<Waypoint>> GetNext(double distance) const;
 
-  std::vector<SharedPtr<Waypoint>> GetPreviousUntilLaneStart(double distance) const;
+    std::vector<SharedPtr<Waypoint>> GetPrevious(double distance) const;
 
-  SharedPtr<Waypoint> GetRight() const;
+    std::vector<SharedPtr<Waypoint>> GetNextUntilLaneEnd(double distance) const;
 
-  SharedPtr<Waypoint> GetLeft() const;
+    std::vector<SharedPtr<Waypoint>> GetPreviousUntilLaneStart(double distance) const;
 
-  boost::optional<road::element::LaneMarking> GetRightLaneMarking() const;
+    SharedPtr<Waypoint> GetRight() const;
 
-  boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
+    SharedPtr<Waypoint> GetLeft() const;
 
-  road::element::LaneMarking::LaneChange GetLaneChange() const;
+    boost::optional<road::element::LaneMarking> GetRightLaneMarking() const;
 
-  SharedPtr<Junction> GetJunction() const;
+    boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
-private:
-  friend class Map;
+    road::element::LaneMarking::LaneChange GetLaneChange() const;
 
-  Waypoint(SharedPtr<const Map> parent, road::element::Waypoint waypoint);
+    SharedPtr<Junction> GetJunction() const;
 
-  SharedPtr<const Map> _parent;
+  private:
 
-  road::element::Waypoint _waypoint;
+    friend class Map;
 
-  geom::Transform _transform;
+    Waypoint(SharedPtr<const Map> parent, road::element::Waypoint waypoint);
 
-  // Mark record right and left respectively.
-  std::pair<
-      const road::element::RoadInfoMarkRecord *,
-      const road::element::RoadInfoMarkRecord *>
-      _mark_record;
-};
+    SharedPtr<const Map> _parent;
+
+    road::element::Waypoint _waypoint;
+
+    geom::Transform _transform;
+
+    // Mark record right and left respectively.
+    std::pair<
+    const road::element::RoadInfoMarkRecord *,
+    const road::element::RoadInfoMarkRecord *>
+    _mark_record;
+  };
 
 } // namespace client
 } // namespace carla
