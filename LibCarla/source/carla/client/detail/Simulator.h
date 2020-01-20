@@ -158,6 +158,16 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    bool IsTrafficManagerRunning() const {
+      return _client.IsTrafficManagerRunning();
+    }
+
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    void SetTrafficManagerRunning(bool running) {
+      _client.SetTrafficManagerRunning(running);
+    }
+
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
 
     SharedPtr<Actor> GetSpectator();

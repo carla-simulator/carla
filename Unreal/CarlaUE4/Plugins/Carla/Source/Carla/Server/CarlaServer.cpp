@@ -71,6 +71,9 @@ public:
     BindActions();
   }
 
+  // DEMO: Channeling multi-client communication for traffic manager.
+  bool IsTrafficManagerRunning = false;
+
   carla::rpc::Server Server;
 
   carla::streaming::Server StreamingServer;
@@ -151,6 +154,19 @@ void FCarlaServer::FPimpl::BindActions()
 {
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
+
+  // DEMO: Channeling multi-client communication for traffic manager.
+  BIND_SYNC(is_traffic_manager_running) << [this] () ->R<bool>
+  {
+    return IsTrafficManagerRunning;
+  };
+
+  // DEMO: Channeling multi-client communication for traffic manager.
+  BIND_ASYNC(set_traffic_manager_running) << [this] (bool running) ->R<void>
+  {
+    IsTrafficManagerRunning = running;
+    return R<void>::Success();
+  };
 
   BIND_ASYNC(version) << [] () -> R<std::string>
   {
