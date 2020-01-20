@@ -1,5 +1,12 @@
 ## latest
+  * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
   * Fixed Low/Epic quality settings transition
+  * Enabled Mesh distance fields
+  * API extensions:
+    - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
+  * New python clients:
+    - `weather.py`: allows weather changes using the new weather parameters
+  * Fixed typos
 
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
