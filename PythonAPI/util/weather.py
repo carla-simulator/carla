@@ -77,6 +77,7 @@ def apply_weather_values(args, weather):
 
 
 def main():
+    """Start function"""
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
