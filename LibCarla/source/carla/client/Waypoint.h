@@ -21,6 +21,7 @@ namespace carla {
 namespace client {
 
   class Map;
+  class Junction;
 
   class Waypoint
     : public EnableSharedFromThis<Waypoint>,
@@ -82,6 +83,8 @@ namespace client {
     boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
     road::element::LaneMarking::LaneChange GetLaneChange() const;
+
+    SharedPtr<Junction> GetJunction()const;
 
   private:
 

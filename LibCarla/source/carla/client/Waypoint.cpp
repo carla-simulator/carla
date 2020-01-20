@@ -7,6 +7,7 @@
 #include "carla/client/Waypoint.h"
 
 #include "carla/client/Map.h"
+#include "carla/client/Junction.h"
 
 namespace carla {
 namespace client {
@@ -59,13 +60,13 @@ namespace client {
   std::vector<SharedPtr<Waypoint>> Waypoint::GetNextUntilLaneEnd(double distance) const{
     std::vector<SharedPtr<Waypoint>> result;
     std::vector<SharedPtr<Waypoint>> next = GetNext(distance);
-    bool isThereNext = true;
-    while(isThereNext){
-      isThereNext = false;
+    bool is_there_next = true;
+    while(is_there_next){
+      is_there_next = false;
       for(auto & w : next){
         if(w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()){
           result.emplace_back(w);
-          isThereNext = true;
+          is_there_next = true;
         }
       }
       if(result.size()){
@@ -78,13 +79,13 @@ namespace client {
 std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double distance) const{
     std::vector<SharedPtr<Waypoint>> result;
     std::vector<SharedPtr<Waypoint>> next = GetPrevious(distance);
-    bool isThereNext = true;
-    while(isThereNext){
-      isThereNext = false;
+    bool is_there_next = true;
+    while(is_there_next){
+      is_there_next = false;
       for(auto & w : next){
         if(w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()){
           result.emplace_back(w);
-          isThereNext = true;
+          is_there_next = true;
         }
       }
       if(result.size()){
@@ -180,6 +181,10 @@ std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double dist
     }
 
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
+  }
+
+  SharedPtr<Junction> Waypoint::GetJunction() const{
+    return _parent->GetJunction(*this);
   }
 
 } // namespace client

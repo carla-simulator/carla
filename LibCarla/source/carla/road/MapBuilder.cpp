@@ -63,7 +63,10 @@ namespace road {
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
-    return Map{std::move(_map_data)};
+    Map map(std::move(_map_data));
+    CreateJunctionBoundingBoxes(map);
+
+    return map;
   }
 
   // called from profiles parser
@@ -688,6 +691,96 @@ namespace road {
 
         }
       }
+    }
+  }
+
+  void MapBuilder::CreateJunctionBoundingBoxes(Map &map){
+    for (auto &junctionpair : map._data.GetJunctions())
+    {
+      auto* junction = map.GetJunction(junctionpair.first);
+      auto waypoints = map.GetJunctionWaypoints(junction->GetId());
+      const int number_intervals = 10;
+
+      float minx = std::numeric_limits<float>::max();
+      float miny = std::numeric_limits<float>::max();
+      float minz = std::numeric_limits<float>::max();
+      float maxx = -std::numeric_limits<float>::max();
+      float maxy = -std::numeric_limits<float>::max();
+      float maxz = -std::numeric_limits<float>::max();
+
+      for (auto &waypoint_p : waypoints)
+      {
+        auto &waypoint_start = waypoint_p.first;
+        auto &waypoint_end = waypoint_p.second;
+        double interval = (waypoint_end.s - waypoint_start.s) / static_cast<double>(number_intervals);
+
+        auto next_wp = waypoint_start;
+
+        auto location = map.ComputeTransform(next_wp).location;
+        if (location.x < minx)
+        {
+          minx = location.x;
+        }
+        if (location.y < miny)
+        {
+          miny = location.y;
+        }
+        if (location.z < minz)
+        {
+          minz = location.z;
+        }
+
+        if (location.x > maxx)
+        {
+          maxx = location.x;
+        }
+        if (location.y > maxy)
+        {
+          maxy = location.y;
+        }
+        if (location.z > maxz)
+        {
+          maxz = location.z;
+        }
+
+        for (int i = 0; i < number_intervals; ++i)
+        {
+          if (interval < std::numeric_limits<double>::epsilon())
+            break;
+          next_wp = map.GetNext(next_wp, interval).front();
+
+          location = map.ComputeTransform(next_wp).location;
+          if (location.x < minx)
+          {
+            minx = location.x;
+          }
+          if (location.y < miny)
+          {
+            miny = location.y;
+          }
+          if (location.z < minz)
+          {
+            minz = location.z;
+          }
+
+          if (location.x > maxx)
+          {
+            maxx = location.x;
+          }
+          if (location.y > maxy)
+          {
+            maxy = location.y;
+          }
+          if (location.z > maxz)
+          {
+            maxz = location.z;
+          }
+        }
+      }
+      carla::geom::Location location(0.5f * (maxx + minx), 0.5f * (maxy + miny), 0.5f * (maxz + minz));
+      carla::geom::Vector3D extent(0.5f*(maxx - minx), 0.5f*(maxy - miny), 0.5f*(maxz - minz));
+     
+      junction->_boundingbox = carla::geom::BoundingBox(location, extent); 
     }
   }
 
