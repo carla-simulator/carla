@@ -110,6 +110,13 @@ namespace road {
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
+    //Generate waypoints of the junction
+    std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id) const;
+
+    Junction* GetJunction(JuncId id);
+    
+    const Junction* GetJunction(JuncId id) const;
+
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
       return _data;
@@ -118,6 +125,7 @@ namespace road {
 
 private:
 
+    friend MapBuilder;
     MapData _data;
   };
 
