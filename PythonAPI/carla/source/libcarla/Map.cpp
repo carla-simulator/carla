@@ -6,6 +6,7 @@
 
 #include <carla/FileSystem.h>
 #include <carla/PythonUtil.h>
+#include <carla/client/Junction.h>
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
 #include <carla/road/element/LaneMarking.h>
@@ -44,6 +45,16 @@ static auto GetTopology(const carla::client::Map &self) {
   auto topology = self.GetTopology();
   py::list result;
   for (auto &&pair : topology) {
+    result.append(py::make_tuple(pair.first, pair.second));
+  }
+  return result;
+}
+
+static auto GetJunctionWaypoints(const carla::client::Junction &self) {
+  namespace py = boost::python;
+  auto topology = self.GetWaypoints();
+  py::list result;
+  for (auto &pair : topology) {
     result.append(py::make_tuple(pair.first, pair.second));
   }
   return result;
@@ -171,6 +182,13 @@ void export_map() {
     .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance")))
     .def("get_right_lane", &cc::Waypoint::GetRight)
     .def("get_left_lane", &cc::Waypoint::GetLeft)
+    .def("get_junction", &cc::Waypoint::GetJunction)
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Junction, boost::noncopyable, boost::shared_ptr<cc::Junction>>("Junction", no_init)
+    .add_property("id", &cc::Junction::GetId)
+    .add_property("bounding_box", &cc::Junction::GetBoundingBox)
+    .def("get_waypoints", &GetJunctionWaypoints)
   ;
 }

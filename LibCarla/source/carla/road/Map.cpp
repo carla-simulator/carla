@@ -77,6 +77,25 @@ namespace road {
     }
   }
 
+  template <typename FuncT>
+  static void ForEachLaneImpl(
+      RoadId road_id,
+      const LaneSection &lane_section,
+      double distance,
+      Lane::LaneType lane_type,
+      FuncT &&func) {
+    for (const auto &pair : lane_section.GetLanes()) {
+      const auto &lane = pair.second;
+      if ((static_cast<uint32_t>(lane.GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
+        std::forward<FuncT>(func)(Waypoint{
+            road_id,
+            lane_section.GetId(),
+            lane.GetId(),
+            distance < 0.0 ? GetDistanceAtStartOfLane(lane) : distance});
+      }
+    }
+  }
+
   /// Return a waypoint for each drivable lane on each lane section of @a road.
   template <typename FuncT>
   static void ForEachDrivableLane(const Road &road, FuncT &&func) {
@@ -85,6 +104,19 @@ namespace road {
           road.GetId(),
           lane_section,
           -1.0,
+          std::forward<FuncT>(func));
+    }
+  }
+
+    /// Return a waypoint for each drivable lane of the specified type on each lane section of @a road.
+  template <typename FuncT>
+  static void ForEachLane(const Road &road, Lane::LaneType lane_type, FuncT &&func) {
+    for (const auto &lane_section : road.GetLaneSections()) {
+      ForEachLaneImpl(
+          road.GetId(),
+          lane_section,
+          -1.0,
+          lane_type,
           std::forward<FuncT>(func));
     }
   }
@@ -603,12 +635,36 @@ namespace road {
     return result;
   }
 
+  std::vector<std::pair<Waypoint, Waypoint>> Map::GetJunctionWaypoints(JuncId id) const{
+    std::vector<std::pair<Waypoint, Waypoint>> result;
+    const Junction * junction = GetJunction(id);
+    for(auto &connections : junction->GetConnections()){
+      const Road &road = _data.GetRoad(connections.second.connecting_road);
+      ForEachLane(road, Lane::LaneType::Driving, [&](auto &&waypoint) {
+        const auto& lane = GetLane(waypoint);
+        double final_s = GetDistanceAtEndOfLane(lane);
+        Waypoint lane_end(waypoint);
+        lane_end.s = final_s;
+        result.push_back({waypoint, lane_end});
+      });
+    }
+    return result;
+  }
+
   // ===========================================================================
   // -- Map: Private functions -------------------------------------------------
   // ===========================================================================
 
   const Lane &Map::GetLane(Waypoint waypoint) const {
     return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
+  }
+
+  Junction* Map::GetJunction(JuncId id) {
+    return _data.GetJunction(id);
+  }
+
+  const Junction* Map::GetJunction(JuncId id) const{
+    return _data.GetJunction(id);
   }
 
 } // namespace road
