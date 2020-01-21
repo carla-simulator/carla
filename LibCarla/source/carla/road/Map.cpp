@@ -635,12 +635,12 @@ namespace road {
     return result;
   }
 
-  std::vector<std::pair<Waypoint, Waypoint>> Map::GetJunctionWaypoints(JuncId id) const{
+  std::vector<std::pair<Waypoint, Waypoint>> Map::GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const{
     std::vector<std::pair<Waypoint, Waypoint>> result;
     const Junction * junction = GetJunction(id);
     for(auto &connections : junction->GetConnections()){
       const Road &road = _data.GetRoad(connections.second.connecting_road);
-      ForEachLane(road, Lane::LaneType::Driving, [&](auto &&waypoint) {
+      ForEachLane(road, lane_type, [&](auto &&waypoint) {
         const auto& lane = GetLane(waypoint);
         double final_s = GetDistanceAtEndOfLane(lane);
         Waypoint lane_end(waypoint);

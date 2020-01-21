@@ -184,7 +184,10 @@ std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double dist
   }
 
   SharedPtr<Junction> Waypoint::GetJunction() const{
-    return _parent->GetJunction(*this);
+    if(IsJunction()){
+      return _parent->GetJunction(*this);
+    }
+    return nullptr;
   }
 
 } // namespace client

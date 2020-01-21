@@ -111,7 +111,7 @@ namespace road {
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
     //Generate waypoints of the junction
-    std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id) const;
+    std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const;
 
     Junction* GetJunction(JuncId id);
     

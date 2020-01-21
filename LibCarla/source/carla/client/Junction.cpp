@@ -17,13 +17,13 @@ Junction::Junction(SharedPtr<const Map> parent, const road::Junction* junction) 
   _id = junction->GetId();
 }
 
-std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Junction::GetWaypoints() const{
-  return _parent->GetJunctionWaypoints(GetId());
+std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Junction::GetWaypoints(road::Lane::LaneType type) const{
+  return _parent->GetJunctionWaypoints(GetId(), type);
 }
 
 geom::BoundingBox Junction::GetBoundingBox() const{
   return _boundingBox;
 }
 
-} //client
-} //carla
+} // namespace client
+} // namespace carla
