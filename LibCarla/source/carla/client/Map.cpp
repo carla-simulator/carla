@@ -110,13 +110,13 @@ namespace client {
     return junction;
   }
 
-  std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Map::GetJunctionWaypoints(road::JuncId id) const{
+  std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Map::GetJunctionWaypoints(road::JuncId id, road::Lane::LaneType lane_type) const{
     std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> result;
-    auto junction_waypoints =GetMap().GetJunctionWaypoints(id);
+    auto junction_waypoints = GetMap().GetJunctionWaypoints(id, lane_type);
     for(auto &waypoint_pair : junction_waypoints){
       result.emplace_back(
-        std::make_pair(SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.first)),
-        SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.second))));
+      std::make_pair(SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.first)),
+      SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.second))));
     }
     return result;
   }

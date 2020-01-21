@@ -70,7 +70,7 @@ namespace client {
 
     SharedPtr<Junction> GetJunction(const Waypoint& waypoint) const;
 
-    std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(road::JuncId id) const;
+    std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(road::JuncId id, road::Lane::LaneType type) const;
 
   private:
 

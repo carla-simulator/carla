@@ -52,7 +52,8 @@
     - var_name: OnRamp
       doc: >
     - var_name: Any
-      doc: >
+      doc: > 
+        Except for type `None`
 
   - class_name: LaneChange
     # - DESCRIPTION ------------------------
@@ -335,6 +336,19 @@
         The list may be empty if the road ends before the specified distance, for instance,
         a lane ending with the only option of incorporating to another road.
     # --------------------------------------
+    - def_name: previous
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          The approximate distance where to get the next Waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Similar to `next` but returns Waypoints in the opposite direction of the lane.
+        
+        The list may be empty if the road ends before the specified distance, for instance,
+        a lane ending with the only option of incorporating to another road.
+    # --------------------------------------
     - def_name: get_right_lane
       return: carla.Waypoint
       doc: >
@@ -351,7 +365,64 @@
 
         Can return `None` if the lane does not exist
     # --------------------------------------
+    - def_name: next_until_lane_end
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          The approximate distance between waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of Waypoints from the current Waypoint to the end of the lane separated by a
+        certain distance.
+    # --------------------------------------
+    - def_name: previous_until_lane_start
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          The approximate distance between waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of Waypoints from the current Waypoint to the start of the lane separated by a
+        certain distance.
+    # --------------------------------------
+    - def_name: get_junction
+      return: list(carla.Waypoint)
+      doc: >
+        Returns the junction corresponding to the Waypoint's lane. If the Waypoint is not inside a 
+        junction, it will return `None`.
+    # --------------------------------------
     - def_name: __str__
       doc: >
     # --------------------------------------
+
+  - class_name: Junction
+    # - DESCRIPTION ------------------------
+    doc: >
+      Object representing an intersection in the road.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        Junction id from the OpenDRIVE file.
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Bounding box encapsulating the junction lanes.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_waypoints
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        doc: >
+          Type of lanes to get the waypoints.
+      return: list(tuple(carla.Waypoint))
+      doc: >
+        Returns a list of pairs of Waypoints. Every element of the list contains the initial and 
+        final waypoint corresponding to a lane of type `lane_type` within the intersection.
+    # --------------------------------------
+      
 ...

@@ -50,9 +50,9 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
-static auto GetJunctionWaypoints(const carla::client::Junction &self) {
+static auto GetJunctionWaypoints(const carla::client::Junction &self, const carla::road::Lane::LaneType lane_type) {
   namespace py = boost::python;
-  auto topology = self.GetWaypoints();
+  auto topology = self.GetWaypoints(lane_type);
   py::list result;
   for (auto &pair : topology) {
     result.append(py::make_tuple(pair.first, pair.second));
@@ -182,7 +182,7 @@ void export_map() {
     .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance")))
     .def("get_right_lane", &cc::Waypoint::GetRight)
     .def("get_left_lane", &cc::Waypoint::GetLeft)
-    .def("get_junction", &cc::Waypoint::GetJunction)
+    .def("get_junction", &cc::Waypoint::GetJunction, (args("lane_type")))
     .def(self_ns::str(self_ns::self))
   ;
 
