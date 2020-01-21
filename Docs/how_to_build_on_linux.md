@@ -23,7 +23,7 @@ pip3 install --user setuptools
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies,
 the best configuration is to compile everything with the same compiler version
-and C++ runtime library. We use clang 6.0 and LLVM's libc++. We recommend to
+and C++ runtime library. We use clang 7.0 and LLVM's libc++. We recommend to
 change your default clang version to compile Unreal Engine and the CARLA
 dependencies
 
