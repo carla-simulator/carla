@@ -41,6 +41,7 @@ namespace traffic_manager {
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
   using ActorIdSet = std::unordered_set<ActorId>;
+  using TLS = carla::rpc::TrafficLightState;
 
   /// This class is responsible for maintaining a horizon of waypoints ahead
   /// of the vehicle for it to follow.
@@ -97,12 +98,14 @@ namespace traffic_manager {
     std::map<carla::ActorId, SimpleWaypointPtr> final_points;
     /// Object for tracking paths of the traffic vehicles.
     TrackTraffic track_traffic;
-    /// Map of all vehicles' idle time and location.
-    std::unordered_map<ActorId, std::pair<chr::time_point<chr::system_clock, chr::nanoseconds>, const cg::Location>> idle_time;
+    /// Map of all vehicles' idle time.
+    std::unordered_map<ActorId, double> idle_time;
     /// Structure to hold the actor with the maximum idle time at each iteration.
-    std::pair<Actor, chr::time_point<chr::system_clock, chr::nanoseconds>> maximum_idle_time;
-    /// Time of the last actor removed.
-    chr::time_point<chr::system_clock, chr::nanoseconds> time_last_actor_removed;
+    std::pair<Actor, double> maximum_idle_time;
+    /// Variable to hold current timestamp from the world snapshot.
+    cc::Timestamp current_timestamp;
+    /// Simulated seconds since the beginning of the current episode when the last actor was destroyed.
+    double elapsed_last_actor_destruction = 0.0;
     /// Counter to track unregistered actors' scan interval.
     uint64_t unregistered_scan_duration = 0;
     /// A structure used to keep track of actors spawned outside of traffic
@@ -121,6 +124,12 @@ namespace traffic_manager {
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
+
+    /// Methods for idle vehicle elimination.
+    void UpdateIdleTime(const Actor& actor);
+    bool IsVehicleStuck(const Actor& actor);
+    void CleanActor(const ActorId actor_id);
+    bool TryDestroyVehicle(const Actor& actor);
 
   public:
 
