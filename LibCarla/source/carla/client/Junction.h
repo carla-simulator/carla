@@ -29,7 +29,6 @@ public:
   carla::road::JuncId GetId() const {
     return _id;
   }
-
   std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetWaypoints(road::Lane::LaneType type = road::Lane::LaneType::Driving) const;
 
   geom::BoundingBox GetBoundingBox() const;
