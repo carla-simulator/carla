@@ -21,21 +21,22 @@ namespace client{
 class Map;
 
 class Junction
-: public EnableSharedFromThis<Junction>,
-  private NonCopyable {
-  public:
+    : public EnableSharedFromThis<Junction>,
+      private NonCopyable
+{
+public:
 
-  carla::road::JuncId GetId() const{
+  carla::road::JuncId GetId() const {
     return _id;
   }
-  
+
   std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetWaypoints(road::Lane::LaneType type = road::Lane::LaneType::Driving) const;
 
   geom::BoundingBox GetBoundingBox() const;
 
   private:
     friend class Map;
-    
+
     Junction(SharedPtr<const Map> parent, const road::Junction* junction);
 
     SharedPtr<const Map> _parent;
@@ -43,7 +44,7 @@ class Junction
     geom::BoundingBox _boundingBox;
 
     road::JuncId _id;
-  };
+};
 
-} //client
-} //carla
+} // namespace client
+} // namespace carla

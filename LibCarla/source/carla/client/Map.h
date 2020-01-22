@@ -70,6 +70,7 @@ namespace client {
 
     SharedPtr<Junction> GetJunction(const Waypoint& waypoint) const;
 
+    // Returns a pair of waypoints (start and end) for each lane in the junction
     std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(road::JuncId id, road::Lane::LaneType type) const;
 
   private:

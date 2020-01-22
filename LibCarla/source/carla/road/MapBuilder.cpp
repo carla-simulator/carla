@@ -694,9 +694,8 @@ namespace road {
     }
   }
 
-  void MapBuilder::CreateJunctionBoundingBoxes(Map &map){
-    for (auto &junctionpair : map._data.GetJunctions())
-    {
+  void MapBuilder::CreateJunctionBoundingBoxes(Map &map) {
+    for (auto &junctionpair : map._data.GetJunctions()) {
       auto* junction = map.GetJunction(junctionpair.first);
       auto waypoints = map.GetJunctionWaypoints(junction->GetId(), Lane::LaneType::Any);
       const int number_intervals = 10;
@@ -708,36 +707,29 @@ namespace road {
       float maxy = -std::numeric_limits<float>::max();
       float maxz = -std::numeric_limits<float>::max();
 
-      auto get_min_max = [&](geom::Location position){
-        if (position.x < minx)
-        {
+      auto get_min_max = [&](geom::Location position) {
+        if (position.x < minx) {
           minx = position.x;
         }
-        if (position.y < miny)
-        {
+        if (position.y < miny) {
           miny = position.y;
         }
-        if (position.z < minz)
-        {
+        if (position.z < minz) {
           minz = position.z;
         }
 
-        if (position.x > maxx)
-        {
+        if (position.x > maxx) {
           maxx = position.x;
         }
-        if (position.y > maxy)
-        {
+        if (position.y > maxy) {
           maxy = position.y;
         }
-        if (position.z > maxz)
-        {
+        if (position.z > maxz) {
           maxz = position.z;
         }
       };
 
-      for (auto &waypoint_p : waypoints)
-      {
+      for (auto &waypoint_p : waypoints) {
         auto &waypoint_start = waypoint_p.first;
         auto &waypoint_end = waypoint_p.second;
         double interval = (waypoint_end.s - waypoint_start.s) / static_cast<double>(number_intervals);
@@ -750,9 +742,8 @@ namespace road {
         location = map.ComputeTransform(next_wp).location;
 
         get_min_max(location);
-        
-        for (int i = 0; i < number_intervals; ++i)
-        {
+
+        for (int i = 0; i < number_intervals; ++i) {
           if (interval < std::numeric_limits<double>::epsilon())
             break;
           next_wp = map.GetNext(next_wp, interval).back();
@@ -764,7 +755,7 @@ namespace road {
       carla::geom::Location location(0.5f * (maxx + minx), 0.5f * (maxy + miny), 0.5f * (maxz + minz));
       carla::geom::Vector3D extent(0.5f * (maxx - minx), 0.5f * (maxy - miny), 0.5f * (maxz - minz));
 
-      junction->_boundingbox = carla::geom::BoundingBox(location, extent); 
+      junction->_boundingbox = carla::geom::BoundingBox(location, extent);
     }
   }
 
