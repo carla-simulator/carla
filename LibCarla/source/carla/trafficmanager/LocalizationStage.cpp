@@ -272,7 +272,8 @@ namespace LocalizationConstants {
         std::cout << "Vehicle destroyed.";
         std::cout << " Id->" << destroyed_actor->GetId();
         std::cout << " IdleTime->" << current_timestamp.elapsed_seconds - maximum_idle_time.second;
-        std::cout << " RemainingVehicles->" << actor_list.size() - 1;
+        std::cout << " Registered vehicles->" << actor_list.size() - 1;
+        std::cout << " Unregistered vehicles->" << unregistered_actors.size();
         std::cout << std::endl;
       }
     }
@@ -378,28 +379,30 @@ namespace LocalizationConstants {
     }
 
     // Regularly update unregistered actors.
-    std::vector<ActorId> actor_ids_to_erase;
-    for (auto& actor_info: unregistered_actors) {
-      if (actor_info.second->IsAlive()) {
-        cg::Location actor_location = actor_info.second->GetLocation();
+    const auto current_snapshot = world.GetSnapshot();
+    for (auto it = unregistered_actors.cbegin(); it != unregistered_actors.cend();) {
+      if (registered_actors.Contains(it->first) || !current_snapshot.Contains(it->first)) {
+        track_traffic.DeleteActor(it->first);
+        it = unregistered_actors.erase(it);
+      } else {
+        // Updating data structures.
+        cg::Location location = it->second->GetLocation();
+        const auto type = it->second->GetTypeId();
+        
         SimpleWaypointPtr nearest_waypoint = nullptr;
-        const auto unregistered_type = actor_info.second->GetTypeId();
-        if (unregistered_type[0] == 'v') {
-          nearest_waypoint = local_map.GetWaypointInVicinity(actor_location);
-        } else if (unregistered_type[0] == 'w') {
-          nearest_waypoint = local_map.GetPedWaypoint(actor_location);
+        if (type[0] == 'v') {
+          nearest_waypoint = local_map.GetWaypointInVicinity(location);
+        } else if (type[0] == 'w') {
+          nearest_waypoint = local_map.GetPedWaypoint(location);
         }
         if (nearest_waypoint == nullptr) {
-          nearest_waypoint = local_map.GetWaypoint(actor_location);
+          nearest_waypoint = local_map.GetWaypoint(location);
         }
-        track_traffic.UpdateUnregisteredGridPosition(actor_info.first, nearest_waypoint);
-      } else {
-        track_traffic.DeleteActor(actor_info.first);
-        actor_ids_to_erase.push_back(actor_info.first);
+
+        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoint);
+
+        ++it;
       }
-    }
-    for (auto actor_id: actor_ids_to_erase) {
-      unregistered_actors.erase(actor_id);
     }
   }
 
