@@ -104,16 +104,14 @@ namespace client {
 
   SharedPtr<Junction> Map::GetJunction(const Waypoint& waypoint) const {
     const road::Junction* juncptr = GetMap().GetJunction(waypoint.GetJunctionId());
-    
     auto junction = SharedPtr<Junction>(new Junction(shared_from_this(), juncptr));
-   
     return junction;
   }
 
-  std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Map::GetJunctionWaypoints(road::JuncId id, road::Lane::LaneType lane_type) const{
+  std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Map::GetJunctionWaypoints(road::JuncId id, road::Lane::LaneType lane_type) const {
     std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> result;
     auto junction_waypoints = GetMap().GetJunctionWaypoints(id, lane_type);
-    for(auto &waypoint_pair : junction_waypoints){
+    for(auto &waypoint_pair : junction_waypoints) {
       result.emplace_back(
       std::make_pair(SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.first)),
       SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.second))));

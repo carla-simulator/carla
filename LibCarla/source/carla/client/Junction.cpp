@@ -12,16 +12,16 @@
 namespace carla{
 namespace client{
 
-Junction::Junction(SharedPtr<const Map> parent, const road::Junction* junction) : _parent(parent){
+Junction::Junction(SharedPtr<const Map> parent, const road::Junction* junction) : _parent(parent) {
   _boundingBox = junction->GetBoundingBox();
   _id = junction->GetId();
 }
 
-std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Junction::GetWaypoints(road::Lane::LaneType type) const{
+std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> Junction::GetWaypoints(road::Lane::LaneType type) const {
   return _parent->GetJunctionWaypoints(GetId(), type);
 }
 
-geom::BoundingBox Junction::GetBoundingBox() const{
+geom::BoundingBox Junction::GetBoundingBox() const {
   return _boundingBox;
 }
 

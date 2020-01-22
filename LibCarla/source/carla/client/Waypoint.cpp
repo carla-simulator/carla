@@ -183,7 +183,7 @@ std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double dist
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
   }
 
-  SharedPtr<Junction> Waypoint::GetJunction() const{
+  SharedPtr<Junction> Waypoint::GetJunction() const {
     if(IsJunction()){
       return _parent->GetJunction(*this);
     }
