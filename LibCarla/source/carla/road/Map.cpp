@@ -352,12 +352,16 @@ namespace road {
       lane_tangent = static_cast<float>(computed_width.second);
     }
 
+    //log_warning("Got to computetransform, road: ", road.GetId(), " ", road.GetLength());
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
+    float lane_offset_tangent = 0;
+    if(lane_offset_info){
+      lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
+    }
 
     lane_tangent -= lane_offset_tangent;
 

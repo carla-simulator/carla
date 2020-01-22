@@ -390,48 +390,97 @@ namespace road {
   }
 
   void MapBuilder::AddRoadGeometrySpiral(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*curvStart*/,
-      const double /*curvEnd*/) {
-    throw_exception(std::runtime_error("geometry spiral not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double curvStart,
+      const double curvEnd) {
+    //throw_exception(std::runtime_error("geometry spiral not supported"));
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto spiral_geometry = std::make_unique<GeometrySpiral>(
+      s,
+      length,
+      hdg,
+      location,
+      curvStart,
+      curvEnd);
+
+      _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(spiral_geometry))));
   }
 
   void MapBuilder::AddRoadGeometryPoly3(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*a*/,
-      const double /*b*/,
-      const double /*c*/,
-      const double /*d*/) {
-    throw_exception(std::runtime_error("geometry poly3 not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double a,
+      const double b,
+      const double c,
+      const double d) {
+    //throw_exception(std::runtime_error("geometry poly3 not supported"));
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto poly3_geometry = std::make_unique<GeometryPoly3>(
+      s, 
+      length, 
+      hdg, 
+      location, 
+      a, 
+      b, 
+      c, 
+      d);
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(poly3_geometry))));
   }
 
   void MapBuilder::AddRoadGeometryParamPoly3(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*aU*/,
-      const double /*bU*/,
-      const double /*cU*/,
-      const double /*dU*/,
-      const double /*aV*/,
-      const double /*bV*/,
-      const double /*cV*/,
-      const double /*dV*/,
-      const std::string /*p_range*/) {
-    throw_exception(std::runtime_error("geometry poly3 not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double aU,
+      const double bU,
+      const double cU,
+      const double dU,
+      const double aV,
+      const double bV,
+      const double cV,
+      const double dV,
+      const std::string p_range) {
+    //throw_exception(std::runtime_error("geometry poly3 not supported"));
+    bool arcLength;
+    if(p_range == "arcLength"){
+      arcLength = true;
+    }else{
+      arcLength = false;
+    } 
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto parampoly3_geometry = std::make_unique<GeometryParamPoly3>(
+      s, 
+      length, 
+      hdg, 
+      location, 
+      aU, 
+      bU, 
+      cU,
+      dU,
+      aV,
+      bV,
+      cV,
+      dV,
+      arcLength);
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(parampoly3_geometry))));      
   }
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {

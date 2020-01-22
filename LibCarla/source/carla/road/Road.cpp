@@ -184,8 +184,10 @@ namespace road {
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
-    const auto offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
-
+    float offset = 0;
+    if(lane_offset){
+      offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
+    }
     // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
     // Unreal's Y axis hack (the minus on the offset)
