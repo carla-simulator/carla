@@ -270,30 +270,13 @@ namespace LocalizationConstants {
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
-    
+
       // Updating idle time when necessary.
       UpdateIdleTime(vehicle);
-
-      // Debugging
-      if (idle_time.find(actor_id) != idle_time.end()) {
-        auto delta_idle_time_actor = current_timestamp.elapsed_seconds - idle_time[actor_id];
-        if (delta_idle_time_actor > BLOCKED_TIME_THRESHOLD / 2.0) {
-          std::string debug_message = std::to_string(delta_idle_time_actor) + " " + std::to_string(vehicle->GetVelocity().Length());
-          debug_helper.DrawString(vehicle_location, debug_message, false, {255u, 0u, 0u}, 0.25);
-        }
-      }
     }
-    
+
     if (IsVehicleStuck(maximum_idle_time.first)) {
-      if (TryDestroyVehicle(maximum_idle_time.first)) {
-        auto destroyed_actor = maximum_idle_time.first;
-        std::cout << "Vehicle destroyed.";
-        std::cout << " Id->" << destroyed_actor->GetId();
-        std::cout << " IdleTime->" << current_timestamp.elapsed_seconds - maximum_idle_time.second;
-        std::cout << " Registered vehicles->" << actor_list.size() - 1;
-        std::cout << " Unregistered vehicles->" << unregistered_actors.size();
-        std::cout << std::endl;
-      }
+      TryDestroyVehicle(maximum_idle_time.first);
     }
 
     // Updating maximum idle time to null for the next iteration.
@@ -410,7 +393,7 @@ namespace LocalizationConstants {
         // Updating data structures.
         cg::Location location = it->second->GetLocation();
         const auto type = it->second->GetTypeId();
-        
+
         SimpleWaypointPtr nearest_waypoint = nullptr;
         if (type[0] == 'v') {
           nearest_waypoint = local_map.GetWaypointInVicinity(location);
