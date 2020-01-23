@@ -8,6 +8,7 @@
 
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Math.h>
+#include <carla/geom/BoundingBox.h>
 #include <carla/geom/Transform.h>
 #include <limits>
 
@@ -56,6 +57,53 @@ TEST(geom, single_point_translation) {
   ASSERT_NEAR(point.y, result_point.y, error);
   ASSERT_NEAR(point.z, result_point.z, error);
 }
+
+
+TEST(geom, single_point_transform_inverse_transform_coherence) {
+  constexpr double error = 0.001;
+
+  const Location point(-3.14f, 1.337f, 4.20f);
+  const Location translation (1.41f, -4.7f, 9.2f);
+  const Rotation rotation (-47.0f, 37.0f, 250.2f);
+  const Transform transform (translation, rotation);
+
+  auto transformed_point = point;
+  transform.TransformPoint(transformed_point);
+
+  auto point_back_to_normal = transformed_point;
+  transform.InverseTransformPoint(point_back_to_normal);
+
+  ASSERT_NEAR(point.x, point_back_to_normal.x, error) << "result.x is " << point_back_to_normal.x << " but expected " << point.x;
+  ASSERT_NEAR(point.y, point_back_to_normal.y, error) << "result.y is " << point_back_to_normal.y << " but expected " << point.y;
+  ASSERT_NEAR(point.z, point_back_to_normal.z, error) << "result.z is " << point_back_to_normal.z << " but expected " << point.z;
+}
+
+
+TEST(geom, bbox_get_local_vertices_get_world_vertices_coherence) {
+  constexpr double error = 0.001;
+
+  const BoundingBox bbox (Location(10.2f, -32.4f, 15.6f), Vector3D(9.2f, 13.5f, 20.3f));
+
+  const Location bbox_location(-3.14f, 1.337f, 4.20f);
+  const Rotation bbox_rotation (-59.0f, 17.0f, -650.2f);
+  const Transform bbox_transform(bbox_location, bbox_rotation);
+
+  const auto local_vertices = bbox.GetLocalVertices();
+  const auto world_vertices = bbox.GetWorldVertices(bbox_transform);
+  for (auto i = 0u; i < local_vertices.size(); ++i){
+      const auto &local_vertex = local_vertices[i];
+
+      auto transformed_local_vertex = local_vertex;
+      bbox_transform.TransformPoint(transformed_local_vertex);
+
+      const auto &world_vertex = world_vertices[i];
+
+      ASSERT_NEAR(transformed_local_vertex.x, world_vertex.x, error) << "result.x is " << transformed_local_vertex.x << " but expected " << world_vertex.x;
+      ASSERT_NEAR(transformed_local_vertex.y, world_vertex.y, error) << "result.y is " << transformed_local_vertex.y << " but expected " << world_vertex.y;
+      ASSERT_NEAR(transformed_local_vertex.z, world_vertex.z, error) << "result.z is " << transformed_local_vertex.z << " but expected " << world_vertex.z;
+  }
+}
+
 
 TEST(geom, single_point_rotation) {
   constexpr double error = 0.001;
