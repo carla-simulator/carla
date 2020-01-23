@@ -448,7 +448,7 @@ Bounding box helper class.
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
 The center of the bounding box relative to its parent actor.  
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-It contains the vector from the center of the bounding box to one of the vertex of the box.  
+It contains the vector from the center of the bounding box to one of the vertex of the box.
 So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`.  
 
 <h3>Methods</h3>
@@ -456,6 +456,20 @@ So, if you want to know the _X bounding box size_, you can just do `extent.x * 2
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `extent` (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns whether a point in world space is inside this BoundingBox.  
+    - **Parameters:**
+        - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked whether it is inside this [carla.BoundingBox](#carla.BoundingBox) or.  
+        - `transform` (_[carla.Transform](#carla.Transform)_) – The [carla.Transform](#carla.Transform) that transforms from this [carla.BoundingBox](#carla.BoundingBox) space to world space.  
+    - **Return:** _bool_  
+- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the vertices of this [carla.BoundingBox](#carla.BoundingBox) in local space.  
+    - **Return:** _a list of [carla.Location](#carla.Location)_  
+- <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns the vertices of this [carla.BoundingBox](#carla.BoundingBox) in world space.  
+    - **Parameters:**
+        - `transform` (_[carla.Transform](#carla.Transform)_) – The [carla.Transform](#carla.Transform) that transforms from this [carla.BoundingBox](#carla.BoundingBox) space to world space.  
+    - **Return:** _a list of [carla.Location](#carla.Location)_  
 - <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -737,7 +751,7 @@ Distance in meters from the sensor to the detection position.
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
 Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
-![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)   _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
+![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
