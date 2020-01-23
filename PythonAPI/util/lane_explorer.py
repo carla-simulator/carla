@@ -61,25 +61,38 @@ def draw_waypoint_info(debug, w, lt=5):
     debug.draw_string(w_loc + carla.Location(z=1.0), "road: " + str(w.road_id), False, blue, lt)
     debug.draw_string(w_loc + carla.Location(z=-.5), str(w.lane_change), False, red, lt)
 
-def draw_junction(debug, junction, lt=10):
-    #draw bounding box
+def draw_junction(debug, junction, l_time=10):
+    """Draws a junction bounding box and the initial and final waypoint of every lane."""
+    # draw bounding box
     box = junction.bounding_box
-    p1 = box.location + carla.Location(x=box.extent.x, y=box.extent.y, z=2)
-    p2 = box.location + carla.Location(x=-box.extent.x, y=box.extent.y, z=2)
-    p3 = box.location + carla.Location(x=-box.extent.x, y=-box.extent.y, z=2)
-    p4 = box.location + carla.Location(x=box.extent.x, y=-box.extent.y, z=2)
-    debug.draw_line(p1, p2, thickness=0.1, color=orange, life_time=lt, persistent_lines=False)
-    debug.draw_line(p2, p3, thickness=0.1, color=orange, life_time=lt, persistent_lines=False)
-    debug.draw_line(p3, p4, thickness=0.1, color=orange, life_time=lt, persistent_lines=False)
-    debug.draw_line(p4, p1, thickness=0.1, color=orange, life_time=lt, persistent_lines=False)
-    #draw junction pairs (begin-end) of every lane
+    point1 = box.location + carla.Location(x=box.extent.x, y=box.extent.y, z=2)
+    point2 = box.location + carla.Location(x=-box.extent.x, y=box.extent.y, z=2)
+    point3 = box.location + carla.Location(x=-box.extent.x, y=-box.extent.y, z=2)
+    point4 = box.location + carla.Location(x=box.extent.x, y=-box.extent.y, z=2)
+    debug.draw_line(
+        point1, point2,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point2, point3,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point3, point4,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point4, point1,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    # draw junction pairs (begin-end) of every lane
     junction_w = junction.get_waypoints(carla.LaneType.Any)
     for pair_w in junction_w:
-        draw_transform(debug, pair_w[0].transform, orange, lt)
-        debug.draw_point(pair_w[0].transform.location + carla.Location(z=0.75), 0.1, orange, lt, False)
-        draw_transform(debug, pair_w[1].transform, orange, lt)
-        debug.draw_point(pair_w[1].transform.location + carla.Location(z=0.75), 0.1, orange, lt, False)
-        debug.draw_line(pair_w[0].transform.location + carla.Location(z=0.75), pair_w[1].transform.location + carla.Location(z=0.75), 0.1, white, lt, False)
+        draw_transform(debug, pair_w[0].transform, orange, l_time)
+        debug.draw_point(
+            pair_w[0].transform.location + carla.Location(z=0.75), 0.1, orange, l_time, False)
+        draw_transform(debug, pair_w[1].transform, orange, l_time)
+        debug.draw_point(
+            pair_w[1].transform.location + carla.Location(z=0.75), 0.1, orange, l_time, False)
+        debug.draw_line(
+            pair_w[0].transform.location + carla.Location(z=0.75),
+            pair_w[1].transform.location + carla.Location(z=0.75), 0.1, white, l_time, False)
 
 def main():
     argparser = argparse.ArgumentParser()
@@ -179,7 +192,6 @@ def main():
             if next_w.is_junction:
                 junction = next_w.get_junction()
                 draw_junction(debug, junction, trail_life_time)
-                
 
             # update the current waypoint and sleep for some time
             current_w = next_w

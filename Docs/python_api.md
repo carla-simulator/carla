@@ -229,6 +229,7 @@ All the possible lane types accepted by OpenDRIVE. Check out this [`recipe`](../
 - <a name="carla.LaneType.OffRamp"></a>**<font color="#f8805a">OffRamp</font>**  
 - <a name="carla.LaneType.OnRamp"></a>**<font color="#f8805a">OnRamp</font>**  
 - <a name="carla.LaneType.Any"></a>**<font color="#f8805a">Any</font>**  
+Except for type `None`.  
 
 ---
 
@@ -665,6 +666,24 @@ Height regarding ground level.
     - **Parameters:**
         - `other` (_[carla.GeoLocation](#carla.GeoLocation)_)  
 - <a name="carla.GeoLocation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.Junction<a name="carla.Junction"></a> <sub><sup>_class_</sup></sub>
+Object representing an intersection in the road.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.Junction.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+Junction id from the OpenDRIVE file.  
+- <a name="carla.Junction.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
+Bounding box encapsulating the junction lanes.  
+
+<h3>Methods</h3>
+- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  
+Returns a list of pairs of Waypoints. Every element of the list contains the initial and  final waypoint corresponding to a lane of type `lane_type` within the intersection.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Type of lanes to get the waypoints.  
+    - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint)))_  
 
 ---
 
@@ -1111,6 +1130,12 @@ The list may be empty if the road ends before the specified distance, for instan
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the next Waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.previous"></a>**<font color="#7fb800">previous</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Similar to `next` but returns Waypoints in the opposite direction of the lane.
+The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
+    - **Parameters:**
+        - `distance` (_float_) – The approximate distance where to get the next Waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
 Generates a Waypoint at the center of the right lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
 Can return `None` if the lane does not exist.  
@@ -1119,6 +1144,19 @@ Can return `None` if the lane does not exist.
 Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
 Can return `None` if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Waypoint.next_until_lane_end"></a>**<font color="#7fb800">next_until_lane_end</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Returns a list of Waypoints from the current Waypoint to the end of the lane separated by a certain distance.  
+    - **Parameters:**
+        - `distance` (_float_) – The approximate distance between waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.previous_until_lane_start"></a>**<font color="#7fb800">previous_until_lane_start</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Returns a list of Waypoints from the current Waypoint to the start of the lane separated by a certain distance.  
+    - **Parameters:**
+        - `distance` (_float_) – The approximate distance between waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the junction corresponding to the Waypoint's lane. If the Waypoint is not inside a  junction, it will return `None`.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
