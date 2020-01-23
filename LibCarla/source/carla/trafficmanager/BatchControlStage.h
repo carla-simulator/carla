@@ -17,6 +17,9 @@
 #include "carla/trafficmanager/MessengerAndDataTypes.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
+#include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/EpisodeProxy.h"
+
 namespace carla {
 namespace traffic_manager {
 
@@ -35,7 +38,7 @@ namespace traffic_manager {
     /// Pointer to a messenger from MotionPlanner.
     std::shared_ptr<PlannerToControlMessenger> messenger;
     /// Reference to carla client connection object.
-    cc::Client &carla_client;
+    carla::client::detail::EpisodeProxy episodeProxyBCS;
     /// Array to hold command batch.
     std::shared_ptr<std::vector<cr::Command>> commands;
     /// Number of vehicles registered with the traffic manager.
@@ -46,7 +49,7 @@ namespace traffic_manager {
     BatchControlStage(
         std::string stage_name,
         std::shared_ptr<PlannerToControlMessenger> messenger,
-        cc::Client &carla_client);
+		carla::client::detail::EpisodeProxy &episodeProxy);
     ~BatchControlStage();
 
     void DataReceiver() override;
