@@ -29,6 +29,9 @@
   * Upgraded Boost to 1.72.0
   * Recorder feature:
     - Added an option (-i) when replaying a session to ignore the hero vehicles
+  * Fixed import pipeline bugs:
+    - Crash when no pedestrian navmesh is present
+    - Automatically imported static meshes not properly tagged
 
 ## CARLA 0.9.7
 
