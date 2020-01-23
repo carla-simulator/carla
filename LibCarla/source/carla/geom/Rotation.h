@@ -95,7 +95,10 @@ namespace geom {
         in_point.y * (cp * sy) +
         in_point.z * (sp);
 
-      out_point.y = in_point.x * (cy * sp * sr - sy * cr) + in_point.y * (sy * sp * sr + cy * cr) + in_point.z * (-cp * sr);
+      out_point.y =
+        in_point.x * (cy * sp * sr - sy * cr) +
+        in_point.y * (sy * sp * sr + cy * cr) +
+        in_point.z * (-cp * sr);
 
       out_point.z =
         in_point.x * (-cy * sp * cr - sy * sr) +
