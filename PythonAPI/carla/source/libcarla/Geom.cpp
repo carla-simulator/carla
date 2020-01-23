@@ -86,25 +86,6 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
   }
 }
 
-template <typename TContainer>
-static boost::python::list CreatePythonList(const TContainer &container) {
-  boost::python::list py_list;
-  for (auto iter = container.begin(); iter != container.end(); ++iter) {
-      py_list.append(*iter);
-  }
-  return py_list;
-}
-
-static boost::python::list BBoxGetLocalVerticesPython(const carla::geom::BoundingBox &self) {
-  return CreatePythonList(self.GetLocalVertices());
-}
-
-static boost::python::list BBoxGetWorldVerticesPython(
-    const carla::geom::BoundingBox &self,
-    const carla::geom::Transform &bbox_transform) {
-  return CreatePythonList(self.GetWorldVertices(bbox_transform));
-}
-
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -201,8 +182,8 @@ void export_geom() {
     .def_readwrite("location", &cg::BoundingBox::location)
     .def_readwrite("extent", &cg::BoundingBox::extent)
     .def("contains", &cg::BoundingBox::Contains, arg("point"), arg("bbox_transform"))
-    .def("get_local_vertices", &BBoxGetLocalVerticesPython)
-    .def("get_world_vertices", &BBoxGetWorldVerticesPython, arg("bbox_transform"))
+    .def("get_local_vertices", CALL_RETURNING_LIST(cg::BoundingBox, GetLocalVertices))
+    .def("get_world_vertices", CALL_RETURNING_LIST_1(cg::BoundingBox, GetWorldVertices, const cg::Transform&), arg("bbox_transform"))
     .def("__eq__", &cg::BoundingBox::operator==)
     .def("__ne__", &cg::BoundingBox::operator!=)
     .def(self_ns::str(self_ns::self))
