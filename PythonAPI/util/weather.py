@@ -106,55 +106,55 @@ def main():
         metavar='A',
         default=None,
         type=float,
-        help='Sun altitude [-90 to 90]')
+        help='Sun altitude [-90.0, 90.0]')
     argparser.add_argument(
         '--azimuth', '-azm',
         metavar='A',
         default=None,
         type=float,
-        help='Sun azimuth [0 to 360]')
+        help='Sun azimuth [0.0, 360.0]')
     argparser.add_argument(
         '--clouds', '-c',
         metavar='C',
         default=None,
         type=float,
-        help='Clouds amount [0.0 to 100.0]')
+        help='Clouds amount [0.0, 100.0]')
     argparser.add_argument(
         '--rain', '-r',
         metavar='R',
         default=None,
         type=float,
-        help='Rain amount [0.0 to 100.0]')
+        help='Rain amount [0.0, 100.0]')
     argparser.add_argument(
         '--puddles', '-pd',
         metavar='Pd',
         default=None,
         type=float,
-        help='Puddles amount [0.0 to 100.0]')
+        help='Puddles amount [0.0, 100.0]')
     argparser.add_argument(
         '--wind', '-w',
         metavar='W',
         default=None,
         type=float,
-        help='Wind intensity [0.0 to 100.0]')
+        help='Wind intensity [0.0, 100.0]')
     argparser.add_argument(
         '--fog', '-f',
         metavar='F',
         default=None,
         type=float,
-        help='Fog intensity [0.0 to 100.0]')
+        help='Fog intensity [0.0, 100.0]')
     argparser.add_argument(
         '--fogdist', '-fd',
         metavar='Fd',
         default=None,
         type=float,
-        help='Fog Distance')
+        help='Fog Distance [0.0, inf)')
     argparser.add_argument(
         '--wetness', '-wet',
         metavar='Wet',
         default=None,
         type=float,
-        help='Wetness')
+        help='Wetness intensity [0.0, 100.0]')
     args = argparser.parse_args()
 
     # since all the arguments are None by default
