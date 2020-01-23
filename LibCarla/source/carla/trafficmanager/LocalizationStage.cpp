@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "LocalizationStage.h"
+#include "carla/client/DebugHelper.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -608,7 +609,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     // 3) Search for final_point (again, if it is in the buffer)
-  
+
     for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
 
       if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){

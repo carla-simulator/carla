@@ -12,10 +12,10 @@ namespace traffic_manager {
   BatchControlStage::BatchControlStage(
       std::string stage_name,
       std::shared_ptr<PlannerToControlMessenger> messenger,
-      cc::Client &carla_client)
+	  carla::client::detail::EpisodeProxy &episodeProxy)
     : PipelineStage(stage_name),
       messenger(messenger),
-      carla_client(carla_client) {
+	  episodeProxyBCS(episodeProxy) {
 
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
@@ -64,7 +64,7 @@ namespace traffic_manager {
     messenger->Pop();
 
     if (commands != nullptr) {
-      carla_client.ApplyBatch(*commands.get());
+    	episodeProxyBCS.Lock()->ApplyBatch(*commands.get(), false);
 
     }
 

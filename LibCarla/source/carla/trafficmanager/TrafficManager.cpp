@@ -5,8 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "TrafficManager.h"
-
 #include "carla/client/TrafficLight.h"
+
+#include "carla/client/ActorList.h"
+#include "carla/client/DebugHelper.h"
 
 namespace carla {
 namespace traffic_manager {

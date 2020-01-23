@@ -15,6 +15,8 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "carla/StringUtil.h"
+
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
 #include "carla/geom/Location.h"
@@ -32,6 +34,10 @@
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/PerformanceDiagnostics.h"
+
+#include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/ActorVariant.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -83,9 +89,9 @@ namespace traffic_manager {
     /// Runtime parameterization object.
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
-    cc::DebugHelper &debug_helper;
+    cc::DebugHelper debug_helper;
     /// Carla world object;
-    cc::World& world;
+    carla::client::detail::EpisodeProxy episodeProxyLS;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
@@ -148,7 +154,7 @@ namespace traffic_manager {
         InMemoryMap &local_map,
         Parameters &parameters,
         cc::DebugHelper &debug_helper,
-        cc::World& world);
+		carla::client::detail::EpisodeProxy &episodeProxy);
 
     ~LocalizationStage();
 

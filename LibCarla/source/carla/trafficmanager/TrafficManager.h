@@ -12,13 +12,18 @@
 #include <unordered_set>
 #include <vector>
 
+#include "carla/StringUtil.h"
+#include "carla/geom/Transform.h"
+#include "carla/Logging.h"
+#include "carla/Memory.h"
+
 #include "carla/client/Actor.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/World.h"
-#include "carla/geom/Transform.h"
-#include "carla/Logging.h"
-#include "carla/Memory.h"
+
+#include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/EpisodeProxy.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
@@ -29,6 +34,8 @@
 #include "carla/trafficmanager/MotionPlannerStage.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
+
+
 
 namespace carla {
 namespace traffic_manager {
@@ -55,11 +62,11 @@ namespace traffic_manager {
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
     /// Carla's client connection object.
-    cc::Client client_connection;
-    /// Carla's world object.
-    cc::World world;
+    carla::client::detail::EpisodeProxy episodeProxyTM;
+
     /// Carla's debug helper object.
     cc::DebugHelper debug_helper;
+
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
     std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;
@@ -87,7 +94,7 @@ namespace traffic_manager {
         std::vector<float> lateral_PID_parameters,
         std::vector<float> lateral_highway_PID_parameters,
         float perc_decrease_from_limit,
-        cc::Client &client_connection);
+		carla::client::detail::EpisodeProxy &episodeProxy);
 
     /// To start the TrafficManager.
     void Start();
@@ -98,7 +105,7 @@ namespace traffic_manager {
   public:
 
     /// Static method for singleton lifecycle management.
-    static TrafficManager& GetInstance(cc::Client &client_connection);
+    static TrafficManager& GetInstance(carla::client::detail::EpisodeProxy &episodeProxy);
 
     /// Static method to get unique client connected to (localhost, 2000).
     static cc::Client& GetUniqueLocalClient();
@@ -143,9 +150,6 @@ namespace traffic_manager {
 
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
-
-    /// Return the world object
-    const cc::World &GetWorld() { return world; };
 
     /// Destructor.
     ~TrafficManager();
