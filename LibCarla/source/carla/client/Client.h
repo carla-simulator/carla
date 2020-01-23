@@ -27,6 +27,16 @@ namespace client {
         uint16_t port,
         size_t worker_threads = 0u);
 
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    bool IsTrafficManagerRunning() const {
+      return _simulator->IsTrafficManagerRunning();
+    }
+
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    void SetTrafficManagerRunning(bool running) {
+      _simulator->SetTrafficManagerRunning(running);
+    }
+
     /// Set a timeout for networking operations. If set, any networking
     /// operation taking longer than @a timeout throws rpc::timeout.
     void SetTimeout(time_duration timeout) {

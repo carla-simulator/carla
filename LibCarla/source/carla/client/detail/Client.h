@@ -61,6 +61,12 @@ namespace detail {
 
     ~Client();
 
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    bool IsTrafficManagerRunning() const;
+
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    void SetTrafficManagerRunning(bool running);
+
     void SetTimeout(time_duration timeout);
 
     time_duration GetTimeout() const;
