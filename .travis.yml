@@ -81,7 +81,7 @@ matrix:
         - pip install -q --user mkdocs
       script:
         - make PythonAPI.docs
-        - git diff --quiet HEAD --; if [ ! $? -eq 0 ]; then echo "Python API reference changed, forgot to run doc_gen.py?"; exit 1; fi
+        - git diff --quiet HEAD --; if [ ! $? -eq 0 ]; then echo "Python API reference changed, forgot to run \"make PythonAPI.docs\"?"; exit 1; fi
         - mkdocs build --verbose --clean --strict --site-dir _site
 
 notifications:
