@@ -438,7 +438,7 @@ class Documentation:
             module_key = module_name
             # Generate class doc (if any)
             if valid_dic_val(module, 'classes'):
-                for cl in sorted(module['classes']):
+                for cl in sorted(module['classes'], key = lambda i: i['class_name']):
                     class_name = cl['class_name']
                     class_key = join([module_key, class_name], '.')
                     inherits = ''
