@@ -20,6 +20,7 @@
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WeatherParameters.h"
 
 #include <functional>
@@ -98,9 +99,16 @@ namespace detail {
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(
         const rpc::ActorId &vehicle) const;
 
+    rpc::VehicleLightState GetVehicleLightState(
+        const rpc::ActorId &vehicle) const;
+
     void ApplyPhysicsControlToVehicle(
         const rpc::ActorId &vehicle,
         const rpc::VehiclePhysicsControl &physics_control);
+
+    void SetLightStateToVehicle(
+        const rpc::ActorId &vehicle,
+        const rpc::VehicleLightState &light_state);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
