@@ -191,9 +191,14 @@ namespace traffic_manager {
     parameters.SetDistanceToLeadingVehicle(actor, distance);
   }
 
-  void TrafficManager::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+  void TrafficManager::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
 
-    parameters.SetPercentageIgnoreActors(actor, perc);
+    parameters.SetPercentageIgnoreWalkers(actor, perc);
+  }
+
+  void TrafficManager::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
+
+    parameters.SetPercentageIgnoreVehicles(actor, perc);
   }
 
   void TrafficManager::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
@@ -201,6 +206,10 @@ namespace traffic_manager {
     parameters.SetPercentageRunningLight(actor, perc);
   }
 
+  void TrafficManager::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
+
+    parameters.SetPercentageRunningSign(actor, perc);
+  }
 
   bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
     for (auto& elem : tl_to_freeze) {

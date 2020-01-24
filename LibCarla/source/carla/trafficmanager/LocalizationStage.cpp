@@ -64,6 +64,9 @@ namespace LocalizationConstants {
 
     // Initializing maximum idle time to null.
     maximum_idle_time = std::make_pair(nullptr, 0.0);
+    // Initializing srand.
+    srand(static_cast<unsigned>(time(NULL)));
+
   }
 
   LocalizationStage::~LocalizationStage() {}

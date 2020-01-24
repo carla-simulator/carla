@@ -33,7 +33,6 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
-#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"

@@ -46,6 +46,8 @@ namespace CollisionStageConstants {
     frame_selector = true;
     // Initializing the number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
+    // Initializing srand.
+    srand(static_cast<unsigned>(time(NULL)));
   }
 
   CollisionStage::~CollisionStage() {}
@@ -72,30 +74,26 @@ namespace CollisionStageConstants {
       bool collision_hazard = false;
       const SimpleWaypointPtr safe_point_junction = localization_frame->at(vehicle_id_to_index.at(ego_actor->GetId())).safe_point_after_junction;
 
-      // Continue only if random number is lower than our %, default is 0.
-      if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= (rand() % 101)) {
+      // Check every actor in the vicinity if it poses a collision hazard.
+      for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
+        const Actor other_actor = j->second;
+        const auto other_actor_type = other_actor->GetTypeId();
+        const ActorId other_actor_id = j->first;
+        const cg::Location other_location = other_actor->GetLocation();
 
-        // Check every actor in the vicinity if it poses a collision hazard.
-        for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
-          const Actor other_actor = j->second;
-          const ActorId other_actor_id = j->first;
-          const cg::Location other_location = other_actor->GetLocation();
+        try {
+          // Collision checks increase with speed (Official formula used)
+          float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
+          collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
+          // Temporary fix to (0,0,0) bug
+          if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0) {
+            if (other_actor_id != ego_actor_id &&
+                (cg::Math::DistanceSquared(ego_location, other_location)
+                < std::pow(MAX_COLLISION_RADIUS, 2)) &&
+                (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-          try {
-            const Actor actor = j->second;
-            const ActorId actor_id = j->first;
-            const cg::Location other_location = actor->GetLocation();
-
-            // Collision checks increase with speed (Official formula used)
-            float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
-            collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
-
-            // Temporary fix to (0,0,0) bug
-            if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0){
-              if (other_actor_id != ego_actor_id &&
-                  (cg::Math::DistanceSquared(ego_location, other_location)
-                  < std::pow(MAX_COLLISION_RADIUS, 2)) &&
-                  (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
+              if ((other_actor_type[0] == 'v' && parameters.GetPercentageIgnoreVehicles(ego_actor) <= (rand() % 101)) ||
+                  (other_actor_type[0] == 'w' && parameters.GetPercentageIgnoreWalkers(ego_actor) <= (rand() % 101))) {
 
                 if (parameters.GetCollisionDetection(ego_actor, other_actor) &&
                     NegotiateCollision(ego_actor, other_actor, ego_location, other_location, closest_point, junction_look_ahead)) {
@@ -112,11 +110,10 @@ namespace CollisionStageConstants {
                 }
               }
             }
-          } catch (const std::exception &e) {
-            carla::log_info("Actor might not be alive \n");
-          }
-
+        } catch (const std::exception &e) {
+          carla::log_info("Actor might not be alive \n");
         }
+
       }
 
       CollisionToPlannerData &message = current_planner_frame->at(i);
