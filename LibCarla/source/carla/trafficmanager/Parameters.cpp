@@ -71,7 +71,7 @@ void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 }
 
 void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-  
+
   float new_distance = std::max(0.0f,distance);
   const auto entry = std::make_pair(actor->GetId(), new_distance);
   distance_to_leading_vehicle.AddEntry(entry);
@@ -144,17 +144,31 @@ float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
-  
+
   float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
   const auto entry = std::make_pair(actor->GetId(), new_perc);
   perc_run_traffic_light.AddEntry(entry);
 }
 
-void Parameters::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+void Parameters::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
 
   float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
   const auto entry = std::make_pair(actor->GetId(), new_perc);
-  perc_ignore_actors.AddEntry(entry);
+  perc_run_traffic_sign.AddEntry(entry);
+}
+
+void Parameters::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
+
+  float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
+  const auto entry = std::make_pair(actor->GetId(), new_perc);
+  perc_ignore_vehicles.AddEntry(entry);
+}
+
+void Parameters::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
+
+  float new_perc = cg::Math::Clamp(perc,0.0f,100.0f);
+  const auto entry = std::make_pair(actor->GetId(), new_perc);
+  perc_ignore_walkers.AddEntry(entry);
 }
 
 float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
@@ -169,13 +183,37 @@ float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
   return percentage;
 }
 
-float Parameters::GetPercentageIgnoreActors(const ActorPtr &actor) {
+float Parameters::GetPercentageRunningSign(const ActorPtr &actor) {
 
   const ActorId actor_id = actor->GetId();
   float percentage = 0.0f;
 
-  if (perc_ignore_actors.Contains(actor_id)) {
-    percentage = perc_ignore_actors.GetValue(actor_id);
+  if (perc_run_traffic_sign.Contains(actor_id)) {
+    percentage = perc_run_traffic_sign.GetValue(actor_id);
+  }
+
+  return percentage;
+}
+
+float Parameters::GetPercentageIgnoreWalkers(const ActorPtr &actor) {
+
+  const ActorId actor_id = actor->GetId();
+  float percentage = 0.0f;
+
+  if (perc_ignore_walkers.Contains(actor_id)) {
+    percentage = perc_ignore_walkers.GetValue(actor_id);
+  }
+
+  return percentage;
+}
+
+float Parameters::GetPercentageIgnoreVehicles(const ActorPtr &actor) {
+
+  const ActorId actor_id = actor->GetId();
+  float percentage = 0.0f;
+
+  if (perc_ignore_vehicles.Contains(actor_id)) {
+    percentage = perc_ignore_vehicles.GetValue(actor_id);
   }
 
   return percentage;

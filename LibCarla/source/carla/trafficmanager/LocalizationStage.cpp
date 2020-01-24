@@ -54,6 +54,9 @@ namespace LocalizationConstants {
 
     // Initializing the registered actors container state.
     registered_actors_state = -1;
+    // Initializing srand.
+    srand(static_cast<unsigned>(time(NULL)));
+
   }
 
   LocalizationStage::~LocalizationStage() {}

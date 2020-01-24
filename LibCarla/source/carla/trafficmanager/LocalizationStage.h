@@ -31,7 +31,6 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
-#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 namespace carla {
 namespace traffic_manager {

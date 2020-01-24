@@ -45,8 +45,12 @@ namespace traffic_manager {
     AtomicMap<ActorId, bool> auto_lane_change;
     /// Map containing % of running a traffic light.
     AtomicMap<ActorId, float> perc_run_traffic_light;
-    /// Map containing % of ignoring actors.
-    AtomicMap<ActorId, float> perc_ignore_actors;
+    /// Map containing % of running a traffic sign.
+    AtomicMap<ActorId, float> perc_run_traffic_sign;
+    /// Map containing % of ignoring walkers.
+    AtomicMap<ActorId, float> perc_ignore_walkers;
+    /// Map containing % of ignoring vehicles.
+    AtomicMap<ActorId, float> perc_ignore_vehicles;
 
 
   public:
@@ -94,14 +98,26 @@ namespace traffic_manager {
     /// Method to set % to run any traffic light.
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
-    /// Method to set % to ignore any actor.
-    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
+    /// Method to set % to run any traffic sign.
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
     /// Method to get % to run any traffic light.
     float GetPercentageRunningLight(const ActorPtr &actor);
 
-    /// Method to get % to ignore any actor.
-    float GetPercentageIgnoreActors(const ActorPtr &actor);
+    /// Method to get % to run any traffic light.
+    float GetPercentageRunningSign(const ActorPtr &actor);
+
+    /// Method to get % to ignore any vehicle.
+    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
+
+    /// Method to get % to ignore any walker.
+    float GetPercentageIgnoreWalkers(const ActorPtr &actor);
 
   };
 

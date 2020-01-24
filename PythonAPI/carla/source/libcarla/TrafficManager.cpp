@@ -32,8 +32,11 @@ void export_trafficmanager() {
       .def("set_auto_lane_change", &carla::traffic_manager::TrafficManager::SetAutoLaneChange)
       .def("set_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
       .def("reset_traffic_lights", &carla::traffic_manager::TrafficManager::ResetAllTrafficLights)
-      .def("ignore_actors_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreActors)
-      .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight);
+      .def("ignore_walkers_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreWalkers)
+      .def("ignore_vehicles_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreVehicles)
+      .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight)
+      .def("ignore_signs_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningSign);
+
 
     def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
 

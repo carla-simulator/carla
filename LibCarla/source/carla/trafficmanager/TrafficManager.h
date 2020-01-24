@@ -135,11 +135,19 @@ namespace traffic_manager {
     /// the leading vehicle.
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-    /// Method to specify the % chance of ignoring collisions with other actors
-    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
+    /// Method to specify the % chance of ignoring collisions with all walkers
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+
+    /// Method to specify the % chance of ignoring collisions with all vehicles
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
 
     /// Method to specify the % chance of running a red light
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+    /// Method to specify the % chance of running any traffic sign
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+
+    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
 
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
