@@ -37,14 +37,15 @@ namespace MapConstants {
     auto square = [](float input) {return std::pow(input, 2);};
 
     // Consuming the raw dense topology from cc::Map into SimpleWaypoints.
-    std::map<std::pair<crd::RoadId, crd::LaneId>, std::vector<SimpleWaypointPtr>> segment_map;
+    std::map<std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>, std::vector<SimpleWaypointPtr>> segment_map;
     for (auto& waypoint_ptr: raw_dense_topology) {
       auto road_id = waypoint_ptr->GetRoadId();
       auto lane_id = waypoint_ptr->GetLaneId();
-      if (segment_map.find({road_id, lane_id}) != segment_map.end()) {
-        segment_map.at({road_id, lane_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      auto section_id = waypoint_ptr->GetSectionId();
+      if (segment_map.find({road_id, lane_id, section_id}) != segment_map.end()) {
+        segment_map.at({road_id, lane_id, section_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
       } else {
-        segment_map.insert({{road_id, lane_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
+        segment_map.insert({{road_id, lane_id, section_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
       }
     }
 
