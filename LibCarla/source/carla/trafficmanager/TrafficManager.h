@@ -4,7 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#ifndef __TRAFFICMANAGER__
+#define __TRAFFICMANAGER__
 
 #include <algorithm>
 #include <memory>
@@ -41,7 +42,6 @@
 
 #define INVALID_INDEX				-1
 #define IP_DATA_BUFFER_SIZE			80
-#define TM_SERVER_PORT				8000
 
 namespace carla {
 namespace traffic_manager {
@@ -172,3 +172,5 @@ namespace traffic_manager {
 
 } // namespace traffic_manager
 } // namespace carla
+
+#endif /* __TRAFFICMANAGER__ */

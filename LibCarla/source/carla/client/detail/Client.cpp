@@ -114,7 +114,7 @@ namespace detail {
 
   // DEMO: Channeling multi-client communication for traffic manager.
   void Client::SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo) {
-    _pimpl->CallAndWait<std::pair<std::string, std::string>>("set_traffic_manager_running", trafficManagerInfo);
+    _pimpl->CallAndWait<void>("set_traffic_manager_running", trafficManagerInfo);
   };
 
   Client::~Client() = default;

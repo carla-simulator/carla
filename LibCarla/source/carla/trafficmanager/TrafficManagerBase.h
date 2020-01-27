@@ -4,11 +4,16 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#ifndef __TRAFFICMANAGERBASE__
+#define __TRAFFICMANAGERBASE__
 
 #include <memory>
 #include "carla/client/Actor.h"
 #include "carla/client/TrafficLight.h"
+#include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/EpisodeProxy.h"
+
+#define TM_SERVER_PORT				8000
 
 namespace carla {
 namespace traffic_manager {
@@ -75,7 +80,15 @@ public:
 
 	/// Method to reset all traffic lights.
 	virtual void ResetAllTrafficLights() = 0;
+
+	/// Get carla episode information
+	virtual  carla::client::detail::EpisodeProxy* GetEpisodeProxy() {
+		return nullptr;
+	}
 };
 
 } // namespace traffic_manager
 } // namespace carla
+
+#endif /* __TRAFFICMANAGERBASE__ */
+

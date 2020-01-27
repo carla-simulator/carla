@@ -158,7 +158,7 @@ void FCarlaServer::FPimpl::BindActions()
   // DEMO: Channeling multi-client communication for traffic manager.
   BIND_SYNC(is_traffic_manager_running) << [this] () ->R<bool>
   {
-    return !TrafficManagerInfo.first.empty() || !TrafficManagerInfo.second.empty();
+    return (!TrafficManagerInfo.first.empty() || !TrafficManagerInfo.second.empty());
   };
 
   // DEMO: Channeling multi-client communication for traffic manager.

@@ -4,7 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#ifndef __TRAFFICMANAGERLOCAL__
+#define __TRAFFICMANAGERLOCAL__
 
 #include <algorithm>
 #include <memory>
@@ -35,6 +36,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
+#include "carla/trafficmanager/TrafficManagerServer.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -82,6 +84,10 @@ namespace traffic_manager {
 
     /// Parameterization object.
     Parameters parameters;
+
+
+    /// Traffic Manager server instance
+    TrafficManagerServer *server;
 
     /// To start the TrafficManager.
     void Start();
@@ -146,7 +152,13 @@ namespace traffic_manager {
 
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
+
+    /// Get carla episode information
+    carla::client::detail::EpisodeProxy* GetEpisodeProxy();
   };
 
 } // namespace traffic_manager
 } // namespace carla
+
+#endif /* __TRAFFICMANAGERLOCAL__ */
+
