@@ -4,7 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#ifndef __TRAFFICMANAGERREMOTE__
+#define __TRAFFICMANAGERREMOTE__
 
 #include <algorithm>
 #include <memory>
@@ -35,6 +36,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
+#include "carla/trafficmanager/TrafficManagerClient.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -48,11 +50,6 @@ using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 /// the traffic manager appropriately using messengers.
 class TrafficManagerRemote : public TrafficManagerBase {
 
-private:
-
-	/// Remote client IP & port information
-	std::pair<std::string, std::string> serverTM;
-
 protected:
 
 	/// To start the TrafficManager.
@@ -64,8 +61,11 @@ protected:
 public:
 
 	/// Constructor store remote location information
-	TrafficManagerRemote(const std::pair<std::string, std::string> _serverTM)
-			: serverTM(_serverTM) {}
+	TrafficManagerRemote
+		( const std::pair<std::string, std::string> _serverTM
+		, carla::client::detail::EpisodeProxy &episodeProxy) : episodeProxyTM(episodeProxy) {
+		client = new TrafficManagerClient(_serverTM.first, uint16_t(std::atoi(_serverTM.second.c_str())));
+	}
 
 	/// Destructor.
 	virtual ~TrafficManagerRemote() {}
@@ -113,7 +113,21 @@ public:
 
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights();
+
+    /// Get carla episode information
+    carla::client::detail::EpisodeProxy* GetEpisodeProxy();
+
+private:
+
+	/// Remote client IP & port information
+	TrafficManagerClient *client = nullptr;
+
+    /// Carla's client connection object.
+    carla::client::detail::EpisodeProxy &episodeProxyTM;
 };
 
 } // namespace traffic_manager
 } // namespace carla
+
+#endif /*__TRAFFICMANAGERREMOTE__ */
+

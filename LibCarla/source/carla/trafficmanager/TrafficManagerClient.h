@@ -4,89 +4,43 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#ifndef __TRAFFICMANAGERCLIENT__
+#define __TRAFFICMANAGERCLIENT__
 
-#include "carla/Memory.h"
-#include "carla/NonCopyable.h"
 #include "carla/client/Actor.h"
+#include <rpc/client.h>
 
-#include "carla/Time.h"
-#include "carla/geom/Transform.h"
-#include "carla/rpc/Actor.h"
-#include "carla/rpc/ActorDefinition.h"
-#include "carla/rpc/AttachmentType.h"
-#include "carla/rpc/Command.h"
-#include "carla/rpc/CommandResponse.h"
-#include "carla/rpc/EpisodeInfo.h"
-#include "carla/rpc/EpisodeSettings.h"
-#include "carla/rpc/MapInfo.h"
-#include "carla/rpc/TrafficLightState.h"
-#include "carla/rpc/VehiclePhysicsControl.h"
-#include "carla/rpc/WeatherParameters.h"
+#define TM_TIMEOUT				5000 // In ms
 
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
+/// Provides communication with the rpc of TrafficManagerServer
+class TrafficManagerClient {
 
-// Forward declarations.
-namespace carla {
-namespace client {
-	class TimeoutException;
-}
-namespace rpc {
-	class ActorDescription;
-	class DebugShape;
-	class VehicleControl;
-	class WalkerControl;
-	class WalkerBoneControl;
-}
-}
+public:
 
-namespace carla {
-namespace traffic_manager {
-namespace client {
+	explicit TrafficManagerClient
+	(const std::string &host, uint16_t port)
+	: tmhost(host), tmport(port) {}
 
-using ActorPtr 	= carla::SharedPtr<carla::client::Actor>;
+	~TrafficManagerClient() {};
 
-  /// Provides communication with the rpc of TrafficManagerServer
-  class TrafficManagerClient : private NonCopyable {
-  public:
+	void RegisterVehicle
+	(const std::vector<carla::rpc::Actor> &actor_list) {
+		std::cout << "This is client side call ... to remote TM Before" << std::endl;
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("register_vehicle", std::move(actor_list));
+	}
 
-    explicit TrafficManagerClient(
-        const std::string &host,
-        uint16_t port,
-        size_t worker_threads = 0u);
+	void UnregisterVehicle
+	(const std::vector<int> &actor_list) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("unregister_vehicle", std::move(actor_list));
+	}
+private:
+	std::string tmhost;
+	uint16_t    tmport;
+};
 
-    ~TrafficManagerClient();
+#endif /* __TRAFFICMANAGERCLIENT__ */
 
-    /// Set timeout for TrafficManagerServer in Carla Server
-    void SetTimeout(time_duration timeout);
-
-    /// Get current timeout of TrafficManagerServer from Carla Server
-    time_duration GetTimeout() const;
-
-    /// Get end point details
-    const std::string GetEndpoint() const;
-
-    /// Current version of Traffic Manager client
-    std::string GetTrafficManagerClientVersion();
-
-    /// Current version of Traffic Manager server
-    std::string GetTrafficManagerServerVersion();
-
-    /// Register remote vehicles
-    void RegisterVehicle(const std::vector<ActorPtr> &actor_list);
-
-    /// Unregister remote vehicles
-    void UnregisterVehicle(const std::vector<ActorPtr> &actor_list);
-
-  private:
-
-    class Pimpl;
-    const std::unique_ptr<Pimpl> _pimpl;
-  };
-
-} // namespace detail
-} // namespace client
-} // namespace carla

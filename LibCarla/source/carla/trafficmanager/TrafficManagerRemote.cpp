@@ -15,7 +15,12 @@
 namespace carla {
 namespace traffic_manager {
 
-void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
+	std::vector<carla::rpc::Actor> actor_list;
+	for (auto &&actor : _actor_list) {
+		actor_list.emplace_back(actor->Serialize());
+	}
+	client->RegisterVehicle(actor_list);
 	std :: cout << actor_list.size() << std :: endl;
 }
 
@@ -68,6 +73,11 @@ bool TrafficManagerRemote::CheckAllFrozen(TLGroup tl_to_freeze) {
 	return true;
 }
 void TrafficManagerRemote::ResetAllTrafficLights() {}
+
+/// Get carla episode information
+carla::client::detail::EpisodeProxy* TrafficManagerRemote::GetEpisodeProxy() {
+	return &episodeProxyTM;
+}
 
 } // namespace traffic_manager
 } // namespace carla
