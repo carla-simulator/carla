@@ -4,29 +4,30 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "TrafficManager.h"
-#include "carla/client/TrafficLight.h"
+#include "carla/trafficmanager/TrafficManagerLocal.h"
 
+
+#include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"
 
 namespace carla {
 namespace traffic_manager {
 
-TrafficManager::TrafficManager(
-		std::vector<float> longitudinal_PID_parameters,
-		std::vector<float> longitudinal_highway_PID_parameters,
-		std::vector<float> lateral_PID_parameters,
-		std::vector<float> lateral_highway_PID_parameters,
-		float perc_difference_from_limit,
-		carla::client::detail::EpisodeProxy &episodeProxy)
-: longitudinal_PID_parameters(longitudinal_PID_parameters),
-  longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
-  lateral_PID_parameters(lateral_PID_parameters),
-  lateral_highway_PID_parameters(lateral_highway_PID_parameters),
-  episodeProxyTM(episodeProxy),
-  debug_helper(carla::client::DebugHelper{episodeProxyTM}) {
-
+TrafficManagerLocal::TrafficManagerLocal
+		( std::vector<float> longitudinal_PID_parameters
+		, std::vector<float> longitudinal_highway_PID_parameters
+		, std::vector<float> lateral_PID_parameters
+		, std::vector<float> lateral_highway_PID_parameters
+		, float perc_difference_from_limit
+		, carla::client::detail::EpisodeProxy &episodeProxy)
+		: longitudinal_PID_parameters(longitudinal_PID_parameters)
+		, longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters)
+		, lateral_PID_parameters(lateral_PID_parameters)
+		, lateral_highway_PID_parameters(lateral_highway_PID_parameters)
+		, episodeProxyTM(episodeProxy)
+		, debug_helper(carla::client::DebugHelper{episodeProxyTM})
+{
 	using WorldMap = carla::SharedPtr<cc::Map>;
 	const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
 	const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
@@ -80,48 +81,19 @@ TrafficManager::TrafficManager(
 	Start();
 }
 
-TrafficManager::~TrafficManager() {
-
+TrafficManagerLocal::~TrafficManagerLocal() {
 	Stop();
 }
 
-std::unique_ptr<TrafficManager> TrafficManager::singleton_pointer = nullptr;
-
-TrafficManager& TrafficManager::GetInstance(carla::client::detail::EpisodeProxy &episodeProxy) {
-
-	if (singleton_pointer == nullptr) {
-
-		const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
-		const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-		const std::vector<float> lateral_param = {10.0f, 0.02f, 1.0f};
-		const std::vector<float> lateral_highway_param = {9.0f, 0.02f, 1.0f};
-		const float perc_difference_from_limit = 30.0f;
-
-		TrafficManager* tm_ptr = new TrafficManager
-				( longitudinal_param
-						, longitudinal_highway_param
-						, lateral_param
-						, lateral_highway_param
-						, perc_difference_from_limit
-						, episodeProxy);
-
-		singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);
-	}
-
-	return *singleton_pointer.get();
-}
-
-std::unique_ptr<cc::Client> TrafficManager::singleton_local_client = nullptr;
-
-void TrafficManager::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
 	registered_actors.Insert(actor_list);
 }
 
-void TrafficManager::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
 	registered_actors.Remove(actor_list);
 }
 
-void TrafficManager::Start() {
+void TrafficManagerLocal::Start() {
 
 	localization_collision_messenger->Start();
 	localization_traffic_light_messenger->Start();
@@ -137,7 +109,7 @@ void TrafficManager::Start() {
 	control_stage->Start();
 }
 
-void TrafficManager::Stop() {
+void TrafficManagerLocal::Stop() {
 
 	localization_collision_messenger->Stop();
 	localization_traffic_light_messenger->Stop();
@@ -154,15 +126,15 @@ void TrafficManager::Stop() {
 
 }
 
-void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
 	parameters.SetPercentageSpeedDifference(actor, percentage);
 }
 
-void TrafficManager::SetGlobalPercentageSpeedDifference(const float percentage) {
+void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percentage) {
 	parameters.SetGlobalPercentageSpeedDifference(percentage);
 }
 
-void TrafficManager::SetCollisionDetection(
+void TrafficManagerLocal::SetCollisionDetection(
 		const ActorPtr &reference_actor,
 		const ActorPtr &other_actor,
 		const bool detect_collision) {
@@ -170,33 +142,33 @@ void TrafficManager::SetCollisionDetection(
 	parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
 
-void TrafficManager::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
+void TrafficManagerLocal::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
 
 	parameters.SetForceLaneChange(actor, direction);
 }
 
-void TrafficManager::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
+void TrafficManagerLocal::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
 	parameters.SetAutoLaneChange(actor, enable);
 }
 
-void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
+void TrafficManagerLocal::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
 
 	parameters.SetDistanceToLeadingVehicle(actor, distance);
 }
 
-void TrafficManager::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+void TrafficManagerLocal::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
 
 	parameters.SetPercentageIgnoreActors(actor, perc);
 }
 
-void TrafficManager::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
+void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
 
 	parameters.SetPercentageRunningLight(actor, perc);
 }
 
 
-bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
+bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
 	for (auto& elem : tl_to_freeze) {
 		if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
 			return false;
@@ -205,14 +177,14 @@ bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
 	return true;
 }
 
-void TrafficManager::ResetAllTrafficLights() {
+void TrafficManagerLocal::ResetAllTrafficLights() {
 
 	auto Filter = [&](auto &actors, auto &wildcard_pattern) {
 		std::vector<carla::client::detail::ActorVariant> filtered;
 		for (auto &&actor : actors) {
 			if (carla::StringUtil::Match
-				   ( carla::client::detail::ActorVariant(actor).GetTypeId()
-				   , wildcard_pattern)) {
+					( carla::client::detail::ActorVariant(actor).GetTypeId()
+							, wildcard_pattern)) {
 				filtered.push_back(actor);
 			}
 		}

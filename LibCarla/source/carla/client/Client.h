@@ -33,14 +33,23 @@ namespace client {
     }
 
     /// DEMO: Channeling multi-client communication for traffic manager.
-    void SetTrafficManagerRunning(bool running) {
-      _simulator->SetTrafficManagerRunning(running);
+    std::pair<std::string, std::string> GetTrafficManagerRunning() {
+      return _simulator->GetTrafficManagerRunning();
+    }
+
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    void SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo) {
+      _simulator->SetTrafficManagerRunning(trafficManagerInfo);
     }
 
     /// Set a timeout for networking operations. If set, any networking
     /// operation taking longer than @a timeout throws rpc::timeout.
     void SetTimeout(time_duration timeout) {
       _simulator->SetNetworkingTimeout(timeout);
+    }
+
+    time_duration GetTimeout() {
+      return _simulator->GetNetworkingTimeout();
     }
 
     /// Return the version string of this client API.

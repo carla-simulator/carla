@@ -107,8 +107,13 @@ namespace detail {
   }
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  void Client::SetTrafficManagerRunning(bool running) {
-    _pimpl->AsyncCall("set_traffic_manager_running", running);
+  std::pair<std::string, std::string> Client::GetTrafficManagerRunning() {
+	return _pimpl->CallAndWait<std::pair<std::string, std::string>>("get_traffic_manager_running");
+  };
+
+  // DEMO: Channeling multi-client communication for traffic manager.
+  void Client::SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo) {
+    _pimpl->CallAndWait<std::pair<std::string, std::string>>("set_traffic_manager_running", trafficManagerInfo);
   };
 
   Client::~Client() = default;
@@ -121,7 +126,7 @@ namespace detail {
     return _pimpl->GetTimeout();
   }
 
-  const std::string &Client::GetEndpoint() const {
+  const std::string Client::GetEndpoint() const {
     return _pimpl->endpoint;
   }
 
