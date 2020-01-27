@@ -12,18 +12,18 @@
 #include <unordered_set>
 #include <vector>
 
-#include <sys/socket.h> ///< socket
-#include <netinet/in.h> ///< sockaddr_in
-#include <arpa/inet.h>  ///< getsockname
-#include <unistd.h>     ///< close
+#include "carla/StringUtil.h"
+#include "carla/geom/Transform.h"
+#include "carla/Logging.h"
+#include "carla/Memory.h"
 
 #include "carla/client/Actor.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/World.h"
-#include "carla/geom/Transform.h"
-#include "carla/Logging.h"
-#include "carla/Memory.h"
+
+#include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/EpisodeProxy.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
@@ -34,27 +34,19 @@
 #include "carla/trafficmanager/MotionPlannerStage.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
-
 #include "carla/trafficmanager/TrafficManagerBase.h"
-#include "carla/trafficmanager/TrafficManagerLocal.h"
-#include "carla/trafficmanager/TrafficManagerRemote.h"
-
-#define INVALID_INDEX				-1
-#define IP_DATA_BUFFER_SIZE			80
-#define TM_SERVER_PORT				8000
 
 namespace carla {
 namespace traffic_manager {
 
-  namespace cc = carla::client;
+  using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 
-  using ActorPtr = carla::SharedPtr<cc::Actor>;
   using TLS = carla::rpc::TrafficLightState;
-  using TLGroup = std::vector<carla::SharedPtr<cc::TrafficLight>>;
+  using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 
   /// The function of this class is to integrate all the various stages of
   /// the traffic manager appropriately using messengers.
-  class TrafficManager {
+  class TrafficManagerLocal : public TrafficManagerBase {
 
   private:
 
@@ -67,11 +59,12 @@ namespace traffic_manager {
     AtomicActorSet registered_actors;
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
+
     /// Carla's client connection object.
     carla::client::detail::EpisodeProxy episodeProxyTM;
 
     /// Carla's debug helper object.
-    cc::DebugHelper debug_helper;
+    carla::client::DebugHelper debug_helper;
 
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
@@ -86,21 +79,9 @@ namespace traffic_manager {
     std::unique_ptr<LocalizationStage> localization_stage;
     std::unique_ptr<MotionPlannerStage> planner_stage;
     std::unique_ptr<TrafficLightStage> traffic_light_stage;
-    /// Static pointer to singleton object.
-    static std::unique_ptr<TrafficManager> singleton_pointer;
-    /// Static pointer to singleton client connected to localhost, 2000.
-    static std::unique_ptr<cc::Client> singleton_local_client;
+
     /// Parameterization object.
     Parameters parameters;
-
-    /// Private constructor for singleton lifecycle management.
-    TrafficManager(
-        std::vector<float> longitudinal_PID_parameters,
-        std::vector<float> longitudinal_highway_PID_parameters,
-        std::vector<float> lateral_PID_parameters,
-        std::vector<float> lateral_highway_PID_parameters,
-        float perc_decrease_from_limit,
-		carla::client::detail::EpisodeProxy &episodeProxy);
 
     /// To start the TrafficManager.
     void Start();
@@ -110,17 +91,26 @@ namespace traffic_manager {
 
   public:
 
-    /// Static method for singleton lifecycle management.
-    static TrafficManager& GetInstance(carla::client::detail::EpisodeProxy &episodeProxy);
+    /// Private constructor for singleton lifecycle management.
+    TrafficManagerLocal
+		( std::vector<float> longitudinal_PID_parameters
+		, std::vector<float> longitudinal_highway_PID_parameters
+		, std::vector<float> lateral_PID_parameters
+		, std::vector<float> lateral_highway_PID_parameters
+		, float perc_decrease_from_limit
+		, carla::client::detail::EpisodeProxy &episodeProxy);
 
-    /// Static method to get unique client connected to (localhost, 2000).
-    static cc::Client& GetUniqueLocalClient();
+    /// Destructor.
+    virtual ~TrafficManagerLocal();
 
     /// This method registers a vehicle with the traffic manager.
     void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
 
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
+
+    /// This method kills a vehicle. (Not working right now)
+    /// void DestroyVehicle(const ActorPtr &actor);
 
     /// Set target velocity specific to a vehicle.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
@@ -145,29 +135,17 @@ namespace traffic_manager {
     /// the leading vehicle.
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-    /// Method to specify the % chance of ignoring collisions with all walkers
-    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
-
-    /// Method to specify the % chance of ignoring collisions with all vehicles
-    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+    /// Method to specify the % chance of ignoring collisions with other actors
+    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
 
     /// Method to specify the % chance of running a red light
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
-
-    /// Method to specify the % chance of running any traffic sign
-    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
-
-    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
 
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
 
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
-
-    /// Destructor.
-    ~TrafficManager();
-
   };
 
 } // namespace traffic_manager

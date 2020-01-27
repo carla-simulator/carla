@@ -72,7 +72,7 @@ public:
   }
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  bool IsTrafficManagerRunning = false;
+  std::pair<std::string, std::string> TrafficManagerInfo;
 
   carla::rpc::Server Server;
 
@@ -158,14 +158,20 @@ void FCarlaServer::FPimpl::BindActions()
   // DEMO: Channeling multi-client communication for traffic manager.
   BIND_SYNC(is_traffic_manager_running) << [this] () ->R<bool>
   {
-    return IsTrafficManagerRunning;
+    return !TrafficManagerInfo.first.empty() || !TrafficManagerInfo.second.empty();
   };
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  BIND_ASYNC(set_traffic_manager_running) << [this] (bool running) ->R<void>
+  BIND_SYNC(get_traffic_manager_running) << [this] () ->R<std::pair<std::string, std::string>>
   {
-    IsTrafficManagerRunning = running;
-    return R<void>::Success();
+    return TrafficManagerInfo;
+  };
+
+  // DEMO: Channeling multi-client communication for traffic manager.
+  BIND_SYNC(set_traffic_manager_running) << [this] (std::pair<std::string, std::string> trafficManagerInfo) ->R<void>
+  {
+	  TrafficManagerInfo = trafficManagerInfo;
+	  return R<void>::Success();
   };
 
   BIND_ASYNC(version) << [] () -> R<std::string>

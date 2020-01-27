@@ -124,6 +124,10 @@ namespace detail {
       _client.SetTimeout(timeout);
     }
 
+    time_duration GetNetworkingTimeout() {
+      return _client.GetTimeout();
+    }
+
     std::string GetClientVersion() {
       return _client.GetClientVersion();
     }
@@ -158,14 +162,23 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    std :: string GetEndpoint() {
+    	return _client.GetEndpoint();
+    }
+
     /// DEMO: Channeling multi-client communication for traffic manager.
     bool IsTrafficManagerRunning() const {
       return _client.IsTrafficManagerRunning();
     }
 
     /// DEMO: Channeling multi-client communication for traffic manager.
-    void SetTrafficManagerRunning(bool running) {
-      _client.SetTrafficManagerRunning(running);
+    std::pair<std::string, std::string> GetTrafficManagerRunning() {
+      return _client.GetTrafficManagerRunning();
+    }
+
+    /// DEMO: Channeling multi-client communication for traffic manager.
+    void SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo) {
+      _client.SetTrafficManagerRunning(trafficManagerInfo);
     }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();

@@ -65,14 +65,17 @@ namespace detail {
     /// DEMO: Channeling multi-client communication for traffic manager.
     bool IsTrafficManagerRunning() const;
 
+    // DEMO: Channeling multi-client communication for traffic manager.
+    std::pair<std::string, std::string> GetTrafficManagerRunning();
+
     /// DEMO: Channeling multi-client communication for traffic manager.
-    void SetTrafficManagerRunning(bool running);
+    void SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo);
 
     void SetTimeout(time_duration timeout);
 
     time_duration GetTimeout() const;
 
-    const std::string &GetEndpoint() const;
+    const std::string GetEndpoint() const;
 
     std::string GetClientVersion();
 
