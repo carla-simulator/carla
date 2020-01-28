@@ -12,7 +12,7 @@
 The quickstart installation uses a pre-packaged version of CARLA. This comprises the content in a boundle that can run automatically with no build needed. The API can be accesseded fully but in exchange, advanced customization and developing options are unavailable.  
 However, some requirements are still needed.  
 
-* __Server side:__ A good GPU will be needed to run a highly realistic environment (2 or 3 GB minimum). A dedicated GPU is highly advised for machine learning. 
+* __Server side:__ A good GPU will be needed to run a highly realistic environment (4GB minimum). A dedicated GPU is highly advised for machine learning. 
 * __Client side:__ it consists of a command line to get in touch with the simulator using [Python](https://www.python.org/downloads/). No graphics at all. A good internet connection and two TCP ports (2000 and 1 by default) will be needed. 
 * __System requirements:__ Any 64-bits OS should run the corresponding version of CARLA.
 * __Other requirements:__  Only two specific Python modules: [Pygame](https://www.pygame.org/download.shtml), to create graphics directly with Python and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
@@ -69,18 +69,25 @@ waiting for a client app to connect and interact with the world.
 ---------------
 ##Updating CARLA
 
-The packaged version requires no updates. The content is bundled and thus, tied to a specific version of CARLA. Everytime there is a release, the repository will be updated. To run this latest or any other version, delete the previous one and repeat the installation steps with the desired. 
+The packaged version requires no updates. The content is bundled and thus, tied to a specific version of CARLA. Everytime there is a release, the repository will be updated. To run this latest or any other version, delete the previous one, visit the CARLA repository on GitHub and repeat the installation steps with the desired version. 
 
 ---------------
 ##Summary
 
-That concludes the quickstart installation process. In case any unexpected error or issue occurs, the [CARLA forum](https://forum.carla.org/) is open to everybody. There is an _Installation issues_ category to post this kind of problems and doubts. 
+That concludes the quickstart installation process. In case any unexpected error or issue occurs, the CARLA forumm is open to everybody. There is an **Installation issues** category to post this kind of problems and doubts. 
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+Visit the forum</a>
+</p>
+</div>
 
 So far, CARLA should be operative in your desired system. A terminal window will be used to contact the server via scripts. Thus will access all of the capabilities that CARLA provides. The next step should be to visiting the _First steps_ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in this [reference](../python_api.md).
 
 <div class="build-buttons">
 <p>
-<a href="../first_steps.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../../python_api_tutorial" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 Go to: First steps</a>
 </p>
 </div>
