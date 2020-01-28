@@ -38,6 +38,6 @@ void export_trafficmanager() {
       .def("ignore_signs_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningSign);
 
 
-    def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
+    // def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
 
 }

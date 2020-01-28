@@ -8,10 +8,13 @@
 
 #include "carla/PythonUtil.h"
 #include "carla/client/World.h"
+#include "carla/trafficmanager/TrafficManager.h"
 #include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace client {
+
+	using namespace carla::traffic_manager;
 
   class Client {
   public:
@@ -26,21 +29,6 @@ namespace client {
         const std::string &host,
         uint16_t port,
         size_t worker_threads = 0u);
-
-    /// DEMO: Channeling multi-client communication for traffic manager.
-    bool IsTrafficManagerRunning() const {
-      return _simulator->IsTrafficManagerRunning();
-    }
-
-    /// DEMO: Channeling multi-client communication for traffic manager.
-    std::pair<std::string, std::string> GetTrafficManagerRunning() {
-      return _simulator->GetTrafficManagerRunning();
-    }
-
-    /// DEMO: Channeling multi-client communication for traffic manager.
-    void SetTrafficManagerRunning(std::pair<std::string, std::string> trafficManagerInfo) {
-      _simulator->SetTrafficManagerRunning(trafficManagerInfo);
-    }
 
     /// Set a timeout for networking operations. If set, any networking
     /// operation taking longer than @a timeout throws rpc::timeout.
@@ -77,6 +65,11 @@ namespace client {
     /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
+    }
+
+    /// Return an instance of the world currently active in the simulator.
+    TrafficManager GetInstanceTM() const {
+      return TrafficManager{_simulator->GetCurrentEpisode()};
     }
 
     std::string StartRecorder(std::string name) {

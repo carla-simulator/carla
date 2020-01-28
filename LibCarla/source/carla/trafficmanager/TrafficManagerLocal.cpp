@@ -5,8 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
-
-
 #include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"

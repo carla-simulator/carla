@@ -28,7 +28,7 @@ namespace traffic_manager {
     // Looping over registered actors.
     for (uint64_t i = 0u; i < number_of_vehicles && data_frame != nullptr; ++i) {
 
-      cr::VehicleControl vehicle_control;
+    	carla::rpc::VehicleControl vehicle_control;
 
       const PlannerToControlData &element = data_frame->at(i);
       if (!element.actor->IsAlive()) {
@@ -40,7 +40,7 @@ namespace traffic_manager {
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
 
-      commands->at(i) = cr::Command::ApplyVehicleControl(actor_id, vehicle_control);
+      commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
     }
   }
 
@@ -54,7 +54,7 @@ namespace traffic_manager {
 
       number_of_vehicles = static_cast<uint64_t>((*data_frame.get()).size());
       // Allocating array for command batching.
-      commands = std::make_shared<std::vector<cr::Command>>(number_of_vehicles);
+      commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
     }
 
   }
