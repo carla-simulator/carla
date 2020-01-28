@@ -20,12 +20,50 @@ namespace MapConstants {
   namespace cg = carla::geom;
   using namespace MapConstants;
 
-  InMemoryMap::InMemoryMap(RawNodeList _raw_dense_topology) {
-    raw_dense_topology = _raw_dense_topology;
-  }
+  InMemoryMap::InMemoryMap(WorldMap world_map) : _world_map(world_map) {}
   InMemoryMap::~InMemoryMap() {}
 
   void InMemoryMap::SetUp() {
+
+    // Building a standard road connectivity map.
+    auto topology = _world_map->GetTopology();
+    std::unordered_map<int64_t, std::pair<std::set<crd::RoadId>, std::set<crd::RoadId>>> std_road_connectivity;
+    std::unordered_map<crd::RoadId, bool> mapped_paths;
+
+    for (auto wp : topology) {
+      auto waypoint = wp.first;
+      auto successor = wp.second;
+
+      // Entrance paths to a standard road.
+      if (waypoint->IsJunction() && !successor->IsJunction()) {
+        int64_t std_road_id = static_cast<int64_t>(successor->GetRoadId());
+        if (successor->GetLaneId() < 0) {
+          std_road_id *= -1;
+        }
+
+        std_road_connectivity[std_road_id].first.insert(waypoint->GetRoadId());
+        if (std_road_connectivity[std_road_id].first.size() >= 2) {
+          for (auto path : std_road_connectivity[std_road_id].first) {
+            mapped_paths[path] = true;
+          }
+        }
+      }
+
+      // Exit paths to a standard road.
+      if (!waypoint->IsJunction() && successor->IsJunction()) {
+        int64_t std_road_id = static_cast<int64_t>(waypoint->GetRoadId());
+        if (waypoint->GetLaneId() < 0) {
+          std_road_id *= -1;
+        }
+
+        std_road_connectivity[std_road_id].second.insert(successor->GetRoadId());
+        if (std_road_connectivity[std_road_id].second.size() >= 2) {
+          for (auto path : std_road_connectivity[std_road_id].second) {
+            mapped_paths[path] = true;
+          }
+        }
+      }
+    }
 
     NodeList entry_node_list;
     NodeList exit_node_list;
@@ -37,14 +75,17 @@ namespace MapConstants {
     auto square = [](float input) {return std::pow(input, 2);};
 
     // Consuming the raw dense topology from cc::Map into SimpleWaypoints.
-    std::map<std::pair<crd::RoadId, crd::LaneId>, std::vector<SimpleWaypointPtr>> segment_map;
+    auto raw_dense_topology = _world_map->GenerateWaypoints(0.1f);
+
+    std::map<std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>, std::vector<SimpleWaypointPtr>> segment_map;
     for (auto& waypoint_ptr: raw_dense_topology) {
       auto road_id = waypoint_ptr->GetRoadId();
       auto lane_id = waypoint_ptr->GetLaneId();
-      if (segment_map.find({road_id, lane_id}) != segment_map.end()) {
-        segment_map.at({road_id, lane_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      auto section_id = waypoint_ptr->GetSectionId();
+      if (segment_map.find({road_id, lane_id, section_id}) != segment_map.end()) {
+        segment_map.at({road_id, lane_id, section_id}).push_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
       } else {
-        segment_map.insert({{road_id, lane_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
+        segment_map.insert({{road_id, lane_id, section_id}, {std::make_shared<SimpleWaypoint>(waypoint_ptr)}});
       }
     }
 
@@ -144,6 +185,14 @@ namespace MapConstants {
 
     // Linking any unconnected segments.
     for (auto& swp: dense_topology) {
+
+      // Checking whether the waypoint is a real junction.
+      if (swp->GetWaypoint()->IsJunction() && mapped_paths.find(swp->GetWaypoint()->GetRoadId()) == mapped_paths.end()) {
+        swp->SetIsJunction(false);
+      } else {
+        swp->SetIsJunction(swp->GetWaypoint()->IsJunction());
+      }
+
       if (swp->GetNextWaypoint().size() == 0) {
         SimpleWaypointPtr nearest_sample = GetWaypointInVicinity(swp->GetLocation()
             + cg::Location(swp->GetForwardVector() * 0.2f));
