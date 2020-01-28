@@ -15,86 +15,102 @@ std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 /// Private constructor for singleton life cycle management.
 TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProxy) {
 
+	std::pair<std::string, std::string> serverTM;
+
 	/// Check singleton instance already created or not
 	if (!singleton_pointer) {
 
-		/// Check TM instance already registered with server or not
-		if(episodeProxy.Lock()->IsTrafficManagerRunning()) {
+		try {
+			/// Check TM instance already registered with server or not
+			if(episodeProxy.Lock()->IsTrafficManagerRunning()) {
 
-			/// Get TM server information
-			std::pair<std::string, std::string> serverTM = episodeProxy.Lock()->GetTrafficManagerRunning();
+				/// Get TM server info (Remote IP & PORT)
+				serverTM = episodeProxy.Lock()->GetTrafficManagerRunning();
 
-			/// Set IP and port
-			TrafficManagerRemote* tm_ptr = new TrafficManagerRemote(serverTM, episodeProxy);
+				/// Set IP and port
+				TrafficManagerRemote* tm_ptr = new TrafficManagerRemote(serverTM, episodeProxy);
 
-			/// Set the pointer of the instance
-			singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+				/// Try to reset all traffic lights
+				tm_ptr->ResetAllTrafficLights();
+
+				/// Set the pointer of the instance
+				singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+			}
+		} catch (...) {
+			std::cout << "Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED" << std::endl;
 		}
+	}
 
-		/// Get Local TM details
-		else {
-			const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
-			const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-			const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};
-			const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
-			const float perc_difference_from_limit 				= 30.0f;
+	/// If pointer is not allocated get Local TM details
+	if (!singleton_pointer) {
 
-			TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
-					( longitudinal_param
-							, longitudinal_highway_param
-							, lateral_param
-							, lateral_highway_param
-							, perc_difference_from_limit
-							, episodeProxy);
+		const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
+		const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
+		const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};
+		const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
+		const float perc_difference_from_limit 				= 30.0f;
+
+		TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
+				( longitudinal_param
+						, longitudinal_highway_param
+						, lateral_param
+						, lateral_highway_param
+						, perc_difference_from_limit
+						, episodeProxy);
 
 
-			auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
-			{
-				int err;
-				std::pair<std::string, std::string> localIP;
-				int sock = socket(AF_INET, SOCK_DGRAM, 0);
-				if(sock == INVALID_INDEX) {
-					std::cout << "Error number1: " << errno << std::endl;
+		auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
+		{
+			int err;
+			std::pair<std::string, std::string> localIP;
+			int sock = socket(AF_INET, SOCK_DGRAM, 0);
+			if(sock == INVALID_INDEX) {
+				std::cout << "Error number1: " << errno << std::endl;
+				std::cout << "Error message: " << strerror(errno) << std::endl;
+			} else {
+				sockaddr_in loopback;
+				std::memset(&loopback, 0, sizeof(loopback));
+				loopback.sin_family = AF_INET;
+				loopback.sin_addr.s_addr = INADDR_LOOPBACK;   // using loopback ip address
+				loopback.sin_port = htons(9);                 // using debug port
+				err = connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+				if(err == INVALID_INDEX) {
+					std::cout << "Error number2: " << errno << std::endl;
 					std::cout << "Error message: " << strerror(errno) << std::endl;
 				} else {
-					sockaddr_in loopback;
-					std::memset(&loopback, 0, sizeof(loopback));
-					loopback.sin_family = AF_INET;
-					loopback.sin_addr.s_addr = INADDR_LOOPBACK;   // using loopback ip address
-					loopback.sin_port = htons(9);                 // using debug port
-					err = connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+					socklen_t addrlen = sizeof(loopback);
+					err = getsockname(sock, reinterpret_cast<struct sockaddr*> (&loopback), &addrlen);
 					if(err == INVALID_INDEX) {
-						std::cout << "Error number2: " << errno << std::endl;
+						std::cout << "Error number3: " << errno << std::endl;
 						std::cout << "Error message: " << strerror(errno) << std::endl;
 					} else {
-						socklen_t addrlen = sizeof(loopback);
-						err = getsockname(sock, reinterpret_cast<struct sockaddr*> (&loopback), &addrlen);
-						if(err == INVALID_INDEX) {
-							std::cout << "Error number3: " << errno << std::endl;
-							std::cout << "Error message: " << strerror(errno) << std::endl;
+						char buffer[IP_DATA_BUFFER_SIZE];
+						const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
+						if(p != NULL) {
+							localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(TM_SERVER_PORT));
+							std::cout << "Local IP: " << localIP.first << " PORT: " << localIP.second << std::endl;
 						} else {
-							char buffer[IP_DATA_BUFFER_SIZE];
-							const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
-							if(p != NULL) {
-								localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(TM_SERVER_PORT));
-								std::cout << "Local IP: " << localIP.first << " PORT: " << localIP.second << std::endl;
-							} else {
-								std::cout << "Error number4: " << errno << std::endl;
-								std::cout << "Error message: " << strerror(errno) << std::endl;
-							}
+							std::cout << "Error number4: " << errno << std::endl;
+							std::cout << "Error message: " << strerror(errno) << std::endl;
 						}
 					}
-					close(sock);
 				}
-				return localIP;
-			};
+				close(sock);
+			}
+			return localIP;
+		};
 
-			/// Set this client as the TM to server
-			episodeProxy.Lock()->SetTrafficManagerRunning(GetLocalIp());
+		/// Get TM server info (Local IP & PORT)
+		serverTM = GetLocalIp();
 
-			/// Set the pointer of the instance
-			singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
-		}
+		/// Set this client as the TM to server
+		episodeProxy.Lock()->SetTrafficManagerRunning(serverTM);
+
+		/// Print status
+		std::cout << "New TM Registered at " << serverTM.first << ":" << serverTM.second << " ..... SUCCESS" << std::endl;
+
+		/// Set the pointer of the instance
+		singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 	}
 }
 
