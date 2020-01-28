@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
@@ -35,6 +36,7 @@ namespace traffic_manager {
   using NodeList = std::vector<SimpleWaypointPtr>;
   using RawNodeList = std::vector<WaypointPtr>;
   using GeoGridId = crd::JuncId;
+  using WorldMap = carla::SharedPtr<cc::Map>;
 
   /// This class builds a discretized local map-cache.
   /// Instantiate the class with map topology from the simulator
@@ -43,8 +45,8 @@ namespace traffic_manager {
 
   private:
 
-    /// Object to hold sparse topology received by the constructor.
-    RawNodeList raw_dense_topology;
+    /// Object to hold the world map received by the constructor.
+    WorldMap _world_map;
     /// Structure to hold all custom waypoint objects after
     /// interpolation of sparse topology.
     NodeList dense_topology;
@@ -67,7 +69,7 @@ namespace traffic_manager {
 
   public:
 
-    InMemoryMap(RawNodeList _raw_dense_topology);
+    InMemoryMap(WorldMap world_map);
     ~InMemoryMap();
 
     /// This method constructs the local map with a resolution of
