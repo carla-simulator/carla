@@ -256,8 +256,8 @@ namespace traffic_manager {
   }
 
 /// Get carla episode information
-carla::client::detail::EpisodeProxy* TrafficManagerLocal::GetEpisodeProxy() {
-	return &episodeProxyTM;
+carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
+	return episodeProxyTM;
 }
 } // namespace traffic_manager
 } // namespace carla
