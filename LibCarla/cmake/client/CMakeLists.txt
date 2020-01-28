@@ -198,6 +198,12 @@ file(GLOB libcarla_cephes_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
 install(FILES ${libcarla_cephes_sources} DESTINATION include/cephes)
 
+file(GLOB libcarla_odrSpiral_sources
+    "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
+    "${libcarla_source_thirdparty_path}/odrSpiral/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_odrSpiral_sources}")
+install(FILES ${libcarla_odrSpiral_sources} DESTINATION include/odrSpiral)
+
 file(GLOB libcarla_moodycamel_sources
     "${libcarla_source_thirdparty_path}/moodycamel/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_moodycamel_sources}")
