@@ -35,6 +35,6 @@ void export_trafficmanager() {
       .def("ignore_actors_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreActors)
       .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight);
 
-    def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
+    // def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
 
 }

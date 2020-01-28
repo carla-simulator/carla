@@ -20,7 +20,15 @@ TrafficManagerRemote :: TrafficManagerRemote
 	( const std::pair<std::string, std::string> &_serverTM
 	, carla::client::detail::EpisodeProxy &episodeProxy)
 	: episodeProxyTM(episodeProxy) {
-	uint16_t serverRPCPort = std::atoi(_serverTM.second.c_str());
+	uint16_t serverRPCPort = TM_SERVER_PORT;
+
+    try {
+    	serverRPCPort = boost::lexical_cast<uint16_t>(std::atoi(_serverTM.second.c_str()));
+    } catch(boost::bad_lexical_cast &) {
+    	serverRPCPort = TM_SERVER_PORT;
+    }
+
+    /// Set server details
 	client.setServerDetails(_serverTM.first, serverRPCPort);
 }
 

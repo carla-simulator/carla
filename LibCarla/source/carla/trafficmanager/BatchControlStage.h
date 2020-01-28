@@ -8,7 +8,6 @@
 
 #include <memory>
 
-#include "carla/client/Client.h"
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/Command.h"
@@ -22,9 +21,6 @@
 
 namespace carla {
 namespace traffic_manager {
-
-  namespace cc = carla::client;
-  namespace cr = carla::rpc;
 
   /// This class receives actuation signals (throttle, brake, steer)
   /// from MotionPlannerStage class and communicates these signals to
@@ -40,7 +36,7 @@ namespace traffic_manager {
     /// Reference to carla client connection object.
     carla::client::detail::EpisodeProxy episodeProxyBCS;
     /// Array to hold command batch.
-    std::shared_ptr<std::vector<cr::Command>> commands;
+    std::shared_ptr<std::vector<carla::rpc::Command>> commands;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
 

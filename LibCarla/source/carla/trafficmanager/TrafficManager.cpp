@@ -13,7 +13,7 @@ namespace traffic_manager {
 std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 
 /// Private constructor for singleton life cycle management.
-TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy &episodeProxy) {
+TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProxy) {
 
 	/// Check singleton instance already created or not
 	if (!singleton_pointer) {

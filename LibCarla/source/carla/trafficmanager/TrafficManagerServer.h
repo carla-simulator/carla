@@ -7,14 +7,15 @@
 #ifndef __TRAFFICMANAGERSERVER__
 #define __TRAFFICMANAGERSERVER__
 
-#include "carla/trafficmanager/TrafficManagerBase.h"
 
-#include <memory.h>
+#include <vector>
+#include <memory>
+
 #include <carla/client/Actor.h>
 #include <carla/Version.h>
 #include <carla/rpc/Server.h>
 
-#include <vector>
+#include "carla/trafficmanager/TrafficManagerBase.h"
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 
@@ -104,16 +105,6 @@ public:
 
 		/// Run TM server to respond of any user client in async mode
 		server->async_run();
-	}
-
-
-	/// Stop running server and clear memory
-	~TrafficManagerServer() {
-		if(server) {
-			server->stop();
-			delete server;
-			server = nullptr;
-		}
 	}
 
 	/// Server instance to

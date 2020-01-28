@@ -7,34 +7,14 @@
 #ifndef __TRAFFICMANAGERREMOTE__
 #define __TRAFFICMANAGERREMOTE__
 
-#include <algorithm>
 #include <memory>
-#include <random>
-#include <unordered_set>
 #include <vector>
 
-#include "carla/StringUtil.h"
-#include "carla/geom/Transform.h"
-#include "carla/Logging.h"
-#include "carla/Memory.h"
-
 #include "carla/client/Actor.h"
-#include "carla/client/BlueprintLibrary.h"
-#include "carla/client/Map.h"
-#include "carla/client/World.h"
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
-#include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/AtomicMap.h"
-#include "carla/trafficmanager/BatchControlStage.h"
-#include "carla/trafficmanager/CollisionStage.h"
-#include "carla/trafficmanager/InMemoryMap.h"
-#include "carla/trafficmanager/LocalizationStage.h"
-#include "carla/trafficmanager/MotionPlannerStage.h"
-#include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/trafficmanager/TrafficManagerClient.h"
 

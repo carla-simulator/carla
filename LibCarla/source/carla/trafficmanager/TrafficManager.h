@@ -59,10 +59,13 @@ private:
 public:
 
 	/// Private constructor for singleton life cycle management.
-	TrafficManager(carla::client::detail::EpisodeProxy &episodeProxy);
+	explicit TrafficManager(carla::client::detail::EpisodeProxy episodeProxy);
 
-	/// Destructor.
-	~TrafficManager() {};
+	TrafficManager(const TrafficManager &) = default;
+	TrafficManager(TrafficManager &&) = default;
+
+	TrafficManager &operator=(const TrafficManager &) = default;
+	TrafficManager &operator=(TrafficManager &&) = default;
 
 	/// This method registers a vehicle with the traffic manager.
 	void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
