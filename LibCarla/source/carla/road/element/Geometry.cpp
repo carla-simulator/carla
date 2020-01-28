@@ -10,11 +10,13 @@
 #include "carla/Exception.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Vector2D.h"
 
 #include <boost/array.hpp>
 #include <boost/math/tools/rational.hpp>
 
-#include <cephes/fresnel.h>
+//#include <cephes/fresnel.h>
+#include <odrSpiral/odrSpiral.h>
 
 #include <algorithm>
 #include <cmath>
@@ -56,33 +58,53 @@ namespace element {
     return p;
   }
 
+  geom::Vector2D RotatebyAngle(double angle, double x, double y){
+    const double cos_a = std::cos(angle);
+    const double sin_a = std::sin(angle);
+    return geom::Vector2D(
+        static_cast<float>(x * cos_a - y * sin_a),
+        static_cast<float>(y * cos_a + x * sin_a));
+  }
+
   DirectedPoint GeometrySpiral::PosFromDist(double dist) const {
-    // not working yet with negative values
     dist = geom::Math::Clamp(dist, 0.0, _length);
     DEBUG_ASSERT(_length > 0.0);
-    DEBUG_ASSERT(std::fabs(_curve_end) > 1e-15);
-    const double radius = 1.0 / _curve_end;
-    const double extra_norm = 1.0 / std::sqrt(geom::Math::Pi<double>() / 2.0);
-    const double norm = 1.0 / std::sqrt(2.0 * radius * _length);
-    const double length = dist * norm;
-    double S, C;
-    fresnl(length * extra_norm, &S, &C);
-    S /= (norm * extra_norm);
-    C /= (norm * extra_norm);
     DirectedPoint p(_start_position, _heading);
-    const double cos_a = std::cos(p.tangent);
-    const double sin_a = std::sin(p.tangent);
-    p.location.x += static_cast<float>(C * cos_a - S * sin_a);
-    p.location.y += static_cast<float>(S * cos_a + C * sin_a);
-    p.tangent += length * length;
+
+    const double curve_end = (_curve_end);
+    const double curve_start = (_curve_start);
+    const double curve_dot = (curve_end - curve_start) / (_length);
+    const double s_o = curve_start / curve_dot;
+    //const double s_f = curve_end / curve_dot;
+    double s = s_o + dist;
+
+    double x;
+    double y;
+    double t;
+    odrSpiral(s, curve_dot, &x, &y, &t);
+
+    double x_o;
+    double y_o;
+    double t_o;
+    odrSpiral(s_o, curve_dot, &x_o, &y_o, &t_o);
+
+    x = x - x_o;
+    y = y - y_o;
+    t = t - t_o;
+
+    geom::Vector2D pos = RotatebyAngle(_heading - t_o, x, y);
+    p.location.x += pos.x;
+    p.location.y += pos.y;
+    p.tangent = _heading + t;
+
     return p;
   }
 
   /// @todo
-  std::pair<float, float> GeometrySpiral::DistanceTo(const geom::Location &) const {
+  std::pair<float, float> GeometrySpiral::DistanceTo(const geom::Location &location) const {
     //Not analytic, discretize and find nearest point
     //throw_exception(std::runtime_error("not implemented"));
-    return {_start_position.x,_start_position.y};
+    return {location.x - _start_position.x, location.y - _start_position.y};
   }
 
   DirectedPoint GeometryPoly3::PosFromDist(double dist) const{
