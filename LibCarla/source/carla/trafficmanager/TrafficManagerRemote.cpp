@@ -15,68 +15,125 @@
 namespace carla {
 namespace traffic_manager {
 
+/// Constructor store remote location information
+TrafficManagerRemote :: TrafficManagerRemote
+	( const std::pair<std::string, std::string> &_serverTM
+	, carla::client::detail::EpisodeProxy &episodeProxy)
+	: episodeProxyTM(episodeProxy) {
+	uint16_t serverRPCPort = std::atoi(_serverTM.second.c_str());
+	client.setServerDetails(_serverTM.first, serverRPCPort);
+}
+
+/// Destructor.
+TrafficManagerRemote :: ~TrafficManagerRemote() {}
+
+
+/// This method registers a vehicle with the traffic manager.
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
+	/// Prepare rpc actor list
 	std::vector<carla::rpc::Actor> actor_list;
 	for (auto &&actor : _actor_list) {
 		actor_list.emplace_back(actor->Serialize());
 	}
-	client->RegisterVehicle(actor_list);
-	std :: cout << actor_list.size() << std :: endl;
+	/// Call client method
+	client.RegisterVehicle(actor_list);
 }
 
-void TrafficManagerRemote::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-	std :: cout << actor_list.size() << std :: endl;
+/// This method unregisters a vehicle from traffic manager.
+void TrafficManagerRemote::UnregisterVehicles(const std::vector<ActorPtr> &_actor_list) {
+	/// Prepare rpc actor list
+	std::vector<carla::rpc::Actor> actor_list;
+	for (auto &&actor : _actor_list) {
+		actor_list.emplace_back(actor->Serialize());
+	}
+	/// Call client method
+	client.UnregisterVehicle(actor_list);
 }
 
-void TrafficManagerRemote::Start() {}
+/// Set target velocity specific to a vehicle.
+void TrafficManagerRemote::SetPercentageSpeedDifference(const ActorPtr &_actor, const float percentage) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-void TrafficManagerRemote::Stop() {}
-
-void TrafficManagerRemote::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-	std :: cout << actor->IsAlive() << percentage << std :: endl;
+	/// Call client method
+	client.SetPercentageSpeedDifference(actor, percentage);
 }
 
+/// Set global target velocity.
 void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percentage) {
-	std :: cout << percentage << std :: endl;
+	/// Call client method
+	client.SetGlobalPercentageSpeedDifference(percentage);
 }
 
-void TrafficManagerRemote::SetCollisionDetection(
-		const ActorPtr &reference_actor,
-		const ActorPtr &other_actor,
-		const bool detect_collision) {
-	std :: cout <<  reference_actor->IsAlive() << other_actor->IsAlive() << detect_collision << std :: endl;
+/// Set collision detection rules between vehicles.
+void TrafficManagerRemote::SetCollisionDetection
+	( const ActorPtr &_reference_actor
+	, const ActorPtr &_other_actor
+	, const bool detect_collision) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor reference_actor(_reference_actor->Serialize());
+	carla::rpc::Actor other_actor(_other_actor->Serialize());
+
+	/// Call client method
+	client.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
 
-void TrafficManagerRemote::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-	std :: cout << actor->IsAlive() << direction << std :: endl;
+/// Method to force lane change on a vehicle.
+/// Direction flag can be set to true for left and false for right.
+void TrafficManagerRemote::SetForceLaneChange(const ActorPtr &_actor, const bool direction) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetForceLaneChange(actor, direction);
 }
 
-void TrafficManagerRemote::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-	std :: cout << actor->IsAlive() << enable << std :: endl;
+/// Enable / disable automatic lane change on a vehicle.
+void TrafficManagerRemote::SetAutoLaneChange(const ActorPtr &_actor, const bool enable) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetAutoLaneChange(actor, enable);
 }
 
-void TrafficManagerRemote::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-	std :: cout << actor->IsAlive() << distance << std :: endl;
+/// Method to specify how much distance a vehicle should maintain to
+/// the leading vehicle.
+void TrafficManagerRemote::SetDistanceToLeadingVehicle(const ActorPtr &_actor, const float distance) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetDistanceToLeadingVehicle(actor, distance);
 }
 
-void TrafficManagerRemote::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-	std :: cout << actor->IsAlive() << perc << std :: endl;
+/// Method to specify the % chance of ignoring collisions with other actors
+void TrafficManagerRemote::SetPercentageIgnoreActors(const ActorPtr &_actor, const float percentage) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetPercentageIgnoreActors(actor, percentage);
 }
 
-void TrafficManagerRemote::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
-	std :: cout << actor->IsAlive() << perc << std :: endl;
+/// Method to specify the % chance of running a red light
+void TrafficManagerRemote::SetPercentageRunningLight(const ActorPtr &_actor, const float percentage) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetPercentageRunningLight(actor, percentage);
 }
 
-
-bool TrafficManagerRemote::CheckAllFrozen(TLGroup tl_to_freeze) {
-	std :: cout << tl_to_freeze.size() << std :: endl;
-	return true;
+/// Method to reset all traffic lights.
+void TrafficManagerRemote::ResetAllTrafficLights() {
+	/// Call client method
+	client.ResetAllTrafficLights();
 }
-void TrafficManagerRemote::ResetAllTrafficLights() {}
 
 /// Get carla episode information
-carla::client::detail::EpisodeProxy* TrafficManagerRemote::GetEpisodeProxy() {
-	return &episodeProxyTM;
+carla::client::detail::EpisodeProxy& TrafficManagerRemote::GetEpisodeProxy() {
+	return episodeProxyTM;
 }
 
 } // namespace traffic_manager

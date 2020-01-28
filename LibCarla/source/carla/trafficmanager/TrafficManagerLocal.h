@@ -57,8 +57,10 @@ namespace traffic_manager {
     std::vector<float> longitudinal_highway_PID_parameters;
     std::vector<float> lateral_PID_parameters;
     std::vector<float> lateral_highway_PID_parameters;
+
     /// Set of all actors registered with traffic manager.
     AtomicActorSet registered_actors;
+
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
 
@@ -75,6 +77,7 @@ namespace traffic_manager {
     std::shared_ptr<LocalizationToPlannerMessenger> localization_planner_messenger;
     std::shared_ptr<PlannerToControlMessenger> planner_control_messenger;
     std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_planner_messenger;
+
     /// Pointers to the stage objects of traffic manager.
     std::unique_ptr<CollisionStage> collision_stage;
     std::unique_ptr<BatchControlStage> control_stage;
@@ -85,9 +88,13 @@ namespace traffic_manager {
     /// Parameterization object.
     Parameters parameters;
 
-
     /// Traffic Manager server instance
-    TrafficManagerServer *server;
+    TrafficManagerServer server;
+
+    /// Method to check if traffic lights are frozen.
+    bool CheckAllFrozen(TLGroup tl_to_freeze);
+
+  protected:
 
     /// To start the TrafficManager.
     void Start();
@@ -147,14 +154,11 @@ namespace traffic_manager {
     /// Method to specify the % chance of running a red light
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
-    /// Method to check if traffic lights are frozen.
-    bool CheckAllFrozen(TLGroup tl_to_freeze);
-
     /// Method to reset all traffic lights.
     void ResetAllTrafficLights();
 
     /// Get carla episode information
-    carla::client::detail::EpisodeProxy* GetEpisodeProxy();
+    carla::client::detail::EpisodeProxy& GetEpisodeProxy();
   };
 
 } // namespace traffic_manager

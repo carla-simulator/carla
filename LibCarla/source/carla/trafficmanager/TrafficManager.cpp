@@ -33,7 +33,6 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy &episodePro
 
 		/// Get Local TM details
 		else {
-			std::cout << "In SetAutopilot ..... TrafficManagerLocal started " << std::endl;
 			const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
 			const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
 			const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};

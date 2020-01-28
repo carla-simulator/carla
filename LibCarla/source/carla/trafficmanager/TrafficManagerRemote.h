@@ -53,22 +53,21 @@ class TrafficManagerRemote : public TrafficManagerBase {
 protected:
 
 	/// To start the TrafficManager.
-	void Start();
+	void Start() {};
 
 	/// To stop the TrafficManager.
-	void Stop();
+	void Stop() {};
 
 public:
 
 	/// Constructor store remote location information
 	TrafficManagerRemote
-		( const std::pair<std::string, std::string> _serverTM
-		, carla::client::detail::EpisodeProxy &episodeProxy) : episodeProxyTM(episodeProxy) {
-		client = new TrafficManagerClient(_serverTM.first, uint16_t(std::atoi(_serverTM.second.c_str())));
-	}
+		( const std::pair<std::string, std::string> &_serverTM
+		, carla::client::detail::EpisodeProxy &episodeProxy);
 
 	/// Destructor.
-	virtual ~TrafficManagerRemote() {}
+	virtual ~TrafficManagerRemote();
+
 
 	/// This method registers a vehicle with the traffic manager.
 	void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
@@ -86,10 +85,10 @@ public:
 	void SetGlobalPercentageSpeedDifference(float const percentage);
 
 	/// Set collision detection rules between vehicles.
-	void SetCollisionDetection(
-			const ActorPtr &reference_actor,
-			const ActorPtr &other_actor,
-			const bool detect_collision);
+	void SetCollisionDetection
+		( const ActorPtr &reference_actor
+		, const ActorPtr &other_actor
+		, const bool detect_collision);
 
 	/// Method to force lane change on a vehicle.
 	/// Direction flag can be set to true for left and false for right.
@@ -108,22 +107,19 @@ public:
 	/// Method to specify the % chance of running a red light
 	void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
-	/// Method to check if traffic lights are frozen.
-	bool CheckAllFrozen(TLGroup tl_to_freeze);
-
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights();
 
     /// Get carla episode information
-    carla::client::detail::EpisodeProxy* GetEpisodeProxy();
+    carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 
 private:
 
-	/// Remote client IP & port information
-	TrafficManagerClient *client = nullptr;
+	/// Remote client using IP & port information it connects to remote RPC TM Server
+	TrafficManagerClient client;
 
     /// Carla's client connection object.
-    carla::client::detail::EpisodeProxy &episodeProxyTM;
+    carla::client::detail::EpisodeProxy episodeProxyTM;
 };
 
 } // namespace traffic_manager

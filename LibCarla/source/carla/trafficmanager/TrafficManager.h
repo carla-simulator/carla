@@ -48,9 +48,6 @@ namespace traffic_manager {
 
 using ActorPtr 	= carla::SharedPtr<carla::client::Actor>;
 
-using TLS 		= carla::rpc::TrafficLightState;
-using TLGroup 	= std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
-
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.
 class TrafficManager {
@@ -80,8 +77,6 @@ public:
 			singleton_pointer->UnregisterVehicles(actor_list);
 		}
 	}
-
-
 
 	/// Set target velocity specific to a vehicle.
 	void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -142,14 +137,6 @@ public:
 		if(singleton_pointer) {
 			singleton_pointer->SetPercentageRunningLight(actor, perc);
 		}
-	}
-
-	/// Method to check if traffic lights are frozen.
-	bool CheckAllFrozen(TLGroup tl_to_freeze) {
-		if(singleton_pointer) {
-			return singleton_pointer->CheckAllFrozen(tl_to_freeze);
-		}
-		return false;
 	}
 
 	/// Method to reset all traffic lights.

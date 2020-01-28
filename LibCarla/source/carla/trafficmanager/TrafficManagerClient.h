@@ -11,32 +11,119 @@
 #include <rpc/client.h>
 
 #define TM_TIMEOUT				5000 // In ms
+#define DEFAULT_RPC_TM_PORT		8000 // TM_SERVER_PORT
 
 /// Provides communication with the rpc of TrafficManagerServer
 class TrafficManagerClient {
 
 public:
 
-	explicit TrafficManagerClient
-	(const std::string &host, uint16_t port)
-	: tmhost(host), tmport(port) {}
+	/// Empty constructor
+	TrafficManagerClient() : tmhost(""), tmport(DEFAULT_RPC_TM_PORT) {}
 
+	/// Parametric constructor to initialize the parameters
+	TrafficManagerClient(const std::string &_host, const uint16_t &_port)
+		: tmhost(_host), tmport(_port) {}
+
+	/// Destructor
 	~TrafficManagerClient() {};
 
+	/// Set parameters
+	void setServerDetails(const std::string &_host, const uint16_t &_port) {
+		 tmhost = _host;
+		 tmport = _port;
+	}
+
+	/// Get parametrs
+	void getServerDetails(std::string &_host, uint16_t &_port) {
+		_host = tmhost;
+		_port = tmport;
+	}
+
+	/// Register vehicles to remote TM server via RPC client
 	void RegisterVehicle
 	(const std::vector<carla::rpc::Actor> &actor_list) {
-		std::cout << "This is client side call ... to remote TM Before" << std::endl;
 		rpc::client rpc_client(tmhost, tmport);
 		rpc_client.set_timeout(TM_TIMEOUT);
 		rpc_client.call("register_vehicle", std::move(actor_list));
 	}
 
+	/// Unregister vehicles to remote TM server via RPC client
 	void UnregisterVehicle
-	(const std::vector<int> &actor_list) {
+	(const std::vector<carla::rpc::Actor> &actor_list) {
 		rpc::client rpc_client(tmhost, tmport);
 		rpc_client.set_timeout(TM_TIMEOUT);
 		rpc_client.call("unregister_vehicle", std::move(actor_list));
 	}
+
+	/// Set target velocity specific to a vehicle.
+	void SetPercentageSpeedDifference(const carla::rpc::Actor &_actor, const float percentage) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_percentage_speed_difference", std::move(_actor), percentage);
+	}
+
+	/// Set global target velocity.
+	void SetGlobalPercentageSpeedDifference(const float percentage) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_global_percentage_speed_difference", percentage);
+	}
+
+	/// Set collision detection rules between vehicles.
+	void SetCollisionDetection
+		( const carla::rpc::Actor &reference_actor
+		, const carla::rpc::Actor &other_actor
+		, const bool detect_collision) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_collision_detection", reference_actor, other_actor, detect_collision);
+	}
+
+	/// Method to force lane change on a vehicle.
+	/// Direction flag can be set to true for left and false for right.
+	void SetForceLaneChange(const carla::rpc::Actor &actor, const bool direction) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_force_lane_change", actor, direction);
+	}
+
+	/// Enable / disable automatic lane change on a vehicle.
+	void SetAutoLaneChange(const carla::rpc::Actor &actor, const bool enable) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_auto_lane_change", actor, enable);
+	}
+
+	/// Method to specify how much distance a vehicle should maintain to
+	/// the leading vehicle.
+	void SetDistanceToLeadingVehicle(const carla::rpc::Actor &actor, const float distance) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_distance_to_leading_vehicle", actor, distance);
+	}
+
+	/// Method to specify the % chance of ignoring collisions with other actors
+	void SetPercentageIgnoreActors(const carla::rpc::Actor &actor, const float percentage) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_percentage_ignore_actors", actor, percentage);
+	}
+
+	/// Method to specify the % chance of running a red light
+	void SetPercentageRunningLight(const carla::rpc::Actor &actor, const float percentage) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_percentage_running_light", actor, percentage);
+	}
+
+	/// Method to reset all traffic lights.
+	void ResetAllTrafficLights() {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("reset_all_traffic_lights");
+	}
+
 private:
 	std::string tmhost;
 	uint16_t    tmport;

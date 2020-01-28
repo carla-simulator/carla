@@ -9,7 +9,6 @@
 
 #include <memory>
 #include "carla/client/Actor.h"
-#include "carla/client/TrafficLight.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
@@ -19,7 +18,6 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-using TLGroup  = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.
@@ -75,16 +73,11 @@ public:
 	/// Method to specify the % chance of running a red light
 	virtual void SetPercentageRunningLight(const ActorPtr &actor, const float perc) = 0;
 
-	/// Method to check if traffic lights are frozen.
-	virtual bool CheckAllFrozen(TLGroup tl_to_freeze) = 0;
-
 	/// Method to reset all traffic lights.
 	virtual void ResetAllTrafficLights() = 0;
 
 	/// Get carla episode information
-	virtual  carla::client::detail::EpisodeProxy* GetEpisodeProxy() {
-		return nullptr;
-	}
+	virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 };
 
 } // namespace traffic_manager

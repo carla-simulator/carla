@@ -27,6 +27,7 @@ TrafficManagerLocal::TrafficManagerLocal
 		, lateral_highway_PID_parameters(lateral_highway_PID_parameters)
 		, episodeProxyTM(episodeProxy)
 		, debug_helper(carla::client::DebugHelper{episodeProxyTM})
+		, server(TrafficManagerServer(TM_SERVER_PORT, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
 {
 	using WorldMap = carla::SharedPtr<cc::Map>;
 	const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
@@ -78,19 +79,10 @@ TrafficManagerLocal::TrafficManagerLocal
 			"Batch control stage",
 			planner_control_messenger, episodeProxyTM);
 
-	/// Create server instance
-	server = new TrafficManagerServer(TM_SERVER_PORT, static_cast<carla::traffic_manager::TrafficManagerBase *>(this));
-
 	Start();
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
-
-	/// Stop server instance
-	if(server != NULL) {
-		delete server;
-	}
-
 	Stop();
 }
 
@@ -238,8 +230,8 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
 }
 
 /// Get carla episode information
-carla::client::detail::EpisodeProxy* TrafficManagerLocal::GetEpisodeProxy() {
-	return &episodeProxyTM;
+carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
+	return episodeProxyTM;
 }
 } // namespace traffic_manager
 } // namespace carla
