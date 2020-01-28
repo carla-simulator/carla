@@ -199,7 +199,7 @@ class LocalPlanner(object):
         if not self._global_plan and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
-        if len(self._waypoints_queue) == 0:
+        if len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0:
             control = carla.VehicleControl()
             control.steer = 0.0
             control.throttle = 0.0
@@ -243,7 +243,7 @@ class LocalPlanner(object):
 
     def done(self):
         vehicle_transform = self._vehicle.get_transform()
-        return len(self._waypoints_queue) == 0 and all([distance_vehicle(wp, vehicle_transform) < self._min_distance for wp in self._waypoints_queue])
+        return len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0
 
 def _retrieve_options(list_waypoints, current_waypoint):
     """
