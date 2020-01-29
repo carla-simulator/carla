@@ -148,6 +148,39 @@
       return: str
     # --------------------------------------
 
+  - class_name: VehicleLightState
+    # - DESCRIPTION ------------------------
+    doc: >
+      These can be used like a flag, e.g: `VehicleLightState.HighBeam & VehicleLightState.Brake`
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+    - var_name: Position
+      doc: >
+    - var_name: LowBeam
+      doc: >
+    - var_name: HighBeam
+      doc: >
+    - var_name: Brake
+      doc: >
+    - var_name: RightBlinker
+      doc: >
+    - var_name: LeftBlinker
+      doc: >
+    - var_name: Reverse
+      doc: >
+    - var_name: Fog
+      doc: >
+    - var_name: Interior
+      doc: >
+    - var_name: Special1
+      doc: >
+    - var_name: Special2
+      doc: >
+    - var_name: Any
+      doc: >
+
   - class_name: Vehicle
     parent: carla.Actor
     # - DESCRIPTION ------------------------
