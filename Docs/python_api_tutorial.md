@@ -349,7 +349,7 @@ object
 
 ```py
 weather = carla.WeatherParameters(
-    cloudyness=80.0,
+    cloudiness=80.0,
     precipitation=30.0,
     sun_altitude_angle=70.0)
 

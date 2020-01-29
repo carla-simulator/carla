@@ -50,54 +50,52 @@ pip install --user pygame numpy
 ```
 
 Let's start by running the simulator. Launch a terminal window and go to the
-folder you extracted CARLA to. Start the simulator with the following command
+folder you extracted CARLA to. Start the simulator with the following command:
 
+_Linux:_
 ```sh
-# Linux
 ./CarlaUE4.sh
 ```
 
+_Windows:_
 ```cmd
-rem Windows
 CarlaUE4.exe
 ```
 
-this launches a window with a view over the city. This is the "spectator"
+This launches a window with a view over the city. This is the "spectator"
 view, you can fly around the city using the mouse and WASD keys, but you cannot
 interact with the world in this view. The simulator is now running as a server,
 waiting for a client app to connect and interact with the world.
 
 !!! note
     CARLA requires two available TCP ports on your computer, by default 2000 and
-    2001. Make sure you don't have a firewall or another application blocking
+    1.    Make sure you don't have a firewall or another application blocking
     those ports. Alternatively, you can manually change the port by launching
     the simulator with the command-line argument `-carla-port=N`, the second
     port will be automatically set to `N+1`.
 
-Let's add now some life to the city, open a new terminal window and write:
+Let's see a few examples of these clients. Open a new terminal and navigate to
+the `PythonAPI/examples` folder, where our python clients are located:
 
 ```sh
-make TrafficManager
+cd PythonAPI/examples
 ```
 
-Once that is completed, move to the TrafficManager/build folder and execute:
+Let's add now some life to the city by running:
 
 ```sh
-./trafficmanager
+python tm_spawn_npc.py
 ```
 
 Which will create an appropriate amount of cars given the specs of your machine.
-Alternatively, you can use the -n <NUMBER_OF_VEHICLES> flag to choose how many
-cars you want to create.
+Alternatively, you can use the `-n <NUMBER_OF_VEHICLES>` and/or
+`-w <NUMBER_OF_WALKERS>` flag to choose how many actors you want to create.
 
-We still support the spawn_npc.py script, even if it will be removed soon. To spawn
-vehicles in "autopilot" mode, you can execute:
+!!! note
+    We still support the old `spawn_npc.py` script, even if it will be removed
+    soon. This one uses the old and simple autopilot mode.
 
-```sh
-python spawn_npc.py -n 80
-```
-
-With this script we are adding 80 vehicles to the world driving in "autopilot"
+With this script we are adding vehicles to the world driving in "autopilot"
 mode. Back to the simulator window we should see these vehicles driving around
 the city. They will keep driving randomly until we stop the script. Let's leave
 them there for now.

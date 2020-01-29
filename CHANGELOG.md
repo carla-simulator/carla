@@ -1,9 +1,25 @@
-## Latest
+## latest
+  * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
+  * Fixed Low/Epic quality settings transition
+  * Enabled Mesh distance fields
+  * API extensions:
+    - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
+  * New python clients:
+    - `weather.py`: allows weather changes using the new weather parameters
+  * Fixed typos
+  * Fixed agent failures due to API changes in is_within_distance_ahead()
+  * Fixed assertion bug when using LibCarla
+
+## CARLA 0.9.7
+  * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
+  * Support for OpenGL and Vulkan in docker + headless mode
   * Added new sensor: Inertial measurement unit (IMU)
   * Added new sensor: Radar
-  * Moved GNSS sensor from client to server side
+  * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
+  * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Improved pedestrians navigation
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
     - Lidar: `horizontal_angle` is now received in radians, not in degrees
@@ -13,17 +29,20 @@
     - Added `carla.RadarMeasurement` and `carla.RadarDetection`
     - GNSS data can now be obtained with noise
     - IMU data can now be obtained with noise
-  * Updated manual_control.py with a lens disortion effect example
-  * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
+  * Moved GNSS sensor from client to server side
+  * Added exporter plugin for UE4 to allow export meshes ready for Recast calculation
+  * The 'make import' process now rename the assets accordingly and set complex collision as simple
+  * New Python API function added (map.get_crosswalks()) that returns a list with all points that define the crosswalk zones from OpenDRIVE file
+  * Updated `manual_control.py` with a lens disortion effect example
+  * Updated `manual_control.py` with IMU and Radar realtime visualization
   * Fixed pylint for python3 in travis
   * Fixed PointCloudIO `cout` that interfiered with other python modules
   * Better steering in manual control
   * Added Doxygen documentation online with automatic updates through Jenkins pipeline
+  * Fixed an error in `automatic_control.py` failing because the `Num Lock` key
   * Fixed client_bounding_boxes.py example script
-  * Exposed in the API: camera, exposure, depth of field, tone mapper and color attributes for the RGB sensor
   * Fixed materials and semantic segmentation issues regarding importing assets
   * Added TrafficManager to replace autopilot in managing the NPC vehicles
-  * Fixed assertion bug when using LibCarla
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6

@@ -40,16 +40,25 @@ def get_packages_json_list(folder):
 
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
+    ue4_path = os.environ["UE4_ROOT"]
+    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    run = "-run=%s" % (name)
+
     if os.name == "nt":
         sys_name = "Win64"
+        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        command = [editor_path, uproject_path, run]
+        command.extend(arguments)
+        print("Commandlet:", command)
+        subprocess.check_call(command, shell=True)
     elif os.name == "posix":
         sys_name = "Linux"
-    ue4_path = os.environ["UE4_ROOT"]
-    editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
-    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
-    full_command = "%s %s -run=%s %s" % (editor_path, uproject_path, name, arguments)
-    print("\n[" + str(SCRIPT_NAME) + "] Running command:\n$ " + full_command + '\n')
-    subprocess.check_call([full_command], shell=True)
+        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        full_command = "%s %s %s %s" % (editor_path, uproject_path, run, " ".join(arguments))
+        print("Commandlet:", full_command)
+        subprocess.call([full_command], shell=True)
+
+
 
 
 def generate_import_setting_file(package_name, json_dirname, props, maps):
@@ -161,7 +170,7 @@ def import_assets(package_name, json_dirname, props, maps):
 
     # Import Props
     import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps)
-    commandlet_arguments = "-importSettings=\"%s\" -nosourcecontrol -replaceexisting" % import_setting_file
+    commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
 
@@ -226,34 +235,95 @@ def import_assets_from_json_list(json_list):
             # segmentation
             move_assets_commandlet(package_name, maps)
 
+            # we need to build the binary file for navigation of pedestrians
+            build_binary_for_navigation(package_name, dirname, maps)
+
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
 
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
-    commandlet_arguments = "-PackageName=%s" % package_name
-    commandlet_arguments += " -OnlyPrepareMaps=%d" % only_prepare_maps
+    commandlet_arguments = ["-PackageName=%s" % package_name]
+    commandlet_arguments.append("-OnlyPrepareMaps=%d" % only_prepare_maps)
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
 
 def move_assets_commandlet(package_name, maps):
     commandlet_name = "MoveAssets"
-    commandlet_arguments = "-PackageName=%s" % package_name
+    commandlet_arguments = ["-PackageName=%s" % package_name]
 
     umap_names = ""
     for umap in maps:
         umap_names += umap["name"] + " "
-    commandlet_arguments += " -Maps=%s" % umap_names
+    commandlet_arguments.append("-Maps=%s" % umap_names)
 
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
+# build the binary file for navigation of pedestrians for that map
+def build_binary_for_navigation(package_name, dirname, maps):
+    folder = os.path.join(CARLA_ROOT_PATH, "Util", "DockerUtils", "dist")
+
+    # process each map
+    for umap in maps:
+
+        # get the target name
+        target_name = umap["name"]
+
+        # copy the XODR file into docker utils folder
+        if "xodr" in umap and umap["xodr"] and os.path.isfile(os.path.join(dirname, umap["xodr"])):
+            # Make sure the `.xodr` file have the same name than the `.umap`
+            xodr_path_source = os.path.abspath(os.path.join(dirname, umap["xodr"]))
+            xodr_name = '.'.join([target_name, "xodr"])
+            xodr_path_target = os.path.join(folder, xodr_name)
+            # copy
+            print('Copying "' + xodr_path_source + '" to "' + xodr_path_target + '"')
+            shutil.copy2(xodr_path_source, xodr_path_target)
+
+        # copy the FBX file into docker utils folder
+        if "source" in umap and umap["source"] and os.path.isfile(os.path.join(dirname, umap["source"])):
+            # Make sure the `.fbx` file have the same name than the `.umap`
+            fbx_path_source = os.path.abspath(os.path.join(dirname, umap["source"]))
+            fbx_name = '.'.join([target_name, "fbx"])
+            fbx_path_target = os.path.join(folder, fbx_name)
+            # copy
+            print('Copying "' + fbx_path_source + '" to "' + fbx_path_target + '"')
+            shutil.copy2(fbx_path_source, fbx_path_target)
+
+        # make the conversion
+        if os.name == "nt":
+            subprocess.call(["build.bat", target_name], cwd=folder, shell=True)
+        else:
+            subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
+            subprocess.call("./build.sh %s" % target_name, cwd=folder, shell=True)
+
+        # copy the binary file
+        nav_folder_target = os.path.join(
+            CARLA_ROOT_PATH,
+            "Unreal",
+            "CarlaUE4",
+            "Content",
+            package_name,
+            "Maps",
+            target_name,
+            "Nav")
+
+        if not os.path.exists(nav_folder_target):
+            os.makedirs(nav_folder_target)
+
+        nav_path_source = os.path.join(folder, "%s.bin" % target_name)
+        nav_path_target = os.path.join(nav_folder_target, "%s.bin" % target_name)
+        print('Copying "' + nav_path_source + '" to "' + nav_path_target + '"')
+        shutil.copy2(nav_path_source, nav_path_target)
+
+        # remove files
+        os.remove(fbx_path_target)
+        os.remove(xodr_path_target)
 
 def main():
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
     import_assets_from_json_list(json_list)
-
 
 if __name__ == '__main__':
     main()

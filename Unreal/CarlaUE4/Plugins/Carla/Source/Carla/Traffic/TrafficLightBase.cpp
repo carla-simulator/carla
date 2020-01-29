@@ -161,6 +161,19 @@ void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
   }
 }
 
+void ATrafficLightBase::UnNotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
+{
+  if (IsValid(Vehicle))
+  {
+    auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+    if (Controller != nullptr)
+    {
+      Controller->SetTrafficLight(nullptr);
+      Controller->SetTrafficLightState(ETrafficLightState::Green);
+    }
+  }
+}
+
 void ATrafficLightBase::SetGreenTime(float InGreenTime)
 {
   GreenTime = InGreenTime;

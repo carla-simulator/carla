@@ -6,7 +6,11 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 
+#if WITH_EDITOR
+#include "FileHelpers.h"
+#endif
 #include "HAL/PlatformFilemanager.h"
+#include "UObject/ConstructorHelpers.h"
 
 UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 {
@@ -101,15 +105,37 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
     if (MeshAsset)
     {
       MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
-      MeshActor->GetStaticMeshComponent()->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
+      UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
+      MeshComponent->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
+
+      // Rename asset
+      FString AssetName;
+      MapAsset.AssetName.ToString(AssetName);
+      // Remove the prefix with the FBX name
+      int32 FindIndex = AssetName.Find("_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
+      if(FindIndex >= 0) {
+        AssetName.RemoveAt(0, FindIndex + 1, true);
+      }
+      MeshActor->SetActorLabel(AssetName, true);
+
+      // set complex collision as simple in asset
+      UBodySetup *BodySetup = MeshAsset->BodySetup;
+      if (BodySetup)
+      {
+        BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
+        MeshAsset->MarkPackageDirty();
+      }
+
+      // rotate all meshes 180 degrees to fit with OpenDRIVE info 
+      // (seems that new version of RoadRunner is doing this)
+      // MeshActor->SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
 
       SpawnedMeshes.Add(MeshActor);
+
       if (bUseCarlaMaterials)
       {
         // Set Carla Materials depending on RoadRunner's Semantic Segmentation
         // tag
-        FString AssetName;
-        MapAsset.AssetName.ToString(AssetName);
         if (AssetName.Contains(SSTags::R_MARKING))
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
@@ -195,6 +221,11 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   {
     SavePackage(PackagePath, Package);
   }
+
+  #if WITH_EDITOR
+  UEditorLoadingAndSavingUtils::SaveMap(World, PackagePath);
+  #endif
+
   return bPackageSaved;
 }
 
@@ -423,6 +454,10 @@ int32 UPrepareAssetsForCookingCommandlet::Main(const FString &Params)
     // Saves Package path for further use
     GeneratePackagePathFile(PackageParams.Name);
   }
+
+  #if WITH_EDITOR
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  #endif
 
   return 0;
 }
