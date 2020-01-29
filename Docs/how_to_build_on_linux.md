@@ -1,21 +1,21 @@
 <h1>Linux build</h1>
 
 
-* [Requirements](#requirements):  
-	* __System specifics:__ Minimum to run CARLA. 
-	* __Dependencies:__ Needed to build the project. 
-* [GitHub](#github):   
-	* __Create a GitHub account:__ Provides access to repositories. 
-	* __Install git:__ Enables terminal commands. 
-	* __Link GitHub and Unreal Engine:__ Allows access to private Unreal Engine repositories.
-* [Unreal Engine](#unreal-engine): 
-	* __Download UE4.22:__ Specific version to run CARLA. 
-	* __Build UE4.22:__ Needed to build the project. 
-* [CARLA build](#carla-build): 
-	* __Clone repository:__ Get the CARLA project in a local computer. 
-	* __Get assets:__ Download the assets, which are stored separately. 
-	* __Set the environment variable:__ Ensures communication between CARLA and Unreal Engine.
-	* __make CARLA:__ Build the server, client and packages. 
+* [__Requirements__](#requirements):  
+	* System specifics 
+	* Dependencies  
+* [__GitHub__](#github):   
+	* Create a GitHub account  
+	* Install git  
+	* Link GitHub and Unreal Engine 
+* [__Unreal Engine__](#unreal-engine): 
+	* Download UE4.22  
+	* Build UE4.22  
+* [__CARLA build__](#carla-build): 
+	* Clone repository  
+	* Get assets  
+	* Set the environment variable 
+	* make CARLA  
 
 The build process can be quite long and tedious. This documentation tries to make things clear, but the CARLA forum is open to anybody who wants to post unexpected issues, doubts or suggestions. There is a specific section for installation issues in Linux. Feel free to login and become part of the community. 
 
@@ -31,14 +31,14 @@ CARLA forum</a>
 ##Requirements
 
 <h4>System specifics</h4>
-* __Ubuntu 16.04 or later:__ migration to Ubuntu 18 is slowly coming forward, but today's date there is still support for 16.04. 
+* __Ubuntu 16.04 or later:__ Currently migrating to Ubuntu 18, but there is support up to Ubuntu 16.04.
 * __Two TCP ports:__ 2000 and 1 by default. Be sure neither firewall nor any other application are blocking these. 
 * __An adequate GPU:__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning. 
 
 
 <h4>Dependencies</h4>
 
-CARLA needs many dependencies to run. Some of them are built automatically during this process, such as _Boost.Python_. Others are binaries that should to be installed before starting the build (_cmake_, _clang_, different versions of _Python_ and much more). In order to do so, run the commands below in a terminal window. 
+CARLA needs many dependencies to run. Some of them are built automatically during this process, such as _Boost.Python_. Others are binaries that should be installed before starting the build (_cmake_, _clang_, different versions of _Python_ and much more). In order to do so, run the commands below in a terminal window. 
 
 ```sh
 sudo apt-get update &&
@@ -50,7 +50,7 @@ sudo apt-get update
 ```
 
 !!! important
-    The following commands differ depending on Ubuntu version. The only change is `libpng16-dev` which becomes `libpng-dev`, but the full set of commands is here twice to ease copying them. 
+    The following commands differ depending on Ubuntu version. While the only change is `libpng16-dev` becoming `libpng-dev`, the full set of commands is here twice to ease the copy. 
 
 **Ubuntu 18.04**:
 ```sh
@@ -171,7 +171,7 @@ make launch
 ``` 
 * **PythonAPI** will compile the API client, necessary to grant control over the simulation. After building it, scripts can run. The following example will run a dynamic weather on the scene: 
 ```sh
-make PythonAPI && cd PythonAPI/examples && ./dynamic_weather.py
+make PythonAPI && cd PythonAPI/examples && ./manual_control.py
 ``` 
 * **package** will create a precompiled version of CARLA. It acts as a quickstart and will run without the UE editor: 
 ```sh
