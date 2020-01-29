@@ -674,6 +674,12 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `object_type` (_String_)
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">vehicle.tesla.cybertruck</font>**  
+    - **Attributes:**
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">vehicle.tesla.model3</font>**  
     - **Attributes:**
         - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>

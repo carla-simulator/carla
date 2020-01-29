@@ -257,6 +257,26 @@ All possible states for traffic lights. Check out this [`recipe`](../python_cook
 
 ---
 
+## carla.VehicleLightState<a name="carla.VehicleLightState"></a> <sub><sup>_class_</sup></sub>
+These can be used like a flag, e.g: `VehicleLightState.HighBeam & VehicleLightState.Brake`.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.VehicleLightState.NONE"></a>**<font color="#f8805a">NONE</font>**  
+- <a name="carla.VehicleLightState.Position"></a>**<font color="#f8805a">Position</font>**  
+- <a name="carla.VehicleLightState.LowBeam"></a>**<font color="#f8805a">LowBeam</font>**  
+- <a name="carla.VehicleLightState.HighBeam"></a>**<font color="#f8805a">HighBeam</font>**  
+- <a name="carla.VehicleLightState.Brake"></a>**<font color="#f8805a">Brake</font>**  
+- <a name="carla.VehicleLightState.RightBlinker"></a>**<font color="#f8805a">RightBlinker</font>**  
+- <a name="carla.VehicleLightState.LeftBlinker"></a>**<font color="#f8805a">LeftBlinker</font>**  
+- <a name="carla.VehicleLightState.Reverse"></a>**<font color="#f8805a">Reverse</font>**  
+- <a name="carla.VehicleLightState.Fog"></a>**<font color="#f8805a">Fog</font>**  
+- <a name="carla.VehicleLightState.Interior"></a>**<font color="#f8805a">Interior</font>**  
+- <a name="carla.VehicleLightState.Special1"></a>**<font color="#f8805a">Special1</font>**  
+- <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**  
+- <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**  
+
+---
+
 ## carla.Actor<a name="carla.Actor"></a> <sub><sup>_class_</sup></sub>
 Base class for all actors.
 Actor is anything that plays a role in the simulation and can be moved around, examples of actors are vehicles, pedestrians, and sensors.  
