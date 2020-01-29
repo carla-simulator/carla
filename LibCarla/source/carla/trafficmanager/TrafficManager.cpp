@@ -31,13 +31,13 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 				TrafficManagerRemote* tm_ptr = new TrafficManagerRemote(serverTM, episodeProxy);
 
 				/// Try to reset all traffic lights
-				tm_ptr->ResetAllTrafficLights();
+				tm_ptr->HealthCheckRemoteTM();
 
 				/// Set the pointer of the instance
 				singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 			}
 		} catch (...) {
-			std::cout << "Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED" << std::endl;
+			std::cout << "Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED " << std::endl;
 		}
 	}
 
@@ -57,7 +57,6 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 						, lateral_highway_param
 						, perc_difference_from_limit
 						, episodeProxy);
-
 
 		auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
 		{
@@ -88,7 +87,6 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 						const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
 						if(p != NULL) {
 							localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(TM_SERVER_PORT));
-							std::cout << "Local IP: " << localIP.first << " PORT: " << localIP.second << std::endl;
 						} else {
 							std::cout << "Error number4: " << errno << std::endl;
 							std::cout << "Error message: " << strerror(errno) << std::endl;

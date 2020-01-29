@@ -10,7 +10,7 @@
 #include "carla/client/Actor.h"
 #include <rpc/client.h>
 
-#define TM_TIMEOUT				5000 // In ms
+#define TM_TIMEOUT				2000 // In ms
 #define DEFAULT_RPC_TM_PORT		8000 // TM_SERVER_PORT
 
 /// Provides communication with the rpc of TrafficManagerServer
@@ -124,6 +124,11 @@ public:
 		rpc_client.call("reset_all_traffic_lights");
 	}
 
+	void HealthCheckRemoteTM() {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("health_check_remote_TM");
+	}
 private:
 	std::string tmhost;
 	uint16_t    tmport;

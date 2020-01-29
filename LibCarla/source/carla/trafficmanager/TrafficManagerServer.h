@@ -103,6 +103,11 @@ public:
 			tm->ResetAllTrafficLights();
 		});
 
+		/// Method to check server is Alive or not
+		server->bind("health_check_remote_TM", [=](){
+			std::cout << "TM Server STATUS is RUNNING ....." << std::endl;
+		});
+
 		/// Run TM server to respond of any user client in async mode
 		server->async_run();
 	}

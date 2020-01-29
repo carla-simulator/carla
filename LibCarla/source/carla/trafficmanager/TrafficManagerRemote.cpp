@@ -139,6 +139,11 @@ void TrafficManagerRemote::ResetAllTrafficLights() {
 	client.ResetAllTrafficLights();
 }
 
+/// Method to reset all traffic lights.
+void TrafficManagerRemote::HealthCheckRemoteTM() {
+	/// Call client method
+	client.HealthCheckRemoteTM();
+}
 /// Get carla episode information
 carla::client::detail::EpisodeProxy& TrafficManagerRemote::GetEpisodeProxy() {
 	return episodeProxyTM;

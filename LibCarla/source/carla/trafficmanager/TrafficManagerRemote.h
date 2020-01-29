@@ -93,6 +93,9 @@ public:
     /// Get carla episode information
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 
+    /// Call to remote server to check its health
+    void HealthCheckRemoteTM();
+
 private:
 
 	/// Remote client using IP & port information it connects to remote RPC TM Server
