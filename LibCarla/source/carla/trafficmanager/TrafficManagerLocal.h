@@ -111,7 +111,8 @@ namespace traffic_manager {
 		, std::vector<float> lateral_PID_parameters
 		, std::vector<float> lateral_highway_PID_parameters
 		, float perc_decrease_from_limit
-		, carla::client::detail::EpisodeProxy &episodeProxy);
+		, carla::client::detail::EpisodeProxy &episodeProxy
+		, uint16_t &RPCportTM);
 
     /// Destructor.
     virtual ~TrafficManagerLocal();
