@@ -37,7 +37,7 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 				singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 			}
 		} catch (...) {
-			std::cout << "Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED " << std::endl;
+			std::cout << "OLD: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED " << std::endl;
 		}
 	}
 
@@ -50,13 +50,17 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 		const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
 		const float perc_difference_from_limit 				= 30.0f;
 
+		/// Get default port
+		uint16_t RPCportTM = TM_SERVER_PORT;
+
 		TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
 				( longitudinal_param
-						, longitudinal_highway_param
-						, lateral_param
-						, lateral_highway_param
-						, perc_difference_from_limit
-						, episodeProxy);
+					, longitudinal_highway_param
+					, lateral_param
+					, lateral_highway_param
+					, perc_difference_from_limit
+					, episodeProxy
+					, RPCportTM);
 
 		auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
 		{
@@ -86,7 +90,7 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 						char buffer[IP_DATA_BUFFER_SIZE];
 						const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
 						if(p != NULL) {
-							localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(TM_SERVER_PORT));
+							localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(RPCportTM));
 						} else {
 							std::cout << "Error number4: " << errno << std::endl;
 							std::cout << "Error message: " << strerror(errno) << std::endl;
@@ -101,11 +105,14 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 		/// Get TM server info (Local IP & PORT)
 		serverTM = GetLocalIp();
 
+		/// Print status
+		std::cout << "TRY: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... " << std::endl;
+
 		/// Set this client as the TM to server
 		episodeProxy.Lock()->SetTrafficManagerRunning(serverTM);
 
 		/// Print status
-		std::cout << "New TM Registered at " << serverTM.first << ":" << serverTM.second << " ..... SUCCESS" << std::endl;
+		std::cout << "NEW: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... SUCCESS" << std::endl;
 
 		/// Set the pointer of the instance
 		singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);

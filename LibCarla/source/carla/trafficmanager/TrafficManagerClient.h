@@ -18,6 +18,12 @@ class TrafficManagerClient {
 
 public:
 
+	TrafficManagerClient(const TrafficManagerClient &) = default;
+	TrafficManagerClient(TrafficManagerClient &&) = default;
+
+	TrafficManagerClient &operator=(const TrafficManagerClient &) = default;
+	TrafficManagerClient &operator=(TrafficManagerClient &&) = default;
+
 	/// Empty constructor
 	TrafficManagerClient() : tmhost(""), tmport(DEFAULT_RPC_TM_PORT) {}
 
