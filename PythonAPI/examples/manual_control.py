@@ -26,6 +26,7 @@ Use ARROWS or WASD keys for control.
     TAB          : change sensor position
     ` or N       : next sensor
     [1-9]        : change to sensor [1-9]
+    G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
 
@@ -101,6 +102,7 @@ try:
     from pygame.locals import K_UP
     from pygame.locals import K_a
     from pygame.locals import K_c
+    from pygame.locals import K_g
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_m
@@ -159,6 +161,8 @@ class World(object):
         self.collision_sensor = None
         self.lane_invasion_sensor = None
         self.gnss_sensor = None
+        self.imu_sensor = None
+        self.radar_sensor = None
         self.camera_manager = None
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
@@ -170,6 +174,8 @@ class World(object):
         self.recording_start = 0
 
     def restart(self):
+        self.player_max_speed = 1.589
+        self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
@@ -184,6 +190,12 @@ class World(object):
             blueprint.set_attribute('driver_id', driver_id)
         if blueprint.has_attribute('is_invincible'):
             blueprint.set_attribute('is_invincible', 'true')
+        # set the max speed
+        if blueprint.has_attribute('speed'):
+            self.player_max_speed = float(blueprint.get_attribute('speed').recommended_values[1])
+            self.player_max_speed_fast = float(blueprint.get_attribute('speed').recommended_values[2])
+        else:
+            print("No recommended values for 'speed' attribute")
         # Spawn the player.
         if self.player is not None:
             spawn_point = self.player.get_transform()
@@ -204,6 +216,7 @@ class World(object):
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
+        self.imu_sensor = IMUSensor(self.player)
         self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
@@ -216,6 +229,13 @@ class World(object):
         preset = self._weather_presets[self._weather_index]
         self.hud.notification('Weather: %s' % preset[1])
         self.player.get_world().set_weather(preset[0])
+
+    def toggle_radar(self):
+        if self.radar_sensor is None:
+            self.radar_sensor = RadarSensor(self.player)
+        elif self.radar_sensor.sensor is not None:
+            self.radar_sensor.sensor.destroy()
+            self.radar_sensor = None
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -230,15 +250,19 @@ class World(object):
         self.camera_manager.index = None
 
     def destroy(self):
+        if self.radar_sensor is not None:
+            self.toggle_radar()
         actors = [
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
             self.gnss_sensor.sensor,
+            self.imu_sensor.sensor,
             self.player]
         for actor in actors:
             if actor is not None:
                 actor.destroy()
+
 
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
@@ -279,6 +303,8 @@ class KeyboardControl(object):
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
+                elif event.key == K_g:
+                    world.toggle_radar()
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key == K_n:
@@ -343,7 +369,7 @@ class KeyboardControl(object):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
             elif isinstance(self._control, carla.WalkerControl):
-                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
+                self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
             world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
@@ -366,7 +392,7 @@ class KeyboardControl(object):
         self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
         self._control.hand_brake = keys[K_SPACE]
 
-    def _parse_walker_keys(self, keys, milliseconds):
+    def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0
         if keys[K_DOWN] or keys[K_s]:
             self._control.speed = 0.0
@@ -377,7 +403,7 @@ class KeyboardControl(object):
             self._control.speed = .01
             self._rotation.yaw += 0.08 * milliseconds
         if keys[K_UP] or keys[K_w]:
-            self._control.speed = 3.333 if pygame.key.get_mods() & KMOD_SHIFT else 1.389
+            self._control.speed = world.player_max_speed_fast if pygame.key.get_mods() & KMOD_SHIFT else world.player_max_speed
         self._control.jump = keys[K_SPACE]
         self._rotation.yaw = round(self._rotation.yaw, 1)
         self._control.direction = self._rotation.get_forward_vector()
@@ -396,11 +422,12 @@ class HUD(object):
     def __init__(self, width, height):
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
-        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+        font_name = 'courier' if os.name == 'nt' else 'mono'
+        fonts = [x for x in pygame.font.get_fonts() if font_name in x]
         default_font = 'ubuntumono'
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
-        self._font_mono = pygame.font.Font(mono, 14)
+        self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self.help = HelpText(pygame.font.Font(mono, 24), width, height)
         self.server_fps = 0
@@ -423,10 +450,11 @@ class HUD(object):
         t = world.player.get_transform()
         v = world.player.get_velocity()
         c = world.player.get_control()
-        heading = 'N' if abs(t.rotation.yaw) < 89.5 else ''
-        heading += 'S' if abs(t.rotation.yaw) > 90.5 else ''
-        heading += 'E' if 179.5 > t.rotation.yaw > 0.5 else ''
-        heading += 'W' if -0.5 > t.rotation.yaw > -179.5 else ''
+        compass = world.imu_sensor.compass
+        heading = 'N' if compass > 270.5 or compass < 89.5 else ''
+        heading += 'S' if 90.5 < compass < 269.5 else ''
+        heading += 'E' if 0.5 < compass < 179.5 else ''
+        heading += 'W' if 180.5 < compass < 359.5 else ''
         colhist = world.collision_sensor.get_collision_history()
         collision = [colhist[x + self.frame - 200] for x in range(0, 200)]
         max_col = max(1.0, max(collision))
@@ -441,7 +469,9 @@ class HUD(object):
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
             'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
-            u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (t.rotation.yaw, heading),
+            u'Compass:% 17.0f\N{DEGREE SIGN} % 2s' % (compass, heading),
+            'Accelero: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.accelerometer),
+            'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             'Height:  % 18.0f m' % t.location.z,
@@ -648,7 +678,7 @@ class LaneInvasionSensor(object):
 
 
 # ==============================================================================
-# -- GnssSensor --------------------------------------------------------
+# -- GnssSensor ----------------------------------------------------------------
 # ==============================================================================
 
 
@@ -674,6 +704,108 @@ class GnssSensor(object):
         self.lat = event.latitude
         self.lon = event.longitude
 
+
+# ==============================================================================
+# -- IMUSensor -----------------------------------------------------------------
+# ==============================================================================
+
+
+class IMUSensor(object):
+    def __init__(self, parent_actor):
+        self.sensor = None
+        self._parent = parent_actor
+        self.accelerometer = ()
+        self.gyroscope = ()
+        self.compass = 0.0
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.other.imu')
+        self.sensor = world.spawn_actor(
+            bp, carla.Transform(), attach_to=self._parent)
+        # We need to pass the lambda a weak reference to self to avoid circular
+        # reference.
+        weak_self = weakref.ref(self)
+        self.sensor.listen(
+            lambda sensor_data: IMUSensor._IMU_callback(weak_self, sensor_data))
+
+    @staticmethod
+    def _IMU_callback(weak_self, sensor_data):
+        self = weak_self()
+        if not self:
+            return
+        limits = (-99.9, 99.9)
+        self.accelerometer = (
+            max(limits[0], min(limits[1], sensor_data.accelerometer.x)),
+            max(limits[0], min(limits[1], sensor_data.accelerometer.y)),
+            max(limits[0], min(limits[1], sensor_data.accelerometer.z)))
+        self.gyroscope = (
+            max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.x))),
+            max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.y))),
+            max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.z))))
+        self.compass = math.degrees(sensor_data.compass)
+
+
+# ==============================================================================
+# -- RadarSensor ---------------------------------------------------------------
+# ==============================================================================
+
+
+class RadarSensor(object):
+    def __init__(self, parent_actor):
+        self.sensor = None
+        self._parent = parent_actor
+        self.velocity_range = 7.5 # m/s
+        world = self._parent.get_world()
+        self.debug = world.debug
+        bp = world.get_blueprint_library().find('sensor.other.radar')
+        bp.set_attribute('horizontal_fov', str(35))
+        bp.set_attribute('vertical_fov', str(20))
+        self.sensor = world.spawn_actor(
+            bp,
+            carla.Transform(
+                carla.Location(x=2.8, z=1.0),
+                carla.Rotation(pitch=5)),
+            attach_to=self._parent)
+        # We need a weak reference to self to avoid circular reference.
+        weak_self = weakref.ref(self)
+        self.sensor.listen(
+            lambda radar_data: RadarSensor._Radar_callback(weak_self, radar_data))
+
+    @staticmethod
+    def _Radar_callback(weak_self, radar_data):
+        self = weak_self()
+        if not self:
+            return
+        # To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
+        # points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
+        # points = np.reshape(points, (len(radar_data), 4))
+
+        current_rot = radar_data.transform.rotation
+        for detect in radar_data:
+            azi = math.degrees(detect.azimuth)
+            alt = math.degrees(detect.altitude)
+            # The 0.25 adjusts a bit the distance so the dots can
+            # be properly seen
+            fw_vec = carla.Vector3D(x=detect.depth - 0.25)
+            carla.Transform(
+                carla.Location(),
+                carla.Rotation(
+                    pitch=current_rot.pitch + alt,
+                    yaw=current_rot.yaw + azi,
+                    roll=current_rot.roll)).transform(fw_vec)
+
+            def clamp(min_v, max_v, value):
+                return max(min_v, min(value, max_v))
+
+            norm_velocity = detect.velocity / self.velocity_range # range [-1, 1]
+            r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
+            g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
+            b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
+            self.debug.draw_point(
+                radar_data.transform.location + fw_vec,
+                size=0.075,
+                life_time=0.06,
+                persistent_lines=False,
+                color=carla.Color(r, g, b))
 
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------

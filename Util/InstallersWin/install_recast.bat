@@ -32,15 +32,14 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set RECAST_SRC=recast-src
+set RECAST_HASH=cdce4e
+set RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+set RECAST_SRC=recast-%RECAST_HASH%-src
 set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
-set RECAST_INSTALL=recast-install
+set RECAST_INSTALL=recast-%RECAST_HASH%-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build
-
-set RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
 set RECAST_BASENAME=%RECAST_SRC%
-
 
 if exist "%RECAST_INSTALL_DIR%" (
     goto already_build
@@ -49,7 +48,7 @@ if exist "%RECAST_INSTALL_DIR%" (
 if not exist "%RECAST_SRC_DIR%" (
     echo %FILE_N% Cloning "Recast & Detour"
 
-    call git clone https://github.com/recastnavigation/recastnavigation.git %RECAST_SRC_DIR%
+    call git clone https://github.com/carla-simulator/recastnavigation.git %RECAST_SRC_DIR%
     cd %RECAST_SRC_DIR%
     call git reset --hard %RECAST_COMMIT%
     cd ..
@@ -71,8 +70,6 @@ cmake .. -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX=%RECAST_INSTALL_DIR%^
     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
-    -DRECASTNAVIGATION_DEMO=False^
-    -DRECASTNAVIGATION_TEST=False^
     %RECAST_SRC_DIR%
 if %errorlevel%  neq 0 goto error_cmake
 

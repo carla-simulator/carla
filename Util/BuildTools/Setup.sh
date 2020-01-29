@@ -289,8 +289,9 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
-RECAST_BASENAME=recast-${CXX_TAG}
+RECAST_HASH=cdce4e
+RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -305,7 +306,7 @@ else
 
   log "Retrieving Recast & Detour"
 
-  git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+  git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 
@@ -379,7 +380,7 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wh
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY -DLIBCARLA_WITH_PYTHON_SUPPORT" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
