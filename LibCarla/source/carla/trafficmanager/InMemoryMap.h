@@ -38,6 +38,12 @@ namespace traffic_manager {
   using GeoGridId = crd::JuncId;
   using WorldMap = carla::SharedPtr<cc::Map>;
 
+  using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
+  using SegmentTopology = std::map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
+  using SegmentMap = std::map<SegmentId, std::vector<SimpleWaypointPtr>>;
+  //using SegmentTopology = boost::unordered_map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
+  //using SegmentMap = boost::unordered_map<SegmentId, std::vector<SimpleWaypointPtr>>;
+
   /// This class builds a discretized local map-cache.
   /// Instantiate the class with map topology from the simulator
   /// and run SetUp() to construct the local map.
@@ -76,6 +82,12 @@ namespace traffic_manager {
     /// sampling_resolution.
     void SetUp();
 
+    /// Computes the segment id of a given waypoint.
+    ///
+    /// The Id takes into accounf OpenDrive's road Id, lane Id and Section Id.
+    SegmentId GetSegmentId(const WaypointPtr& wp) const;
+    SegmentId GetSegmentId(const SimpleWaypointPtr& swp) const;
+
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;
 
@@ -91,6 +103,9 @@ namespace traffic_manager {
     void MakeGeodesiGridCenters();
     cg::Location GetGeodesicGridCenter(GeoGridId ggid);
 
+  private:
+    std::vector<SimpleWaypointPtr> GetSuccessors(const SegmentId segment_id, const SegmentTopology& segment_topology, const SegmentMap& segment_map);
+    std::vector<SimpleWaypointPtr> GetPredecessors(const SegmentId segment_id, const SegmentTopology& segment_topology, const SegmentMap& segment_map);
   };
 
 } // namespace traffic_manager
