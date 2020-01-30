@@ -10,6 +10,7 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 #include <exception>
 
@@ -56,15 +57,22 @@ namespace detail {
 
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
+        bool episode_has_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
+        bool end_loop = true;
         do {
           if (prev->GetFrame() >= next->GetFrame()) {
             self->_on_tick_callbacks.Call(next);
             return;
           }
-        } while (!self->_state.compare_exchange(&prev, next));
+          if(!episode_has_changed) {
+            end_loop = self->_state.compare_exchange(&prev, next);
+          }
+        } while (!end_loop);
 
-        if (next->GetEpisodeId() != prev->GetEpisodeId()) {
+        if (episode_has_changed) {
           self->OnEpisodeStarted();
+          self->_state.compare_exchange(&prev, next);
+          return;
         }
 
         // Notify waiting threads and do the callbacks.
@@ -118,6 +126,7 @@ namespace detail {
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
+    traffic_manager::TrafficManager::Release();
   }
 
 } // namespace detail

@@ -16,7 +16,7 @@ namespace traffic_manager {
   }
 
   PipelineStage::~PipelineStage() {
-    worker_thread->join();
+    Stop();
     worker_thread.release();
   }
 
@@ -27,26 +27,28 @@ namespace traffic_manager {
 
   void PipelineStage::Stop() {
     run_stage.store(false);
+    if(worker_thread->joinable()){
+      worker_thread->join();
+    }
   }
 
   void PipelineStage::Update() {
-    while (run_stage.load()){
-      // Receive data.
-      DataReceiver();
+      while (run_stage.load()){
+        // Receive data.
+        DataReceiver();
+        // Receive data.
+        if(run_stage.load()){
+          performance_diagnostics.RegisterUpdate(true);
+            Action();
+          performance_diagnostics.RegisterUpdate(false);
+        }
 
-      // Receive data.
-      if(run_stage.load()){
-        performance_diagnostics.RegisterUpdate(true);
-        Action();
-        performance_diagnostics.RegisterUpdate(false);
+        // Receive data.
+        if(run_stage.load()) {
+          DataSender();
+        }
+
       }
-
-      // Receive data.
-      if(run_stage.load()) {
-        DataSender();
-      }
-
-    }
   }
 
 } // namespace traffic_manager
