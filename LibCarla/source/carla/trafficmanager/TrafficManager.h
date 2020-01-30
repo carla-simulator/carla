@@ -58,6 +58,8 @@ private:
 
 public:
 
+	static void Release();
+
 	/// Private constructor for singleton life cycle management.
 	explicit TrafficManager(carla::client::detail::EpisodeProxy episodeProxy);
 
@@ -154,4 +156,3 @@ public:
 } // namespace carla
 
 #endif /* __TRAFFICMANAGER__ */
-

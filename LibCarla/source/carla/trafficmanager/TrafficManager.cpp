@@ -119,5 +119,13 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 	}
 }
 
+void TrafficManager::Release() {
+  if(singleton_pointer) {
+    TrafficManagerBase *base_ptr = singleton_pointer.release();
+    delete base_ptr;
+  }
+}
+
+
 } // namespace traffic_manager
 } // namespace carla
