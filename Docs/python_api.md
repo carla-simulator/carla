@@ -457,19 +457,19 @@ So, if you want to know the _X bounding box size_, you can just do `extent.x * 2
         - `location` (_[carla.Location](#carla.Location)_)  
         - `extent` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
-Returns whether a point in world space is inside this BoundingBox.  
+Returns **True** if a point passed in world space is inside this bounding box.  
     - **Parameters:**
-        - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked whether it is inside this [carla.BoundingBox](#carla.BoundingBox) or.  
-        - `transform` (_[carla.Transform](#carla.Transform)_) – The [carla.Transform](#carla.Transform) that transforms from this [carla.BoundingBox](#carla.BoundingBox) space to world space.  
+        - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked.  
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
     - **Return:** _bool_  
 - <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the vertices of this [carla.BoundingBox](#carla.BoundingBox) in local space.  
-    - **Return:** _a list of [carla.Location](#carla.Location)_  
+Returns a list containing the locations of this object's vertices in local space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
-Returns the vertices of this [carla.BoundingBox](#carla.BoundingBox) in world space.  
+Returns a list containing the locations of this object's vertices in world space.  
     - **Parameters:**
-        - `transform` (_[carla.Transform](#carla.Transform)_) – The [carla.Transform](#carla.Transform) that transforms from this [carla.BoundingBox](#carla.BoundingBox) space to world space.  
-    - **Return:** _a list of [carla.Location](#carla.Location)_  
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
