@@ -94,22 +94,24 @@
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
+      doc: >
+        Reads the attribute as boolean value. 
     # --------------------------------------
     - def_name: as_color
       doc: >
-        Converts the attribute to carla.Color. 
+        Reads the attribute as carla.Color. 
     # --------------------------------------
     - def_name: as_int
       doc: >
-        Converts the attribute to int. 
+        Reads the attribute as int. 
     # --------------------------------------
     - def_name: as_float
       doc: >
-        Converts the attribute to float.  
+        Reads the attribute as float.  
     # --------------------------------------
     - def_name: as_str
       doc: >
-        Converts the attribute to string. 
+        Reads the attribute as string. 
     # --------------------------------------
     - def_name: __bool__
       doc: >
@@ -183,7 +185,7 @@
       - param_name: id
         type: str
         doc: >
-          e.g. 'gender'
+          e.g. `gender` would return **True** for pedestrians' blueprints. 
       doc: >
         Returns <b>True</b> if the blueprint contains the attribute `id`. 
     # --------------------------------------
@@ -195,7 +197,7 @@
         doc: >
           e.g. 'walker'
       doc: >
-        Returns <b>True</b> if the blueprint has `tag` listed.
+        Returns <b>True</b> if the blueprint has the specified `tag` listed.
     # --------------------------------------
     - def_name: match_tags
       return: bool
