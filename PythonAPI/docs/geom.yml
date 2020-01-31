@@ -311,29 +311,28 @@
       - param_name: world_point
         type: carla.Location
         doc: >
-          The point in world space to be checked whether it is inside this carla.BoundingBox or.
+          The point in world space to be checked.
       - param_name: transform
         type: carla.Transform
         doc: >
-          The carla.Transform that transforms from this carla.BoundingBox space to world space.
+          Contains location and rotation needed to convert this object's local space to world space.
       doc: >
-        Returns whether a point in world space is inside this BoundingBox.
+        Returns **True** if a point passed in world space is inside this bounding box.
     # --------------------------------------
     - def_name: get_local_vertices
-      return: a list of carla.Location
-      params:
+      return: list(carla.Location)
       doc: >
-        Returns the vertices of this carla.BoundingBox in local space.
+        Returns a list containing the locations of this object's vertices in local space.
     # --------------------------------------
     - def_name: get_world_vertices
-      return: a list of carla.Location
+      return: list(carla.Location)
       params:
       - param_name: transform
         type: carla.Transform
         doc: >
-          The carla.Transform that transforms from this carla.BoundingBox space to world space.
+          Contains location and rotation needed to convert this object's local space to world space.
       doc: >
-        Returns the vertices of this carla.BoundingBox in world space.
+        Returns a list containing the locations of this object's vertices in world space.
     # --------------------------------------
     - def_name: __eq__
       params:
