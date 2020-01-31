@@ -4,6 +4,7 @@
   * Fixed Low/Epic quality settings transition
   * Enabled Mesh distance fields
   * API extensions:
+    - Added new function to get a waypoint specifying parameters from the openDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
