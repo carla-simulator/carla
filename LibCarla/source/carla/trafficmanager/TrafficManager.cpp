@@ -20,24 +20,38 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 	/// Check singleton instance already created or not
 	if (!singleton_pointer) {
 
-		try {
-			/// Check TM instance already registered with server or not
-			if(episodeProxy.Lock()->IsTrafficManagerRunning()) {
 
-				/// Get TM server info (Remote IP & PORT)
-				serverTM = episodeProxy.Lock()->GetTrafficManagerRunning();
+		/// Check TM instance already registered with server or not
+		if(episodeProxy.Lock()->IsTrafficManagerRunning()) {
 
-				/// Set IP and port
-				TrafficManagerRemote* tm_ptr = new TrafficManagerRemote(serverTM, episodeProxy);
+			/// Get TM server info (Remote IP & PORT)
+			serverTM = episodeProxy.Lock()->GetTrafficManagerRunning();
 
-				/// Try to reset all traffic lights
-				tm_ptr->HealthCheckRemoteTM();
+			/// Set IP and port
+			TrafficManagerRemote* tm_ptr = new(std::nothrow)
+			TrafficManagerRemote(serverTM, episodeProxy);
 
-				/// Set the pointer of the instance
-				singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+			try {
+
+				/// Check memory allocated or not
+				if(tm_ptr != nullptr) {
+
+					/// Try to reset all traffic lights
+					tm_ptr->HealthCheckRemoteTM();
+
+					/// Set the pointer of the instance
+					singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+				}
 			}
-		} catch (...) {
-			std::cout << "OLD: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... FAILED " << std::endl;
+			catch (...) {
+
+				/// Clear previously allocated memory
+				delete tm_ptr;
+				std::cout 	<< "OLD: Registered TM at "
+							<< serverTM.first  << ":"
+							<< serverTM.second << " ..... FAILED "
+							<< std::endl;
+			}
 		}
 	}
 
@@ -55,12 +69,12 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 
 		TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
 				( longitudinal_param
-					, longitudinal_highway_param
-					, lateral_param
-					, lateral_highway_param
-					, perc_difference_from_limit
-					, episodeProxy
-					, RPCportTM);
+						, longitudinal_highway_param
+						, lateral_param
+						, lateral_highway_param
+						, perc_difference_from_limit
+						, episodeProxy
+						, RPCportTM);
 
 		auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
 		{
@@ -74,26 +88,42 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 				sockaddr_in loopback;
 				std::memset(&loopback, 0, sizeof(loopback));
 				loopback.sin_family = AF_INET;
-				loopback.sin_addr.s_addr = INADDR_LOOPBACK;   // using loopback ip address
-				loopback.sin_port = htons(9);                 // using debug port
-				err = connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+				loopback.sin_addr.s_addr = INADDR_LOOPBACK;
+				loopback.sin_port = htons(9);
+				err = connect
+						( sock
+						, reinterpret_cast<sockaddr*>(&loopback)
+						, sizeof(loopback));
 				if(err == INVALID_INDEX) {
-					std::cout << "Error number2: " << errno << std::endl;
-					std::cout << "Error message: " << strerror(errno) << std::endl;
+					std::cout 	<< "Error number2: "
+								<< errno << std::endl;
+					std::cout 	<< "Error message: "
+								<< strerror(errno) << std::endl;
 				} else {
 					socklen_t addrlen = sizeof(loopback);
-					err = getsockname(sock, reinterpret_cast<struct sockaddr*> (&loopback), &addrlen);
+					err = getsockname
+							( sock
+							, reinterpret_cast<struct sockaddr*> (&loopback)
+							, &addrlen);
 					if(err == INVALID_INDEX) {
-						std::cout << "Error number3: " << errno << std::endl;
-						std::cout << "Error message: " << strerror(errno) << std::endl;
+						std::cout 	<< "Error number3: "
+									<< errno << std::endl;
+						std::cout 	<< "Error message: "
+									<< strerror(errno) << std::endl;
 					} else {
 						char buffer[IP_DATA_BUFFER_SIZE];
-						const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
+						const char* p = inet_ntop
+											( AF_INET
+											, &loopback.sin_addr, buffer
+											, IP_DATA_BUFFER_SIZE);
 						if(p != NULL) {
-							localIP = std::make_pair<std::string, std::string>(buffer, std::to_string(RPCportTM));
+							localIP = std::make_pair<std::string, std::string>
+									  (buffer, std::to_string(RPCportTM));
 						} else {
-							std::cout << "Error number4: " << errno << std::endl;
-							std::cout << "Error message: " << strerror(errno) << std::endl;
+							std::cout 	<< "Error number4: "
+										<< errno << std::endl;
+							std::cout 	<< "Error message: "
+										<< strerror(errno) << std::endl;
 						}
 					}
 				}
@@ -105,14 +135,14 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 		/// Get TM server info (Local IP & PORT)
 		serverTM = GetLocalIp();
 
-		/// Print status
-		std::cout << "TRY: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... " << std::endl;
-
 		/// Set this client as the TM to server
 		episodeProxy.Lock()->SetTrafficManagerRunning(serverTM);
 
 		/// Print status
-		std::cout << "NEW: Registered TM at " << serverTM.first << ":" << serverTM.second << " ..... SUCCESS" << std::endl;
+		std::cout 	<< "NEW: Registered TM at "
+					<< serverTM.first  << ":"
+					<< serverTM.second << " ..... SUCCESS"
+					<< std::endl;
 
 		/// Set the pointer of the instance
 		singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
@@ -120,10 +150,10 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 }
 
 void TrafficManager::Release() {
-  if(singleton_pointer) {
-    TrafficManagerBase *base_ptr = singleton_pointer.release();
-    delete base_ptr;
-  }
+	if(singleton_pointer) {
+		TrafficManagerBase *base_ptr = singleton_pointer.release();
+		delete base_ptr;
+	}
 }
 
 
