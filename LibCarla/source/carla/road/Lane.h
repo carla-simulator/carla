@@ -79,6 +79,12 @@ namespace road {
       return _info.GetInfo<T>(s);
     }
 
+    template <typename T>
+    std::vector<const T*> GetInfos() const {
+      DEBUG_ASSERT(_lane_section != nullptr);
+      return _info.GetInfos<T>();
+    }
+
     const std::vector<Lane *> &GetNextLanes() const {
       return _next_lanes;
     }

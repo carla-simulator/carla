@@ -13,10 +13,8 @@
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
+#include "carla/geom/Rtree.h"
 
-//#include <boost/geometry.hpp>
-//#include <boost/geometry/geometries/point.hpp>
-//#include <boost/geometry/index/rtree.hpp>
 #include <boost/optional.hpp>
 
 #include <vector>
@@ -33,7 +31,7 @@ namespace road {
     /// -- Constructor ---------------------------------------------------------
     /// ========================================================================
 
-    Map(MapData m) : _data(std::move(m)) {}
+    Map(MapData m) : _data(std::move(m)) {CreateRtree();}
 
     /// ========================================================================
     /// -- Georeference --------------------------------------------------------
@@ -136,14 +134,10 @@ private:
     friend MapBuilder;
     MapData _data;
 
-    //namespace bg = boost::geometry;
-    //namespace bgi = boost::geometry::index;
+    using Rtree = geom::SegmentCloudRtree<Waypoint>;
+    Rtree _rtree;
 
-    /*struct rtreecontent{
-      LaneId lid;
-      RoadId rid;
-    };*/
-    //bgi::rtree rtree;
+    void CreateRtree();
   };
 
 } // namespace road

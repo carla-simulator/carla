@@ -11,10 +11,14 @@
 namespace carla {
 namespace geom {
 
+  double Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
+    return std::acos(Dot(a, b) / (a.Length() * b.Length()));
+  }
+
   std::pair<float, float> Math::DistanceSegmentToPoint(
-      const Vector3D &p,
-      const Vector3D &v,
-      const Vector3D &w) {
+  const Vector3D &p,
+  const Vector3D &v,
+  const Vector3D &w) {
     const float l2 = DistanceSquared2D(v, w);
     const float l = std::sqrt(l2);
     if (l2 == 0.0f) {
@@ -27,11 +31,11 @@ namespace geom {
   }
 
   std::pair<float, float> Math::DistanceArcToPoint(
-      Vector3D p,
-      Vector3D start_pos,
-      const float length,
-      float heading,   // [radians]
-      float curvature) {
+  Vector3D p,
+  Vector3D start_pos,
+  const float length,
+  float heading,       // [radians]
+  float curvature) {
 
     /// @todo: Because Unreal's coordinates, hacky way to correct
     /// the -y, this must be changed in the future
@@ -87,21 +91,21 @@ namespace geom {
     DEBUG_ASSERT(angle >= 0.0f);
     if (angle <= last_point_angle) {
       return std::make_pair(
-          angle * radius,
-          Distance2D(intersection, rotated_p));
+      angle * radius,
+      Distance2D(intersection, rotated_p));
     }
 
     // find the nearest point, start or end to intersection
     const float start_dist = Distance2D(Vector3D(), rotated_p);
 
     const Vector3D end_pos(
-        radius * std::cos(last_point_angle - pi_half),
-        radius * std::sin(last_point_angle - pi_half) + circ_center.y,
-        0.0f);
+    radius * std::cos(last_point_angle - pi_half),
+    radius * std::sin(last_point_angle - pi_half) + circ_center.y,
+    0.0f);
     const float end_dist = Distance2D(end_pos, rotated_p);
     return (start_dist < end_dist) ?
-           std::make_pair(0.0f, start_dist) :
-           std::make_pair(length, end_dist);
+    std::make_pair(0.0f, start_dist) :
+    std::make_pair(length, end_dist);
   }
 
   Vector3D Math::RotatePointOnOrigin2D(Vector3D p, float angle) {
@@ -115,7 +119,7 @@ namespace geom {
     const float sp = std::sin(ToRadians(rotation.pitch));
     const float cy = std::cos(ToRadians(rotation.yaw));
     const float sy = std::sin(ToRadians(rotation.yaw));
-    return {cy * cp, sy * cp, sp};
+    return {cy *cp, sy *cp, sp};
   }
 
 } // namespace geom

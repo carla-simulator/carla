@@ -29,24 +29,24 @@ namespace geom {
     CubicPolynomial(const CubicPolynomial &) = default;
 
     CubicPolynomial(
-        const value_type &a,
-        const value_type &b,
-        const value_type &c,
-        const value_type &d)
+    const value_type &a,
+    const value_type &b,
+    const value_type &c,
+    const value_type &d)
       : _v{ {a, b, c, d} },
-        _s(0.0) {}
+    _s(0.0) {}
 
     CubicPolynomial(
-        const value_type &a,
-        const value_type &b,
-        const value_type &c,
-        const value_type &d,
-        const value_type &s) // lateral offset
+    const value_type &a,
+    const value_type &b,
+    const value_type &c,
+    const value_type &d,
+    const value_type &s)     // lateral offset
       : _v{ {a - b * s + c * s * s - d * s * s * s,
-             b - 2 * c * s + 3 * d * s * s,
-             c - 3 * d * s,
-             d} },
-        _s(s) {}
+      b - 2 * c * s + 3 * d * s * s,
+      c - 3 * d * s,
+      d} },
+    _s(s) {}
 
     // =========================================================================
     // -- Getters --------------------------------------------------------------
@@ -77,16 +77,25 @@ namespace geom {
     // =========================================================================
 
     void Set(
-        const value_type &a,
-        const value_type &b,
-        const value_type &c,
-        const value_type &d,
-        const value_type &s) { // lateral offset
+    const value_type &a,
+    const value_type &b,
+    const value_type &c,
+    const value_type &d,
+    const value_type &s) {     // lateral offset
       _v = { a - b * s + c * s * s - d * s * s * s,
              b - 2 * c * s + 3 * d * s * s,
              c - 3 * d * s,
              d };
       _s = s;
+    }
+
+    void Set(
+    const value_type &a,
+    const value_type &b,
+    const value_type &c,
+    const value_type &d) {
+      _v = {{a, b, c, d}};
+      _s = (0.0);
     }
 
     // =========================================================================
