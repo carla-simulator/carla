@@ -198,12 +198,29 @@ namespace road {
         geom::Vector3D(s1.get<0>(), s1.get<1>(), s1.get<2>()),
         geom::Vector3D(s2.get<0>(), s2.get<1>(), s2.get<2>()));
 
-    Waypoint result = query_result.front().second.first;
+    Waypoint result_start = query_result.front().second.first;
+    Waypoint result_end = query_result.front().second.second;
 
-    if (distance_to_segment.first <= 0) {
-      return result;
-    } else {
-      return GetNext(result, distance_to_segment.first).front();
+    if(result_start.lane_id < 0){
+      double delta_s = distance_to_segment.first;
+      double final_s = result_start.s + delta_s;
+      if(final_s >= result_end.s){
+        return result_end;
+      }else if (delta_s <= 0) {
+        return result_start;
+      } else {
+        return GetNext(result_start, distance_to_segment.first).front();
+      }
+    }else{
+      double delta_s = distance_to_segment.first;
+      double final_s = result_start.s - delta_s;
+      if(final_s <= result_end.s){
+        return result_end;
+      }else if (delta_s <= 0) {
+        return result_start;
+      } else {
+        return GetNext(result_start, distance_to_segment.first).front();
+      }
     }
   }
 
@@ -738,9 +755,11 @@ namespace road {
           }
             if (is_straight) {
               if (lane.GetId() < 0) {
-                delta_s = geometry_end_s - current_waypoint.s;
+                double remaining_length = (geometry_end_s - current_waypoint.s) - epsilon;
+                delta_s = std::min(delta_s, remaining_length);
               } else {
-                delta_s = current_waypoint.s - geometry_start_s;
+                double remaining_length = (current_waypoint.s - geometry_start_s) - epsilon;
+                delta_s = std::min(delta_s, remaining_length);
               }
               delta_s -= epsilon;
 
@@ -764,6 +783,7 @@ namespace road {
                   std::make_pair(current_waypoint, next_waypoint)));
 
               current_waypoint = next_waypoint;
+              current_transform = next_transform;
               break;
             }
           case element::GeometryType::ARC:
@@ -772,17 +792,28 @@ namespace road {
           case element::GeometryType::POLY3PARAM: {
             auto next_waypoint = current_waypoint;
             while (true) {
-              current_transform = ComputeTransform(current_waypoint);
-
+              delta_s = min_delta_s;
               if (lane.GetId() < 0) {
-                double remaining_length = (geometry_end_s - current_waypoint.s) - epsilon;
+                double remaining_length = (geometry_end_s - next_waypoint.s) - epsilon;
                 delta_s = std::min(delta_s, remaining_length);
               } else {
-                double remaining_length = (current_waypoint.s - geometry_start_s) - epsilon;
+                double remaining_length = (next_waypoint.s - geometry_start_s) - epsilon;
                 delta_s = std::min(delta_s, remaining_length);
               }
 
               if (delta_s < epsilon) {
+                geom::Transform next_transform = ComputeTransform(next_waypoint);
+                Rtree::BPoint init = Rtree::BPoint(current_transform.location.x,
+                    current_transform.location.y, current_transform.location.z);
+                Rtree::BPoint end = Rtree::BPoint(next_transform.location.x,
+                    next_transform.location.y, next_transform.location.z);
+
+                rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init,
+                    end), std::make_pair(current_waypoint, next_waypoint)));
+
+                current_waypoint = next_waypoint;
+                current_transform = next_transform;
+
                 break;
               }
 
@@ -800,6 +831,7 @@ namespace road {
                     end), std::make_pair(current_waypoint, next_waypoint)));
 
                 current_waypoint = next_waypoint;
+                current_transform = next_transform;
 
                 break;
               }
@@ -818,6 +850,7 @@ namespace road {
                 rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init,
                     end), std::make_pair(current_waypoint, next_waypoint)));
                 current_waypoint = next_waypoint;
+                current_transform = next_transform;
               }
             }
 

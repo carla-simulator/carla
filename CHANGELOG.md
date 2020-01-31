@@ -3,7 +3,7 @@
   * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
   * Vehicles get destroyed when they are stuck in Traffic Manager
   * Implemented intersection anticipation algorithm in Traffic Manager
-  * Added support for new geometry: spiral
+  * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
   * Fixed Low/Epic quality settings transition
   * Enabled Mesh distance fields
