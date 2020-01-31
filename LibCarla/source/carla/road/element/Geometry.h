@@ -8,6 +8,8 @@
 
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/CubicPolynomial.h"
+#include "carla/geom/Rtree.h"
 
 namespace carla {
 namespace road {
@@ -73,17 +75,16 @@ namespace element {
   protected:
 
     Geometry(
-        GeometryType type,
-        double start_offset,
-        double length,
-        double heading,
-        const geom::Location &start_pos)
+    GeometryType type,
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos)
       : _type(type),
         _length(length),
         _start_position_offset(start_offset),
         _heading(heading),
-        _start_position(start_pos)
-    {}
+        _start_position(start_pos) {}
 
   protected:
 
@@ -100,10 +101,10 @@ namespace element {
   public:
 
     GeometryLine(
-        double start_offset,
-        double length,
-        double heading,
-        const geom::Location &start_pos)
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos)
       : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
     DirectedPoint PosFromDist(double dist) const override;
@@ -116,9 +117,9 @@ namespace element {
     ///   @param p point to calculate the distance
     std::pair<float, float> DistanceTo(const geom::Location &p) const override {
       return geom::Math::DistanceSegmentToPoint(
-          p,
-          _start_position,
-          PosFromDist(_length).location);
+      p,
+      _start_position,
+      PosFromDist(_length).location);
     }
 
   };
@@ -127,11 +128,11 @@ namespace element {
   public:
 
     GeometryArc(
-        double start_offset,
-        double length,
-        double heading,
-        const geom::Location &start_pos,
-        double curv)
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos,
+    double curv)
       : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
 
@@ -144,11 +145,11 @@ namespace element {
     ///   @param p point to calculate the distance
     std::pair<float, float> DistanceTo(const geom::Location &p) const override {
       return geom::Math::DistanceArcToPoint(
-          p,
-          _start_position,
-          static_cast<float>(_length),
-          static_cast<float>(_heading),
-          static_cast<float>(_curvature));
+      p,
+      _start_position,
+      static_cast<float>(_length),
+      static_cast<float>(_heading),
+      static_cast<float>(_curvature));
     }
 
     double GetCurvature() const {
@@ -164,12 +165,12 @@ namespace element {
   public:
 
     GeometrySpiral(
-        double start_offset,
-        double length,
-        double heading,
-        const geom::Location &start_pos,
-        double curv_s,
-        double curv_e)
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos,
+    double curv_s,
+    double curv_e)
       : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
         _curve_start(curv_s),
         _curve_end(curv_e) {}
@@ -194,20 +195,24 @@ namespace element {
 
   class GeometryPoly3 final : public Geometry {
   public:
+
     GeometryPoly3(
-        double start_offset, 
-        double length, 
-        double heading, 
-        const geom::Location &start_pos, 
-        double a, 
-        double b, 
-        double c, 
-        double d)
-        : Geometry(GeometryType::POLY3, start_offset, length, heading, start_pos),
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos,
+    double a,
+    double b,
+    double c,
+    double d)
+      : Geometry(GeometryType::POLY3, start_offset, length, heading, start_pos),
         _a(a),
         _b(b),
         _c(c),
-        _d(d){}
+        _d(d) {
+      _poly.Set(a, b, c, d);
+      PreComputeSpline();
+    }
 
     double Geta() const {
       return _a;
@@ -227,30 +232,44 @@ namespace element {
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 
   private:
+
+    geom::CubicPolynomial _poly;
+
     double _a;
     double _b;
     double _c;
     double _d;
+
+    struct RtreeValue {
+      double u = 0;
+      double v = 0;
+      double s = 0;
+      double t = 0;
+    };
+    using Rtree = geom::SegmentCloudRtree<RtreeValue>;
+    using TreeElement = Rtree::TreeElement;
+    Rtree _rtree;
+    void PreComputeSpline();
   };
 
   class GeometryParamPoly3 final : public Geometry {
   public:
 
     GeometryParamPoly3(
-        double start_offset, 
-        double length, 
-        double heading, 
-        const geom::Location &start_pos, 
-        double aU, 
-        double bU, 
-        double cU, 
-        double dU,
-        double aV, 
-        double bV, 
-        double cV, 
-        double dV,
-        bool arcLength)
-        : Geometry(GeometryType::POLY3PARAM, start_offset, length, heading, start_pos),
+    double start_offset,
+    double length,
+    double heading,
+    const geom::Location &start_pos,
+    double aU,
+    double bU,
+    double cU,
+    double dU,
+    double aV,
+    double bV,
+    double cV,
+    double dV,
+    bool arcLength)
+      : Geometry(GeometryType::POLY3PARAM, start_offset, length, heading, start_pos),
         _aU(aU),
         _bU(bU),
         _cU(cU),
@@ -259,7 +278,7 @@ namespace element {
         _bV(bV),
         _cV(cV),
         _dV(dV),
-        _arcLength(arcLength){}
+        _arcLength(arcLength) {}
 
     double GetaU() const {
       return _aU;
@@ -291,6 +310,7 @@ namespace element {
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 
   private:
+
     double _aU;
     double _bU;
     double _cU;

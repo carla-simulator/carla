@@ -7,13 +7,16 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
 import glob
 import os
 import sys
+import argparse
+import math
+import pygame
+
+# ==============================================================================
+# -- find carla module ---------------------------------------------------------
+# ==============================================================================
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -29,36 +32,40 @@ except IndexError:
 
 import carla
 
-import argparse
-import logging
-import datetime
-import weakref
-import math
-import random
-import hashlib
-import pygame
-import time
-
 # ==============================================================================
 # -- Constants -----------------------------------------------------------------
 # ==============================================================================
 
+COLOR_BLACK = pygame.Color(0, 0, 0)
 COLOR_GREEN = pygame.Color(0, 255, 0)
 COLOR_RED = pygame.Color(255, 0, 0)
 COLOR_BLUE = pygame.Color(0, 0, 255)
 COLOR_WHITE = pygame.Color(255, 255, 255)
+COLOR_PINK = pygame.Color(255, 0, 255)
 
-def world_to_pixel(location, pixels_per_meter, scale,  world_offset, offset=(0,0)):
+
+def world_to_pixel(location, pixels_per_meter, scale, world_offset, offset=(0, 0)):
     """Converts the world coordinates to pixel coordinates"""
-    x = scale * pixels_per_meter * (location.x - world_offset[0])
-    y = scale * pixels_per_meter * (location.y - world_offset[1])
-    return [int(x - offset[0]), int(y - offset[1])]
+    pixel_x = scale * pixels_per_meter * (location.x - world_offset[0])
+    pixel_y = scale * pixels_per_meter * (location.y - world_offset[1])
+    return [int(pixel_x - offset[0]), int(pixel_y - offset[1])]
+
+
+def pixel_to_world(pixel_x, pixel_y, pixels_per_meter, scale, world_offset, offset=(0, 0)):
+    """Converts the pixel coordinates to world coordinates"""
+    location_x = float(pixel_x + offset[0]) / (scale * pixels_per_meter) + world_offset[0]
+    location_y = float(pixel_y + offset[1]) / (scale * pixels_per_meter) + world_offset[1]
+    return carla.Location(location_x, location_y, 0)
 
 # ==============================================================================
 # -- Main --------------------------------------------------------------------
 # ==============================================================================
 
+HEIGHT = 1024
+WIDTH = 1024
+
 def main():
+    """Runs the 2D map viewer"""
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         '-f', '--file',
@@ -66,19 +73,12 @@ def main():
         default="",
         type=str,
         help='Path to the OpenDRIVE file')
-    argparser.add_argument(
-        '-o', '--output',
-        metavar='O',
-        default="map_viewer.png",
-        type=str,
-        help='Output file for the map image')
     args = argparser.parse_args()
 
     pygame.init()
-    height = 1024
-    width = 1024
+
     display = pygame.display.set_mode(
-        (width, height),
+        (WIDTH, HEIGHT),
         pygame.HWSURFACE | pygame.DOUBLEBUF)
 
     # Place a title to game window
@@ -87,16 +87,18 @@ def main():
     filename = args.file
     f_odr = open(filename, "r")
     opendrive = f_odr.read()
-    map = carla.Map("TestParser", str(opendrive))
-    waypoints = map.generate_waypoints(10)
+    f_odr.close()
+
+    map = carla.Map("MapViewer", str(opendrive))
+    waypoints = map.generate_waypoints(5)
     points = []
     x_list = []
     y_list = []
-    for w in waypoints:
-
-        transf = w.transform
+    for waypoint in waypoints:
+        transf = waypoint.transform
         if math.isnan(transf.location.x) | math.isnan(transf.location.y):
-            print("nan here: lane id " + str(w.lane_id) + " road id " + str(w.road_id))
+            print("nan here: lane id " + str(waypoint.lane_id) +
+                  " road id " + str(waypoint.road_id))
         else:
             x_list.append(transf.location.x)
             y_list.append(transf.location.y)
@@ -108,40 +110,40 @@ def main():
 
     road_width = x_max - x_min
     road_height = y_max - y_min
-    road_mid = (0.5*(x_max + x_min), 0.5*(y_max + y_min))
-    scale = 1
-    pixels_per_meter = width/road_width
+    road_mid = (0.5 * (x_max + x_min), 0.5 * (y_max + y_min))
+    scale = 0.99
+    pixels_per_meter = min(WIDTH / road_width, HEIGHT / road_height)
     world_offset = road_mid
-    print("Num points: " + str(len(waypoints)))
-    print("road width: " + str(road_width))
-    print("road height: " + str(road_height))
-    print("road mid: " + str(road_mid))
-    print("scale: " + str(scale))
 
     for point in points:
         pygame.draw.circle(
             display, COLOR_GREEN,
-            world_to_pixel(point.location, pixels_per_meter, scale, world_offset, (-width / 2, -height / 2)), 0)
+            world_to_pixel(point.location, pixels_per_meter, scale, world_offset,
+                           (-WIDTH / 2, -HEIGHT / 2)), 0)
 
-    """waypoints = map.get_topology()
-    topopoints = []
-    for w in waypoints:
-        pos = w[0].transform.location
-        topopoints.append(pos)
-        pos = w[1].transform.location
-        topopoints.append(pos)
+    while True:
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            break
+        display.fill(COLOR_BLACK)
 
-    for point in topopoints:
-        pygame.draw.circle(
-            display, COLOR_BLUE,
-            world_to_pixel(point, pixels_per_meter, scale, world_offset, (-width / 2, -height / 2)), 3)
-"""
-    pygame.display.flip()
-    if args.output != "":
-        pygame.image.save(display, args.output)
-    time.sleep(100000)
+        for point in points:
+            pygame.draw.circle(
+                display, COLOR_GREEN,
+                world_to_pixel(point.location, pixels_per_meter, scale, world_offset,
+                               (-WIDTH / 2, -HEIGHT / 2)), 0)
 
+        mouse = pygame.mouse.get_pos()
+        mouse_position = pixel_to_world(mouse[0], mouse[1], pixels_per_meter,
+                                        scale, world_offset, (-WIDTH / 2, -HEIGHT / 2))
+        mouse_waypoint = map.get_waypoint(mouse_position)
+        waypoint_position = world_to_pixel(mouse_waypoint.transform.location,
+                                           pixels_per_meter, scale, world_offset,
+                                           (-WIDTH / 2, -HEIGHT / 2))
+        pygame.draw.line(display, COLOR_WHITE, mouse, waypoint_position, 1)
+        pygame.display.flip()
 
+    pygame.quit()
 
 
 if __name__ == '__main__':
