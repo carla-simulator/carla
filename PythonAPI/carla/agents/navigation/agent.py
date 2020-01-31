@@ -95,9 +95,8 @@ class Agent(object):
                     object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
-            loc = traffic_light.get_location()
-            if is_within_distance_ahead(loc, ego_vehicle_location,
-                                        self._vehicle.get_transform().rotation.yaw,
+            if is_within_distance_ahead(traffic_light.get_transform(),
+                                        self._vehicle.get_transform(),
                                         self._proximity_threshold):
                 if traffic_light.state == carla.TrafficLightState.Red:
                     return (True, traffic_light)
@@ -184,9 +183,8 @@ class Agent(object):
                     target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
-            loc = target_vehicle.get_location()
-            if is_within_distance_ahead(loc, ego_vehicle_location,
-                                        self._vehicle.get_transform().rotation.yaw,
+            if is_within_distance_ahead(target_vehicle.get_transform(),
+                                        self._vehicle.get_transform(),
                                         self._proximity_threshold):
                 return (True, target_vehicle)
 
