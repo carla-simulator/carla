@@ -54,7 +54,7 @@ namespace client {
         bool project_to_road = true,
         uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
-    SharedPtr<Waypoint> Map::GetWaypointXODR(
+    SharedPtr<Waypoint> GetWaypointXODR(
       carla::road::RoadId road_id,
       carla::road::LaneId lane_id,
       float s) const;
