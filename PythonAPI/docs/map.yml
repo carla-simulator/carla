@@ -10,10 +10,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
-      doc: >
-    - var_name: Any
-      doc: >
-        Every type except for NONE.  
+      doc: > 
     - var_name: Bidirectional
       doc: >
     - var_name: Biking
@@ -54,6 +51,9 @@
       doc: >
     - var_name: Tram
       doc: >
+    - var_name: Any
+      doc: >
+        Every type except for NONE. 
 
   - class_name: LaneChange
     # - DESCRIPTION ------------------------

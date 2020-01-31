@@ -5,8 +5,7 @@
   - class_name: Actor
     # - DESCRIPTION ------------------------
     doc: >
-      CARLA defines actors as anything that plays a role in the simulation and can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/). 
-
+      CARLA defines actors as anything that plays a role in the simulation and can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: attributes
@@ -143,7 +142,7 @@
       - param_name: physics_control
         type: carla.VehiclePhysicsControl
       doc: >
-        Applies a control object in the next tick containing the parameters that define the vehicle as a physical object. E.g.: moment of inertia, mass, drag coefficient and many more. 
+        Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more. 
     # --------------------------------------
     - def_name: get_control
       return: carla.VehicleControl
@@ -264,7 +263,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in carla.TrafficLight. Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.  
+      Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in carla.TrafficLight. Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: trigger_volume
@@ -275,7 +274,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
-      All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do it. 
+      All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Green
@@ -289,7 +288,7 @@
     parent: carla.TrafficSign
     # - DESCRIPTION ------------------------
     doc: >
-      A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.          
+      A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
            
         Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends some seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so. 
     # - PROPERTIES -------------------------

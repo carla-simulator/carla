@@ -82,14 +82,15 @@ It is <b>True</b> if the attribute's value can be modified.
 
 <h3>Methods</h3>
 - <a name="carla.ActorAttribute.as_bool"></a>**<font color="#7fb800">as_bool</font>**(<font color="#00a6ed">**self**</font>)  
+Reads the attribute as boolean value.  
 - <a name="carla.ActorAttribute.as_color"></a>**<font color="#7fb800">as_color</font>**(<font color="#00a6ed">**self**</font>)  
-Converts the attribute to [carla.Color](#carla.Color).  
+Reads the attribute as [carla.Color](#carla.Color).  
 - <a name="carla.ActorAttribute.as_int"></a>**<font color="#7fb800">as_int</font>**(<font color="#00a6ed">**self**</font>)  
-Converts the attribute to int.  
+Reads the attribute as int.  
 - <a name="carla.ActorAttribute.as_float"></a>**<font color="#7fb800">as_float</font>**(<font color="#00a6ed">**self**</font>)  
-Converts the attribute to float.  
+Reads the attribute as float.  
 - <a name="carla.ActorAttribute.as_str"></a>**<font color="#7fb800">as_str</font>**(<font color="#00a6ed">**self**</font>)  
-Converts the attribute to string.  
+Reads the attribute as string.  
 - <a name="carla.ActorAttribute.__bool__"></a>**<font color="#7fb800">\__bool__</font>**(<font color="#00a6ed">**self**</font>)  
 Internal method to manage the attribute as bool.  
 - <a name="carla.ActorAttribute.__int__"></a>**<font color="#7fb800">\__int__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -145,10 +146,10 @@ Parses the information of this blueprint to string.
 - <a name="carla.ActorBlueprint.has_attribute"></a>**<font color="#7fb800">has_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
 Returns <b>True</b> if the blueprint contains the attribute `id`.  
     - **Parameters:**
-        - `id` (_str_) – e.g. 'gender'.  
+        - `id` (_str_) – e.g. `gender` would return **True** for pedestrians' blueprints.  
     - **Return:** _bool_  
 - <a name="carla.ActorBlueprint.has_tag"></a>**<font color="#7fb800">has_tag</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tag**</font>)  
-Returns <b>True</b> if the blueprint has `tag` listed.  
+Returns <b>True</b> if the blueprint has the specified `tag` listed.  
     - **Parameters:**
         - `tag` (_str_) – e.g. 'walker'.  
     - **Return:** _bool_  
@@ -339,7 +340,7 @@ Returns a list of strings containing the paths of the maps available on server. 
   '/Game/Carla/Maps/Town07'].  
     - **Return:** _list(str)_  
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
+Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
     - **Return:** _str_  
 - <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
@@ -733,8 +734,6 @@ Class that defines the possible lane types accepted by OpenDRIVE 1.4. This stand
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
-- <a name="carla.LaneType.Any"></a>**<font color="#f8805a">Any</font>**  
-Every type except for NONE.  
 - <a name="carla.LaneType.Bidirectional"></a>**<font color="#f8805a">Bidirectional</font>**  
 - <a name="carla.LaneType.Biking"></a>**<font color="#f8805a">Biking</font>**  
 - <a name="carla.LaneType.Border"></a>**<font color="#f8805a">Border</font>**  
@@ -755,6 +754,8 @@ Every type except for NONE.
 - <a name="carla.LaneType.Special3"></a>**<font color="#f8805a">Special3</font>**  
 - <a name="carla.LaneType.Stop"></a>**<font color="#f8805a">Stop</font>**  
 - <a name="carla.LaneType.Tram"></a>**<font color="#f8805a">Tram</font>**  
+- <a name="carla.LaneType.Any"></a>**<font color="#f8805a">Any</font>**  
+Every type except for NONE.  
 
 ---
 
@@ -1056,7 +1057,7 @@ Time register of the frame at which this measurement was taken given by the OS i
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a><sub><sup>([carla.TrafficSign](#carla.TrafficSign))</sup></sub> <sub><sup>_class_</sup></sub>
-A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.          
+A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
      
   Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends some seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so.  
 
@@ -1115,7 +1116,7 @@ Sets a given time (in seconds) for the yellow light to be active.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a> <sub><sup>_class_</sup></sub>
-All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do it.  
+All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Green"></a>**<font color="#f8805a">Green</font>**  
@@ -1280,7 +1281,7 @@ Applies a control object on the next tick, containing driving parameters such as
     - **Parameters:**
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
 - <a name="carla.Vehicle.apply_physics_control"></a>**<font color="#7fb800">apply_physics_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**physics_control**</font>)  
-Applies a control object in the next tick containing the parameters that define the vehicle as a physical object. E.g.: moment of inertia, mass, drag coefficient and many more.  
+Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more.  
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  

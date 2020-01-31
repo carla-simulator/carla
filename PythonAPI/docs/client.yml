@@ -1,7 +1,7 @@
 ---
 - module_name: carla
   doc: >
-      LOREM IPSUM.  
+        
   # - CLASSES ------------------------------
   classes:
   - class_name: Client
@@ -86,7 +86,7 @@
       params:
       return: str
       doc: >
-        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version. 
+        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities. 
     # --------------------------------------
     - def_name: get_server_version
       params:
