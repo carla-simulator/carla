@@ -37,8 +37,8 @@ namespace client {
 
     explicit BlueprintLibrary(const std::vector<rpc::ActorDefinition> &blueprints);
 
-    BlueprintLibrary(BlueprintLibrary &&) = default;
-    BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
+    //BlueprintLibrary(BlueprintLibrary &&) = default;
+    //BlueprintLibrary &operator=(BlueprintLibrary &&) = default;
 
     /// Filters a list of ActorBlueprint with id or tags matching
     /// @a wildcard_pattern.
