@@ -29,7 +29,7 @@ OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean -n 'parse-op
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
-eval set -- "$OPTS"
+#eval set -- "$OPTS"
 
 while true; do
   case "$1" in
@@ -111,7 +111,7 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+    "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
     set -e
 
   fi
