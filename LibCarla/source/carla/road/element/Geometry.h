@@ -278,7 +278,11 @@ namespace element {
         _bV(bV),
         _cV(cV),
         _dV(dV),
-        _arcLength(arcLength) {}
+        _arcLength(arcLength) {
+        _polyU.Set(aU, bU, cU, dU);
+        _polyV.Set(aV, bV, cV, dV);
+        PreComputeSpline();
+    }
 
     double GetaU() const {
       return _aU;
@@ -311,6 +315,8 @@ namespace element {
 
   private:
 
+    geom::CubicPolynomial _polyU;
+    geom::CubicPolynomial _polyV;
     double _aU;
     double _bU;
     double _cU;
@@ -320,6 +326,18 @@ namespace element {
     double _cV;
     double _dV;
     bool _arcLength;
+
+	  struct RtreeValue {
+	    double u = 0;
+	    double v = 0;
+	    double s = 0;
+	    double t_u = 0;
+      double t_v = 0;
+	  };
+	  using Rtree = geom::SegmentCloudRtree<RtreeValue>;
+	  using TreeElement = Rtree::TreeElement;
+	  Rtree _rtree;
+	  void PreComputeSpline();
   };
 
 } // namespace element
