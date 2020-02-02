@@ -163,7 +163,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  /usr/bin/open -a ${UE4_ROOT}/Engine/Binaries/Mac/UE4Editor.app "${PWD}/CarlaUE4.uproject"
+  /usr/bin/open -a "${UE4_ROOT}/Engine/Binaries/Mac/UE4Editor.app" "${PWD}/CarlaUE4.uproject"
 
 else
 
