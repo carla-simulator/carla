@@ -136,9 +136,9 @@ if ${BUILD_CARLAUE4} ; then
     fi
 
     if ${USE_XCODE}; then
-      ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -xcode
+      "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -xcode
     else
-      ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+      "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
       # HACK! This generates wrong targets on the Mac! Just replace Linux with Mac everywhere:
       sed -i .original -e "s/Linux/Mac/g" Makefile
     fi
