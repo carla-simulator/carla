@@ -22,14 +22,14 @@ clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.command --clean
 
 rebuild: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.command --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.command --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.command --rebuild
 
 hard-clean:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.command --hard-clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.command --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.command --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
 
 export-maps:
@@ -61,7 +61,7 @@ benchmark: LibCarla.server
 	@cat profiler.csv
 
 CarlaUE4Editor: LibCarla.server
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.command --build
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla.client
