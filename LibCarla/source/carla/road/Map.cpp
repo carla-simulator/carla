@@ -749,8 +749,9 @@ namespace road {
     const double epsilon = 0.000001; // small delta in the road (set to 1
                                      // micrometer to prevent numeric errors)
     const double min_delta_s = 1;    // segments of minimum 1m through the road
-    // 9 degrees, maximum angle in a curve to place a segment
-    constexpr double angle_threshold = geom::Math::Pi<double>() / 20.0;
+
+    // 1.8 degrees, maximum angle in a curve to place a segment
+    constexpr double angle_threshold = geom::Math::Pi<double>() / 100.0;
 
     // Generate waypoints at start of every road and for everey lane
     std::vector<Waypoint> topology = GenerateWaypointsOnRoadEntries(Lane::LaneType::Any);
@@ -781,7 +782,7 @@ namespace road {
           double delta_s = min_delta_s;
           double remaining_length =
           GetRemainingLength(lane, geometry_start_s, geometry_end_s, current_waypoint.s) - epsilon;
-          delta_s = remaining_length - epsilon;
+          delta_s = remaining_length;
           if (delta_s < epsilon) {
             break;
           }
@@ -826,13 +827,12 @@ namespace road {
               current_transform = next_transform;
             }
           }
-
-          auto next = GetNext(current_waypoint, 10.0 * epsilon);
-          if (next.size() != 1 || next.front().road_id != current_waypoint.road_id) {
-            break;
-          } else {
-            current_waypoint = next.front();
-          }
+        }
+        auto next = GetNext(current_waypoint, 10.0 * epsilon);
+        if (next.size() != 1 || next.front().road_id != current_waypoint.road_id) {
+          break;
+        } else {
+          current_waypoint = next.front();
         }
       }
     }
