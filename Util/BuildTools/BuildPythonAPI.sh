@@ -2,8 +2,8 @@
 
 source $(dirname "$0")/Environment.sh
 
-export CC=clang-7
-export CXX=clang++-7
+export CC=clang
+export CXX=clang++
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -22,7 +22,9 @@ OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss -n 'parse-options' -- "$
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
-eval set -- "$OPTS"
+if [ "$(uname)" != "Darwin" ]; then
+  eval set -- "$OPTS"
+fi
 
 while true; do
   case "$1" in
