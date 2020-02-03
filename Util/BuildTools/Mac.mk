@@ -77,10 +77,10 @@ PythonAPI.3: LibCarla.client
 LibCarla: LibCarla.server LibCarla.client
 
 LibCarla.server: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release
 
 LibCarla.client: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
 
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.command

@@ -79,6 +79,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
             extra_compile_args = [
+                '-isystem', 'dependencies/include/system',
                 '-mmacosx-version-min=10.13',
                 '-fPIC', '-std=c++14', '-Wno-missing-braces', 
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',

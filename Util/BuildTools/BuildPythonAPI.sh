@@ -2,8 +2,13 @@
 
 source $(dirname "$0")/Environment.sh
 
-export CC=clang
-export CXX=clang++
+if [ "$(uname)" != "Darwin" ]; then
+  export CC=clang-7
+  export CXX=clang++-7
+else
+  export CC=clang
+  export CXX=clang++
+fi
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
