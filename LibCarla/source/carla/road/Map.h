@@ -110,7 +110,7 @@ namespace road {
     std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;
 
     /// Generate waypoints on each @a lane at the start of each @a road
-    std::vector<Waypoint> GenerateWaypointsOnRoadEntries() const;
+    std::vector<Waypoint> GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type = Lane::LaneType::Driving) const;
 
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
@@ -138,6 +138,13 @@ private:
     Rtree _rtree;
 
     void CreateRtree();
+    //Helper Functions for constructing the rtree element list
+    void AddElementToRtree(std::vector<Rtree::TreeElement> &rtree_elements,
+                            geom::Transform &current_transform, geom::Transform &next_transform,
+                            Waypoint &current_waypoint, Waypoint &next_waypoint);
+    void AddElementToRtreeAndUpdateTransforms(std::vector<Rtree::TreeElement> &rtree_elements,
+                                              geom::Transform &current_transform, Waypoint &current_waypoint,
+                                              Waypoint &next_waypoint);
   };
 
 } // namespace road
