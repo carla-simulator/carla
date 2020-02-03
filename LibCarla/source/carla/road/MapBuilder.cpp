@@ -755,7 +755,7 @@ namespace road {
       carla::geom::Location location(0.5f * (maxx + minx), 0.5f * (maxy + miny), 0.5f * (maxz + minz));
       carla::geom::Vector3D extent(0.5f * (maxx - minx), 0.5f * (maxy - miny), 0.5f * (maxz - minz));
 
-      junction->_boundingbox = carla::geom::BoundingBox(location, extent);
+      junction->_bounding_box = carla::geom::BoundingBox(location, extent);
     }
   }
 
