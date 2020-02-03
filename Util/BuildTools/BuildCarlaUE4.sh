@@ -120,7 +120,7 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
     set -e
 
   fi
@@ -142,7 +142,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} "${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor" "${PWD}/CarlaUE4.uproject" ${RHI}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI}
 
 else
 
