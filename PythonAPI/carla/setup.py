@@ -8,7 +8,7 @@
 
 from setuptools import setup, Extension
 
-import fnmatch 
+import fnmatch
 import os
 import platform
 import sys
