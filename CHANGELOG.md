@@ -8,6 +8,7 @@
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
+  * Fixed docker build of .BIN for pedestrian navigation
   * Fixed typos
   * Fixed agent failures due to API changes in is_within_distance_ahead()
   * Fixed incorrect doppler velocity for RADAR sensors.
