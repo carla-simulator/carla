@@ -65,7 +65,7 @@ if $DO_PACKAGE ; then
   rm -Rf ${BUILD_FOLDER}
   mkdir -p ${BUILD_FOLDER}
 
-  ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
+  "${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh" BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=Development -ue4exe=UE4Editor \
