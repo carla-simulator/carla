@@ -88,7 +88,7 @@ namespace s11n {
       Buffer &&output) {
     std::array<boost::asio::const_buffer, 2u> seq = {
         boost::asio::buffer(measurement._header),
-        boost::asio::buffer(measurement._points)}};
+        boost::asio::buffer(measurement._points)};
     output.copy_from(seq);
     return std::move(output);
   }
