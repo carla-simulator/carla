@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/PythonUtil.h"
+//#include "carla/PythonUtil.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/Simulator.h"
 
@@ -110,8 +110,10 @@ namespace client {
       uint16_t port,
       size_t worker_threads)
     : _simulator(
-        new detail::Simulator(host, port, worker_threads),
-        PythonUtil::ReleaseGILDeleter()) {}
+        new detail::Simulator(host, port, worker_threads)
+        ) {}
+        // TODO: pyconfig.h isn't included, so we can't have this
+        //,PythonUtil::ReleaseGILDeleter()) {}
 
 } // namespace client
 } // namespace carla
