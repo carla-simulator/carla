@@ -182,9 +182,7 @@ namespace element {
     DirectedPoint point(_start_position, _heading + theta);
     point.location.x += pos.x;
     point.location.y += pos.y;*/
-    if (!_arcLength) {
-      dist = dist / _length;
-    }
+
     auto result = _rtree.GetNearestNeighbours(Rtree::BPoint(static_cast<float>(dist), 0.0f, 0.0f)).front();
 
     auto &val1 = result.second.first;
@@ -242,6 +240,9 @@ namespace element {
           last_val = current_val;
 
           param_p += delta_p;
+          if(current_s > _length){
+            break;
+          }
       }
   }
 } // namespace element

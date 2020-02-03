@@ -89,8 +89,8 @@ def main():
     opendrive = f_odr.read()
     f_odr.close()
 
-    map = carla.Map("MapViewer", str(opendrive))
-    waypoints = map.generate_waypoints(5)
+    carla_map = carla.Map("MapViewer", str(opendrive))
+    waypoints = carla_map.generate_waypoints(5)
     points = []
     x_list = []
     y_list = []
@@ -136,7 +136,7 @@ def main():
         mouse = pygame.mouse.get_pos()
         mouse_position = pixel_to_world(mouse[0], mouse[1], pixels_per_meter,
                                         scale, world_offset, (-WIDTH / 2, -HEIGHT / 2))
-        mouse_waypoint = map.get_waypoint(mouse_position)
+        mouse_waypoint = carla_map.get_waypoint(mouse_position)
         waypoint_position = world_to_pixel(mouse_waypoint.transform.location,
                                            pixels_per_meter, scale, world_offset,
                                            (-WIDTH / 2, -HEIGHT / 2))
