@@ -472,7 +472,7 @@ Bounding box helper class.
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
 The center of the bounding box relative to its parent actor.  
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-It contains the vector from the center of the bounding box to one of the vertex of the box.  
+It contains the vector from the center of the bounding box to one of the vertex of the box.
 So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`.  
 
 <h3>Methods</h3>
@@ -480,6 +480,20 @@ So, if you want to know the _X bounding box size_, you can just do `extent.x * 2
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `extent` (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns **True** if a point passed in world space is inside this bounding box.  
+    - **Parameters:**
+        - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked.  
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
+    - **Return:** _bool_  
+- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list containing the locations of this object's vertices in local space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
+- <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns a list containing the locations of this object's vertices in world space.  
+    - **Parameters:**
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -716,6 +730,13 @@ Returns a list of transformations corresponding to the recommended spawn points 
 If **False**, the waypoint will be at the given location. Also, in this second case, the result may be `None` if the waypoint is not found.  
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – This parameter is used to limit the search on a certain lane type. This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
+Get a waypoint if all the parameters passed are correct, otherwise return None.  
+    - **Parameters:**
+        - `road_id` (_int_) – Id of the road from where getting the waypoint.  
+        - `lane_id` (_int_) – Id of the lane to get the waypoint.  
+        - `s` (_float_) – Specify the length from the road start.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
 It provides a minimal graph of the topology of the current OpenDRIVE file. It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be: `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
@@ -761,7 +782,7 @@ Distance in meters from the sensor to the detection position.
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
 Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
-![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)   _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
+![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  

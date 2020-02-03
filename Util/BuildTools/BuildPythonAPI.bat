@@ -59,7 +59,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-set PYTHON_LIB_PATH=%ROOT_PATH%PythonAPI\carla
+set PYTHON_LIB_PATH=%ROOT_PATH:/=\%PythonAPI\carla\
 
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_FOR_PYTHON3% == false (
@@ -73,9 +73,9 @@ if %REMOVE_INTERMEDIATE% == false (
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
     for %%G in (
-        "%PYTHON_LIB_PATH:/=\%build",
-        "%PYTHON_LIB_PATH:/=\%dist",
-        "%PYTHON_LIB_PATH:/=\%source\carla.egg-info"
+        "%PYTHON_LIB_PATH%build",
+        "%PYTHON_LIB_PATH%dist",
+        "%PYTHON_LIB_PATH%source\carla.egg-info"
     ) do (
         if exist %%G (
             echo %FILE_N% Cleaning %%G
@@ -154,3 +154,4 @@ rem ============================================================================
 :bad_exit
     endlocal
     exit /b %errorlevel%
+    

@@ -184,6 +184,24 @@
           This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`
       return: carla.Waypoint
     # --------------------------------------
+    - def_name: get_waypoint_xodr
+      doc: >
+        Get a waypoint if all the parameters passed are correct, otherwise return None
+      params:
+      - param_name: road_id
+        type: int
+        doc: > 
+          Id of the road from where getting the waypoint
+      - param_name: lane_id
+        type: int
+        doc: > 
+          Id of the lane to get the waypoint.
+      - param_name: s
+        type: float
+        doc: > 
+          Specify the length from the road start
+      return: carla.Waypoint
+    # --------------------------------------
     - def_name: get_topology
       doc: >
         It provides a minimal graph of the topology of the current OpenDRIVE file.
