@@ -88,9 +88,6 @@ namespace traffic_manager {
     /// Parameterization object.
     Parameters parameters;
 
-    /// Traffic Manager server instance
-    TrafficManagerServer server;
-
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
 
@@ -111,8 +108,7 @@ namespace traffic_manager {
 		, std::vector<float> lateral_PID_parameters
 		, std::vector<float> lateral_highway_PID_parameters
 		, float perc_decrease_from_limit
-		, carla::client::detail::EpisodeProxy &episodeProxy
-		, uint16_t &RPCportTM);
+		, carla::client::detail::EpisodeProxy episodeProxy);
 
     /// Destructor.
     virtual ~TrafficManagerLocal();
@@ -160,6 +156,8 @@ namespace traffic_manager {
 
     /// Get carla episode information
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
+
+    std::size_t GetRegisteredActorsCount();
   };
 
 } // namespace traffic_manager
