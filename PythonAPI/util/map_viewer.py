@@ -13,6 +13,7 @@ import sys
 import argparse
 import math
 import pygame
+import time
 
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
@@ -65,7 +66,11 @@ HEIGHT = 1024
 WIDTH = 1024
 
 def main():
-    """Runs the 2D map viewer"""
+    """Runs the 2D map viewer. Shows the map and the closest point of the mouse to the road
+       Prints the required time to build the map structure and the average time of the query
+       nearest point to the road.
+    """
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         '-f', '--file',
@@ -89,8 +94,12 @@ def main():
     opendrive = f_odr.read()
     f_odr.close()
 
+    start_map = time.time()
     carla_map = carla.Map("MapViewer", str(opendrive))
-    waypoints = carla_map.generate_waypoints(5)
+    end_map = time.time()
+    print("Map load time: " + str(end_map - start_map) + " s")
+
+    waypoints = carla_map.generate_waypoints(1)
     points = []
     x_list = []
     y_list = []
@@ -120,26 +129,33 @@ def main():
             display, COLOR_GREEN,
             world_to_pixel(point.location, pixels_per_meter, scale, world_offset,
                            (-WIDTH / 2, -HEIGHT / 2)), 0)
+    road = display.convert()
 
+    avg_query_time = 0
+    counter = 0
     while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
-        display.fill(COLOR_BLACK)
 
-        for point in points:
-            pygame.draw.circle(
-                display, COLOR_GREEN,
-                world_to_pixel(point.location, pixels_per_meter, scale, world_offset,
-                               (-WIDTH / 2, -HEIGHT / 2)), 0)
+        display.blit(road, (0,0))
 
         mouse = pygame.mouse.get_pos()
         mouse_position = pixel_to_world(mouse[0], mouse[1], pixels_per_meter,
                                         scale, world_offset, (-WIDTH / 2, -HEIGHT / 2))
         mouse_waypoint = carla_map.get_waypoint(mouse_position)
+
+        query_start = time.time()
         waypoint_position = world_to_pixel(mouse_waypoint.transform.location,
                                            pixels_per_meter, scale, world_offset,
                                            (-WIDTH / 2, -HEIGHT / 2))
+        query_end = time.time()
+        counter += 1
+        avg_query_time = (avg_query_time * counter + query_end - query_start) / counter
+        if (counter == 10):
+            print("Query time: " + str(avg_query_time) + " s \r"),
+            counter = 0
+            avg_query_time = 0
         pygame.draw.line(display, COLOR_WHITE, mouse, waypoint_position, 1)
         pygame.display.flip()
 
