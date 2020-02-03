@@ -10,7 +10,7 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.command --launch
 
 package: CarlaUE4Editor PythonAPI
-	@${CARLA_BUILD_TOOLS_FOLDER}/Package.command $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
 	@doxygen

@@ -20,7 +20,9 @@ OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages: -n 'pa
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
-eval set -- "$OPTS"
+if [ "$(uname)" != "Darwin" ]; then
+  eval set -- "$OPTS"
+fi
 
 while true; do
   case "$1" in
@@ -94,11 +96,17 @@ if ${DO_CARLA_RELEASE} ; then
   rm -Rf ${RELEASE_BUILD_FOLDER}
   mkdir -p ${RELEASE_BUILD_FOLDER}
 
+  if [ "$(uname)" != "Darwin" ]; then
+    PLATFORM=Linux
+  else
+    PLATFORM=MAC
+  fi
+
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package \
       -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
-      -prereqs -targetplatform=Linux -build -utf8output \
+      -prereqs -targetplatform=$PLATFORM -build -utf8output \
       -archivedirectory="${RELEASE_BUILD_FOLDER}"
 
   popd >/dev/null
