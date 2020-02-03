@@ -706,6 +706,13 @@ Returns a list of transformations corresponding to the recommended spawn points 
 If **False**, the waypoint will be at the given location. Also, in this second case, the result may be `None` if the waypoint is not found.  
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – This parameter is used to limit the search on a certain lane type. This can be used like a flag: `LaneType.Driving & LaneType.Shoulder`.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
+Get a waypoint if all the parameters passed are correct, otherwise return None.  
+    - **Parameters:**
+        - `road_id` (_int_) – Id of the road from where getting the waypoint.  
+        - `lane_id` (_int_) – Id of the lane to get the waypoint.  
+        - `s` (_float_) – Specify the length from the road start.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
 It provides a minimal graph of the topology of the current OpenDRIVE file. It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be: `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
