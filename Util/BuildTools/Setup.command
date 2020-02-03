@@ -329,6 +329,63 @@ fi
 unset GTEST_BASENAME
 
 # ==============================================================================
+# -- Get Recast&Detour and compile it with libc++ ------------------------------
+# ==============================================================================
+
+RECAST_HASH=cdce4e
+RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+
+RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
+RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
+
+if [[ -d "${RECAST_BASENAME}-install" ]] ; then
+  log "${RECAST_BASENAME} already installed."
+else
+  rm -Rf \
+      ${RECAST_BASENAME}-source \
+      ${RECAST_BASENAME}-build \
+      ${RECAST_BASENAME}-install
+
+  log "Retrieving Recast & Detour"
+
+  git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
+
+  pushd ${RECAST_BASENAME}-source >/dev/null
+
+  git reset --hard ${RECAST_COMMIT}
+
+  popd >/dev/null
+
+  log "Building Recast & Detour with libc++."
+
+  mkdir -p ${RECAST_BASENAME}-build
+
+  pushd ${RECAST_BASENAME}-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
+      -DRECASTNAVIGATION_DEMO=False \
+      -DRECASTNAVIGATION_TEST=False \
+      ../${RECAST_BASENAME}-source
+
+  ninja
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
+
+  # move headers inside 'recast' folder
+  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
+  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
+
+fi
+
+unset RECAST_BASENAME
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
