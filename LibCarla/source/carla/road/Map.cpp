@@ -103,7 +103,7 @@ namespace road {
       ForEachDrivableLaneImpl(
           road.GetId(),
           lane_section,
-          -1.0,
+          -1.0,  // At start of the lane
           std::forward<FuncT>(func));
     }
   }
@@ -115,7 +115,7 @@ namespace road {
       ForEachLaneImpl(
           road.GetId(),
           lane_section,
-          -1.0,
+          -1.0,  // At start of the lane
           lane_type,
           std::forward<FuncT>(func));
     }
@@ -642,7 +642,7 @@ namespace road {
       const Road &road = _data.GetRoad(connections.second.connecting_road);
       ForEachLane(road, lane_type, [&](auto &&waypoint) {
         const auto& lane = GetLane(waypoint);
-        double final_s = GetDistanceAtEndOfLane(lane);
+        const double final_s = GetDistanceAtEndOfLane(lane);
         Waypoint lane_end(waypoint);
         lane_end.s = final_s;
         result.push_back({waypoint, lane_end});

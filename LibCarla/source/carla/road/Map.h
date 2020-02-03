@@ -90,7 +90,7 @@ namespace road {
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
     std::vector<Waypoint> GetNext(Waypoint waypoint, double distance) const;
-    /// Return the list of waypoints at @a distance in the reversed direction 
+    /// Return the list of waypoints at @a distance in the reversed direction
     /// that a vehicle at @a waypoint could drive to.
     std::vector<Waypoint> GetPrevious(Waypoint waypoint, double distance) const;
 
@@ -114,7 +114,7 @@ namespace road {
     std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const;
 
     Junction* GetJunction(JuncId id);
-    
+
     const Junction* GetJunction(JuncId id) const;
 
 #ifdef LIBCARLA_WITH_GTEST

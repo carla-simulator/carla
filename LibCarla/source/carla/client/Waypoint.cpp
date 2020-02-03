@@ -78,18 +78,18 @@ namespace client {
 
   std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double distance) const {
     std::vector<SharedPtr<Waypoint>> result;
-    std::vector<SharedPtr<Waypoint>> next = GetPrevious(distance);
-    bool is_there_next = true;
-    while (is_there_next) {
-      is_there_next = false;
-      for (auto &w : next) {
+    std::vector<SharedPtr<Waypoint>> prev = GetPrevious(distance);
+    bool is_there_prev = true;
+    while (is_there_prev) {
+      is_there_prev = false;
+      for (auto &w : prev) {
         if (w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()) {
           result.emplace_back(w);
-          is_there_next = true;
+          is_there_prev = true;
         }
       }
       if (result.size()) {
-        next = result.back()->GetPrevious(distance);
+        prev = result.back()->GetPrevious(distance);
       }
     }
     return result;
@@ -180,7 +180,7 @@ namespace client {
       }
     }
 
-    return (c_right &lane_change_type::Right) | (c_left & lane_change_type::Left);
+    return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
   }
 
   SharedPtr<Junction> Waypoint::GetJunction() const {

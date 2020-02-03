@@ -48,7 +48,7 @@ namespace road {
     const Road &GetRoad(const RoadId id) const;
 
     Junction *GetJunction(JuncId id);
-    
+
     const Junction *GetJunction(JuncId id) const;
 
     template <typename T>

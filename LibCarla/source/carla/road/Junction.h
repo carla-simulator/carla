@@ -68,9 +68,9 @@ namespace road {
     std::unordered_map<ConId, Connection> GetConnections() const {
       return _connections;
     }
-    
+
     carla::geom::BoundingBox GetBoundingBox() const{
-      return _boundingbox;
+      return _bounding_box;
     }
 
   private:
@@ -83,7 +83,7 @@ namespace road {
 
     std::unordered_map<ConId, Connection> _connections;
 
-    carla::geom::BoundingBox _boundingbox;
+    carla::geom::BoundingBox _bounding_box;
   };
 
 } // road
