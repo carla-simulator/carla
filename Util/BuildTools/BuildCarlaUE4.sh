@@ -32,7 +32,7 @@ OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
-#eval set -- "$OPTS"
+eval set -- "$OPTS"
 
 while true; do
   case "$1" in
