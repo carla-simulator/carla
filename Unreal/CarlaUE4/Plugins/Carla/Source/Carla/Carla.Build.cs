@@ -78,6 +78,11 @@ public class Carla : ModuleRules
     AddCarlaServerDependency(Target);
   }
 
+  private bool IsMac(ReadOnlyTargetRules Target)
+  {
+    return (Target.Platform == UnrealTargetPlatform.Mac);
+  }
+
   private bool UseDebugLibs(ReadOnlyTargetRules Target)
   {
     if (IsWindows(Target))

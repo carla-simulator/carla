@@ -18,27 +18,20 @@ fi
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--[no]-xcode]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 
-GDB=
-RHI="-vulkan"
-
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
-
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
-#eval set -- "$OPTS"
+USE_XCODE=true
+if [[ -f ${CARLA_BUILD_FOLDER}/NO_XCODEBUILD ]] ; then
+  USE_XCODE=false
+fi
 
 while true; do
   case "$1" in
-    --gdb )
-      GDB="gdb --args";
-      shift ;;
     --build )
       BUILD_CARLAUE4=true;
       shift ;;
@@ -56,8 +49,11 @@ while true; do
       REMOVE_INTERMEDIATE=true;
       HARD_CLEAN=true;
       shift ;;
-    --opengl )
-      RHI="-opengl";
+    --no-xcode )
+      USE_XCODE=false;
+      shift ;;
+    --xcode )
+      USE_XCODE=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -65,6 +61,11 @@ while true; do
       exit 1
       ;;
     * )
+      if [ ! -z "$1" ]; then
+        echo "Bad argument: '$1'"
+        echo "$USAGE_STRING"
+        exit 2
+      fi
       break ;;
   esac
 done
@@ -79,18 +80,6 @@ pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 # -- Clean CarlaUE4 ------------------------------------------------------------
 # ==============================================================================
 
-if ${HARD_CLEAN} ; then
-
-  if [ ! -f Makefile ]; then
-    fatal_error "The project wasn't built before!"
-  fi
-
-  log "Doing a \"hard\" clean of the Unreal Engine project."
-
-  make CarlaUE4Editor ARGS=-clean
-
-fi
-
 if ${REMOVE_INTERMEDIATE} ; then
 
   log "Cleaning intermediate files and folders."
@@ -99,13 +88,34 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
-  rm -f Makefile
-
   pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
   popd >/dev/null
+
+fi
+
+if ${HARD_CLEAN} ; then
+
+  if [ ! -f Makefile ]; then
+    fatal_error "The project wasn't built before!"
+  fi
+
+  log "Doing a \"hard\" clean of the Unreal Engine project."
+
+  if ${USE_XCODE}; then
+    xcodebuild -scheme CarlaUe4 clean
+  else
+    make CarlaUE4Editor ARGS=-clean
+  fi
+
+fi
+
+if ${REMOVE_INTERMEDIATE} ; then
+
+  rm -f Makefile 
+  rm -rf CarlaUe4.xcworkspace
 
 fi
 
@@ -120,18 +130,29 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+
+    if [[ ! -f ${UE4_ROOT}/GenerateProjectFiles.sh ]]; then
+      fatal_error "No GenerateProjectFiles.sh in ${UE4_ROOT}. You can copy this from UnrealEngine source tree."
+    fi
+
+    if ${USE_XCODE}; then
+      "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -xcode
+    else
+      "${UE4_ROOT}/GenerateProjectFiles.sh" -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+      # HACK! This generates wrong targets on the Mac! Just replace Linux with Mac everywhere:
+      sed -i .original -e "s/Linux/Mac/g" Makefile
+    fi
+
     set -e
 
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor
-
-  #Providing the user with the ExportedMaps folder
-  EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
-  mkdir -p "${EXPORTED_MAPS}"
-
+  if ${USE_XCODE}; then
+    xcodebuild -scheme CarlaUE4 -target CarlaUE4Editor
+  else
+    make CarlaUE4Editor
+  fi
 
 fi
 
@@ -142,7 +163,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} "${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor" "${PWD}/CarlaUE4.uproject" ${RHI}
+  /usr/bin/open -a "${UE4_ROOT}/Engine/Binaries/Mac/UE4Editor.app" "${PWD}/CarlaUE4.uproject"
 
 else
 

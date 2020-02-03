@@ -4,7 +4,7 @@
 
 set -e
 
-CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
+CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../..">/dev/null && pwd )"
 source $(dirname "$0")/Vars.mk
 unset CURDIR
 

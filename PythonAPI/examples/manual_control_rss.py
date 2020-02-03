@@ -411,12 +411,25 @@ class KeyboardControl(object):
 class HUD(object):
     def __init__(self, width, height):
         self.dim = (width, height)
-        font = pygame.font.Font(pygame.font.get_default_font(), 20)
-        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
-        default_font = 'ubuntumono'
-        mono = default_font if default_font in fonts else fonts[0]
-        mono = pygame.font.match_font(mono)
-        self._font_mono = pygame.font.Font(mono, 14)
+        if sys.platform == 'darwin': 
+            # At least on my Mac, pygame cannot find any fonts by itself
+            fonts = ['/System/Library/Fonts/Menlo.ttc',
+                     '/System/Library/Fonts/Monaco.dfont',
+                     '/Library/Fonts/Andale Mono.ttf',
+                     '/Library/Fonts/Courier New.ttf',
+                     '/System/Library/Fonts/Courier.dfont'
+                     ]
+            fonts = [font for font in fonts if os.path.exists(font)]
+            font = pygame.font.Font(fonts[0], 20)
+            mono = fonts[0]
+            self._font_mono = pygame.font.Font(mono, 12)
+        else:
+            font = pygame.font.Font(pygame.font.get_default_font(), 20)
+            fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+            default_font = 'ubuntumono'
+            mono = default_font if default_font in fonts else fonts[0]
+            mono = pygame.font.match_font(mono)
+            self._font_mono = pygame.font.Font(mono, 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self.help = HelpText(pygame.font.Font(mono, 24), width, height)
         self.server_fps = 0

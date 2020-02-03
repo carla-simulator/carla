@@ -1,0 +1,31 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: carla
+  version: {{ data['version'] }}
+
+source:
+  path: ..
+
+build:
+
+requirements:
+  build:
+    - python =3.6
+    - setuptools
+
+  host:
+    - python =3.6
+
+  run:
+    - python =3.6
+
+test:
+  imports:
+    - carla
+
+about:
+  home: {{ data['url'] }}
+  license: {{ data['license'] }}
+  summary: {{ data['description'] }}
+  description: {{ data['description']}}
