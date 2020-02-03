@@ -22,6 +22,7 @@ namespace LocalizationConstants {
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
   static const float BLOCKED_TIME_THRESHOLD = 90.0f;
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
+  static const float STOPPED_VELOCITY_THRESHOLD = 0.4f;  // meters per second.
 
 } // namespace LocalizationConstants
 
@@ -643,7 +644,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-    if (actor->GetVelocity().Length() > 0.1 || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
+    if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
       idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
     }
 
