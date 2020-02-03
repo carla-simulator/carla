@@ -258,10 +258,11 @@ All possible states for traffic lights. Check out this [`recipe`](../python_cook
 ---
 
 ## carla.VehicleLightState<a name="carla.VehicleLightState"></a> <sub><sup>_class_</sup></sub>
-These can be used like a flag, e.g: `VehicleLightState.HighBeam & VehicleLightState.Brake`.  
+Class that recaps the state of the lights of a vehicle, these can be used as a flags. E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active. Lights are off by default in any situation and should be managed by the user via script. The blinkers blink automatically. _Warning: Right now, not all vehicles have been prepared to work with this functionality, this will be added to all of them in later updates_.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.VehicleLightState.NONE"></a>**<font color="#f8805a">NONE</font>**  
+All lights off.  
 - <a name="carla.VehicleLightState.Position"></a>**<font color="#f8805a">Position</font>**  
 - <a name="carla.VehicleLightState.LowBeam"></a>**<font color="#f8805a">LowBeam</font>**  
 - <a name="carla.VehicleLightState.HighBeam"></a>**<font color="#f8805a">HighBeam</font>**  
@@ -272,8 +273,11 @@ These can be used like a flag, e.g: `VehicleLightState.HighBeam & VehicleLightSt
 - <a name="carla.VehicleLightState.Fog"></a>**<font color="#f8805a">Fog</font>**  
 - <a name="carla.VehicleLightState.Interior"></a>**<font color="#f8805a">Interior</font>**  
 - <a name="carla.VehicleLightState.Special1"></a>**<font color="#f8805a">Special1</font>**  
+This is reserved for certain vehicles that can have special lights, like a siren.  
 - <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**  
+This is reserved for certain vehicles that can have special lights, like a siren.  
 - <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**  
+All lights on.  
 
 ---
 
@@ -1169,17 +1173,23 @@ WeatherParameters class is used for requesting and changing the lighting and wea
 
 <h3>Instance Variables</h3>
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
-Weather cloudiness. Values range from 0 to 100.  
+Weather cloudiness. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>** (_float_)  
-Precipitation amount for controlling rain intensity. Values range from 0 to 100.  
+Precipitation amount for controlling rain intensity. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
-Precipitation deposits for controlling the area of puddles on roads. Values range from 0 to 100.  
+Precipitation deposits for controlling the area of puddles on roads. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>** (_float_)  
-Wind intensity. Values range from 0 to 100.  
+Wind intensity, it affects the clouds moving speed, the raindrop direction, and vegetation. This doesn't affect the car physics. Values range from 0 to 100.  
+- <a name="carla.WeatherParameters.fog_density"></a>**<font color="#f8805a">fog_density</font>** (_float_)  
+Fog density. It only affects the RGB camera sensor. Values range from 0 to 100.  
+- <a name="carla.WeatherParameters.fog_distance"></a>**<font color="#f8805a">fog_distance</font>** (_float_)  
+Fog start distance (in meters). Values range from 0 to infinite.  
+- <a name="carla.WeatherParameters.wetness"></a>**<font color="#f8805a">wetness</font>** (_float_)  
+Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>** (_float_)  
-The azimuth angle of the sun in degrees. Values range from 0 to 360.  
+The azimuth angle of the sun in degrees. Values range from 0 to 360 (degrees).  
 - <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>** (_float_)  
-Altitude angle of the sun in degrees. Values range from -90 to 90.  
+Altitude angle of the sun in degrees. Values range from -90 to 90 (where 0 degrees is the horizon).  
 
 <h3>Methods</h3>
 - <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>)  

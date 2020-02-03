@@ -12,32 +12,50 @@
     - var_name: cloudiness
       type: float
       doc: >
-        Weather cloudiness. Values range from 0 to 100.
+        Weather cloudiness. It only affects the RGB camera sensor. Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation
       type: float
       doc: >
-        Precipitation amount for controlling rain intensity. Values range from 0 to 100.
+        Precipitation amount for controlling rain intensity. It only affects the RGB camera sensor.
+        Values range from 0 to 100.
     # --------------------------------------
     - var_name: precipitation_deposits
       type: float
       doc: >
-        Precipitation deposits for controlling the area of puddles on roads. Values range from 0 to 100.
+        Precipitation deposits for controlling the area of puddles on roads. It only affects the RGB camera sensor.
+        Values range from 0 to 100.
     # --------------------------------------
     - var_name: wind_intensity
       type: float
       doc: >
-        Wind intensity. Values range from 0 to 100.
+        Wind intensity, it affects the clouds moving speed, the raindrop direction,
+        and vegetation. This doesn't affect the car physics. Values range from 0 to 100.
+    # --------------------------------------
+    - var_name: fog_density
+      type: float
+      doc: >
+        Fog density. It only affects the RGB camera sensor. Values range from 0 to 100.
+    # --------------------------------------
+    - var_name: fog_distance
+      type: float
+      doc: >
+        Fog start distance (in meters). Values range from 0 to infinite.
+    # --------------------------------------
+    - var_name: wetness
+      type: float
+      doc: >
+        Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.
     # --------------------------------------
     - var_name: sun_azimuth_angle
       type: float
       doc: >
-        The azimuth angle of the sun in degrees. Values range from 0 to 360.
+        The azimuth angle of the sun in degrees. Values range from 0 to 360 (degrees).
     # --------------------------------------
     - var_name: sun_altitude_angle
       type: float
       doc: >
-        Altitude angle of the sun in degrees. Values range from -90 to 90.
+        Altitude angle of the sun in degrees. Values range from -90 to 90 (where 0 degrees is the horizon).
 
     # - METHODS ----------------------------
     methods:
@@ -79,6 +97,6 @@
         Returns True if `self` and `other` are not equal
     # --------------------------------------
     - def_name: __str__
-      doc: > 
+      doc: >
     # --------------------------------------
 ...
