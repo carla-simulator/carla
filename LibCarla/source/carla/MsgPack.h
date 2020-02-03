@@ -24,7 +24,7 @@ namespace carla {
       namespace mp = ::clmdep_msgpack;
       mp::sbuffer sbuf;
       mp::pack(sbuf, obj);
-      return Buffer(reinterpret_cast<const unsigned char *>(sbuf.data()), static_cast<uint64_t>(sbuf.size()));
+      return Buffer(reinterpret_cast<const unsigned char *>(sbuf.data()), sbuf.size());
     }
 
     template <typename T>

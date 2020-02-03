@@ -98,6 +98,7 @@ namespace carla {
       copy_from(data, size);
     }
 
+#ifndef __APPLE__
     /// @copydoc Buffer(size_type)
     explicit Buffer(const value_type *data, uint64_t size)
       : Buffer(data, [size]() {
@@ -106,6 +107,7 @@ namespace carla {
           }
           return static_cast<size_type>(size);
         } ()) {}
+#endif
 
     Buffer(const Buffer &) = delete;
 

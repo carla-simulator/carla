@@ -329,6 +329,21 @@ fi
 unset GTEST_BASENAME
 
 # ==============================================================================
+# -- Generate Version.h --------------------------------------------------------
+# ==============================================================================
+
+CARLA_VERSION=$(get_git_repository_version)
+
+log "CARLA version ${CARLA_VERSION}."
+
+VERSION_H_FILE=${LIBCARLA_ROOT_FOLDER}/source/carla/Version.h
+VERSION_H_FILE_GEN=${CARLA_BUILD_FOLDER}/Version.h
+
+sed -e "s|\${CARLA_VERSION}|${CARLA_VERSION}|g" ${VERSION_H_FILE}.in > ${VERSION_H_FILE_GEN}
+
+move_if_changed "${VERSION_H_FILE_GEN}" "${VERSION_H_FILE}"
+
+# ==============================================================================
 # -- Generate CMake toolchains and config --------------------------------------
 # ==============================================================================
 
