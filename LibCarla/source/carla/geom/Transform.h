@@ -53,30 +53,19 @@ namespace geom {
       return rotation.GetForwardVector();
     }
 
+    /// Applies this transformation to @a in_point (first translation then rotation).
     void TransformPoint(Vector3D &in_point) const {
-      // Rotate
-      const float cy = std::cos(Math::ToRadians(rotation.yaw));
-      const float sy = std::sin(Math::ToRadians(rotation.yaw));
-      const float cr = std::cos(Math::ToRadians(rotation.roll));
-      const float sr = std::sin(Math::ToRadians(rotation.roll));
-      const float cp = std::cos(Math::ToRadians(rotation.pitch));
-      const float sp = std::sin(Math::ToRadians(rotation.pitch));
+      auto out_point = in_point;
+      rotation.RotateVector(out_point); // First rotate
+      out_point += location;            // Then translate
+      in_point = out_point;
+    }
 
-      Vector3D out_point;
-      out_point.x = in_point.x * (cp * cy) +
-          in_point.y * (cy * sp * sr - sy * cr) +
-          in_point.z * (-cy * sp * cr - sy * sr);
-      out_point.y = in_point.x * (cp * sy) +
-          in_point.y * (sy * sp * sr + cy * cr) +
-          in_point.z * (-sy * sp * cr + cy * sr);
-
-      out_point.z = in_point.x *  (sp) +
-          in_point.y * -(cp * sr) +
-          in_point.z *  (cp * cr);
-
-      // Translate
-      out_point += location;
-
+    /// Applies the inverse of this transformation to @a in_point
+    void InverseTransformPoint(Vector3D &in_point) const {
+      auto out_point = in_point;
+      out_point -= location;                   // First translate inverse
+      rotation.InverseRotateVector(out_point); // Then rotate inverse
       in_point = out_point;
     }
 
