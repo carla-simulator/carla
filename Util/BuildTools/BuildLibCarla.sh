@@ -40,7 +40,10 @@ OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n '
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
-eval set -- "$OPTS"
+if [ "$(uname)" != "Darwin" ]; then
+  # getopt doesn't work on mac
+  eval set -- "$OPTS"
+fi
 
 while true; do
   case "$1" in

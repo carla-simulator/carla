@@ -37,6 +37,8 @@ LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 PYTHON_API_2=false
 PYTHON_API_3=false
+SMOKE_TESTS_2=false
+SMOKE_TESTS_3=false
 RUN_BENCHMARK=false
 
 OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,benchmark -n 'parse-options' -- "$@"`
