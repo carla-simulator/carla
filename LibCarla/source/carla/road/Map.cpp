@@ -201,22 +201,22 @@ namespace road {
     Waypoint result_start = query_result.front().second.first;
     Waypoint result_end = query_result.front().second.second;
 
-    if(result_start.lane_id < 0){
+    if (result_start.lane_id < 0) {
       double delta_s = distance_to_segment.first;
       double final_s = result_start.s + delta_s;
-      if(final_s >= result_end.s){
+      if (final_s >= result_end.s) {
         return result_end;
-      }else if (delta_s <= 0) {
+      } else if (delta_s <= 0) {
         return result_start;
       } else {
         return GetNext(result_start, distance_to_segment.first).front();
       }
-    }else{
+    } else {
       double delta_s = distance_to_segment.first;
       double final_s = result_start.s - delta_s;
-      if(final_s <= result_end.s){
+      if (final_s <= result_end.s) {
         return result_end;
-      }else if (delta_s <= 0) {
+      } else if (delta_s <= 0) {
         return result_start;
       } else {
         return GetNext(result_start, distance_to_segment.first).front();
@@ -619,7 +619,7 @@ namespace road {
     return result;
   }
 
-  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries() const {
+  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type) const {
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
@@ -627,7 +627,8 @@ namespace road {
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the right (negative) lanes
-          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+          if (lane.first < 0 &&
+          static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
@@ -637,7 +638,8 @@ namespace road {
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the left (positive) lanes
-          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+          if (lane.first > 0 &&
+          static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(),
                                           road_len });
           }
@@ -684,189 +686,153 @@ namespace road {
     return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
   }
 
-  void Map::CreateRtree() {
-    const double epsilon = 0.000001;
-    const double min_delta_s = 1;
-    const double angle_threshold = geom::Math::Pi<double>() / 20.0; // 9 degrees
-
-    std::vector<Waypoint> topology;
-    for (const auto &pair : _data.GetRoads()) {
-      const auto &road = pair.second;
-      // right lanes start at s 0
-      for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
-        for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 && lane.second.GetType() != Lane::LaneType::None) {
-            topology.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
-          }
-        }
-      }
-      // left lanes start at s max
-      const auto road_len = road.GetLength();
-      for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
-        for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 && lane.second.GetType() != Lane::LaneType::None) {
-            topology.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(),
-                                            road_len });
-          }
-        }
+  // Checks whether the geometry is straight or not
+  bool IsLineStraight(const Road &road, const Lane &lane, element::GeometryType geometry_type) {
+    if (geometry_type != element::GeometryType::LINE) {
+      return false;
+    }
+    auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
+    for (auto *lane_offset : lane_offsets) {
+      if (abs(lane_offset->GetPolynomial().GetC()) > 0 ||
+      abs(lane_offset->GetPolynomial().GetD()) > 0) {
+        return false;
       }
     }
+    auto elevations = road.GetInfos<element::RoadInfoElevation>();
+    for (auto *elevation : elevations) {
+      if (abs(elevation->GetPolynomial().GetC()) > 0 ||
+      abs(elevation->GetPolynomial().GetD()) > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-    std::vector<Rtree::TreeElement> rtree_elements;
+  // Adds a new element to the rtree element list using the position of the
+  // waypoints
+  // both ends of the segment
+  void Map::AddElementToRtree(std::vector<Rtree::TreeElement> &rtree_elements,
+  geom::Transform &current_transform, geom::Transform &next_transform,
+  Waypoint & current_waypoint, Waypoint & next_waypoint) {
+    Rtree::BPoint init =
+    Rtree::BPoint(current_transform.location.x, current_transform.location.y,
+        current_transform.location.z);
+    Rtree::BPoint end =
+    Rtree::BPoint(next_transform.location.x, next_transform.location.y, next_transform.location.z);
+    rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init, end),
+        std::make_pair(current_waypoint, next_waypoint)));
+  }
+  // Adds a new element to the rtree element list using the position of the
+  // waypoints
+  // both ends of the segment
+  void Map::AddElementToRtreeAndUpdateTransforms(std::vector<Rtree::TreeElement> &rtree_elements,
+  geom::Transform &current_transform, Waypoint & current_waypoint, Waypoint & next_waypoint) {
+    geom::Transform next_transform = ComputeTransform(next_waypoint);
+    AddElementToRtree(rtree_elements, current_transform, next_transform,
+    current_waypoint, next_waypoint);
+    current_waypoint = next_waypoint;
+    current_transform = next_transform;
+  }
+
+  // returns the remaining length of the geometry depending on the lane
+  // direction
+  double GetRemainingLength(const Lane &lane, double geometry_start_s, double geometry_end_s,
+  double current_s) {
+    if (lane.GetId() < 0) {
+      return (geometry_end_s - current_s);
+    } else {
+      return (current_s - geometry_start_s);
+    }
+  }
+
+  void Map::CreateRtree() {
+    const double epsilon = 0.000001; // small delta in the road (set to 1
+                                     // micrometer to prevent numeric errors)
+    const double min_delta_s = 1;    // segments of minimum 1m through the road
+    // 9 degrees, maximum angle in a curve to place a segment
+    constexpr double angle_threshold = geom::Math::Pi<double>() / 20.0;
+
+    // Generate waypoints at start of every road and for everey lane
+    std::vector<Waypoint> topology = GenerateWaypointsOnRoadEntries(Lane::LaneType::Any);
+
+    std::vector<Rtree::TreeElement> rtree_elements; // container of segments and
+                                                    // waypoints
+    // Loop through all road lanes
     for (auto &waypoint : topology) {
       auto &lane_start_waypoint = waypoint;
 
       auto current_waypoint = lane_start_waypoint;
 
-      const Lane &lane = GetLane(current_waypoint);
       const Road &road = _data.GetRoad(current_waypoint.road_id);
-      while (current_waypoint.s <= road.GetLength() && current_waypoint.s >= 0) {
-        bool shouldBreak = false;
-        const auto *geometry = road.GetInfo<element::RoadInfoGeometry>(current_waypoint.s);
 
+      // loop through every geometry in the road
+      while (current_waypoint.s <= road.GetLength() && current_waypoint.s >= 0) {
+        const Lane &lane = GetLane(current_waypoint);
+        const auto *geometry = road.GetInfo<element::RoadInfoGeometry>(current_waypoint.s);
+        // start s of this geometry in the road
         double geometry_start_s = geometry->GetGeometry().GetStartOffset();
+        // end s this geometry in the road
         double geometry_end_s = geometry_start_s + geometry->GetGeometry().GetLength();
-        double delta_s = min_delta_s;
+
         geom::Transform current_transform = ComputeTransform(current_waypoint);
 
-        element::GeometryType geometry_type = geometry->GetGeometry().GetType();
-
-        bool is_straight = true;
-        switch (geometry_type) {
-          case element::GeometryType::LINE: {
-            auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
-            for (auto *lane_offset : lane_offsets) {
-              if (abs(lane_offset->GetPolynomial().GetC()) > 0 ||
-              abs(lane_offset->GetPolynomial().GetD()) > 0) {
-                is_straight = false;
-                break;
-              }
-            }
-            auto elevations = road.GetInfos<element::RoadInfoElevation>();
-            for (auto *elevation : elevations) {
-              if (abs(elevation->GetPolynomial().GetC()) > 0 ||
-              abs(elevation->GetPolynomial().GetD()) > 0) {
-                is_straight = false;
-                break;
-              }
-            }
-          }
-            if (is_straight) {
-              if (lane.GetId() < 0) {
-                double remaining_length = (geometry_end_s - current_waypoint.s) - epsilon;
-                delta_s = std::min(delta_s, remaining_length);
-              } else {
-                double remaining_length = (current_waypoint.s - geometry_start_s) - epsilon;
-                delta_s = std::min(delta_s, remaining_length);
-              }
-              delta_s -= epsilon;
-
-              if (delta_s < epsilon) {
-                break;
-              }
-              auto next = GetNext(current_waypoint, delta_s);
-
-              RELEASE_ASSERT(next.size() == 1);
-              RELEASE_ASSERT(next.front().road_id == current_waypoint.road_id);
-
-              auto next_waypoint = next.front();
-              geom::Transform next_transform = ComputeTransform(next_waypoint);
-
-              Rtree::BPoint init =
-              Rtree::BPoint(current_transform.location.x, current_transform.location.y,
-                  current_transform.location.z);
-              Rtree::BPoint end =
-              Rtree::BPoint(next_transform.location.x, next_transform.location.y, next_transform.location.z);
-              rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init, end),
-                  std::make_pair(current_waypoint, next_waypoint)));
-
-              current_waypoint = next_waypoint;
-              current_transform = next_transform;
-              break;
-            }
-          case element::GeometryType::ARC:
-          case element::GeometryType::SPIRAL:
-          case element::GeometryType::POLY3:
-          case element::GeometryType::POLY3PARAM: {
-            auto next_waypoint = current_waypoint;
-            while (true) {
-              delta_s = min_delta_s;
-              if (lane.GetId() < 0) {
-                double remaining_length = (geometry_end_s - next_waypoint.s) - epsilon;
-                delta_s = std::min(delta_s, remaining_length);
-              } else {
-                double remaining_length = (next_waypoint.s - geometry_start_s) - epsilon;
-                delta_s = std::min(delta_s, remaining_length);
-              }
-
-              if (delta_s < epsilon) {
-                geom::Transform next_transform = ComputeTransform(next_waypoint);
-                Rtree::BPoint init = Rtree::BPoint(current_transform.location.x,
-                    current_transform.location.y, current_transform.location.z);
-                Rtree::BPoint end = Rtree::BPoint(next_transform.location.x,
-                    next_transform.location.y, next_transform.location.z);
-
-                rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init,
-                    end), std::make_pair(current_waypoint, next_waypoint)));
-
-                current_waypoint = next_waypoint;
-                current_transform = next_transform;
-
-                break;
-              }
-
-              auto next = GetNext(next_waypoint, delta_s);
-
-              if (next.size() != 1 ||
-              current_waypoint.road_id != next.front().road_id) {
-                geom::Transform next_transform = ComputeTransform(next_waypoint);
-                Rtree::BPoint init = Rtree::BPoint(current_transform.location.x,
-                    current_transform.location.y, current_transform.location.z);
-                Rtree::BPoint end = Rtree::BPoint(next_transform.location.x,
-                    next_transform.location.y, next_transform.location.z);
-
-                rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init,
-                    end), std::make_pair(current_waypoint, next_waypoint)));
-
-                current_waypoint = next_waypoint;
-                current_transform = next_transform;
-
-                break;
-              }
-
-              next_waypoint = next.front();
-
-              geom::Transform next_transform = ComputeTransform(next_waypoint);
-              double angle = geom::Math::GetVectorAngle(current_transform.GetForwardVector(),
-                  next_transform.GetForwardVector());
-
-              if (abs(angle) > angle_threshold) {
-                Rtree::BPoint init = Rtree::BPoint(current_transform.location.x,
-                    current_transform.location.y, current_transform.location.z);
-                Rtree::BPoint end = Rtree::BPoint(next_transform.location.x,
-                    next_transform.location.y, next_transform.location.z);
-                rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init,
-                    end), std::make_pair(current_waypoint, next_waypoint)));
-                current_waypoint = next_waypoint;
-                current_transform = next_transform;
-              }
-            }
-
+        // Save computation time in straight lines
+        if (IsLineStraight(road, lane, geometry->GetGeometry().GetType())) {
+          double delta_s = min_delta_s;
+          double remaining_length =
+          GetRemainingLength(lane, geometry_start_s, geometry_end_s, current_waypoint.s) - epsilon;
+          delta_s = remaining_length - epsilon;
+          if (delta_s < epsilon) {
             break;
           }
-        }
+          auto next = GetNext(current_waypoint, delta_s);
+          RELEASE_ASSERT(next.size() == 1);
+          RELEASE_ASSERT(next.front().road_id == current_waypoint.road_id);
+          auto next_waypoint = next.front();
 
-        auto next = GetNext(current_waypoint, 10.0 * epsilon);
-        if (next.size() != 1 || next.front().road_id != current_waypoint.road_id) {
-          shouldBreak = true;
+          AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
+          next_waypoint);
         } else {
-          current_waypoint = next.front();
-        }
+          auto next_waypoint = current_waypoint;
+          // Loop until the end of the geometry
+          while (true) {
+            double delta_s = min_delta_s;
+            double remaining_length =
+            GetRemainingLength(lane, geometry_start_s, geometry_end_s, next_waypoint.s) - epsilon;
+            delta_s = std::min(delta_s, remaining_length);
+            if (delta_s < epsilon) {
+              AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
+              next_waypoint);
+              break;
+            }
 
-        if (shouldBreak) {
-          break;
+            auto next = GetNext(next_waypoint, delta_s);
+            if (next.size() != 1 ||
+            current_waypoint.road_id != next.front().road_id) {
+              AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
+              next_waypoint);
+              break;
+            }
+            next_waypoint = next.front();
+
+            geom::Transform next_transform = ComputeTransform(next_waypoint);
+            double angle = geom::Math::GetVectorAngle(current_transform.GetForwardVector(),
+                next_transform.GetForwardVector());
+
+            if (abs(angle) > angle_threshold) {
+              AddElementToRtree(rtree_elements, current_transform, next_transform,
+              current_waypoint, next_waypoint);
+              current_waypoint = next_waypoint;
+              current_transform = next_transform;
+            }
+          }
+
+          auto next = GetNext(current_waypoint, 10.0 * epsilon);
+          if (next.size() != 1 || next.front().road_id != current_waypoint.road_id) {
+            break;
+          } else {
+            current_waypoint = next.front();
+          }
         }
       }
     }
