@@ -105,7 +105,7 @@ namespace adaptor {
 
   private:
 
-    template <uint64_t I>
+    template <unsigned long I>
     static void copy_to_variant_impl(
         const clmdep_msgpack::object &o,
         boost::variant<Ts...> &v) {
@@ -115,9 +115,9 @@ namespace adaptor {
       v = o.via.array.ptr[1].as<T>();
     }
 
-    template <uint64_t... Is>
+    template <unsigned long... Is>
     static void copy_to_variant(
-        const uint64_t index,
+        const unsigned long index,
         const clmdep_msgpack::object &o,
         boost::variant<Ts...> &v,
         std::index_sequence<Is...>) {
