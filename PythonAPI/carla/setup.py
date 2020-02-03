@@ -86,8 +86,12 @@ def get_libcarla_extensions():
                 '-mmacosx-version-min=10.13',
                 '-fPIC', '-std=c++14', '-Wno-missing-braces', 
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
-                '-DLIBCARLA_ENABLE_LIFETIME_PROFILER',
             ]
+            if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
+                print('Building AD RSS variant.')
+                extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad-rss.a')]
+
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
                 extra_link_args += ['-ljpeg', '-ltiff']
