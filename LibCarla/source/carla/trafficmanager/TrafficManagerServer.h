@@ -16,8 +16,6 @@
 #include <carla/rpc/Server.h>
 #include "carla/trafficmanager/TrafficManagerBase.h"
 
-#define MIN_TRY_COUNT		20
-
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 
 class TrafficManagerServer

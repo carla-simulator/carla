@@ -76,7 +76,7 @@ def main():
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(2.0)
+    client.set_timeout(10.0)
 
     try:
 

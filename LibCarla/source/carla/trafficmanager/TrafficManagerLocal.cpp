@@ -257,5 +257,10 @@ namespace traffic_manager {
 carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
 	return episodeProxyTM;
 }
+
+std::size_t TrafficManagerLocal::GetRegisteredActorsCount() {
+	return registered_actors.GetList().size();
+}
+
 } // namespace traffic_manager
 } // namespace carla

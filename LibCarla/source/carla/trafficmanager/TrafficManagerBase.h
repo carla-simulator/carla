@@ -12,6 +12,7 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
+#define MIN_TRY_COUNT				10
 #define TM_SERVER_PORT				8000
 
 namespace carla {
