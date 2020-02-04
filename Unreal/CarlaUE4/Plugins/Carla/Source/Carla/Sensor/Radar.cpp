@@ -129,7 +129,7 @@ void ARadar::SendLineTraces(float DeltaTime)
     const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
     if (Hitted && HittedActor.Get()) {
 
-      const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation, ForwardVector);
+      const float RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation);
 
       const FVector2D AzimuthAndElevation = FMath::GetAzimuthAndElevation (
         (EndLocation - RadarLocation).GetSafeNormal() * Range,
@@ -148,7 +148,7 @@ void ARadar::SendLineTraces(float DeltaTime)
   }
 }
 
-float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector)
+float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)
 {
   constexpr float TO_METERS = 1e-2;
 
@@ -157,7 +157,7 @@ float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector&
   const FVector TargetLocation = OutHit.ImpactPoint;
   const FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();
   const FVector DeltaVelocity = (TargetVelocity - CurrentVelocity);
-  const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, ForwardVector);
+  const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
 
   return V;
 }

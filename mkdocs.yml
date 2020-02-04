@@ -7,46 +7,47 @@ extra_css: [extra.css]
 
 nav:
 - Home: 'index.md'
-- Quick start:
-  - 'Getting started': 'getting_started.md'
+- Getting started: 
+  - 'Introduction': 'getting_started/introduction.md'
+  - 'Quick start': 'getting_started/quickstart.md'
+- Building CARLA:
+  - 'Linux build': 'how_to_build_on_linux.md'
+  - 'Windows build': 'how_to_build_on_windows.md'
+  - "Get latest content": 'dev/how_to_upgrade_content.md'
+  - 'Build system': 'dev/build_system.md'
+  - 'Running in a Docker': 'carla_docker.md'
+  - 'F.A.Q.': 'faq.md'
+- First steps:
   - 'Python API tutorial': 'python_api_tutorial.md'
   - 'Configuring the simulation': 'configuring_the_simulation.md'
   - 'Cameras and sensors': 'cameras_and_sensors.md'
-  - 'F.A.Q.': 'faq.md'
-- Building from source:
-  - 'How to build on Linux': 'how_to_build_on_linux.md'
-  - 'How to build on Windows': 'how_to_build_on_windows.md'
-- Advanced topics:
-  - 'Python API reference': 'python_api.md'
-  - 'C++ reference' : 'cpp_reference.md'
   - 'Python Cookbook': 'python_cookbook.md'
+- References: 
+  - 'Python API reference': 'python_api.md'
   - 'Blueprint Library': 'bp_library.md'
-  - 'Running without display and selecting GPUs': 'carla_headless.md'
-  - 'Running in a Docker': 'carla_docker.md'
-  - "How to create and import a new map": 'how_to_make_a_new_map.md'
-  - "How to generate pedestrian navigation": 'how_to_generate_pedestrians_navigation.md'
-  - "How to link Epic's Automotive Materials": 'epic_automotive_materials.md'
+  - 'C++ reference' : 'cpp_reference.md'
+- How to... (general):
+  - 'Add a new sensor': 'dev/how_to_add_a_new_sensor.md'
+  - "Add friction triggers": "how_to_add_friction_triggers.md"
+  - "Control vehicle physics": "how_to_control_vehicle_physics.md"
+  - "Control walker skeletons": "walker_bone_control.md"
   - "Creating standalone asset packages for distribution": 'asset_packages_for_dist.md'
+  - "Generate pedestrian navigation": 'how_to_generate_pedestrians_navigation.md'
   - "How to record and replay": 'recorder_and_playback.md'
+  - "Link Epic's Automotive Materials": 'epic_automotive_materials.md'
+  - 'Map customization': 'dev/map_customization.md'
   - "Recorder binary file format": 'recorder_binary_file_format.md'
-  - "How to add friction triggers": "how_to_add_friction_triggers.md"
-  - "How to control vehicle physics": "how_to_control_vehicle_physics.md"
-  - "How to control walker skeletons": "walker_bone_control.md"
+  - 'Running without display and selecting GPUs': 'carla_headless.md'
+- How to... (content):
+  - 'Add assets': 'how_to_add_assets.md'
+  - "Create and import a new map": 'how_to_make_a_new_map.md'
+  - 'Model vehicles': 'how_to_model_vehicles.md'
 - Contributing:
   - 'Contribution guidelines': 'CONTRIBUTING.md'
   - 'Coding standard': 'coding_standard.md'
   - 'Documentation standard': 'doc_standard.md'
+  - "Make a release": 'dev/how_to_make_a_release.md'
   - 'Code of conduct': 'CODE_OF_CONDUCT.md'
-- Development:
-  - 'Index': 'dev/index.md'
-  - 'Map customization': 'dev/map_customization.md'
-  - 'Build system': 'dev/build_system.md'
-  - 'How to add a new sensor': 'dev/how_to_add_a_new_sensor.md'
-  - "How to upgrade content": 'dev/how_to_upgrade_content.md'
-  - "How to make a release": 'dev/how_to_make_a_release.md'
-- Art guidelines:
-  - 'How to add assets': 'how_to_add_assets.md'
-  - 'How to model vehicles': 'how_to_model_vehicles.md'
 
 markdown_extensions:
   - admonition

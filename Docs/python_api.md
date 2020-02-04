@@ -257,6 +257,30 @@ All possible states for traffic lights. Check out this [`recipe`](../python_cook
 
 ---
 
+## carla.VehicleLightState<a name="carla.VehicleLightState"></a> <sub><sup>_class_</sup></sub>
+Class that recaps the state of the lights of a vehicle, these can be used as a flags. E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active. Lights are off by default in any situation and should be managed by the user via script. The blinkers blink automatically. _Warning: Right now, not all vehicles have been prepared to work with this functionality, this will be added to all of them in later updates_.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.VehicleLightState.NONE"></a>**<font color="#f8805a">NONE</font>**  
+All lights off.  
+- <a name="carla.VehicleLightState.Position"></a>**<font color="#f8805a">Position</font>**  
+- <a name="carla.VehicleLightState.LowBeam"></a>**<font color="#f8805a">LowBeam</font>**  
+- <a name="carla.VehicleLightState.HighBeam"></a>**<font color="#f8805a">HighBeam</font>**  
+- <a name="carla.VehicleLightState.Brake"></a>**<font color="#f8805a">Brake</font>**  
+- <a name="carla.VehicleLightState.RightBlinker"></a>**<font color="#f8805a">RightBlinker</font>**  
+- <a name="carla.VehicleLightState.LeftBlinker"></a>**<font color="#f8805a">LeftBlinker</font>**  
+- <a name="carla.VehicleLightState.Reverse"></a>**<font color="#f8805a">Reverse</font>**  
+- <a name="carla.VehicleLightState.Fog"></a>**<font color="#f8805a">Fog</font>**  
+- <a name="carla.VehicleLightState.Interior"></a>**<font color="#f8805a">Interior</font>**  
+- <a name="carla.VehicleLightState.Special1"></a>**<font color="#f8805a">Special1</font>**  
+This is reserved for certain vehicles that can have special lights, like a siren.  
+- <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**  
+This is reserved for certain vehicles that can have special lights, like a siren.  
+- <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**  
+All lights on.  
+
+---
+
 ## carla.Actor<a name="carla.Actor"></a> <sub><sup>_class_</sup></sub>
 Base class for all actors.
 Actor is anything that plays a role in the simulation and can be moved around, examples of actors are vehicles, pedestrians, and sensors.  
@@ -448,7 +472,7 @@ Bounding box helper class.
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
 The center of the bounding box relative to its parent actor.  
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-It contains the vector from the center of the bounding box to one of the vertex of the box.  
+It contains the vector from the center of the bounding box to one of the vertex of the box.
 So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`.  
 
 <h3>Methods</h3>
@@ -456,6 +480,20 @@ So, if you want to know the _X bounding box size_, you can just do `extent.x * 2
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `extent` (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns **True** if a point passed in world space is inside this bounding box.  
+    - **Parameters:**
+        - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked.  
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
+    - **Return:** _bool_  
+- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list containing the locations of this object's vertices in local space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
+- <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+Returns a list containing the locations of this object's vertices in world space.  
+    - **Parameters:**
+        - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
     - **Parameters:**
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -712,14 +750,29 @@ Returns a list of recommendations made by creators of the map to be used spawnin
 Returns a list of tuples describing a minimal graph of the topology of the OpenDRIVE file. The tuples contain pairs of waypoints located either at the point a road begins or ends. The first one is the origin and the second one represents another road end that can be reached. This graph can be loaded into [NetworkX](https://networkx.github.io/) to work with. Output could look like this: <b>[(w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4)]</b>.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
 - <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
-Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.  
+Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
  The method will return <b>None</b> if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – Location used as reference for the [carla.Waypoint](#carla.Waypoint).  
         - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the closest lane. This is the default setting. If **False**, the waypoint will be exactly in `location`. <b>None</b> means said location does not belong to a road.  
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Limits the search for nearest lane to one or various lane types that can be flagged.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
-- <a name="carla.Map.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+- <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
+Get a waypoint if all the parameters passed are correct, otherwise return None.  
+    - **Parameters:**
+        - `road_id` (_int_) – Id of the road from where getting the waypoint.  
+        - `lane_id` (_int_) – Id of the lane to get the waypoint.  
+        - `s` (_float_) – Specify the length from the road start.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
+It provides a minimal graph of the topology of the current OpenDRIVE file. It is constituted by a list of pairs of waypoints, where the first waypoint is the origin and the second one is the destination. It can be loaded into [NetworkX](https://networkx.github.io/). A valid output could be: `[ (w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4) ]`.  
+    - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
+- <a name="carla.Map.generate_waypoints"></a>**<font color="#7fb800">generate_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Returns a list of waypoints positioned on the center of the lanes all over the map with an approximate distance between them.  
+    - **Parameters:**
+        - `distance` (_float_) – Approximate distance between the waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Map.transform_to_geolocation"></a>**<font color="#7fb800">transform_to_geolocation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
 Saves the .xodr OpenDRIVE file of the current map to disk.  
     - **Parameters:**
         - `path` – Path where the file will be saved.  
@@ -756,7 +809,7 @@ Distance in meters from the sensor to the detection position.
 ## carla.Rotation<a name="carla.Rotation"></a> <sub><sup>_class_</sup></sub>
 Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
-![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)   _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
+![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
@@ -1123,15 +1176,15 @@ The left lane marking information based on the direction of the Waypoint.
 
 <h3>Methods</h3>
 - <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
+Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.
 Can return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a waypoint at the center of the right lane based on the direction of the current waypoint, regardless if the lane change is allowed in this location.  
+Generates a waypoint at the center of the right lane based on the direction of the current waypoint, regardless if the lane change is allowed in this location.
 Can return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
+Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.
 The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the next waypoints.  
@@ -1142,7 +1195,7 @@ Returns a list of waypoints from this to the end of the lane separated by a cert
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.previous"></a>**<font color="#7fb800">previous</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to **<font color="#7fb800">next()</font>**, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
+This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to **<font color="#7fb800">next()</font>**, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.
 The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the previous waypoints.  
@@ -1161,17 +1214,23 @@ WeatherParameters class is used for requesting and changing the lighting and wea
 
 <h3>Instance Variables</h3>
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
-Weather cloudiness. Values range from 0 to 100.  
+Weather cloudiness. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>** (_float_)  
-Precipitation amount for controlling rain intensity. Values range from 0 to 100.  
+Precipitation amount for controlling rain intensity. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
-Precipitation deposits for controlling the area of puddles on roads. Values range from 0 to 100.  
+Precipitation deposits for controlling the area of puddles on roads. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>** (_float_)  
-Wind intensity. Values range from 0 to 100.  
+Wind intensity, it affects the clouds moving speed, the raindrop direction, and vegetation. This doesn't affect the car physics. Values range from 0 to 100.  
+- <a name="carla.WeatherParameters.fog_density"></a>**<font color="#f8805a">fog_density</font>** (_float_)  
+Fog density. It only affects the RGB camera sensor. Values range from 0 to 100.  
+- <a name="carla.WeatherParameters.fog_distance"></a>**<font color="#f8805a">fog_distance</font>** (_float_)  
+Fog start distance (in meters). Values range from 0 to infinite.  
+- <a name="carla.WeatherParameters.wetness"></a>**<font color="#f8805a">wetness</font>** (_float_)  
+Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>** (_float_)  
-The azimuth angle of the sun in degrees. Values range from 0 to 360.  
+The azimuth angle of the sun in degrees. Values range from 0 to 360 (degrees).  
 - <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>** (_float_)  
-Altitude angle of the sun in degrees. Values range from -90 to 90.  
+Altitude angle of the sun in degrees. Values range from -90 to 90 (where 0 degrees is the horizon).  
 
 <h3>Methods</h3>
 - <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>)  

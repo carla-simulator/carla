@@ -16,10 +16,10 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: x 
+      - param_name: x
         type: float
         default: 0.0
-      - param_name: y 
+      - param_name: y
         type: float
         default: 0.0
       doc: >
@@ -135,13 +135,13 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: x 
+      - param_name: x
         type: float
         default: 0.0
       - param_name: 'y'
         type: float
         default: 0.0
-      - param_name: z 
+      - param_name: z
         type: float
         default: 0.0
       doc: >
@@ -176,7 +176,7 @@
       Class that represents a 3D rotation. All rotation angles are stored in degrees.
 
 
-      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)  
+      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
       _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_
     # - PROPERTIES -------------------------
     instance_variables:
@@ -292,7 +292,7 @@
     - var_name: extent
       type: carla.Vector3D
       doc: >
-        It contains the vector from the center of the bounding box to one of the vertex of the box.  
+        It contains the vector from the center of the bounding box to one of the vertex of the box.
 
         So, if you want to know the _X bounding box size_, you can just do `extent.x * 2`
     # - METHODS ----------------------------
@@ -304,6 +304,35 @@
       - param_name: extent
         type: carla.Vector3D
       doc: >
+    # --------------------------------------
+    - def_name: contains
+      return: bool
+      params:
+      - param_name: world_point
+        type: carla.Location
+        doc: >
+          The point in world space to be checked.
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains location and rotation needed to convert this object's local space to world space.
+      doc: >
+        Returns **True** if a point passed in world space is inside this bounding box.
+    # --------------------------------------
+    - def_name: get_local_vertices
+      return: list(carla.Location)
+      doc: >
+        Returns a list containing the locations of this object's vertices in local space.
+    # --------------------------------------
+    - def_name: get_world_vertices
+      return: list(carla.Location)
+      params:
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains location and rotation needed to convert this object's local space to world space.
+      doc: >
+        Returns a list containing the locations of this object's vertices in world space.
     # --------------------------------------
     - def_name: __eq__
       params:
@@ -324,7 +353,7 @@
   - class_name: GeoLocation
     # - DESCRIPTION ------------------------
     doc: >
-      Class that contains geolocation simulated data 
+      Class that contains geolocation simulated data
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: latitude
