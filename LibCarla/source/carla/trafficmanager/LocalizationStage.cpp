@@ -20,9 +20,6 @@ namespace LocalizationConstants {
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
-  static const float JUNCTION_IGNORE_THRESHOLD = 35;
-  static const float LOW_UNJUNCTION_IGNORE_THRESHOLD = 20;  // Used to ignore roundabouts (Just a quick "patch")
-  static const float HIGH_UNJUNCTION_IGNORE_THRESHOLD = 70;  // Used to ignore roundabouts (Just a quick "patch")
 
 } // namespace LocalizationConstants
 
@@ -57,14 +54,6 @@ namespace LocalizationConstants {
 
     // Initializing the registered actors container state.
     registered_actors_state = -1;
-
-    for (uint i = 0u; i < actor_list.size(); ++i) {
-
-      Actor vehicle = actor_list.at(i);
-      ActorId actor_id = vehicle->GetId();
-      approached[actor_id] = false;
-      final_safe_points[actor_id] = nullptr;
-    }
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -543,10 +532,8 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     // First Waypoint after the junction
     SimpleWaypointPtr safe_point = nullptr;
     uint safe_index = 0;
-    uint junction_counter = 0;
     // Vehicle position after the junction
     SimpleWaypointPtr final_point = nullptr;
-    uint unjunction_counter = 0;
     // Safe space after the junction
     const float safe_distance = 1.5f*length;
 
@@ -559,7 +546,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
     // 2) Search for the end of the intersection (if it is in the buffer)
     for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
-      junction_counter++;
+
       if (!waypoint_buffer.at(i)->CheckJunction()){
         safe_point = waypoint_buffer.at(i);
         safe_index = i;
@@ -571,7 +558,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     if(safe_point == nullptr){
       while (waypoint_buffer.back()->CheckJunction()) {
 
-          junction_counter++;
           std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
           uint selection_index = 0u;
           if (next_waypoints.size() > 1) {
@@ -588,9 +574,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     if (safe_index != 0){
       for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
 
-        if (!waypoint_buffer.at(k)->CheckJunction()){
-          unjunction_counter++;
-        }
         if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
           final_point = waypoint_buffer.at(k);
           break;
@@ -602,9 +585,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     if(final_point == nullptr){
       while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
 
-        if (!waypoint_buffer.back()->CheckJunction()){
-          unjunction_counter++;
-        }
         // Record the last point as a safe one and save it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint selection_index = 0u;
@@ -616,27 +596,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
         waypoint_buffer.push_back(next_waypoints.at(selection_index));
       }
       final_point = waypoint_buffer.back();
-    }
-
-    // 4) Ignore roundabouts
-    SimpleWaypointPtr roundabout_point = final_point->GetNextWaypoint().front();
-
-    while (unjunction_counter < HIGH_UNJUNCTION_IGNORE_THRESHOLD){
-      if (roundabout_point->CheckJunction()){
-        break;
-      }
-      roundabout_point = roundabout_point->GetNextWaypoint().front();
-      unjunction_counter++;
-    }
-
-    // 5) Ignore small junctions and roundabouts
-    if (junction_counter < JUNCTION_IGNORE_THRESHOLD){
-      final_point = nullptr;
-    }
-
-    if (LOW_UNJUNCTION_IGNORE_THRESHOLD < unjunction_counter &&
-        unjunction_counter < HIGH_UNJUNCTION_IGNORE_THRESHOLD) {
-      final_point = nullptr;
     }
 
     return final_point;

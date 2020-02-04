@@ -23,6 +23,7 @@ namespace CollisionStageConstants {
   static const float MIN_COLLISION_RADIUS = 15.0f;
   static const float WALKER_TIME_EXTENSION = 1.5f;
   static const float EPSILON_VELOCITY = 0.1f;
+  static const float INTER_BBOX_DISTANCE_THRESHOLD = 0.3f;
 } // namespace CollisionStageConstants
 
   using namespace CollisionStageConstants;
@@ -374,11 +375,11 @@ namespace CollisionStageConstants {
     return bbox_boundary;
   }
 
-  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &actor, const SimpleWaypointPtr safe_point){
+  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor, const SimpleWaypointPtr safe_point){
 
     bool safe_junction = true;
 
-    if (actor->GetVelocity().Length() < EPSILON_VELOCITY){
+    if (overlapped_actor->GetVelocity().Length() < EPSILON_VELOCITY){
 
       cg::Location location = safe_point->GetLocation();
       cg::Vector3D heading_vector = safe_point->GetForwardVector();
@@ -403,10 +404,10 @@ namespace CollisionStageConstants {
       };
 
       const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
-      const Polygon other_polygon = GetPolygon(GetBoundary(actor));
+      const Polygon other_polygon = GetPolygon(GetBoundary(overlapped_actor));
 
       const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
-      if (inter_bbox_distance < 0.3f){
+      if (inter_bbox_distance < INTER_BBOX_DISTANCE_THRESHOLD){
         safe_junction = false;
       }
     }
