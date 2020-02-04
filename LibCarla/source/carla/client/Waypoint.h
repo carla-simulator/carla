@@ -70,8 +70,12 @@ namespace client {
 
     std::vector<SharedPtr<Waypoint>> GetPrevious(double distance) const;
 
+    /// Returns a list of waypoints separated by distance from the current waypoint
+    /// to the end of the lane
     std::vector<SharedPtr<Waypoint>> GetNextUntilLaneEnd(double distance) const;
 
+    /// Returns a list of waypoints separated by distance from the current waypoint
+    /// to the start of the lane
     std::vector<SharedPtr<Waypoint>> GetPreviousUntilLaneStart(double distance) const;
 
     SharedPtr<Waypoint> GetRight() const;

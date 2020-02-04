@@ -63,11 +63,14 @@ namespace client {
     bool is_there_next = true;
     while (is_there_next) {
       is_there_next = false;
-      for (auto &w : next) {
-        if (w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()) {
-          result.emplace_back(w);
-          is_there_next = true;
-        }
+      if(next.size() != 1){
+        is_there_next = false;
+        break;
+      }
+      auto next_waypoint = next.front();
+      if (next_waypoint->GetRoadId() == GetRoadId()) {
+        result.emplace_back(next_waypoint);
+        is_there_next = true;
       }
       if (result.size()) {
         next = result.back()->GetNext(distance);
@@ -82,11 +85,14 @@ namespace client {
     bool is_there_prev = true;
     while (is_there_prev) {
       is_there_prev = false;
-      for (auto &w : prev) {
-        if (w->GetLaneId() == GetLaneId() && w->GetRoadId() == GetRoadId()) {
-          result.emplace_back(w);
-          is_there_prev = true;
-        }
+      if(prev.size() != 1){
+        is_there_prev = false;
+        break;
+      }
+      auto prev_waypoint = prev.front();
+      if (prev_waypoint->GetRoadId() == GetRoadId()) {
+        result.emplace_back(prev_waypoint);
+        is_there_prev = true;
       }
       if (result.size()) {
         prev = result.back()->GetPrevious(distance);
