@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 """OpenDRIVE Map viewer
 """
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+
+# ==============================================================================
+# -- imports -------------------------------------------------------------------
+# ==============================================================================
 
 import glob
 import os
 import sys
 import argparse
 import math
-import pygame
 import time
+import pygame
 
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
@@ -26,10 +30,6 @@ try:
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
-
-# ==============================================================================
-# -- imports -------------------------------------------------------------------
-# ==============================================================================
 
 import carla
 
@@ -131,31 +131,21 @@ def main():
                            (-WIDTH / 2, -HEIGHT / 2)), 0)
     road = display.convert()
 
-    avg_query_time = 0
-    counter = 0
     while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
 
-        display.blit(road, (0,0))
+        display.blit(road, (0, 0))
 
         mouse = pygame.mouse.get_pos()
         mouse_position = pixel_to_world(mouse[0], mouse[1], pixels_per_meter,
                                         scale, world_offset, (-WIDTH / 2, -HEIGHT / 2))
         mouse_waypoint = carla_map.get_waypoint(mouse_position)
 
-        query_start = time.time()
         waypoint_position = world_to_pixel(mouse_waypoint.transform.location,
                                            pixels_per_meter, scale, world_offset,
                                            (-WIDTH / 2, -HEIGHT / 2))
-        query_end = time.time()
-        counter += 1
-        avg_query_time = (avg_query_time * counter + query_end - query_start) / counter
-        if (counter == 10):
-            print("Query time: " + str(avg_query_time) + " s \r"),
-            counter = 0
-            avg_query_time = 0
         pygame.draw.line(display, COLOR_WHITE, mouse, waypoint_position, 1)
         pygame.display.flip()
 
