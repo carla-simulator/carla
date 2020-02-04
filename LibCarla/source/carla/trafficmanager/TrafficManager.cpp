@@ -8,6 +8,8 @@
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 
+#define DEBUG_PRINT_TM		0
+
 namespace carla {
 namespace traffic_manager {
 
@@ -24,7 +26,7 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 	if (!singleton_pointer) {
 
 		/// Repeatedly check for TM services
-		 while(true) {
+		while(true) {
 
 			/// Set default
 			bool tm_rpc_server_running = true;
@@ -40,7 +42,7 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 
 				/// Set IP and port
 				TrafficManagerRemote* tm_ptr = new(std::nothrow)
-				TrafficManagerRemote(serverTM, episodeProxy);
+						TrafficManagerRemote(serverTM, episodeProxy);
 
 				/// Try to connect to remote TM server
 				try {
@@ -48,21 +50,23 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 					/// Check memory allocated or not
 					if(tm_ptr != nullptr) {
 
+#if DEBUG_PRINT_TM
 						/// Test print
 						std::cout 	<< "OLD[" << counter + 1 <<"]: Registered TM at "
-									<< serverTM.first  << ":"
-									<< serverTM.second << " ..... TRY "
-									<< std::endl;
-
+								<< serverTM.first  << ":"
+								<< serverTM.second << " ..... TRY "
+								<< std::endl;
+#endif
 						/// Try to reset all traffic lights
 						tm_ptr->HealthCheckRemoteTM();
 
+#if DEBUG_PRINT_TM
 						/// Test print
 						std::cout 	<< "OLD[" << counter + 1 <<"]: Registered TM at "
-									<< serverTM.first  << ":"
-									<< serverTM.second << " ..... SUCCESS "
-									<< std::endl;
-
+								<< serverTM.first  << ":"
+								<< serverTM.second << " ..... SUCCESS "
+								<< std::endl;
+#endif
 						/// Set the pointer of the instance
 						singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 					}
@@ -77,17 +81,20 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 					/// Set flag to indicate TM server not running
 					tm_rpc_server_running = false;
 
+#if DEBUG_PRINT_TM
 					/// Test print
 					std::cout 	<< "OLD[" << counter + 1 <<"]: Registered TM at "
-								<< serverTM.first  << ":"
-								<< serverTM.second << " ..... FAILED "
-								<< std::endl;
+							<< serverTM.first  << ":"
+							<< serverTM.second << " ..... FAILED "
+							<< std::endl;
+#endif
 				}
 			} else {
 
+#if DEBUG_PRINT_TM
 				/// Test print
 				std::cout 	<< "OLD[" << counter + 1 <<"]: No Registered TM." << std::endl;
-
+#endif
 				/// Set flag to indicate TM server not running
 				tm_rpc_server_running = false;
 			}
@@ -144,8 +151,10 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 						std::pair<std::string, std::string> localIP;
 						int sock = socket(AF_INET, SOCK_DGRAM, 0);
 						if(sock == INVALID_INDEX) {
+#if DEBUG_PRINT_TM
 							std::cout << "Error number1: " << errno << std::endl;
 							std::cout << "Error message: " << strerror(errno) << std::endl;
+#endif
 						} else {
 							sockaddr_in loopback;
 							std::memset(&loopback, 0, sizeof(loopback));
@@ -154,13 +163,13 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 							loopback.sin_port = htons(9);
 							err = connect
 									( sock
-									, reinterpret_cast<sockaddr*>(&loopback)
-									, sizeof(loopback));
+											, reinterpret_cast<sockaddr*>(&loopback)
+											, sizeof(loopback));
 							if(err == INVALID_INDEX) {
-								std::cout 	<< "Error number2: "
-										<< errno << std::endl;
-								std::cout 	<< "Error message: "
-										<< strerror(errno) << std::endl;
+#if DEBUG_PRINT_TM
+								std::cout << "Error number2: " << errno << std::endl;
+								std::cout << "Error message: " << strerror(errno) << std::endl;
+#endif
 							} else {
 								socklen_t addrlen = sizeof(loopback);
 								err = getsockname
@@ -168,24 +177,24 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 												, reinterpret_cast<struct sockaddr*> (&loopback)
 												, &addrlen);
 								if(err == INVALID_INDEX) {
-									std::cout 	<< "Error number3: "
-											<< errno << std::endl;
-									std::cout 	<< "Error message: "
-											<< strerror(errno) << std::endl;
+#if DEBUG_PRINT_TM
+									std::cout << "Error number3: " << errno << std::endl;
+									std::cout << "Error message: " << strerror(errno) << std::endl;
+#endif
 								} else {
 									char buffer[IP_DATA_BUFFER_SIZE];
 									const char* p = inet_ntop
 											( AF_INET
-													, &loopback.sin_addr, buffer
-													, IP_DATA_BUFFER_SIZE);
+												, &loopback.sin_addr, buffer
+												, IP_DATA_BUFFER_SIZE);
 									if(p != NULL) {
 										localIP = std::make_pair<std::string, std::string>
 										(buffer, std::to_string(RPCportTM));
 									} else {
-										std::cout 	<< "Error number4: "
-												<< errno << std::endl;
-										std::cout 	<< "Error message: "
-												<< strerror(errno) << std::endl;
+#if DEBUG_PRINT_TM
+										std::cout << "Error number4: " << errno << std::endl;
+										std::cout << "Error message: " << strerror(errno) << std::endl;
+#endif
 									}
 								}
 							}
@@ -206,23 +215,79 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 								<< serverTM.second << " ..... SUCCESS"
 								<< std::endl;
 
-					/// Sleep for 5 seconds to wait to check any vehicle registered or not
-					do {
-						/// Wait for vehicle registration
-						std::this_thread::sleep_for(5s);
+					/// Try to run TM as long as vehicles are present
+					try {
 
-						/// Get valid registered vehicle count
-						auto vcount = tm_ptr->GetRegisteredActorsCount();
-						std::cout << "Total register vehicles:: " << vcount << std::endl;
+						/// Filter to get all current episode vehicle information
+						auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+							std::vector<carla::client::detail::ActorVariant> filtered;
+							for (auto &&actor : actors) {
+								if (carla::StringUtil::Match
+										( carla::client::detail::ActorVariant(actor).GetTypeId()
+										, wildcard_pattern)) {
+									filtered.push_back(actor);
+								}
+							}
+							return filtered;
+						};
 
-						/// If no valid vehicle present
-						if(vcount == 0) break;
-					} while (true);
+						/// Sleep for 5 seconds to wait to check any vehicle registered or not
+						do {
+
+							/// Temporary variables
+							std::set<ActorId> worldVSet;
+							bool noVehiclePresent = true;
+
+							/// Wait for vehicle registration
+							std::this_thread::sleep_for(5s);
+
+							/// Get all actors of the world
+							auto world_actorsList = episodeProxyLocal.Lock()->GetAllTheActorsInTheEpisode();
+
+							/// Get all vehicles of the world
+							auto world_vehicle = Filter(world_actorsList, "vehicle.*");
+							std::cout << "Total WR register vehicles:: " << world_vehicle.size() << std::endl;
+							for (auto actor: world_vehicle) {
+								worldVSet.insert(actor.GetId());
+							}
+
+							/// Get all registered vehicles to TM
+							const auto tmreg_vehicle = tm_ptr->GetRegisteredVehiclesIDs();
+							std::cout << "Total TM register vehicles:: " << tmreg_vehicle.size() << std::endl;
+
+							/// Check any registered vehicle present in the world
+							for (auto &actor: tmreg_vehicle) {
+								if(worldVSet.find(actor) != worldVSet.end()) {
+									noVehiclePresent = false;
+									break;
+								}
+							}
+
+							/// If no valid vehicle present
+							if(noVehiclePresent) break;
+
+						/// Run for ever
+						} while (true);
+
+						/// Clear allocated TM memory
+						if(tm_ptr) {
+							delete tm_ptr;
+						}
+					} catch(...) {
+
+						/// Print status
+						std::cout 	<< "Errs: Registered TM at "
+									<< serverTM.first  << ":"
+									<< serverTM.second << " ..... CATCHED"
+									<< std::endl;
+
+					}
 
 					/// If no vehicle registered stop the RPC TM server
-					if(tm_ptr) {
-						delete tm_ptr;
-					}
+					std::cout 	<< "EXIT: Registered TM at "
+								<< serverTM.first  << ":"
+								<< serverTM.second << " ..... STOPPED"
+								<< std::endl;
 				}
 
 				/// TM as separate process creation failed
