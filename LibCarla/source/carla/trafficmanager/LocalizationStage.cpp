@@ -232,6 +232,8 @@ void LocalizationStage::Action() {
 			} else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
 				actor_ptr = unregistered_actors.at(overlapping_actor_id);
 			}
+			debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 2), actor_ptr->GetLocation() + cg::Location(0, 0, 2),
+								   0.1f, 0.1f, {0u, 0u, 255u}, 0.1f);
 			collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
 		}
 		collision_message.closest_waypoint = waypoint_buffer.front();
@@ -254,7 +256,7 @@ void LocalizationStage::DataReceiver() {
 		actor_list = registered_actors.GetList();
 		uint64_t index = 0u;
 		for (auto &actor: actor_list) {
-			vehicle_id_to_index.insert({actor->GetId(), index});
+			vehicle_id_to_index[actor->GetId()] = index;
 			++index;
 		}
 		registered_actors_state = registered_actors.GetState();
