@@ -42,6 +42,16 @@ namespace traffic_manager {
       return actor_list;
     }
 
+    std::vector<ActorId> GetIDList() {
+
+      std::lock_guard<std::mutex> lock(modification_mutex);
+      std::vector<ActorId> actor_list;
+      for (auto it = actor_set.begin(); it != actor_set.end(); ++it) {
+        actor_list.push_back(it->first);
+      }
+      return actor_list;
+    }
+
     void Insert(std::vector<ActorPtr> actor_list) {
 
       std::lock_guard<std::mutex> lock(modification_mutex);

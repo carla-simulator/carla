@@ -258,8 +258,10 @@ carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
 	return episodeProxyTM;
 }
 
-std::size_t TrafficManagerLocal::GetRegisteredActorsCount() {
-	return registered_actors.GetList().size();
+std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
+
+	/// Get valid registered vehicle count
+	return registered_actors.GetIDList();
 }
 
 } // namespace traffic_manager

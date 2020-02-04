@@ -157,7 +157,8 @@ namespace traffic_manager {
     /// Get carla episode information
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 
-    std::size_t GetRegisteredActorsCount();
+    /// Get list of all registered vehicles
+    std::vector<ActorId> GetRegisteredVehiclesIDs();
   };
 
 } // namespace traffic_manager
