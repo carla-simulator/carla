@@ -108,7 +108,7 @@ namespace road {
     }
   }
 
-    /// Return a waypoint for each drivable lane of the specified type on each lane section of @a road.
+  /// Return a waypoint for each drivable lane of the specified type on each lane section of @a road.
   template <typename FuncT>
   static void ForEachLane(const Road &road, Lane::LaneType lane_type, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSections()) {
