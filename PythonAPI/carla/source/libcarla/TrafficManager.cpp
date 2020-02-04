@@ -11,6 +11,7 @@
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 
 #include "carla/trafficmanager/TrafficManager.h"
+#include "carla/client/detail/ActorState.h"
 
 void export_trafficmanager() {
     namespace cc = carla::client;
@@ -23,6 +24,7 @@ void export_trafficmanager() {
     class_<Parameters>("TM_Parameters").def(vector_indexing_suite<Parameters>());
 
     class_<carla::traffic_manager::TrafficManager, boost::noncopyable>("TrafficManager", no_init)
+       //.def(init<uint16_t>(arg("port")))
       .def("register_vehicles", &carla::traffic_manager::TrafficManager::RegisterVehicles)
       .def("unregister_vehicles", &carla::traffic_manager::TrafficManager::UnregisterVehicles)
       .def("set_vehicle_max_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)

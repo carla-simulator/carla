@@ -40,135 +40,122 @@
 #include "carla/trafficmanager/TrafficManagerLocal.h"
 #include "carla/trafficmanager/TrafficManagerRemote.h"
 
-#define INVALID_INDEX				-1
-#define IP_DATA_BUFFER_SIZE			80
+#define INVALID_INDEX           -1
+#define IP_DATA_BUFFER_SIZE     80
+#define TM_DEFAULT_PORT         8000
 
 namespace carla {
 namespace traffic_manager {
 
-  namespace cc = carla::client;
+using ActorPtr 	= carla::SharedPtr<carla::client::Actor>;
 
-  using ActorPtr = carla::SharedPtr<cc::Actor>;
-  using TLS = carla::rpc::TrafficLightState;
-  using TLGroup = std::vector<carla::SharedPtr<cc::TrafficLight>>;
+/// The function of this class is to integrate all the various stages of
+/// the traffic manager appropriately using messengers.
+class TrafficManager {
 
-  /// The function of this class is to integrate all the various stages of
-  /// the traffic manager appropriately using messengers.
-  class TrafficManager {
+private:
+  /// Pointer to hold representative TM class
+  static std::unique_ptr<TrafficManagerBase> singleton_pointer;
 
-  private:
+public:
 
-    /// PID controller parameters.
-    std::vector<float> longitudinal_PID_parameters;
-    std::vector<float> longitudinal_highway_PID_parameters;
-    std::vector<float> lateral_PID_parameters;
-    std::vector<float> lateral_highway_PID_parameters;
-    /// Set of all actors registered with traffic manager.
-    AtomicActorSet registered_actors;
-    /// Pointer to local map cache.
-    std::shared_ptr<InMemoryMap> local_map;
-    /// Carla's client connection object.
-    carla::client::detail::EpisodeProxy episodeProxyTM;
+  static void Release();
 
-    /// Carla's debug helper object.
-    cc::DebugHelper debug_helper;
+  /// Private constructor for singleton life cycle management.
+  explicit TrafficManager(uint16_t port = TM_DEFAULT_PORT);
 
-    /// Pointers to messenger objects connecting stage pairs.
-    std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
-    std::shared_ptr<LocalizationToCollisionMessenger> localization_collision_messenger;
-    std::shared_ptr<LocalizationToTrafficLightMessenger> localization_traffic_light_messenger;
-    std::shared_ptr<LocalizationToPlannerMessenger> localization_planner_messenger;
-    std::shared_ptr<PlannerToControlMessenger> planner_control_messenger;
-    std::shared_ptr<TrafficLightToPlannerMessenger> traffic_light_planner_messenger;
-    /// Pointers to the stage objects of traffic manager.
-    std::unique_ptr<CollisionStage> collision_stage;
-    std::unique_ptr<BatchControlStage> control_stage;
-    std::unique_ptr<LocalizationStage> localization_stage;
-    std::unique_ptr<MotionPlannerStage> planner_stage;
-    std::unique_ptr<TrafficLightStage> traffic_light_stage;
-    /// Static pointer to singleton object.
-    static std::unique_ptr<TrafficManager> singleton_pointer;
-    /// Static pointer to singleton client connected to localhost, 2000.
-    static std::unique_ptr<cc::Client> singleton_local_client;
-    /// Parameterization object.
-    Parameters parameters;
+  TrafficManager(const TrafficManager &) = default;
+  TrafficManager(TrafficManager &&) = default;
 
-    /// Private constructor for singleton lifecycle management.
-    TrafficManager(
-        std::vector<float> longitudinal_PID_parameters,
-        std::vector<float> longitudinal_highway_PID_parameters,
-        std::vector<float> lateral_PID_parameters,
-        std::vector<float> lateral_highway_PID_parameters,
-        float perc_decrease_from_limit,
-		carla::client::detail::EpisodeProxy &episodeProxy);
+  TrafficManager &operator=(const TrafficManager &) = default;
+  TrafficManager &operator=(TrafficManager &&) = default;
 
-    /// To start the TrafficManager.
-    void Start();
+  /// This method registers a vehicle with the traffic manager.
+  void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+    std::cout << "TMMaster RegisterVechicle" << std::endl;
+    if(singleton_pointer) {
+      singleton_pointer->RegisterVehicles(actor_list);
+    }
+    std::cout << "TMMaster RegisterVechicle end" << std::endl;
+  }
 
-    /// To stop the TrafficManager.
-    void Stop();
+  /// This method unregisters a vehicle from traffic manager.
+  void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+    std::cout << "TMMaster RegisterVechicle" << std::endl;
+    if(singleton_pointer) {
+      singleton_pointer->UnregisterVehicles(actor_list);
+    }
+    std::cout << "TMMaster RegisterVechicle end" << std::endl;
+  }
 
-  public:
+  /// Set target velocity specific to a vehicle.
+  void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+    if(singleton_pointer) {
+      singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
+    }
+  }
 
-    /// Static method for singleton lifecycle management.
-    static TrafficManager& GetInstance(carla::client::detail::EpisodeProxy &episodeProxy);
+  /// Set global target velocity.
+  void SetGlobalPercentageSpeedDifference(float const percentage){
+    if(singleton_pointer) {
+      singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
+    }
+  }
 
-    /// Static method to get unique client connected to (localhost, 2000).
-    static cc::Client& GetUniqueLocalClient();
+  /// Set collision detection rules between vehicles.
+  void SetCollisionDetection
+    ( const ActorPtr &reference_actor
+    , const ActorPtr &other_actor
+    , const bool detect_collision) {
+    if(singleton_pointer) {
+      singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
+    }
+  }
 
-    /// This method registers a vehicle with the traffic manager.
-    void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
+  /// Method to force lane change on a vehicle.
+  /// Direction flag can be set to true for left and false for right.
+  void SetForceLaneChange(const ActorPtr &actor, const bool direction) {
+    if(singleton_pointer) {
+      singleton_pointer->SetForceLaneChange(actor, direction);
+    }
+  }
 
-    /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
+  /// Enable / disable automatic lane change on a vehicle.
+  void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
+    if(singleton_pointer) {
+      singleton_pointer->SetAutoLaneChange(actor, enable);
+    }
+  }
 
-    /// Set target velocity specific to a vehicle.
-    void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
+  /// Method to specify how much distance a vehicle should maintain to
+  /// the leading vehicle.
+  void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
+    if(singleton_pointer) {
+      singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
+    }
+  }
 
-    /// Set global target velocity.
-    void SetGlobalPercentageSpeedDifference(float const percentage);
+  /// Method to specify the % chance of ignoring collisions with other actors
+  void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+    if(singleton_pointer) {
+      singleton_pointer->SetPercentageIgnoreActors(actor, perc);
+    }
+  }
 
-    /// Set collision detection rules between vehicles.
-    void SetCollisionDetection(
-        const ActorPtr &reference_actor,
-        const ActorPtr &other_actor,
-        const bool detect_collision);
+  /// Method to specify the % chance of running a red light
+  void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
+    if(singleton_pointer) {
+      singleton_pointer->SetPercentageRunningLight(actor, perc);
+    }
+  }
 
-    /// Method to force lane change on a vehicle.
-    /// Direction flag can be set to true for left and false for right.
-    void SetForceLaneChange(const ActorPtr &actor, const bool direction);
-
-    /// Enable / disable automatic lane change on a vehicle.
-    void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
-
-    /// Method to specify how much distance a vehicle should maintain to
-    /// the leading vehicle.
-    void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
-
-    /// Method to specify the % chance of ignoring collisions with all walkers
-    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
-
-    /// Method to specify the % chance of ignoring collisions with all vehicles
-    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
-
-    /// Method to specify the % chance of running a red light
-    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
-
-    /// Method to specify the % chance of running any traffic sign
-    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
-
-    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
-
-    /// Method to check if traffic lights are frozen.
-    bool CheckAllFrozen(TLGroup tl_to_freeze);
-
-    /// Method to reset all traffic lights.
-    void ResetAllTrafficLights();
-
-    /// Destructor.
-    ~TrafficManager();
-
-  };
+  /// Method to reset all traffic lights.
+  void ResetAllTrafficLights() {
+    if(singleton_pointer) {
+      return singleton_pointer->ResetAllTrafficLights();
+    }
+  }
+};
 
 } // namespace traffic_manager
 } // namespace carla

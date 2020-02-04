@@ -30,6 +30,10 @@ namespace client {
         uint16_t port,
         size_t worker_threads = 0u);
 
+    static Client* GetClient() {
+      return nullptr;
+    }
+
     /// Set a timeout for networking operations. If set, any networking
     /// operation taking longer than @a timeout throws rpc::timeout.
     void SetTimeout(time_duration timeout) {
@@ -69,7 +73,7 @@ namespace client {
 
     /// Return an instance of the world currently active in the simulator.
     TrafficManager GetInstanceTM() const {
-      return TrafficManager{_simulator->GetCurrentEpisode()};
+      return TrafficManager();
     }
 
     /// Return an instance of the world currently active in the simulator.
@@ -119,7 +123,9 @@ namespace client {
 
   private:
 
+    //static std::shared_ptr<Client> _client;
     std::shared_ptr<detail::Simulator> _simulator;
+
   };
 
   inline Client::Client(
@@ -128,7 +134,12 @@ namespace client {
       size_t worker_threads)
     : _simulator(
         new detail::Simulator(host, port, worker_threads),
-        PythonUtil::ReleaseGILDeleter()) {}
+        PythonUtil::ReleaseGILDeleter()) {
+          /*if(!_client){
+            _client = std::shared_ptr<Client>(this);
+          }*/
+
+        }
 
 } // namespace client
 } // namespace carla

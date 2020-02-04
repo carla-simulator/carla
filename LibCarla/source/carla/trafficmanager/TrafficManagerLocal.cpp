@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
+
+
 #include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"
@@ -252,17 +254,6 @@ namespace traffic_manager {
       }
     }
   }
-
-/// Get carla episode information
-carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
-	return episodeProxyTM;
-}
-
-std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
-
-	/// Get valid registered vehicle count
-	return registered_actors.GetIDList();
-}
 
 } // namespace traffic_manager
 } // namespace carla

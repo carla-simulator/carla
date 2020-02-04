@@ -42,7 +42,7 @@ public:
 
 	/// Constructor store remote location information
 	TrafficManagerRemote
-		( const std::pair<std::string, std::string> &_serverTM
+		( const std::pair<std::string, uint16_t> &_serverTM
 		, carla::client::detail::EpisodeProxy &episodeProxy);
 
 	/// Destructor.
@@ -109,4 +109,3 @@ private:
 } // namespace carla
 
 #endif /*__TRAFFICMANAGERREMOTE__ */
-
