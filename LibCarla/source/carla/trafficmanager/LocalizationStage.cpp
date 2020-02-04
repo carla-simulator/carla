@@ -59,7 +59,7 @@ namespace LocalizationConstants {
     registered_actors_state = -1;
 
     for (uint i = 0u; i < actor_list.size(); ++i) {
-      
+
       Actor vehicle = actor_list.at(i);
       ActorId actor_id = vehicle->GetId();
       approached[actor_id] = false;
@@ -229,10 +229,10 @@ namespace LocalizationConstants {
       }
 
       // Only do once, when the intersection has just been seen.
-      if (approaching_junction && !approached[actor_id]){
+      else if (approaching_junction && !approached[actor_id]){
 
         SimpleWaypointPtr final_point = nullptr;
-        final_point = GetSafeLocationAfterJunction(vehicle, waypoint_buffer);
+        final_point = GetSafeLocationAfterJunction(vehicle_reference, waypoint_buffer);
         if(final_point != nullptr){
           final_safe_points[actor_id] = final_point;
           approaching_junction = false;
@@ -532,14 +532,13 @@ namespace LocalizationConstants {
     }
   }
 
-SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &actor, Buffer &waypoint_buffer){
+SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle &vehicle, Buffer &waypoint_buffer){
 
     // Get the length of the car
-    auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
     float length = vehicle->GetBoundingBox().extent.x;
 
     // First Waypoint before the junction
-    SimpleWaypointPtr initial_point;
+    const SimpleWaypointPtr initial_point;
     uint initial_index = 0;
     // First Waypoint after the junction
     SimpleWaypointPtr safe_point = nullptr;
@@ -549,9 +548,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     SimpleWaypointPtr final_point = nullptr;
     uint unjunction_counter = 0;
     // Safe space after the junction
-    float safe_distance = 1.5f*length;
-    // Multiple junction detection. (Currrently deactivated)
-    // bool extend_buffer = true;
+    const float safe_distance = 1.5f*length;
 
     for (uint j = 0u; j < waypoint_buffer.size(); ++j){
       if (waypoint_buffer.at(j)->CheckJunction()){
@@ -608,7 +605,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
         if (!waypoint_buffer.back()->CheckJunction()){
           unjunction_counter++;
         }
-        // Record the last point as a safe one and safe it
+        // Record the last point as a safe one and save it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint selection_index = 0u;
         // Pseudo-randomized path selection if found more than one choice.
@@ -616,15 +613,12 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
           selection_index = static_cast<uint>(rand()) % next_waypoints.size();
         }
 
-        //safe_point = waypoint_buffer.back()->GetNextWaypoint().front();
         waypoint_buffer.push_back(next_waypoints.at(selection_index));
       }
       final_point = waypoint_buffer.back();
     }
-    
+
     // 4) Ignore roundabouts
-    // Done by ignoring the whole intersection if two intersections are very close by
-    // Unintentionally ignores some at Town 07
     SimpleWaypointPtr roundabout_point = final_point->GetNextWaypoint().front();
 
     while (unjunction_counter < HIGH_UNJUNCTION_IGNORE_THRESHOLD){
@@ -636,7 +630,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Actor &a
     }
 
     // 5) Ignore small junctions and roundabouts
-    // Also missignores some intersections 
     if (junction_counter < JUNCTION_IGNORE_THRESHOLD){
       final_point = nullptr;
     }

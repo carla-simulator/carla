@@ -39,6 +39,7 @@ namespace traffic_manager {
   using namespace std::chrono;
   namespace cc = carla::client;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using Vehicle = carla::SharedPtr<cc::Vehicle>;
   using ActorId = carla::ActorId;
   using ActorIdSet = std::unordered_set<ActorId>;
 
@@ -115,7 +116,7 @@ namespace traffic_manager {
 
     // When near an intersection, extends the buffer throughout all the
     // intersection to see if there is space after it
-    SimpleWaypointPtr GetSafeLocationAfterJunction(const Actor &actor, Buffer &waypoint_buffer);
+    SimpleWaypointPtr GetSafeLocationAfterJunction(const Vehicle &vehicle, Buffer &waypoint_buffer);
 
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);

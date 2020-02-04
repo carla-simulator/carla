@@ -22,6 +22,7 @@ namespace CollisionStageConstants {
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float MIN_COLLISION_RADIUS = 15.0f;
   static const float WALKER_TIME_EXTENSION = 1.5f;
+  static const float EPSILON_VELOCITY = 0.1f;
 } // namespace CollisionStageConstants
 
   using namespace CollisionStageConstants;
@@ -81,7 +82,7 @@ namespace CollisionStageConstants {
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
-            
+
             // Temporary fix to (0,0,0) bug
             if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0){
 
@@ -92,8 +93,8 @@ namespace CollisionStageConstants {
 
                 if (safe_point_junction != nullptr){
                   if(parameters.GetCollisionDetection(ego_actor, actor) &&
-                    !IsLocationAfterJunctionSafe(ego_actor,actor)){
-                  
+                    !IsLocationAfterJunctionSafe(ego_actor, actor, safe_point_junction)){
+
                     collision_hazard = true;
                     break;
                   }
@@ -101,7 +102,7 @@ namespace CollisionStageConstants {
 
                 if (parameters.GetCollisionDetection(ego_actor, actor) &&
                     NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
-                  
+
                   collision_hazard = true;
                   break;
                 }
@@ -373,46 +374,40 @@ namespace CollisionStageConstants {
     return bbox_boundary;
   }
 
-  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &actor){
-    
+  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &actor, const SimpleWaypointPtr safe_point){
+
     bool safe_junction = true;
 
-    const SimpleWaypointPtr safe_point_junction = localization_frame->at(vehicle_id_to_index.at(ego_actor->GetId())).safe_point_after_junction;
+    if (actor->GetVelocity().Length() < EPSILON_VELOCITY){
 
-    if (safe_point_junction != nullptr){
+      cg::Location location = safe_point->GetLocation();
+      cg::Vector3D heading_vector = safe_point->GetForwardVector();
+      heading_vector.z = 0.0f;
+      heading_vector = heading_vector.MakeUnitVector();
 
-      if (actor->GetVelocity().Length() < 0.1f){
+      cg::BoundingBox bbox;
+      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
+      bbox = vehicle->GetBoundingBox();
+      const cg::Vector3D extent = bbox.extent;
 
-        // GetBoundary() simplified for the new "ghost" location after the junction
-        cg::Location location = safe_point_junction->GetLocation();
-        cg::Vector3D heading_vector = safe_point_junction->GetForwardVector();
-        heading_vector.z = 0.0f;
-        heading_vector = heading_vector.MakeUnitVector();
+      const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
 
-        cg::BoundingBox bbox;
-        const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
-        bbox = vehicle->GetBoundingBox();
-        const cg::Vector3D extent = bbox.extent;
+      const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
+      const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
 
-        const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
+      LocationList ego_actor_boundary = {
+        location + cg::Location(x_boundary_vector - y_boundary_vector),
+        location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
+        location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
+        location + cg::Location(x_boundary_vector + y_boundary_vector),
+      };
 
-        const cg::Vector3D x_boundary_vector = heading_vector * extent.x;
-        const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
+      const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
+      const Polygon other_polygon = GetPolygon(GetBoundary(actor));
 
-        LocationList ego_actor_boundary = {
-          location + cg::Location(x_boundary_vector - y_boundary_vector),
-          location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
-          location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
-          location + cg::Location(x_boundary_vector + y_boundary_vector),
-        };
-
-        const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
-        const Polygon other_polygon = GetPolygon(GetBoundary(actor));
-
-        const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
-        if (inter_bbox_distance < 0.3f){
-          safe_junction = false;
-        }
+      const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+      if (inter_bbox_distance < 0.3f){
+        safe_junction = false;
       }
     }
 
