@@ -18,16 +18,15 @@ TrafficManagerLocal::TrafficManagerLocal
 		, std::vector<float> lateral_PID_parameters
 		, std::vector<float> lateral_highway_PID_parameters
 		, float perc_difference_from_limit
-		, carla::client::detail::EpisodeProxy &episodeProxy
-		, uint16_t &RPCportTM)
+		, carla::client::detail::EpisodeProxy episodeProxy)
 		: longitudinal_PID_parameters(longitudinal_PID_parameters)
 		, longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters)
 		, lateral_PID_parameters(lateral_PID_parameters)
 		, lateral_highway_PID_parameters(lateral_highway_PID_parameters)
 		, episodeProxyTM(episodeProxy)
 		, debug_helper(carla::client::DebugHelper{episodeProxyTM})
-		, server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
 {
+
 	using WorldMap = carla::SharedPtr<cc::Map>;
 	const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
 	const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
@@ -232,5 +231,10 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
 carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
 	return episodeProxyTM;
 }
+
+std::size_t TrafficManagerLocal::GetRegisteredActorsCount() {
+	return registered_actors.GetList().size();
+}
+
 } // namespace traffic_manager
 } // namespace carla

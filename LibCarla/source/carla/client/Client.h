@@ -72,6 +72,11 @@ namespace client {
       return TrafficManager{_simulator->GetCurrentEpisode()};
     }
 
+    /// Return an instance of the world currently active in the simulator.
+    carla::client::detail::EpisodeProxy GetCurrentEpisode() const {
+      return _simulator->GetCurrentEpisode();
+    }
+
     std::string StartRecorder(std::string name) {
       return _simulator->StartRecorder(name);
     }
