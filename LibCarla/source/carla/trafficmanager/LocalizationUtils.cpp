@@ -102,28 +102,29 @@ namespace LocalizationConstants {
 
   void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer& buffer) {
 
-    // Add actor entry if not present.
-    if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
-      actor_to_grids.insert({actor_id, {}});
-    }
+    if (!buffer.empty()) {
 
-    std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+      // Add actor entry if not present.
+      if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
+        actor_to_grids.insert({actor_id, {}});
+      }
 
-    // Clear current actor from all grids containing current actor.
-    for (auto& grid_id: current_grids) {
-      if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
-        ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
-        if (actor_ids.find(actor_id) != actor_ids.end()) {
-          actor_ids.erase(actor_id);
+      std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+
+      // Clear current actor from all grids containing current actor.
+      for (auto& grid_id: current_grids) {
+        if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+          ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
+          if (actor_ids.find(actor_id) != actor_ids.end()) {
+            actor_ids.erase(actor_id);
+          }
         }
       }
-    }
 
-    // Clear all grids current actor is tracking.
-    current_grids.clear();
+      // Clear all grids current actor is tracking.
+      current_grids.clear();
 
-    // Step through buffer and update grid list for actor and actor list for grids.
-    if (!buffer.empty()) {
+      // Step through buffer and update grid list for actor and actor list for grids.
       uint64_t buffer_size = buffer.size();
       uint64_t step_size = static_cast<uint64_t>(std::floor(buffer_size/BUFFER_STEP_THROUGH));
       for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
