@@ -724,6 +724,24 @@ Returns a list of pairs of waypoints. Every tuple on the list contains first an 
 
 ---
 
+## carla.Junction<a name="carla.Junction"></a> <sub><sup>_class_</sup></sub>
+Class that embodies the intersections on the road described in the OpenDRIVE file according to OpenDRIVE 1.4 standards.
+
+<h3>Instance Variables</h3>
+- <a name="carla.Junction.id"></a>**<font color="#f8805a">id</font>** (_int_)
+Identificator found in the OpenDRIVE file.
+- <a name="carla.Junction.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)
+Bounding box encapsulating the junction lanes.
+
+<h3>Methods</h3>
+- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)
+Returns a list of pairs of waypoints. Every tuple on the list contains first an initial and then a final waypoint within the intersection boundaries that describe the beginning and the end of said lane along the junction. Lanes follow their OpenDRIVE definitions so there may be many different tuples with the same starting waypoint due to possible deviations, as this are considered different lanes.
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Type of lanes to get the waypoints.
+    - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint)))_
+
+---
+
 ## carla.Map<a name="carla.Map"></a> <sub><sup>_class_</sup></sub>
 Class containing the road information and waypoint managing. Data is retrieved from an OpenDRIVE file that describes the road. A query system is defined which works hand in hand with [carla.Waypoint](#carla.Waypoint) to translate geometrical information from the .xodr to natural world points. CARLA is currently working with [OpenDRIVE 1.4 standard](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf).
 
