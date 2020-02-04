@@ -6,6 +6,9 @@
 
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
+#include "carla/client/Client.h"
+
+#include <chrono>
 
 namespace carla {
 namespace traffic_manager {
@@ -13,147 +16,148 @@ namespace traffic_manager {
 std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 
 /// Private constructor for singleton life cycle management.
-TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProxy) {
+TrafficManager :: TrafficManager(uint16_t port) {
 
-	std::pair<std::string, std::string> serverTM;
+  std::cout << "TrafficManager ctr" << std::endl;
 
-	/// Check singleton instance already created or not
-	if (!singleton_pointer) {
+  carla::client::detail::EpisodeProxy episodeProxy = client::Client::GetClient()->GetWorld().GetEpisode();
 
+  std::pair<std::string, uint16_t> serverTM;
+  std::string port_str = std::to_string(port);
 
-		/// Check TM instance already registered with server or not
-		if(episodeProxy.Lock()->IsTrafficManagerRunning()) {
+  /// Check singleton instance already created or not
+  if (!singleton_pointer) {
 
-			/// Get TM server info (Remote IP & PORT)
-			serverTM = episodeProxy.Lock()->GetTrafficManagerRunning();
+    /// Check TM instance already registered with server or not
+    if(episodeProxy.Lock()->IsTrafficManagerRunning(port)) {
 
-			/// Set IP and port
-			TrafficManagerRemote* tm_ptr = new(std::nothrow)
-			TrafficManagerRemote(serverTM, episodeProxy);
+      /// Get TM server info (Remote IP & PORT)
+      serverTM = episodeProxy.Lock()->GetTrafficManagerRunning(port);
 
-			try {
+      /// Set IP and port
+      TrafficManagerRemote* tm_ptr = new(std::nothrow)
+        TrafficManagerRemote(serverTM, episodeProxy);
 
-				/// Check memory allocated or not
-				if(tm_ptr != nullptr) {
+      try {
 
-					/// Try to reset all traffic lights
-					tm_ptr->HealthCheckRemoteTM();
+        /// Check memory allocated or not
+        if(tm_ptr != nullptr) {
 
-					/// Set the pointer of the instance
-					singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
-				}
-			}
-			catch (...) {
+          /// Try to reset all traffic lights
+          tm_ptr->HealthCheckRemoteTM();
 
-				/// Clear previously allocated memory
-				delete tm_ptr;
-				std::cout 	<< "OLD: Registered TM at "
-							<< serverTM.first  << ":"
-							<< serverTM.second << " ..... FAILED "
-							<< std::endl;
-			}
-		}
-	}
+          /// Set the pointer of the instance
+          singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+        }
+      }
+      catch (...) {
 
-	/// If pointer is not allocated get Local TM details
-	if (!singleton_pointer) {
+        /// Clear previously allocated memory
+        delete tm_ptr;
+        std::cout 	<< "OLD: Registered TM at "
+              << serverTM.first  << ":"
+              << serverTM.second << " ..... FAILED "
+              << std::endl;
+      }
+    }
+  }
 
-		const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
-		const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-		const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};
-		const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
-		const float perc_difference_from_limit 				= 30.0f;
+  /// If pointer is not allocated get Local TM details
+  if (!singleton_pointer) {
 
-		/// Get default port
-		uint16_t RPCportTM = TM_SERVER_PORT;
+    const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
+    const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
+    const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};
+    const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
+    const float perc_difference_from_limit 				= 30.0f;
 
-		TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
-				( longitudinal_param
-						, longitudinal_highway_param
-						, lateral_param
-						, lateral_highway_param
-						, perc_difference_from_limit
-						, episodeProxy
-						, RPCportTM);
+    TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
+        ( longitudinal_param
+            , longitudinal_highway_param
+            , lateral_param
+            , lateral_highway_param
+            , perc_difference_from_limit
+            , episodeProxy
+            , port);
 
-		auto GetLocalIp = [=]()-> std::pair<std::string, std::string>
-		{
-			int err;
-			std::pair<std::string, std::string> localIP;
-			int sock = socket(AF_INET, SOCK_DGRAM, 0);
-			if(sock == INVALID_INDEX) {
-				std::cout << "Error number1: " << errno << std::endl;
-				std::cout << "Error message: " << strerror(errno) << std::endl;
-			} else {
-				sockaddr_in loopback;
-				std::memset(&loopback, 0, sizeof(loopback));
-				loopback.sin_family = AF_INET;
-				loopback.sin_addr.s_addr = INADDR_LOOPBACK;
-				loopback.sin_port = htons(9);
-				err = connect
-						( sock
-						, reinterpret_cast<sockaddr*>(&loopback)
-						, sizeof(loopback));
-				if(err == INVALID_INDEX) {
-					std::cout 	<< "Error number2: "
-								<< errno << std::endl;
-					std::cout 	<< "Error message: "
-								<< strerror(errno) << std::endl;
-				} else {
-					socklen_t addrlen = sizeof(loopback);
-					err = getsockname
-							( sock
-							, reinterpret_cast<struct sockaddr*> (&loopback)
-							, &addrlen);
-					if(err == INVALID_INDEX) {
-						std::cout 	<< "Error number3: "
-									<< errno << std::endl;
-						std::cout 	<< "Error message: "
-									<< strerror(errno) << std::endl;
-					} else {
-						char buffer[IP_DATA_BUFFER_SIZE];
-						const char* p = inet_ntop
-											( AF_INET
-											, &loopback.sin_addr, buffer
-											, IP_DATA_BUFFER_SIZE);
-						if(p != NULL) {
-							localIP = std::make_pair<std::string, std::string>
-									  (buffer, std::to_string(RPCportTM));
-						} else {
-							std::cout 	<< "Error number4: "
-										<< errno << std::endl;
-							std::cout 	<< "Error message: "
-										<< strerror(errno) << std::endl;
-						}
-					}
-				}
-				close(sock);
-			}
-			return localIP;
-		};
+    auto GetLocalIp = [=]()-> std::pair<std::string, uint16_t>
+    {
+      int err;
+      std::pair<std::string, uint16_t> localIP;
+      int sock = socket(AF_INET, SOCK_DGRAM, 0);
+      if(sock == INVALID_INDEX) {
+        std::cout << "Error number1: " << errno << std::endl;
+        std::cout << "Error message: " << strerror(errno) << std::endl;
+      } else {
+        sockaddr_in loopback;
+        std::memset(&loopback, 0, sizeof(loopback));
+        loopback.sin_family = AF_INET;
+        loopback.sin_addr.s_addr = INADDR_LOOPBACK;
+        loopback.sin_port = htons(9);
+        err = connect
+            ( sock
+            , reinterpret_cast<sockaddr*>(&loopback)
+            , sizeof(loopback));
+        if(err == INVALID_INDEX) {
+          std::cout 	<< "Error number2: "
+                << errno << std::endl;
+          std::cout 	<< "Error message: "
+                << strerror(errno) << std::endl;
+        } else {
+          socklen_t addrlen = sizeof(loopback);
+          err = getsockname
+              ( sock
+              , reinterpret_cast<struct sockaddr*> (&loopback)
+              , &addrlen);
+          if(err == INVALID_INDEX) {
+            std::cout 	<< "Error number3: "
+                  << errno << std::endl;
+            std::cout 	<< "Error message: "
+                  << strerror(errno) << std::endl;
+          } else {
+            char buffer[IP_DATA_BUFFER_SIZE];
+            const char* p = inet_ntop
+                      ( AF_INET
+                      , &loopback.sin_addr, buffer
+                      , IP_DATA_BUFFER_SIZE);
+            if(p != NULL) {
+              localIP = std::make_pair(buffer, port);
+            } else {
+              std::cout 	<< "Error number4: "
+                    << errno << std::endl;
+              std::cout 	<< "Error message: "
+                    << strerror(errno) << std::endl;
+            }
+            carla::log_info(localIP.first,localIP.second);
+          }
+        }
+        close(sock);
+      }
+      return localIP;
+    };
 
-		/// Get TM server info (Local IP & PORT)
-		serverTM = GetLocalIp();
+    /// Get TM server info (Local IP & PORT)
+    serverTM = GetLocalIp();
 
-		/// Set this client as the TM to server
-		episodeProxy.Lock()->SetTrafficManagerRunning(serverTM);
+    /// Set this client as the TM to server
+    episodeProxy.Lock()->AddTrafficManagerRunning(serverTM);
 
-		/// Print status
-		std::cout 	<< "NEW: Registered TM at "
-					<< serverTM.first  << ":"
-					<< serverTM.second << " ..... SUCCESS"
-					<< std::endl;
+    /// Print status
+    std::cout 	<< "NEW: Registered TM at "
+          << serverTM.first  << ":"
+          << serverTM.second << " ..... SUCCESS"
+          << std::endl;
 
-		/// Set the pointer of the instance
-		singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
-	}
+    /// Set the pointer of the instance
+    singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+  }
 }
 
 void TrafficManager::Release() {
-	if(singleton_pointer) {
-		TrafficManagerBase *base_ptr = singleton_pointer.release();
-		delete base_ptr;
-	}
+  if(singleton_pointer) {
+    TrafficManagerBase *base_ptr = singleton_pointer.release();
+    delete base_ptr;
+  }
 }
 
 

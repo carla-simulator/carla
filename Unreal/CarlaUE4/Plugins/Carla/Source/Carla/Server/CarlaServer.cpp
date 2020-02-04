@@ -40,6 +40,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+#include <map>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -71,7 +72,8 @@ public:
   }
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  std::pair<std::string, std::string> TrafficManagerInfo;
+  // < port , ip >
+  std::map<uint16_t, std::string> TrafficManagerInfo;
 
   carla::rpc::Server Server;
 
@@ -155,22 +157,28 @@ void FCarlaServer::FPimpl::BindActions()
   namespace cg = carla::geom;
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  BIND_SYNC(is_traffic_manager_running) << [this] () ->R<bool>
+  BIND_SYNC(is_traffic_manager_running) << [this] (uint16_t port) ->R<bool>
   {
-    return (!TrafficManagerInfo.first.empty() || !TrafficManagerInfo.second.empty());
+    return (TrafficManagerInfo.find(port) != TrafficManagerInfo.end());
   };
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  BIND_SYNC(get_traffic_manager_running) << [this] () ->R<std::pair<std::string, std::string>>
+  // < ip, port >
+  BIND_SYNC(get_traffic_manager_running) << [this] (uint16_t port) ->R<std::pair<std::string, uint16_t>>
   {
-    return TrafficManagerInfo;
+    auto it = TrafficManagerInfo.find(port);
+    if(it != TrafficManagerInfo.end()) {
+      return std::pair<std::string, uint16_t>(it->second, it->first);
+    }
+    return std::pair<std::string, uint16_t>("",0);
   };
 
   // DEMO: Channeling multi-client communication for traffic manager.
-  BIND_SYNC(set_traffic_manager_running) << [this] (std::pair<std::string, std::string> trafficManagerInfo) ->R<void>
+  BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<void>
   {
-	  TrafficManagerInfo = trafficManagerInfo;
-	  return R<void>::Success();
+    TrafficManagerInfo.insert(
+      std::pair<uint16_t, std::string>(trafficManagerInfo.second, trafficManagerInfo.first));
+    return R<void>::Success();
   };
 
   BIND_ASYNC(version) << [] () -> R<std::string>
@@ -436,7 +444,7 @@ void FCarlaServer::FPimpl::BindActions()
     FVector CurrentLocation = CurrentTransform.GetLocation();
     NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
 
-    // if difference between Z position is small, then we keep current, otherwise we set the new one 
+    // if difference between Z position is small, then we keep current, otherwise we set the new one
     // (to avoid Z fighting position and falling pedestrians)
     if (NewLocation.Z - CurrentLocation.Z < 100.0f)
       NewLocation.Z = CurrentLocation.Z;

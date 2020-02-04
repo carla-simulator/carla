@@ -64,11 +64,15 @@ public:
 
 			// Binding a lambda function to the name "register_vehicle".
 			server->bind("register_vehicle", [=](std :: vector <carla::rpc::Actor> _actor_list) {
+				std::cout << "TMServer register_vehicle" << std::endl;
+				carla::client::detail::EpisodeProxy& episode_proxy = tm->GetEpisodeProxy();
 				std::vector<ActorPtr> actor_list;
 				for (auto &&actor : _actor_list) {
-					actor_list.emplace_back(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()));
+					actor_list.emplace_back(carla::client::detail::ActorVariant(actor).Get(episode_proxy));
 				}
+				std::cout << "TMServer register_vehicle for loop end" << std::endl;
 				tm->RegisterVehicles(actor_list);
+				std::cout << "TMServer register_vehicle end" << std::endl;
 			});
 
 
@@ -158,4 +162,3 @@ private:
 };
 
 #endif /* __TRAFFICMANAGERSERVER__ */
-

@@ -127,6 +127,10 @@ namespace client {
       return DebugHelper{_episode};
     }
 
+    detail::EpisodeProxy GetEpisode() const {
+      return _episode;
+    };
+
   private:
 
     detail::EpisodeProxy _episode;
