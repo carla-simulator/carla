@@ -83,7 +83,7 @@ make launch
 -------------------
 ##Get development assets
 
-The 3D assets, models, and maps have also a [public git repository][contentrepolink] where the CARLA team regularly pushes latest updates. However, using this version of the content is only recommended to developers, as it contains not finished maps and models.
+The 3D assets, models, and maps have also a [public git repository][contentrepolink] where the CARLA team regularly pushes latest updates. However, using this version of the content is only recommended to developers, as it may contain unfinished maps and/or models.
 
 Handling this repository requires [git-lfs][gitlfslink] installed to work with large files that are modified regularly. To clone this repository **go to the main CARLA directory** and run the following command: 
 
