@@ -203,38 +203,43 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 					const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
 					const float perc_difference_from_limit 				= 30.0f;
 
-					/// Create new client
-					auto client = carla::client::Client(srthost, rpcPort);
-					auto episodeProxyLocal = client.GetCurrentEpisode();
-
-					/// Create local instance of TM
-					TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
-							( longitudinal_param
-							, longitudinal_highway_param
-							, lateral_param
-							, lateral_highway_param
-							, perc_difference_from_limit
-							, episodeProxyLocal);
-
-					/// Create RPC TM server
-					TrafficManagerServer server = TrafficManagerServer
-							( RPCportTM
-							, static_cast<carla::traffic_manager::TrafficManagerBase *>(tm_ptr));
-
-					/// Get TM server info (Local IP & PORT)
-					std::pair<std::string, std::string> serverTM = GetLocalIP();
-
-					/// Set this client as the TM to server
-					episodeProxyLocal.Lock()->SetTrafficManagerRunning(serverTM);
-
-					/// Print status
-					std::cout 	<< "NEW[@]: Registered TM at "
-								<< serverTM.first  << ":"
-								<< serverTM.second << " ..... SUCCESS."
-								<< std::endl;
+					std::pair<std::string, std::string> serverTM;
 
 					/// Try to run TM as long as vehicles are present
 					try {
+
+						/// Create new client
+						auto client = carla::client::Client(srthost, rpcPort);
+						auto episodeProxyLocal = client.GetCurrentEpisode();
+
+						/// Set client timeout
+						client.SetTimeout(2s);
+
+						/// Create local instance of TM
+						TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
+								( longitudinal_param
+										, longitudinal_highway_param
+										, lateral_param
+										, lateral_highway_param
+										, perc_difference_from_limit
+										, episodeProxyLocal);
+
+						/// Create RPC TM server
+						TrafficManagerServer server = TrafficManagerServer
+								( RPCportTM
+								, static_cast<carla::traffic_manager::TrafficManagerBase *>(tm_ptr));
+
+						/// Get TM server info (Local IP & PORT)
+						serverTM = GetLocalIP();
+
+						/// Set this client as the TM to server
+						episodeProxyLocal.Lock()->SetTrafficManagerRunning(serverTM);
+
+						/// Print status
+						std::cout 	<< "NEW[@]: Registered TM at "
+								<< serverTM.first  << ":"
+								<< serverTM.second << " ..... SUCCESS."
+								<< std::endl;
 
 						/// Sleep for 5 seconds to wait to check any vehicle registered or not
 						do {
@@ -250,14 +255,12 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 
 							/// Get all vehicles of the world
 							auto world_vehicle = Filter(world_actorsList, "vehicle.*");
-							std::cout << "Total WR register vehicles:: " << world_vehicle.size() << std::endl;
 							for (auto actor: world_vehicle) {
 								worldVSet.insert(actor.GetId());
 							}
 
 							/// Get all registered vehicles to TM
 							const auto tmreg_vehicle = tm_ptr->GetRegisteredVehiclesIDs();
-							std::cout << "Total TM register vehicles:: " << tmreg_vehicle.size() << std::endl;
 
 							/// Check any registered vehicle present in the world
 							for (auto &actor: tmreg_vehicle) {
@@ -268,29 +271,41 @@ TrafficManager :: TrafficManager(carla::client::detail::EpisodeProxy episodeProx
 							}
 
 							/// If no valid vehicle present
-							if(noVehiclePresent) break;
+							if(noVehiclePresent) {
+								std::cout << "RUN: vehicle(s) Registered at TM: NO " << std::endl;
+								break;
+							} else {
+								std::cout << "RUN: vehicle(s) Registered at TM: YES " << std::endl;
+							}
 
-						/// Run for ever
-						} while (true);
+							/// Run for ever unit carla server exist
+						} while (episodeProxyLocal.Lock()->IsTrafficManagerRunning());
 
 						/// Clear allocated TM memory
 						if(tm_ptr) {
 							delete tm_ptr;
 						}
-					} catch(...) {
+					} catch (const carla::client::TimeoutException &e) {
+
+						std::cout << "\nRuntimeError: " << e.what() << std::endl;
+						/// Timeout exception happened
+					} catch (const std::exception &e) {
 
 						/// Print status
 						std::cout 	<< "ERRS: Registered TM at "
-									<< serverTM.first  << ":"
-									<< serverTM.second << " ..... CAUGHT."
-									<< std::endl;
+								<< serverTM.first  << ":"
+								<< serverTM.second << " ..... CAUGHT."
+								<< std::endl;
 					}
 
 					/// If no vehicle registered stop the RPC TM server
 					std::cout 	<< "EXIT: Registered TM at "
-								<< serverTM.first  << ":"
-								<< serverTM.second << " ..... STOPPED."
-								<< std::endl;
+							<< serverTM.first  << ":"
+							<< serverTM.second << " ..... STOPPED."
+							<< std::endl;
+
+					/// Exit normally without error code
+					exit(0);
 				}
 
 				/// TM as separate process creation failed

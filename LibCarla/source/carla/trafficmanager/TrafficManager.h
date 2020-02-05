@@ -22,6 +22,8 @@
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
 #include "carla/client/World.h"
+#include "carla/client/TimeoutException.h"
+
 #include "carla/geom/Transform.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
@@ -58,6 +60,7 @@ private:
 
 public:
 
+	/// Public release method to clear allocated data
 	static void Release();
 
 	/// Private constructor for singleton life cycle management.
@@ -144,6 +147,11 @@ public:
 	void SetSynchronousMode(bool mode) {
 		DEBUG_ASSERT(singleton_pointer != nullptr);
 		singleton_pointer->SetSynchronousMode(mode);
+	}
+
+	void SetSynchronousModeTimeOutInMiliSecond(double time) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetSynchronousModeTimeOutInMiliSecond(time);
 	}
 
 	/// Method to provide synchronous tick

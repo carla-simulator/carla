@@ -123,18 +123,18 @@ public:
 		rpc_client.call("set_percentage_running_light", actor, percentage);
 	}
 
-	/// Method to reset all traffic lights.
-	void ResetAllTrafficLights() {
-		rpc::client rpc_client(tmhost, tmport);
-		rpc_client.set_timeout(TM_TIMEOUT);
-		rpc_client.call("reset_all_traffic_lights");
-	}
-
 	/// Method to switch traffic manager into synchronous execution.
 	void SetSynchronousMode(const bool mode) {
 		rpc::client rpc_client(tmhost, tmport);
 		rpc_client.set_timeout(TM_TIMEOUT);
 		rpc_client.call("set_synchronous_mode", mode);
+	}
+
+	/// Method to set Tick timeout for synchronous execution.
+	void SetSynchronousModeTimeOutInMiliSecond(const double time) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_synchronous_mode_timeout_in_milisecond", time);
 	}
 
 	/// Method to reset all traffic lights.
@@ -143,6 +143,13 @@ public:
 		rpc_client.set_timeout(TM_TIMEOUT);
 		auto rs = rpc_client.call("synchronous_tick").as<bool>();
 		return rs;
+	}
+
+	/// Method to reset all traffic lights.
+	void ResetAllTrafficLights() {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("reset_all_traffic_lights");
 	}
 
 	void HealthCheckRemoteTM() {

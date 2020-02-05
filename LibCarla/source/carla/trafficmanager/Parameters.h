@@ -65,7 +65,7 @@ private:
   std::atomic<bool> synchronous_mode;
 
   /// Synchronous mode time out.
-  std::chrono::duration<int, std::milli> synchronous_time_out;
+  std::chrono::duration<double, std::milli> synchronous_time_out;
 
 public:
   Parameters();
@@ -98,10 +98,10 @@ public:
   bool GetSynchronousMode();
 
   /// Synchronous mode time out.
-  void SetSynchronousModeTimeOutInMiliSecond(const int time);
+  void SetSynchronousModeTimeOutInMiliSecond(const double time);
 
   /// Synchronous mode time out
-  int GetSynchronousModeTimeOutInMiliSecond();
+  double GetSynchronousModeTimeOutInMiliSecond();
 
   /// Method to query target velocity for a vehicle.
   float GetVehicleTargetVelocity(const ActorPtr &actor);

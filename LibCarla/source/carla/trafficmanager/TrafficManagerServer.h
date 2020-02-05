@@ -130,19 +130,24 @@ public:
 				tm->SetPercentageRunningLight(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
 			});
 
-			/// Method to reset all traffic lights.
-			server->bind("reset_all_traffic_lights", [=]() {
-				tm->ResetAllTrafficLights();
-			});
-
 			/// Method to set synchronous mode.
 			server->bind("set_synchronous_mode", [=](const bool mode) {
 				tm->SetSynchronousMode(mode);
 			});
 
+			/// Method to set Tick timeout for synchronous execution.
+			server->bind("set_synchronous_mode_timeout_in_milisecond", [=](const double time) {
+				tm->SetSynchronousModeTimeOutInMiliSecond(time);
+			});
+
 			/// Method to reset all traffic lights.
 			server->bind("synchronous_tick", [=]() -> bool {
 				return tm->SynchronousTick();
+			});
+
+			/// Method to reset all traffic lights.
+			server->bind("reset_all_traffic_lights", [=]() {
+				tm->ResetAllTrafficLights();
 			});
 
 			/// Method to check server is Alive or not

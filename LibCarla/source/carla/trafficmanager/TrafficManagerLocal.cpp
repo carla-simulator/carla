@@ -234,6 +234,11 @@ void TrafficManagerLocal::SetSynchronousMode(bool mode) {
 	parameters.SetSynchronousMode(mode);
 }
 
+/// Method to set Tick timeout for synchronous execution.
+void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {
+	parameters.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
 /// Method to provide synchronous tick
 bool TrafficManagerLocal::SynchronousTick() {
 	return control_stage->RunStep();

@@ -77,7 +77,7 @@ void BatchControlStage::DataSender()
 
 			/// Wait for signal to process
 			while (!run_step.load()) {
-				send_control_notifier.wait_for(lock, 10ms, [this]() { return run_step.load(); });
+				send_control_notifier.wait_for(lock, 1ms, [this]() { return run_step.load(); });
 			}
 
 			/// Do work (send information to server)
@@ -106,6 +106,12 @@ bool BatchControlStage::RunStep()
 	/// Get step_execution_mutex lock
 	std::unique_lock<std::mutex> lock(step_execution_mutex);
 
+	/// Get timeout value in millisecond
+	double timeOut = parameters.GetSynchronousModeTimeOutInMiliSecond();
+
+	/// Get start time
+	auto st = std::chrono::high_resolution_clock::now();
+
 	/// Set run set flag
 	run_step.store(true);
 
@@ -113,9 +119,26 @@ bool BatchControlStage::RunStep()
 	send_control_notifier.notify_one();
 
 	/// Wait for service to finish
-	while (run_step.load()) {
+	while (true) {
+
+		/// Wait for signal
 		step_execution_notifier.wait_for
-			(lock, 10ms, [this]() { return !run_step.load(); });
+			(lock, 1ms, [this]() { return !run_step.load(); });
+
+		/// If time out occurred
+		if(run_step.load()) {
+
+			/// Get end time processing time
+			auto en = std::chrono::high_resolution_clock::now();
+
+			/// Get time gap
+			std::chrono::duration<double, std::milli> elapsed = en - st;
+
+			/// Mark RunStep failed
+			if(elapsed.count() > timeOut) return false;
+		} else {
+			break;
+		}
 	}
 
 	return true;
