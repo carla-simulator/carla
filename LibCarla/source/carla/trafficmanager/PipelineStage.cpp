@@ -17,18 +17,22 @@ namespace traffic_manager {
 
   PipelineStage::~PipelineStage() {
     Stop();
-    worker_thread.release();
   }
 
   void PipelineStage::Start() {
     run_stage.store(true);
-    worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
+    if(!worker_thread) {
+      worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
+    }
   }
 
   void PipelineStage::Stop() {
     run_stage.store(false);
-    if(worker_thread->joinable()){
-      worker_thread->join();
+    if(worker_thread){
+      if(worker_thread->joinable()){
+        worker_thread->join();
+      }
+      worker_thread.release();
     }
   }
 

@@ -150,11 +150,26 @@ TrafficManager::TrafficManager(
 }
 
 void TrafficManager::Release() {
+  carla::log_info("TrafficManager::Release");
   if(singleton_pointer) {
+    carla::log_info("TrafficManager::Release if");
     TrafficManagerBase *base_ptr = singleton_pointer.release();
+    carla::log_info("TrafficManager::Release delete");
     delete base_ptr;
-    carla::log_info("TrafficManager::Release");
+    carla::log_info("TrafficManager::Release exception");
     throw_exception(std::runtime_error("TM shutdown"));
+  }
+}
+
+void TrafficManager::Restart() {
+  carla::log_info("TrafficManager::Restart");
+  if(singleton_pointer) {
+
+    if(singleton_pointer->IsRunning()){
+      singleton_pointer->Stop();
+    } else {
+      singleton_pointer->Start();
+    }
   }
 }
 

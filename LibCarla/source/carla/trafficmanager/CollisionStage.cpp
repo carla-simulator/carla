@@ -52,6 +52,7 @@ namespace CollisionStageConstants {
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over registered actors.
+    carla::log_info("CollisionStage", number_of_vehicles);
     for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
       LocalizationToCollisionData &data = localization_frame->at(i);
@@ -73,11 +74,11 @@ namespace CollisionStageConstants {
 
         // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
-          const Actor actor = j->second;
-          const ActorId actor_id = j->first;
-          const cg::Location other_location = actor->GetLocation();
-
           try {
+            const Actor actor = j->second;
+            const ActorId actor_id = j->first;
+            const cg::Location other_location = actor->GetLocation();
+
             // Collision checks increase with speed (Official formula used)
             float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
             collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
@@ -94,8 +95,8 @@ namespace CollisionStageConstants {
                   }
                 }
               }
-          } catch (const std::exception &e) {
-            carla::log_info("Actor might not be alive", e.what());
+          } catch (const std::exception & e ) {
+            //carla::log_info("Actor might not be alive", e.what());
           }
 
         }

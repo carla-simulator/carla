@@ -61,6 +61,8 @@ public:
 
   static void Release();
 
+  static void Restart();
+
   /// Private constructor for singleton life cycle management.
   explicit TrafficManager(
     carla::client::detail::EpisodeProxy episodeProxy,
@@ -74,6 +76,7 @@ public:
 
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+    carla::log_info("TM registering", actor_list.size(),"vehicles");
     if(singleton_pointer) {
       singleton_pointer->RegisterVehicles(actor_list);
     }
