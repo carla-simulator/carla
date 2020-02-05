@@ -1,5 +1,5 @@
 ## carla.Actor<a name="carla.Actor"></a>
-CARLA defines actors as anything that plays a role in the simulation and can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).  
+CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Actor.attributes"></a>**<font color="#f8805a">attributes</font>** (_dict_)  
@@ -27,19 +27,19 @@ Tells the simulator to destroy this actor and returns <b>True</b> if it was succ
     - **Warning:** <font color="#ED2F2F">_This method blocks the script until the destruction is completed by the simulator.
 _</font>  
 - <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's 3D acceleration vector the client recieved during last tick.  
+Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's angular velocity vector the client recieved during last tick.  
+Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's location the client recieved during last tick.  
+Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's transform (location and rotation) the client recieved during last tick.  
+Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's velocity vector the client recieved during last tick.  
+Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world this actor belongs to.  
@@ -128,7 +128,7 @@ CARLA provides a library of blueprints for actors in [carla.BlueprintLibrary](#c
 ---
 
 ## carla.ActorBlueprint<a name="carla.ActorBlueprint"></a>
-CARLA provides a blueprint library for actors that can be consulted through [carla.BlueprintLibrary](#carla.BlueprintLibrary). Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then custom some attributes and eventually spawn the actors through [carla.World](#carla.World).  
+CARLA provides a blueprint library for actors that can be consulted through [carla.BlueprintLibrary](#carla.BlueprintLibrary). Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then customize some attributes and eventually spawn the actors through [carla.World](#carla.World).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorBlueprint.id"></a>**<font color="#f8805a">id</font>** (_str_)  
@@ -281,7 +281,7 @@ Vector from the center of the box to one vertex. The value in each axis equals h
 - <a name="carla.BoundingBox.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**extent**</font>)  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – Point to center the box.  
-        - `extent` (_[carla.Vector3D](#carla.Vector3D)_) – Vector containing half the size of the box for each axis.  
+        - `extent` (_[carla.Vector3D](#carla.Vector3D)_) – Vector containing half the size of the box for every axis.  
 - <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
 Returns **True** if a point passed in world space is inside this bounding box.  
     - **Parameters:**
@@ -302,7 +302,7 @@ Returns true if both location and extent are equal for this and `other`.
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
     - **Return:** _bool_  
 - <a name="carla.BoundingBox.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns true if any location and extent are different for this and `other`.  
+Returns true if either location or extent are different for this and `other`.  
     - **Parameters:**
         - `other` (_[carla.BoundingBox](#carla.BoundingBox)_)  
     - **Return:** _bool_  
@@ -313,9 +313,9 @@ Parses the location and extent of the bounding box to string.
 ---
 
 ## carla.Client<a name="carla.Client"></a>
-The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication in between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of his.
+The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of his.
   
-  The client also has a recording feature that saves all the information of a simulation while running it. That allows the server to replay it at will to obtain information and experiment with it. [Here](recorder_and_playback.md) is some information about how to use this recorder.  
+  The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](recorder_and_playback.md) is some information about how to use this recorder.  
 
 <h3>Methods</h3>
 - <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**=127.0.0.1</font>, <font color="#00a6ed">**port**=2000</font>, <font color="#00a6ed">**worker_threads**=0</font>)  
@@ -825,7 +825,7 @@ Distance in meters from origin to spot on Z axis.
         - `y` (_float_)  
         - `z` (_float_)  
 - <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns true if both locations are the point in space.  
+Returns true if both locations are the same point in space.  
     - **Parameters:**
         - `other` (_[carla.Location](#carla.Location)_) – The other point to be compared with.  
     - **Return:** _bool_  
@@ -865,7 +865,7 @@ Returns a list of waypoints with a certain distance between them for every lane 
         - `distance` (_float_) – Approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of recommendations made by creators of the map to be used spawning points for vehicles. The list includes [carla.Tranform](#carla.Tranform) objects with certain location and orientation. Said locations are slightly on-air and vehicles fall for a bit before starting their way.  
+Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Tranform](#carla.Tranform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of tuples describing a minimal graph of the topology of the OpenDRIVE file. The tuples contain pairs of waypoints located either at the point a road begins or ends. The first one is the origin and the second one represents another road end that can be reached. This graph can be loaded into [NetworkX](https://networkx.github.io/) to work with. Output could look like this: <b>[(w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4)]</b>.  
@@ -959,7 +959,7 @@ Retrieves the number of entries generated, same as **<font color="#7fb800">\__st
 ---
 
 ## carla.Rotation<a name="carla.Rotation"></a>
-Class that represents a 3D rotation and so, an orientation in space.
+Class that represents a 3D rotation and therefore, an orientation in space.
 
 ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
 
@@ -978,15 +978,15 @@ Degrees around the X-axis.
         - `yaw` (_float_) – Z rotation in degrees.  
         - `roll` (_float_) – X rotation in degrees.  
 - <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
-Computes the vector pointing forward according the orientation for every axis.  
+Computes the vector pointing forward according to the orientation of each axis.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns true if both rotations represent the same orientation for every axis.  
+Returns true if both rotations represent the same orientation of each axis.  
     - **Parameters:**
         - `other` (_[carla.Rotation](#carla.Rotation)_) – The other rotation to be compared with.  
     - **Return:** _bool_  
 - <a name="carla.Rotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
-Returns true if both rotations represent the same orientation for every axis.  
+Returns true if both rotations represent the same orientation of each axis.  
     - **Parameters:**
         - `other` (_[carla.Rotation](#carla.Rotation)_) – The other rotation to be compared with.  
     - **Return:** _bool_  
@@ -998,7 +998,7 @@ Parses the axis' orientations to string.
 ## carla.Sensor<a name="carla.Sensor"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).             
      
-  Mainly sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](/cameras_and_sensors/), but the list of those available in CARLA so far goes as follow:        
+  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](/cameras_and_sensors/), but the list of those available in CARLA so far goes as follow:        
   <b>Receive data on every tick:</b>       
   - Gnss sensor.        
   - IMU sensor.         
@@ -1014,7 +1014,7 @@ Parses the axis' orientations to string.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  
-When <b>True</b> the sensor will be listening for data.  
+When <b>True</b> the sensor will be waiting for data.  
 
 <h3>Methods</h3>
 - <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
@@ -1081,7 +1081,7 @@ Time register of the frame at which this measurement was taken given by the OS i
 ## carla.TrafficLight<a name="carla.TrafficLight"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</b></small></div></p><p>A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
      
-  Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends some seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so.  
+  Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
@@ -1093,7 +1093,7 @@ Stops the traffic light at its current state.
     - **Parameters:**
         - `freeze` (_bool_)  
 - <a name="carla.TrafficLight.is_frozen"></a>**<font color="#7fb800">is_frozen</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns <b>True</b> if a traffic light is frozen according to last tick.  
+The client returns <b>True</b> if a traffic light is frozen according to last tick. The method does not call the simulator.  
     - **Return:** _bool_  
 - <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the index of the pole that identifies it as part of the traffic light group of a junction.  
@@ -1104,19 +1104,19 @@ Returns all traffic lights in the group this one belongs to.
     - **Note:** <font color="#8E8E8E">_This function calls the simulator.
 _</font>  
 - <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the time in seconds since current light state started according to last tick.  
+The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
 - <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the state of the traffic light according to last tick.  
+The client returns the state of the traffic light according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
 - <a name="carla.TrafficLight.get_green_time"></a>**<font color="#7fb800">get_green_time</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the time set for the green light to be active according to last tick.  
+The client returns the seconds set for the traffic light to be green according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
 - <a name="carla.TrafficLight.get_red_time"></a>**<font color="#7fb800">get_red_time</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the time set for the red light to be active according to last tick.  
+The client returns the seconds set for the traffic light to be red according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
 - <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the time set for the yellow light to be active according to last tick.  
+The client returns the the seconds set for the traffic light to be yellow according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
 - <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  
 Sets a given state to a traffic light actor.  
@@ -1138,7 +1138,7 @@ Sets a given time (in seconds) for the yellow light to be active.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a>
-All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example.  
+All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Green"></a>**<font color="#f8805a">Green</font>**  
@@ -1291,7 +1291,7 @@ Returns the axis values for the vector parsed as string.
 ---
 
 ## carla.Vehicle<a name="carla.Vehicle"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -1307,26 +1307,26 @@ Applies a physics control object in the next tick containing the parameters that
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the control applied in the last tick.  
+The client returns the control applied in the last tick. The method does not call the simulator.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
 - <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
 The simulator returns the last physics control applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
     - **Warning:** <font color="#ED2F2F">_This function does call the simulator to retrieve the value._</font>  
 - <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the speed limit affecting this vehicle according to last tick. The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning. right after spawning.  
+The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.  
     - **Return:** _float_  
 - <a name="carla.Vehicle.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
-Retrieves the traffic light actor affecting this vehicle according to last tick if any.  
+Retrieves the traffic light actor affecting this vehicle (if any) according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the state of the traffic light affecting this vehicle according to last tick. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
+The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns whether a traffic light is affecting this vehicle according to last tick. Vehicles will be affected by a traffic light or traffic sign when inside its trigger volume.  
+The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator). Vehicles will be affected by a traffic light or traffic sign when inside its trigger volume.  
     - **Return:** _bool_  
 - <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
-Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will conducted by the traffic manager client-side.  
+Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
 - <a name="carla.Vehicle.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1398,7 +1398,7 @@ All lights on.
 ---
 
 ## carla.VehiclePhysicsControl<a name="carla.VehiclePhysicsControl"></a>
-Summarizes the parameters that will be used to simulate a [carla.Vehicle](#carla.Vehicle) as a physical object. The specifics settings for the wheels though are stipulated using [carla.WheelPhysicsControl](#carla.WheelPhysicsControl).  
+Summarizes the parameters that will be used to simulate a [carla.Vehicle](#carla.Vehicle) as a physical object. The specific settings for the wheels though are stipulated using [carla.WheelPhysicsControl](#carla.WheelPhysicsControl).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.VehiclePhysicsControl.torque_curve"></a>**<font color="#f8805a">torque_curve</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
@@ -1464,7 +1464,7 @@ VehiclePhysicsControl constructor.
 ---
 
 ## carla.Walker<a name="carla.Walker"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled by an AI using a specific class for it, [carla.WalkerAIController](#carla.WalkerAIController). However, they could also be manually controlled or by script using different controller class to move these and their skeletons.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI ([carla.WalkerAIController](#carla.WalkerAIController)) or manually via script, using a series of [carla.WalkerControl](#carla.WalkerControl) to move these and their skeletons.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Walker.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -1480,7 +1480,7 @@ On the next tick, the control defines a list of bone transformations that will b
     - **Parameters:**
         - `control` (_[carla.WalkerBoneControl](#carla.WalkerBoneControl)_)  
 - <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
-The client returns the control applied to this walker during last tick.  
+The client returns the control applied to this walker during last tick. The method does not call the simulator.  
     - **Return:** _[carla.WalkerControl](#carla.WalkerControl)_  
 - <a name="carla.Walker.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
     - **Return:** _str_  
@@ -1508,7 +1508,7 @@ Sets a speed for the walker in meters per second.
 ---
 
 ## carla.WalkerBoneControl<a name="carla.WalkerBoneControl"></a>
-This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relativo to its parent. Take a look [here](walker_bone_control.md) to learn more on how to create a walker and define its movement.  
+This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](walker_bone_control.md) to learn more on how to create a walker and define its movement.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WalkerBoneControl.bone_transforms"></a>**<font color="#f8805a">bone_transforms</font>** (_list([name,transform])_)  
@@ -1516,7 +1516,7 @@ List of tuples where the first value is the bone's name and the second value sto
 
 <h3>Methods</h3>
 - <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**list(name,transform)**</font>)  
-Intializes an object containing moves to be applied on tick listed as name of the bone and transform to be applied to it.  
+Intializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it.  
     - **Parameters:**
         - `list(name,transform)` (_tuple_)  
 - <a name="carla.WalkerBoneControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1585,12 +1585,12 @@ The left lane marking information based on the direction of the Waypoint.
 
 <h3>Methods</h3>
 - <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, regardless if the lane change is allowed in this location.  
-Can return <b>None</b> if the lane does not exist.  
+Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location.  
+Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a waypoint at the center of the right lane based on the direction of the current waypoint, regardless if the lane change is allowed in this location.  
-Can return <b>None</b> if the lane does not exist.  
+Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.  
+Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
@@ -1619,8 +1619,8 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
 ---
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a>
-This class defines objects containing lightning and weather specifications that can be later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
-  Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working reallistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
+This class defines objects containing lightning and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
+  Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
@@ -1630,7 +1630,7 @@ Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy r
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
 Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations.  
 - <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>** (_float_)  
-Controlls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues.  
+Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues.  
 - <a name="carla.WeatherParameters.fog_density"></a>**<font color="#f8805a">fog_density</font>** (_float_)  
 Fog density. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.fog_distance"></a>**<font color="#f8805a">fog_distance</font>** (_float_)  
@@ -1665,7 +1665,7 @@ Returns <b>True</b> if both objects' variables are different.
 ---
 
 ## carla.WheelPhysicsControl<a name="carla.WheelPhysicsControl"></a>
-Class that defines specific physics parameters for wheel objects that will be part of a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to simulate vehicle it as a material object.  
+Class that defines specific physical parameters for wheel objects that will be part of a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to simulate vehicle it as a material object.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WheelPhysicsControl.tire_friction"></a>**<font color="#f8805a">tire_friction</font>** (_float_)  
@@ -1738,7 +1738,7 @@ Returns a list of actor blueprints available to ease the spawn of these into the
 Returns the object containing the navigation map used to describe this world.  
     - **Return:** _[carla.Map](#carla.Map)_  
 - <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
-This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take in consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
+This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a snapshot of the world at a certain moment comprising all the information about the actors.  
@@ -1797,11 +1797,11 @@ The simulation has some advanced configuration options that are contained in thi
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSettings.synchronous_mode"></a>**<font color="#f8805a">synchronous_mode</font>** (_bool_)  
-States the synchrony between client and server. When set to true, both will work together the simulation step by step. It is false by default.  
+States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is false by default.  
 - <a name="carla.WorldSettings.no_rendering_mode"></a>**<font color="#f8805a">no_rendering_mode</font>** (_bool_)  
 When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is false by default.  
 - <a name="carla.WorldSettings.fixed_delta_seconds"></a>**<font color="#f8805a">fixed_delta_seconds</font>** (_float_)  
-Grants that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
 
 <h3>Methods</h3>
 - <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
@@ -1827,7 +1827,7 @@ Parses the established settings to a string and shows them in command line.
 ---
 
 ## carla.WorldSnapshot<a name="carla.WorldSnapshot"></a>
-This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick and this cannot be stored.  
+This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick that cannot be stored.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  

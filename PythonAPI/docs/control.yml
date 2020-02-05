@@ -139,7 +139,7 @@
   - class_name: WalkerBoneControl
     # - DESCRIPTION ------------------------
     doc: >
-       This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relativo to its parent. Take a look [here](walker_bone_control.md) to learn more on how to create a walker and define its movement.  
+       This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](walker_bone_control.md) to learn more on how to create a walker and define its movement.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bone_transforms
@@ -153,7 +153,7 @@
       - param_name: 'list(name,transform)'
         type: tuple
       doc: >
-        Intializes an object containing moves to be applied on tick listed as name of the bone and transform to be applied to it. 
+        Intializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it. 
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -207,7 +207,7 @@
 
   - class_name: VehiclePhysicsControl
     doc: >
-      Summarizes the parameters that will be used to simulate a carla.Vehicle as a physical object. The specifics settings for the wheels though are stipulated using carla.WheelPhysicsControl.
+      Summarizes the parameters that will be used to simulate a carla.Vehicle as a physical object. The specific settings for the wheels though are stipulated using carla.WheelPhysicsControl.
 
     # - PROPERTIES -------------------------
     instance_variables:
@@ -360,7 +360,7 @@
 
   - class_name: WheelPhysicsControl
     doc: >
-      Class that defines specific physics parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
+      Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: tire_friction

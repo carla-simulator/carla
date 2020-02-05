@@ -110,7 +110,7 @@
     - var_name: synchronous_mode
       type: bool
       doc: >
-        States the synchrony between client and server. When set to true, both will work together the simulation step by step. It is false by default. 
+        States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is false by default. 
     - var_name: no_rendering_mode
       type: bool
       doc: >
@@ -118,7 +118,7 @@
     - var_name: fixed_delta_seconds
       type: float
       doc: >
-        Grants that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -243,7 +243,7 @@
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
-        This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take in consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
+        This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
     # --------------------------------------
     - def_name: get_snapshot
       return: carla.WorldSnapshot

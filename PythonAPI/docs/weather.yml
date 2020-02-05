@@ -6,8 +6,8 @@
   - class_name: WeatherParameters
     # - DESCRIPTION ------------------------
     doc: >
-      This class defines objects containing lightning and weather specifications that can be later be applied in carla.World. So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
-        Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working reallistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py). 
+      This class defines objects containing lightning and weather specifications that can later be applied in carla.World. So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
+        Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py). 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudiness
@@ -28,7 +28,7 @@
     - var_name: wind_intensity
       type: float
       doc: >
-        Controlls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues. 
+        Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues. 
     # --------------------------------------
     - var_name: fog_density
       type: float

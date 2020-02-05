@@ -154,7 +154,7 @@
   - class_name: ActorBlueprint
     # - DESCRIPTION ------------------------
     doc: >
-      CARLA provides a blueprint library for actors that can be consulted through carla.BlueprintLibrary. Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then custom some attributes and eventually spawn the actors through carla.World.   
+      CARLA provides a blueprint library for actors that can be consulted through carla.BlueprintLibrary. Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then customize some attributes and eventually spawn the actors through carla.World.   
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id

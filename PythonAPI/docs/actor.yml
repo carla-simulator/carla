@@ -5,7 +5,7 @@
   - class_name: Actor
     # - DESCRIPTION ------------------------
     doc: >
-      CARLA defines actors as anything that plays a role in the simulation and can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).
+      CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: attributes
@@ -53,27 +53,27 @@
     - def_name: get_acceleration
       return: carla.Vector3D
       doc: >
-        Returns the actor's 3D acceleration vector the client recieved during last tick.
+        Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
       doc: >
-        Returns the actor's angular velocity vector the client recieved during last tick.
+        Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
       doc: >
-        Returns the actor's location the client recieved during last tick.
+        Returns the actor's location the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_transform
       return: carla.Transform
       doc: >
-        Returns the actor's transform (location and rotation) the client recieved during last tick.
+        Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
       doc: >
-        Returns the actor's velocity vector the client recieved during last tick.
+        Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_world
       return: carla.World
@@ -152,7 +152,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these is provided in carla.BlueprintLibrary to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
+      One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in carla.BlueprintLibrary to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
@@ -194,7 +194,7 @@
     - def_name: get_control
       return: carla.VehicleControl
       doc: >
-        The client returns the control applied in the last tick. 
+        The client returns the control applied in the last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
@@ -205,23 +205,23 @@
     - def_name: get_speed_limit
       return: float
       doc: >
-        The client returns the speed limit affecting this vehicle according to last tick. The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning. right after spawning.
+        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
       doc: >
-        Retrieves the traffic light actor affecting this vehicle according to last tick if any.
+        Retrieves the traffic light actor affecting this vehicle (if any) according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_traffic_light_state
       return: carla.TrafficLightState
       doc: >
-        The client returns the state of the traffic light affecting this vehicle according to last tick.
+        The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator.
         If no traffic light is currently affecting the vehicle, returns <b>green</b>.
     # --------------------------------------
     - def_name: is_at_traffic_light
       return: bool
       doc: >
-        The client returns whether a traffic light is affecting this vehicle according to last tick. Vehicles will be affected by a traffic light or traffic sign when inside its trigger volume.
+        The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator). Vehicles will be affected by a traffic light or traffic sign when inside its trigger volume.
     # --------------------------------------
     - def_name: set_autopilot
       params:
@@ -229,7 +229,7 @@
         type: bool
         default: True
       doc: >
-        Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will conducted by the traffic manager client-side. 
+        Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side. 
     # --------------------------------------
     - def_name: __str__
       return: str
@@ -239,7 +239,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      This class inherits from the carla.Actor and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled by an AI using a specific class for it, carla.WalkerAIController. However, they could also be manually controlled or by script using different controller class to move these and their skeletons.  
+      This class inherits from the carla.Actor and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI (carla.WalkerAIController) or manually via script, using a series of carla.WalkerControl to move these and their skeletons.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
@@ -265,7 +265,7 @@
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
-        The client returns the control applied to this walker during last tick. 
+        The client returns the control applied to this walker during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: __str__
       return: str
@@ -321,7 +321,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
-      All possible states for traffic lights. These can either change with a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example. 
+      All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Green
@@ -337,7 +337,7 @@
     doc: >
       A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
            
-        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends some seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so. 
+        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
@@ -356,7 +356,7 @@
     - def_name: is_frozen
       return: bool
       doc: >
-        The client returns <b>True</b> if a traffic light is frozen according to last tick.
+        The client returns <b>True</b> if a traffic light is frozen according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_pole_index
       return: int
@@ -373,27 +373,27 @@
     - def_name: get_elapsed_time
       return: float
       doc: >
-        The client returns the time in seconds since current light state started according to last tick.
+        The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_state
       return: carla.TrafficLightState
       doc: >
-        The client returns the state of the traffic light according to last tick.
+        The client returns the state of the traffic light according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_green_time
       return: float
       doc: >
-        The client returns the time set for the green light to be active according to last tick.
+        The client returns the seconds set for the traffic light to be green according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_red_time
       return: float
       doc: >
-        The client returns the time set for the red light to be active according to last tick.
+        The client returns the seconds set for the traffic light to be red according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_yellow_time
       return: float
       doc: >
-        The client returns the time set for the yellow light to be active according to last tick.
+        The client returns the the seconds set for the traffic light to be yellow according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: set_state
       params:
