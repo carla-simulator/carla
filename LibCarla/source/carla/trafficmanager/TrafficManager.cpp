@@ -14,14 +14,9 @@ namespace traffic_manager {
 std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 
 /// Private constructor for singleton life cycle management.
-TrafficManager::TrafficManager(uint16_t port) {
-
-  std::cout << "TrafficManager ctr " << port << std::endl;
-
-  client::World* world = client::GetWorld();
-  std::cout << "TrafficManager world " << ((world==nullptr)?"YES":"NO") << std::endl;
-  client::detail::EpisodeProxy episodeProxy = world->GetEpisode();
-  std::cout << "TrafficManager episode " << (episodeProxy.IsValid()?"YES":"NO") << std::endl;
+TrafficManager::TrafficManager(
+  carla::client::detail::EpisodeProxy episodeProxy,
+  uint16_t port) {
 
   std::pair<std::string, uint16_t> serverTM;
   std::string port_str = std::to_string(port);

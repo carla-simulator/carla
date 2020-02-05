@@ -29,23 +29,11 @@ namespace client {
   class ActorList;
   class BlueprintLibrary;
   class Map;
-  class World;
-
-  World* GetWorld();
-
-  extern World* _world;
 
   class World {
   public:
 
-    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {
-      std::cout << "World ctr" << std::endl;
-      _world = this;
-    }
-
-    ~World(){
-      std::cout << "World dtr" << std::endl;
-    }
+    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {}
 
     World(const World &) = default;
     World(World &&) = default;
@@ -140,7 +128,6 @@ namespace client {
     }
 
     detail::EpisodeProxy GetEpisode() const {
-      std::cout << "World episode " << (_episode.IsValid()?"YES":"NO") << std::endl;
       return _episode;
     };
 

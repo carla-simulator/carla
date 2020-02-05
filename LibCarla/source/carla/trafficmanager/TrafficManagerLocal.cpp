@@ -28,7 +28,6 @@ TrafficManagerLocal::TrafficManagerLocal
     , debug_helper(carla::client::DebugHelper{episodeProxyTM})
     , server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
 {
-  std::cout << "TrafficManagerLocal ctr" << std::endl;
   using WorldMap = carla::SharedPtr<cc::Map>;
   const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
   const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
@@ -80,7 +79,6 @@ TrafficManagerLocal::TrafficManagerLocal
       planner_control_messenger, episodeProxyTM);
 
   Start();
-  std::cout << "TrafficManagerLocal ctr end" << std::endl;
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
@@ -88,9 +86,7 @@ TrafficManagerLocal::~TrafficManagerLocal() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  std::cout << "TMLocal RegisterVechicle" << std::endl;
   registered_actors.Insert(actor_list);
-  std::cout << "TMLocal RegisterVechicle end" << std::endl;
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
