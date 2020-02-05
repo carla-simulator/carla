@@ -110,6 +110,16 @@
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------
+    - def_name: GetTrafficManager
+      params:
+      - param_name: client_connection
+        type: carla.Client
+        doc: >
+          Is this the port?
+      return: carla.TrafficManager
+      doc: >
+        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created. The port per default is `8000`.
+    # --------------------------------------
     - def_name: reload_world
       params:
       raises: RuntimeError when corresponding.
@@ -238,5 +248,155 @@
       params:
       doc: >
         Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
+    # --------------------------------------
+  - class_name: TrafficManager
+    # - DESCRIPTION ------------------------
+    doc: >
+      The traffic manager is a module build on top of the CARLA API that handles any group of vehicles in order to simulate specific behaviours. This module manages every [carla.Vehicle]() that has been set to autopilot mode. Its main goal is to improve the traffic around the city so that the simulation runs under realistic conditions. While doing so, another goal is to give the users the option to customize the simulated traffic like never before.  
+      
+      In order to learn more, visit the [documentation](../traffic_manager) regarding this module.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: force_lane_change
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle being forced to change lanes. 
+      - param_name: direction
+        type: bool
+        doc: > 
+          Destiny lane. __True__ is the one on the left and __False__ is the right one. 
+      doc: >
+        Forces a vehicle to change either to the lane on its left or right (if existing) as indicated in `direction`. This method provokes the lane change no matter what, disregarding possible collisions. 
+    # --------------------------------------
+    - def_name: ignore_actors_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore others.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times collisions will be ignored. 
+      doc: >
+        During the collision detection stage, which runs every frame, this method sets a percentage of times that collisions will be ignored for said `actor` and so, not computed.
+    # --------------------------------------
+    - def_name: ignore_lights_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore traffic lights.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times traffic lights will be ignored.
+      return: Anything?
+      doc: >
+        During the traffic light stage, which runs every frame, this method sets a percentage of times that collisions with the bounding boxes of traffic lights will be ignored for said `actor` and so, not computed. 
+    # --------------------------------------
+    - def_name: register_vehicles
+      params:
+      - param_name: actor_list
+        type: list(carla.Actor)
+        doc: >
+          List of actors to be subscribed. 
+      doc: >
+        Registers a series of actors to a traffic manager to make it aware of them. 
+    # --------------------------------------
+    - def_name: reset_traffic_lights
+      doc: >
+        Returns every group of traffic lights in a map to its initial state. The first traffic light of the group will turn green, the rest will be frozen in red and the time cycle will reset. 
+    # --------------------------------------
+    - def_name: set_auto_lane_change
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle whose settings are changed.
+      - param_name: enable
+        type: bool
+        doc: >
+          When __True__, lane changes will be enabled. 
+      doc: >
+        Sets the capability of a vehicle to perform lane changes when the traffic manager decides so. Otherwise, there will be none. 
+    # --------------------------------------
+    - def_name: set_distance_to_leading_vehicle
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose safe distance is being changed. 
+      - param_name: distance
+        type: float
+        doc: >
+          Meters between both vehicles. 
+      doc: >
+        Sets the minimum safety distance for a vehicle to keep with the rest when stopped. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
+    - def_name: set_collision_detection
+      params:
+      - param_name: reference_actor
+        type: carla.Actor
+        doc: >
+          Vehicle that is going to ignore collisions. 
+      - param_name: other_actor
+        type: carla.Actor
+        doc: >
+          The actor that `reference_actor` is going to ignore collisions with.
+      - param_name: detect_collision
+        type: bool
+        doc: >
+          Set it to __True__ to enable collisions. 
+      doc: >
+        Turns on/off collisions between a specific vehicle and another actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
+    # --------------------------------------
+    - def_name: set_global_max_speed_difference
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Between 0 and 100, difference between speed regarding the current limit.
+      doc: >
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+        
+        The percentage is 0 per default for every vehicle, meaning that the default behaviour makes them drive at their limit speed.  If `perc` is 30 and the speed limit is 100, the vehicles' intended speed will be 70.    If `perc` is -30 and the speed limit is 100, the vehicles' intended speed will be 130. 
+    # --------------------------------------
+    - def_name: set_global_distance_to_leading_vehicle
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          Meters between vehicles. 
+      doc: >
+        Sets a new minimum distance between stopped vehicles to keep for safety reasons. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
+    - def_name: set_vehicle_max_speed_difference
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose speed behaviour is being changed. 
+      - param_name: percentage
+        type: float
+        doc: >
+          Between 0 and 100, difference between speed regarding the current limit.  
+      doc: >
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+        
+        The percentage is 0 per default for every vehicle, meaning that the default behaviour makes them drive at their limit speed.  If `perc` is 30 and the speed limit is 100, the vehicle's intended speed will be 70.    If `perc` is -30 and the speed limit is 100, the vehicle's intended speed will be 130.
+    # --------------------------------------
+    - def_name: unregister_vehicles
+      params:
+      - param_name: actor_list
+        type: list(carla.Actor)
+        doc: >
+          List of actors to be unsubscribed. 
+      doc: >
+        Deletes a series of actors from the traffic manager's lists to stop being responsible of them. 
     # --------------------------------------
 ...
