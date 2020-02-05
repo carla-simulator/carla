@@ -1,4 +1,6 @@
 ## latest
+  * Fixed linkage between waypoints in InMemoryMap.
+  * Vehicles get destroyed when they are stuck.
   * Implemented intersection anticipation algorithm
   * Added new methods to BoundingBox: contains, get_local_vertices and get_world_vertices.
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
