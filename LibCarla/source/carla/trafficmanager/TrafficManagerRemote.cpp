@@ -138,6 +138,11 @@ void TrafficManagerRemote::ResetAllTrafficLights() {
   client.ResetAllTrafficLights();
 }
 
+/// Method to provide synchronous tick
+bool TrafficManagerRemote::SynchronousTick() {
+	return client.SynchronousTick();
+}
+
 /// Method to reset all traffic lights.
 void TrafficManagerRemote::HealthCheckRemoteTM() {
   /// Call client method

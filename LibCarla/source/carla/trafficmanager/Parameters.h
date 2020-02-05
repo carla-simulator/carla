@@ -7,6 +7,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -53,6 +54,10 @@ namespace traffic_manager {
     AtomicMap<ActorId, float> perc_ignore_walkers;
     /// Map containing % of ignoring vehicles.
     AtomicMap<ActorId, float> perc_ignore_vehicles;
+    /// Synchronous mode switch.
+    std::atomic<bool> synchronous_mode;
+    /// Synchronous mode time out.
+    std::chrono::duration<int, std::milli> synchronous_time_out;
 
 
   public:
@@ -120,6 +125,18 @@ namespace traffic_manager {
 
     /// Method to get % to ignore any walker.
     float GetPercentageIgnoreWalkers(const ActorPtr &actor);
+
+    /// Method to set synchronous mode.
+    void SetSynchronousMode(const bool mode_switch = true);
+
+    /// Method to get synchronous mode.
+    bool GetSynchronousMode();
+
+    /// Synchronous mode time out.
+    void SetSynchronousModeTimeOutInMiliSecond(const int time);
+
+    /// Synchronous mode time out
+    int GetSynchronousModeTimeOutInMiliSecond();
 
   };
 

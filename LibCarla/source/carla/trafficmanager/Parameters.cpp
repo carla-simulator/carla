@@ -13,77 +13,78 @@ namespace carla
 namespace traffic_manager
 {
 
-Parameters::Parameters() {}
+Parameters::Parameters() {
+
+	/// Set default synchronous mode false
+	synchronous_mode.store(false);
+
+	/// Set default synchronous mode time out
+	synchronous_time_out = std::chrono::duration<int, std::milli>(10);
+}
 
 Parameters::~Parameters() {}
 
-void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage)
-{
-  float new_percentage = std::min(100.0f, percentage);
-  percentage_difference_from_speed_limit.AddEntry({actor->GetId(), new_percentage});
+void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+
+	float new_percentage = std::min(100.0f, percentage);
+	percentage_difference_from_speed_limit.AddEntry({actor->GetId(), new_percentage});
 }
 
-void Parameters::SetGlobalPercentageSpeedDifference(const float percentage)
-{
-  float new_percentage = std::min(100.0f, percentage);
-  global_percentage_difference_from_limit = new_percentage;
+void Parameters::SetGlobalPercentageSpeedDifference(const float percentage) {
+	float new_percentage = std::min(100.0f, percentage);
+	global_percentage_difference_from_limit = new_percentage;
 }
 
-void Parameters::SetCollisionDetection(
-    const ActorPtr &reference_actor,
-    const ActorPtr &other_actor,
-    const bool detect_collision)
+void Parameters::SetCollisionDetection
+	( const ActorPtr &reference_actor
+	, const ActorPtr &other_actor
+	, const bool detect_collision)
 {
+	const ActorId reference_id = reference_actor->GetId();
+	const ActorId other_id = other_actor->GetId();
 
-  const ActorId reference_id = reference_actor->GetId();
-  const ActorId other_id = other_actor->GetId();
-
-  if (detect_collision)
-  {
-
-    if (ignore_collision.Contains(reference_id))
-    {
-      std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-      if (actor_set->Contains(other_id))
-      {
-        actor_set->Remove({other_actor});
-      }
-    }
-  }
-  else
-  {
-
-    if (ignore_collision.Contains(reference_id))
-    {
-      std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-      if (!actor_set->Contains(other_id))
-      {
-        actor_set->Insert({other_actor});
-      }
-    }
-    else
-    {
-      std::shared_ptr<AtomicActorSet> actor_set = std::make_shared<AtomicActorSet>();
-      actor_set->Insert({other_actor});
-      auto entry = std::make_pair(reference_id, actor_set);
-      ignore_collision.AddEntry(entry);
-    }
-  }
+	if (detect_collision)
+	{
+		if (ignore_collision.Contains(reference_id))
+		{
+			std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
+			if (actor_set->Contains(other_id))
+			{
+				actor_set->Remove({other_actor});
+			}
+		}
+	}
+	else
+	{
+		if (ignore_collision.Contains(reference_id))
+		{
+			std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
+			if (!actor_set->Contains(other_id))
+			{
+				actor_set->Insert({other_actor});
+			}
+		}
+		else
+		{
+			std::shared_ptr<AtomicActorSet> actor_set = std::make_shared<AtomicActorSet>();
+			actor_set->Insert({other_actor});
+			auto entry = std::make_pair(reference_id, actor_set);
+			ignore_collision.AddEntry(entry);
+		}
+	}
 }
 
-void Parameters::SetForceLaneChange(const ActorPtr &actor, const bool direction)
-{
+void Parameters::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
 
-  const ChangeLaneInfo lane_change_info = {true, direction};
-  const auto entry = std::make_pair(actor->GetId(), lane_change_info);
-  force_lane_change.AddEntry(entry);
+	const ChangeLaneInfo lane_change_info = {true, direction};
+	const auto entry = std::make_pair(actor->GetId(), lane_change_info);
+	force_lane_change.AddEntry(entry);
 }
 
-void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable)
-{
+void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
-  const auto entry = std::make_pair(actor->GetId(), enable);
-  auto_lane_change.AddEntry(entry);
+	const auto entry = std::make_pair(actor->GetId(), enable);
+	auto_lane_change.AddEntry(entry);
 }
 
 void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
@@ -93,90 +94,87 @@ void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float 
   distance_to_leading_vehicle.AddEntry(entry);
 }
 
-void Parameters::SetSynchronousMode(const bool mode_switch)
-{
-  synchronous_mode.store(mode_switch);
+void Parameters::SetSynchronousMode(const bool mode_switch) {
+	synchronous_mode.store(mode_switch);
 }
 
-bool Parameters::GetSynchronousMode()
-{
-  return synchronous_mode.load();
+bool Parameters::GetSynchronousMode() {
+	return synchronous_mode.load();
 }
 
-float Parameters::GetVehicleTargetVelocity(const ActorPtr &actor)
-{
-
-  const ActorId actor_id = actor->GetId();
-  const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-  const float speed_limit = vehicle->GetSpeedLimit();
-  float percentage_difference = global_percentage_difference_from_limit;
-
-  if (percentage_difference_from_speed_limit.Contains(actor_id))
-  {
-    percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
-  }
-
-  return speed_limit * (1.0f - percentage_difference / 100.0f);
+void Parameters::SetSynchronousModeTimeOutInMiliSecond(const int time) {
+	synchronous_time_out = std::chrono::duration<int, std::milli>(time);
 }
 
-bool Parameters::GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor)
-{
-
-  const ActorId reference_actor_id = reference_actor->GetId();
-  const ActorId other_actor_id = other_actor->GetId();
-  bool avoid_collision = true;
-
-  if (ignore_collision.Contains(reference_actor_id) &&
-      ignore_collision.GetValue(reference_actor_id)->Contains(other_actor_id))
-  {
-    avoid_collision = false;
-  }
-
-  return avoid_collision;
+int Parameters::GetSynchronousModeTimeOutInMiliSecond() {
+	return synchronous_time_out.count();
 }
 
-ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor)
-{
+float Parameters::GetVehicleTargetVelocity(const ActorPtr &actor) {
 
-  const ActorId actor_id = actor->GetId();
-  ChangeLaneInfo change_lane_info;
+	const ActorId actor_id = actor->GetId();
+	const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+	const float speed_limit = vehicle->GetSpeedLimit();
+	float percentage_difference = global_percentage_difference_from_limit;
 
-  if (force_lane_change.Contains(actor_id))
-  {
-    change_lane_info = force_lane_change.GetValue(actor_id);
-  }
+	if (percentage_difference_from_speed_limit.Contains(actor_id)) {
+		percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
+	}
 
-  force_lane_change.RemoveEntry(actor_id);
-
-  return change_lane_info;
+	return speed_limit * (1.0f - percentage_difference / 100.0f);
 }
 
-bool Parameters::GetAutoLaneChange(const ActorPtr &actor)
-{
+bool Parameters::GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor) {
 
-  const ActorId actor_id = actor->GetId();
-  bool auto_lane_change_policy = true;
+	const ActorId reference_actor_id = reference_actor->GetId();
+	const ActorId other_actor_id = other_actor->GetId();
+	bool avoid_collision = true;
 
-  if (auto_lane_change.Contains(actor_id))
-  {
-    auto_lane_change_policy = auto_lane_change.GetValue(actor_id);
-  }
+	if (ignore_collision.Contains(reference_actor_id) &&
+		ignore_collision.GetValue(reference_actor_id)->Contains(other_actor_id)) {
+		avoid_collision = false;
+	}
 
-  return auto_lane_change_policy;
+	return avoid_collision;
 }
 
-float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor)
-{
+ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
 
-  const ActorId actor_id = actor->GetId();
-  float distance_margin = -1.0f;
+	const ActorId actor_id = actor->GetId();
+	ChangeLaneInfo change_lane_info;
 
-  if (distance_to_leading_vehicle.Contains(actor_id))
-  {
-    distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
-  }
+	if (force_lane_change.Contains(actor_id))
+	{
+		change_lane_info = force_lane_change.GetValue(actor_id);
+	}
 
-  return distance_margin;
+	force_lane_change.RemoveEntry(actor_id);
+
+	return change_lane_info;
+}
+
+bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
+
+	const ActorId actor_id = actor->GetId();
+	bool auto_lane_change_policy = true;
+
+	if (auto_lane_change.Contains(actor_id)) {
+		auto_lane_change_policy = auto_lane_change.GetValue(actor_id);
+	}
+
+	return auto_lane_change_policy;
+}
+
+float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
+
+	const ActorId actor_id = actor->GetId();
+	float distance_margin = -1.0f;
+
+	if (distance_to_leading_vehicle.Contains(actor_id)) {
+		distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+	}
+
+	return distance_margin;
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
@@ -207,24 +205,22 @@ void Parameters::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float p
   perc_ignore_walkers.AddEntry(entry);
 }
 
-float Parameters::GetPercentageRunningLight(const ActorPtr &actor)
-{
+float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
 
-  const ActorId actor_id = actor->GetId();
-  float percentage = 0.0f;
+	const ActorId actor_id = actor->GetId();
+	float percentage = 0.0f;
 
-  if (perc_run_traffic_light.Contains(actor_id))
-  {
-    percentage = perc_run_traffic_light.GetValue(actor_id);
-  }
+	if (perc_run_traffic_light.Contains(actor_id)) {
+		percentage = perc_run_traffic_light.GetValue(actor_id);
+	}
 
-  return percentage;
+	return percentage;
 }
 
 float Parameters::GetPercentageRunningSign(const ActorPtr &actor) {
 
-  const ActorId actor_id = actor->GetId();
-  float percentage = 0.0f;
+	const ActorId actor_id = actor->GetId();
+	float percentage = 0.0f;
 
   if (perc_run_traffic_sign.Contains(actor_id)) {
     percentage = perc_run_traffic_sign.GetValue(actor_id);
@@ -254,7 +250,7 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorPtr &actor) {
     percentage = perc_ignore_vehicles.GetValue(actor_id);
   }
 
-  return percentage;
+	return percentage;
 }
 
 } // namespace traffic_manager
