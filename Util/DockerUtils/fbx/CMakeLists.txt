@@ -12,14 +12,17 @@ set(CMAKE_GENERATOR_PLATFORM x64)
 
 # include folders
 include_directories(src)
-include_directories(include)
+include_directories(dependencies/include)
 
 # library folders
-link_directories(lib/gcc/x64/release)
+link_directories(dependencies/lib/gcc/x64/release)
 
 # sources
 file(GLOB SOURCES "src/*.cpp")
 add_executable(FBX2OBJ ${SOURCES})
+
+# install location
+install(TARGETS FBX2OBJ DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../dist")
 
 # libraries to link
 target_link_libraries(FBX2OBJ libfbxsdk.so)
