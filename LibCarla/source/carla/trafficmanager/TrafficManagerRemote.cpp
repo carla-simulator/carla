@@ -19,24 +19,21 @@ namespace traffic_manager {
 TrafficManagerRemote :: TrafficManagerRemote
   ( const std::pair<std::string, uint16_t> &_serverTM
   , carla::client::detail::EpisodeProxy &episodeProxy)
-  : episodeProxyTM(episodeProxy) {
-  uint16_t serverRPCPort = TM_SERVER_PORT;
-    try {
-      serverRPCPort = _serverTM.second;
-    } catch(boost::bad_lexical_cast &) {
-      serverRPCPort = TM_SERVER_PORT;
-    }
+  : client(_serverTM.first, _serverTM.second),
+    episodeProxyTM(episodeProxy) {
 
-    /// Set server details
-  client.setServerDetails(_serverTM.first, serverRPCPort);
+  carla::log_info("TrafficManagerRemote", _serverTM.second);
+
 }
 
 /// Destructor.
-TrafficManagerRemote :: ~TrafficManagerRemote() {}
-
+TrafficManagerRemote :: ~TrafficManagerRemote() {
+  carla::log_info("TrafficManagerRemote dtr");
+}
 
 /// This method registers a vehicle with the traffic manager.
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
+  carla::log_info("TrafficManagerRemote registering", _actor_list.size(),"vehicles");
   /// Prepare rpc actor list
   std::vector<carla::rpc::Actor> actor_list;
   for (auto &&actor : _actor_list) {
