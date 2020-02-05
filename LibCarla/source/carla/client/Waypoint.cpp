@@ -28,6 +28,13 @@ namespace client {
     return _parent->GetMap().IsJunction(_waypoint.road_id);
   }
 
+  SharedPtr<Junction> Waypoint::GetJunction() const {
+    if (IsJunction()) {
+      return _parent->GetJunction(*this);
+    }
+    return nullptr;
+  }
+
   double Waypoint::GetLaneWidth() const {
     return _parent->GetMap().GetLaneWidth(_waypoint);
 
@@ -103,7 +110,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::GetRight() const {
     auto right_lane_waypoint =
-    _parent->GetMap().GetRight(_waypoint);
+        _parent->GetMap().GetRight(_waypoint);
     if (right_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*right_lane_waypoint)));
     }
@@ -112,7 +119,7 @@ namespace client {
 
   SharedPtr<Waypoint> Waypoint::GetLeft() const {
     auto left_lane_waypoint =
-    _parent->GetMap().GetLeft(_waypoint);
+        _parent->GetMap().GetLeft(_waypoint);
     if (left_lane_waypoint.has_value()) {
       return SharedPtr<Waypoint>(new Waypoint(_parent, std::move(*left_lane_waypoint)));
     }
@@ -136,15 +143,15 @@ namespace client {
   template <typename EnumT>
   static EnumT operator&(EnumT lhs, EnumT rhs) {
     return static_cast<EnumT>(
-      static_cast<typename std::underlying_type<EnumT>::type>(lhs) &
-      static_cast<typename std::underlying_type<EnumT>::type>(rhs));
+        static_cast<typename std::underlying_type<EnumT>::type>(lhs) &
+        static_cast<typename std::underlying_type<EnumT>::type>(rhs));
   }
 
   template <typename EnumT>
   static EnumT operator|(EnumT lhs, EnumT rhs) {
     return static_cast<EnumT>(
-      static_cast<typename std::underlying_type<EnumT>::type>(lhs) |
-      static_cast<typename std::underlying_type<EnumT>::type>(rhs));
+        static_cast<typename std::underlying_type<EnumT>::type>(lhs) |
+        static_cast<typename std::underlying_type<EnumT>::type>(rhs));
   }
 
   road::element::LaneMarking::LaneChange Waypoint::GetLaneChange() const {
@@ -187,13 +194,6 @@ namespace client {
     }
 
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
-  }
-
-  SharedPtr<Junction> Waypoint::GetJunction() const {
-    if (IsJunction()) {
-      return _parent->GetJunction(*this);
-    }
-    return nullptr;
   }
 
 } // namespace client

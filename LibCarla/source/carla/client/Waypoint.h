@@ -62,6 +62,8 @@ namespace client {
 
     bool IsJunction() const;
 
+    SharedPtr<Junction> GetJunction() const;
+
     double GetLaneWidth() const;
 
     road::Lane::LaneType GetType() const;
@@ -87,8 +89,6 @@ namespace client {
     boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
     road::element::LaneMarking::LaneChange GetLaneChange() const;
-
-    SharedPtr<Junction> GetJunction() const;
 
   private:
 
