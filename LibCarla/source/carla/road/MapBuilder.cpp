@@ -555,7 +555,10 @@ namespace road {
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
-    if (lane_id <= 0) {
+
+    // Forward lane (left) leads into successors
+    // Backward lane (right) leads into predecessors
+    if (lane_id >= 0) {
       next_road = road.GetSuccessor();
       next = lane->GetSuccessor();
     } else {
@@ -568,12 +571,13 @@ namespace road {
     double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
-    if ((lane_id > 0 && s > 0) ||
-        (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
+    if ((lane_id < 0 && s > 0) ||
+        (lane_id >= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
-        if (lane_id <= 0) {
+        // Next or Prev depends on road direction
+        if (lane_id >= 0) {
           result.push_back(road.GetNextLane(s, next));
         } else {
           result.push_back(road.GetPrevLane(s, next));
@@ -593,7 +597,7 @@ namespace road {
       auto next_road_as_junction = static_cast<JuncId>(next_road);
       auto options = GetJunctionLanes(next_road_as_junction, road_id, lane_id);
       for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second <= 0), opt.second));
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second >= 0), opt.second));
       }
     }
 

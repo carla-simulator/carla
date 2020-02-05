@@ -43,7 +43,7 @@ namespace road {
   }
 
   static double GetDistanceAtStartOfLane(const Lane &lane) {
-    if (lane.GetId() <= 0) {
+    if (lane.GetId() >= 0) {
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -51,7 +51,7 @@ namespace road {
   }
 
   static double GetDistanceAtEndOfLane(const Lane &lane) {
-    if (lane.GetId() > 0) {
+    if (lane.GetId() < 0) {
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -339,7 +339,8 @@ namespace road {
 
     dp.ApplyLateralOffset(lane_width);
 
-    if (waypoint.lane_id > 0) {
+    // Backwards-facing waypoints (right lanes) need to be turned around
+    if (waypoint.lane_id < 0) {
       rot.yaw += 180.0f + geom::Math::ToDegrees(lane_tangent);
       rot.pitch = 360.0f - rot.pitch;
     } else {
@@ -383,7 +384,7 @@ namespace road {
 
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
-    // if lane Id is 0, just return a pair of nulls
+    // if lane Id is 0, just return a pair of nulls (Lane ID 0 = center lane marker)
     if (waypoint.lane_id == 0)
       return std::make_pair(nullptr, nullptr);
 
@@ -511,7 +512,10 @@ namespace road {
       const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     const auto &lane = GetLane(waypoint);
-    const bool forward = (waypoint.lane_id <= 0);
+
+    // Assume left-handed traffic (left and center lane travel forward)
+    const bool forward = (waypoint.lane_id >= 0);
+
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -579,21 +583,27 @@ namespace road {
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      // right lanes start at s 0
+
+      // Road Length = maximum s-value
+      const auto road_len = road.GetLength();
+
+      // Regardless of traffic handedness, the origin of the forward-lane is at s=0
+      // and the backward lane is at s = max
+
+      // check s = 0 for lanes in the forward travel direction.
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+          // add left lanes since they're forward facing
+          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
       }
-      // left lanes start at s max
-      const auto road_len = road.GetLength();
+      // check s = max for lanes in the backward travel direction.
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+          // add right lanes since they're backward facing
+          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
           }
         }
