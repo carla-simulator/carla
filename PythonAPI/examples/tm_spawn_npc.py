@@ -200,10 +200,8 @@ def main():
 
         time.sleep(1)
 
-        print("Creting TM...")
         client.get_world()
-        tm = carla.TrafficManager(args.tm_port)
-        print("TM created")
+        tm = client.get_trafficmanager(args.tm_port)
 
         for v in vehicles_list:
             v.set_autopilot(True)

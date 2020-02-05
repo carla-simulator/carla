@@ -171,5 +171,6 @@ void export_client() {
       .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
       .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
       .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
+      .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=TM_DEFAULT_PORT))
       ;
 }

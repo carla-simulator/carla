@@ -76,7 +76,7 @@ namespace logging {
 
 #endif
 
-#if LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_INFO
+#if 1 //LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_INFO
 
   template <typename ... Args>
   static inline void log_info(Args && ... args) {

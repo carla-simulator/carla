@@ -62,7 +62,9 @@ public:
   static void Release();
 
   /// Private constructor for singleton life cycle management.
-  explicit TrafficManager(uint16_t port = TM_DEFAULT_PORT);
+  explicit TrafficManager(
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port = TM_DEFAULT_PORT);
 
   TrafficManager(const TrafficManager &) = default;
   TrafficManager(TrafficManager &&) = default;
@@ -72,20 +74,16 @@ public:
 
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    std::cout << "TMMaster RegisterVechicle" << std::endl;
     if(singleton_pointer) {
       singleton_pointer->RegisterVehicles(actor_list);
     }
-    std::cout << "TMMaster RegisterVechicle end" << std::endl;
   }
 
   /// This method unregisters a vehicle from traffic manager.
   void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    std::cout << "TMMaster RegisterVechicle" << std::endl;
     if(singleton_pointer) {
       singleton_pointer->UnregisterVehicles(actor_list);
     }
-    std::cout << "TMMaster RegisterVechicle end" << std::endl;
   }
 
   /// Set target velocity specific to a vehicle.

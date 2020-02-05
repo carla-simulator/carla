@@ -21,7 +21,6 @@ TrafficManagerRemote :: TrafficManagerRemote
   , carla::client::detail::EpisodeProxy &episodeProxy)
   : episodeProxyTM(episodeProxy) {
   uint16_t serverRPCPort = TM_SERVER_PORT;
-std::cout << "TrafficManagerRemote ctr" << std::endl;
     try {
       serverRPCPort = _serverTM.second;
     } catch(boost::bad_lexical_cast &) {
@@ -30,7 +29,6 @@ std::cout << "TrafficManagerRemote ctr" << std::endl;
 
     /// Set server details
   client.setServerDetails(_serverTM.first, serverRPCPort);
-std::cout << "TrafficManagerRemote ctr end" << std::endl;
 }
 
 /// Destructor.

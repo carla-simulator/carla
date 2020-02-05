@@ -68,8 +68,8 @@ namespace client {
     }
 
     /// Return an instance of the world currently active in the simulator.
-    TrafficManager GetInstanceTM() const {
-      return TrafficManager();
+    TrafficManager GetInstanceTM(uint16_t port = TM_DEFAULT_PORT) const {
+      return TrafficManager{_simulator->GetCurrentEpisode(), port};
     }
 
     /// Return an instance of the world currently active in the simulator.

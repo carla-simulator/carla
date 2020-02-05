@@ -14,78 +14,140 @@
 namespace carla {
 namespace traffic_manager {
 
-  TrafficManager::TrafficManager(
-      std::vector<float> longitudinal_PID_parameters,
-      std::vector<float> longitudinal_highway_PID_parameters,
-      std::vector<float> lateral_PID_parameters,
-      std::vector<float> lateral_highway_PID_parameters,
-      float perc_difference_from_limit,
-      cc::Client &client_connection)
-    : longitudinal_PID_parameters(longitudinal_PID_parameters),
-      longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
-      lateral_PID_parameters(lateral_PID_parameters),
-      lateral_highway_PID_parameters(lateral_highway_PID_parameters),
-      client_connection(client_connection),
-      world(client_connection.GetWorld()),
-      debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
+TrafficManagerLocal::TrafficManagerLocal
+    ( std::vector<float> longitudinal_PID_parameters
+    , std::vector<float> longitudinal_highway_PID_parameters
+    , std::vector<float> lateral_PID_parameters
+    , std::vector<float> lateral_highway_PID_parameters
+    , float perc_difference_from_limit
+    , carla::client::detail::EpisodeProxy &episodeProxy
+    , uint16_t &RPCportTM)
+    : longitudinal_PID_parameters(longitudinal_PID_parameters)
+    , longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters)
+    , lateral_PID_parameters(lateral_PID_parameters)
+    , lateral_highway_PID_parameters(lateral_highway_PID_parameters)
+    , episodeProxyTM(episodeProxy)
+    , debug_helper(carla::client::DebugHelper{episodeProxyTM})
+    , server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
+{
+  using WorldMap = carla::SharedPtr<cc::Map>;
+  const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
+  const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
+  local_map = std::make_shared<traffic_manager::InMemoryMap>(raw_dense_topology);
+  local_map->SetUp();
 
-    const WorldMap world_map = world.GetMap();
-    local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
-    local_map->SetUp();
+  parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
-    parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
+  localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
+  localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
+  collision_planner_messenger = std::make_shared<CollisionToPlannerMessenger>();
+  localization_planner_messenger = std::make_shared<LocalizationToPlannerMessenger>();
+  traffic_light_planner_messenger = std::make_shared<TrafficLightToPlannerMessenger>();
+  planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
 
-    localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
-    localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
-    collision_planner_messenger = std::make_shared<CollisionToPlannerMessenger>();
-    localization_planner_messenger = std::make_shared<LocalizationToPlannerMessenger>();
-    traffic_light_planner_messenger = std::make_shared<TrafficLightToPlannerMessenger>();
-    planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
+  localization_stage = std::make_unique<LocalizationStage>(
+      "Localization stage",
+      localization_planner_messenger, localization_collision_messenger,
+      localization_traffic_light_messenger,
+      registered_actors, *local_map.get(),
+      parameters, debug_helper,
+      episodeProxyTM);
 
-    localization_stage = std::make_unique<LocalizationStage>(
-        "Localization stage",
-        localization_planner_messenger, localization_collision_messenger,
-        localization_traffic_light_messenger,
-        registered_actors, *local_map.get(),
-        parameters, debug_helper,
-        world);
+  collision_stage = std::make_unique<CollisionStage>(
+      "Collision stage",
+      localization_collision_messenger, collision_planner_messenger,
+      parameters, debug_helper);
 
-    collision_stage = std::make_unique<CollisionStage>(
-        "Collision stage",
-        localization_collision_messenger, collision_planner_messenger,
-        parameters, debug_helper);
+  traffic_light_stage = std::make_unique<TrafficLightStage>(
+      "Traffic light stage",
+      localization_traffic_light_messenger, traffic_light_planner_messenger,
+      parameters, debug_helper);
 
-    traffic_light_stage = std::make_unique<TrafficLightStage>(
-        "Traffic light stage",
-        localization_traffic_light_messenger, traffic_light_planner_messenger,
-        parameters, debug_helper);
+  planner_stage = std::make_unique<MotionPlannerStage>(
+      "Motion planner stage",
+      localization_planner_messenger,
+      collision_planner_messenger,
+      traffic_light_planner_messenger,
+      planner_control_messenger,
+      parameters,
+      longitudinal_PID_parameters,
+      longitudinal_highway_PID_parameters,
+      lateral_PID_parameters,
+      lateral_highway_PID_parameters,
+      debug_helper);
 
-    planner_stage = std::make_unique<MotionPlannerStage>(
-        "Motion planner stage",
-        localization_planner_messenger,
-        collision_planner_messenger,
-        traffic_light_planner_messenger,
-        planner_control_messenger,
-        parameters,
-        longitudinal_PID_parameters,
-        longitudinal_highway_PID_parameters,
-        lateral_PID_parameters,
-        lateral_highway_PID_parameters,
-        debug_helper);
+  control_stage = std::make_unique<BatchControlStage>(
+      "Batch control stage",
+      planner_control_messenger, episodeProxyTM);
 
-    control_stage = std::make_unique<BatchControlStage>(
-        "Batch control stage",
-        planner_control_messenger, client_connection);
+  Start();
+}
 
-    Start();
-  }
+TrafficManagerLocal::~TrafficManagerLocal() {
+  Stop();
+}
 
-  TrafficManager::~TrafficManager() {
+void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+  registered_actors.Insert(actor_list);
+}
 
-    Stop();
-  }
+void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+  registered_actors.Remove(actor_list);
+}
 
-  std::unique_ptr<TrafficManager> TrafficManager::singleton_pointer = nullptr;
+void TrafficManagerLocal::Start() {
+
+  localization_collision_messenger->Start();
+  localization_traffic_light_messenger->Start();
+  localization_planner_messenger->Start();
+  collision_planner_messenger->Start();
+  traffic_light_planner_messenger->Start();
+  planner_control_messenger->Start();
+
+  localization_stage->Start();
+  collision_stage->Start();
+  traffic_light_stage->Start();
+  planner_stage->Start();
+  control_stage->Start();
+}
+
+void TrafficManagerLocal::Stop() {
+
+  localization_collision_messenger->Stop();
+  localization_traffic_light_messenger->Stop();
+  localization_planner_messenger->Stop();
+  collision_planner_messenger->Stop();
+  traffic_light_planner_messenger->Stop();
+  planner_control_messenger->Stop();
+
+  localization_stage->Stop();
+  collision_stage->Stop();
+  traffic_light_stage->Stop();
+  planner_stage->Stop();
+  control_stage->Stop();
+
+}
+
+void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+  parameters.SetPercentageSpeedDifference(actor, percentage);
+}
+
+void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percentage) {
+  parameters.SetGlobalPercentageSpeedDifference(percentage);
+}
+
+void TrafficManagerLocal::SetCollisionDetection(
+    const ActorPtr &reference_actor,
+    const ActorPtr &other_actor,
+    const bool detect_collision) {
+
+  parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
+}
+
+void TrafficManagerLocal::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
+
+  parameters.SetForceLaneChange(actor, direction);
+}
 
   TrafficManager& TrafficManager::GetInstance(cc::Client &client_connection) {
 
