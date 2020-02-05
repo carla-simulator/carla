@@ -110,9 +110,10 @@ namespace CollisionStageConstants {
                   break;
                 }
               }
-            }
-        } catch (const std::exception &e) {
-          carla::log_info("Actor might not be alive \n");
+          } catch (const std::exception &e) {
+            carla::log_info("Actor might not be alive", e.what());
+          }
+
         }
 
       }

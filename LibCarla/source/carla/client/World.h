@@ -29,11 +29,20 @@ namespace client {
   class ActorList;
   class BlueprintLibrary;
   class Map;
+  class World;
+
+  World* GetWorld();
+
+  extern World* _world;
 
   class World {
   public:
 
-    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {}
+    explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {
+      _world = this;
+    }
+
+    ~World(){}
 
     World(const World &) = default;
     World(World &&) = default;

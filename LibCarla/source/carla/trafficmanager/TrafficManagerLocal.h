@@ -88,6 +88,9 @@ namespace traffic_manager {
     /// Parameterization object.
     Parameters parameters;
 
+    /// Traffic manager server instance
+    TrafficManagerServer server;
+
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
 
