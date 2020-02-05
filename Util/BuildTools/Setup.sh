@@ -151,6 +151,10 @@ else
 
 fi
 
+log "Applying boost patch."
+cp ${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp ${BOOST_BASENAME}-install/include/boost/rational.hpp
+cp ${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp ${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp
+
 unset BOOST_BASENAME
 
 # ==============================================================================
