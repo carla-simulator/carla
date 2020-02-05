@@ -23,14 +23,17 @@ using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 /// the traffic manager appropriately using messengers.
 class TrafficManagerBase {
 
-protected:
+public:
   /// To start the TrafficManager.
   virtual void Start() = 0;
 
   /// To stop the TrafficManager.
   virtual void Stop() = 0;
 
-public:
+
+  bool IsRunning() const {
+    return _is_running;
+  }
 
   /// Protected constructor for singleton lifecycle management.
   TrafficManagerBase() {};
@@ -78,6 +81,10 @@ public:
 
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
+
+protected:
+  bool _is_running = false;
+
 };
 
 } // namespace traffic_manager

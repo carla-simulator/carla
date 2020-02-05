@@ -30,15 +30,17 @@ using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 /// the traffic manager appropriately using messengers.
 class TrafficManagerRemote : public TrafficManagerBase {
 
-protected:
+public:
 
   /// To start the TrafficManager.
-  void Start() {};
+  void Start() {
+      _is_running = true;
+  }
 
   /// To stop the TrafficManager.
-  void Stop() {};
-
-public:
+  void Stop() {
+      _is_running = false;
+  }
 
   /// Constructor store remote location information
   TrafficManagerRemote

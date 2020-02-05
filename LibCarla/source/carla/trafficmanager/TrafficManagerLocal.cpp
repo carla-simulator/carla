@@ -84,8 +84,10 @@ TrafficManagerLocal::TrafficManagerLocal
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
-  Stop();
+  carla::log_info("TrafficManagerLocal dtr");
   episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
+  Stop();
+  carla::log_info("TrafficManagerLocal dtr end");
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
@@ -99,7 +101,6 @@ void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_
 }
 
 void TrafficManagerLocal::Start() {
-
   localization_collision_messenger->Start();
   localization_traffic_light_messenger->Start();
   localization_planner_messenger->Start();
@@ -112,10 +113,12 @@ void TrafficManagerLocal::Start() {
   traffic_light_stage->Start();
   planner_stage->Start();
   control_stage->Start();
+
+  _is_running = true;
 }
 
 void TrafficManagerLocal::Stop() {
-
+  carla::log_info("TrafficManagerLocal::Stop");
   localization_collision_messenger->Stop();
   localization_traffic_light_messenger->Stop();
   localization_planner_messenger->Stop();
@@ -128,7 +131,9 @@ void TrafficManagerLocal::Stop() {
   traffic_light_stage->Stop();
   planner_stage->Stop();
   control_stage->Stop();
+  carla::log_info("TrafficManagerLocal::Stop end");
 
+  _is_running = false;
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
