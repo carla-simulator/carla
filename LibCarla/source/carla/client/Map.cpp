@@ -52,6 +52,17 @@ namespace client {
         nullptr;
   }
 
+  SharedPtr<Waypoint> Map::GetWaypointXODR(
+      carla::road::RoadId road_id,
+      carla::road::LaneId lane_id,
+      float s) const {
+    boost::optional<road::element::Waypoint> waypoint;
+    waypoint = _map.GetWaypoint(road_id, lane_id, s);
+    return waypoint.has_value() ?
+        SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :
+        nullptr;
+  }
+
   Map::TopologyList Map::GetTopology() const {
     namespace re = carla::road::element;
     std::unordered_map<re::Waypoint, SharedPtr<Waypoint>> waypoints;

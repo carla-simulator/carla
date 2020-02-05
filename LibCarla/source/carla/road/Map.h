@@ -52,6 +52,11 @@ namespace road {
         const geom::Location &location,
         uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
 
+    boost::optional<element::Waypoint> GetWaypoint(
+        RoadId road_id,
+        LaneId lane_id,
+        float s) const;
+
     geom::Transform ComputeTransform(Waypoint waypoint) const;
 
     /// ========================================================================
