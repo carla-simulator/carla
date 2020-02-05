@@ -75,7 +75,9 @@ TrafficManagerLocal::TrafficManagerLocal
 
 	control_stage = std::make_unique<BatchControlStage>(
 			"Batch control stage",
-			planner_control_messenger, episodeProxyTM);
+			planner_control_messenger,
+			episodeProxyTM,
+			parameters);
 
 	Start();
 }
@@ -225,6 +227,11 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
 			tln->Freeze(true);
 		}
 	}
+}
+
+/// Method to provide synchronous tick
+bool TrafficManagerLocal::SynchronousTick() {
+	return control_stage->RunStep();
 }
 
 /// Get carla episode information

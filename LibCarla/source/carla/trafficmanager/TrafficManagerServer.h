@@ -11,9 +11,10 @@
 #include <vector>
 #include <memory>
 
-#include <carla/client/Actor.h>
-#include <carla/Version.h>
-#include <carla/rpc/Server.h>
+#include "carla/Exception.h"
+#include "carla/client/Actor.h"
+#include "carla/Version.h"
+#include "carla/rpc/Server.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
@@ -52,7 +53,9 @@ public:
 
 		/// If server still not created
 		if(!server) {
-			throw bindError;
+			carla::throw_exception(std::runtime_error(
+			  "trying to create rpc server for traffic manager; "
+			  "but the system failed to create because of bind error."));
 		}
 
 		/// If server creation successful
@@ -130,6 +133,11 @@ public:
 			/// Method to reset all traffic lights.
 			server->bind("reset_all_traffic_lights", [=]() {
 				tm->ResetAllTrafficLights();
+			});
+
+			/// Method to reset all traffic lights.
+			server->bind("synchronous_tick", [=]() -> bool {
+				return tm->SynchronousTick();
 			});
 
 			/// Method to check server is Alive or not

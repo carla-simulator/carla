@@ -90,6 +90,9 @@ public:
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights();
 
+	/// Method to provide synchronous tick
+	bool SynchronousTick();
+
     /// Get carla episode information
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <atomic>
-#include <chrono
+#include <chrono>
 #include <memory>
 #include <mutex>
 
@@ -38,20 +38,29 @@ class BatchControlStage : public PipelineStage
 private:
   /// Pointer to frame received from MotionPlanner.
   std::shared_ptr<PlannerToControlFrame> data_frame;
+
   /// Pointer to a messenger from MotionPlanner.
   std::shared_ptr<PlannerToControlMessenger> messenger;
+
   /// Reference to carla client connection object.
   carla::client::detail::EpisodeProxy episodeProxyBCS;
+
   /// Array to hold command batch.
   std::shared_ptr<std::vector<carla::rpc::Command>> commands;
   /// Number of vehicles registered with the traffic manager.
+
   uint64_t number_of_vehicles;
   /// Parameter object for changing synchronous behaviour.
+
   Parameters &parameters;
   /// Flag for resetting frame step.
-  std::atomic<bool> run_step = false;
+
+  /// Step runner flag
+  std::atomic<bool> run_step;
+
   /// Mutex for progressing synchronous execution.
   std::mutex step_execution_mutex;
+
   /// Condition variables for progressing synchronous execution.
   std::condition_variable step_execution_notifier;
   std::condition_variable send_control_notifier;
@@ -70,7 +79,7 @@ public:
 
   void DataSender() override;
 
-  void RunStep();
+  bool RunStep();
 };
 
 } // namespace traffic_manager

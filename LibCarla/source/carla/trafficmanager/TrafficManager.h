@@ -71,30 +71,26 @@ public:
 
 	/// This method registers a vehicle with the traffic manager.
 	void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-		if(singleton_pointer) {
-			singleton_pointer->RegisterVehicles(actor_list);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->RegisterVehicles(actor_list);
 	}
 
 	/// This method unregisters a vehicle from traffic manager.
 	void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-		if(singleton_pointer) {
-			singleton_pointer->UnregisterVehicles(actor_list);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->UnregisterVehicles(actor_list);
 	}
 
 	/// Set target velocity specific to a vehicle.
 	void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-		if(singleton_pointer) {
-			singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
 	}
 
 	/// Set global target velocity.
 	void SetGlobalPercentageSpeedDifference(float const percentage){
-		if(singleton_pointer) {
-			singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
 	}
 
 	/// Set collision detection rules between vehicles.
@@ -102,53 +98,52 @@ public:
 		( const ActorPtr &reference_actor
 		, const ActorPtr &other_actor
 		, const bool detect_collision) {
-		if(singleton_pointer) {
-			singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
 	}
 
 	/// Method to force lane change on a vehicle.
 	/// Direction flag can be set to true for left and false for right.
 	void SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-		if(singleton_pointer) {
-			singleton_pointer->SetForceLaneChange(actor, direction);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetForceLaneChange(actor, direction);
 	}
 
 	/// Enable / disable automatic lane change on a vehicle.
 	void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-		if(singleton_pointer) {
-			singleton_pointer->SetAutoLaneChange(actor, enable);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetAutoLaneChange(actor, enable);
 	}
 
 	/// Method to specify how much distance a vehicle should maintain to
 	/// the leading vehicle.
 	void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-		if(singleton_pointer) {
-			singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
 	}
 
 	/// Method to specify the % chance of ignoring collisions with other actors
 	void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-		if(singleton_pointer) {
-			singleton_pointer->SetPercentageIgnoreActors(actor, perc);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageIgnoreActors(actor, perc);
 	}
 
 	/// Method to specify the % chance of running a red light
 	void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
-		if(singleton_pointer) {
-			singleton_pointer->SetPercentageRunningLight(actor, perc);
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageRunningLight(actor, perc);
 	}
 
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights() {
-		if(singleton_pointer) {
-			return singleton_pointer->ResetAllTrafficLights();
-		}
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		return singleton_pointer->ResetAllTrafficLights();
+	}
+
+	/// Method to provide synchronous tick
+	bool SynchronousTick() {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		return singleton_pointer->SynchronousTick();
 	}
 };
 

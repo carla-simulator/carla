@@ -7,6 +7,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -38,22 +39,33 @@ class Parameters
 private:
   /// Target velocity map for individual vehicles.
   AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
+
   /// Global target velocity limit % difference.
   float global_percentage_difference_from_limit = 0;
+
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
+
   /// Map containing distance to leading vehicle command.
   AtomicMap<ActorId, float> distance_to_leading_vehicle;
+
   /// Map containing force lane change commands.
   AtomicMap<ActorId, ChangeLaneInfo> force_lane_change;
+
   /// Map containing auto lane change commands.
   AtomicMap<ActorId, bool> auto_lane_change;
+
   /// Map containing % of running a traffic light.
   AtomicMap<ActorId, float> perc_run_traffic_light;
+
   /// Map containing % of ignoring actors.
   AtomicMap<ActorId, float> perc_ignore_actors;
-  /// Syncrhonous mode switch.
-  std::atomic<bool> synchronous_mode = false;
+
+  /// Synchronous mode switch.
+  std::atomic<bool> synchronous_mode;
+
+  /// Synchronous mode time out.
+  std::chrono::duration<int, std::milli> synchronous_time_out;
 
 public:
   Parameters();
@@ -66,10 +78,7 @@ public:
   void SetGlobalPercentageSpeedDifference(float const percentage);
 
   /// Set collision detection rules between vehicles.
-  void SetCollisionDetection(
-      const ActorPtr &reference_actor,
-      const ActorPtr &other_actor,
-      const bool detect_collision);
+  void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);
 
   /// Method to force lane change on a vehicle.
   /// Direction flag can be set to true for left and false for right.
@@ -87,6 +96,12 @@ public:
 
   /// Method to get synchronous mode.
   bool GetSynchronousMode();
+
+  /// Synchronous mode time out.
+  void SetSynchronousModeTimeOutInMiliSecond(const int time);
+
+  /// Synchronous mode time out
+  int GetSynchronousModeTimeOutInMiliSecond();
 
   /// Method to query target velocity for a vehicle.
   float GetVehicleTargetVelocity(const ActorPtr &actor);

@@ -11,18 +11,21 @@ namespace carla
 namespace traffic_manager
 {
 
-BatchControlStage::BatchControlStage(std::string stage_name,
-                                     std::shared_ptr<PlannerToControlMessenger> messenger,
-                                     carla::client::detail::EpisodeProxy &episodeProxy,
-                                     Parameters &parameters)
-    : PipelineStage(stage_name),
-      messenger(messenger),
-      episodeProxyBCS(episodeProxy),
-      parameters(parameters)
+BatchControlStage::BatchControlStage
+	( std::string stage_name
+	, std::shared_ptr<PlannerToControlMessenger> messenger
+	, carla::client::detail::EpisodeProxy &episodeProxy
+	, Parameters &parameters)
+	: PipelineStage(stage_name)
+	, messenger(messenger)
+	, episodeProxyBCS(episodeProxy)
+	, parameters(parameters)
 {
+	// Initializing number of vehicles to zero in the beginning.
+	number_of_vehicles = 0u;
 
-  // Initializing number of vehicles to zero in the beginning.
-  number_of_vehicles = 0u;
+	/// Set default step run as
+	run_step.store(false);
 }
 
 BatchControlStage::~BatchControlStage() {}
@@ -30,76 +33,92 @@ BatchControlStage::~BatchControlStage() {}
 void BatchControlStage::Action()
 {
 
-  // Looping over registered actors.
-  for (uint64_t i = 0u; i < number_of_vehicles && data_frame != nullptr; ++i)
-  {
+	// Looping over registered actors.
+	for (uint64_t i = 0u; i < number_of_vehicles && data_frame != nullptr; ++i)
+	{
+		carla::rpc::VehicleControl vehicle_control;
 
-    carla::rpc::VehicleControl vehicle_control;
+		const PlannerToControlData &element = data_frame->at(i);
+		const carla::ActorId actor_id = element.actor_id;
+		vehicle_control.throttle = element.throttle;
+		vehicle_control.brake = element.brake;
+		vehicle_control.steer = element.steer;
 
-    const PlannerToControlData &element = data_frame->at(i);
-    const carla::ActorId actor_id = element.actor_id;
-    vehicle_control.throttle = element.throttle;
-    vehicle_control.brake = element.brake;
-    vehicle_control.steer = element.steer;
-
-    commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
-  }
+		commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+	}
 }
 
 void BatchControlStage::DataReceiver()
 {
+	data_frame = messenger->Peek();
 
-  data_frame = messenger->Peek();
+	// Allocating new containers for the changed number of registered vehicles.
+	if (data_frame != nullptr && number_of_vehicles != (*data_frame.get()).size())
+	{
 
-  // Allocating new containers for the changed number of registered vehicles.
-  if (data_frame != nullptr &&
-      number_of_vehicles != (*data_frame.get()).size())
-  {
-
-    number_of_vehicles = static_cast<uint64_t>((*data_frame.get()).size());
-    // Allocating array for command batching.
-    commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
-  }
+		number_of_vehicles = static_cast<uint64_t>((*data_frame.get()).size());
+		// Allocating array for command batching.
+		commands = std::make_shared<std::vector<carla::rpc::Command>>(number_of_vehicles);
+	}
 }
 
 void BatchControlStage::DataSender()
 {
+	messenger->Pop();
+	bool synch_mode = parameters.GetSynchronousMode();
 
-  messenger->Pop();
-  bool synch_mode = parameters.GetSynchronousMode();
+	if (commands != nullptr)
+	{
+		/// Chekc which mode to operate
+		if (synch_mode)	{
 
-  if (commands != nullptr)
-  {
-    episodeProxyBCS.Lock()->ApplyBatch(*commands.get(), false);
-    if (synch_mode)
-    {
-      std::unique_lock<std::mutex> lock(step_execution_mutex);
-      while (!run_step.load())
-      {
-        send_control_notifier.wait_for(lock, 1ms, [](std::atomic<bool> &run_step) { return run_step.load(); });
-      }
-      episodeProxyBCS.Lock()->ApplyBatchSync(*commands.get(), false);
-      run_step.store(false);
-      step_execution_notifier.notify_one();
-    }
-  }
+			/// Get step_execution_mutex lock
+			std::unique_lock<std::mutex> lock(step_execution_mutex);
 
-  // Limiting updates to 100 frames per second.
-  if (!synch_mode)
-  {
-    std::this_thread::sleep_for(10ms);
-  }
+			/// Wait for signal to process
+			while (!run_step.load()) {
+				send_control_notifier.wait_for(lock, 10ms, [this]() { return run_step.load(); });
+			}
+
+			/// Do work (send information to server)
+			episodeProxyBCS.Lock()->ApplyBatchSync(*commands.get(), false);
+
+			/// Set flag the work done
+			run_step.store(false);
+
+			/// Notify sender
+			step_execution_notifier.notify_one();
+		} else {
+
+			/// Run Async mode commands
+			episodeProxyBCS.Lock()->ApplyBatch(*commands.get(), false);
+		}
+	}
+
+	// Limiting updates to 100 frames per second.
+	if (!synch_mode) {
+		std::this_thread::sleep_for(10ms);
+	}
 }
 
-void BatchControlStage::RunStep()
+bool BatchControlStage::RunStep()
 {
-  std::unique_lock<std::mutex> lock(step_execution_mutex);
-  run_step.store(true);
-  send_control_notifier.notify_one();
-  while (run_step.load())
-  {
-    step_execution_notifier.wait_for(lock, 1ms, [](std::atomic<bool> &run_step) { return !run_step.load(); });
-  }
+	/// Get step_execution_mutex lock
+	std::unique_lock<std::mutex> lock(step_execution_mutex);
+
+	/// Set run set flag
+	run_step.store(true);
+
+	/// Notify the sender thread
+	send_control_notifier.notify_one();
+
+	/// Wait for service to finish
+	while (run_step.load()) {
+		step_execution_notifier.wait_for
+			(lock, 10ms, [this]() { return !run_step.load(); });
+	}
+
+	return true;
 }
 
 } // namespace traffic_manager

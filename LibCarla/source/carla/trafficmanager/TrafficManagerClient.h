@@ -130,6 +130,14 @@ public:
 		rpc_client.call("reset_all_traffic_lights");
 	}
 
+	/// Method to reset all traffic lights.
+	bool SynchronousTick() {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		auto rs = rpc_client.call("synchronous_tick").as<bool>();
+		return rs;
+	}
+
 	void HealthCheckRemoteTM() {
 		rpc::client rpc_client(tmhost, tmport);
 		rpc_client.set_timeout(TM_TIMEOUT);
