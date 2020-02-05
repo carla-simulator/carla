@@ -35,6 +35,7 @@ void export_trafficmanager() {
       .def("ignore_actors_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreActors)
       .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight)
       .def("set_synchronous_mode", &carla::traffic_manager::TrafficManager::SetSynchronousMode)
+	  .def("set_synchronous_mode_timeout_in_ms", &carla::traffic_manager::TrafficManager::SetSynchronousModeTimeOutInMiliSecond)
       .def("synchronous_tick", &carla::traffic_manager::TrafficManager::SynchronousTick);
 
     // def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());

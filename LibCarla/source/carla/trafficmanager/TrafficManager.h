@@ -149,6 +149,7 @@ public:
 		singleton_pointer->SetSynchronousMode(mode);
 	}
 
+	/// Method to set Tick timeout for synchronous execution.
 	void SetSynchronousModeTimeOutInMiliSecond(double time) {
 		DEBUG_ASSERT(singleton_pointer != nullptr);
 		singleton_pointer->SetSynchronousModeTimeOutInMiliSecond(time);
