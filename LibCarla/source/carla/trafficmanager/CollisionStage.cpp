@@ -381,7 +381,7 @@ namespace CollisionStageConstants {
 
     if (overlapped_actor->GetVelocity().Length() < EPSILON_VELOCITY){
 
-      cg::Location location = safe_point->GetLocation();
+      cg::Location safe_location = safe_point->GetLocation();
       cg::Vector3D heading_vector = safe_point->GetForwardVector();
       heading_vector.z = 0.0f;
       heading_vector = heading_vector.MakeUnitVector();
@@ -397,10 +397,10 @@ namespace CollisionStageConstants {
       const cg::Vector3D y_boundary_vector = perpendicular_vector * extent.y;
 
       LocationList ego_actor_boundary = {
-        location + cg::Location(x_boundary_vector - y_boundary_vector),
-        location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
-        location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
-        location + cg::Location(x_boundary_vector + y_boundary_vector),
+        safe_location + cg::Location(x_boundary_vector - y_boundary_vector),
+        safe_location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
+        safe_location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
+        safe_location + cg::Location(x_boundary_vector + y_boundary_vector),
       };
 
       const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
