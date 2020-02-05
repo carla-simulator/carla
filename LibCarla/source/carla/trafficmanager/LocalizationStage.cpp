@@ -544,6 +544,11 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
       }
     }
 
+    // Stop if something failed
+    if (initial_index == 0 && !waypoint_buffer.front()->CheckJunction()){
+      return final_point;
+    }
+
     // 2) Search for the end of the intersection (if it is in the buffer)
     for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
 
@@ -570,14 +575,18 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
       safe_point = waypoint_buffer.back();
     }
 
-    // 3) Search for final_point (again, if it is in the buffer)
-    if (safe_index != 0){
-      for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+    // Stop if something failed
+    if (safe_index == 0){
+      return final_point;
+    }
 
-        if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
-          final_point = waypoint_buffer.at(k);
-          break;
-        }
+    // 3) Search for final_point (again, if it is in the buffer)
+  
+    for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+
+      if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
+        final_point = waypoint_buffer.at(k);
+        break;
       }
     }
 
