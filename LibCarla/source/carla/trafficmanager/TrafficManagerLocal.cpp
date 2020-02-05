@@ -229,6 +229,11 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
 	}
 }
 
+/// Method to switch traffic manager into synchronous execution.
+void TrafficManagerLocal::SetSynchronousMode(bool mode) {
+	parameters.SetSynchronousMode(mode);
+}
+
 /// Method to provide synchronous tick
 bool TrafficManagerLocal::SynchronousTick() {
 	return control_stage->RunStep();

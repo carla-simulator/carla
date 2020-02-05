@@ -77,6 +77,9 @@ public:
 	/// Method to reset all traffic lights.
 	virtual void ResetAllTrafficLights() = 0;
 
+	/// Method to switch traffic manager into synchronous execution.
+	virtual void SetSynchronousMode(bool mode) = 0;
+
 	/// Method to provide synchronous tick
 	virtual bool SynchronousTick() = 0;
 

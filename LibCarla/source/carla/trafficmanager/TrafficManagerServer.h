@@ -135,6 +135,11 @@ public:
 				tm->ResetAllTrafficLights();
 			});
 
+			/// Method to set synchronous mode.
+			server->bind("set_synchronous_mode", [=](const bool mode) {
+				tm->SetSynchronousMode(mode);
+			});
+
 			/// Method to reset all traffic lights.
 			server->bind("synchronous_tick", [=]() -> bool {
 				return tm->SynchronousTick();

@@ -137,7 +137,13 @@ public:
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights() {
 		DEBUG_ASSERT(singleton_pointer != nullptr);
-		return singleton_pointer->ResetAllTrafficLights();
+		singleton_pointer->ResetAllTrafficLights();
+	}
+
+	/// Method to switch traffic manager into synchronous execution.
+	void SetSynchronousMode(bool mode) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetSynchronousMode(mode);
 	}
 
 	/// Method to provide synchronous tick

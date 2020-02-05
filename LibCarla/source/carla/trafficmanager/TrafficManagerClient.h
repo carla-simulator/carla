@@ -130,6 +130,13 @@ public:
 		rpc_client.call("reset_all_traffic_lights");
 	}
 
+	/// Method to switch traffic manager into synchronous execution.
+	void SetSynchronousMode(const bool mode) {
+		rpc::client rpc_client(tmhost, tmport);
+		rpc_client.set_timeout(TM_TIMEOUT);
+		rpc_client.call("set_synchronous_mode", mode);
+	}
+
 	/// Method to reset all traffic lights.
 	bool SynchronousTick() {
 		rpc::client rpc_client(tmhost, tmport);
