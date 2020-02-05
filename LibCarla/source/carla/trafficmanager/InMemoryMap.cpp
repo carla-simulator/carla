@@ -15,6 +15,7 @@ namespace MapConstants {
   static const float GRID_SIZE = 4.0f;
   static const float PED_GRID_SIZE = 10.0f;
   static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
+  static const float TOPOLOGY_DISTANCE = 0.1f;
 } // namespace MapConstants
 
   namespace cg = carla::geom;
@@ -115,7 +116,7 @@ namespace MapConstants {
 
     // 2. Consuming the raw dense topology from cc::Map into SimpleWaypoints.
     SegmentMap segment_map;
-    auto raw_dense_topology = _world_map->GenerateWaypoints(0.1f);
+    auto raw_dense_topology = _world_map->GenerateWaypoints(TOPOLOGY_DISTANCE);
     for (auto &waypoint_ptr: raw_dense_topology) {
       segment_map[GetSegmentId(waypoint_ptr)].emplace_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
     }
