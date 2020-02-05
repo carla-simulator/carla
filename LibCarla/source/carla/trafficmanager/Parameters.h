@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
 #include "carla/Memory.h"
