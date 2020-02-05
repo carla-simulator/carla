@@ -160,6 +160,10 @@ private:
   UPROPERTY()
   UMaterial *TerrainNodeMaterial;
 
+  /// Workaround material for the SidewalkNodes
+  UPROPERTY()
+  UMaterial *SidewalkNodeMaterial;
+
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
   bool SavePackage(const FString &PackagePath, UPackage *Package) const;
