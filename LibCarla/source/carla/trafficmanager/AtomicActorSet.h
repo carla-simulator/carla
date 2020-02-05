@@ -75,9 +75,15 @@ namespace traffic_manager {
     }
 
     bool Contains(ActorId id) {
-
+      std::lock_guard<std::mutex> lock(modification_mutex);
       return actor_set.find(id) != actor_set.end();
     }
+
+    size_t Size() {
+      std::lock_guard<std::mutex> lock(modification_mutex);
+      return actor_set.size();
+    }
+
   };
 
 } // namespace traffic_manager

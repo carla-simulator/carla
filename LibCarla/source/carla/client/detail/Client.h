@@ -65,10 +65,12 @@ namespace detail {
     bool IsTrafficManagerRunning(uint16_t port) const;
 
     // DEMO: Channeling multi-client communication for traffic manager.
-    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port);
+    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const;
 
     /// DEMO: Channeling multi-client communication for traffic manager.
-    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo);
+    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const;
+
+    void DestroyTrafficManager(uint16_t port) const;
 
     void SetTimeout(time_duration timeout);
 

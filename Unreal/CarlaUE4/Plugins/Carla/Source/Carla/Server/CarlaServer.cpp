@@ -181,6 +181,16 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(destroy_traffic_manager) << [this] (uint16_t port) ->R<bool>
+  {
+    auto it = TrafficManagerInfo.find(port);
+    if(it != TrafficManagerInfo.end()) {
+      TrafficManagerInfo.erase(it);
+      return true;
+    }
+    return false;
+  };
+
   BIND_ASYNC(version) << [] () -> R<std::string>
   {
     return carla::version();
