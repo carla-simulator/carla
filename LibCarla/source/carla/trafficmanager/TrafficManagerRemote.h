@@ -90,6 +90,9 @@ public:
 	/// Method to reset all traffic lights.
 	void ResetAllTrafficLights();
 
+	/// Method to switch traffic manager into synchronous execution.
+	void SetSynchronousMode(bool mode);
+
 	/// Method to provide synchronous tick
 	bool SynchronousTick();
 

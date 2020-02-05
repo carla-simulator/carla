@@ -138,6 +138,11 @@ void TrafficManagerRemote::ResetAllTrafficLights() {
   client.ResetAllTrafficLights();
 }
 
+/// Method to switch traffic manager into synchronous execution.
+void TrafficManagerRemote::SetSynchronousMode(bool mode) {
+	client.SetSynchronousMode(mode);
+}
+
 /// Method to provide synchronous tick
 bool TrafficManagerRemote::SynchronousTick() {
 	return client.SynchronousTick();
