@@ -10,8 +10,8 @@
 #include "carla/client/Actor.h"
 #include <rpc/client.h>
 
-#define TM_TIMEOUT				2000 // In ms
-#define DEFAULT_RPC_TM_PORT		8000 // TM_SERVER_PORT
+#define TM_TIMEOUT			2000 // In ms
+#define TM_DEFAULT_PORT		8000 // TM_SERVER_PORT
 
 /// Provides communication with the rpc of TrafficManagerServer
 class TrafficManagerClient {
@@ -25,7 +25,7 @@ public:
 	TrafficManagerClient &operator=(TrafficManagerClient &&) = default;
 
 	/// Empty constructor
-	TrafficManagerClient() : tmhost(""), tmport(DEFAULT_RPC_TM_PORT) {}
+	TrafficManagerClient() : tmhost(""), tmport(TM_DEFAULT_PORT) {}
 
 	/// Parametric constructor to initialize the parameters
 	TrafficManagerClient(const std::string &_host, const uint16_t &_port)

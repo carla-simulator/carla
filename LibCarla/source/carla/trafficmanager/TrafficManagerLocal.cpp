@@ -18,13 +18,15 @@ TrafficManagerLocal::TrafficManagerLocal
 		, std::vector<float> lateral_PID_parameters
 		, std::vector<float> lateral_highway_PID_parameters
 		, float perc_difference_from_limit
-		, carla::client::detail::EpisodeProxy episodeProxy)
+		, carla::client::detail::EpisodeProxy episodeProxy
+		, uint16_t &RPCportTM)
 		: longitudinal_PID_parameters(longitudinal_PID_parameters)
 		, longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters)
 		, lateral_PID_parameters(lateral_PID_parameters)
 		, lateral_highway_PID_parameters(lateral_highway_PID_parameters)
 		, episodeProxyTM(episodeProxy)
 		, debug_helper(carla::client::DebugHelper{episodeProxyTM})
+		, server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
 {
 
 	using WorldMap = carla::SharedPtr<cc::Map>;

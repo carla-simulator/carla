@@ -14,7 +14,7 @@
 namespace carla {
 namespace client {
 
-	using namespace carla::traffic_manager;
+  using namespace carla::traffic_manager;
 
   class Client {
   public:
@@ -69,12 +69,7 @@ namespace client {
 
     /// Return an instance of the world currently active in the simulator.
     TrafficManager GetInstanceTM() const {
-      return TrafficManager{_simulator->GetCurrentEpisode()};
-    }
-
-    /// Return an instance of the world currently active in the simulator.
-    carla::client::detail::EpisodeProxy GetCurrentEpisode() const {
-      return _simulator->GetCurrentEpisode();
+      return TrafficManager();
     }
 
     std::string StartRecorder(std::string name) {
@@ -120,6 +115,7 @@ namespace client {
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;
+
   };
 
   inline Client::Client(

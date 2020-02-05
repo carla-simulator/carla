@@ -64,7 +64,7 @@ public:
 	static void Release();
 
 	/// Private constructor for singleton life cycle management.
-	explicit TrafficManager(carla::client::detail::EpisodeProxy episodeProxy);
+	explicit TrafficManager(uint16_t port = TM_DEFAULT_PORT);
 
 	TrafficManager(const TrafficManager &) = default;
 	TrafficManager(TrafficManager &&) = default;

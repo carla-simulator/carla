@@ -36,23 +36,22 @@ public:
 		( uint16_t &RPCPort
 		, carla::traffic_manager::TrafficManagerBase *tm)
 	{
-		std::string bindError;
 		uint16_t counter = RPCPort;
-		while(!server && (counter - RPCPort < MIN_TRY_COUNT)) {
+		while(counter - RPCPort < MIN_TRY_COUNT) {
 			try {
 				/// Create server instance
 				server = new rpc::server(counter);
 			} catch(...) {
-				/// Keep note of bind error
-				bindError = "RPC_Registered_TM_Error";
-
 				/// Update port number and try again
 				counter ++;
 			}
+
+			/// If server created
+			if(server != nullptr) break;
 		}
 
 		/// If server still not created
-		if(!server) {
+		if(server == nullptr) {
 			carla::throw_exception(std::runtime_error(
 			  "trying to create rpc server for traffic manager; "
 			  "but the system failed to create because of bind error."));

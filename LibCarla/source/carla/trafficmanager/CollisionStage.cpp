@@ -95,7 +95,7 @@ namespace CollisionStageConstants {
                 }
               }
           } catch (const std::exception &e) {
-            carla::log_info("Actor might not be alive \n");
+            carla::log_info("Actor might not be alive", e.what());
           }
 
         }

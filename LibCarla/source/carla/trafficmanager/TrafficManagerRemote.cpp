@@ -17,19 +17,12 @@ namespace traffic_manager {
 
 /// Constructor store remote location information
 TrafficManagerRemote :: TrafficManagerRemote
-	( const std::pair<std::string, std::string> &_serverTM
+	( const std::pair<std::string, uint16_t> &_serverTM
 	, carla::client::detail::EpisodeProxy &episodeProxy)
 	: episodeProxyTM(episodeProxy) {
-	uint16_t serverRPCPort = TM_SERVER_PORT;
-
-    try {
-    	serverRPCPort = boost::lexical_cast<uint16_t>(std::atoi(_serverTM.second.c_str()));
-    } catch(boost::bad_lexical_cast &) {
-    	serverRPCPort = TM_SERVER_PORT;
-    }
 
     /// Set server details
-	client.setServerDetails(_serverTM.first, serverRPCPort);
+	client.setServerDetails(_serverTM.first, _serverTM.second);
 }
 
 /// Destructor.
