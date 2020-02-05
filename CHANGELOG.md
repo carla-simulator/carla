@@ -22,6 +22,8 @@
   * Fixed incorrect doppler velocity for RADAR sensor
   * Fixed documentation links
   * Upgraded Boost to 1.72.0
+  * Recorder feature:
+    - Added an option (-i) when replaying a session to ignore the hero vehicles
 
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
