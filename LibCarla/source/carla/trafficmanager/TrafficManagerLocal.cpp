@@ -85,10 +85,13 @@ TrafficManagerLocal::TrafficManagerLocal
 
 TrafficManagerLocal::~TrafficManagerLocal() {
   Stop();
+  episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+  carla::log_info("TrafficManagerLocal registering", actor_list.size(),"vehicles");
   registered_actors.Insert(actor_list);
+  carla::log_info("TrafficManagerLocal registered_actors has", registered_actors.Size());
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {

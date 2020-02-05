@@ -35,13 +35,15 @@ public:
   TrafficManagerServer
     ( uint16_t &RPCPort
     , carla::traffic_manager::TrafficManagerBase *tm)
+    : _RPCPort(RPCPort)
   {
+    carla::log_info("TrafficManagerServer", RPCPort);
     std::string bindError;
-    uint16_t counter = RPCPort;
-    while(!server && (counter - RPCPort < MIN_TRY_COUNT)) {
+    uint16_t counter = 0;
+    while(!server && (counter < MIN_TRY_COUNT)) {
       try {
         /// Create server instance
-        server = new rpc::server(counter);
+        server = new rpc::server(RPCPort);
       } catch(...) {
         /// Keep note of bind error
         bindError = "RPC_Registered_TM_Error";
@@ -58,8 +60,11 @@ public:
 
     /// If server creation successful
     else {
-      /// Update valid port
-      RPCPort = counter;
+
+      // Binding a lambda function to the name "trafficmanager_destroyed".
+      /*server->bind("trafficmanager_destroyed", [=]() {
+        tm->Stop();
+      });*/
 
       // Binding a lambda function to the name "register_vehicle".
       server->bind("register_vehicle", [=](std :: vector <carla::rpc::Actor> _actor_list) {
@@ -151,8 +156,13 @@ public:
       server = nullptr;
     }
   }
-private:
 
+  uint16_t port() const {
+    return _RPCPort;
+  }
+
+private:
+  uint16_t _RPCPort;
   /// Server instance to
   rpc::server *server = nullptr;
 };
