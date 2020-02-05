@@ -109,9 +109,6 @@ namespace traffic_manager {
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
-    /// This method kills a vehicle. (Not working right now)
-    void DestroyVehicles(const std::vector<ActorPtr> &actor_list);
-
     /// Set target velocity specific to a vehicle.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
