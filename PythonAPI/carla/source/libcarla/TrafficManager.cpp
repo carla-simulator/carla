@@ -22,7 +22,7 @@ void export_trafficmanager() {
 
     class_<Parameters>("TM_Parameters").def(vector_indexing_suite<Parameters>());
 
-    class_<carla::traffic_manager::TrafficManager, boost::noncopyable>("TrafficManager", no_init)
+    class_<carla::traffic_manager::TrafficManager>("TrafficManager", no_init)
       .def("register_vehicles", &carla::traffic_manager::TrafficManager::RegisterVehicles)
       .def("unregister_vehicles", &carla::traffic_manager::TrafficManager::UnregisterVehicles)
       .def("set_vehicle_max_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)
@@ -33,7 +33,9 @@ void export_trafficmanager() {
       .def("set_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
       .def("reset_traffic_lights", &carla::traffic_manager::TrafficManager::ResetAllTrafficLights)
       .def("ignore_actors_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreActors)
-      .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight);
+      .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight)
+      .def("set_synchronous_mode", &carla::traffic_manager::TrafficManager::SetSynchronousMode)
+      .def("synchronous_tick", &carla::traffic_manager::TrafficManager::SynchronousTick);
 
     // def("GetTrafficManager", &carla::traffic_manager::TrafficManager::GetInstance, return_value_policy<reference_existing_object>());
 
