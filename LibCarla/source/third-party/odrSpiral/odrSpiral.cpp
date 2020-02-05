@@ -2,7 +2,7 @@
  *  file:       odrSpiral.c
  * ---------------------------------------------------
  *  purpose:	free method for computing spirals
- *              in OpenDRIVE applications 
+ *              in OpenDRIVE applications
  * ---------------------------------------------------
  *  using methods of CEPHES library
  * ---------------------------------------------------
@@ -22,21 +22,23 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-    
-    
+
+
     NOTE:
-    The methods have been realized using the CEPHES library 
+    The methods have been realized using the CEPHES library
 
         http://www.netlib.org/cephes/
 
-    and do neither constitute the only nor the exclusive way of implementing 
-    spirals for OpenDRIVE applications. Their sole purpose is to facilitate 
+    and do neither constitute the only nor the exclusive way of implementing
+    spirals for OpenDRIVE applications. Their sole purpose is to facilitate
     the interpretation of OpenDRIVE spiral data.
  */
 
 /* ====== INCLUSIONS ====== */
 #include <stdio.h>
-#include <unistd.h>
+// Edit to original file-----
+#define _USE_MATH_DEFINES // Enable windows compatibility
+// --------------------------
 #include <math.h>
 
 /* ====== LOCAL VARIABLES ====== */
@@ -180,7 +182,7 @@ static void fresnel( double xxa, double *ssa, double *cca )
 
     x  = fabs( xxa );
     x2 = x * x;
-    
+
     if ( x2 < 2.5625 )
     {
         t = x2 * x2;
@@ -235,12 +237,12 @@ void odrSpiral( double s, double cDot, double *x, double *y, double *t )
 
     a = 1.0 / sqrt( fabs( cDot ) );
     a *= sqrt( M_PI );
-    
+
     fresnel( s / a, y, x );
-    
+
     *x *= a;
     *y *= a;
-    
+
     if ( cDot < 0.0 )
         *y *= -1.0;
 
