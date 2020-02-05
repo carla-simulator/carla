@@ -4,9 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/client/World.h"
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
-#include "carla/client/World.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -39,7 +39,6 @@ TrafficManager::TrafficManager(
         /// Check memory allocated or not
         if(tm_ptr != nullptr) {
 
-          /// Try to reset all traffic lights
           tm_ptr->HealthCheckRemoteTM();
 
           /// Set the pointer of the instance
@@ -61,11 +60,13 @@ TrafficManager::TrafficManager(
   /// If pointer is not allocated get Local TM details
   if (!singleton_pointer) {
 
-    const std::vector<float> longitudinal_param 		= {2.0f, 0.05f, 0.07f};
+    const std::vector<float> longitudinal_param   = {2.0f, 0.05f, 0.07f};
     const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-    const std::vector<float> lateral_param 				= {10.0f, 0.02f, 1.0f};
-    const std::vector<float> lateral_highway_param 		= {9.0f, 0.02f, 1.0f};
-    const float perc_difference_from_limit 				= 30.0f;
+    const std::vector<float> lateral_param        = {10.0f, 0.02f, 1.0f};
+    const std::vector<float> lateral_highway_param    = {9.0f, 0.02f, 1.0f};
+    const float perc_difference_from_limit        = 30.0f;
+
+    carla::log_info("TrafficManager", port);
 
     TrafficManagerLocal* tm_ptr = new TrafficManagerLocal
         ( longitudinal_param
@@ -124,7 +125,6 @@ TrafficManager::TrafficManager(
               std::cout 	<< "Error message: "
                     << strerror(errno) << std::endl;
             }
-            carla::log_info(localIP.first,localIP.second);
           }
         }
         close(sock);
@@ -153,6 +153,8 @@ void TrafficManager::Release() {
   if(singleton_pointer) {
     TrafficManagerBase *base_ptr = singleton_pointer.release();
     delete base_ptr;
+    carla::log_info("TrafficManager::Release");
+    throw_exception(std::runtime_error("TM shutdown"));
   }
 }
 

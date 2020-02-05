@@ -62,11 +62,6 @@ public:
     /// If server creation successful
     else {
 
-      // Binding a lambda function to the name "trafficmanager_destroyed".
-      /*server->bind("trafficmanager_destroyed", [=]() {
-        tm->Stop();
-      });*/
-
       // Binding a lambda function to the name "register_vehicle".
       server->bind("register_vehicle", [=](std :: vector <carla::rpc::Actor> _actor_list) {
         carla::client::detail::EpisodeProxy& episode_proxy = tm->GetEpisodeProxy();
@@ -152,6 +147,7 @@ public:
 
   ~TrafficManagerServer() {
     if(server) {
+      server->close_sessions();
       server->stop();
       delete server;
       server = nullptr;
