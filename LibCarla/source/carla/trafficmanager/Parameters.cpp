@@ -102,11 +102,11 @@ bool Parameters::GetSynchronousMode() {
 	return synchronous_mode.load();
 }
 
-void Parameters::SetSynchronousModeTimeOutInMiliSecond(const int time) {
-	synchronous_time_out = std::chrono::duration<int, std::milli>(time);
+void Parameters::SetSynchronousModeTimeOutInMiliSecond(const double time) {
+	synchronous_time_out = std::chrono::duration<double, std::milli>(time);
 }
 
-int Parameters::GetSynchronousModeTimeOutInMiliSecond() {
+double Parameters::GetSynchronousModeTimeOutInMiliSecond() {
 	return synchronous_time_out.count();
 }
 

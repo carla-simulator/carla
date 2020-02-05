@@ -143,6 +143,11 @@ void TrafficManagerRemote::SetSynchronousMode(bool mode) {
 	client.SetSynchronousMode(mode);
 }
 
+/// Method to set Tick timeout for synchronous execution.
+void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
+	client.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
 /// Method to provide synchronous tick
 bool TrafficManagerRemote::SynchronousTick() {
 	return client.SynchronousTick();

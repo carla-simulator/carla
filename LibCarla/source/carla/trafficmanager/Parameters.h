@@ -89,6 +89,8 @@ namespace traffic_manager {
 
     /// Method to query target velocity for a vehicle.
     float GetVehicleTargetVelocity(const ActorPtr &actor);
+  /// Synchronous mode time out.
+  std::chrono::duration<double, std::milli> synchronous_time_out;
 
     /// Method to query collision avoidance rule between a pair of vehicles.
     bool GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor);
@@ -122,6 +124,11 @@ namespace traffic_manager {
 
     /// Method to get % to ignore any vehicle.
     float GetPercentageIgnoreVehicles(const ActorPtr &actor);
+  /// Synchronous mode time out.
+  void SetSynchronousModeTimeOutInMiliSecond(const double time);
+
+  /// Synchronous mode time out
+  double GetSynchronousModeTimeOutInMiliSecond();
 
     /// Method to get % to ignore any walker.
     float GetPercentageIgnoreWalkers(const ActorPtr &actor);

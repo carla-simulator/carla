@@ -87,14 +87,17 @@ public:
 	/// Method to specify the % chance of running a red light
 	void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
-	/// Method to reset all traffic lights.
-	void ResetAllTrafficLights();
-
 	/// Method to switch traffic manager into synchronous execution.
 	void SetSynchronousMode(bool mode);
 
+	/// Method to set Tick timeout for synchronous execution.
+	void SetSynchronousModeTimeOutInMiliSecond(double time);
+
 	/// Method to provide synchronous tick
 	bool SynchronousTick();
+
+	/// Method to reset all traffic lights.
+	void ResetAllTrafficLights();
 
     /// Get carla episode information
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
