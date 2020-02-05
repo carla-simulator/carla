@@ -14,7 +14,7 @@
 namespace carla {
 namespace client {
 
-	using namespace carla::traffic_manager;
+  using namespace carla::traffic_manager;
 
   class Client {
   public:
@@ -29,10 +29,6 @@ namespace client {
         const std::string &host,
         uint16_t port,
         size_t worker_threads = 0u);
-
-    static Client* GetClient() {
-      return nullptr;
-    }
 
     /// Set a timeout for networking operations. If set, any networking
     /// operation taking longer than @a timeout throws rpc::timeout.
@@ -123,7 +119,6 @@ namespace client {
 
   private:
 
-    //static std::shared_ptr<Client> _client;
     std::shared_ptr<detail::Simulator> _simulator;
 
   };
@@ -134,12 +129,7 @@ namespace client {
       size_t worker_threads)
     : _simulator(
         new detail::Simulator(host, port, worker_threads),
-        PythonUtil::ReleaseGILDeleter()) {
-          /*if(!_client){
-            _client = std::shared_ptr<Client>(this);
-          }*/
-
-        }
+        PythonUtil::ReleaseGILDeleter()) {}
 
 } // namespace client
 } // namespace carla

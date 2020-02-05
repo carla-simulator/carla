@@ -7,9 +7,7 @@
 #include <carla/client/Client.h>
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
-#include "carla/client/Client.h"
-
-#include <chrono>
+#include "carla/client/World.h"
 
 #define DEBUG_PRINT_TM		0
 
@@ -20,11 +18,14 @@ namespace traffic_manager {
 std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 
 /// Private constructor for singleton life cycle management.
-TrafficManager :: TrafficManager(uint16_t port) {
+TrafficManager::TrafficManager(uint16_t port) {
 
-  std::cout << "TrafficManager ctr" << std::endl;
+  std::cout << "TrafficManager ctr " << port << std::endl;
 
-  carla::client::detail::EpisodeProxy episodeProxy = client::Client::GetClient()->GetWorld().GetEpisode();
+  client::World* world = client::GetWorld();
+  std::cout << "TrafficManager world " << ((world==nullptr)?"YES":"NO") << std::endl;
+  client::detail::EpisodeProxy episodeProxy = world->GetEpisode();
+  std::cout << "TrafficManager episode " << (episodeProxy.IsValid()?"YES":"NO") << std::endl;
 
   std::pair<std::string, uint16_t> serverTM;
   std::string port_str = std::to_string(port);

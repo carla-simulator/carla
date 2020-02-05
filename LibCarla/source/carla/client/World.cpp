@@ -17,6 +17,13 @@
 namespace carla {
 namespace client {
 
+  // Work around... Also we have to take care of the world destruction
+  World* _world = nullptr;
+
+  World* GetWorld() {
+    return _world;
+  }
+
   SharedPtr<Map> World::GetMap() const {
     return _episode.Lock()->GetCurrentMap();
   }

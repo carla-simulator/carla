@@ -64,6 +64,12 @@ def main():
         metavar='PATTERN',
         default='walker.pedestrian.*',
         help='pedestrians filter (default: "walker.pedestrian.*")')
+    argparser.add_argument(
+        '-tm_p', '--tm_port',
+        metavar='P',
+        default=8000,
+        type=int,
+        help='port to communicate with TM (default: 8000)')
 
     args = argparser.parse_args()
 
@@ -193,6 +199,11 @@ def main():
         print('Spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
         time.sleep(1)
+
+        print("Creting TM...")
+        client.get_world()
+        tm = carla.TrafficManager(args.tm_port)
+        print("TM created")
 
         for v in vehicles_list:
             v.set_autopilot(True)
