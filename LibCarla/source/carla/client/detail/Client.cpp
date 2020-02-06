@@ -117,7 +117,7 @@ namespace detail {
   };
 
   void Client::DestroyTrafficManager(uint16_t port) const {
-    _pimpl->CallAndWait<void>("destroy_traffic_manager", port);
+    _pimpl->AsyncCall("destroy_traffic_manager", port);
   }
 
   Client::~Client() = default;
