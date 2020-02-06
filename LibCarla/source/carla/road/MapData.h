@@ -49,6 +49,8 @@ namespace road {
 
     Junction *GetJunction(JuncId id);
 
+    const Junction *GetJunction(JuncId id) const;
+
     template <typename T>
     auto GetRoadInfo(const RoadId id, const double s) {
       return GetRoad(id).template GetInfo<T>(s);

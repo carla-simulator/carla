@@ -349,6 +349,9 @@ namespace road {
     /// Create the pointers between RoadSegments based on the ids.
     void CreatePointersBetweenRoadSegments();
 
+    /// Create the bounding boxes of each junction
+    void CreateJunctionBoundingBoxes(Map &map);
+
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
 

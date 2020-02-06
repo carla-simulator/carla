@@ -46,7 +46,7 @@ namespace road {
       Exit          = 0x1 << 18,
       OffRamp       = 0x1 << 19,
       OnRamp        = 0x1 << 20,
-      Any           = 0xFFFFFFFF
+      Any           = 0xFFFFFFFE
     };
 
   public:

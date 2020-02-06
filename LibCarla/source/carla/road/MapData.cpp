@@ -34,5 +34,12 @@ namespace road {
     return nullptr;
   }
 
+  const Junction *MapData::GetJunction(JuncId id) const {
+    const auto search = _junctions.find(id);
+    if (search != _junctions.end()) {
+      return &search->second;
+    }
+    return nullptr;
+  }
 } // namespace road
 } // namespace carla

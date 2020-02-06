@@ -95,6 +95,9 @@ namespace road {
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
     std::vector<Waypoint> GetNext(Waypoint waypoint, double distance) const;
+    /// Return the list of waypoints at @a distance in the reversed direction
+    /// that a vehicle at @a waypoint could drive to.
+    std::vector<Waypoint> GetPrevious(Waypoint waypoint, double distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
     boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
@@ -112,6 +115,13 @@ namespace road {
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
+    //Generate waypoints of the junction
+    std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const;
+
+    Junction* GetJunction(JuncId id);
+
+    const Junction* GetJunction(JuncId id) const;
+
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
       return _data;
@@ -120,6 +130,7 @@ namespace road {
 
 private:
 
+    friend MapBuilder;
     MapData _data;
   };
 
