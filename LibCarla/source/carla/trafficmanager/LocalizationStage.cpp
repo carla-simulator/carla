@@ -20,6 +20,9 @@ namespace LocalizationConstants {
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
+  static const float BLOCKED_TIME_THRESHOLD = 90.0f;
+  static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
+  static const float STOPPED_VELOCITY_THRESHOLD = 0.4f;  // meters per second.
 
 } // namespace LocalizationConstants
 
@@ -54,6 +57,12 @@ namespace LocalizationConstants {
 
     // Initializing the registered actors container state.
     registered_actors_state = -1;
+
+    // Initializing buffer lists.
+    buffer_list = std::make_shared<BufferList>();
+
+    // Initializing maximum idle time to null.
+    maximum_idle_time = std::make_pair(nullptr, 0.0);
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -68,6 +77,8 @@ namespace LocalizationConstants {
     const auto current_traffic_light_frame =
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
+    // Selecting current timestamp from the world snapshot.
+    current_timestamp = world.GetSnapshot().GetTimestamp();
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -77,17 +88,19 @@ namespace LocalizationConstants {
       const cg::Location vehicle_location = vehicle->GetLocation();
       const float vehicle_velocity = vehicle->GetVelocity().Length();
 
-      //TODO: Improve search so it doesn't do it every loop..
-      auto search = idle_time.find(actor_id);
-      if (search == idle_time.end()) {
-        idle_time[actor_id] = chr::system_clock::now();
+      // Initializing idle times.
+      if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0) {
+        idle_time[actor_id] = current_timestamp.elapsed_seconds;
       }
 
       const float horizon_size = std::max(
           WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
           MINIMUM_HORIZON_LENGTH);
 
-      Buffer &waypoint_buffer = buffer_list->at(i);
+      if (buffer_list->find(actor_id) == buffer_list->end()) {
+        buffer_list->insert({actor_id, Buffer()});
+      }
+      Buffer &waypoint_buffer = buffer_list->at(actor_id);
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
@@ -258,7 +271,17 @@ namespace LocalizationConstants {
       traffic_light_message.actor = vehicle;
       traffic_light_message.closest_waypoint = waypoint_buffer.front();
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
+
+      // Updating idle time when necessary.
+      UpdateIdleTime(vehicle);
     }
+
+    if (IsVehicleStuck(maximum_idle_time.first)) {
+      TryDestroyVehicle(maximum_idle_time.first);
+    }
+
+    // Updating maximum idle time to null for the next iteration.
+    maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
   void LocalizationStage::DataReceiver() {
@@ -270,6 +293,7 @@ namespace LocalizationConstants {
 
       actor_list = registered_actors.GetList();
       uint64_t index = 0u;
+      vehicle_id_to_index.clear();
       for (auto &actor: actor_list) {
         vehicle_id_to_index.insert({actor->GetId(), index});
         ++index;
@@ -281,8 +305,7 @@ namespace LocalizationConstants {
     if (number_of_vehicles != actor_list.size()) {
 
       number_of_vehicles = static_cast<uint64_t>(actor_list.size());
-      // Allocating the buffer lists.
-      buffer_list = std::make_shared<BufferList>(number_of_vehicles);
+
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
@@ -362,28 +385,30 @@ namespace LocalizationConstants {
     }
 
     // Regularly update unregistered actors.
-    std::vector<ActorId> actor_ids_to_erase;
-    for (auto& actor_info: unregistered_actors) {
-      if (actor_info.second->IsAlive()) {
-        cg::Location actor_location = actor_info.second->GetLocation();
+    const auto current_snapshot = world.GetSnapshot();
+    for (auto it = unregistered_actors.cbegin(); it != unregistered_actors.cend();) {
+      if (registered_actors.Contains(it->first) || !current_snapshot.Contains(it->first)) {
+        track_traffic.DeleteActor(it->first);
+        it = unregistered_actors.erase(it);
+      } else {
+        // Updating data structures.
+        cg::Location location = it->second->GetLocation();
+        const auto type = it->second->GetTypeId();
+
         SimpleWaypointPtr nearest_waypoint = nullptr;
-        const auto unregistered_type = actor_info.second->GetTypeId();
-        if (unregistered_type[0] == 'v') {
-          nearest_waypoint = local_map.GetWaypointInVicinity(actor_location);
-        } else if (unregistered_type[0] == 'w') {
-          nearest_waypoint = local_map.GetPedWaypoint(actor_location);
+        if (type[0] == 'v') {
+          nearest_waypoint = local_map.GetWaypointInVicinity(location);
+        } else if (type[0] == 'w') {
+          nearest_waypoint = local_map.GetPedWaypoint(location);
         }
         if (nearest_waypoint == nullptr) {
-          nearest_waypoint = local_map.GetWaypoint(actor_location);
+          nearest_waypoint = local_map.GetWaypoint(location);
         }
-        track_traffic.UpdateUnregisteredGridPosition(actor_info.first, nearest_waypoint);
-      } else {
-        track_traffic.DeleteActor(actor_info.first);
-        actor_ids_to_erase.push_back(actor_info.first);
+
+        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoint);
+
+        ++it;
       }
-    }
-    for (auto actor_id: actor_ids_to_erase) {
-      unregistered_actors.erase(actor_id);
     }
   }
 
@@ -394,7 +419,7 @@ namespace LocalizationConstants {
     const float vehicle_velocity = vehicle->GetVelocity().Length();
     const float speed_limit = boost::static_pointer_cast<cc::Vehicle>(vehicle)->GetSpeedLimit();
 
-    const Buffer& waypoint_buffer = buffer_list->at(vehicle_id_to_index.at(actor_id));
+    const Buffer& waypoint_buffer = buffer_list->at(actor_id);
     const SimpleWaypointPtr& current_waypoint = waypoint_buffer.front();
 
     bool need_to_change_lane = false;
@@ -415,7 +440,10 @@ namespace LocalizationConstants {
         // This is totally ignoring unregistered actors during lane changes.
         // Need to fix this. Only a temporary solution.
         if (vehicle_id_to_index.find(other_vehicle_id) != vehicle_id_to_index.end()) {
-          const Buffer& other_buffer = buffer_list->at(vehicle_id_to_index.at(other_vehicle_id));
+          if (buffer_list->find(other_vehicle_id) == buffer_list->end()) {
+            buffer_list->insert({other_vehicle_id, Buffer()});
+          }
+          const Buffer& other_buffer = buffer_list->at(other_vehicle_id);
 
           if (!other_buffer.empty()) {
             const SimpleWaypointPtr& other_current_waypoint = other_buffer.front();
@@ -608,6 +636,67 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     return final_point;
+  }
+
+  void LocalizationStage::UpdateIdleTime(const Actor& actor) {
+    if (idle_time.find(actor->GetId()) == idle_time.end()) {
+      return;
+    }
+
+    const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+    if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
+      idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
+    }
+
+    // Checking maximum idle time.
+    if (maximum_idle_time.first == nullptr || maximum_idle_time.second > idle_time[actor->GetId()]) {
+      maximum_idle_time = std::make_pair(actor, idle_time[actor->GetId()]);
+    }
+  }
+
+  bool LocalizationStage::IsVehicleStuck(const Actor& actor) {
+    if (actor == nullptr) {
+      return false;
+    }
+
+    if (idle_time.find(actor->GetId()) != idle_time.end()) {
+      auto delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor->GetId());
+      if (delta_idle_time >= BLOCKED_TIME_THRESHOLD) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void LocalizationStage::CleanActor(const ActorId actor_id) {
+    track_traffic.DeleteActor(actor_id);
+    for (const auto& waypoint : buffer_list->at(actor_id)) {
+      track_traffic.RemovePassingVehicle(waypoint->GetId(), actor_id);
+    }
+
+    idle_time.erase(actor_id);
+    buffer_list->erase(actor_id);
+  }
+
+  bool LocalizationStage::TryDestroyVehicle(const Actor& actor) {
+    if (!actor->IsAlive()) {
+      return false;
+    }
+
+    const ActorId actor_id = actor->GetId();
+
+    auto delta_last_actor_destruction = current_timestamp.elapsed_seconds - elapsed_last_actor_destruction;
+    if (delta_last_actor_destruction >= DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+      registered_actors.Destroy(actor);
+
+      // Clean actor data structures.
+      CleanActor(actor_id);
+
+      elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
+
+      return true;
+    }
+    return false;
   }
 
 } // namespace traffic_manager
