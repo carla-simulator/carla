@@ -39,7 +39,7 @@ void BatchControlStage::Action()
 		carla::rpc::VehicleControl vehicle_control;
 
 		const PlannerToControlData &element = data_frame->at(i);
-		const carla::ActorId actor_id = element.actor_id;
+		const carla::ActorId actor_id = element.actor->GetId();
 		vehicle_control.throttle = element.throttle;
 		vehicle_control.brake = element.brake;
 		vehicle_control.steer = element.steer;

@@ -53,12 +53,20 @@ namespace client {
     GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
   }
 
+  void Vehicle::SetLightState(const LightState &light_state) {
+    GetEpisode().Lock()->SetLightStateToVehicle(*this, rpc::VehicleLightState(light_state));
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }
 
   Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {
     return GetEpisode().Lock()->GetVehiclePhysicsControl(*this);
+  }
+
+  Vehicle::LightState Vehicle::GetLightState() const {
+    return GetEpisode().Lock()->GetVehicleLightState(*this).GetLightStateEnum();
   }
 
   float Vehicle::GetSpeedLimit() const {

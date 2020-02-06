@@ -77,6 +77,8 @@ namespace traffic_manager {
     chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
     /// Number of vehicles registered with the traffic manager.
     uint64_t number_of_vehicles;
+    /// Structure to hold the geodesic boundaries during one iteration.
+    std::unordered_map<ActorId, LocationList> geodesic_boundaries;
     /// Snippet profiler for measuring execution time.
     SnippetProfiler snippet_profiler;
 
@@ -98,6 +100,9 @@ namespace traffic_manager {
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
     float GetBoundingBoxExtention(const Actor &ego_vehicle);
+
+    /// At intersections, used to see if there is space after the junction
+    bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor, const SimpleWaypointPtr safe_point);
 
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary);
