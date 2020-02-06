@@ -77,12 +77,12 @@ namespace CollisionStageConstants {
 
       // Check every actor in the vicinity if it poses a collision hazard.
       for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
-        const Actor other_actor = j->second;
-        const auto other_actor_type = other_actor->GetTypeId();
-        const ActorId other_actor_id = j->first;
-        const cg::Location other_location = other_actor->GetLocation();
-
         try {
+          const Actor other_actor = j->second;
+          const auto other_actor_type = other_actor->GetTypeId();
+          const ActorId other_actor_id = j->first;
+          const cg::Location other_location = other_actor->GetLocation();
+
           // Collision checks increase with speed (Official formula used)
           float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
           collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
@@ -102,7 +102,15 @@ namespace CollisionStageConstants {
                     break;
                   }
                 }
+
+                if (parameters.GetCollisionDetection(ego_actor, actor) &&
+                    NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
+
+                  collision_hazard = true;
+                  break;
+                }
               }
+            }
           } catch (const std::exception &e) {
             carla::log_info("Actor might not be alive", e.what());
           }
@@ -233,7 +241,11 @@ namespace CollisionStageConstants {
 
   LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor, const cg::Location &vehicle_location) {
 
-    const LocationList bbox = GetBoundary(actor, vehicle_location);
+    if (geodesic_boundaries.find(actor->GetId()) != geodesic_boundaries.end()) {
+      return geodesic_boundaries.at(actor->GetId());
+    }
+
+    const LocationList bbox = GetBoundary(actor);
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
 

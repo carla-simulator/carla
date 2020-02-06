@@ -7,13 +7,14 @@ extra_css: [extra.css]
 
 nav:
 - Home: 'index.md'
-- Getting started: 
+- Getting started:
   - 'Introduction': 'getting_started/introduction.md'
   - 'Quick start': 'getting_started/quickstart.md'
 - Building CARLA:
   - 'Linux build': 'how_to_build_on_linux.md'
   - 'Windows build': 'how_to_build_on_windows.md'
   - 'Update CARLA': 'update_carla.md'
+  - "Get latest content": 'dev/how_to_upgrade_content.md'
   - 'Build system': 'dev/build_system.md'
   - 'Running in a Docker': 'carla_docker.md'
   - 'F.A.Q.': 'faq.md'
@@ -22,7 +23,7 @@ nav:
   - 'Configuring the simulation': 'configuring_the_simulation.md'
   - 'Cameras and sensors': 'cameras_and_sensors.md'
   - 'Python Cookbook': 'python_cookbook.md'
-- References: 
+- References:
   - 'Python API reference': 'python_api.md'
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'cpp_reference.md'

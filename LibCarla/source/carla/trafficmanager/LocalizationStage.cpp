@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "LocalizationStage.h"
+#include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/client/DebugHelper.h"
 
 namespace carla {
@@ -701,6 +701,156 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
     return false;
   }
+
+SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle &vehicle, Buffer &waypoint_buffer){
+
+	// Get the length of the car
+	float length = vehicle->GetBoundingBox().extent.x;
+
+	// First Waypoint before the junction
+	const SimpleWaypointPtr initial_point;
+	uint initial_index = 0;
+	// First Waypoint after the junction
+	SimpleWaypointPtr safe_point = nullptr;
+	uint safe_index = 0;
+	// Vehicle position after the junction
+	SimpleWaypointPtr final_point = nullptr;
+	// Safe space after the junction
+	const float safe_distance = 1.5f*length;
+
+	for (uint j = 0u; j < waypoint_buffer.size(); ++j){
+		if (waypoint_buffer.at(j)->CheckJunction()){
+			initial_index = j;
+			break;
+		}
+	}
+
+	// Stop if something failed
+	if (initial_index == 0 && !waypoint_buffer.front()->CheckJunction()){
+		return final_point;
+	}
+
+	// 2) Search for the end of the intersection (if it is in the buffer)
+	for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
+
+		if (!waypoint_buffer.at(i)->CheckJunction()){
+			safe_point = waypoint_buffer.at(i);
+			safe_index = i;
+			break;
+		}
+	}
+
+	// If it hasn't been found, extend the buffer
+	if(safe_point == nullptr){
+		while (waypoint_buffer.back()->CheckJunction()) {
+
+			std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+			uint selection_index = 0u;
+			if (next_waypoints.size() > 1) {
+				selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+			}
+
+			waypoint_buffer.push_back(next_waypoints.at(selection_index));
+		}
+		// Save the last one
+		safe_point = waypoint_buffer.back();
+	}
+
+	// Stop if something failed
+	if (safe_index == 0){
+		return final_point;
+	}
+
+	// 3) Search for final_point (again, if it is in the buffer)
+
+	for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+
+		if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
+			final_point = waypoint_buffer.at(k);
+			break;
+		}
+	}
+
+	// If it hasn't been found, extend the buffer
+	if(final_point == nullptr){
+		while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
+
+			// Record the last point as a safe one and save it
+			std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+			uint selection_index = 0u;
+			// Pseudo-randomized path selection if found more than one choice.
+			if (next_waypoints.size() > 1) {
+				selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+			}
+
+			waypoint_buffer.push_back(next_waypoints.at(selection_index));
+		}
+		final_point = waypoint_buffer.back();
+	}
+
+	return final_point;
+}
+
+void LocalizationStage::UpdateIdleTime(const Actor& actor) {
+	if (idle_time.find(actor->GetId()) == idle_time.end()) {
+		return;
+	}
+
+	const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+	if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
+		idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
+	}
+
+	// Checking maximum idle time.
+	if (maximum_idle_time.first == nullptr || maximum_idle_time.second > idle_time[actor->GetId()]) {
+		maximum_idle_time = std::make_pair(actor, idle_time[actor->GetId()]);
+	}
+}
+
+bool LocalizationStage::IsVehicleStuck(const Actor& actor) {
+	if (actor == nullptr) {
+		return false;
+	}
+
+	if (idle_time.find(actor->GetId()) != idle_time.end()) {
+		auto delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor->GetId());
+		if (delta_idle_time >= BLOCKED_TIME_THRESHOLD) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void LocalizationStage::CleanActor(const ActorId actor_id) {
+	track_traffic.DeleteActor(actor_id);
+	for (const auto& waypoint : buffer_list->at(actor_id)) {
+		track_traffic.RemovePassingVehicle(waypoint->GetId(), actor_id);
+	}
+
+	idle_time.erase(actor_id);
+	buffer_list->erase(actor_id);
+}
+
+bool LocalizationStage::TryDestroyVehicle(const Actor& actor) {
+	if (!actor->IsAlive()) {
+		return false;
+	}
+
+	const ActorId actor_id = actor->GetId();
+
+	auto delta_last_actor_destruction = current_timestamp.elapsed_seconds - elapsed_last_actor_destruction;
+	if (delta_last_actor_destruction >= DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+		registered_actors.Destroy(actor);
+
+		// Clean actor data structures.
+		CleanActor(actor_id);
+
+		elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
+
+		return true;
+	}
+	return false;
+}
 
 } // namespace traffic_manager
 } // namespace carla
