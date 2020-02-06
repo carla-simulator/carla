@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -26,7 +27,7 @@ namespace traffic_manager {
   /// Alias for waypoint buffer used in the localization stage.
   using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
   /// Alias used for the list of buffers in the localization stage.
-  using BufferList = std::vector<Buffer>;
+  using BufferList = std::unordered_map<carla::ActorId, Buffer>;
 
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::ActorId;
@@ -43,7 +44,7 @@ namespace traffic_manager {
 
   /// Type of data sent by the motion planner stage to the batch control stage.
   struct PlannerToControlData {
-    carla::ActorId actor_id;
+    Actor actor;
     float throttle;
     float brake;
     float steer;
@@ -54,6 +55,7 @@ namespace traffic_manager {
     Actor actor;
     Buffer buffer;
     std::unordered_map<ActorId, Actor> overlapping_actors;
+    std::shared_ptr<SimpleWaypoint> safe_point_after_junction;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
   };

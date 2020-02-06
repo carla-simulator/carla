@@ -45,6 +45,10 @@ namespace traffic_manager {
 
       bool traffic_light_hazard = false;
       const LocalizationToTrafficLightData &data = localization_frame->at(i);
+      if (!data.actor->IsAlive()) {
+        continue;
+      }
+
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const SimpleWaypointPtr closest_waypoint = data.closest_waypoint;
@@ -58,16 +62,14 @@ namespace traffic_manager {
 
       // We determine to stop if the current position of the vehicle is not a
       // junction and there is a red or yellow light.
-      if (!closest_waypoint->CheckJunction() &&
-          ego_vehicle->IsAtTrafficLight() &&
+      if (ego_vehicle->IsAtTrafficLight() &&
           traffic_light_state != TLS::Green &&
           parameters.GetPercentageRunningLight(boost::shared_ptr<cc::Actor>(ego_actor)) <= (rand() % 101)) {
 
         traffic_light_hazard = true;
       }
       // Handle entry negotiation at non-signalised junction.
-      else if (!closest_waypoint->CheckJunction() &&
-               look_ahead_point->CheckJunction() &&
+      else if (look_ahead_point->CheckJunction() &&
                !ego_vehicle->IsAtTrafficLight() &&
                traffic_light_state != TLS::Green &&
                parameters.GetPercentageRunningSign(boost::shared_ptr<cc::Actor>(ego_actor)) <= (rand() % 101)) {

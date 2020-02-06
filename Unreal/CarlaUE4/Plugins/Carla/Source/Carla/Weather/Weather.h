@@ -21,9 +21,18 @@ public:
 
   AWeather(const FObjectInitializer& ObjectInitializer);
 
+  /* Update the weather parameters and notifies it to the blueprint's event
+   */
   UFUNCTION(BlueprintCallable)
   void ApplyWeather(const FWeatherParameters &WeatherParameters);
 
+  /* Update the weather parameters without notifing it to the blueprint's event
+   */
+  UFUNCTION(BlueprintCallable)
+  void SetWeather(const FWeatherParameters &WeatherParameters);
+
+  /* Returns the current WeatherParameters
+   */
   UFUNCTION(BlueprintCallable)
   const FWeatherParameters &GetCurrentWeather() const
   {

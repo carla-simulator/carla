@@ -147,7 +147,38 @@
     - def_name: __str__
       return: str
     # --------------------------------------
-
+  - class_name: VehicleLightState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that recaps the state of the lights of a vehicle, these can be used as a flags.
+      E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active.
+      Lights are off by default in any situation and should be managed by the user via script.
+      The blinkers blink automatically.
+      _Warning: Right now, not all vehicles have been prepared to work with this functionality,
+      this will be added to all of them in later updates_
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+        All lights off
+    - var_name: Position
+    - var_name: LowBeam
+    - var_name: HighBeam
+    - var_name: Brake
+    - var_name: RightBlinker
+    - var_name: LeftBlinker
+    - var_name: Reverse
+    - var_name: Fog
+    - var_name: Interior
+    - var_name: Special1
+      doc: >
+        This is reserved for certain vehicles that can have special lights, like a siren.
+    - var_name: Special2
+      doc: >
+        This is reserved for certain vehicles that can have special lights, like a siren.
+    - var_name: Any
+      doc: >
+        All lights on
   - class_name: Vehicle
     parent: carla.Actor
     # - DESCRIPTION ------------------------
@@ -160,6 +191,22 @@
       doc: >
         The vehicle's bounding box
     # - METHODS ----------------------------
+    methods:
+    - def_name: get_light_state
+      return: carla.VehicleLightState
+      doc: >
+        Returns a flag representing the vehicle light state,
+        this represents which lights are active or not
+    # --------------------------------------
+    methods:
+    - def_name: set_light_state
+      params:
+      - param_name: light_state
+        type: carla.VehicleLightState
+      doc: >
+        Sets the light state of a vehicle using a VehicleLightState flag,
+        this represents which lights are active or not
+    # --------------------------------------
     methods:
     - def_name: apply_control
       params:

@@ -44,6 +44,8 @@ namespace traffic_manager {
     SimpleWaypointPtr next_right_waypoint;
     /// Integer placing the waypoint into a geodesic grid.
     GeoGridId geodesic_grid_id = 0;
+    // Boolean to hold if the waypoint belongs to a junction
+    bool _is_junction = false;
 
   public:
 
@@ -108,6 +110,9 @@ namespace traffic_manager {
 
     /// Returns true if the object's waypoint belongs to an intersection.
     bool CheckJunction() const;
+
+    /// This method is used to set whether the waypoint belongs to a junction.
+    void SetIsJunction(bool value);
 
     /// Returns true if the object's waypoint belongs to an intersection (Doesn't use OpenDrive).
     bool CheckIntersection() const;
