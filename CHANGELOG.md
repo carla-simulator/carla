@@ -1,20 +1,21 @@
 ## latest
-  * Fixed linkage between waypoints in InMemoryMap.
-  * Vehicles get destroyed when they are stuck.
-  * Implemented intersection anticipation algorithm
-  * Added new methods to BoundingBox: contains, get_local_vertices and get_world_vertices.
+  * Added junction class as queryable object from waypoint
+  * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
+  * Vehicles get destroyed when they are stuck in Traffic Manager
+  * Implemented intersection anticipation algorithm in Traffic Manager
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
   * Fixed Low/Epic quality settings transition
   * Enabled Mesh distance fields
   * API extensions:
+    - Added new methods to `BoundingBox`: `contains()`, `get_local_vertices()` and `get_world_vertices(transform)`
     - Added new function to get a waypoint specifying parameters from the openDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
   * Fixed typos
-  * Fixed agent failures due to API changes in is_within_distance_ahead()
-  * Fixed incorrect doppler velocity for RADAR sensors.
+  * Fixed agent failures due to API changes in `is_within_distance_ahead()`
+  * Fixed incorrect doppler velocity for RADAR sensor
 
 
 ## CARLA 0.9.7

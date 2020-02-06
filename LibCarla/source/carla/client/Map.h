@@ -21,10 +21,11 @@ namespace geom { class GeoLocation; }
 namespace client {
 
   class Waypoint;
+  class Junction;
 
   class Map
     : public EnableSharedFromThis<Map>,
-      private NonCopyable {
+    private NonCopyable {
   public:
 
     explicit Map(rpc::MapInfo description);
@@ -50,9 +51,9 @@ namespace client {
     }
 
     SharedPtr<Waypoint> GetWaypoint(
-        const geom::Location &location,
-        bool project_to_road = true,
-        uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
+    const geom::Location &location,
+    bool project_to_road = true,
+    uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
     SharedPtr<Waypoint> GetWaypointXODR(
       carla::road::RoadId road_id,
@@ -66,12 +67,19 @@ namespace client {
     std::vector<SharedPtr<Waypoint>> GenerateWaypoints(double distance) const;
 
     std::vector<road::element::LaneMarking> CalculateCrossedLanes(
-        const geom::Location &origin,
-        const geom::Location &destination) const;
+    const geom::Location &origin,
+    const geom::Location &destination) const;
 
     const geom::GeoLocation &GetGeoReference() const;
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
+
+    SharedPtr<Junction> GetJunction(const Waypoint &waypoint) const;
+
+    /// Returns a pair of waypoints (start and end) for each lane in the
+    /// junction
+    std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(
+        road::JuncId id, road::Lane::LaneType type) const;
 
   private:
 
