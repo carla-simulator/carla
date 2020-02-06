@@ -1,4 +1,7 @@
 ## latest
+  * Fixed linkage between waypoints in InMemoryMap.
+  * Vehicles get destroyed when they are stuck.
+  * Implemented intersection anticipation algorithm
   * Added new methods to BoundingBox: contains, get_local_vertices and get_world_vertices.
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
   * Fixed Low/Epic quality settings transition
@@ -18,6 +21,7 @@
   * Fixed import pipeline bugs:
     - Crash when no pedestrian navmesh is present
     - Automatically imported static meshes not properly tagged
+
 
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
