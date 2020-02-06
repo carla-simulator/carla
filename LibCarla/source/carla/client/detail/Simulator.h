@@ -182,9 +182,14 @@ namespace detail {
     }
 
     void DestroyTrafficManager(uint16_t port) const {
+      carla::log_info("Simulator DestroyTrafficManager", port);
       _client.DestroyTrafficManager(port);
+      carla::log_info("Simulator DestroyTrafficManager end", port);
     }
 
+    void AddPendingException(std::string e) {
+      _episode->AddPendingException(e);
+    }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
 

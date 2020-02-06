@@ -86,6 +86,7 @@ TrafficManagerLocal::TrafficManagerLocal
 TrafficManagerLocal::~TrafficManagerLocal() {
   carla::log_info("TrafficManagerLocal dtr");
   episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
+  carla::log_info("TrafficManagerLocal stop");
   Stop();
   carla::log_info("TrafficManagerLocal dtr end");
 }
@@ -101,6 +102,7 @@ void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_
 }
 
 void TrafficManagerLocal::Start() {
+  carla::log_info("TrafficManagerLocal::Start");
   localization_collision_messenger->Start();
   localization_traffic_light_messenger->Start();
   localization_planner_messenger->Start();
@@ -115,6 +117,7 @@ void TrafficManagerLocal::Start() {
   control_stage->Start();
 
   _is_running = true;
+  carla::log_info("TrafficManagerLocal::Start end");
 }
 
 void TrafficManagerLocal::Stop() {
