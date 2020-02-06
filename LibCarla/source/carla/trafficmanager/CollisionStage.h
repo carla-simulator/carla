@@ -102,7 +102,7 @@ namespace traffic_manager {
     float GetBoundingBoxExtention(const Actor &ego_vehicle);
 
     /// At intersections, used to see if there is space after the junction
-    bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor, const SimpleWaypointPtr safe_point);
+    bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor, const SimpleWaypointPtr safe_point, const cg::Location &other_location);
 
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary);
