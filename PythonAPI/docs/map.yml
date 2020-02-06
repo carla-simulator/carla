@@ -168,7 +168,7 @@
     - def_name: get_spawn_points
       return: list(carla.Transform)
       doc: >
-        Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes carla.Tranform objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way. 
+        Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes carla.Transform objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way. 
     # --------------------------------------
     - def_name: get_topology
       doc: >

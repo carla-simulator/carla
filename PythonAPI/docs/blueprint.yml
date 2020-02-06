@@ -233,7 +233,7 @@
   - class_name: BlueprintLibrary
     # - DESCRIPTION ------------------------
     doc: >
-      A class that gives access to the blueprints provided for actor spawning and returns the carla.ActorBlueprint that will be used for that. Each blueprint has an identifier and attributes that may or may not be modifiable depending on which.The library is automatically created by the server and can be accessed through carla.World.
+      A class that contains the blueprints provided for actor spawning. Its main application is to return carla.ActorBlueprint objects needed to spawn actors. Each blueprint has an identifier and attributes that may or may not be modifiable. The library is automatically created by the server and can be accessed through carla.World.
         
         [Here](../bp_library/) is a reference containing every available blueprint and its specifics.   
     # - METHODS ----------------------------
