@@ -67,42 +67,52 @@ namespace client {
   std::vector<SharedPtr<Waypoint>> Waypoint::GetNextUntilLaneEnd(double distance) const {
     std::vector<SharedPtr<Waypoint>> result;
     std::vector<SharedPtr<Waypoint>> next = GetNext(distance);
-    bool is_there_next = true;
-    while (is_there_next) {
-      is_there_next = false;
-      if(next.size() != 1){
-        break;
-      }
-      auto next_waypoint = next.front();
-      if (next_waypoint->GetRoadId() == GetRoadId()) {
-        result.emplace_back(next_waypoint);
-        is_there_next = true;
-      }
-      if (result.size()) {
-        next = result.back()->GetNext(distance);
-      }
+
+    while (next.size() == 1 && next.front()->GetRoadId() == GetRoadId()) {
+      result.emplace_back(next.front());
+      next = result.back()->GetNext(distance);
     }
+    double current_s = GetDistance();
+    if(result.size()){
+      current_s = result.back()->GetDistance();
+    }
+    double remaining_length;
+    double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
+    if(_waypoint.lane_id < 0){
+      remaining_length = road_length - current_s;
+    }else{
+      remaining_length = current_s;
+    }
+    remaining_length -= std::numeric_limits<double>::epsilon();
+    result.emplace_back(result.back()->GetNext(remaining_length).front());
+
     return result;
   }
 
   std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double distance) const {
     std::vector<SharedPtr<Waypoint>> result;
     std::vector<SharedPtr<Waypoint>> prev = GetPrevious(distance);
-    bool is_there_prev = true;
-    while (is_there_prev) {
-      is_there_prev = false;
-      if(prev.size() != 1){
-        break;
-      }
-      auto prev_waypoint = prev.front();
-      if (prev_waypoint->GetRoadId() == GetRoadId()) {
-        result.emplace_back(prev_waypoint);
-        is_there_prev = true;
-      }
-      if (result.size()) {
-        prev = result.back()->GetPrevious(distance);
-      }
+
+    while (prev.size() == 1 && prev.front()->GetRoadId() == GetRoadId()) {
+      result.emplace_back(prev.front());
+      prev = result.back()->GetPrevious(distance);
     }
+
+    double current_s = GetDistance();
+    if(result.size()){
+      current_s = result.back()->GetDistance();
+    }
+
+    double remaining_length;
+    double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
+    if(_waypoint.lane_id < 0){
+      remaining_length = road_length - current_s;
+    }else{
+      remaining_length = current_s;
+    }
+    remaining_length -= std::numeric_limits<double>::epsilon();
+    result.emplace_back(result.back()->GetPrevious(remaining_length).front());
+
     return result;
   }
 
