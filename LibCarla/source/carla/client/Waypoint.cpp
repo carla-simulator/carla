@@ -73,14 +73,14 @@ namespace client {
       next = result.back()->GetNext(distance);
     }
     double current_s = GetDistance();
-    if(result.size()){
+    if(result.size()) {
       current_s = result.back()->GetDistance();
     }
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0){
+    if(_waypoint.lane_id < 0) {
       remaining_length = road_length - current_s;
-    }else{
+    } else {
       remaining_length = current_s;
     }
     remaining_length -= std::numeric_limits<double>::epsilon();
@@ -99,15 +99,15 @@ namespace client {
     }
 
     double current_s = GetDistance();
-    if(result.size()){
+    if(result.size()) {
       current_s = result.back()->GetDistance();
     }
 
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0){
+    if(_waypoint.lane_id < 0) {
       remaining_length = road_length - current_s;
-    }else{
+    } else {
       remaining_length = current_s;
     }
     remaining_length -= std::numeric_limits<double>::epsilon();
