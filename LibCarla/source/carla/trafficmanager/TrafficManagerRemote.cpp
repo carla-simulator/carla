@@ -29,6 +29,9 @@ TrafficManagerRemote :: TrafficManagerRemote
 /// Destructor.
 TrafficManagerRemote :: ~TrafficManagerRemote() {
   carla::log_info("TrafficManagerRemote dtr");
+  if(!client.ConnectionActive()) {
+    episodeProxyTM.Lock()->AddPendingException("TM shutdown");
+  }
 }
 
 /// This method registers a vehicle with the traffic manager.

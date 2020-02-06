@@ -60,15 +60,14 @@ public:
     } else {
       carla::log_info("TrafficManagerClient already have rpc::client");
     }
-    if(/* !_thread && */ _client){
+    if( _client){
       std::thread _thread = std::thread( [&] () {
-        bool connection_active = false;
         std::chrono::milliseconds wait_time(TM_TIMEOUT);
         do {
           std::this_thread::sleep_for(wait_time);
-          connection_active = (_client->get_connection_state() == rpc::client::connection_state::connected);
-          carla::log_info("TrafficManagerClient - connection", connection_active?"active":"ended");
-        } while (connection_active && !stop_thread);
+          _connection_active = (_client->get_connection_state() == rpc::client::connection_state::connected);
+          carla::log_info("TrafficManagerClient - connection", _connection_active?"active":"ended");
+        } while (_connection_active && !stop_thread);
         Stop();
       });
       _thread.detach();
@@ -76,6 +75,10 @@ public:
   }
 
   void Stop();
+
+  bool ConnectionActive() const {
+    return _connection_active;
+  }
 
   /// Set parameters
   void setServerDetails(const std::string &_host, const uint16_t &_port) {
@@ -186,6 +189,7 @@ private:
   std::string tmhost;
   uint16_t    tmport;
   bool stop_thread = false;
+  bool _connection_active = false;
 };
 
 #endif /* __TRAFFICMANAGERCLIENT__ */

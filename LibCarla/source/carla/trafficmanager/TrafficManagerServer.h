@@ -148,7 +148,7 @@ public:
   ~TrafficManagerServer() {
     carla::log_info("TrafficManagerServer dtr");
     if(server) {
-      server->close_sessions();
+      //server->close_sessions();
       server->stop();
       delete server;
       server = nullptr;
