@@ -113,7 +113,7 @@ pipeline {
         stage('Deploy')
         {
             agent { label 'build' }
-            when { anyOf { branch "master"; buildingTag() } }
+            //when { anyOf { branch "master"; buildingTag() } }
             steps
             {
                 sh 'git checkout .'
