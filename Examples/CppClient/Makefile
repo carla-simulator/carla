@@ -24,7 +24,7 @@ run: build
 
 build: $(BINDIR)/cpp_client
 
-$(BINDIR)/cpp_client: build_libcarla
+$(BINDIR)/cpp_client: | build_libcarla
 	$(call log,Compiling C++ Client...)
 	@mkdir -p $(BINDIR)
 	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -isystem $(INSTALLDIR)/include/system -L$(INSTALLDIR)/lib \
