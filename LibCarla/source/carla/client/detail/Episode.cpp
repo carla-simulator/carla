@@ -71,7 +71,7 @@ namespace detail {
 
         if (episode_has_changed) {
           self->OnEpisodeStarted();
-          // self->_state.compare_exchange(&prev, next);
+          self->_state.compare_exchange(&prev, next);
           return;
         }
 
@@ -127,7 +127,7 @@ namespace detail {
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
-    traffic_manager::TrafficManager::Restart();
+    traffic_manager::TrafficManager::Release();
   }
 
 } // namespace detail
