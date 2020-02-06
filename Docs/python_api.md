@@ -368,10 +368,10 @@ Returns the world object currently active in the simulation. This world will be 
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
         - `map_name` (_str_) – Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.  
-- <a name="carla.Client.GetTrafficManager"></a>**<font color="#7fb800">GetTrafficManager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**</font>)  
-Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created. The port per default is `8000`.  
+- <a name="carla.Client.GetTrafficManager"></a>**<font color="#7fb800">GetTrafficManager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**=8000</font>)  
+Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.  
     - **Parameters:**
-        - `client_connection` (_[carla.Client](#carla.Client)_) – Is this the port?  
+        - `client_connection` (_int_) – Port that will be used by the traffic manager. Default is `8000`.  
     - **Return:** _[carla.TrafficManager](#carla.TrafficManager)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
 Deletes the current world and creates a new one using the same map and default settings. Every actor in the previous world will be destroyed.  
@@ -1305,67 +1305,66 @@ All possible states for traffic lights. These can either change at a specific ti
 ---
 
 ## carla.TrafficManager<a name="carla.TrafficManager"></a>
-The traffic manager is a module build on top of the CARLA API that handles any group of vehicles in order to simulate specific behaviours. This module manages every [[carla.Vehicle](#carla.Vehicle)]() that has been set to autopilot mode. Its main goal is to improve the traffic around the city so that the simulation runs under realistic conditions. While doing so, another goal is to give the users the option to customize the simulated traffic like never before.  
+The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a [carla.VehicleControl](#carla.VehicleControl) is applied to every vehicle registered in a traffic manager.  
 In order to learn more, visit the [documentation](../traffic_manager) regarding this module.  
 
 <h3>Methods</h3>
 - <a name="carla.TrafficManager.force_lane_change"></a>**<font color="#7fb800">force_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**direction**</font>)  
-Forces a vehicle to change either to the lane on its left or right (if existing) as indicated in `direction`. This method provokes the lane change no matter what, disregarding possible collisions.  
+Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle being forced to change lanes.  
-        - `direction` (_bool_) – Destiny lane. __True__ is the one on the left and __False__ is the right one.  
+        - `direction` (_bool_) – Destination lane. __True__ is the one on the left and __False__ is the right one.  
 - <a name="carla.TrafficManager.ignore_actors_percentage"></a>**<font color="#7fb800">ignore_actors_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
-During the collision detection stage, which runs every frame, this method sets a percentage of times that collisions will be ignored for said `actor` and so, not computed.  
+During the collision detection stage, which runs every frame, this method sets a percent chance that collisions will be ignored for a vehicle.  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_) – The actor that is going to ignore others.  
+        - `actor` (_[carla.Actor](#carla.Actor)_) – The vehicle that is going to ignore others.  
         - `perc` (_float_) – Between 0 and 100. Amount of times collisions will be ignored.  
 - <a name="carla.TrafficManager.ignore_lights_percentage"></a>**<font color="#7fb800">ignore_lights_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
-During the traffic light stage, which runs every frame, this method sets a percentage of times that collisions with the bounding boxes of traffic lights will be ignored for said `actor` and so, not computed.  
+During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The actor that is going to ignore traffic lights.  
         - `perc` (_float_) – Between 0 and 100. Amount of times traffic lights will be ignored.  
-    - **Return:** _Anything?_  
 - <a name="carla.TrafficManager.register_vehicles"></a>**<font color="#7fb800">register_vehicles</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_list**</font>)  
-Registers a series of actors to a traffic manager to make it aware of them.  
+Registers a series of vehicles to a traffic manager that will conduct them.  
     - **Parameters:**
-        - `actor_list` (_list([carla.Actor](#carla.Actor))_) – List of actors to be subscribed.  
+        - `actor_list` (_list([carla.Actor](#carla.Actor))_) – List of vehicles to register.  
 - <a name="carla.TrafficManager.reset_traffic_lights"></a>**<font color="#7fb800">reset_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
-Returns every group of traffic lights in a map to its initial state. The first traffic light of the group will turn green, the rest will be frozen in red and the time cycle will reset.  
+Resets every traffic light in the map to its initial state.  
 - <a name="carla.TrafficManager.set_auto_lane_change"></a>**<font color="#7fb800">set_auto_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enable**</font>)  
-Sets the capability of a vehicle to perform lane changes when the traffic manager decides so. Otherwise, there will be none.  
+Turns on or off lane changing behaviour for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The vehicle whose settings are changed.  
-        - `enable` (_bool_) – When __True__, lane changes will be enabled.  
+        - `enable` (_bool_) – __True__ is default and enables lane changes. __False__ will disable them.  
 - <a name="carla.TrafficManager.set_distance_to_leading_vehicle"></a>**<font color="#7fb800">set_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**distance**</font>)  
-Sets the minimum safety distance for a vehicle to keep with the rest when stopped. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
+Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.  
     - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose safe distance is being changed.  
+        - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose minimum distance is being changed.  
         - `distance` (_float_) – Meters between both vehicles.  
 - <a name="carla.TrafficManager.set_collision_detection"></a>**<font color="#7fb800">set_collision_detection</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reference_actor**</font>, <font color="#00a6ed">**other_actor**</font>, <font color="#00a6ed">**detect_collision**</font>)  
-Turns on/off collisions between a specific vehicle and another actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.  
+Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.  
     - **Parameters:**
         - `reference_actor` (_[carla.Actor](#carla.Actor)_) – Vehicle that is going to ignore collisions.  
         - `other_actor` (_[carla.Actor](#carla.Actor)_) – The actor that `reference_actor` is going to ignore collisions with.  
-        - `detect_collision` (_bool_) – Set it to __True__ to enable collisions.  
+        - `detect_collision` (_bool_) – __True__ is default and enables collisions. __False will disable them.  
 - <a name="carla.TrafficManager.set_global_max_speed_difference"></a>**<font color="#7fb800">set_global_max_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
-The percentage is 0 per default for every vehicle, meaning that the default behaviour makes them drive at their limit speed.  If `perc` is 30 and the speed limit is 100, the vehicles' intended speed will be 70.    If `perc` is -30 and the speed limit is 100, the vehicles' intended speed will be 130.  
+Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
-        - `percentage` (_float_) – Between 0 and 100, difference between speed regarding the current limit.  
+        - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
 - <a name="carla.TrafficManager.set_global_distance_to_leading_vehicle"></a>**<font color="#7fb800">set_global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-Sets a new minimum distance between stopped vehicles to keep for safety reasons. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
+Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
     - **Parameters:**
         - `distance` (_float_) – Meters between vehicles.  
 - <a name="carla.TrafficManager.set_vehicle_max_speed_difference"></a>**<font color="#7fb800">set_vehicle_max_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
-The percentage is 0 per default for every vehicle, meaning that the default behaviour makes them drive at their limit speed.  If `perc` is 30 and the speed limit is 100, the vehicle's intended speed will be 70.    If `perc` is -30 and the speed limit is 100, the vehicle's intended speed will be 130.  
+Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
-        - `percentage` (_float_) – Between 0 and 100, difference between speed regarding the current limit.  
+        - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
 - <a name="carla.TrafficManager.unregister_vehicles"></a>**<font color="#7fb800">unregister_vehicles</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_list**</font>)  
-Deletes a series of actors from the traffic manager's lists to stop being responsible of them.  
+Deletes a series of vehicles from the traffic manager's registered list to stop conducting them.  
     - **Parameters:**
-        - `actor_list` (_list([carla.Actor](#carla.Actor))_) – List of actors to be unsubscribed.  
+        - `actor_list` (_list([carla.Actor](#carla.Actor))_) – List of vehicles to be unregistered.  
 
 ---
 
