@@ -71,7 +71,6 @@ namespace client {
     while (is_there_next) {
       is_there_next = false;
       if(next.size() != 1){
-        is_there_next = false;
         break;
       }
       auto next_waypoint = next.front();
@@ -93,7 +92,6 @@ namespace client {
     while (is_there_prev) {
       is_there_prev = false;
       if(prev.size() != 1){
-        is_there_prev = false;
         break;
       }
       auto prev_waypoint = prev.front();
