@@ -7,7 +7,7 @@ FBX2OBJ_FOLDER=${CARLA_DOCKER_UTILS_FOLDER}/fbx
 FBX2OBJ_BUILD_FOLDER=${FBX2OBJ_FOLDER}/build
 FBX2OBJ_DEP_FOLDER=${FBX2OBJ_FOLDER}/dependencies
 
-if [ -f ${FBX2OBJ_DIST}/FBX2OBJ ]; then
+if [ -f "${FBX2OBJ_DIST}/FBX2OBJ" ]; then
   log "FBX SDK already installed."
   exit
 fi
@@ -19,24 +19,23 @@ FBXSDK_URL=https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-0-1/${
 
 echo "Downloading FBX SDK 2020"
 
-wget -c ${FBXSDK_URL} -P ${CARLA_DOCKER_UTILS_FOLDER}
+wget -c "${FBXSDK_URL}" -P "${CARLA_DOCKER_UTILS_FOLDER}"
 
 echo "Unpacking..."
-echo ${FBX2OBJ_DEP_FOLDER}
-mkdir -p ${FBX2OBJ_DEP_FOLDER}
-tar -xvzf "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz" -C ${CARLA_DOCKER_UTILS_FOLDER} ${LIB_NAME}
+mkdir -p "${FBX2OBJ_DEP_FOLDER}"
+tar -xvzf "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz" -C "${CARLA_DOCKER_UTILS_FOLDER}" "${LIB_NAME}"
 rm ${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz
 
 echo "Installing..."
-echo -e "y\nyes\nn\n" | ${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME} ${FBX2OBJ_DEP_FOLDER}
+echo -e "y\nyes\nn\n" | "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}" "${FBX2OBJ_DEP_FOLDER}"
 echo
-rm ${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}
+rm "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}"
 
 echo "Compiling FBX2OBJ..."
-mkdir -p ${FBX2OBJ_DIST}
+mkdir -p "${FBX2OBJ_DIST}"
 
-cmake -S ${FBX2OBJ_FOLDER} -B ${FBX2OBJ_BUILD_FOLDER}
+cmake -S "${FBX2OBJ_FOLDER}" -B "${FBX2OBJ_BUILD_FOLDER}"
 
-make -C ${FBX2OBJ_BUILD_FOLDER} install
+make -C "${FBX2OBJ_BUILD_FOLDER}" install
 
 log "Success!"
