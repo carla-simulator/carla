@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,9 +15,9 @@
 namespace carla {
 namespace geom {
 
-  // Rtree class working with 3D point clouds.
-  // Asociates a T element with a 3D point
-  // Useful to perform fast k-NN searches
+  /// Rtree class working with 3D point clouds.
+  /// Asociates a T element with a 3D point
+  /// Useful to perform fast k-NN searches
   template <typename T, size_t Dimension = 3>
   class PointCloudRtree {
   public:
@@ -36,11 +36,12 @@ namespace geom {
     void InsertElements(const std::vector<TreeElement> &elements) {
       _rtree.insert(elements.begin(), elements.end());
     }
-    // Return nearest neighbors with a user defined filter.
-    // The filter reveices as an argument a TreeElement value and needs to
-    // return a bool to accept or reject the value
-    // [&](Rtree::TreeElement const &element){if (IsOk(element)) return true;
-    // else return false;}
+
+    /// Return nearest neighbors with a user defined filter.
+    /// The filter reveices as an argument a TreeElement value and needs to
+    /// return a bool to accept or reject the value
+    /// [&](Rtree::TreeElement const &element){if (IsOk(element)) return true;
+    /// else return false;}
     template <typename Filter>
     std::vector<TreeElement> GetNearestNeighboursWithFilter(const BPoint &point, Filter filter,
         size_t number_neighbours = 1) const {
@@ -50,12 +51,14 @@ namespace geom {
       std::back_inserter(query_result));
       return query_result;
     }
+
     std::vector<TreeElement> GetNearestNeighbours(const BPoint &point, size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
       _rtree.query(boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours)),
       std::back_inserter(query_result));
       return query_result;
     }
+
     size_t GetTreeSize() const {
       return _rtree.size();
     }
@@ -66,9 +69,9 @@ namespace geom {
 
   };
 
-  // Rtree class working with 3D segment clouds.
-  // Stores a pair of T elements (one for each end of the segment)
-  // Useful to perform fast k-NN searches.
+  /// Rtree class working with 3D segment clouds.
+  /// Stores a pair of T elements (one for each end of the segment)
+  /// Useful to perform fast k-NN searches.
   template <typename T, size_t Dimension = 3>
   class SegmentCloudRtree {
   public:
@@ -80,6 +83,7 @@ namespace geom {
     void InsertElement(const BSegment &segment, const T &element_start, const T &element_end) {
       _rtree.insert(std::make_pair(segment, std::make_pair(element_start, element_end)));
     }
+
     void InsertElement(const TreeElement &element) {
       _rtree.insert(element);
     }
@@ -87,25 +91,30 @@ namespace geom {
     void InsertElements(const std::vector<TreeElement> &elements) {
       _rtree.insert(elements.begin(), elements.end());
     }
-    // Return nearest neighbors with a user defined filter.
-    // The filter reveices as an argument a TreeElement value and needs to
-    // return a bool to accept or reject the value
-    // [&](Rtree::TreeElement const &element){if (IsOk(element)) return true;
-    // else return false;}
+
+    /// Return nearest neighbors with a user defined filter.
+    /// The filter reveices as an argument a TreeElement value and needs to
+    /// return a bool to accept or reject the value
+    /// [&](Rtree::TreeElement const &element){if (IsOk(element)) return true;
+    /// else return false;}
     template <typename Filter>
-    std::vector<TreeElement> GetNearestNeighboursWithFilter(const BPoint &point, Filter filter,
+    std::vector<TreeElement> GetNearestNeighboursWithFilter(
+        const BPoint &point,
+        Filter filter,
         size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
-      _rtree.query(boost::geometry::index::nearest(point,
-          static_cast<unsigned int>(number_neighbours)) && boost::geometry::index::satisfies(filter),
-      std::back_inserter(query_result));
+      _rtree.query(
+          boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours)) &&
+              boost::geometry::index::satisfies(filter),
+          std::back_inserter(query_result));
       return query_result;
     }
+
     std::vector<TreeElement> GetNearestNeighbours(const BPoint &point, size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
-      _rtree.query(boost::geometry::index::nearest(point,
-          static_cast<unsigned int>(number_neighbours)),
-      std::back_inserter(query_result));
+      _rtree.query(
+          boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours)),
+          std::back_inserter(query_result));
       return query_result;
     }
 
