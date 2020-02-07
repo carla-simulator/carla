@@ -188,47 +188,47 @@ namespace element {
   }
 
   void GeometryParamPoly3::PreComputeSpline() {
-      size_t number_intervals = 1000;
-      double delta_p = 1.0 / number_intervals;
-      if (_arcLength) {
-          delta_p *= _length;
+    size_t number_intervals = 1000;
+    double delta_p = 1.0 / number_intervals;
+    if (_arcLength) {
+        delta_p *= _length;
+    }
+    double param_p = 0;
+    double current_s = 0;
+    double last_u = 0;
+    double last_v = 0;
+    double last_s = 0;
+    RtreeValue last_val;
+    for(size_t i = 0; i < number_intervals; ++i) {
+      double current_u = _polyU.Evaluate(param_p);
+      double current_v = _polyV.Evaluate(param_p);
+      double du = current_u - last_u;
+      double dv = current_v - last_v;
+      double ds = sqrt(du * du + dv * dv);
+      current_s += ds;
+      double current_t_u = _polyU.Tangent(param_p);
+      double current_t_v = _polyV.Tangent(param_p);
+      RtreeValue current_val{
+          current_u,
+          current_v,
+          current_s,
+          current_t_u,
+          current_t_v };
+
+      Rtree::BPoint p1(static_cast<float>(last_s));
+      Rtree::BPoint p2(static_cast<float>(current_s));
+      _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
+
+      last_u = current_u;
+      last_v = current_v;
+      last_s = current_s;
+      last_val = current_val;
+
+      param_p += delta_p;
+      if(current_s > _length){
+        break;
       }
-      double param_p = 0;
-      double current_s = 0;
-      double last_u = 0;
-      double last_v = 0;
-      double last_s = 0;
-      RtreeValue last_val;
-      for(size_t i = 0; i < number_intervals; ++i) {
-          double current_u = _polyU.Evaluate(param_p);
-          double current_v = _polyV.Evaluate(param_p);
-          double du = current_u - last_u;
-          double dv = current_v - last_v;
-          double ds = sqrt(du * du + dv * dv);
-          current_s += ds;
-          double current_t_u = _polyU.Tangent(param_p);
-          double current_t_v = _polyV.Tangent(param_p);
-          RtreeValue current_val{
-              current_u,
-              current_v,
-              current_s,
-              current_t_u,
-              current_t_v };
-
-          Rtree::BPoint p1(static_cast<float>(last_s));
-          Rtree::BPoint p2(static_cast<float>(current_s));
-          _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
-
-          last_u = current_u;
-          last_v = current_v;
-          last_s = current_s;
-          last_val = current_val;
-
-          param_p += delta_p;
-          if(current_s > _length){
-            break;
-          }
-      }
+    }
   }
 } // namespace element
 } // namespace road
