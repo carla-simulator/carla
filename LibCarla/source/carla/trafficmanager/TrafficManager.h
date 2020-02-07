@@ -41,9 +41,8 @@
 #include "carla/trafficmanager/TrafficManagerLocal.h"
 #include "carla/trafficmanager/TrafficManagerRemote.h"
 
-#define INVALID_INDEX           -1
-#define IP_DATA_BUFFER_SIZE     80
-#define TM_DEFAULT_PORT         8000
+#define INVALID_INDEX				-1
+#define IP_DATA_BUFFER_SIZE			80
 
 namespace carla {
 namespace traffic_manager {
@@ -55,108 +54,111 @@ using ActorPtr 	= carla::SharedPtr<carla::client::Actor>;
 class TrafficManager {
 
 private:
-  /// Pointer to hold representative TM class
-  static std::unique_ptr<TrafficManagerBase> singleton_pointer;
+	/// Pointer to hold representative TM class
+	static std::unique_ptr<TrafficManagerBase> singleton_pointer;
 
 public:
 
-  static void Release();
+	/// Public release method to clear allocated data
+	static void Release();
 
-  static void Restart();
+	/// Private constructor for singleton life cycle management.
+	explicit TrafficManager(uint16_t port = TM_DEFAULT_PORT);
 
-  /// Private constructor for singleton life cycle management.
-  explicit TrafficManager(
-    carla::client::detail::EpisodeProxy episodeProxy,
-    uint16_t port = TM_DEFAULT_PORT);
+	TrafficManager(const TrafficManager &) = default;
+	TrafficManager(TrafficManager &&) = default;
 
-  TrafficManager(const TrafficManager &) = default;
-  TrafficManager(TrafficManager &&) = default;
+	TrafficManager &operator=(const TrafficManager &) = default;
+	TrafficManager &operator=(TrafficManager &&) = default;
 
-  TrafficManager &operator=(const TrafficManager &) = default;
-  TrafficManager &operator=(TrafficManager &&) = default;
+	/// This method registers a vehicle with the traffic manager.
+	void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->RegisterVehicles(actor_list);
+	}
 
-  /// This method registers a vehicle with the traffic manager.
-  void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    carla::log_info("TM registering", actor_list.size(),"vehicles");
-    if(singleton_pointer) {
-      singleton_pointer->RegisterVehicles(actor_list);
-    }
-  }
+	/// This method unregisters a vehicle from traffic manager.
+	void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->UnregisterVehicles(actor_list);
+	}
 
-  /// This method unregisters a vehicle from traffic manager.
-  void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    if(singleton_pointer) {
-      singleton_pointer->UnregisterVehicles(actor_list);
-    }
-  }
+	/// Set target velocity specific to a vehicle.
+	void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
+	}
 
-  /// Set target velocity specific to a vehicle.
-  void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-    if(singleton_pointer) {
-      singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
-    }
-  }
+	/// Set global target velocity.
+	void SetGlobalPercentageSpeedDifference(float const percentage){
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
+	}
 
-  /// Set global target velocity.
-  void SetGlobalPercentageSpeedDifference(float const percentage){
-    if(singleton_pointer) {
-      singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
-    }
-  }
+	/// Set collision detection rules between vehicles.
+	void SetCollisionDetection
+		( const ActorPtr &reference_actor
+		, const ActorPtr &other_actor
+		, const bool detect_collision) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
+	}
 
-  /// Set collision detection rules between vehicles.
-  void SetCollisionDetection
-    ( const ActorPtr &reference_actor
-    , const ActorPtr &other_actor
-    , const bool detect_collision) {
-    if(singleton_pointer) {
-      singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
-    }
-  }
+	/// Method to force lane change on a vehicle.
+	/// Direction flag can be set to true for left and false for right.
+	void SetForceLaneChange(const ActorPtr &actor, const bool direction) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetForceLaneChange(actor, direction);
+	}
 
-  /// Method to force lane change on a vehicle.
-  /// Direction flag can be set to true for left and false for right.
-  void SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-    if(singleton_pointer) {
-      singleton_pointer->SetForceLaneChange(actor, direction);
-    }
-  }
+	/// Enable / disable automatic lane change on a vehicle.
+	void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetAutoLaneChange(actor, enable);
+	}
 
-  /// Enable / disable automatic lane change on a vehicle.
-  void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-    if(singleton_pointer) {
-      singleton_pointer->SetAutoLaneChange(actor, enable);
-    }
-  }
+	/// Method to specify how much distance a vehicle should maintain to
+	/// the leading vehicle.
+	void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
+	}
 
-  /// Method to specify how much distance a vehicle should maintain to
-  /// the leading vehicle.
-  void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-    if(singleton_pointer) {
-      singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
-    }
-  }
+	/// Method to specify the % chance of ignoring collisions with other actors
+	void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageIgnoreActors(actor, perc);
+	}
 
-  /// Method to specify the % chance of ignoring collisions with other actors
-  void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-    if(singleton_pointer) {
-      singleton_pointer->SetPercentageIgnoreActors(actor, perc);
-    }
-  }
+	/// Method to specify the % chance of running a red light
+	void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageRunningLight(actor, perc);
+	}
 
-  /// Method to specify the % chance of running a red light
-  void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
-    if(singleton_pointer) {
-      singleton_pointer->SetPercentageRunningLight(actor, perc);
-    }
-  }
+	/// Method to reset all traffic lights.
+	void ResetAllTrafficLights() {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->ResetAllTrafficLights();
+	}
 
-  /// Method to reset all traffic lights.
-  void ResetAllTrafficLights() {
-    if(singleton_pointer) {
-      return singleton_pointer->ResetAllTrafficLights();
-    }
-  }
+	/// Method to switch traffic manager into synchronous execution.
+	void SetSynchronousMode(bool mode) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetSynchronousMode(mode);
+	}
+
+	/// Method to set Tick timeout for synchronous execution.
+	void SetSynchronousModeTimeOutInMiliSecond(double time) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetSynchronousModeTimeOutInMiliSecond(time);
+	}
+
+	/// Method to provide synchronous tick
+	bool SynchronousTick() {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		return singleton_pointer->SynchronousTick();
+	}
 };
 
 } // namespace traffic_manager

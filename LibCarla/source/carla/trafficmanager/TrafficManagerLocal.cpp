@@ -30,10 +30,8 @@ TrafficManagerLocal::TrafficManagerLocal
     , debug_helper(carla::client::DebugHelper{episodeProxyTM})
     , server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
 {
-  using WorldMap = carla::SharedPtr<cc::Map>;
-  const WorldMap world_map = episodeProxyTM.Lock()->GetCurrentMap();
-  const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
-  local_map = std::make_shared<traffic_manager::InMemoryMap>(raw_dense_topology);
+	const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
+	local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();
 
   parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
@@ -76,9 +74,11 @@ TrafficManagerLocal::TrafficManagerLocal
       lateral_highway_PID_parameters,
       debug_helper);
 
-  control_stage = std::make_unique<BatchControlStage>(
-      "Batch control stage",
-      planner_control_messenger, episodeProxyTM);
+  control_stage = std::make_unique<BatchControlStage>
+  	  ( "Batch control stage"
+  	  , planner_control_messenger
+	  , episodeProxyTM
+	  , parameters);
 
   Start();
 }
@@ -115,9 +115,6 @@ void TrafficManagerLocal::Start() {
   traffic_light_stage->Start();
   planner_stage->Start();
   control_stage->Start();
-
-  _is_running = true;
-  carla::log_info("TrafficManagerLocal::Start end");
 }
 
 void TrafficManagerLocal::Stop() {
@@ -134,9 +131,6 @@ void TrafficManagerLocal::Stop() {
   traffic_light_stage->Stop();
   planner_stage->Stop();
   control_stage->Stop();
-  carla::log_info("TrafficManagerLocal::Stop end");
-
-  _is_running = false;
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {

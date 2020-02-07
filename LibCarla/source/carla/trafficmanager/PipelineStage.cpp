@@ -9,51 +9,54 @@
 namespace carla {
 namespace traffic_manager {
 
-  PipelineStage::PipelineStage(std::string stage_name)
-    : stage_name(stage_name),
-      performance_diagnostics(PerformanceDiagnostics(stage_name)) {
-    run_stage.store(false);
-  }
+PipelineStage::PipelineStage(std::string stage_name)
+: stage_name(stage_name),
+  performance_diagnostics(PerformanceDiagnostics(stage_name)) {
+	run_stage.store(false);
+}
 
-  PipelineStage::~PipelineStage() {
-    Stop();
-  }
+PipelineStage::~PipelineStage() {
+	Stop();
+	worker_thread.release();
+}
 
-  void PipelineStage::Start() {
-    run_stage.store(true);
-    if(!worker_thread) {
-      worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
-    }
-  }
+void PipelineStage::Start() {
+	run_stage.store(true);
+	if(worker_thread) {
+		Stop();
+		worker_thread.release();
+	}
+	worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
+}
 
-  void PipelineStage::Stop() {
-    run_stage.store(false);
-    if(worker_thread){
-      if(worker_thread->joinable()){
-        worker_thread->join();
-      }
-      worker_thread.release();
-    }
-  }
+void PipelineStage::Stop() {
+	run_stage.store(false);
+	if(worker_thread) {
+		if(worker_thread->joinable()){
+			worker_thread->join();
+		}
+	}
+}
 
-  void PipelineStage::Update() {
-      while (run_stage.load()){
-        // Receive data.
-        DataReceiver();
-        // Receive data.
-        if(run_stage.load()){
-          performance_diagnostics.RegisterUpdate(true);
-            Action();
-          performance_diagnostics.RegisterUpdate(false);
-        }
+void PipelineStage::Update() {
+	while (run_stage.load()){
+		// Receive data.
+		DataReceiver();
 
-        // Receive data.
-        if(run_stage.load()) {
-          DataSender();
-        }
+		// Receive data.
+		if(run_stage.load()){
+			performance_diagnostics.RegisterUpdate(true);
+			Action();
+			performance_diagnostics.RegisterUpdate(false);
+		}
 
-      }
-  }
+		// Receive data.
+		if(run_stage.load()) {
+			DataSender();
+		}
+
+	}
+}
 
 } // namespace traffic_manager
 } // namespace carla
