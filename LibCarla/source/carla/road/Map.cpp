@@ -178,14 +178,14 @@ namespace road {
   // ===========================================================================
 
   boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
-  const geom::Location &pos,
-  uint32_t lane_type) const {
+      const geom::Location &pos,
+      uint32_t lane_type) const {
     std::vector<Rtree::TreeElement> query_result =
-    _rtree.GetNearestNeighboursWithFilter(Rtree::BPoint(pos.x, pos.y, pos.z),
+        _rtree.GetNearestNeighboursWithFilter(Rtree::BPoint(pos.x, pos.y, pos.z),
         [&](Rtree::TreeElement const &element) {
-      const Lane &lane = GetLane(element.second.first);
-      return (lane_type & static_cast<uint32_t>(lane.GetType())) > 0;
-    });
+          const Lane &lane = GetLane(element.second.first);
+          return (lane_type & static_cast<uint32_t>(lane.GetType())) > 0;
+        });
 
     if (query_result.size() == 0) {
       return boost::optional<Waypoint>{};
@@ -225,8 +225,8 @@ namespace road {
   }
 
   boost::optional<Waypoint> Map::GetWaypoint(
-  const geom::Location &pos,
-  uint32_t lane_type) const {
+      const geom::Location &pos,
+      uint32_t lane_type) const {
     boost::optional<Waypoint> w = GetClosestWaypointOnRoad(pos, lane_type);
 
     if (!w.has_value()) {
@@ -712,13 +712,18 @@ namespace road {
   // waypoints
   // both ends of the segment
   void Map::AddElementToRtree(std::vector<Rtree::TreeElement> &rtree_elements,
-  geom::Transform &current_transform, geom::Transform &next_transform,
-  Waypoint & current_waypoint, Waypoint & next_waypoint) {
+      geom::Transform &current_transform, geom::Transform &next_transform,
+      Waypoint & current_waypoint, Waypoint & next_waypoint) {
     Rtree::BPoint init =
-    Rtree::BPoint(current_transform.location.x, current_transform.location.y,
+        Rtree::BPoint(
+        current_transform.location.x,
+        current_transform.location.y,
         current_transform.location.z);
     Rtree::BPoint end =
-    Rtree::BPoint(next_transform.location.x, next_transform.location.y, next_transform.location.z);
+        Rtree::BPoint(
+        next_transform.location.x,
+        next_transform.location.y,
+        next_transform.location.z);
     rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init, end),
         std::make_pair(current_waypoint, next_waypoint)));
   }
@@ -726,7 +731,7 @@ namespace road {
   // waypoints
   // both ends of the segment
   void Map::AddElementToRtreeAndUpdateTransforms(std::vector<Rtree::TreeElement> &rtree_elements,
-  geom::Transform &current_transform, Waypoint & current_waypoint, Waypoint & next_waypoint) {
+      geom::Transform &current_transform, Waypoint & current_waypoint, Waypoint & next_waypoint) {
     geom::Transform next_transform = ComputeTransform(next_waypoint);
     AddElementToRtree(rtree_elements, current_transform, next_transform,
     current_waypoint, next_waypoint);
@@ -737,7 +742,7 @@ namespace road {
   // returns the remaining length of the geometry depending on the lane
   // direction
   double GetRemainingLength(const Lane &lane, double geometry_start_s, double geometry_end_s,
-  double current_s) {
+      double current_s) {
     if (lane.GetId() < 0) {
       return (geometry_end_s - current_s);
     } else {

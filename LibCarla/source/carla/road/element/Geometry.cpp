@@ -107,7 +107,8 @@ namespace element {
   }
 
   DirectedPoint GeometryPoly3::PosFromDist(double dist) const {
-    auto result = _rtree.GetNearestNeighbours(Rtree::BPoint(static_cast<float>(dist), 0.0f, 0.0f)).front();
+    auto result = _rtree.GetNearestNeighbours(
+        Rtree::BPoint(static_cast<float>(dist))).front();
 
     auto &val1 = result.second.first;
     auto &val2 = result.second.second;
@@ -147,8 +148,8 @@ namespace element {
       double current_t = _poly.Tangent(current_u);
       RtreeValue current_val{current_u, current_v, current_s, current_t};
 
-      Rtree::BPoint p1(static_cast<float>(last_s), 0.0f, 0.0f);
-      Rtree::BPoint p2(static_cast<float>(current_s), 0.0f, 0.0f);
+      Rtree::BPoint p1(static_cast<float>(last_s));
+      Rtree::BPoint p2(static_cast<float>(current_s));
       _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
 
       last_u = current_u;
@@ -160,30 +161,9 @@ namespace element {
     }
   }
 
-  DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const
-  {
-    /*double p = dist;
-    if (!_arcLength) {
-      p = dist / _length;
-    }
-
-    auto polyU = geom::CubicPolynomial(_aU, _bU, _cU, _dU);
-    auto polyV = geom::CubicPolynomial(_aV, _bV, _cV, _dV);
-
-    double u = polyU.Evaluate(p);
-    double v = polyV.Evaluate(p);
-
-    auto pos = RotatebyAngle(_heading, u, v);
-
-    double tangentU = polyU.Tangent(p);
-    double tangentV = polyV.Tangent(p);
-    double theta = atan2(tangentV, tangentU);
-
-    DirectedPoint point(_start_position, _heading + theta);
-    point.location.x += pos.x;
-    point.location.y += pos.y;*/
-
-    auto result = _rtree.GetNearestNeighbours(Rtree::BPoint(static_cast<float>(dist), 0.0f, 0.0f)).front();
+  DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const {
+    auto result = _rtree.GetNearestNeighbours(
+        Rtree::BPoint(static_cast<float>(dist))).front();
 
     auto &val1 = result.second.first;
     auto &val2 = result.second.second;
@@ -228,10 +208,15 @@ namespace element {
           current_s += ds;
           double current_t_u = _polyU.Tangent(param_p);
           double current_t_v = _polyV.Tangent(param_p);
-          RtreeValue current_val{ current_u, current_v, current_s, current_t_u, current_t_v };
+          RtreeValue current_val{
+              current_u,
+              current_v,
+              current_s,
+              current_t_u,
+              current_t_v };
 
-          Rtree::BPoint p1(static_cast<float>(last_s), 0.0f, 0.0f);
-          Rtree::BPoint p2(static_cast<float>(current_s), 0.0f, 0.0f);
+          Rtree::BPoint p1(static_cast<float>(last_s));
+          Rtree::BPoint p2(static_cast<float>(current_s));
           _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
 
           last_u = current_u;
