@@ -90,6 +90,10 @@ else
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
   mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+  # Boost patch for exception handling
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
+  # ---
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -123,6 +127,10 @@ else
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
   mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+  # Boost patch for exception handling
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
+  # ---
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -150,6 +158,11 @@ else
   rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
 fi
+
+# Boost patch for exception handling
+cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
+cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
+# ---
 
 unset BOOST_BASENAME
 
