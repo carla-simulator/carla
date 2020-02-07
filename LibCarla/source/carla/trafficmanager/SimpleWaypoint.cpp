@@ -103,7 +103,11 @@ namespace traffic_manager {
   }
 
   bool SimpleWaypoint::CheckJunction() const {
-    return waypoint->IsJunction();
+    return _is_junction;
+  }
+
+  void SimpleWaypoint::SetIsJunction(bool value) {
+    _is_junction = value;
   }
 
   bool SimpleWaypoint::CheckIntersection() const {

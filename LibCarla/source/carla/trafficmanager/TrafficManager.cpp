@@ -26,10 +26,8 @@ namespace traffic_manager {
       world(client_connection.GetWorld()),
       debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
 
-    using WorldMap = carla::SharedPtr<cc::Map>;
     const WorldMap world_map = world.GetMap();
-    const RawNodeList raw_dense_topology = world_map->GenerateWaypoints(0.1f);
-    local_map = std::make_shared<traffic_manager::InMemoryMap>(raw_dense_topology);
+    local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
     local_map->SetUp();
 
     parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
