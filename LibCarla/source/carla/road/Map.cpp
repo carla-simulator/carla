@@ -37,9 +37,9 @@ namespace road {
       return ConcatVectors(src, dst);
     }
     dst.insert(
-    dst.end(),
-    std::make_move_iterator(src.begin()),
-    std::make_move_iterator(src.end()));
+        dst.end(),
+        std::make_move_iterator(src.begin()),
+        std::make_move_iterator(src.end()));
     return dst;
   }
 
@@ -62,18 +62,18 @@ namespace road {
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
-  RoadId road_id,
-  const LaneSection &lane_section,
-  double distance,
-  FuncT && func) {
+      RoadId road_id,
+      const LaneSection &lane_section,
+      double distance,
+      FuncT &&func) {
     for (const auto &pair : lane_section.GetLanes()) {
       const auto &lane = pair.second;
       if ((static_cast<uint32_t>(lane.GetType()) & static_cast<uint32_t>(Lane::LaneType::Driving)) > 0) {
         std::forward<FuncT>(func)(Waypoint{
-          road_id,
-          lane_section.GetId(),
-          lane.GetId(),
-          distance < 0.0 ? GetDistanceAtStartOfLane(lane) : distance});
+            road_id,
+            lane_section.GetId(),
+            lane.GetId(),
+            distance < 0.0 ? GetDistanceAtStartOfLane(lane) : distance});
       }
     }
   }
@@ -99,12 +99,12 @@ namespace road {
 
   /// Return a waypoint for each drivable lane on each lane section of @a road.
   template <typename FuncT>
-  static void ForEachDrivableLane(const Road &road, FuncT && func) {
+  static void ForEachDrivableLane(const Road &road, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSections()) {
       ForEachDrivableLaneImpl(
           road.GetId(),
           lane_section,
-          -1.0,  // At start of the lane
+          -1.0, // At start of the lane
           std::forward<FuncT>(func));
     }
   }
@@ -116,7 +116,7 @@ namespace road {
       ForEachLaneImpl(
           road.GetId(),
           lane_section,
-          -1.0,  // At start of the lane
+          -1.0, // At start of the lane
           lane_type,
           std::forward<FuncT>(func));
     }
@@ -124,13 +124,13 @@ namespace road {
 
   /// Return a waypoint for each drivable lane at @a distance on @a road.
   template <typename FuncT>
-  static void ForEachDrivableLaneAt(const Road &road, double distance, FuncT && func) {
+  static void ForEachDrivableLaneAt(const Road &road, double distance, FuncT &&func) {
     for (const auto &lane_section : road.GetLaneSectionsAt(distance)) {
       ForEachDrivableLaneImpl(
-      road.GetId(),
-      lane_section,
-      distance,
-      std::forward<FuncT>(func));
+          road.GetId(),
+          lane_section,
+          distance,
+          std::forward<FuncT>(func));
     }
   }
 
@@ -138,9 +138,9 @@ namespace road {
   /// for an specific Lane given an s and a iterator over lanes
   template <typename T>
   static std::pair<double, double> ComputeTotalLaneWidth(
-  const T container,
-  const double s,
-  const LaneId lane_id) {
+      const T container,
+      const double s,
+      const LaneId lane_id) {
 
     // lane_id can't be 0
     RELEASE_ASSERT(lane_id != 0);
@@ -236,7 +236,7 @@ namespace road {
     const auto dist = geom::Math::Distance2D(ComputeTransform(*w).location, pos);
     const auto lane_width_info = GetLane(*w).GetInfo<RoadInfoLaneWidth>(w->s);
     const auto half_lane_width =
-    lane_width_info->GetPolynomial().Evaluate(w->s) * 0.5;
+        lane_width_info->GetPolynomial().Evaluate(w->s) * 0.5;
 
     if (dist < half_lane_width) {
       return w;
@@ -309,14 +309,14 @@ namespace road {
       const auto side_lanes = MakeListView(
           std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
       const auto computed_width =
-      ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
+          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
       lane_width = static_cast<float>(computed_width.first);
       lane_tangent = static_cast<float>(computed_width.second);
     } else if (waypoint.lane_id > 0) {
       // left lane
       const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
       const auto computed_width =
-      ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
+          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
       lane_width = static_cast<float>(computed_width.first);
       lane_tangent = static_cast<float>(computed_width.second);
     }
@@ -337,7 +337,7 @@ namespace road {
 
     geom::Rotation rot(
         geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
-        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)),     // Unreal's Y axis hack
+        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)), // Unreal's Y axis hack
         0.0f);
 
     dp.ApplyLateralOffset(lane_width);
@@ -397,8 +397,8 @@ namespace road {
     RELEASE_ASSERT(s <= current_lane.GetRoad()->GetLength());
 
     const auto inner_lane_id = waypoint.lane_id < 0 ?
-    waypoint.lane_id + 1 :
-    waypoint.lane_id - 1;
+        waypoint.lane_id + 1 :
+        waypoint.lane_id - 1;
 
     const auto &inner_lane = current_lane.GetRoad()->GetLaneById(waypoint.section_id, inner_lane_id);
 
@@ -409,8 +409,8 @@ namespace road {
   }
 
   std::vector<LaneMarking> Map::CalculateCrossedLanes(
-  const geom::Location &origin,
-  const geom::Location &destination) const {
+      const geom::Location &origin,
+      const geom::Location &destination) const {
     return LaneCrossingCalculator::Calculate(*this, origin, destination);
   }
 
@@ -454,13 +454,16 @@ namespace road {
 
           // calculate all the corners
           for (auto corner : crosswalk->GetPoints()) {
-            geom::Vector3D v2(static_cast<float>(corner.u), static_cast<float>(corner.v),
-            static_cast<float>(corner.z));
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(corner.v),
+                static_cast<float>(corner.z));
             // set the width larger to contact with the sidewalk (in case they have gutter area)
-            if (corner.u < 0)
+            if (corner.u < 0) {
               v2.x -= 1.0f;
-            else
+            } else {
               v2.x += 1.0f;
+            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
@@ -511,8 +514,8 @@ namespace road {
   }
 
   std::vector<Waypoint> Map::GetNext(
-  const Waypoint waypoint,
-  const double distance) const {
+      const Waypoint waypoint,
+      const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
@@ -535,9 +538,9 @@ namespace road {
     std::vector<Waypoint> result;
     for (const auto &successor : GetSuccessors(waypoint)) {
       DEBUG_ASSERT(
-      successor.road_id != waypoint.road_id ||
-      successor.section_id != waypoint.section_id ||
-      successor.lane_id != waypoint.lane_id);
+          successor.road_id != waypoint.road_id ||
+          successor.section_id != waypoint.section_id ||
+          successor.lane_id != waypoint.lane_id);
       result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
     }
     return result;
@@ -708,8 +711,8 @@ namespace road {
       std::vector<Rtree::TreeElement> &rtree_elements,
       geom::Transform &current_transform,
       geom::Transform &next_transform,
-      Waypoint & current_waypoint,
-      Waypoint & next_waypoint) {
+      Waypoint &current_waypoint,
+      Waypoint &next_waypoint) {
     Rtree::BPoint init =
         Rtree::BPoint(
         current_transform.location.x,
@@ -728,8 +731,8 @@ namespace road {
   void Map::AddElementToRtreeAndUpdateTransforms(
       std::vector<Rtree::TreeElement> &rtree_elements,
       geom::Transform &current_transform,
-      Waypoint & current_waypoint,
-      Waypoint & next_waypoint) {
+      Waypoint &current_waypoint,
+      Waypoint &next_waypoint) {
     geom::Transform next_transform = ComputeTransform(next_waypoint);
     AddElementToRtree(rtree_elements, current_transform, next_transform,
     current_waypoint, next_waypoint);
