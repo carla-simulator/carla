@@ -69,7 +69,7 @@ namespace client {
 
     /// Return an instance of the world currently active in the simulator.
     TrafficManager GetInstanceTM(uint16_t port = TM_DEFAULT_PORT) const {
-      return TrafficManager{_simulator->GetCurrentEpisode(), port};
+      return TrafficManager(port);
     }
 
     std::string StartRecorder(std::string name) {

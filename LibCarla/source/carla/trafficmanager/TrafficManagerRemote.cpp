@@ -16,125 +16,156 @@ namespace traffic_manager {
 
 /// Constructor store remote location information
 TrafficManagerRemote :: TrafficManagerRemote
-  ( const std::pair<std::string, uint16_t> &_serverTM
-  , carla::client::detail::EpisodeProxy &episodeProxy)
-  : client(_serverTM.first, _serverTM.second),
-    episodeProxyTM(episodeProxy) {
+	( const std::pair<std::string, uint16_t> &_serverTM
+	, carla::client::detail::EpisodeProxy &episodeProxy)
+	: client(_serverTM.first, _serverTM.second),
+	  episodeProxyTM(episodeProxy) {
 
-  carla::log_info("TrafficManagerRemote", _serverTM.second);
+	/// Local thread to check server status
+	std::thread _thread = std::thread( [this] () {
 
+		/// Set timeout in milli second
+		std::chrono::milliseconds wait_time(TM_TIMEOUT);
+
+		try {
+			do {
+				/// Wait for sleep time
+				std::this_thread::sleep_for(wait_time);
+
+				/// Check connection state
+				client.HealthCheckRemoteTM();
+
+				/// Until connection active
+			} while (true);
+		} catch (...) {
+
+			std::string rhost("");
+			uint16_t rport = 0;
+
+			/// Get server address
+			client.getServerDetails(rhost, rport);
+
+			/// Prepare TM server string information
+			std::string strtmserver(rhost + ":" + std::to_string(rport));
+
+			/// Create error msg
+			std::string errmsg(
+				  "Trying to connect rpc server of traffic manager; "
+				  "but the system failed to connect at " + strtmserver);
+
+			/// Through run time error
+			this->episodeProxyTM.Lock()->AddPendingException(errmsg);
+		}
+	});
+
+	/// detach thread to run it independently
+	_thread.detach();
 }
 
 /// Destructor.
-TrafficManagerRemote :: ~TrafficManagerRemote() {
-  carla::log_info("TrafficManagerRemote dtr");
-  if(!client.ConnectionActive()) {
-    episodeProxyTM.Lock()->AddPendingException("TM shutdown");
-  }
-}
+TrafficManagerRemote :: ~TrafficManagerRemote() {}
 
 /// This method registers a vehicle with the traffic manager.
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
-  carla::log_info("TrafficManagerRemote registering", _actor_list.size(),"vehicles");
-  /// Prepare rpc actor list
-  std::vector<carla::rpc::Actor> actor_list;
-  for (auto &&actor : _actor_list) {
-    actor_list.emplace_back(actor->Serialize());
-  }
-  /// Call client method
-  client.RegisterVehicle(actor_list);
+	/// Prepare rpc actor list
+	std::vector<carla::rpc::Actor> actor_list;
+	for (auto &&actor : _actor_list) {
+		actor_list.emplace_back(actor->Serialize());
+	}
+	/// Call client method
+	client.RegisterVehicle(actor_list);
 }
 
 /// This method unregisters a vehicle from traffic manager.
 void TrafficManagerRemote::UnregisterVehicles(const std::vector<ActorPtr> &_actor_list) {
-  /// Prepare rpc actor list
-  std::vector<carla::rpc::Actor> actor_list;
-  for (auto &&actor : _actor_list) {
-    actor_list.emplace_back(actor->Serialize());
-  }
-  /// Call client method
-  client.UnregisterVehicle(actor_list);
+	/// Prepare rpc actor list
+	std::vector<carla::rpc::Actor> actor_list;
+	for (auto &&actor : _actor_list) {
+		actor_list.emplace_back(actor->Serialize());
+	}
+	/// Call client method
+	client.UnregisterVehicle(actor_list);
 }
 
 /// Set target velocity specific to a vehicle.
 void TrafficManagerRemote::SetPercentageSpeedDifference(const ActorPtr &_actor, const float percentage) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetPercentageSpeedDifference(actor, percentage);
+	/// Call client method
+	client.SetPercentageSpeedDifference(actor, percentage);
 }
 
 /// Set global target velocity.
 void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percentage) {
-  /// Call client method
-  client.SetGlobalPercentageSpeedDifference(percentage);
+	/// Call client method
+	client.SetGlobalPercentageSpeedDifference(percentage);
 }
 
 /// Set collision detection rules between vehicles.
 void TrafficManagerRemote::SetCollisionDetection
-  ( const ActorPtr &_reference_actor
-  , const ActorPtr &_other_actor
-  , const bool detect_collision) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor reference_actor(_reference_actor->Serialize());
-  carla::rpc::Actor other_actor(_other_actor->Serialize());
+	( const ActorPtr &_reference_actor
+	, const ActorPtr &_other_actor
+	, const bool detect_collision) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor reference_actor(_reference_actor->Serialize());
+	carla::rpc::Actor other_actor(_other_actor->Serialize());
 
-  /// Call client method
-  client.SetCollisionDetection(reference_actor, other_actor, detect_collision);
+	/// Call client method
+	client.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
 
 /// Method to force lane change on a vehicle.
 /// Direction flag can be set to true for left and false for right.
 void TrafficManagerRemote::SetForceLaneChange(const ActorPtr &_actor, const bool direction) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetForceLaneChange(actor, direction);
+	/// Call client method
+	client.SetForceLaneChange(actor, direction);
 }
 
 /// Enable / disable automatic lane change on a vehicle.
 void TrafficManagerRemote::SetAutoLaneChange(const ActorPtr &_actor, const bool enable) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetAutoLaneChange(actor, enable);
+	/// Call client method
+	client.SetAutoLaneChange(actor, enable);
 }
 
 /// Method to specify how much distance a vehicle should maintain to
 /// the leading vehicle.
 void TrafficManagerRemote::SetDistanceToLeadingVehicle(const ActorPtr &_actor, const float distance) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetDistanceToLeadingVehicle(actor, distance);
+	/// Call client method
+	client.SetDistanceToLeadingVehicle(actor, distance);
 }
 
 /// Method to specify the % chance of ignoring collisions with other actors
 void TrafficManagerRemote::SetPercentageIgnoreActors(const ActorPtr &_actor, const float percentage) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetPercentageIgnoreActors(actor, percentage);
+	/// Call client method
+	client.SetPercentageIgnoreActors(actor, percentage);
 }
 
 /// Method to specify the % chance of running a red light
 void TrafficManagerRemote::SetPercentageRunningLight(const ActorPtr &_actor, const float percentage) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
 
-  /// Call client method
-  client.SetPercentageRunningLight(actor, percentage);
+	/// Call client method
+	client.SetPercentageRunningLight(actor, percentage);
 }
 
 /// Method to reset all traffic lights.
 void TrafficManagerRemote::ResetAllTrafficLights() {
-  /// Call client method
-  client.ResetAllTrafficLights();
+	/// Call client method
+	client.ResetAllTrafficLights();
 }
 
 /// Method to switch traffic manager into synchronous execution.
@@ -154,12 +185,12 @@ bool TrafficManagerRemote::SynchronousTick() {
 
 /// Method to reset all traffic lights.
 void TrafficManagerRemote::HealthCheckRemoteTM() {
-  /// Call client method
-  client.HealthCheckRemoteTM();
+	/// Call client method
+	client.HealthCheckRemoteTM();
 }
 /// Get carla episode information
 carla::client::detail::EpisodeProxy& TrafficManagerRemote::GetEpisodeProxy() {
-  return episodeProxyTM;
+	return episodeProxyTM;
 }
 
 } // namespace traffic_manager

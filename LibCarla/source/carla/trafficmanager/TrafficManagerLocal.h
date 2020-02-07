@@ -175,4 +175,3 @@ namespace traffic_manager {
 } // namespace traffic_manager
 } // namespace carla
 
-#endif /* __TRAFFICMANAGERLOCAL__ */
