@@ -13,7 +13,7 @@ nav:
 - Building CARLA:
   - 'Linux build': 'how_to_build_on_linux.md'
   - 'Windows build': 'how_to_build_on_windows.md'
-  - "Get latest content": 'dev/how_to_upgrade_content.md'
+  - 'Update CARLA': 'update_carla.md'
   - 'Build system': 'dev/build_system.md'
   - 'Running in a Docker': 'carla_docker.md'
   - 'F.A.Q.': 'faq.md'
@@ -47,6 +47,7 @@ nav:
   - 'Coding standard': 'coding_standard.md'
   - 'Documentation standard': 'doc_standard.md'
   - "Make a release": 'dev/how_to_make_a_release.md'
+  - "Upgrade the content": 'dev/how_to_upgrade_content.md'
   - 'Code of conduct': 'CODE_OF_CONDUCT.md'
 
 markdown_extensions:
