@@ -4,6 +4,7 @@
   * Vehicles get destroyed when they are stuck in Traffic Manager
   * Implemented intersection anticipation algorithm in Traffic Manager
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
+  * Improved `get_waypoint(location)` performance
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
   * Fixed Low/Epic quality settings transition
   * Enabled Mesh distance fields

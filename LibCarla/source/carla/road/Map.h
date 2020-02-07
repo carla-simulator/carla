@@ -140,13 +140,20 @@ private:
     Rtree _rtree;
 
     void CreateRtree();
-    //Helper Functions for constructing the rtree element list
-    void AddElementToRtree(std::vector<Rtree::TreeElement> &rtree_elements,
-                            geom::Transform &current_transform, geom::Transform &next_transform,
-                            Waypoint &current_waypoint, Waypoint &next_waypoint);
-    void AddElementToRtreeAndUpdateTransforms(std::vector<Rtree::TreeElement> &rtree_elements,
-                                              geom::Transform &current_transform, Waypoint &current_waypoint,
-                                              Waypoint &next_waypoint);
+
+    /// Helper Functions for constructing the rtree element list
+    void AddElementToRtree(
+        std::vector<Rtree::TreeElement> &rtree_elements,
+        geom::Transform &current_transform,
+        geom::Transform &next_transform,
+        Waypoint &current_waypoint,
+        Waypoint &next_waypoint);
+
+    void AddElementToRtreeAndUpdateTransforms(
+        std::vector<Rtree::TreeElement> &rtree_elements,
+        geom::Transform &current_transform,
+        Waypoint &current_waypoint,
+        Waypoint &next_waypoint);
   };
 
 } // namespace road
