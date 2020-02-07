@@ -134,7 +134,7 @@ if ${DOCKER_PUSH} ; then
 
   log "Pushing Docker image."
 
-  ${DOCKER} push ${DOCKER_NAME}
+  # ${DOCKER} push ${DOCKER_NAME}
 
   popd >/dev/null
 
