@@ -176,17 +176,21 @@ namespace CollisionStageConstants {
     float other_vehicle_length = other_vehicle_ptr->GetBoundingBox().extent.x * 1.414f;
     float inter_vehicle_length = reference_vehicle_length + other_vehicle_length;
 
+    float inter_vehicle_distance = cg::Math::DistanceSquared(reference_location, other_location);
+    float minimum_inter_vehicle_distance = std::pow(GetBoundingBoxExtention(reference_vehicle) + inter_vehicle_length, 2.0f);
+
     if (!(!reference_front_wp->CheckJunction() &&
-        cg::Math::Dot(reference_heading, reference_to_other) < 0) &&
+        cg::Math::Dot(reference_heading, reference_to_other) < 0 &&
+        inter_vehicle_distance > minimum_inter_vehicle_distance) &&
 
         !(!closest_point->CheckJunction() && junction_look_ahead->CheckJunction() &&
         reference_vehicle_ptr->GetVelocity().SquaredLength() < 0.1 &&
-        reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green) &&
+        reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green &&
+        inter_vehicle_distance > minimum_inter_vehicle_distance) &&
 
         !(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) > 0 &&
-        (cg::Math::DistanceSquared(reference_location, other_location) >
-        std::pow(GetBoundingBoxExtention(reference_vehicle) + inter_vehicle_length, 2)))) {
+        inter_vehicle_distance > minimum_inter_vehicle_distance)) {
 
       const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
       const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
