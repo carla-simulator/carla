@@ -63,7 +63,10 @@ namespace road {
     // _map_data is a memeber of MapBuilder so you must especify if
     // you want to keep it (will return copy -> Map(const Map &))
     // or move it (will return move -> Map(Map &&))
-    return Map{std::move(_map_data)};
+    Map map(std::move(_map_data));
+    CreateJunctionBoundingBoxes(map);
+
+    return map;
   }
 
   // called from profiles parser
@@ -387,48 +390,97 @@ namespace road {
   }
 
   void MapBuilder::AddRoadGeometrySpiral(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*curvStart*/,
-      const double /*curvEnd*/) {
-    throw_exception(std::runtime_error("geometry spiral not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double curvStart,
+      const double curvEnd) {
+    //throw_exception(std::runtime_error("geometry spiral not supported"));
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto spiral_geometry = std::make_unique<GeometrySpiral>(
+        s,
+        length,
+        hdg,
+        location,
+        curvStart,
+        curvEnd);
+
+      _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(spiral_geometry))));
   }
 
   void MapBuilder::AddRoadGeometryPoly3(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*a*/,
-      const double /*b*/,
-      const double /*c*/,
-      const double /*d*/) {
-    throw_exception(std::runtime_error("geometry poly3 not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double a,
+      const double b,
+      const double c,
+      const double d) {
+    //throw_exception(std::runtime_error("geometry poly3 not supported"));
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto poly3_geometry = std::make_unique<GeometryPoly3>(
+        s,
+        length,
+        hdg,
+        location,
+        a,
+        b,
+        c,
+        d);
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(poly3_geometry))));
   }
 
   void MapBuilder::AddRoadGeometryParamPoly3(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*aU*/,
-      const double /*bU*/,
-      const double /*cU*/,
-      const double /*dU*/,
-      const double /*aV*/,
-      const double /*bV*/,
-      const double /*cV*/,
-      const double /*dV*/,
-      const std::string /*p_range*/) {
-    throw_exception(std::runtime_error("geometry poly3 not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double aU,
+      const double bU,
+      const double cU,
+      const double dU,
+      const double aV,
+      const double bV,
+      const double cV,
+      const double dV,
+      const std::string p_range) {
+    //throw_exception(std::runtime_error("geometry poly3 not supported"));
+    bool arcLength;
+    if(p_range == "arcLength"){
+      arcLength = true;
+    }else{
+      arcLength = false;
+    }
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto parampoly3_geometry = std::make_unique<GeometryParamPoly3>(
+        s,
+        length,
+        hdg,
+        location,
+        aU,
+        bU,
+        cU,
+        dU,
+        aV,
+        bV,
+        cV,
+        dV,
+        arcLength);
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(parampoly3_geometry))));
   }
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
@@ -688,6 +740,71 @@ namespace road {
 
         }
       }
+    }
+  }
+
+  void MapBuilder::CreateJunctionBoundingBoxes(Map &map) {
+    for (auto &junctionpair : map._data.GetJunctions()) {
+      auto* junction = map.GetJunction(junctionpair.first);
+      auto waypoints = map.GetJunctionWaypoints(junction->GetId(), Lane::LaneType::Any);
+      const int number_intervals = 10;
+
+      float minx = std::numeric_limits<float>::max();
+      float miny = std::numeric_limits<float>::max();
+      float minz = std::numeric_limits<float>::max();
+      float maxx = -std::numeric_limits<float>::max();
+      float maxy = -std::numeric_limits<float>::max();
+      float maxz = -std::numeric_limits<float>::max();
+
+      auto get_min_max = [&](geom::Location position) {
+        if (position.x < minx) {
+          minx = position.x;
+        }
+        if (position.y < miny) {
+          miny = position.y;
+        }
+        if (position.z < minz) {
+          minz = position.z;
+        }
+
+        if (position.x > maxx) {
+          maxx = position.x;
+        }
+        if (position.y > maxy) {
+          maxy = position.y;
+        }
+        if (position.z > maxz) {
+          maxz = position.z;
+        }
+      };
+
+      for (auto &waypoint_p : waypoints) {
+        auto &waypoint_start = waypoint_p.first;
+        auto &waypoint_end = waypoint_p.second;
+        double interval = (waypoint_end.s - waypoint_start.s) / static_cast<double>(number_intervals);
+        auto next_wp = waypoint_end;
+        auto location = map.ComputeTransform(next_wp).location;
+
+        get_min_max(location);
+
+        next_wp = waypoint_start;
+        location = map.ComputeTransform(next_wp).location;
+
+        get_min_max(location);
+
+        for (int i = 0; i < number_intervals; ++i) {
+          if (interval < std::numeric_limits<double>::epsilon())
+            break;
+          next_wp = map.GetNext(next_wp, interval).back();
+
+          location = map.ComputeTransform(next_wp).location;
+          get_min_max(location);
+        }
+      }
+      carla::geom::Location location(0.5f * (maxx + minx), 0.5f * (maxy + miny), 0.5f * (maxz + minz));
+      carla::geom::Vector3D extent(0.5f * (maxx - minx), 0.5f * (maxy - miny), 0.5f * (maxz - minz));
+
+      junction->_bounding_box = carla::geom::BoundingBox(location, extent);
     }
   }
 
