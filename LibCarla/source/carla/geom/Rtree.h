@@ -18,11 +18,11 @@ namespace geom {
   // Rtree class working with 3D point clouds.
   // Asociates a T element with a 3D point
   // Useful to perform fast k-NN searches
-  template <typename T>
-  class PointCloudRtree{
+  template <typename T, size_t Dimension = 3>
+  class PointCloudRtree {
   public:
 
-    typedef boost::geometry::model::point<float, 3, boost::geometry::cs::cartesian> BPoint;
+    typedef boost::geometry::model::point<float, Dimension, boost::geometry::cs::cartesian> BPoint;
     typedef std::pair<BPoint, T> TreeElement;
 
     void InsertElement(const BPoint &point, const T &element) {
@@ -43,7 +43,7 @@ namespace geom {
     // else return false;}
     template <typename Filter>
     std::vector<TreeElement> GetNearestNeighboursWithFilter(const BPoint &point, Filter filter,
-    size_t number_neighbours = 1) const {
+        size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
       _rtree.query(boost::geometry::index::nearest(point,
           static_cast<unsigned int>(number_neighbours)) && boost::geometry::index::satisfies(filter),
@@ -56,7 +56,8 @@ namespace geom {
       std::back_inserter(query_result));
       return query_result;
     }
-    size_t GetTreeSize() const { return _rtree.size();
+    size_t GetTreeSize() const {
+      return _rtree.size();
     }
 
   private:
@@ -68,11 +69,11 @@ namespace geom {
   // Rtree class working with 3D segment clouds.
   // Stores a pair of T elements (one for each end of the segment)
   // Useful to perform fast k-NN searches.
-  template <typename T>
+  template <typename T, size_t Dimension = 3>
   class SegmentCloudRtree {
   public:
 
-    typedef boost::geometry::model::point<float, 3, boost::geometry::cs::cartesian> BPoint;
+    typedef boost::geometry::model::point<float, Dimension, boost::geometry::cs::cartesian> BPoint;
     typedef boost::geometry::model::segment<BPoint> BSegment;
     typedef std::pair<BSegment, std::pair<T, T>> TreeElement;
 
@@ -93,7 +94,7 @@ namespace geom {
     // else return false;}
     template <typename Filter>
     std::vector<TreeElement> GetNearestNeighboursWithFilter(const BPoint &point, Filter filter,
-    size_t number_neighbours = 1) const {
+        size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
       _rtree.query(boost::geometry::index::nearest(point,
           static_cast<unsigned int>(number_neighbours)) && boost::geometry::index::satisfies(filter),
@@ -108,7 +109,8 @@ namespace geom {
       return query_result;
     }
 
-    size_t GetTreeSize() const { return _rtree.size();
+    size_t GetTreeSize() const {
+      return _rtree.size();
     }
 
   private:
