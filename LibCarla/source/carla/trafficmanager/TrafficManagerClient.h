@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERCLIENT__
-#define __TRAFFICMANAGERCLIENT__
+#pragma once
 
 #include "carla/client/Actor.h"
 #include <rpc/client.h>
@@ -161,6 +160,4 @@ private:
 	std::string tmhost;
 	uint16_t    tmport;
 };
-
-#endif /* __TRAFFICMANAGERCLIENT__ */
 

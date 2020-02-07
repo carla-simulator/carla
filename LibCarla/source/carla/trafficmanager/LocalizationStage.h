@@ -89,7 +89,7 @@ namespace traffic_manager {
     /// Runtime parameterization object.
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
-    cc::DebugHelper debug_helper;
+     cc::DebugHelper debug_helper;
     /// Carla world object;
     carla::client::detail::EpisodeProxy episodeProxyLS;
     /// Structures to hold waypoint buffers for all vehicles.

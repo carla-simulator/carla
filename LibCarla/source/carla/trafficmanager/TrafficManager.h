@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGER__
-#define __TRAFFICMANAGER__
+#pragma once
 
 #include <algorithm>
 #include <memory>
@@ -165,4 +164,3 @@ public:
 } // namespace traffic_manager
 } // namespace carla
 
-#endif /* __TRAFFICMANAGER__ */

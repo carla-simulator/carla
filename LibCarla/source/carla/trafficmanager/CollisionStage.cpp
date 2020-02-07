@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CollisionStage.h"
+#include "carla/trafficmanager/CollisionStage.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -77,6 +77,7 @@ namespace CollisionStageConstants {
 
       // Continue only if random number is lower than our %, default is 0.
       if (parameters.GetPercentageIgnoreActors(boost::shared_ptr<cc::Actor>(ego_actor)) <= r) {
+
         // Check every actor in the vicinity if it poses a collision hazard.
         for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
           try {

@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERREMOTE__
-#define __TRAFFICMANAGERREMOTE__
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -116,6 +115,4 @@ private:
 
 } // namespace traffic_manager
 } // namespace carla
-
-#endif /*__TRAFFICMANAGERREMOTE__ */
 
