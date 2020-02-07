@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERCLIENT__
-#define __TRAFFICMANAGERCLIENT__
+#pragma once
 
 #include "carla/client/Actor.h"
 
@@ -191,5 +190,3 @@ private:
   bool stop_thread = false;
   bool _connection_active = false;
 };
-
-#endif /* __TRAFFICMANAGERCLIENT__ */

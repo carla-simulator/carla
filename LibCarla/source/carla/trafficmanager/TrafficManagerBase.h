@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERBASE__
-#define __TRAFFICMANAGERBASE__
+#pragma once
 
 #include <memory>
 #include "carla/client/Actor.h"
@@ -89,5 +88,3 @@ protected:
 
 } // namespace traffic_manager
 } // namespace carla
-
-#endif /* __TRAFFICMANAGERBASE__ */

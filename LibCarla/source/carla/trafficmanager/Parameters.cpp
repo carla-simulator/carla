@@ -6,7 +6,7 @@
 
 #include <random>
 
-#include "Parameters.h"
+#include "carla/trafficmanager/Parameters.h"
 
 namespace carla
 {

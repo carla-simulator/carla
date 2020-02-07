@@ -4,9 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERSERVER__
-#define __TRAFFICMANAGERSERVER__
-
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -164,5 +162,3 @@ private:
   /// Server instance to
   rpc::server *server = nullptr;
 };
-
-#endif /* __TRAFFICMANAGERSERVER__ */

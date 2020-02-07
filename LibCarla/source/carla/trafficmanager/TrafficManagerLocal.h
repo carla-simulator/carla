@@ -4,8 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef __TRAFFICMANAGERLOCAL__
-#define __TRAFFICMANAGERLOCAL__
+#pragma once
 
 #include <algorithm>
 #include <memory>
@@ -35,6 +34,7 @@
 #include "carla/trafficmanager/MotionPlannerStage.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
+
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/trafficmanager/TrafficManagerServer.h"
 
@@ -174,5 +174,3 @@ namespace traffic_manager {
 
 } // namespace traffic_manager
 } // namespace carla
-
-#endif /* __TRAFFICMANAGERLOCAL__ */

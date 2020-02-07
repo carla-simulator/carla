@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "TrafficLightStage.h"
+#include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace carla {
 namespace traffic_manager {

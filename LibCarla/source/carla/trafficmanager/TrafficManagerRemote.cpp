@@ -4,13 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/trafficmanager/TrafficManagerRemote.h"
-
-
 #include <carla/client/Client.h>
 #include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"
+
+#include "carla/trafficmanager/TrafficManagerRemote.h"
 
 namespace carla {
 namespace traffic_manager {
