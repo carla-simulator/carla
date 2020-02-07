@@ -51,12 +51,12 @@ CARLA forum</a>
 
   Many different issues can be dragged during the build installation and finally show here, so here is a list of the most likely reasons why:  
 
-* __Run Unreal Engine 4.22:__ Something may have failed when building Unreal Engine. Try running UE editor on its own and make sure that it is the 4.22 release.
+* __Run Unreal Engine 4.22:__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check out that it is the 4.22 release.
 * __Download the assets:__ The server will not be able to run without the visual content, so this step is mandatory even when building CARLA for the first time. Go to the root CARLA folder and run the script to get the assets: `./Update.sh`
 * __UE4_ROOT is not defined:__ The environment variable is not set. Remember to make it persistent session-wide by adding it to your `~/.bashrc` or `~/.profile`, otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.22` to set the variable this time. Make sure that the path leads to the UE 4.22 main folder.  
-* __Check dependencies:__ Make sure that everything was installed properly during the first steps of the process. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
+* __Check dependencies:__ Confirm that everything was installed properly during the first steps of the process. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
 * __Delete CARLA and clone it again:__ Just in case something went wrong. Delete your version of CARLA and try cloning or downloading and extracting it again. Then follow the steps from there.   
-* __Meet system requirements:__ Make sure that Ubuntu version is at least 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run. 
+* __Meet system requirements:__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run. 
 
 Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the forum so the team can get to know more about them.   
   </details>
@@ -91,10 +91,10 @@ Something went wrong when trying to build CARLA. To know what happened, the buil
 <!-- ======================================================================= -->
   <details>
     <summary><h5 style="display:inline">
-    CMake error shows but Cmake is properly installed.
+    CMake error shows but CMake is properly installed.
     </h5></summary>
 	
-This issue occurs when trying to use the _make_ command either to build the server or the client even though Cmake is installed with an updated version and added to the environment path. The reason is that the issue is not really related with Cmake but a conflict between Visual Studio versions.  
+This issue occurs when trying to use the _make_ command either to build the server or the client even though CMake is installed with an updated version and added to the environment path. The reason is that the issue is not really related with CMake but a conflict between Visual Studio versions.  
 Completely erase Visual Studio versions from the system and leave only the Visual Studio 2017 to make sure that everything works properly.  
   </details>
 
