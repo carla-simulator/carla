@@ -52,13 +52,17 @@ namespace detail {
     std::weak_ptr<Episode> weak = shared_from_this();
     _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
+      if(self->_pending_exceptions) {
+        self->_pending_exceptions = false;
+        throw_exception(std::runtime_error( self->_pending_exceptions_msg));
+      }
       if (self != nullptr) {
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
         bool episode_has_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
         bool end_loop = true;
+        //carla::log_info("Episode::Listen", episode_has_changed?"TRUE":"FALSE");
         do {
           if (prev->GetFrame() >= next->GetFrame()) {
             self->_on_tick_callbacks.Call(next);
@@ -69,7 +73,16 @@ namespace detail {
           }
         } while (!end_loop);
 
+        if(self->_episode_has_changed) {
+          self->_episode_has_changed = false;
+          self->OnEpisodeChange();
+          throw_exception(std::runtime_error(
+          "trying to access an expired episode; a new episode was started "
+          "in the simulation but an object tried accessing the old one."));
+        }
+
         if (episode_has_changed) {
+          self->_episode_has_changed = true;
           self->OnEpisodeStarted();
           self->_state.compare_exchange(&prev, next);
           return;
@@ -123,10 +136,15 @@ namespace detail {
   }
 
   void Episode::OnEpisodeStarted() {
+    carla::log_info("Episode::OnEpisodeStarted");
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
-    traffic_manager::TrafficManager::Release();
+    traffic_manager::TrafficManager::Restart();
+  }
+
+  void Episode::OnEpisodeChange() {
+    traffic_manager::TrafficManager::Restart();
   }
 
 } // namespace detail

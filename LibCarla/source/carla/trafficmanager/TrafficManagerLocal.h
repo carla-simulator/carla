@@ -94,7 +94,7 @@ namespace traffic_manager {
     /// Method to check if traffic lights are frozen.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
 
-  protected:
+  public:
 
     /// To start the TrafficManager.
     void Start();
@@ -102,17 +102,15 @@ namespace traffic_manager {
     /// To stop the TrafficManager.
     void Stop();
 
-  public:
-
     /// Private constructor for singleton lifecycle management.
     TrafficManagerLocal
-		( std::vector<float> longitudinal_PID_parameters
-		, std::vector<float> longitudinal_highway_PID_parameters
-		, std::vector<float> lateral_PID_parameters
-		, std::vector<float> lateral_highway_PID_parameters
-		, float perc_decrease_from_limit
-		, carla::client::detail::EpisodeProxy episodeProxy
-		, uint16_t &RPCportTM);
+    ( std::vector<float> longitudinal_PID_parameters
+    , std::vector<float> longitudinal_highway_PID_parameters
+    , std::vector<float> lateral_PID_parameters
+    , std::vector<float> lateral_highway_PID_parameters
+    , float perc_decrease_from_limit
+    , carla::client::detail::EpisodeProxy &episodeProxy
+    , uint16_t &RPCportTM);
 
     /// Destructor.
     virtual ~TrafficManagerLocal();
@@ -177,3 +175,4 @@ namespace traffic_manager {
 } // namespace traffic_manager
 } // namespace carla
 
+#endif /* __TRAFFICMANAGERLOCAL__ */

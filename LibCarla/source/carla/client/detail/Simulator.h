@@ -172,13 +172,23 @@ namespace detail {
     }
 
     /// DEMO: Channeling multi-client communication for traffic manager.
-    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) {
+    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const {
       return _client.GetTrafficManagerRunning(port);
     }
 
     /// DEMO: Channeling multi-client communication for traffic manager.
-    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) {
+    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
       _client.AddTrafficManagerRunning(trafficManagerInfo);
+    }
+
+    void DestroyTrafficManager(uint16_t port) const {
+      carla::log_info("Simulator DestroyTrafficManager", port);
+      _client.DestroyTrafficManager(port);
+      carla::log_info("Simulator DestroyTrafficManager end", port);
+    }
+
+    void AddPendingException(std::string e) {
+      _episode->AddPendingException(e);
     }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
