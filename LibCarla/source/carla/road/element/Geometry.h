@@ -75,12 +75,12 @@ namespace element {
   protected:
 
     Geometry(
-    GeometryType type,
+        GeometryType type,
         double start_offset,
         double length,
         double heading,
         const geom::Location &start_pos)
-        : _type(type),
+      : _type(type),
         _length(length),
         _start_position_offset(start_offset),
         _heading(heading),
@@ -105,7 +105,7 @@ namespace element {
         double length,
         double heading,
         const geom::Location &start_pos)
-        : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
+      : Geometry(GeometryType::LINE, start_offset, length, heading, start_pos) {}
 
     DirectedPoint PosFromDist(double dist) const override;
 
@@ -133,7 +133,7 @@ namespace element {
         double heading,
         const geom::Location &start_pos,
         double curv)
-        : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
+      : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
         _curvature(curv) {}
 
     DirectedPoint PosFromDist(double dist) const override;
@@ -171,7 +171,7 @@ namespace element {
         const geom::Location &start_pos,
         double curv_s,
         double curv_e)
-        : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
+      : Geometry(GeometryType::SPIRAL, start_offset, length, heading, start_pos),
         _curve_start(curv_s),
         _curve_end(curv_e) {}
 
@@ -205,7 +205,7 @@ namespace element {
         double b,
         double c,
         double d)
-        : Geometry(GeometryType::POLY3, start_offset, length, heading, start_pos),
+      : Geometry(GeometryType::POLY3, start_offset, length, heading, start_pos),
         _a(a),
         _b(b),
         _c(c),
@@ -269,7 +269,7 @@ namespace element {
         double cV,
         double dV,
         bool arcLength)
-        : Geometry(GeometryType::POLY3PARAM, start_offset, length, heading, start_pos),
+      : Geometry(GeometryType::POLY3PARAM, start_offset, length, heading, start_pos),
         _aU(aU),
         _bU(bU),
         _cU(cU),
@@ -327,17 +327,17 @@ namespace element {
     double _dV;
     bool _arcLength;
 
-	  struct RtreeValue {
-	    double u = 0;
-	    double v = 0;
-	    double s = 0;
-	    double t_u = 0;
+    struct RtreeValue {
+      double u = 0;
+      double v = 0;
+      double s = 0;
+      double t_u = 0;
       double t_v = 0;
-	  };
-	  using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
-	  using TreeElement = Rtree::TreeElement;
-	  Rtree _rtree;
-	  void PreComputeSpline();
+    };
+    using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
+    using TreeElement = Rtree::TreeElement;
+    Rtree _rtree;
+    void PreComputeSpline();
   };
 
 } // namespace element
