@@ -328,10 +328,7 @@ namespace road {
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    float lane_offset_tangent = 0;
-    if (lane_offset_info) {
-      lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
-    }
+    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
 
     lane_tangent -= lane_offset_tangent;
 
@@ -339,10 +336,9 @@ namespace road {
     lane_tangent *= -1;
 
     geom::Rotation rot(
-    geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
-    geom::Math::ToDegrees(-static_cast<float>(dp.tangent)),     // Unreal's Y
-                                                                // axis hack
-    0.0f);
+        geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
+        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)),     // Unreal's Y axis hack
+        0.0f);
 
     dp.ApplyLateralOffset(lane_width);
 
@@ -448,8 +444,7 @@ namespace road {
           // move perpendicular ('t')
           geom::Transform pivot = base;
           pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
-          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the
-                                      // lateral offset
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
           geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
           pivot.TransformPoint(v);
           // restore pivot position and orientation
@@ -461,13 +456,11 @@ namespace road {
           for (auto corner : crosswalk->GetPoints()) {
             geom::Vector3D v2(static_cast<float>(corner.u), static_cast<float>(corner.v),
             static_cast<float>(corner.z));
-            // set the width larger to contact with the sidewalk (in case they
-            // have gutter area)
-            if (corner.u < 0) {
+            // set the width larger to contact with the sidewalk (in case they have gutter area)
+            if (corner.u < 0)
               v2.x -= 1.0f;
-            } else {
+            else
               v2.x += 1.0f;
-            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
@@ -628,7 +621,7 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the right (negative) lanes
           if (lane.first < 0 &&
-          static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
@@ -639,9 +632,9 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the left (positive) lanes
           if (lane.first > 0 &&
-          static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
-            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(),
-                                          road_len });
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+            result.emplace_back(
+              Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
           }
         }
       }
@@ -711,9 +704,12 @@ namespace road {
   // Adds a new element to the rtree element list using the position of the
   // waypoints
   // both ends of the segment
-  void Map::AddElementToRtree(std::vector<Rtree::TreeElement> &rtree_elements,
-      geom::Transform &current_transform, geom::Transform &next_transform,
-      Waypoint & current_waypoint, Waypoint & next_waypoint) {
+  void Map::AddElementToRtree(
+      std::vector<Rtree::TreeElement> &rtree_elements,
+      geom::Transform &current_transform,
+      geom::Transform &next_transform,
+      Waypoint & current_waypoint,
+      Waypoint & next_waypoint) {
     Rtree::BPoint init =
         Rtree::BPoint(
         current_transform.location.x,
@@ -728,10 +724,12 @@ namespace road {
         std::make_pair(current_waypoint, next_waypoint)));
   }
   // Adds a new element to the rtree element list using the position of the
-  // waypoints
-  // both ends of the segment
-  void Map::AddElementToRtreeAndUpdateTransforms(std::vector<Rtree::TreeElement> &rtree_elements,
-      geom::Transform &current_transform, Waypoint & current_waypoint, Waypoint & next_waypoint) {
+  // waypoints, both ends of the segment
+  void Map::AddElementToRtreeAndUpdateTransforms(
+      std::vector<Rtree::TreeElement> &rtree_elements,
+      geom::Transform &current_transform,
+      Waypoint & current_waypoint,
+      Waypoint & next_waypoint) {
     geom::Transform next_transform = ComputeTransform(next_waypoint);
     AddElementToRtree(rtree_elements, current_transform, next_transform,
     current_waypoint, next_waypoint);
@@ -741,7 +739,10 @@ namespace road {
 
   // returns the remaining length of the geometry depending on the lane
   // direction
-  double GetRemainingLength(const Lane &lane, double geometry_start_s, double geometry_end_s,
+  double GetRemainingLength(
+      const Lane &lane,
+      double geometry_start_s,
+      double geometry_end_s,
       double current_s) {
     if (lane.GetId() < 0) {
       return (geometry_end_s - current_s);
@@ -786,7 +787,8 @@ namespace road {
         if (IsLineStraight(road, lane, geometry->GetGeometry().GetType())) {
           double delta_s = min_delta_s;
           double remaining_length =
-          GetRemainingLength(lane, geometry_start_s, geometry_end_s, current_waypoint.s) - epsilon;
+              GetRemainingLength(lane, geometry_start_s, geometry_end_s, current_waypoint.s);
+          remaining_length -= epsilon;
           delta_s = remaining_length;
           if (delta_s < epsilon) {
             break;
@@ -796,38 +798,56 @@ namespace road {
           RELEASE_ASSERT(next.front().road_id == current_waypoint.road_id);
           auto next_waypoint = next.front();
 
-          AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
-          next_waypoint);
+          AddElementToRtreeAndUpdateTransforms(
+              rtree_elements,
+              current_transform,
+              current_waypoint,
+              next_waypoint);
         } else {
           auto next_waypoint = current_waypoint;
           // Loop until the end of the geometry
           while (true) {
             double delta_s = min_delta_s;
             double remaining_length =
-            GetRemainingLength(lane, geometry_start_s, geometry_end_s, next_waypoint.s) - epsilon;
+                GetRemainingLength(
+                    lane,
+                    geometry_start_s,
+                    geometry_end_s,
+                    next_waypoint.s);
+            remaining_length -= epsilon;
             delta_s = std::min(delta_s, remaining_length);
             if (delta_s < epsilon) {
-              AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
-              next_waypoint);
+              AddElementToRtreeAndUpdateTransforms(
+                  rtree_elements,
+                  current_transform,
+                  current_waypoint,
+                  next_waypoint);
               break;
             }
 
             auto next = GetNext(next_waypoint, delta_s);
             if (next.size() != 1 ||
             current_waypoint.road_id != next.front().road_id) {
-              AddElementToRtreeAndUpdateTransforms(rtree_elements, current_transform, current_waypoint,
-              next_waypoint);
+              AddElementToRtreeAndUpdateTransforms(
+                  rtree_elements,
+                  current_transform,
+                  current_waypoint,
+                  next_waypoint);
               break;
             }
             next_waypoint = next.front();
 
             geom::Transform next_transform = ComputeTransform(next_waypoint);
-            double angle = geom::Math::GetVectorAngle(current_transform.GetForwardVector(),
-                next_transform.GetForwardVector());
+            double angle = geom::Math::GetVectorAngle(
+                current_transform.GetForwardVector(), next_transform.GetForwardVector());
 
             if (abs(angle) > angle_threshold) {
-              AddElementToRtree(rtree_elements, current_transform, next_transform,
-              current_waypoint, next_waypoint);
+              AddElementToRtree(
+                  rtree_elements,
+                  current_transform,
+                  next_transform,
+                  current_waypoint,
+                  next_waypoint);
               current_waypoint = next_waypoint;
               current_transform = next_transform;
             }
@@ -841,7 +861,6 @@ namespace road {
         }
       }
     }
-
     _rtree.InsertElements(rtree_elements);
   }
 
