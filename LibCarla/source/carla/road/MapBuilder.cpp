@@ -402,12 +402,12 @@ namespace road {
     DEBUG_ASSERT(road != nullptr);
     const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
     auto spiral_geometry = std::make_unique<GeometrySpiral>(
-      s,
-      length,
-      hdg,
-      location,
-      curvStart,
-      curvEnd);
+        s,
+        length,
+        hdg,
+        location,
+        curvStart,
+        curvEnd);
 
       _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
         std::move(spiral_geometry))));
@@ -428,14 +428,14 @@ namespace road {
     DEBUG_ASSERT(road != nullptr);
     const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
     auto poly3_geometry = std::make_unique<GeometryPoly3>(
-      s, 
-      length, 
-      hdg, 
-      location, 
-      a, 
-      b, 
-      c, 
-      d);
+        s,
+        length,
+        hdg,
+        location,
+        a,
+        b,
+        c,
+        d);
     _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
         std::move(poly3_geometry))));
   }
@@ -462,25 +462,25 @@ namespace road {
       arcLength = true;
     }else{
       arcLength = false;
-    } 
+    }
     DEBUG_ASSERT(road != nullptr);
     const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
     auto parampoly3_geometry = std::make_unique<GeometryParamPoly3>(
-      s, 
-      length, 
-      hdg, 
-      location, 
-      aU, 
-      bU, 
-      cU,
-      dU,
-      aV,
-      bV,
-      cV,
-      dV,
-      arcLength);
+        s,
+        length,
+        hdg,
+        location,
+        aU,
+        bU,
+        cU,
+        dU,
+        aV,
+        bV,
+        cV,
+        dV,
+        arcLength);
     _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
-        std::move(parampoly3_geometry))));      
+        std::move(parampoly3_geometry))));
   }
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
