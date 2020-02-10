@@ -56,6 +56,9 @@ and the difference between qualities.
 
 **Low mode runs significantly faster**, ideal for users that don't rely on quality precision.
 
+!!! important
+    The issue that made quality levels show an abnormal whiteness has been fixed. If the problem persists delete `GameUserSettings.ini` as it is saving the previous settings. It will be generated again in the next run. __Ubuntu path:__ `  ~/.config/Epic/CarlaUE4/Saved/Config/LinuxNoEditor/` __Windows path:__ `<Package folder>\WindowsNoEditor\CarlaUE4\Saved\Config\WindowsNoEditor\`
+
 Running off-screen
 ------------------
 
