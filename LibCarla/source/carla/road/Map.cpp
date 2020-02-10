@@ -13,6 +13,7 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadObjectCrosswalk.h"
+#include "carla/road/element/RoadInfoElevation.h"
 #include "carla/geom/Math.h"
 
 #include <stdexcept>
@@ -77,6 +78,25 @@ namespace road {
     }
   }
 
+  template <typename FuncT>
+  static void ForEachLaneImpl(
+      RoadId road_id,
+      const LaneSection &lane_section,
+      double distance,
+      Lane::LaneType lane_type,
+      FuncT &&func) {
+    for (const auto &pair : lane_section.GetLanes()) {
+      const auto &lane = pair.second;
+      if ((static_cast<uint32_t>(lane.GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
+        std::forward<FuncT>(func)(Waypoint{
+            road_id,
+            lane_section.GetId(),
+            lane.GetId(),
+            distance < 0.0 ? GetDistanceAtStartOfLane(lane) : distance});
+      }
+    }
+  }
+
   /// Return a waypoint for each drivable lane on each lane section of @a road.
   template <typename FuncT>
   static void ForEachDrivableLane(const Road &road, FuncT &&func) {
@@ -84,7 +104,20 @@ namespace road {
       ForEachDrivableLaneImpl(
           road.GetId(),
           lane_section,
-          -1.0,
+          -1.0, // At start of the lane
+          std::forward<FuncT>(func));
+    }
+  }
+
+  /// Return a waypoint for each drivable lane of the specified type on each lane section of @a road.
+  template <typename FuncT>
+  static void ForEachLane(const Road &road, Lane::LaneType lane_type, FuncT &&func) {
+    for (const auto &lane_section : road.GetLaneSections()) {
+      ForEachLaneImpl(
+          road.GetId(),
+          lane_section,
+          -1.0, // At start of the lane
+          lane_type,
           std::forward<FuncT>(func));
     }
   }
@@ -147,80 +180,48 @@ namespace road {
   boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
       const geom::Location &pos,
       uint32_t lane_type) const {
-    // max_nearests represents the max nearests roads
-    // where we will search for nearests lanes
-    constexpr size_t max_nearests = 50u;
-    // in case that map has less than max_nearests lanes,
-    // we will use the maximum lanes
-    const size_t max_nearest_allowed = std::min(_data.GetRoadCount(), max_nearests);
+    std::vector<Rtree::TreeElement> query_result =
+        _rtree.GetNearestNeighboursWithFilter(Rtree::BPoint(pos.x, pos.y, pos.z),
+        [&](Rtree::TreeElement const &element) {
+          const Lane &lane = GetLane(element.second.first);
+          return (lane_type & static_cast<uint32_t>(lane.GetType())) > 0;
+        });
 
-    // Unreal's Y axis hack
-    const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
-
-    double nearest_dist[max_nearests];
-    std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
-        std::numeric_limits<double>::max());
-
-    RoadId ids[max_nearests];
-    std::fill(ids, ids + max_nearest_allowed, 0);
-
-    double dists[max_nearests];
-    std::fill(dists, dists + max_nearest_allowed, 0.0);
-
-    for (const auto &road_pair : _data.GetRoads()) {
-      const auto road = &road_pair.second;
-      const auto current_dist = road->GetNearestPoint(pos_inverted_y);
-
-      for (size_t i = 0u; i < max_nearest_allowed; ++i) {
-        if (current_dist.second < nearest_dist[i]) {
-          // reorder nearest_dist
-          for (size_t j = max_nearest_allowed - 1u; j > i; --j) {
-            DEBUG_ASSERT(j > 0u);
-            nearest_dist[j] = nearest_dist[j - 1];
-            ids[j] = ids[j - 1];
-            dists[j] = dists[j - 1];
-          }
-          nearest_dist[i] = current_dist.second;
-          ids[i] = road->GetId();
-          dists[i] = current_dist.first;
-          break;
-        }
-      }
-    }
-
-    // search for the nearest lane in nearest_dist
-    Waypoint waypoint;
-    auto nearest_lane_dist = std::numeric_limits<double>::max();
-    for (size_t i = 0u; i < max_nearest_allowed; ++i) {
-      auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(dists[i], pos_inverted_y, lane_type);
-
-      if (lane_dist.second < nearest_lane_dist) {
-        nearest_lane_dist = lane_dist.second;
-        waypoint.lane_id = lane_dist.first->GetId();
-        waypoint.road_id = ids[i];
-        waypoint.s = dists[i];
-      }
-    }
-
-    if (nearest_lane_dist == std::numeric_limits<double>::max()) {
+    if (query_result.size() == 0) {
       return boost::optional<Waypoint>{};
     }
 
-    const auto &road = _data.GetRoad(waypoint.road_id);
+    Rtree::BSegment segment = query_result.front().first;
+    Rtree::BPoint s1 = segment.first;
+    Rtree::BPoint s2 = segment.second;
+    auto distance_to_segment = geom::Math::DistanceSegmentToPoint(pos,
+        geom::Vector3D(s1.get<0>(), s1.get<1>(), s1.get<2>()),
+        geom::Vector3D(s2.get<0>(), s2.get<1>(), s2.get<2>()));
 
-    // Make sure 0.0 < waipoint.s < Road's length
-    constexpr double margin = 5.0 * EPSILON;
-    DEBUG_ASSERT(margin < road.GetLength() - margin);
-    waypoint.s = geom::Math::Clamp(waypoint.s, margin, road.GetLength() - margin);
+    Waypoint result_start = query_result.front().second.first;
+    Waypoint result_end = query_result.front().second.second;
 
-    auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
-
-    const auto lane_section = lane.GetLaneSection();
-    RELEASE_ASSERT(lane_section != nullptr);
-    const auto lane_section_id = lane_section->GetId();
-    waypoint.section_id = lane_section_id;
-
-    return waypoint;
+    if (result_start.lane_id < 0) {
+      double delta_s = distance_to_segment.first;
+      double final_s = result_start.s + delta_s;
+      if (final_s >= result_end.s) {
+        return result_end;
+      } else if (delta_s <= 0) {
+        return result_start;
+      } else {
+        return GetNext(result_start, distance_to_segment.first).front();
+      }
+    } else {
+      double delta_s = distance_to_segment.first;
+      double final_s = result_start.s - delta_s;
+      if (final_s <= result_end.s) {
+        return result_end;
+      } else if (delta_s <= 0) {
+        return result_start;
+      } else {
+        return GetNext(result_start, distance_to_segment.first).front();
+      }
+    }
   }
 
   boost::optional<Waypoint> Map::GetWaypoint(
@@ -242,6 +243,47 @@ namespace road {
     }
 
     return boost::optional<Waypoint>{};
+  }
+
+  boost::optional<Waypoint> Map::GetWaypoint(
+      RoadId road_id,
+      LaneId lane_id,
+      float s) const {
+
+    // define the waypoint with the known parameters
+    Waypoint waypoint;
+    waypoint.road_id = road_id;
+    waypoint.lane_id = lane_id;
+    waypoint.s = s;
+
+    // check the road
+    if (!_data.ContainsRoad(waypoint.road_id)) {
+      return boost::optional<Waypoint>{};
+    }
+    const Road &road = _data.GetRoad(waypoint.road_id);
+
+    // check the 's' distance
+    if (s < 0.0f || s >= road.GetLength())
+    {
+      return boost::optional<Waypoint>{};
+    }
+
+    // check the section
+    bool lane_found = false;
+    for (auto &section : road.GetLaneSectionsAt(s)) {
+      if (section.ContainsLane(lane_id)) {
+        waypoint.section_id = section.GetId();
+        lane_found = true;
+        break;
+      }
+    }
+
+    // check the lane id
+    if (!lane_found) {
+      return boost::optional<Waypoint>{};
+    }
+
+    return waypoint;
   }
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
@@ -279,6 +321,8 @@ namespace road {
       lane_tangent = static_cast<float>(computed_width.second);
     }
 
+    // log_warning("Got to computetransform, road: ", road.GetId(), " ",
+    // road.GetLength());
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
 
@@ -342,6 +386,10 @@ namespace road {
 
   std::pair<const RoadInfoMarkRecord *, const RoadInfoMarkRecord *>
   Map::GetMarkRecord(const Waypoint waypoint) const {
+    // if lane Id is 0, just return a pair of nulls
+    if (waypoint.lane_id == 0)
+      return std::make_pair(nullptr, nullptr);
+
     const auto s = waypoint.s;
 
     const auto &current_lane = GetLane(waypoint);
@@ -369,7 +417,7 @@ namespace road {
   std::vector<geom::Location> Map::GetAllCrosswalkZones() const {
     std::vector<geom::Location> result;
 
-     for (const auto &pair : _data.GetRoads()) {
+    for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
       std::vector<const RoadObjectCrosswalk *> crosswalks = road.GetObjects<RoadObjectCrosswalk>();
       if (crosswalks.size() > 0) {
@@ -406,12 +454,16 @@ namespace road {
 
           // calculate all the corners
           for (auto corner : crosswalk->GetPoints()) {
-            geom::Vector3D v2(static_cast<float>(corner.u), static_cast<float>(corner.v), static_cast<float>(corner.z));
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(corner.v),
+                static_cast<float>(corner.z));
             // set the width larger to contact with the sidewalk (in case they have gutter area)
-            if (corner.u < 0)
+            if (corner.u < 0) {
               v2.x -= 1.0f;
-            else
+            } else {
               v2.x += 1.0f;
+            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
@@ -494,6 +546,39 @@ namespace road {
     return result;
   }
 
+  std::vector<Waypoint> Map::GetPrevious(
+      const Waypoint waypoint,
+      const double distance) const {
+    RELEASE_ASSERT(distance > 0.0);
+    const auto &lane = GetLane(waypoint);
+    const bool forward = !(waypoint.lane_id <= 0);
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      Waypoint result = waypoint;
+      result.s += signed_distance;
+      result.s += forward ? -EPSILON : EPSILON;
+      RELEASE_ASSERT(result.s > 0.0);
+      return { result };
+    }
+
+    // If we run out of remaining_lane_length we have to go to the successors.
+    std::vector<Waypoint> result;
+    for (const auto &successor : GetPredecessors(waypoint)) {
+      DEBUG_ASSERT(
+          successor.road_id != waypoint.road_id ||
+          successor.section_id != waypoint.section_id ||
+          successor.lane_id != waypoint.lane_id);
+      result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+    }
+    return result;
+  }
+
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
@@ -530,7 +615,7 @@ namespace road {
     return result;
   }
 
-  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries() const {
+  std::vector<Waypoint> Map::GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type) const {
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
@@ -538,7 +623,8 @@ namespace road {
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the right (negative) lanes
-          if (lane.first < 0 && lane.second.GetType() == Lane::LaneType::Driving) {
+          if (lane.first < 0 &&
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
@@ -548,8 +634,10 @@ namespace road {
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the left (positive) lanes
-          if (lane.first > 0 && lane.second.GetType() == Lane::LaneType::Driving) {
-            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
+          if (lane.first > 0 &&
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+            result.emplace_back(
+              Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
           }
         }
       }
@@ -570,12 +658,221 @@ namespace road {
     return result;
   }
 
+  std::vector<std::pair<Waypoint, Waypoint>> Map::GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const {
+    std::vector<std::pair<Waypoint, Waypoint>> result;
+    const Junction * junction = GetJunction(id);
+    for(auto &connections : junction->GetConnections()) {
+      const Road &road = _data.GetRoad(connections.second.connecting_road);
+      ForEachLane(road, lane_type, [&](auto &&waypoint) {
+        const auto& lane = GetLane(waypoint);
+        const double final_s = GetDistanceAtEndOfLane(lane);
+        Waypoint lane_end(waypoint);
+        lane_end.s = final_s;
+        result.push_back({waypoint, lane_end});
+      });
+    }
+    return result;
+  }
+
   // ===========================================================================
   // -- Map: Private functions -------------------------------------------------
   // ===========================================================================
 
   const Lane &Map::GetLane(Waypoint waypoint) const {
     return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
+  }
+
+  // Checks whether the geometry is straight or not
+  bool IsLineStraight(const Road &road, const Lane &lane, element::GeometryType geometry_type) {
+    if (geometry_type != element::GeometryType::LINE) {
+      return false;
+    }
+    auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
+    for (auto *lane_offset : lane_offsets) {
+      if (abs(lane_offset->GetPolynomial().GetC()) > 0 ||
+      abs(lane_offset->GetPolynomial().GetD()) > 0) {
+        return false;
+      }
+    }
+    auto elevations = road.GetInfos<element::RoadInfoElevation>();
+    for (auto *elevation : elevations) {
+      if (abs(elevation->GetPolynomial().GetC()) > 0 ||
+      abs(elevation->GetPolynomial().GetD()) > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Adds a new element to the rtree element list using the position of the
+  // waypoints
+  // both ends of the segment
+  void Map::AddElementToRtree(
+      std::vector<Rtree::TreeElement> &rtree_elements,
+      geom::Transform &current_transform,
+      geom::Transform &next_transform,
+      Waypoint &current_waypoint,
+      Waypoint &next_waypoint) {
+    Rtree::BPoint init =
+        Rtree::BPoint(
+        current_transform.location.x,
+        current_transform.location.y,
+        current_transform.location.z);
+    Rtree::BPoint end =
+        Rtree::BPoint(
+        next_transform.location.x,
+        next_transform.location.y,
+        next_transform.location.z);
+    rtree_elements.emplace_back(std::make_pair(Rtree::BSegment(init, end),
+        std::make_pair(current_waypoint, next_waypoint)));
+  }
+  // Adds a new element to the rtree element list using the position of the
+  // waypoints, both ends of the segment
+  void Map::AddElementToRtreeAndUpdateTransforms(
+      std::vector<Rtree::TreeElement> &rtree_elements,
+      geom::Transform &current_transform,
+      Waypoint &current_waypoint,
+      Waypoint &next_waypoint) {
+    geom::Transform next_transform = ComputeTransform(next_waypoint);
+    AddElementToRtree(rtree_elements, current_transform, next_transform,
+    current_waypoint, next_waypoint);
+    current_waypoint = next_waypoint;
+    current_transform = next_transform;
+  }
+
+  // returns the remaining length of the geometry depending on the lane
+  // direction
+  double GetRemainingLength(
+      const Lane &lane,
+      double geometry_start_s,
+      double geometry_end_s,
+      double current_s) {
+    if (lane.GetId() < 0) {
+      return (geometry_end_s - current_s);
+    } else {
+      return (current_s - geometry_start_s);
+    }
+  }
+
+  void Map::CreateRtree() {
+    const double epsilon = 0.000001; // small delta in the road (set to 1
+                                     // micrometer to prevent numeric errors)
+    const double min_delta_s = 1;    // segments of minimum 1m through the road
+
+    // 1.8 degrees, maximum angle in a curve to place a segment
+    constexpr double angle_threshold = geom::Math::Pi<double>() / 100.0;
+
+    // Generate waypoints at start of every road and for everey lane
+    std::vector<Waypoint> topology = GenerateWaypointsOnRoadEntries(Lane::LaneType::Any);
+
+    std::vector<Rtree::TreeElement> rtree_elements; // container of segments and
+                                                    // waypoints
+    // Loop through all road lanes
+    for (auto &waypoint : topology) {
+      auto &lane_start_waypoint = waypoint;
+
+      auto current_waypoint = lane_start_waypoint;
+
+      const Road &road = _data.GetRoad(current_waypoint.road_id);
+
+      // loop through every geometry in the road
+      while (current_waypoint.s <= road.GetLength() && current_waypoint.s >= 0) {
+        const Lane &lane = GetLane(current_waypoint);
+        const auto *geometry = road.GetInfo<element::RoadInfoGeometry>(current_waypoint.s);
+        // start s of this geometry in the road
+        double geometry_start_s = geometry->GetGeometry().GetStartOffset();
+        // end s this geometry in the road
+        double geometry_end_s = geometry_start_s + geometry->GetGeometry().GetLength();
+
+        geom::Transform current_transform = ComputeTransform(current_waypoint);
+
+        // Save computation time in straight lines
+        if (IsLineStraight(road, lane, geometry->GetGeometry().GetType())) {
+          double delta_s = min_delta_s;
+          double remaining_length =
+              GetRemainingLength(lane, geometry_start_s, geometry_end_s, current_waypoint.s);
+          remaining_length -= epsilon;
+          delta_s = remaining_length;
+          if (delta_s < epsilon) {
+            break;
+          }
+          auto next = GetNext(current_waypoint, delta_s);
+          RELEASE_ASSERT(next.size() == 1);
+          RELEASE_ASSERT(next.front().road_id == current_waypoint.road_id);
+          auto next_waypoint = next.front();
+
+          AddElementToRtreeAndUpdateTransforms(
+              rtree_elements,
+              current_transform,
+              current_waypoint,
+              next_waypoint);
+        } else {
+          auto next_waypoint = current_waypoint;
+          // Loop until the end of the geometry
+          while (true) {
+            double delta_s = min_delta_s;
+            double remaining_length =
+                GetRemainingLength(
+                    lane,
+                    geometry_start_s,
+                    geometry_end_s,
+                    next_waypoint.s);
+            remaining_length -= epsilon;
+            delta_s = std::min(delta_s, remaining_length);
+            if (delta_s < epsilon) {
+              AddElementToRtreeAndUpdateTransforms(
+                  rtree_elements,
+                  current_transform,
+                  current_waypoint,
+                  next_waypoint);
+              break;
+            }
+
+            auto next = GetNext(next_waypoint, delta_s);
+            if (next.size() != 1 ||
+            current_waypoint.road_id != next.front().road_id) {
+              AddElementToRtreeAndUpdateTransforms(
+                  rtree_elements,
+                  current_transform,
+                  current_waypoint,
+                  next_waypoint);
+              break;
+            }
+            next_waypoint = next.front();
+
+            geom::Transform next_transform = ComputeTransform(next_waypoint);
+            double angle = geom::Math::GetVectorAngle(
+                current_transform.GetForwardVector(), next_transform.GetForwardVector());
+
+            if (abs(angle) > angle_threshold) {
+              AddElementToRtree(
+                  rtree_elements,
+                  current_transform,
+                  next_transform,
+                  current_waypoint,
+                  next_waypoint);
+              current_waypoint = next_waypoint;
+              current_transform = next_transform;
+            }
+          }
+        }
+        auto next = GetNext(current_waypoint, 10.0 * epsilon);
+        if (next.size() != 1 || next.front().road_id != current_waypoint.road_id) {
+          break;
+        } else {
+          current_waypoint = next.front();
+        }
+      }
+    }
+    _rtree.InsertElements(rtree_elements);
+  }
+
+  Junction* Map::GetJunction(JuncId id) {
+    return _data.GetJunction(id);
+  }
+
+  const Junction* Map::GetJunction(JuncId id) const {
+    return _data.GetJunction(id);
   }
 
 } // namespace road

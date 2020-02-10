@@ -49,6 +49,9 @@ def apply_weather_presets(args, weather):
             weather.precipitation = WEATHER_PRESETS[args.weather][1]
             weather.precipitation_deposits = WEATHER_PRESETS[args.weather][2]
             weather.wind_intensity = WEATHER_PRESETS[args.weather][3]
+            weather.fog_density = WEATHER_PRESETS[args.weather][4]
+            weather.fog_distance = WEATHER_PRESETS[args.weather][5]
+            weather.wetness = WEATHER_PRESETS[args.weather][6]
         else:
             print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
