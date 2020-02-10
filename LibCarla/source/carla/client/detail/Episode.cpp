@@ -61,57 +61,52 @@ using namespace std::chrono_literals;
 			  auto next = std::make_shared<const EpisodeState>(CastData(*data));
 			  auto prev = self->GetState();
 
-			  /// Check for pending exceptions
+			  /// Check for pending exceptions (Mainly TM server closed)
 			  if(self->_pending_exceptions) {
+
+				  /// Mark pending exception false
 				  self->_pending_exceptions = false;
 
 				  /// Create exception for the error message
-				  auto exception(std::make_shared<std::exception>
-				  	  (std::runtime_error(self->_pending_exceptions_msg)));
+				  auto exception(self->_pending_exceptions_msg);
 
 				  // Notify waiting threads that exception occurred
-				  self->_snapshot.SetValue(exception);
+				  self->_snapshot.SetException(std::runtime_error(exception));
 
-			  } else {
+			  }
 
-				  bool episode_has_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
-				  bool end_loop = true;
+			  /// Episode change
+			  else if((next->GetEpisodeId() != prev->GetEpisodeId())) {
+
+				  /// Create exception for the error message
+				  auto exception("trying to access an expired episode; a new episode was started "
+					   "in the simulation but an object tried accessing the old one.");
+
+				  // Notify waiting threads and do the callbacks.
+				  self->_snapshot.SetException(std::runtime_error(exception));
+			  }
+
+			  /// Sensor case: inconsistent data
+			  else {
 				  do {
 					  if (prev->GetFrame() >= next->GetFrame()) {
 						  self->_on_tick_callbacks.Call(next);
 						  return;
 					  }
-					  if(!episode_has_changed) {
-						  end_loop = self->_state.compare_exchange(&prev, next);
-					  }
-				  } while (!end_loop);
-
-				  if(self->_episode_has_changed) {
-					  self->_episode_has_changed = false;
-					  self->OnEpisodeChange();
-					  throw_exception(std::runtime_error(
-							  "trying to access an expired episode; a new episode was started "
-							  "in the simulation but an object tried accessing the old one."));
-				  }
-
-				  if (episode_has_changed) {
-					  self->_episode_has_changed = true;
-					  self->OnEpisodeStarted();
-					  self->_state.compare_exchange(&prev, next);
-					  return;
-				  }
+				  } while (!self->_state.compare_exchange(&prev, next));
 
 				  // Notify waiting threads and do the callbacks.
 				  self->_snapshot.SetValue(next);
-			  }
-			  // Tick navigation.
-			  auto navigation = self->_navigation.load();
-			  if (navigation != nullptr) {
-				  navigation->Tick(self);
-			  }
 
-			  // Call user callbacks.
-			  self->_on_tick_callbacks.Call(next);
+				  // Tick navigation.
+				  auto navigation = self->_navigation.load();
+				  if (navigation != nullptr) {
+					  navigation->Tick(self);
+				  }
+
+				  // Call user callbacks.
+				  self->_on_tick_callbacks.Call(next);
+			  }
 		  }
 	  });
   }
