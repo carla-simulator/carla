@@ -57,46 +57,53 @@ using namespace std::chrono_literals;
 
 		  if (self != nullptr) {
 
-			  /// Check for pending exceptions
-			  if(self->_pending_exceptions) {
-				  self->_pending_exceptions = false;
-				  throw_exception(std::runtime_error(self->_pending_exceptions_msg));
-			  }
-
 			  auto data = sensor::Deserializer::Deserialize(std::move(buffer));
 			  auto next = std::make_shared<const EpisodeState>(CastData(*data));
 			  auto prev = self->GetState();
-			  bool episode_has_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
-			  bool end_loop = true;
 
-			  do {
-				  if (prev->GetFrame() >= next->GetFrame()) {
-					  self->_on_tick_callbacks.Call(next);
+			  /// Check for pending exceptions
+			  if(self->_pending_exceptions) {
+				  self->_pending_exceptions = false;
+
+				  /// Create exception for the error message
+				  auto exception(std::make_shared<std::exception>
+				  	  (std::runtime_error(self->_pending_exceptions_msg)));
+
+				  // Notify waiting threads that exception occurred
+				  self->_snapshot.SetValue(exception);
+
+			  } else {
+
+				  bool episode_has_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
+				  bool end_loop = true;
+				  do {
+					  if (prev->GetFrame() >= next->GetFrame()) {
+						  self->_on_tick_callbacks.Call(next);
+						  return;
+					  }
+					  if(!episode_has_changed) {
+						  end_loop = self->_state.compare_exchange(&prev, next);
+					  }
+				  } while (!end_loop);
+
+				  if(self->_episode_has_changed) {
+					  self->_episode_has_changed = false;
+					  self->OnEpisodeChange();
+					  throw_exception(std::runtime_error(
+							  "trying to access an expired episode; a new episode was started "
+							  "in the simulation but an object tried accessing the old one."));
+				  }
+
+				  if (episode_has_changed) {
+					  self->_episode_has_changed = true;
+					  self->OnEpisodeStarted();
+					  self->_state.compare_exchange(&prev, next);
 					  return;
 				  }
-				  if(!episode_has_changed) {
-					  end_loop = self->_state.compare_exchange(&prev, next);
-				  }
-			  } while (!end_loop);
 
-			  if(self->_episode_has_changed) {
-				  self->_episode_has_changed = false;
-				  self->OnEpisodeChange();
-				  throw_exception(std::runtime_error(
-						  "trying to access an expired episode; a new episode was started "
-						  "in the simulation but an object tried accessing the old one."));
+				  // Notify waiting threads and do the callbacks.
+				  self->_snapshot.SetValue(next);
 			  }
-
-			  if (episode_has_changed) {
-				  self->_episode_has_changed = true;
-				  self->OnEpisodeStarted();
-				  self->_state.compare_exchange(&prev, next);
-				  return;
-			  }
-
-			  // Notify waiting threads and do the callbacks.
-			  self->_snapshot.SetValue(next);
-
 			  // Tick navigation.
 			  auto navigation = self->_navigation.load();
 			  if (navigation != nullptr) {
@@ -146,11 +153,11 @@ using namespace std::chrono_literals;
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
-    traffic_manager::TrafficManager::Release();
+    traffic_manager::TrafficManager::Reset();
   }
 
   void Episode::OnEpisodeChange() {
-    traffic_manager::TrafficManager::Release();
+    traffic_manager::TrafficManager::Reset();
   }
 
 } // namespace detail

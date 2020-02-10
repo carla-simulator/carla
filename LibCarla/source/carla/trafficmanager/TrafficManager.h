@@ -62,6 +62,9 @@ public:
 	/// Public release method to clear allocated data
 	static void Release();
 
+	/// Public Reset method to restart every this
+	static void Reset();
+
 	/// Private constructor for singleton life cycle management.
 	explicit TrafficManager(uint16_t port = TM_DEFAULT_PORT);
 

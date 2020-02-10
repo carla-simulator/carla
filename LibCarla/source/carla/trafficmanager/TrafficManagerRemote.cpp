@@ -53,7 +53,10 @@ TrafficManagerRemote :: TrafficManagerRemote
 				  "Trying to connect rpc server of traffic manager; "
 				  "but the system failed to connect at " + strtmserver);
 
-			/// Through run time error
+			/// Print erro message
+			std::cout << errmsg << std::endl;
+
+			/// TSet the error message
 			this->episodeProxyTM.Lock()->AddPendingException(errmsg);
 		}
 	});
