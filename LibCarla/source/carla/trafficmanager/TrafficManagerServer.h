@@ -132,6 +132,16 @@ public:
 				tm->SetPercentageRunningLight(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
 			});
 
+		    /// Method to specify the % chance of ignoring collisions with all walkers
+			server->bind("set_percentage_ignore_walkers", [=](carla::rpc::Actor actor, const float percentage) {
+				tm->SetPercentageIgnoreWalkers(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+			});
+
+		    /// Method to specify the % chance of ignoring collisions with all vehicles
+			server->bind("set_percentage_ignore_vehicles", [=](carla::rpc::Actor actor, const float percentage) {
+				tm->SetPercentageIgnoreVehicles(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+			});
+
 			/// Method to set synchronous mode.
 			server->bind("set_synchronous_mode", [=](const bool mode) {
 				tm->SetSynchronousMode(mode);

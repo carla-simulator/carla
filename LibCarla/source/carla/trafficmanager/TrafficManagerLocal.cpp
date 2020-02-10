@@ -174,6 +174,20 @@ void TrafficManagerLocal::SetForceLaneChange(const ActorPtr &actor, const bool d
 
     return *singleton_pointer.get();
   }
+/// Method to specify the % chance of ignoring collisions with all walkers
+void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
+
+  parameters.SetPercentageIgnoreWalkers(actor, perc);
+}
+
+/// Method to specify the % chance of ignoring collisions with all vehicles
+void TrafficManagerLocal::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
+
+  parameters.SetPercentageIgnoreVehicles(actor, perc);
+}
+
+
+void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
 
   std::unique_ptr<cc::Client> TrafficManager::singleton_local_client = nullptr;
 

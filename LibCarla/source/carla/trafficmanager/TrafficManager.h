@@ -133,6 +133,23 @@ public:
 		singleton_pointer->SetPercentageIgnoreActors(actor, perc);
 	}
 
+    /// Method to specify the % chance of ignoring collisions with all walkers
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageIgnoreWalkers(actor, perc);
+	}
+
+    /// Method to specify the % chance of ignoring collisions with all vehicles
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageIgnoreVehicles(actor, perc);
+	}
+
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageRunningLight(actor, perc);
+    }
+
 	/// Method to specify the % chance of running a red light
 	void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
 		DEBUG_ASSERT(singleton_pointer != nullptr);
@@ -166,4 +183,3 @@ public:
 
 } // namespace traffic_manager
 } // namespace carla
-

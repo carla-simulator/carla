@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/trafficmanager/CollisionStage.h"
+#include "CollisionStage.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -101,17 +101,8 @@ namespace CollisionStageConstants {
                     break;
                   }
                 }
-
-                if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                    NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
-
-                  collision_hazard = true;
-                  break;
-                }
               }
             }
-          } catch (const std::exception &e) {
-            carla::log_info("Actor might not be alive", e.what());
           }
       }
     }

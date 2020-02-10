@@ -150,6 +150,12 @@ namespace traffic_manager {
     /// Method to specify the % chance of ignoring collisions with other actors
     void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
 
+    /// Method to specify the % chance of ignoring collisions with all walkers
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+
+    /// Method to specify the % chance of ignoring collisions with all vehicles
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+
     /// Method to specify the % chance of running a red light
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 

@@ -107,28 +107,28 @@ namespace traffic_manager {
     /// Method to set % to run any traffic light.
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
-    /// Method to set % to run any traffic sign.
-    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+	/// Method to set distance to leading vehicle
+	void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-    /// Method to set % to ignore any vehicle.
-    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+	/// Method to set % to run any traffic sign.
+	void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
 
-    /// Method to set % to ignore any vehicle.
-    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+	/// Method to set % to ignore any vehicle.
+	void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
 
     /// Method to get % to run any traffic light.
     float GetPercentageRunningLight(const ActorPtr &actor);
 
-    /// Method to get % to run any traffic light.
-    float GetPercentageRunningSign(const ActorPtr &actor);
+	/// Method to set % to run any traffic light.
+	void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
 
     /// Method to get % to ignore any vehicle.
     float GetPercentageIgnoreVehicles(const ActorPtr &actor);
   /// Synchronous mode time out.
   void SetSynchronousModeTimeOutInMiliSecond(const double time);
 
-  /// Synchronous mode time out
-  double GetSynchronousModeTimeOutInMiliSecond();
+	/// Method to get % to ignore any vehicle.
+	float GetPercentageIgnoreVehicles(const ActorPtr &actor);
 
     /// Method to get % to ignore any walker.
     float GetPercentageIgnoreWalkers(const ActorPtr &actor);

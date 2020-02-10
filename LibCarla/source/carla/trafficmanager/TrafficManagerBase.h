@@ -68,6 +68,12 @@ public:
 	/// Method to specify the % chance of ignoring collisions with other actors
 	virtual void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) = 0;
 
+    /// Method to specify the % chance of ignoring collisions with all walkers
+    virtual void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) = 0;
+
+    /// Method to specify the % chance of ignoring collisions with all vehicles
+    virtual void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) = 0;
+
 	/// Method to specify the % chance of running a red light
 	virtual void SetPercentageRunningLight(const ActorPtr &actor, const float perc) = 0;
 

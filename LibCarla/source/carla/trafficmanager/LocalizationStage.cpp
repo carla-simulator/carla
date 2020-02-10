@@ -37,8 +37,8 @@ namespace LocalizationConstants {
       AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
       Parameters &parameters,
-      cc::DebugHelper &debug_helper,
-      cc::World& world)
+      carla::client::DebugHelper &debug_helper,
+      carla::client::detail::EpisodeProxy &episodeProxy)
     : PipelineStage(stage_name),
       planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
@@ -47,7 +47,7 @@ namespace LocalizationConstants {
       local_map(local_map),
       parameters(parameters),
       debug_helper(debug_helper),
-      world(world) {
+  	  episodeProxyLS(episodeProxy) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;
@@ -82,7 +82,7 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
     // Selecting current timestamp from the world snapshot.
-    current_timestamp = world.GetSnapshot().GetTimestamp();
+    current_timestamp = episodeProxyLS.Lock()->GetWorldSnapshot().GetTimestamp();
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -365,31 +365,48 @@ namespace LocalizationConstants {
 
   void LocalizationStage::ScanUnregisteredVehicles() {
     ++unregistered_scan_duration;
-    // Periodically check for actors not spawned by TrafficManager.
-    if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
-      unregistered_scan_duration = 0;
+	// Periodically check for actors not spawned by TrafficManager.
+	if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
+		unregistered_scan_duration = 0;
 
-      const auto world_actors = world.GetActors()->Filter("vehicle.*");
-      const auto world_walker = world.GetActors()->Filter("walker.*");
-      // Scanning for vehicles.
-      for (auto actor: *world_actors.get()) {
-        const auto unregistered_id = actor->GetId();
-        if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
-            unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, actor});
-        }
-      }
-      // Scanning for pedestrians.
-      for (auto walker: *world_walker.get()) {
-        const auto unregistered_id = walker->GetId();
-        if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, walker});
-        }
-      }
-    }
+		auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+			std::vector<carla::client::detail::ActorVariant> filtered;
+			for (auto &&actor : actors) {
+				if (carla::StringUtil::Match
+					   ( carla::client::detail::ActorVariant(actor).GetTypeId()
+					   , wildcard_pattern)) {
+					filtered.push_back(actor);
+				}
+			}
+			return filtered;
+		};
+
+		/// Get all actors of the world
+		auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
+
+		/// Filter based on wildcard_pattern
+		const auto world_actors = Filter(world_actorsList, "vehicle.*");
+		const auto world_walker = Filter(world_actorsList, "walker.*");
+
+		// Scanning for vehicles.
+		for (auto actor: world_actors) {
+			const auto unregistered_id = actor.GetId();
+			if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
+					unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+				unregistered_actors.insert({unregistered_id, actor.Get(episodeProxyLS)});
+			}
+		}
+		// Scanning for pedestrians.
+		for (auto walker: world_walker) {
+			const auto unregistered_id = walker.GetId();
+			if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+				unregistered_actors.insert({unregistered_id, walker.Get(episodeProxyLS)});
+			}
+		}
+	}
 
     // Regularly update unregistered actors.
-    const auto current_snapshot = world.GetSnapshot();
+    const auto current_snapshot = episodeProxyLS.Lock()->GetWorldSnapshot();
     for (auto it = unregistered_actors.cbegin(); it != unregistered_actors.cend();) {
       if (registered_actors.Contains(it->first) || !current_snapshot.Contains(it->first)) {
         track_traffic.DeleteActor(it->first);
