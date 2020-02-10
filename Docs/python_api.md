@@ -268,7 +268,7 @@ Returns the blueprint corresponding to that identifier.
 ---
 
 ## carla.BoundingBox<a name="carla.BoundingBox"></a>
-Helper class defining a box location and its dimensions that will later be used by [carla.DebugHelper](#carla.DebugHelper) to draw shapes. Bounding boxes normally act for object colliders. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
+Helper class defining a box location and its dimensions that will later be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
@@ -1339,17 +1339,17 @@ Manages the basic movement of a vehicle using typical driving controls.
 
 <h3>Instance Variables</h3>
 - <a name="carla.VehicleControl.throttle"></a>**<font color="#f8805a">throttle</font>** (_float_)  
-A scalar value to control the vehicle throttle [0.0, 1.0].  
+A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0.  
 - <a name="carla.VehicleControl.steer"></a>**<font color="#f8805a">steer</font>** (_float_)  
-A scalar value to control the vehicle steering [-1.0, 1.0].  
+A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0.  
 - <a name="carla.VehicleControl.brake"></a>**<font color="#f8805a">brake</font>** (_float_)  
-A scalar value to control the vehicle brake [0.0, 1.0].  
+A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0.  
 - <a name="carla.VehicleControl.hand_brake"></a>**<font color="#f8805a">hand_brake</font>** (_bool_)  
-Determines whether hand brake will be used. <b>True</b> by default.  
+Determines whether hand brake will be used. Default is <b>False</b>.  
 - <a name="carla.VehicleControl.reverse"></a>**<font color="#f8805a">reverse</font>** (_bool_)  
-Determines whether the vehicle will move backwards. <b>True</b> by default.  
+Determines whether the vehicle will move backwards. Default is <b>False</b>.  
 - <a name="carla.VehicleControl.manual_gear_shift"></a>**<font color="#f8805a">manual_gear_shift</font>** (_bool_)  
-Determines whether the vehicle will be controlled by changing gears manually. <b>True</b> by default.  
+Determines whether the vehicle will be controlled by changing gears manually. Default is <b>False</b>.  
 - <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>** (_int_)  
 States which gear is the vehicle running on.  
 

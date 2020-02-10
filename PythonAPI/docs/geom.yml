@@ -362,7 +362,7 @@
   - class_name: BoundingBox
     # - DESCRIPTION ------------------------
     doc: >
-      Helper class defining a box location and its dimensions that will later be used by carla.DebugHelper to draw shapes. Bounding boxes normally act for object colliders. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights. 
+      Helper class defining a box location and its dimensions that will later be used by carla.DebugHelper or a carla.Client to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: location

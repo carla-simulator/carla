@@ -12,32 +12,32 @@
     - var_name: throttle
       type: float
       doc: >
-        A scalar value to control the vehicle throttle [0.0, 1.0].
+        A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0.
     # --------------------------------------
     - var_name: steer
       type: float
       doc: >
-        A scalar value to control the vehicle steering [-1.0, 1.0].
+        A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0.
     # --------------------------------------
     - var_name: brake
       type: float    
       doc: >
-        A scalar value to control the vehicle brake [0.0, 1.0].
+        A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0.
     # --------------------------------------
     - var_name: hand_brake
       type: bool
       doc: >
-        Determines whether hand brake will be used. <b>True</b> by default.
+        Determines whether hand brake will be used. Default is <b>False</b>.
     # --------------------------------------
     - var_name: reverse
       type: bool
       doc: >
-        Determines whether the vehicle will move backwards. <b>True</b> by default. 
+        Determines whether the vehicle will move backwards. Default is <b>False</b>. 
     # --------------------------------------
     - var_name: manual_gear_shift
       type: bool
       doc: >
-        Determines whether the vehicle will be controlled by changing gears manually. <b>True</b> by default.
+        Determines whether the vehicle will be controlled by changing gears manually. Default is <b>False</b>.
     # --------------------------------------
     - var_name: gear
       type: int
