@@ -40,8 +40,26 @@ private:
   /// Target velocity map for individual vehicles.
   AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
 
-  /// Global target velocity limit % difference.
-  float global_percentage_difference_from_limit = 0;
+    /// Target velocity map for individual vehicles.
+    AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
+    /// Global target velocity limit % difference.
+    float global_percentage_difference_from_limit = 0;
+    /// Map containing a set of actors to be ignored during collision detection.
+    AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
+    /// Map containing distance to leading vehicle command.
+    AtomicMap<ActorId, float> distance_to_leading_vehicle;
+    /// Map containing force lane change commands.
+    AtomicMap<ActorId, ChangeLaneInfo> force_lane_change;
+    /// Map containing auto lane change commands.
+    AtomicMap<ActorId, bool> auto_lane_change;
+    /// Map containing % of running a traffic light.
+    AtomicMap<ActorId, float> perc_run_traffic_light;
+    /// Map containing % of running a traffic sign.
+    AtomicMap<ActorId, float> perc_run_traffic_sign;
+    /// Map containing % of ignoring walkers.
+    AtomicMap<ActorId, float> perc_ignore_walkers;
+    /// Map containing % of ignoring vehicles.
+    AtomicMap<ActorId, float> perc_ignore_vehicles;
 
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
@@ -87,16 +105,30 @@ public:
   /// Enable / disable automatic lane change on a vehicle.
   void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
-  /// Method to specify how much distance a vehicle should maintain to
-  /// the leading vehicle.
-  void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
+    /// Method to set % to run any traffic sign.
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
   /// Method to set synchronous mode.
   void SetSynchronousMode(const bool mode_switch = true);
 
-  /// Method to get synchronous mode.
-  bool GetSynchronousMode();
+    /// Method to get % to run any traffic light.
+    float GetPercentageRunningSign(const ActorPtr &actor);
 
+    /// Method to get % to ignore any vehicle.
+    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
+
+    /// Method to get % to ignore any walker.
+    float GetPercentageIgnoreWalkers(const ActorPtr &actor);
+
+ /// Method to get synchronous mode.
+  bool GetSynchronousMode();
+  
   /// Synchronous mode time out.
   void SetSynchronousModeTimeOutInMiliSecond(const double time);
 

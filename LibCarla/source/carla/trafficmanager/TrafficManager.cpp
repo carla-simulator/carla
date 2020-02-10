@@ -79,6 +79,10 @@ TrafficManager::TrafficManager(uint16_t port) {
 		return localIP;
 	};
 
+  void TrafficManager::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
+
+    parameters.SetPercentageRunningSign(actor, perc);
+  }
 
 
 	/// Check singleton instance already created or not

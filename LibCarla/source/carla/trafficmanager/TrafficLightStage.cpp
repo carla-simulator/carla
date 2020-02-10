@@ -27,9 +27,11 @@ namespace traffic_manager {
 
     // Initializing output frame selector.
     frame_selector = true;
-
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
+    // Initializing srand.
+    srand(static_cast<unsigned>(time(NULL)));
+
   }
 
   TrafficLightStage::~TrafficLightStage() {}
@@ -57,24 +59,21 @@ namespace traffic_manager {
 
       const auto ego_vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);
       TLS traffic_light_state = ego_vehicle->GetTrafficLightState();
-      // Generate number between 0 and 100
-      const int r = rand() % 101;
-
-      // Set to green if random number is lower than percentage, default is 0
-      if (parameters.GetPercentageRunningLight(boost::shared_ptr<cc::Actor>(ego_actor)) > r)
-        traffic_light_state = TLS::Green;
 
       // We determine to stop if the current position of the vehicle is not a
       // junction and there is a red or yellow light.
       if (ego_vehicle->IsAtTrafficLight() &&
-          traffic_light_state != TLS::Green) {
+          traffic_light_state != TLS::Green &&
+          parameters.GetPercentageRunningLight(boost::shared_ptr<cc::Actor>(ego_actor)) <= (rand() % 101)) {
 
         traffic_light_hazard = true;
       }
       // Handle entry negotiation at non-signalised junction.
       else if (look_ahead_point->CheckJunction() &&
                !ego_vehicle->IsAtTrafficLight() &&
-               traffic_light_state != TLS::Green) {
+               traffic_light_state != TLS::Green &&
+               parameters.GetPercentageRunningSign(boost::shared_ptr<cc::Actor>(ego_actor)) <= (rand() % 101)) {
+
         std::lock_guard<std::mutex> lock(no_signal_negotiation_mutex);
 
         if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
@@ -165,10 +164,11 @@ namespace traffic_manager {
 
   void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor) const {
     std::string str;
+    auto ego_location = ego_actor->GetLocation();
     if (traffic_light_state == TLS::Green) {
       str="Green";
       debug_helper.DrawString(
-          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
           str,
           false,
           {0u, 255u, 0u}, 0.1f, true);
@@ -177,7 +177,7 @@ namespace traffic_manager {
     else if (traffic_light_state == TLS::Yellow) {
       str="Yellow";
       debug_helper.DrawString(
-          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
           str,
           false,
           {255u, 255u, 0u}, 0.1f, true);
@@ -186,7 +186,7 @@ namespace traffic_manager {
     else {
       str="Red";
       debug_helper.DrawString(
-          cg::Location(ego_actor->GetLocation().x, ego_actor->GetLocation().y, ego_actor->GetLocation().z+1.0f),
+          cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
           str,
           false,
           {255u, 0u, 0u}, 0.1f, true);
