@@ -202,5 +202,10 @@ void TrafficManager::Release() {
 	}
 }
 
+/// It clears all previous data and on next request starts again
+void TrafficManager::Reset() {
+	Release();
+}
+
 } // namespace traffic_manager
 } // namespace carla
