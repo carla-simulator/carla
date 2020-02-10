@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/trafficmanager/CollisionStage.h"
+#include "CollisionStage.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -92,47 +92,17 @@ namespace CollisionStageConstants {
                 < std::pow(MAX_COLLISION_RADIUS, 2)) &&
                 (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
 
-        // Check every actor in the vicinity if it poses a collision hazard.
-        for (auto j = overlapping_actors.begin(); (j != overlapping_actors.end()) && !collision_hazard; ++j) {
-          try {
-            const Actor actor = j->second;
-            const ActorId actor_id = j->first;
-            const cg::Location other_location = actor->GetLocation();
-
-            // Collision checks increase with speed (Official formula used)
-            float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
-            collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
-
-            // Temporary fix to (0,0,0) bug
-            if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0){
-
-              if (actor_id != ego_actor_id &&
-                  (cg::Math::DistanceSquared(ego_location, other_location)
-                  < std::pow(MAX_COLLISION_RADIUS, 2)) &&
-                  (std::abs(ego_location.z - other_location.z) < VERTICAL_OVERLAP_THRESHOLD)) {
-
-                if (safe_point_junction != nullptr){
               if (parameters.GetCollisionDetection(ego_actor, other_actor)) {
                 if((safe_point_junction != nullptr && !IsLocationAfterJunctionSafe(ego_actor, other_actor, safe_point_junction, other_location)) ||
                   NegotiateCollision(ego_actor, other_actor, ego_location, other_location, closest_point, junction_look_ahead)){
                   if ((other_actor_type[0] == 'v' && parameters.GetPercentageIgnoreVehicles(ego_actor) <= (rand() % 101)) ||
                       (other_actor_type[0] == 'w' && parameters.GetPercentageIgnoreWalkers(ego_actor) <= (rand() % 101))) {
-
                     collision_hazard = true;
                     break;
                   }
                 }
-
-                if (parameters.GetCollisionDetection(ego_actor, actor) &&
-                    NegotiateCollision(ego_actor, actor, closest_point, junction_look_ahead)) {
-
-                  collision_hazard = true;
-                  break;
-                }
               }
             }
-          } catch (const std::exception &e) {
-            carla::log_info("Actor might not be alive", e.what());
           }
         } catch (const std::exception &e) {
           carla::log_info("Actor might not be alive \n");

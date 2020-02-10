@@ -167,6 +167,19 @@ void TrafficManagerLocal::SetPercentageIgnoreActors(const ActorPtr &actor, const
   parameters.SetPercentageIgnoreActors(actor, perc);
 }
 
+/// Method to specify the % chance of ignoring collisions with all walkers
+void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
+
+  parameters.SetPercentageIgnoreWalkers(actor, perc);
+}
+
+/// Method to specify the % chance of ignoring collisions with all vehicles
+void TrafficManagerLocal::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
+
+  parameters.SetPercentageIgnoreVehicles(actor, perc);
+}
+
+
 void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
 
   parameters.SetPercentageRunningLight(actor, perc);

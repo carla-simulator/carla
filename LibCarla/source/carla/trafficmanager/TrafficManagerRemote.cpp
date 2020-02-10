@@ -53,9 +53,6 @@ TrafficManagerRemote :: TrafficManagerRemote
 				  "Trying to connect rpc server of traffic manager; "
 				  "but the system failed to connect at " + strtmserver);
 
-			/// Print erro message
-			std::cout << errmsg << std::endl;
-
 			/// TSet the error message
 			this->episodeProxyTM.Lock()->AddPendingException(errmsg);
 		}
@@ -154,6 +151,24 @@ void TrafficManagerRemote::SetPercentageIgnoreActors(const ActorPtr &_actor, con
 
 	/// Call client method
 	client.SetPercentageIgnoreActors(actor, percentage);
+}
+
+/// Method to specify the % chance of ignoring collisions with all walkers
+void TrafficManagerRemote::SetPercentageIgnoreWalkers(const ActorPtr &_actor, const float percentage) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetPercentageIgnoreWalkers(actor, percentage);
+}
+
+/// Method to specify the % chance of ignoring collisions with all vehicles
+void TrafficManagerRemote::SetPercentageIgnoreVehicles(const ActorPtr &_actor, const float percentage) {
+	/// Prepare rpc actor list
+	carla::rpc::Actor actor(_actor->Serialize());
+
+	/// Call client method
+	client.SetPercentageIgnoreVehicles(actor, percentage);
 }
 
 /// Method to specify the % chance of running a red light

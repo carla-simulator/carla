@@ -33,11 +33,11 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/PerformanceDiagnostics.h"
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/detail/ActorVariant.h"
-
 namespace carla {
 namespace traffic_manager {
 
@@ -88,8 +88,8 @@ namespace traffic_manager {
     /// Runtime parameterization object.
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
-     cc::DebugHelper debug_helper;
-    /// Carla world object;
+    cc::DebugHelper &debug_helper;
+    /// Reference to carla client connection object.
     carla::client::detail::EpisodeProxy episodeProxyLS;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
@@ -152,7 +152,7 @@ namespace traffic_manager {
         AtomicActorSet &registered_actors,
         InMemoryMap &local_map,
         Parameters &parameters,
-        cc::DebugHelper &debug_helper,
+		carla::client::DebugHelper &debug_helper,
 		carla::client::detail::EpisodeProxy &episodeProxy);
 
     ~LocalizationStage();

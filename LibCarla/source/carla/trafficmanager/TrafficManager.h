@@ -145,6 +145,11 @@ public:
 		singleton_pointer->SetPercentageIgnoreVehicles(actor, perc);
 	}
 
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
+		DEBUG_ASSERT(singleton_pointer != nullptr);
+		singleton_pointer->SetPercentageRunningLight(actor, perc);
+    }
+
 	/// Method to specify the % chance of running a red light
 	void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
 		DEBUG_ASSERT(singleton_pointer != nullptr);

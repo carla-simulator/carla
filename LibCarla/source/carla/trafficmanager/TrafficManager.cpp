@@ -79,11 +79,6 @@ TrafficManager::TrafficManager(uint16_t port) {
 		return localIP;
 	};
 
-  void TrafficManager::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageRunningSign(actor, perc);
-  }
-
 
 	/// Check singleton instance already created or not
 	if (!singleton_pointer) {
@@ -121,13 +116,12 @@ TrafficManager::TrafficManager(uint16_t port) {
 					/// Try to reset all traffic lights
 					tm_ptr->HealthCheckRemoteTM();
 
-#if DEBUG_PRINT_TM
 					/// Test print
 					std::cout 	<< "OLD@: Registered TM at "
 								<< serverTM.first  << ":"
 								<< serverTM.second << " ..... SUCCESS "
 								<< std::endl;
-#endif
+
 					/// Set the pointer of the instance
 					singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 				}
