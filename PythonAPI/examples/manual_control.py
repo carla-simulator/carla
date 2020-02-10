@@ -181,6 +181,8 @@ class World(object):
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
+        weather = self.world.get_weather()
+        self.world.set_weather(weather)
 
     def restart(self):
         self.player_max_speed = 1.589
@@ -213,6 +215,8 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            weather = self.world.get_weather()
+            self.world.set_weather(weather)
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -915,6 +919,9 @@ class CameraManager(object):
     def toggle_camera(self):
         self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
         self.set_sensor(self.index, notify=False, force_respawn=True)
+        world = self._parent.get_world()
+        weather = world.get_weather()
+        world.set_weather(weather)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
