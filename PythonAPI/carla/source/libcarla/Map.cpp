@@ -10,6 +10,7 @@
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
 #include <carla/road/element/LaneMarking.h>
+#include <carla/client/Landmark.h>
 
 #include <ostream>
 #include <fstream>
@@ -191,5 +192,53 @@ void export_map() {
     .add_property("id", &cc::Junction::GetId)
     .add_property("bounding_box", &cc::Junction::GetBoundingBox)
     .def("get_waypoints", &GetJunctionWaypoints)
+  ;
+
+  enum_<cc::LandmarkType>("LandmarkType")
+    .value("Unknown", cc::LandmarkType::Unknown)
+    .value("Danger", cc::LandmarkType::Danger)
+    .value("LanesMerging", cc::LandmarkType::LanesMerging)
+    .value("CautionPedestrian", cc::LandmarkType::CautionPedestrian)
+    .value("CautionBicycle", cc::LandmarkType::CautionBicycle)
+    .value("LevelCrossing", cc::LandmarkType::LevelCrossing)
+    .value("Stop", cc::LandmarkType::Stop)
+    .value("Yield", cc::LandmarkType::Yield)
+    .value("MandatoryTurnDirection", cc::LandmarkType::MandatoryTurnDirection)
+    .value("MandatoryLeftRightDirection", cc::LandmarkType::MandatoryLeftRightDirection)
+    .value("TwoChoiceTurnDirection", cc::LandmarkType::TwoChoiceTurnDirection)
+    .value("Roundabout", cc::LandmarkType::Roundabout)
+    .value("PassRightLeft", cc::LandmarkType::PassRightLeft)
+    .value("AccessForbidden", cc::LandmarkType::AccessForbidden)
+    .value("AccessForbiddenMotorvehicles", cc::LandmarkType::AccessForbiddenMotorvehicles)
+    .value("AccessForbiddenTrucks", cc::LandmarkType::AccessForbiddenTrucks)
+    .value("AccessForbiddenBicycle", cc::LandmarkType::AccessForbiddenBicycle)
+    .value("AccessForbiddenWeight", cc::LandmarkType::AccessForbiddenWeight)
+    .value("AccessForbiddenWidth", cc::LandmarkType::AccessForbiddenWidth)
+    .value("AccessForbiddenHeight", cc::LandmarkType::AccessForbiddenHeight)
+    .value("AccessForbiddenWrongDirection", cc::LandmarkType::AccessForbiddenWrongDirection)
+    .value("ForbiddenUTurn", cc::LandmarkType::ForbiddenUTurn)
+    .value("MaximumSpeed", cc::LandmarkType::MaximumSpeed)
+    .value("ForbiddenOvertakingMotorvehicles", cc::LandmarkType::ForbiddenOvertakingMotorvehicles)
+    .value("ForbiddenOvertakingTrucks", cc::LandmarkType::ForbiddenOvertakingTrucks)
+    .value("AbsoluteNoStop", cc::LandmarkType::AbsoluteNoStop)
+    .value("RestrictedStop", cc::LandmarkType::RestrictedStop)
+    .value("HasWayNextIntersection", cc::LandmarkType::HasWayNextIntersection)
+    .value("PriorityWay", cc::LandmarkType::PriorityWay)
+    .value("PriorityWayEnd", cc::LandmarkType::PriorityWayEnd)
+    .value("CityBegin", cc::LandmarkType::CityBegin)
+    .value("CityEnd", cc::LandmarkType::CityEnd)
+    .value("Highway", cc::LandmarkType::Highway)
+    .value("DeadEnd", cc::LandmarkType::DeadEnd)
+    .value("RecomendedSpeed", cc::LandmarkType::RecomendedSpeed)
+    .value("RecomendedSpeedEnd", cc::LandmarkType::RecomendedSpeedEnd)
+  ;
+
+  class_<cc::Landmark>("Landmark", no_init)
+    .add_property("type", &cc::Landmark::GetType)
+    .add_property("sub_type", &cc::Landmark::GetSubType)
+    .add_property("country", &cc::Landmark::GetCountryCode)
+    .add_property("waypoint", &cc::Landmark::GetWaypoint)
+    .add_property("transform", CALL_RETURNING_COPY(cc::Landmark, GetTransform))
+    .add_property("value", &cc::Landmark::GetValue)
   ;
 }
