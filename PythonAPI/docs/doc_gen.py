@@ -80,7 +80,7 @@ class MarkdownFile:
     
     def inherit_join(self, inh):
         self._data = join([
-            self._data,'<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from ',inh,'</div></b></small><br>'])
+            self._data,'<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
