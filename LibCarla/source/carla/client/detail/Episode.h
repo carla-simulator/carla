@@ -96,8 +96,6 @@ namespace detail {
 
     void OnEpisodeStarted();
 
-    void OnEpisodeChange();
-
     Client &_client;
 
     AtomicSharedPtr<const EpisodeState> _state;

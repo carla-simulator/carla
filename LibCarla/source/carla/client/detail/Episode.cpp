@@ -51,64 +51,62 @@ using namespace std::chrono_literals;
   }
 
   void Episode::Listen() {
-	  std::weak_ptr<Episode> weak = shared_from_this();
-	  _client.SubscribeToStream(_token, [weak](auto buffer) {
-		  auto self = weak.lock();
+    std::weak_ptr<Episode> weak = shared_from_this();
+    _client.SubscribeToStream(_token, [weak](auto buffer) {
+      auto self = weak.lock();
 
-		  if (self != nullptr) {
+      if (self != nullptr) {
 
-			  auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-			  auto next = std::make_shared<const EpisodeState>(CastData(*data));
-			  auto prev = self->GetState();
+        auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+        auto next = std::make_shared<const EpisodeState>(CastData(*data));
+        auto prev = self->GetState();
 
-			  /// Check for pending exceptions (Mainly TM server closed)
-			  if(self->_pending_exceptions) {
+        /// Check for pending exceptions (Mainly TM server closed)
+        if(self->_pending_exceptions) {
 
-				  /// Mark pending exception false
-				  self->_pending_exceptions = false;
+          /// Mark pending exception false
+          self->_pending_exceptions = false;
 
-				  /// Create exception for the error message
-				  auto exception(self->_pending_exceptions_msg);
+          /// Create exception for the error message
+          auto exception(self->_pending_exceptions_msg);
+          // Notify waiting threads that exception occurred
+          self->_snapshot.SetException(std::runtime_error(exception));
 
-				  // Notify waiting threads that exception occurred
-				  self->_snapshot.SetException(std::runtime_error(exception));
+        }
 
-			  }
+        /// Episode change
+        else if((next->GetEpisodeId() != prev->GetEpisodeId())) {
+          /// Create exception for the error message
+          auto exception(
+            "trying to access an expired episode; a new episode was started "
+            "in the simulation but an object tried accessing the old one.");
 
-			  /// Episode change
-			  else if((next->GetEpisodeId() != prev->GetEpisodeId())) {
+          // Notify waiting threads and do the callbacks.
+          self->_snapshot.SetException(std::runtime_error(exception));
+        }
+        /// Sensor case: inconsistent data
+        else {
+          do {
+            if (prev->GetFrame() >= next->GetFrame()) {
+              self->_on_tick_callbacks.Call(next);
+              return;
+            }
+          } while (!self->_state.compare_exchange(&prev, next));
 
-				  /// Create exception for the error message
-				  auto exception("trying to access an expired episode; a new episode was started "
-					   "in the simulation but an object tried accessing the old one.");
+          // Notify waiting threads and do the callbacks.
+          self->_snapshot.SetValue(next);
 
-				  // Notify waiting threads and do the callbacks.
-				  self->_snapshot.SetException(std::runtime_error(exception));
-			  }
+          // Tick navigation.
+          auto navigation = self->_navigation.load();
+          if (navigation != nullptr) {
+            navigation->Tick(self);
+          }
 
-			  /// Sensor case: inconsistent data
-			  else {
-				  do {
-					  if (prev->GetFrame() >= next->GetFrame()) {
-						  self->_on_tick_callbacks.Call(next);
-						  return;
-					  }
-				  } while (!self->_state.compare_exchange(&prev, next));
-
-				  // Notify waiting threads and do the callbacks.
-				  self->_snapshot.SetValue(next);
-
-				  // Tick navigation.
-				  auto navigation = self->_navigation.load();
-				  if (navigation != nullptr) {
-					  navigation->Tick(self);
-				  }
-
-				  // Call user callbacks.
-				  self->_on_tick_callbacks.Call(next);
-			  }
-		  }
-	  });
+          // Call user callbacks.
+          self->_on_tick_callbacks.Call(next);
+        }
+      }
+    });
   }
 
   boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {
@@ -144,15 +142,10 @@ using namespace std::chrono_literals;
   }
 
   void Episode::OnEpisodeStarted() {
-    carla::log_info("Episode::OnEpisodeStarted");
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
-    traffic_manager::TrafficManager::Reset();
-  }
-
-  void Episode::OnEpisodeChange() {
-    traffic_manager::TrafficManager::Reset();
+    traffic_manager::TrafficManager::Release();
   }
 
 } // namespace detail

@@ -96,24 +96,24 @@ namespace traffic_manager {
 
   public:
 
+    /// Private constructor for singleton lifecycle management.
+    TrafficManagerLocal(
+      std::vector<float> longitudinal_PID_parameters,
+      std::vector<float> longitudinal_highway_PID_parameters,
+      std::vector<float> lateral_PID_parameters,
+      std::vector<float> lateral_highway_PID_parameters,
+      float perc_decrease_from_limit,
+      carla::client::detail::EpisodeProxy &episodeProxy,
+      uint16_t &RPCportTM);
+
+    /// Destructor.
+    virtual ~TrafficManagerLocal();
+
     /// To start the TrafficManager.
     void Start();
 
     /// To stop the TrafficManager.
     void Stop();
-
-    /// Private constructor for singleton lifecycle management.
-    TrafficManagerLocal
-    ( std::vector<float> longitudinal_PID_parameters
-    , std::vector<float> longitudinal_highway_PID_parameters
-    , std::vector<float> lateral_PID_parameters
-    , std::vector<float> lateral_highway_PID_parameters
-    , float perc_decrease_from_limit
-    , carla::client::detail::EpisodeProxy &episodeProxy
-    , uint16_t &RPCportTM);
-
-    /// Destructor.
-    virtual ~TrafficManagerLocal();
 
     /// This method registers a vehicle with the traffic manager.
     void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
@@ -162,8 +162,8 @@ namespace traffic_manager {
     /// Method to switch traffic manager into synchronous execution.
     void SetSynchronousMode(bool mode);
 
-	/// Method to set Tick timeout for synchronous execution.
-	void SetSynchronousModeTimeOutInMiliSecond(double time);
+    /// Method to set Tick timeout for synchronous execution.
+    void SetSynchronousModeTimeOutInMiliSecond(double time);
 
     /// Method to provide synchronous tick
     bool SynchronousTick();
@@ -180,4 +180,3 @@ namespace traffic_manager {
 
 } // namespace traffic_manager
 } // namespace carla
-
