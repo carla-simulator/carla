@@ -398,7 +398,7 @@ This function executes the whole list of commands on a single simulation step, b
 ---
 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Class that defines a registered collision.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines a registered collision.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -561,7 +561,7 @@ Height regarding ground level.
 ---
 
 ## carla.GnssMeasurement<a name="carla.GnssMeasurement"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Gnss sensor data.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Gnss sensor data.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.GnssMeasurement.latitude"></a>**<font color="#f8805a">latitude</font>** (_float_)  
@@ -577,7 +577,7 @@ Height regarding ground level.
 ---
 
 ## carla.IMUMeasurement<a name="carla.IMUMeasurement"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>IMU sensor data regarding the sensor World's transformation.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>IMU sensor data regarding the sensor World's transformation.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
@@ -593,7 +593,7 @@ Orientation with respect to the North (`(0.0, -1.0, 0.0)` in Unreal) in radians.
 ---
 
 ## carla.Image<a name="carla.Image"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Class that defines an image of 32-bit BGRA colors.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines an image of 32-bit BGRA colors.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Image.width"></a>**<font color="#f8805a">width</font>** (_int_)  
@@ -661,7 +661,7 @@ Traffic rules allow turning right.
 ---
 
 ## carla.LaneInvasionEvent<a name="carla.LaneInvasionEvent"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Lane invasion sensor data.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Lane invasion sensor data.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneInvasionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -757,7 +757,7 @@ Every type except for NONE.
 ---
 
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Lidar sensor measurement data.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Lidar sensor measurement data.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
@@ -792,7 +792,7 @@ Save point cloud to disk.
 ---
 
 ## carla.Location<a name="carla.Location"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Vector3D](#carla.Vector3D)_</div></b></small><br>Represents a location in the world (in meters).  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Vector3D](#carla.Vector3D)_</b></small></div></p><p>Represents a location in the world (in meters).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>** (_float_)  
@@ -885,7 +885,7 @@ Converts a given `location`, a point in the simulation, to a [carla.GeoLocation]
 ---
 
 ## carla.ObstacleDetectionEvent<a name="carla.ObstacleDetectionEvent"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Obstacle detection sensor data.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Obstacle detection sensor data.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ObstacleDetectionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -919,7 +919,7 @@ Distance in meters from the sensor to the detection position.
 ---
 
 ## carla.RadarMeasurement<a name="carla.RadarMeasurement"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.SensorData](#carla.SensorData)_</div></b></small><br>Measurement produced by a Radar. Consists of an array of [carla.RadarDetection](#carla.RadarDetection).  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Measurement produced by a Radar. Consists of an array of [carla.RadarDetection](#carla.RadarDetection).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
@@ -974,7 +974,7 @@ Computes a forward vector using the current rotation.
 ---
 
 ## carla.Sensor<a name="carla.Sensor"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Actor](#carla.Actor)_</div></b></small><br>A sensor actor.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>A sensor actor.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  
@@ -1034,7 +1034,7 @@ Time-stamp of the frame at which this measurement was taken, in seconds as given
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</div></b></small><br>A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</b></small></div></p><p>A traffic light actor. Check out this [`recipe`](../python_cookbook/#traffic-lights-recipe)!  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
@@ -1115,7 +1115,7 @@ All possible states for traffic lights. Check out this [`recipe`](../python_cook
 ---
 
 ## carla.TrafficSign<a name="carla.TrafficSign"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Actor](#carla.Actor)_</div></b></small><br>A traffic sign actor.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>A traffic sign actor.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficSign.trigger_volume"></a>**<font color="#f8805a">trigger_volume</font>**  
@@ -1223,7 +1223,7 @@ Vector 3D helper class.
 ---
 
 ## carla.Vehicle<a name="carla.Vehicle"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Actor](#carla.Actor)_</div></b></small><br>A vehicle actor.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>A vehicle actor.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -1405,7 +1405,7 @@ VehiclePhysicsControl constructor.
 ---
 
 ## carla.Walker<a name="carla.Walker"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Actor](#carla.Actor)_</div></b></small><br>A walking actor, pedestrian.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>A walking actor, pedestrian.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Walker.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -1435,7 +1435,7 @@ _</font>
 ---
 
 ## carla.WalkerAIController<a name="carla.WalkerAIController"></a>
-<small><b><div style="padding-left:30px;margin-top:-20px">Inherited from _[carla.Actor](#carla.Actor)_</div></b></small><br>Class used for controlling the automation of a pedestrian.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class used for controlling the automation of a pedestrian.  
 
 <h3>Methods</h3>
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
