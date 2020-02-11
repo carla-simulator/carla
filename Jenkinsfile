@@ -139,10 +139,17 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         deleteDir()
-    //     }
-    // }
-
+    post {
+        always
+        {
+            node('build')
+            {
+                deleteDir()
+            }
+            node('gpu')
+            {
+                deleteDir()
+            }
+        }
+    }
 }
