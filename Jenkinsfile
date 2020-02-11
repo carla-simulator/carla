@@ -30,7 +30,10 @@ pipeline {
             {
                 sh 'make LibCarla'
                 sh 'make PythonAPI'
-                sh 'make CarlaUE4Editor'
+                lock('build_CarlaUE4')
+                {
+                    sh 'make CarlaUE4Editor'
+                }
                 sh 'make examples'
             }
             post
@@ -94,11 +97,14 @@ pipeline {
             {
                 unstash name: 'eggs'
                 unstash name: 'carla_package'
-                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                sh 'make smoke_tests ARGS="--xml"'
                 unstash name: 'examples'
-                sh 'make run-examples ARGS="localhost 3654"'
+                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
+                lock('using_gpu')
+                {
+                    sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                    sh 'make smoke_tests ARGS="--xml"'
+                    sh 'make run-examples ARGS="localhost 3654"'
+                }
             }
             post
             {
