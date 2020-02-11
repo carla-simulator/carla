@@ -12,7 +12,7 @@
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
-#include "carla/road/element/RoadObjectCrosswalk.h"
+#include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
 #include "carla/geom/Math.h"
 
@@ -419,7 +419,7 @@ namespace road {
 
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      std::vector<const RoadObjectCrosswalk *> crosswalks = road.GetObjects<RoadObjectCrosswalk>();
+      std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
       if (crosswalks.size() > 0) {
         for (auto crosswalk : crosswalks) {
           // waypoint only at start position
