@@ -6,24 +6,33 @@
 
 #pragma once
 
+#include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/RoadTypes.h"
-#include "carla/road/general/Validity.h"
-#include "carla/road/signal/SignalDependency.h"
+#include "carla/road/LaneValidity.h"
 
 #include <string>
 #include <vector>
 
 namespace carla {
 namespace road {
-namespace signal {
+
+  struct SignalDependency {
+  public:
+
+    SignalDependency( std::string dependency_id, std::string type)
+      : _dependency_id(dependency_id), _type(type) {}
+
+    std::string _dependency_id;
+
+    std::string _type;
+
+  };
 
   class Signal : private MovableNonCopyable {
   public:
-
     Signal(
-        road::RoadId road_id,
-        road::SignId signal_id,
+        SignId signal_id,
         double s,
         double t,
         std::string name,
@@ -41,8 +50,7 @@ namespace signal {
         double hOffset,
         double pitch,
         double roll)
-      : _road_id(road_id),
-        _signal_id(signal_id),
+      : _signal_id(signal_id),
         _s(s),
         _t(t),
         _name(name),
@@ -61,46 +69,55 @@ namespace signal {
         _pitch(pitch),
         _roll(roll) {}
 
-    void AddValidity(general::Validity &&validity) {
+    void AddValidity(LaneValidity &&validity) {
       _validities.push_back(std::move(validity));
     }
 
-    void AddDependency(signal::SignalDependency &&dependency) {
+    void AddDependency(SignalDependency &&dependency) {
       _dependencies.push_back(std::move(dependency));
     }
 
-  private:
+    SignId _signal_id;
 
-#if defined(__clang__)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wunused-private-field"
-#endif
-    road::RoadId _road_id;
-    road::SignId _signal_id;
     double _s;
+
     double _t;
+
     std::string _name;
+
     std::string _dynamic;
+
     std::string _orientation;
+
     double _zOffset;
+
     std::string _country;
+
     std::string _type;
+
     std::string _subtype;
+
     double _value;
+
     std::string _unit;
+
     double _height;
+
     double _width;
+
     std::string _text;
+
     double _hOffset;
+
     double _pitch;
+
     double _roll;
-    std::vector<general::Validity> _validities;
-    std::vector<signal::SignalDependency> _dependencies;
-#if defined(__clang__)
-#  pragma clang diagnostic pop
-#endif
+
+    std::vector<LaneValidity> _validities;
+
+    std::vector<SignalDependency> _dependencies;
+
   };
 
-} // object
 } // road
 } // carla
