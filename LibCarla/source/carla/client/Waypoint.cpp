@@ -8,6 +8,7 @@
 
 #include "carla/client/Map.h"
 #include "carla/client/Junction.h"
+#include "carla/client/Landmark.h"
 
 namespace carla {
 namespace client {
@@ -202,6 +203,12 @@ namespace client {
     }
 
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
+  }
+
+  std::vector<SharedPtr<Landmark>> Waypoint::GetLandmakrsInDistance(double /*distance*/) const {
+    std::vector<SharedPtr<Landmark>> result;
+    result.emplace_back(new Landmark(_transform, shared_from_this()));
+    return result;
   }
 
 } // namespace client
