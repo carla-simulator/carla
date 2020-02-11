@@ -724,22 +724,19 @@ White by default.
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a>
 Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](../python_cookbook/#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.  
+__Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
 - <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
 - <a name="carla.LaneMarkingType.Broken"></a>**<font color="#f8805a">Broken</font>**  
 - <a name="carla.LaneMarkingType.BrokenBroken"></a>**<font color="#f8805a">BrokenBroken</font>**  
-From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.BrokenSolid"></a>**<font color="#f8805a">BrokenSolid</font>**  
-From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
 - <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
 - <a name="carla.LaneMarkingType.Solid"></a>**<font color="#f8805a">Solid</font>**  
 - <a name="carla.LaneMarkingType.SolidBroken"></a>**<font color="#f8805a">SolidBroken</font>**  
-From inside to outside except for center lane which is from left to right.  
 - <a name="carla.LaneMarkingType.SolidSolid"></a>**<font color="#f8805a">SolidSolid</font>**  
-For double solid line.  
 - <a name="carla.LaneMarkingType.Other"></a>**<font color="#f8805a">Other</font>**  
 
 ---
@@ -1594,7 +1591,7 @@ Will return <b>None</b> if the lane does not exist.
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
-The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
+The list may be empty if the lane is not connected to any other at the specified distance.  
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the next waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
@@ -1605,7 +1602,7 @@ Returns a list of waypoints from this to the end of the lane separated by a cert
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Waypoint.previous"></a>**<font color="#7fb800">previous</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to **<font color="#7fb800">next()</font>**, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
-The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.  
+The list may be empty if the lane is not connected to any other at the specified distance.  
     - **Parameters:**
         - `distance` (_float_) – The approximate distance where to get the previous waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  

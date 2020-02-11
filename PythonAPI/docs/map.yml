@@ -99,7 +99,9 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](../python_cookbook/#lanes-recipe) where the user creates a carla.Waypoint for a vehicle location and retrieves from it the information about adjacent lane markings. 
+      Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](../python_cookbook/#lanes-recipe) where the user creates a carla.Waypoint for a vehicle location and retrieves from it the information about adjacent lane markings.  
+      
+      __Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -110,10 +112,8 @@
       doc: >
     - var_name: BrokenBroken
       doc: > 
-        From inside to outside except for center lane which is from left to right.
     - var_name: BrokenSolid
       doc: >
-        From inside to outside except for center lane which is from left to right.
     - var_name: Curb
       doc: >
     - var_name: Grass
@@ -122,10 +122,8 @@
       doc: >
     - var_name: SolidBroken
       doc: >
-        From inside to outside except for center lane which is from left to right.
     - var_name: SolidSolid
       doc: >
-        For double solid line.
     - var_name: Other
       doc: >
 
@@ -342,7 +340,7 @@
       doc: >
         Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
 
-        The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.
+        The list may be empty if the lane is not connected to any other at the specified distance.
     # --------------------------------------
     - def_name: next_until_lane_end
       params:
@@ -364,7 +362,7 @@
       doc: >
         This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to **<font color="#7fb800">next()</font>**, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.   
 
-        The list may be empty if the road ends before the specified distance, for instance, a lane ending with the only option of incorporating to another road.
+        The list may be empty if the lane is not connected to any other at the specified distance.
     # --------------------------------------
     - def_name: previous_until_lane_start
       params:
