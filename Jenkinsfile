@@ -16,39 +16,94 @@ pipeline {
 
         stage('Setup')
         {
-            agent { label 'build' }
-            steps
+            parallel
             {
-                sh 'make setup'
+                stage('Ubuntu Setup')
+                {
+                    agent { label '2ubuntu && build' }
+                    steps
+                    {
+                        sh 'make setup'
+                    }
+                }
+                stage('Windows Setup')
+                {
+                    agent { label 'windows && build' }
+                    steps
+                    {
+                        bat """
+                            call ../setEnv64.bat
+                            make setup
+                        """
+                    }
+                }
             }
         }
 
-        stage('Build')
+        stage('build')
         {
-            agent { label 'build' }
-            steps
+            parallel
             {
-                sh 'make LibCarla'
-                sh 'make PythonAPI'
-                lock('build_CarlaUE4')
+                stage('ubuntu build')
                 {
-                    sh 'make CarlaUE4Editor'
+                    agent { label 'ubuntu && build' }
+                    steps
+                    {
+                        sh 'make LibCarla'
+                        sh 'make PythonAPI'
+                        lock('ubuntu_build')
+                        {
+                            sh 'make CarlaUE4Editor'
+                        }
+                        sh 'make examples'
+                    }
+                    post
+                    {
+                        always
+                        {
+                            archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                            stash includes: 'PythonAPI/carla/dist/*.egg', name: 'eggs'
+                        }
+                    }
                 }
-                sh 'make examples'
-            }
-            post
-            {
-                always
+                stage('windows build')
                 {
-                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'eggs'
+                    agent { label 'windows && build' }
+                    steps
+                    {
+                        bat """
+                            call ../setEnv64.bat
+                            make setup
+                            make LibCarla
+                            make PythonAPI
+                        """
+                        lock('windows_build')
+                        {
+                            bat """
+                                call ../setEnv64.bat
+                                make CarlaUE4Editor
+                            """
+                        }
+                        bat """
+                            call ../setEnv64.bat
+                            make examples
+                        """
+                    }
+                    post
+                    {
+                        always
+                        {
+                            archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                            stash includes: 'PythonAPI/carla/dist/*.egg', name: 'eggs'
+                        }
+                    }
                 }
             }
         }
 
         stage('Unit Tests')
         {
-            agent { label 'build' }
+            agent { label 'ubuntu && build' }
             steps
             {
                 sh 'make check ARGS="--all --xml"'
@@ -65,7 +120,7 @@ pipeline {
 
         stage('Retrieve Content')
         {
-            agent { label 'build' }
+            agent { label 'ubuntu && build' }
             steps
             {
                 sh './Update.sh'
@@ -74,7 +129,7 @@ pipeline {
 
         stage('Package')
         {
-            agent { label 'build' }
+            agent { label 'ubuntu && build' }
             steps
             {
                 sh 'make package'
@@ -92,14 +147,14 @@ pipeline {
 
         stage('Smoke Tests')
         {
-            agent { label 'gpu' }
+            agent { label 'ubuntu && gpu' }
             steps
             {
                 unstash name: 'eggs'
                 unstash name: 'carla_package'
                 unstash name: 'examples'
                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                lock('using_gpu')
+                lock('ubuntu_gpu')
                 {
                     sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                     sh 'make smoke_tests ARGS="--xml"'
@@ -118,7 +173,7 @@ pipeline {
 
         stage('Deploy')
         {
-            agent { label 'build' }
+            agent { label 'ubuntu && build' }
             //when { anyOf { branch "master"; buildingTag() } }
             steps
             {
@@ -129,7 +184,7 @@ pipeline {
 
         stage('Doxygen')
         {
-            agent { label 'build' }
+            agent { label 'ubuntu && build' }
             when { anyOf { branch "master"; buildingTag() } }
             steps
             {
