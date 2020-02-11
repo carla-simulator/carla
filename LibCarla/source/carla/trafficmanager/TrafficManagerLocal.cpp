@@ -14,24 +14,23 @@
 namespace carla {
 namespace traffic_manager {
 
-TrafficManagerLocal::TrafficManagerLocal
-    ( std::vector<float> longitudinal_PID_parameters
-    , std::vector<float> longitudinal_highway_PID_parameters
-    , std::vector<float> lateral_PID_parameters
-    , std::vector<float> lateral_highway_PID_parameters
-    , float perc_difference_from_limit
-    , carla::client::detail::EpisodeProxy &episodeProxy
-    , uint16_t &RPCportTM)
-    : longitudinal_PID_parameters(longitudinal_PID_parameters)
-    , longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters)
-    , lateral_PID_parameters(lateral_PID_parameters)
-    , lateral_highway_PID_parameters(lateral_highway_PID_parameters)
-    , episodeProxyTM(episodeProxy)
-    , debug_helper(carla::client::DebugHelper{episodeProxyTM})
-    , server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))
-{
-	const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
-	local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
+TrafficManagerLocal::TrafficManagerLocal(
+    std::vector<float> longitudinal_PID_parameters,
+    std::vector<float> longitudinal_highway_PID_parameters,
+    std::vector<float> lateral_PID_parameters,
+    std::vector<float> lateral_highway_PID_parameters,
+    float perc_difference_from_limit,
+    carla::client::detail::EpisodeProxy &episodeProxy,
+    uint16_t &RPCportTM)
+  : longitudinal_PID_parameters(longitudinal_PID_parameters),
+    longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
+    lateral_PID_parameters(lateral_PID_parameters),
+    lateral_highway_PID_parameters(lateral_highway_PID_parameters),
+    episodeProxyTM(episodeProxy),
+    debug_helper(carla::client::DebugHelper{episodeProxyTM}),
+    server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
+  const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
+  local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();
 
   parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
@@ -74,35 +73,21 @@ TrafficManagerLocal::TrafficManagerLocal
       lateral_highway_PID_parameters,
       debug_helper);
 
-  control_stage = std::make_unique<BatchControlStage>
-  	  ( "Batch control stage"
-  	  , planner_control_messenger
-	  , episodeProxyTM
-	  , parameters);
+  control_stage = std::make_unique<BatchControlStage>(
+      "Batch control stage",
+      planner_control_messenger,
+      episodeProxyTM,
+      parameters);
 
   Start();
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
-  carla::log_info("TrafficManagerLocal dtr");
   episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
-  carla::log_info("TrafficManagerLocal stop");
   Stop();
-  carla::log_info("TrafficManagerLocal dtr end");
-}
-
-void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  carla::log_info("TrafficManagerLocal registering", actor_list.size(),"vehicles");
-  registered_actors.Insert(actor_list);
-  carla::log_info("TrafficManagerLocal registered_actors has", registered_actors.Size());
-}
-
-void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  registered_actors.Remove(actor_list);
 }
 
 void TrafficManagerLocal::Start() {
-  carla::log_info("TrafficManagerLocal::Start");
   localization_collision_messenger->Start();
   localization_traffic_light_messenger->Start();
   localization_planner_messenger->Start();
@@ -118,7 +103,6 @@ void TrafficManagerLocal::Start() {
 }
 
 void TrafficManagerLocal::Stop() {
-  carla::log_info("TrafficManagerLocal::Stop");
   localization_collision_messenger->Stop();
   localization_traffic_light_messenger->Stop();
   localization_planner_messenger->Stop();
@@ -131,6 +115,16 @@ void TrafficManagerLocal::Stop() {
   traffic_light_stage->Stop();
   planner_stage->Stop();
   control_stage->Stop();
+}
+
+void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+  carla::log_info("TrafficManagerLocal registering", actor_list.size(),"vehicles");
+  registered_actors.Insert(actor_list);
+  carla::log_info("TrafficManagerLocal registered_actors has", registered_actors.Size());
+}
+
+void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+  registered_actors.Remove(actor_list);
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -254,6 +248,20 @@ void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const
       const ActorPtr &reference_actor,
       const ActorPtr &other_actor,
       const bool detect_collision) {
+/// Method to switch traffic manager into synchronous execution.
+void TrafficManagerLocal::SetSynchronousMode(bool mode) {
+  parameters.SetSynchronousMode(mode);
+}
+
+/// Method to set Tick timeout for synchronous execution.
+void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {
+  parameters.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
+/// Method to provide synchronous tick
+bool TrafficManagerLocal::SynchronousTick() {
+  return control_stage->RunStep();
+}
 
     parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
   }
@@ -335,6 +343,9 @@ void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const
       }
     }
   }
+  /// Get valid registered vehicle count
+  return registered_actors.GetIDList();
+}
 
 } // namespace traffic_manager
 } // namespace carla
