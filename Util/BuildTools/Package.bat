@@ -16,12 +16,12 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--zip] [--clean]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
 
-set DO_TARBALL=true
+set DO_TARBALL=false
 set DO_CLEAN=false
 
 set UE_VERSION=4.22
@@ -35,8 +35,8 @@ if not "%1"=="" (
         set DO_COPY_FILES=false
     )
 
-    if "%1"=="--no-zip" (
-        set DO_TARBALL=false
+    if "%1"=="--zip" (
+        set DO_TARBALL=true
     )
 
     if "%1"=="--no-packaging" (
@@ -137,14 +137,21 @@ if %DO_COPY_FILES%==true (
     set XCOPY_FROM=%ROOT_PATH:/=\%
     set XCOPY_TO=%SOURCE:/=\%
 
-    echo f | xcopy /y "!XCOPY_FROM!LICENSE"                           "!XCOPY_TO!LICENSE"
-    echo f | xcopy /y "!XCOPY_FROM!CHANGELOG.md"                      "!XCOPY_TO!CHANGELOG"
-    echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"            "!XCOPY_TO!README"
-    echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"    "!XCOPY_TO!Dockerfile"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\dist\*.egg"              "!XCOPY_TO!PythonAPI\"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\example.py"              "!XCOPY_TO!example.py"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\manual_control.py"       "!XCOPY_TO!manual_control.py"
-    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\vehicle_gallery.py"      "!XCOPY_TO!vehicle_gallery.py"
+    echo f | xcopy /y "!XCOPY_FROM!LICENSE"                                         "!XCOPY_TO!LICENSE"
+    echo f | xcopy /y "!XCOPY_FROM!CHANGELOG.md"                                    "!XCOPY_TO!CHANGELOG"
+    echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"                          "!XCOPY_TO!README"
+    echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"                  "!XCOPY_TO!Dockerfile"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\dist\*.egg"                      "!XCOPY_TO!PythonAPI\carla\dist\"
+    echo d | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\agents"                       "!XCOPY_TO!PythonAPI\carla\agents"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\scene_layout.py"                 "!XCOPY_TO!PythonAPI\carla\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\requirements.txt"                "!XCOPY_TO!PythonAPI\carla\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\examples\*.py"                         "!XCOPY_TO!PythonAPI\examples\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\examples\requirements.txt"             "!XCOPY_TO!PythonAPI\examples\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\*.py"                             "!XCOPY_TO!PythonAPI\util\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\requirements.txt"                 "!XCOPY_TO!PythonAPI\util\"
+    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\*.pcd"      "!XCOPY_TO!HDMaps\"
+    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\Readme.md"  "!XCOPY_TO!HDMaps\README"
+
 )
 
 rem ==============================================================================
@@ -166,6 +173,8 @@ if %DO_TARBALL%==true (
 
     pushd "!SRC_PATH!"
         rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
+        rem If memory problem happens, then probably you need more memory for the archiving. Use:
+        rem    powershell -command "Set-Item WSMan:\localhost\Shell\MaxMemoryPerShellMB 1000000"
         powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
     popd
 )
@@ -189,7 +198,7 @@ rem ============================================================================
 
 :success
     echo.
-    if %DO_PACKAGE%==true echo %FILE_N% Carla project successful exported to "%CARLA_OUTPUT_PATH%"!
+    if %DO_PACKAGE%==true echo %FILE_N% Carla project successful exported to "%BUILD_FOLDER:/=\%"!
     if %DO_TARBALL%==true echo %FILE_N% Compress carla project exported to "%DESTINATION_ZIP%"!
     goto good_exit
 
