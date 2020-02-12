@@ -15,7 +15,7 @@ namespace carla {
 namespace traffic_manager {
 
 /// Constructor store remote location information
-TrafficManagerRemote :: TrafficManagerRemote(
+TrafficManagerRemote::TrafficManagerRemote(
     const std::pair<std::string, uint16_t> &_serverTM,
     carla::client::detail::EpisodeProxy &episodeProxy)
   : client(_serverTM.first, _serverTM.second),
