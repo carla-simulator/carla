@@ -16,12 +16,12 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--zip] [--clean]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
 
-set DO_TARBALL=false
+set DO_TARBALL=true
 set DO_CLEAN=false
 
 set UE_VERSION=4.22
@@ -35,8 +35,8 @@ if not "%1"=="" (
         set DO_COPY_FILES=false
     )
 
-    if "%1"=="--zip" (
-        set DO_TARBALL=true
+    if "%1"=="--no-zip" (
+        set DO_TARBALL=false
     )
 
     if "%1"=="--no-packaging" (
@@ -80,7 +80,7 @@ if not defined CARLA_VERSION goto error_carla_version
 set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
 if not exist "%BUILD_FOLDER%" mkdir "%BUILD_FOLDER%"
 
-set DESTINATION_ZIP="%BUILD_FOLDER%../CARLA_%CARLA_VERSION%.zip"
+set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/CARLA_%CARLA_VERSION%.zip
 set SOURCE=%BUILD_FOLDER%WindowsNoEditor/
 
 rem ============================================================================
@@ -159,24 +159,29 @@ rem -- Zip the project ---------------------------------------------------------
 rem ==============================================================================
 
 if %DO_TARBALL%==true (
-    echo "%FILE_N% Building package..."
-
-    set DST_ZIP=%DESTINATION_ZIP:/=\%
+    set ZIP_EXE=%INSTALLATION_DIR:/=\%\7za.exe
     set SRC_PATH=%SOURCE:/=\%
+
+    echo %FILE_N% Building package...
+    echo %FILE_N% Please be sure that you have the '7za.exe' application from 'http://www.7-zip.org'
+    echo %FILE_N% copied at '!ZIP_EXE!'. We don't use Powershell script for zipping as before
+    echo %FILE_N% because of some 'out of memory' errors
 
     if exist "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt"
     if exist "!SRC_PATH!Manifest_DebugFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_DebugFiles_Win64.txt"
     if exist "!SRC_PATH!Manifest_UFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_UFSFiles_Win64.txt"
-
     if exist "!SRC_PATH!CarlaUE4/Saved" rmdir /S /Q "!SRC_PATH!CarlaUE4/Saved"
     if exist "!SRC_PATH!Engine/Saved" rmdir /S /Q "!SRC_PATH!Engine/Saved"
 
-    pushd "!SRC_PATH!"
-        rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
-        rem If memory problem happens, then probably you need more memory for the archiving. Use:
-        rem    powershell -command "Set-Item WSMan:\localhost\Shell\MaxMemoryPerShellMB 1000000"
-        powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
-    popd
+    set DST_ZIP=%DESTINATION_ZIP:/=\%
+    if exist "%ProgramFiles%/7-Zip/7z.exe" (
+        "%ProgramFiles%/7-Zip/7z.exe" a "!DST_ZIP!" "!SRC_PATH!" -tzip -mmt -mx5
+    ) else (
+        pushd "!SRC_PATH!"
+            rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
+            powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
+        popd
+    )
 )
 
 rem ==============================================================================
