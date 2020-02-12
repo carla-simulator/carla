@@ -1,4 +1,5 @@
-pipeline {
+pipeline
+{
     agent none
 
     environment
@@ -13,194 +14,233 @@ pipeline {
 
     stages
     {
-
-        stage('Setup')
+        stage('windows and ubuntu in parallel')
         {
             parallel
             {
-                stage('Ubuntu Setup')
+                stage('ubuntu')
                 {
-                    agent { label '2ubuntu && build' }
-                    steps
+                    stages
                     {
-                        sh 'make setup'
-                    }
-                }
-                stage('Windows Setup')
-                {
-                    agent { label 'windows && build' }
-                    steps
-                    {
-                        bat """
-                            call ../setEnv64.bat
-                            make setup
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('build')
-        {
-            parallel
-            {
-                stage('ubuntu build')
-                {
-                    agent { label 'ubuntu && build' }
-                    steps
-                    {
-                        sh 'make LibCarla'
-                        sh 'make PythonAPI'
-                        lock('ubuntu_build')
+                        stage('ubuntu setup')
                         {
-                            sh 'make CarlaUE4Editor'
+                            agent { label '2ubuntu && build' }
+                            steps
+                            {
+                                sh 'make setup'
+                            }
                         }
-                        sh 'make examples'
-                    }
-                    post
-                    {
-                        always
+                        stage('ubuntu build')
                         {
-                            archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                            stash includes: 'PythonAPI/carla/dist/*.egg', name: 'eggs'
+                            agent { label 'ubuntu && build' }
+                            steps
+                            {
+                                sh 'make LibCarla'
+                                sh 'make PythonAPI'
+                                lock('ubuntu_build')
+                                {
+                                    sh 'make CarlaUE4Editor'
+                                }
+                                sh 'make examples'
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
+                                }
+                            }
                         }
-                    }
-                }
-                stage('windows build')
-                {
-                    agent { label 'windows && build' }
-                    steps
-                    {
-                        bat """
-                            call ../setEnv64.bat
-                            make setup
-                            make LibCarla
-                            make PythonAPI
-                        """
-                        lock('windows_build')
+                        stage('ubuntu unit tests')
                         {
-                            bat """
-                                call ../setEnv64.bat
-                                make CarlaUE4Editor
-                            """
+                            agent { label 'ubuntu && build' }
+                            steps
+                            {
+                                sh 'make check ARGS="--all --xml"'
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    junit 'Build/test-results/*.xml'
+                                    archiveArtifacts 'profiler.csv'
+                                }
+                            }
                         }
-                        bat """
-                            call ../setEnv64.bat
-                            make examples
-                        """
-                    }
-                    post
-                    {
-                        always
+                        stage('ubuntu retrieve content')
                         {
-                            archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                            stash includes: 'PythonAPI/carla/dist/*.egg', name: 'eggs'
+                            agent { label 'ubuntu && build' }
+                            steps
+                            {
+                                sh './Update.sh'
+                            }
+                        }
+                        stage('ubuntu package')
+                        {
+                            agent { label 'ubuntu && build' }
+                            steps
+                            {
+                                sh 'make package'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
+                                sh 'make examples ARGS="localhost 3654"'
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts 'Dist/*.tar.gz'
+                                    stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
+                                    stash includes: 'Examples/', name: 'ubuntu_examples'
+                                }
+                            }
+                        }
+                        stage('ubuntu smoke tests')
+                        {
+                            agent { label 'ubuntu && gpu' }
+                            steps
+                            {
+                                unstash name: 'ubuntu_eggs'
+                                unstash name: 'ubuntu_package'
+                                unstash name: 'ubuntu_examples'
+                                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
+                                lock('ubuntu_gpu')
+                                {
+                                    sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                    sh 'make smoke_tests ARGS="--xml"'
+                                    sh 'make run-examples ARGS="localhost 3654"'
+                                }
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'CarlaUE4.log'
+                                    junit 'Build/test-results/smoke-tests-*.xml'
+                                }
+                            }
+                        }
+                        stage('ubuntu deploy')
+                        {
+                            agent { label 'ubuntu && build' }
+                            when { anyOf { branch "master"; buildingTag() } }
+                            steps
+                            {
+                                sh 'git checkout .'
+                                sh 'make deploy ARGS="--replace-latest --docker-push"'
+                            }
+                        }
+                        stage('ubuntu Doxygen')
+                        {
+                            agent { label 'ubuntu && build' }
+                            when { anyOf { branch "master"; buildingTag() } }
+                            steps
+                            {
+                                sh 'make docs'
+                                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
+                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                                sh 'cd ~/carla-simulator.github.io && \
+                                    git pull && \
+                                    git add Doxygen && \
+                                    git commit -m "Updated c++ docs" || true && \
+                                    git push'
+                            }
                         }
                     }
                 }
-            }
-        }
-
-        stage('Unit Tests')
-        {
-            agent { label 'ubuntu && build' }
-            steps
-            {
-                sh 'make check ARGS="--all --xml"'
-            }
-            post
-            {
-                always
+                stage('windows')
                 {
-                    junit 'Build/test-results/*.xml'
-                    archiveArtifacts 'profiler.csv'
+                    stages
+                    {
+                        stage('windows setup')
+                        {
+                            agent { label 'windows && build' }
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make setup
+                                """
+                            }
+                        }
+                        stage('windows build')
+                        {
+                            agent { label 'windows && build' }
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make setup
+                                    make LibCarla
+                                    make PythonAPI
+                                """
+                                lock('windows_build')
+                                {
+                                    bat """
+                                        call ../setEnv64.bat
+                                        make CarlaUE4Editor
+                                    """
+                                }
+                                bat """
+                                    call ../setEnv64.bat
+                                    make examples
+                                """
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
+                                }
+                            }
+                        }
+                        stage('windows unit tests')
+                        {
+                            agent { label 'windows && build' }
+                            steps { bat 'rem Not Implemented'}
+                        }
+                        stage('windows retrieve content')
+                        {
+                            agent { label 'windows && build' }
+                            steps { bat 'rem Not Implemented'}
+                        }
+                        stage('windows package')
+                        {
+                            agent { label 'windows && build' }
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make package
+                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate"
+                                    make examples ARGS="localhost 3654"
+                                """
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts 'Dist/*.zip'
+                                    stash includes: 'Dist/CARLA*.zip', name: 'windows_package'
+                                    stash includes: 'Examples/', name: 'windows_examples'
+                                }
+                            }
+                        }
+                        stage('windows smoke test')
+                        {
+                            agent { label 'windows && build' }
+                            steps { bat 'rem Not Implemented'}
+                        }
+                        stage('windows deploy')
+                        {
+                            agent { label 'windows && build' }
+                            steps { bat 'rem Not Implemented'}
+                        }
+                    }
                 }
-            }
-        }
-
-        stage('Retrieve Content')
-        {
-            agent { label 'ubuntu && build' }
-            steps
-            {
-                sh './Update.sh'
-            }
-        }
-
-        stage('Package')
-        {
-            agent { label 'ubuntu && build' }
-            steps
-            {
-                sh 'make package'
-                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
-                sh 'make examples ARGS="localhost 3654"'
-            }
-            post {
-                always {
-                    archiveArtifacts 'Dist/*.tar.gz'
-                    stash includes: 'Dist/CARLA*.tar.gz', name: 'carla_package'
-                    stash includes: 'Examples/', name: 'examples'
-                }
-            }
-        }
-
-        stage('Smoke Tests')
-        {
-            agent { label 'ubuntu && gpu' }
-            steps
-            {
-                unstash name: 'eggs'
-                unstash name: 'carla_package'
-                unstash name: 'examples'
-                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                lock('ubuntu_gpu')
-                {
-                    sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                    sh 'make smoke_tests ARGS="--xml"'
-                    sh 'make run-examples ARGS="localhost 3654"'
-                }
-            }
-            post
-            {
-                always
-                {
-                    archiveArtifacts 'CarlaUE4.log'
-                    junit 'Build/test-results/smoke-tests-*.xml'
-                }
-            }
-        }
-
-        stage('Deploy')
-        {
-            agent { label 'ubuntu && build' }
-            //when { anyOf { branch "master"; buildingTag() } }
-            steps
-            {
-                sh 'git checkout .'
-                sh 'make deploy ARGS="--replace-latest --docker-push"'
-            }
-        }
-
-        stage('Doxygen')
-        {
-            agent { label 'ubuntu && build' }
-            when { anyOf { branch "master"; buildingTag() } }
-            steps
-            {
-                sh 'make docs'
-                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
-                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
-                sh 'cd ~/carla-simulator.github.io && \
-                    git pull && \
-                    git add Doxygen && \
-                    git commit -m "Updated c++ docs" || true && \
-                    git push'
             }
         }
     }
 
-    post {
+    post
+    {
         always
         {
             node('build')
