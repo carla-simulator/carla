@@ -85,8 +85,8 @@ if not exist "%BOOST_SRC_DIR%" (
     )
     if %errorlevel% neq 0 goto error_download
     echo %FILE_N% Extracting boost from "%BOOST_TEMP_FILE%", this can take a while...
-    if exist "%ProgramFiles%/7-Zip/7z.exe" (
-        "%ProgramFiles%/7-Zip/7z.exe" x "%BOOST_TEMP_FILE_DIR%" -o"%BUILD_DIR%" -y
+    if exist "%ProgramW6432%/7-Zip/7z.exe" (
+        "%ProgramW6432%/7-Zip/7z.exe" x "%BOOST_TEMP_FILE_DIR%" -o"%BUILD_DIR%" -y
     ) else (
         powershell -Command "Expand-Archive '%BOOST_TEMP_FILE_DIR%' -DestinationPath '%BUILD_DIR%' -Force"
     )

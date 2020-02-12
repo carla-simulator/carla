@@ -174,8 +174,8 @@ if %DO_TARBALL%==true (
     if exist "!SRC_PATH!Engine/Saved" rmdir /S /Q "!SRC_PATH!Engine/Saved"
 
     set DST_ZIP=%DESTINATION_ZIP:/=\%
-    if exist "%ProgramFiles%/7-Zip/7z.exe" (
-        "%ProgramFiles%/7-Zip/7z.exe" a "!DST_ZIP!" "!SRC_PATH!" -tzip -mmt -mx5
+    if exist "%ProgramW6432%/7-Zip/7z.exe" (
+        "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" "!SRC_PATH!" -tzip -mmt -mx5
     ) else (
         pushd "!SRC_PATH!"
             rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
