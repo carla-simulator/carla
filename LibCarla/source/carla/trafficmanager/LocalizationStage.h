@@ -145,15 +145,15 @@ namespace traffic_manager {
   public:
 
     LocalizationStage(
-        std::string stage_name,
-        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-        AtomicActorSet &registered_actors,
-        InMemoryMap &local_map,
-        Parameters &parameters,
-		carla::client::DebugHelper &debug_helper,
-		carla::client::detail::EpisodeProxy &episodeProxy);
+      std::string stage_name,
+      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+      AtomicActorSet &registered_actors,
+      InMemoryMap &local_map,
+      Parameters &parameters,
+      carla::client::DebugHelper &debug_helper,
+      carla::client::detail::EpisodeProxy &episodeProxy);
 
     ~LocalizationStage();
 
