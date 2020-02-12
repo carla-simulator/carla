@@ -221,7 +221,7 @@
     - def_name: is_at_traffic_light
       return: bool
       doc: >
-        The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator). Vehicles will be affected by a traffic light or traffic sign when inside its trigger volume.
+        Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).
     # --------------------------------------
     - def_name: set_autopilot
       params:
