@@ -94,7 +94,7 @@ namespace CollisionStageConstants {
 
               if (parameters.GetCollisionDetection(ego_actor, other_actor)) {
                 if((safe_point_junction != nullptr && !IsLocationAfterJunctionSafe(ego_actor, other_actor, safe_point_junction, other_location)) ||
-                  NegotiateCollision(ego_actor, other_actor, ego_location, other_location, closest_point, junction_look_ahead)){
+                  NegotiateCollision(ego_actor, other_actor, ego_location, other_location, closest_point, junction_look_ahead)) {
                   if ((other_actor_type[0] == 'v' && parameters.GetPercentageIgnoreVehicles(ego_actor) <= (rand() % 101)) ||
                       (other_actor_type[0] == 'w' && parameters.GetPercentageIgnoreWalkers(ego_actor) <= (rand() % 101))) {
                     collision_hazard = true;
@@ -106,12 +106,13 @@ namespace CollisionStageConstants {
           }
         } catch (const std::exception &e) {
           carla::log_info("Actor might not be alive \n");
+        }
       }
+      CollisionToPlannerData &message = current_planner_frame->at(i);
+      message.hazard = collision_hazard;
     }
-    CollisionToPlannerData &message = current_planner_frame->at(i);
-    message.hazard = collision_hazard;
   }
-}
+
   void CollisionStage::DataReceiver() {
     localization_frame = localization_messenger->Peek();
 
