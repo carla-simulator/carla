@@ -5,8 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
-
-
 #include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"
@@ -139,115 +137,96 @@ void TrafficManagerLocal::SetCollisionDetection(
     const ActorPtr &reference_actor,
     const ActorPtr &other_actor,
     const bool detect_collision) {
-
   parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
 
 void TrafficManagerLocal::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-
   parameters.SetForceLaneChange(actor, direction);
 }
 
-  TrafficManager& TrafficManager::GetInstance(cc::Client &client_connection) {
+void TrafficManagerLocal::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
+  parameters.SetAutoLaneChange(actor, enable);
+}
 
-    if (singleton_pointer == nullptr) {
+void TrafficManagerLocal::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
+  parameters.SetDistanceToLeadingVehicle(actor, distance);
+}
 
-      const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
-      const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-      const std::vector<float> lateral_param = {10.0f, 0.02f, 1.0f};
-      const std::vector<float> lateral_highway_param = {9.0f, 0.02f, 1.0f};
-      const float perc_difference_from_limit = 30.0f;
-
-      TrafficManager* tm_ptr = new TrafficManager(
-        longitudinal_param, longitudinal_highway_param, lateral_param, lateral_highway_param,
-        perc_difference_from_limit, client_connection
-      );
-
-      singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);
-    }
-
-    return *singleton_pointer.get();
-  }
 /// Method to specify the % chance of ignoring collisions with all walkers
 void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
-
   parameters.SetPercentageIgnoreWalkers(actor, perc);
 }
 
 /// Method to specify the % chance of ignoring collisions with all vehicles
 void TrafficManagerLocal::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
-
   parameters.SetPercentageIgnoreVehicles(actor, perc);
 }
 
-
 void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
+  parameters.SetPercentageRunningLight(actor, perc);
+}
 
-  std::unique_ptr<cc::Client> TrafficManager::singleton_local_client = nullptr;
 
-  cc::Client& TrafficManager::GetUniqueLocalClient() {
-
-    if (singleton_local_client == nullptr) {
-      cc::Client* client = new cc::Client("localhost", 2000);
-      singleton_local_client = std::unique_ptr<cc::Client>(client);
+bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
+  for (auto& elem : tl_to_freeze) {
+    if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
+      return false;
     }
+  }
+  return true;
+}
 
-    return *singleton_local_client.get();
+void TrafficManagerLocal::ResetAllTrafficLights() {
+
+  auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+    std::vector<carla::client::detail::ActorVariant> filtered;
+    for (auto &&actor : actors) {
+      if (carla::StringUtil::Match
+          ( carla::client::detail::ActorVariant(actor).GetTypeId()
+              , wildcard_pattern)) {
+        filtered.push_back(actor);
+      }
+    }
+    return filtered;
+  };
+
+  /// Get all actors of the world
+  auto world_actorsList = episodeProxyTM.Lock()->GetAllTheActorsInTheEpisode();
+
+  /// Filter based on wildcard_pattern
+  const auto world_traffic_lights = Filter(world_actorsList, "*traffic_light*");
+
+  std::vector<TLGroup> list_of_all_groups;
+  TLGroup tl_to_freeze;
+  std::vector<carla::ActorId> list_of_ids;
+  for (auto tl : world_traffic_lights) {
+    if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl.GetId()) != list_of_ids.end())) {
+      const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl.Get(episodeProxyTM))->GetGroupTrafficLights();
+      list_of_all_groups.push_back(tl_group);
+      for (uint64_t i=0u; i<tl_group.size(); i++) {
+        list_of_ids.push_back(tl_group.at(i).get()->GetId());
+        if(i!=0u) {
+          tl_to_freeze.push_back(tl_group.at(i));
+        }
+      }
+    }
   }
 
-  void TrafficManager::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    registered_actors.Insert(actor_list);
+  for (TLGroup& tl_group : list_of_all_groups) {
+    tl_group.front()->SetState(TLS::Green);
+    std::for_each(
+        tl_group.begin()+1, tl_group.end(),
+        [] (auto& tl) {tl->SetState(TLS::Red);});
   }
 
-  void TrafficManager::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    registered_actors.Remove(actor_list);
+  while (!CheckAllFrozen(tl_to_freeze)) {
+    for (auto& tln : tl_to_freeze) {
+      tln->SetState(TLS::Red);
+      tln->Freeze(true);
+    }
   }
+}
 
-  void TrafficManager::Start() {
-
-    localization_collision_messenger->Start();
-    localization_traffic_light_messenger->Start();
-    localization_planner_messenger->Start();
-    collision_planner_messenger->Start();
-    traffic_light_planner_messenger->Start();
-    planner_control_messenger->Start();
-
-    localization_stage->Start();
-    collision_stage->Start();
-    traffic_light_stage->Start();
-    planner_stage->Start();
-    control_stage->Start();
-  }
-
-  void TrafficManager::Stop() {
-
-    localization_collision_messenger->Stop();
-    localization_traffic_light_messenger->Stop();
-    localization_planner_messenger->Stop();
-    collision_planner_messenger->Stop();
-    traffic_light_planner_messenger->Stop();
-    planner_control_messenger->Stop();
-
-    localization_stage->Stop();
-    collision_stage->Stop();
-    traffic_light_stage->Stop();
-    planner_stage->Stop();
-    control_stage->Stop();
-
-  }
-
-  void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-    parameters.SetPercentageSpeedDifference(actor, percentage);
-  }
-
-  void TrafficManager::SetGlobalPercentageSpeedDifference(const float percentage) {
-    parameters.SetGlobalPercentageSpeedDifference(percentage);
-  }
-
-  void TrafficManager::SetCollisionDetection(
-      const ActorPtr &reference_actor,
-      const ActorPtr &other_actor,
-      const bool detect_collision) {
 /// Method to switch traffic manager into synchronous execution.
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
   parameters.SetSynchronousMode(mode);
@@ -263,86 +242,13 @@ bool TrafficManagerLocal::SynchronousTick() {
   return control_stage->RunStep();
 }
 
-    parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
-  }
+/// Get carla episode information
+carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
+  return episodeProxyTM;
+}
 
-  void TrafficManager::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
+std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
-    parameters.SetForceLaneChange(actor, direction);
-  }
-
-  void TrafficManager::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-
-    parameters.SetAutoLaneChange(actor, enable);
-  }
-
-  void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-
-    parameters.SetDistanceToLeadingVehicle(actor, distance);
-  }
-
-  void TrafficManager::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageIgnoreWalkers(actor, perc);
-  }
-
-  void TrafficManager::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageIgnoreVehicles(actor, perc);
-  }
-
-  void TrafficManager::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageRunningLight(actor, perc);
-  }
-
-  void TrafficManager::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageRunningSign(actor, perc);
-  }
-
-  bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
-    for (auto& elem : tl_to_freeze) {
-      if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void TrafficManager::ResetAllTrafficLights() {
-    const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-    std::vector<TLGroup> list_of_all_groups;
-    TLGroup tl_to_freeze;
-    std::vector<carla::ActorId> list_of_ids;
-    for (auto tl : *world_traffic_lights.get()) {
-      if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-        const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-        list_of_all_groups.push_back(tl_group);
-        for (uint64_t i=0u; i<tl_group.size(); i++) {
-          list_of_ids.push_back(tl_group.at(i).get()->GetId());
-          if(i!=0u) {
-            tl_to_freeze.push_back(tl_group.at(i));
-          }
-        }
-      }
-    }
-
-    for (TLGroup& tl_group : list_of_all_groups) {
-      tl_group.front()->SetState(TLS::Green);
-      std::for_each(
-          tl_group.begin()+1, tl_group.end(),
-          [] (auto& tl) {tl->SetState(TLS::Red);});
-    }
-
-    while (!CheckAllFrozen(tl_to_freeze)) {
-      for (auto& tln : tl_to_freeze) {
-        tln->SetState(TLS::Red);
-        tln->Freeze(true);
-      }
-    }
-  }
   /// Get valid registered vehicle count
   return registered_actors.GetIDList();
 }

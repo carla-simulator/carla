@@ -147,9 +147,6 @@ namespace traffic_manager {
     /// the leading vehicle.
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-    /// Method to specify the % chance of ignoring collisions with other actors
-    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
-
     /// Method to specify the % chance of ignoring collisions with all walkers
     void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 

@@ -155,17 +155,6 @@ void TrafficManagerRemote::SetDistanceToLeadingVehicle(
   client.SetDistanceToLeadingVehicle(actor, distance);
 }
 
-/// Method to specify the % chance of ignoring collisions with other actors
-void TrafficManagerRemote::SetPercentageIgnoreActors(
-    const ActorPtr &_actor,
-    const float percentage) {
-  /// Prepare rpc actor list
-  carla::rpc::Actor actor(_actor->Serialize());
-
-  /// Call client method
-  client.SetPercentageIgnoreActors(actor, percentage);
-}
-
 /// Method to specify the % chance of ignoring collisions with all walkers
 void TrafficManagerRemote::SetPercentageIgnoreWalkers(
     const ActorPtr &_actor,

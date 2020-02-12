@@ -56,8 +56,6 @@ namespace traffic_manager {
     AtomicMap<ActorId, float> perc_ignore_vehicles;
     /// Synchronous mode switch.
     std::atomic<bool> synchronous_mode;
-    /// Synchronous mode time out.
-    std::chrono::duration<int, std::milli> synchronous_time_out;
 
 
   public:
@@ -89,8 +87,6 @@ namespace traffic_manager {
 
     /// Method to query target velocity for a vehicle.
     float GetVehicleTargetVelocity(const ActorPtr &actor);
-  /// Synchronous mode time out.
-  std::chrono::duration<double, std::milli> synchronous_time_out;
 
     /// Method to query collision avoidance rule between a pair of vehicles.
     bool GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor);
@@ -104,46 +100,47 @@ namespace traffic_manager {
     /// Method to query distance to leading vehicle for a given vehicle.
     float GetDistanceToLeadingVehicle(const ActorPtr &actor);
 
-    /// Method to set % to run any traffic light.
-    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
-
-	/// Method to set distance to leading vehicle
-	void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
-
-	/// Method to set % to run any traffic sign.
-	void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
-
-	/// Method to set % to ignore any vehicle.
-	void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+    /// Method to get % to run any traffic light.
+    float GetPercentageRunningSign(const ActorPtr &actor);
 
     /// Method to get % to run any traffic light.
     float GetPercentageRunningLight(const ActorPtr &actor);
 
-	/// Method to set % to run any traffic light.
-	void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
-
     /// Method to get % to ignore any vehicle.
     float GetPercentageIgnoreVehicles(const ActorPtr &actor);
-  /// Synchronous mode time out.
-  void SetSynchronousModeTimeOutInMiliSecond(const double time);
-
-	/// Method to get % to ignore any vehicle.
-	float GetPercentageIgnoreVehicles(const ActorPtr &actor);
 
     /// Method to get % to ignore any walker.
     float GetPercentageIgnoreWalkers(const ActorPtr &actor);
 
-    /// Method to set synchronous mode.
-    void SetSynchronousMode(const bool mode_switch = true);
+    /// Method to set % to run any traffic sign.
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to run any traffic light.
+    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+
+    /// Synchronous mode
 
     /// Method to get synchronous mode.
     bool GetSynchronousMode();
 
-    /// Synchronous mode time out.
-    void SetSynchronousModeTimeOutInMiliSecond(const int time);
+    /// Method to set synchronous mode.
+    void SetSynchronousMode(const bool mode_switch = true);
 
     /// Synchronous mode time out
-    int GetSynchronousModeTimeOutInMiliSecond();
+    double GetSynchronousModeTimeOutInMiliSecond();
+
+    /// Synchronous mode time out.
+    void SetSynchronousModeTimeOutInMiliSecond(const double time);
+
+    /// Synchronous mode time out.
+    std::chrono::duration<double, std::milli> synchronous_time_out;
+
 
   };
 

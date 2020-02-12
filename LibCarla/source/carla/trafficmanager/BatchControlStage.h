@@ -22,20 +22,18 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using namespace std::literals::chrono_literals;
 
 /// This class receives actuation signals (throttle, brake, steer)
 /// from MotionPlannerStage class and communicates these signals to
 /// the simulator in batches to control vehicles' movement.
-class BatchControlStage : public PipelineStage
-{
+class BatchControlStage : public PipelineStage {
 
 private:
+
   /// Pointer to frame received from MotionPlanner.
   std::shared_ptr<PlannerToControlFrame> data_frame;
 
@@ -47,13 +45,12 @@ private:
 
   /// Array to hold command batch.
   std::shared_ptr<std::vector<carla::rpc::Command>> commands;
+
   /// Number of vehicles registered with the traffic manager.
-
   uint64_t number_of_vehicles;
-  /// Parameter object for changing synchronous behaviour.
 
+  /// Parameter object for changing synchronous behaviour.
   Parameters &parameters;
-  /// Flag for resetting frame step.
 
   /// Step runner flag
   std::atomic<bool> run_step;
@@ -66,6 +63,7 @@ private:
   std::condition_variable send_control_notifier;
 
 public:
+
   BatchControlStage(std::string stage_name,
                     std::shared_ptr<PlannerToControlMessenger> messenger,
                     carla::client::detail::EpisodeProxy &episodeProxy,

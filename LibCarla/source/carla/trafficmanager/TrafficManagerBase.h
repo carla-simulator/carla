@@ -64,9 +64,6 @@ public:
   /// the leading vehicle.
   virtual void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) = 0;
 
-  /// Method to specify the % chance of ignoring collisions with other actors
-  virtual void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) = 0;
-
   /// Method to specify the % chance of ignoring collisions with all walkers
   virtual void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) = 0;
 

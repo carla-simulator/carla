@@ -126,12 +126,6 @@ public:
     singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
   }
 
-  /// Method to specify the % chance of ignoring collisions with other actors
-  void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageIgnoreActors(actor, perc);
-  }
-
   /// Method to specify the % chance of ignoring collisions with all walkers
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
     DEBUG_ASSERT(singleton_pointer != nullptr);

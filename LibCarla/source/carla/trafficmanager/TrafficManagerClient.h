@@ -115,14 +115,7 @@ public:
     _client->call("set_distance_to_leading_vehicle", actor, distance);
   }
 
-  /// Method to specify the % chance of ignoring collisions with other actors
-  void SetPercentageIgnoreActors(const carla::rpc::Actor &actor, const float percentage) {
-    DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_percentage_ignore_actors", actor, percentage);
-  }
-
-  /// Method to specify the % chance of ignoring collisions with other actors
-    /// Method to specify the % chance of ignoring collisions with all walkers
+  /// Method to specify the % chance of ignoring collisions with all walkers
   void SetPercentageIgnoreWalkers(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_ignore_walkers", actor, percentage);

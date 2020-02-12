@@ -104,12 +104,14 @@ namespace CollisionStageConstants {
               }
             }
           }
+        } catch (const std::exception &e) {
+          carla::log_info("Actor might not be alive \n");
+        }
+        CollisionToPlannerData &message = current_planner_frame->at(i);
+        message.hazard = collision_hazard;
       }
     }
-    CollisionToPlannerData &message = current_planner_frame->at(i);
-    message.hazard = collision_hazard;
   }
-}
 
   void CollisionStage::DataReceiver() {
     localization_frame = localization_messenger->Peek();
@@ -239,7 +241,7 @@ namespace CollisionStageConstants {
       return geodesic_boundaries.at(actor->GetId());
     }
 
-    const LocationList bbox = GetBoundary(actor);
+    const LocationList bbox = GetBoundary(actor, vehicle_location);
 
     if (vehicle_id_to_index.find(actor->GetId()) != vehicle_id_to_index.end()) {
 
@@ -378,7 +380,7 @@ namespace CollisionStageConstants {
 
     bool safe_junction = true;
 
-    if (overlapped_actor->GetVelocity().Length() < EPSILON_VELOCITY){
+    if (other_actor->GetVelocity().Length() < EPSILON_VELOCITY){
 
       cg::Location safe_location = safe_point->GetLocation();
       cg::Vector3D heading_vector = safe_point->GetForwardVector();
@@ -403,7 +405,7 @@ namespace CollisionStageConstants {
       };
 
       const Polygon reference_polygon = GetPolygon(ego_actor_boundary);
-      const Polygon other_polygon = GetPolygon(GetBoundary(overlapped_actor));
+      const Polygon other_polygon = GetPolygon(GetBoundary(other_actor, other_location));
 
       const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
       if (inter_bbox_distance < INTER_BBOX_DISTANCE_THRESHOLD){

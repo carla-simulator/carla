@@ -120,11 +120,6 @@ public:
         tm->SetDistanceToLeadingVehicle(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), distance);
       });
 
-      /// Method to specify the % chance of ignoring collisions with other actors
-      server->bind("set_percentage_ignore_actors", [=](carla::rpc::Actor actor, const float percentage) {
-        tm->SetPercentageIgnoreActors(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
-      });
-
       /// Method to specify the % chance of running a red light
       server->bind("set_percentage_running_light", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageRunningLight(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);

@@ -47,7 +47,7 @@ namespace LocalizationConstants {
       local_map(local_map),
       parameters(parameters),
       debug_helper(debug_helper),
-  	  episodeProxyLS(episodeProxy) {
+      episodeProxyLS(episodeProxy) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;
@@ -365,45 +365,45 @@ namespace LocalizationConstants {
 
   void LocalizationStage::ScanUnregisteredVehicles() {
     ++unregistered_scan_duration;
-	// Periodically check for actors not spawned by TrafficManager.
-	if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
-		unregistered_scan_duration = 0;
+  // Periodically check for actors not spawned by TrafficManager.
+  if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
+    unregistered_scan_duration = 0;
 
-		auto Filter = [&](auto &actors, auto &wildcard_pattern) {
-			std::vector<carla::client::detail::ActorVariant> filtered;
-			for (auto &&actor : actors) {
-				if (carla::StringUtil::Match
-					   ( carla::client::detail::ActorVariant(actor).GetTypeId()
-					   , wildcard_pattern)) {
-					filtered.push_back(actor);
-				}
-			}
-			return filtered;
-		};
+    auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+      std::vector<carla::client::detail::ActorVariant> filtered;
+      for (auto &&actor : actors) {
+        if (carla::StringUtil::Match
+             ( carla::client::detail::ActorVariant(actor).GetTypeId()
+             , wildcard_pattern)) {
+          filtered.push_back(actor);
+        }
+      }
+      return filtered;
+    };
 
-		/// Get all actors of the world
-		auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
+    /// Get all actors of the world
+    auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
 
-		/// Filter based on wildcard_pattern
-		const auto world_actors = Filter(world_actorsList, "vehicle.*");
-		const auto world_walker = Filter(world_actorsList, "walker.*");
+    /// Filter based on wildcard_pattern
+    const auto world_actors = Filter(world_actorsList, "vehicle.*");
+    const auto world_walker = Filter(world_actorsList, "walker.*");
 
-		// Scanning for vehicles.
-		for (auto actor: world_actors) {
-			const auto unregistered_id = actor.GetId();
-			if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
-					unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-				unregistered_actors.insert({unregistered_id, actor.Get(episodeProxyLS)});
-			}
-		}
-		// Scanning for pedestrians.
-		for (auto walker: world_walker) {
-			const auto unregistered_id = walker.GetId();
-			if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-				unregistered_actors.insert({unregistered_id, walker.Get(episodeProxyLS)});
-			}
-		}
-	}
+    // Scanning for vehicles.
+    for (auto actor: world_actors) {
+      const auto unregistered_id = actor.GetId();
+      if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
+          unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+        unregistered_actors.insert({unregistered_id, actor.Get(episodeProxyLS)});
+      }
+    }
+    // Scanning for pedestrians.
+    for (auto walker: world_walker) {
+      const auto unregistered_id = walker.GetId();
+      if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+        unregistered_actors.insert({unregistered_id, walker.Get(episodeProxyLS)});
+      }
+    }
+  }
 
     // Regularly update unregistered actors.
     const auto current_snapshot = episodeProxyLS.Lock()->GetWorldSnapshot();
@@ -718,156 +718,6 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
     return false;
   }
-
-SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle &vehicle, Buffer &waypoint_buffer){
-
-	// Get the length of the car
-	float length = vehicle->GetBoundingBox().extent.x;
-
-	// First Waypoint before the junction
-	const SimpleWaypointPtr initial_point;
-	uint initial_index = 0;
-	// First Waypoint after the junction
-	SimpleWaypointPtr safe_point = nullptr;
-	uint safe_index = 0;
-	// Vehicle position after the junction
-	SimpleWaypointPtr final_point = nullptr;
-	// Safe space after the junction
-	const float safe_distance = 1.5f*length;
-
-	for (uint j = 0u; j < waypoint_buffer.size(); ++j){
-		if (waypoint_buffer.at(j)->CheckJunction()){
-			initial_index = j;
-			break;
-		}
-	}
-
-	// Stop if something failed
-	if (initial_index == 0 && !waypoint_buffer.front()->CheckJunction()){
-		return final_point;
-	}
-
-	// 2) Search for the end of the intersection (if it is in the buffer)
-	for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
-
-		if (!waypoint_buffer.at(i)->CheckJunction()){
-			safe_point = waypoint_buffer.at(i);
-			safe_index = i;
-			break;
-		}
-	}
-
-	// If it hasn't been found, extend the buffer
-	if(safe_point == nullptr){
-		while (waypoint_buffer.back()->CheckJunction()) {
-
-			std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-			uint selection_index = 0u;
-			if (next_waypoints.size() > 1) {
-				selection_index = static_cast<uint>(rand()) % next_waypoints.size();
-			}
-
-			waypoint_buffer.push_back(next_waypoints.at(selection_index));
-		}
-		// Save the last one
-		safe_point = waypoint_buffer.back();
-	}
-
-	// Stop if something failed
-	if (safe_index == 0){
-		return final_point;
-	}
-
-	// 3) Search for final_point (again, if it is in the buffer)
-
-	for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
-
-		if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
-			final_point = waypoint_buffer.at(k);
-			break;
-		}
-	}
-
-	// If it hasn't been found, extend the buffer
-	if(final_point == nullptr){
-		while (safe_point->Distance(waypoint_buffer.back()->GetLocation()) < safe_distance) {
-
-			// Record the last point as a safe one and save it
-			std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-			uint selection_index = 0u;
-			// Pseudo-randomized path selection if found more than one choice.
-			if (next_waypoints.size() > 1) {
-				selection_index = static_cast<uint>(rand()) % next_waypoints.size();
-			}
-
-			waypoint_buffer.push_back(next_waypoints.at(selection_index));
-		}
-		final_point = waypoint_buffer.back();
-	}
-
-	return final_point;
-}
-
-void LocalizationStage::UpdateIdleTime(const Actor& actor) {
-	if (idle_time.find(actor->GetId()) == idle_time.end()) {
-		return;
-	}
-
-	const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-	if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
-		idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
-	}
-
-	// Checking maximum idle time.
-	if (maximum_idle_time.first == nullptr || maximum_idle_time.second > idle_time[actor->GetId()]) {
-		maximum_idle_time = std::make_pair(actor, idle_time[actor->GetId()]);
-	}
-}
-
-bool LocalizationStage::IsVehicleStuck(const Actor& actor) {
-	if (actor == nullptr) {
-		return false;
-	}
-
-	if (idle_time.find(actor->GetId()) != idle_time.end()) {
-		auto delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor->GetId());
-		if (delta_idle_time >= BLOCKED_TIME_THRESHOLD) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void LocalizationStage::CleanActor(const ActorId actor_id) {
-	track_traffic.DeleteActor(actor_id);
-	for (const auto& waypoint : buffer_list->at(actor_id)) {
-		track_traffic.RemovePassingVehicle(waypoint->GetId(), actor_id);
-	}
-
-	idle_time.erase(actor_id);
-	buffer_list->erase(actor_id);
-}
-
-bool LocalizationStage::TryDestroyVehicle(const Actor& actor) {
-	if (!actor->IsAlive()) {
-		return false;
-	}
-
-	const ActorId actor_id = actor->GetId();
-
-	auto delta_last_actor_destruction = current_timestamp.elapsed_seconds - elapsed_last_actor_destruction;
-	if (delta_last_actor_destruction >= DELTA_TIME_BETWEEN_DESTRUCTIONS) {
-		registered_actors.Destroy(actor);
-
-		// Clean actor data structures.
-		CleanActor(actor_id);
-
-		elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
-
-		return true;
-	}
-	return false;
-}
 
 } // namespace traffic_manager
 } // namespace carla
