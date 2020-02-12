@@ -265,7 +265,9 @@ namespace LocalizationConstants {
         } else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
           actor_ptr = unregistered_actors.at(overlapping_actor_id);
         }
-        collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
+        if (actor_ptr!=nullptr) {
+          collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
+        }
         collision_message.safe_point_after_junction = final_safe_points[actor_id];
       }
       collision_message.closest_waypoint = waypoint_buffer.front();

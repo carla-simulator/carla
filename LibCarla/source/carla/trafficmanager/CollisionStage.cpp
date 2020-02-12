@@ -82,7 +82,7 @@ namespace CollisionStageConstants {
           const ActorId other_actor_id = j->first;
           const cg::Location other_location = other_actor->GetLocation();
 
-          // Collision checks increase with speed (Official formula used)
+          // Collision checks increase with speed
           float collision_distance = std::pow(floor(ego_actor->GetVelocity().Length()*3.6f/10.0f),2.0f);
           collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
           // Temporary fix to (0,0,0) bug
@@ -106,13 +106,12 @@ namespace CollisionStageConstants {
           }
         } catch (const std::exception &e) {
           carla::log_info("Actor might not be alive \n");
-        }
-        CollisionToPlannerData &message = current_planner_frame->at(i);
-        message.hazard = collision_hazard;
       }
     }
+    CollisionToPlannerData &message = current_planner_frame->at(i);
+    message.hazard = collision_hazard;
   }
-
+}
   void CollisionStage::DataReceiver() {
     localization_frame = localization_messenger->Peek();
 
