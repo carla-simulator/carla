@@ -290,8 +290,7 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
-  void LocalizationStage::DataReceiver()
-  {
+  void LocalizationStage::DataReceiver() {
     bool isDeletedActorsPresent = false;
     std::set<uint32_t> worldActorId;
     std::vector<ActorPtr> actor_list_to_be_deleted;
@@ -312,7 +311,7 @@ namespace LocalizationConstants {
 
     /// Filter with Vehicle
     auto vehicles = Filter(world_actorsList, "vehicle.*");
-    
+
     /// Building a Set of Vehicle Id of the World
     for (const auto &actor : vehicles) {
       worldActorId.insert(actor.GetId());
@@ -343,8 +342,7 @@ namespace LocalizationConstants {
       actor_list = registered_actors.GetList();
       uint64_t index = 0u;
       vehicle_id_to_index.clear();
-      for (auto &actor : actor_list)
-      {
+      for (auto &actor : actor_list) {
         vehicle_id_to_index.insert({actor->GetId(), index});
         ++index;
       }
@@ -352,9 +350,7 @@ namespace LocalizationConstants {
     }
 
     // Allocating new containers for the changed number of registered vehicles.
-    if (number_of_vehicles != actor_list.size())
-    {
-
+    if (number_of_vehicles != actor_list.size()) {
       number_of_vehicles = static_cast<uint64_t>(actor_list.size());
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
