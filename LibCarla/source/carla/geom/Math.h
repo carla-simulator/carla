@@ -109,6 +109,9 @@ namespace geom {
 
     /// Compute the unit vector pointing towards the X-axis of @a rotation.
     static Vector3D GetForwardVector(const Rotation &rotation);
+
+    /// Compute the unit vector pointing towards the Y-axis of @a rotation.
+    static Vector3D GetRightVector(const Rotation &rotation);
   };
 
 } // namespace geom
