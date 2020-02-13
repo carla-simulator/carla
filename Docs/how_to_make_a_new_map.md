@@ -12,8 +12,6 @@ Files needed:
 It is possible to modify an existing CARLA map, check out the [map customization][custommaplink]
 tutorial.
 
-[custommaplink]: /Docs/dev/map_customization.md
-
 The following steps will introduce the RoadRunner software for map creation. If the map is
 created by other software, go to this [section](#3-importing-into-unreal).
 
@@ -376,3 +374,6 @@ Now pedestrians will be able to spawn randomly and walk on the selected meshes!
     * Unreal shortcuts to find materials and assets:
         * `Right-click on the Asset > Browse to Asset`
         * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
+
+
+[custommaplink]: /Docs/dev/map_customization.md
