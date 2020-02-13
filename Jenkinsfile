@@ -201,7 +201,13 @@ pipeline
                         stage('windows retrieve content')
                         {
                             agent { label 'windows && build' }
-                            steps { bat 'rem Not Implemented'}
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    call Update.bat
+                                """
+                            }
                         }
                         stage('windows package')
                         {
@@ -211,8 +217,8 @@ pipeline
                                 bat """
                                     call ../setEnv64.bat
                                     make package
-                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate"
-                                    make examples ARGS="localhost 3654"
+                                    rem make package ARGS="--packages=AdditionalMaps --clean-intermediate"
+                                    rem make examples ARGS="localhost 3654"
                                 """
                             }
                             post {
