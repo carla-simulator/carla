@@ -290,17 +290,61 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
-  void LocalizationStage::DataReceiver() {
+  void LocalizationStage::DataReceiver()
+  {
+    bool isDeletedActorsPresent = false;
+    std::set<uint32_t> worldActorId;
+    std::vector<ActorPtr> actor_list_to_be_deleted;
+
+    /// Filter Function to collect the Data
+    auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+      std::vector<carla::client::detail::ActorVariant> filtered;
+      for (auto &&actor : actors) {
+        if (carla::StringUtil::Match(carla::client::detail::ActorVariant(actor).GetTypeId(), wildcard_pattern)) {
+          filtered.push_back(actor);
+        }
+      }
+      return filtered;
+    };
+
+    /// Get all World Actor
+    auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
+
+    /// Filter with Vehicle
+    auto vehicles = Filter(world_actorsList, "vehicle.*");
+    
+    /// Building a Set of Vehicle Id of the World
+    for (const auto &actor : vehicles) {
+      worldActorId.insert(actor.GetId());
+    }
+
+    /// Search for Invalid / Destroyed Vehicles
+    for (auto &actor : actor_list) {
+      if (worldActorId.find(actor->GetId()) == worldActorId.end()) {
+        actor_list_to_be_deleted.emplace_back(actor);
+        track_traffic.DeleteActor(actor->GetId());
+      }
+    }
+
+    /// Clearing the registered Actor List
+    if(!actor_list_to_be_deleted.empty()) {
+      registered_actors.Remove(actor_list_to_be_deleted);
+      actor_list.clear();
+      actor_list = registered_actors.GetList();
+      isDeletedActorsPresent = true;
+    }
 
     // Building a list of registered actors and
     // connecting the vehicle ids to their position indices on data arrays.
 
-    if (registered_actors_state != registered_actors.GetState()) {
-
+    if (isDeletedActorsPresent  || (registered_actors_state != registered_actors.GetState())) {
+      actor_list.clear();
+      actor_list_to_be_deleted.clear();
       actor_list = registered_actors.GetList();
       uint64_t index = 0u;
       vehicle_id_to_index.clear();
-      for (auto &actor: actor_list) {
+      for (auto &actor : actor_list)
+      {
         vehicle_id_to_index.insert({actor->GetId(), index});
         ++index;
       }
@@ -308,10 +352,10 @@ namespace LocalizationConstants {
     }
 
     // Allocating new containers for the changed number of registered vehicles.
-    if (number_of_vehicles != actor_list.size()) {
+    if (number_of_vehicles != actor_list.size())
+    {
 
       number_of_vehicles = static_cast<uint64_t>(actor_list.size());
-
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
@@ -322,7 +366,6 @@ namespace LocalizationConstants {
       traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
       traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
     }
-
   }
 
   void LocalizationStage::DataSender() {
