@@ -578,16 +578,16 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
     // First Waypoint before the junction
     const SimpleWaypointPtr initial_point;
-    uint initial_index = 0;
+    uint64_t initial_index = 0;
     // First Waypoint after the junction
     SimpleWaypointPtr safe_point = nullptr;
-    uint safe_index = 0;
+    uint64_t safe_index = 0;
     // Vehicle position after the junction
     SimpleWaypointPtr final_point = nullptr;
     // Safe space after the junction
     const float safe_distance = 1.5f*length;
 
-    for (uint j = 0u; j < waypoint_buffer.size(); ++j){
+    for (uint64_t j = 0u; j < waypoint_buffer.size(); ++j){
       if (waypoint_buffer.at(j)->CheckJunction()){
         initial_index = j;
         break;
@@ -600,7 +600,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     // 2) Search for the end of the intersection (if it is in the buffer)
-    for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
+    for (uint64_t i = initial_index; i < waypoint_buffer.size(); ++i){
 
       if (!waypoint_buffer.at(i)->CheckJunction()){
         safe_point = waypoint_buffer.at(i);
@@ -614,9 +614,9 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
       while (waypoint_buffer.back()->CheckJunction()) {
 
           std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-          uint selection_index = 0u;
+          uint64_t selection_index = 0u;
           if (next_waypoints.size() > 1) {
-            selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+            selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
           }
 
           waypoint_buffer.push_back(next_waypoints.at(selection_index));
@@ -632,7 +632,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
     // 3) Search for final_point (again, if it is in the buffer)
 
-    for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+    for(uint64_t k = safe_index; k < waypoint_buffer.size(); ++k){
 
       if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
         final_point = waypoint_buffer.at(k);
@@ -646,10 +646,10 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
         // Record the last point as a safe one and save it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-        uint selection_index = 0u;
+        uint64_t selection_index = 0u;
         // Pseudo-randomized path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
-          selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
 
         waypoint_buffer.push_back(next_waypoints.at(selection_index));
