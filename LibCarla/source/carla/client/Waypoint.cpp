@@ -10,6 +10,8 @@
 #include "carla/client/Junction.h"
 #include "carla/client/Landmark.h"
 
+#include <unordered_set>
+
 namespace carla {
 namespace client {
 
@@ -205,9 +207,40 @@ namespace client {
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
   }
 
-  std::vector<SharedPtr<Landmark>> Waypoint::GetLandmakrsInDistance(double /*distance*/) const {
+  std::vector<SharedPtr<Landmark>> Waypoint::GetAllLandmakrsInDistance(
+      double distance, bool stop_at_junction) const {
     std::vector<SharedPtr<Landmark>> result;
-    result.emplace_back(new Landmark(_transform, shared_from_this()));
+    auto signals = _parent->GetMap().GetSignalsInDistance(
+        _waypoint, distance, stop_at_junction);
+    std::unordered_set<const road::element::RoadInfoSignal*> added_signals; // check for repeated signals
+    for(auto &signal_data : signals){
+      if(added_signals.count(signal_data.signal) > 0) {
+        continue;
+      }
+      added_signals.insert(signal_data.signal);
+      auto waypoint = SharedPtr<Waypoint>(new Waypoint(_parent, signal_data.waypoint));
+      result.emplace_back(
+          new Landmark(waypoint, signal_data.signal, signal_data.accumulated_s));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>> Waypoint::GetLandmakrsOfTypeInDistance(
+        double distance, std::string filter_type, bool stop_at_junction) const {
+    std::vector<SharedPtr<Landmark>> result;
+    std::unordered_set<const road::element::RoadInfoSignal*> added_signals; // check for repeated signals
+    auto signals = _parent->GetMap().GetSignalsInDistance(
+        _waypoint, distance, stop_at_junction);
+    for(auto &signal_data : signals){
+      if(signal_data.signal->GetSignal()->GetType() == filter_type) {
+        if(added_signals.count(signal_data.signal) > 0) {
+          continue;
+        }
+        auto waypoint = SharedPtr<Waypoint>(new Waypoint(_parent, signal_data.waypoint));
+        result.emplace_back(
+            new Landmark(waypoint, signal_data.signal, signal_data.accumulated_s));
+      }
+    }
     return result;
   }
 

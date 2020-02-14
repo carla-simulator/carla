@@ -91,7 +91,11 @@ namespace client {
 
     road::element::LaneMarking::LaneChange GetLaneChange() const;
 
-    std::vector<SharedPtr<Landmark>> GetLandmakrsInDistance(double distance) const;
+    std::vector<SharedPtr<Landmark>> GetAllLandmakrsInDistance(
+        double distance, bool stop_at_junction = false) const;
+
+    std::vector<SharedPtr<Landmark>> GetLandmakrsOfTypeInDistance(
+        double distance, std::string filter_type, bool stop_at_junction = false) const;
 
   private:
 

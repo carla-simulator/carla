@@ -18,11 +18,12 @@ namespace element {
 
     RoadInfoSignal(
         SignId signal_id,
-        std::shared_ptr<Signal> &signal,
+        Signal* signal,
         double s,
         double t,
         std::string orientation)
-      : _signal_id(signal_id),
+      : RoadInfo(s),
+        _signal_id(signal_id),
         _signal(signal),
         _s(s),
         _t(t),
@@ -33,7 +34,8 @@ namespace element {
         double s,
         double t,
         std::string orientation)
-      : _signal_id(signal_id),
+      : RoadInfo(s),
+        _signal_id(signal_id),
         _s(s),
         _t(t),
         _orientation(orientation) {}
@@ -42,18 +44,46 @@ namespace element {
       v.Visit(*this);
     }
 
-    const std::shared_ptr<Signal>& GetSignal() const {
+    SignId GetSignalId() const {
+      return _signal_id;
+    }
+
+    const Signal* GetSignal() const {
       return _signal;
     }
 
+    bool IsDynamic() const {
+      return _signal->GetDynamic();
+    }
 
+    double GetS() const {
+      return _s;
+    }
+
+    double GetT() const {
+      return _t;
+    }
+
+    SignalOrientation GetOrientation() const {
+      if(_orientation == "+") {
+        return SignalOrientation::Positive;
+      } else if(_orientation == "-") {
+        return SignalOrientation::Negative;
+      } else {
+        return SignalOrientation::Both;
+      }
+    }
+
+    const std::vector<LaneValidity> &GetValidities() const {
+      return _validities;
+    }
 
   private:
     friend MapBuilder;
 
     SignId _signal_id;
 
-    std::shared_ptr<Signal> _signal;
+    Signal* _signal;
 
     double _s;
 
