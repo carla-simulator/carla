@@ -18,7 +18,7 @@
   * Fixed typos
   * Fixed agent failures due to API changes in `is_within_distance_ahead()`
   * Fixed incorrect doppler velocity for RADAR sensor
-
+  * Fixed documentation links
 
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
