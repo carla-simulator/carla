@@ -14,6 +14,7 @@
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
+#include "carla/road/element/RoadInfoSignal.h"
 #include "carla/geom/Math.h"
 
 #include <stdexcept>
@@ -408,6 +409,68 @@ namespace road {
     return std::make_pair(current_lane_info, inner_lane_info);
   }
 
+  std::vector<Map::SignalSearchData> Map::GetSignalsInDistance(
+      Waypoint waypoint, double distance, bool stop_at_junction) const {
+
+    const auto &lane = GetLane(waypoint);
+    const bool forward = (waypoint.lane_id <= 0);
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance();
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    auto &road =_data.GetRoad(waypoint.road_id);
+    std::vector<SignalSearchData> result;
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      auto signals = road.GetInfosInRange<RoadInfoSignal>(
+          waypoint.s, waypoint.s + signed_distance);
+      for(auto* signal : signals){
+        double distance_to_signal = 0;
+        if (waypoint.lane_id < 0){
+          distance_to_signal = signal->GetDistance() - waypoint.s;
+        } else {
+          distance_to_signal = waypoint.s - signal->GetDistance();
+        }
+        Waypoint signal_waypoint = GetNext(waypoint, distance_to_signal).front();
+        SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
+        result.emplace_back(signal_data);
+      }
+      return result;
+    }
+    const double signed_remaining_length = forward ? remaining_lane_length : -remaining_lane_length;
+
+    //result = road.GetInfosInRange<RoadInfoSignal>(waypoint.s, waypoint.s + signed_remaining_length);
+    auto signals = road.GetInfosInRange<RoadInfoSignal>(
+        waypoint.s, waypoint.s + signed_remaining_length);
+    for(auto* signal : signals){
+      double distance_to_signal = 0;
+      if (waypoint.lane_id < 0){
+        distance_to_signal = signal->GetDistance() - waypoint.s;
+      } else {
+        distance_to_signal = waypoint.s - signal->GetDistance();
+      }
+      Waypoint signal_waypoint = GetNext(waypoint, distance_to_signal).front();
+      SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
+      result.emplace_back(signal_data);
+    }
+    // If we run out of remaining_lane_length we have to go to the successors.
+    for (const auto &successor : GetSuccessors(waypoint)) {
+      if(_data.GetRoad(successor.road_id).IsJunction() && stop_at_junction){
+        continue;
+      }
+      auto sucessor_signals = GetSignalsInDistance(
+          successor, distance - remaining_lane_length, stop_at_junction);
+      for(auto& signal : sucessor_signals){
+        signal.accumulated_s += remaining_lane_length;
+      }
+      result = ConcatVectors(result, sucessor_signals);
+    }
+    return result;
+  }
+
   std::vector<LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
@@ -674,13 +737,13 @@ namespace road {
     return result;
   }
 
-  // ===========================================================================
-  // -- Map: Private functions -------------------------------------------------
-  // ===========================================================================
-
   const Lane &Map::GetLane(Waypoint waypoint) const {
     return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
   }
+
+  // ===========================================================================
+  // -- Map: Private functions -------------------------------------------------
+  // ===========================================================================
 
   // Checks whether the geometry is straight or not
   bool IsLineStraight(const Road &road, const Lane &lane, element::GeometryType geometry_type) {

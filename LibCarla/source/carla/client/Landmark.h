@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include "carla/Memory.h"
 #include "carla/client/Waypoint.h"
-
 #include "carla/geom/Transform.h"
 #include "carla/geom/BoundingBox.h"
+
+#include "carla/road/element/RoadInfoSignal.h"
 
 #include <string>
 
@@ -18,84 +20,157 @@ namespace client {
 
   /// Using OpenDRIVE 1.5M (6.10 Country Codes)
   ///
-  enum class LandmarkType : uint32_t {
-    Unknown,
-    Danger = 101, // danger types from 101 to 151
-    LanesMerging = 121,
-    CautionPedestrian = 133,
-    CautionBicycle = 138,
-    LevelCrossing = 150,
-    Yield = 205,
-    Stop = 206,
-    MandatoryTurnDirection = 209, // Left, right or forward
-    MandatoryLeftRightDirection = 211,
-    TwoChoiceTurnDirection = 214, // Forward-left, forward-right, left-right
-    Roundabout = 215,
-    PassRightLeft = 222,
-    AccessForbidden = 250,
-    AccessForbiddenMotorvehicles = 251,
-    AccessForbiddenTrucks = 253,
-    AccessForbiddenBicycle = 254,
-    AccessForbiddenWeight = 263,
-    AccessForbiddenWidth = 264,
-    AccessForbiddenHeight = 265,
-    AccessForbiddenWrongDirection = 267,
-    ForbiddenUTurn = 272,
-    MaximumSpeed = 274,
-    ForbiddenOvertakingMotorvehicles = 276,
-    ForbiddenOvertakingTrucks = 277,
-    AbsoluteNoStop = 283,
-    RestrictedStop = 286,
-    HasWayNextIntersection = 301,
-    PriorityWay = 306,
-    PriorityWayEnd = 307,
-    CityBegin = 310,
-    CityEnd = 311,
-    Highway = 330,
-    DeadEnd = 357,
-    RecomendedSpeed = 380,
-    RecomendedSpeedEnd = 381
+  class LandmarkType {
+  public:
+    static const std::string Danger();     // = "101" // danger types from 101 to 151
+    static const std::string LanesMerging(); // = "121";
+    static const std::string CautionPedestrian(); // = "133";
+    static const std::string CautionBicycle(); // = "138";
+    static const std::string LevelCrossing(); // = "150";
+    static const std::string Yield(); // = "205";
+    static const std::string Stop(); // = "206";
+    static const std::string MandatoryTurnDirection(); // = "209" // Left, right or forward
+    static const std::string MandatoryLeftRightDirection(); // = "211";
+    static const std::string TwoChoiceTurnDirection(); // = "214" // Forward-left, forward-right, left-right
+    static const std::string Roundabout(); // = "215";
+    static const std::string PassRightLeft(); // = "222";
+    static const std::string AccessForbidden(); // = "250";
+    static const std::string AccessForbiddenMotorvehicles(); // = "251";
+    static const std::string AccessForbiddenTrucks(); // = "253";
+    static const std::string AccessForbiddenBicycle(); // = "254";
+    static const std::string AccessForbiddenWeight(); // = "263";
+    static const std::string AccessForbiddenWidth(); // = "264";
+    static const std::string AccessForbiddenHeight(); // = "265";
+    static const std::string AccessForbiddenWrongDirection(); // = "267";
+    static const std::string ForbiddenUTurn(); // = "272";
+    static const std::string MaximumSpeed(); // = "274";
+    static const std::string ForbiddenOvertakingMotorvehicles(); // = "276";
+    static const std::string ForbiddenOvertakingTrucks(); // = "277";
+    static const std::string AbsoluteNoStop(); // = "283";
+    static const std::string RestrictedStop(); // = "286";
+    static const std::string HasWayNextIntersection(); // = "301";
+    static const std::string PriorityWay(); // = "306";
+    static const std::string PriorityWayEnd(); // = "307";
+    static const std::string CityBegin(); // = "310";
+    static const std::string CityEnd(); // = "311";
+    static const std::string Highway(); // = "330";
+    static const std::string DeadEnd(); // = "357";
+    static const std::string RecomendedSpeed(); // = "380";
+    static const std::string RecomendedSpeedEnd(); // = "381";
   };
 
-  class Landmark {
+  class Landmark : private MovableNonCopyable {
   public:
 
-    SharedPtr<const Waypoint> GetWaypoint() const {
+    SharedPtr<Waypoint> GetWaypoint() const {
       return _waypoint;
     }
 
     const geom::Transform &GetTransform() const {
-      return _transform;
+      return _signal->GetSignal()->GetTransform();
     }
 
-    LandmarkType GetType() const {
-      return LandmarkType::Unknown;
+    road::RoadId GetRoadId() const {
+      return _signal->GetSignal()->GetRoadId();
     }
 
-    uint32_t GetSubType() const {
-      return 0;
+    double GetDistance() const {
+      return _distance_from_search;
     }
 
-    std::string GetCountryCode() const {
-      return "OpenDRIVE";
+    double GetS() const {
+      return _signal->GetS();
+    }
+
+    double GetT() const {
+      return _signal->GetT();
+    }
+
+    std::string GetId() const {
+      return _signal->GetSignalId();
+    }
+
+    std::string GetName() const {
+      return _signal->GetSignal()->GetName();
+    }
+
+    bool IsDynamic() const {
+      return _signal->IsDynamic();
+    }
+
+    road::SignalOrientation GetOrientation() const {
+      return _signal->GetOrientation();
+    }
+
+    double GetZOffset() const {
+      return _signal->GetSignal()->GetZOffset();
+    }
+
+    std::string GetCountry() const {
+      return _signal->GetSignal()->GetCountry();
+    }
+
+    std::string GetType() const {
+      return _signal->GetSignal()->GetType();
+    }
+
+    std::string GetSubType() const {
+      return _signal->GetSignal()->GetSubtype();
     }
 
     double GetValue() const {
-      return 0.0;
+      return _signal->GetSignal()->GetValue();
+    }
+
+    std::string GetUnit() const {
+      return _signal->GetSignal()->GetUnit();
+    }
+
+    double GetHeight() const {
+      return _signal->GetSignal()->GetHeight();
+    }
+
+    double GetWidth() const {
+      return _signal->GetSignal()->GetWidth();
+    }
+
+    std::string GetText() const {
+      return _signal->GetSignal()->GetText();
+    }
+
+    double GethOffset() const {
+      return _signal->GetSignal()->GetHOffset();
+    }
+
+    double GetPitch() const {
+      return _signal->GetSignal()->GetPitch();
+    }
+
+    double GetRoll() const {
+      return _signal->GetSignal()->GetRoll();
+    }
+
+    const auto &GetValidities() const {
+      return _signal->GetValidities();
     }
 
   private:
 
     friend Waypoint;
 
-    Landmark(geom::Transform transform, SharedPtr<const Waypoint> waypoint/*, road::Landmarkinfo...*/)
-        : _transform(transform), _waypoint(waypoint) {}
+    Landmark(
+        SharedPtr<Waypoint> waypoint,
+        const road::element::RoadInfoSignal* signal,
+        double distance_from_search = 0)
+      : _waypoint(waypoint),
+        _signal(signal),
+        _distance_from_search(distance_from_search) {}
 
-    geom::Transform _transform;
+    SharedPtr<Waypoint> _waypoint;
 
-    SharedPtr<const Waypoint> _waypoint;
+    const road::element::RoadInfoSignal* _signal;
 
-    // road::Landmarkinfo...
+    double _distance_from_search;
   };
 
 } // client

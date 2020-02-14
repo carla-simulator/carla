@@ -10,12 +10,19 @@
 #include "carla/NonCopyable.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/road/LaneValidity.h"
+#include "carla/geom/Transform.h"
 
 #include <string>
 #include <vector>
 
 namespace carla {
 namespace road {
+
+  enum SignalOrientation {
+    Positive,
+    Negative,
+    Both
+  };
 
   struct SignalDependency {
   public:
@@ -32,6 +39,7 @@ namespace road {
   class Signal : private MovableNonCopyable {
   public:
     Signal(
+        RoadId road_id,
         SignId signal_id,
         double s,
         double t,
@@ -50,7 +58,8 @@ namespace road {
         double hOffset,
         double pitch,
         double roll)
-      : _signal_id(signal_id),
+      : _road_id(road_id),
+        _signal_id(signal_id),
         _s(s),
         _t(t),
         _name(name),
@@ -69,13 +78,105 @@ namespace road {
         _pitch(pitch),
         _roll(roll) {}
 
-    void AddValidity(LaneValidity &&validity) {
-      _validities.push_back(std::move(validity));
+    RoadId GetRoadId() const {
+      return _road_id;
     }
 
-    void AddDependency(SignalDependency &&dependency) {
-      _dependencies.push_back(std::move(dependency));
+    const SignId &GetSignalId() const {
+      return _signal_id;
     }
+
+    double GetS() const {
+      return _s;
+    }
+
+    double GetT() const {
+      return _t;
+    }
+
+    bool GetDynamic() const {
+      if(_dynamic == "yes") {
+        return true;
+      }else {
+        return false;
+      }
+    }
+
+    const std::string &GetName() const {
+      return _name;
+    }
+
+    SignalOrientation GetOrientation() const {
+      if(_orientation == "+") {
+        return SignalOrientation::Positive;
+      } else if(_orientation == "-") {
+        return SignalOrientation::Negative;
+      } else {
+        return SignalOrientation::Both;
+      }
+    }
+
+    double GetZOffset() const {
+      return _zOffset;
+    }
+
+    const std::string &GetCountry() const {
+      return _country;
+    }
+
+    const std::string &GetType() const {
+      return _type;
+    }
+
+    const std::string &GetSubtype() const {
+      return _subtype;
+    }
+
+    double GetValue() const {
+      return _value;
+    }
+
+    const std::string &GetUnit() const {
+      return _unit;
+    }
+
+    double GetHeight() const {
+      return _height;
+    }
+
+    double GetWidth() const {
+      return _width;
+    }
+
+    const std::string &GetText() const {
+      return _text;
+    }
+
+    double GetHOffset() const {
+      return _hOffset;
+    }
+
+    double GetPitch() const {
+      return _pitch;
+    }
+
+    double GetRoll() const {
+      return _roll;
+    }
+
+    const std::vector<SignalDependency> &
+        GetDependencies() {
+      return _dependencies;
+    }
+
+    const geom::Transform &GetTransform() const {
+      return _transform;
+    }
+
+  private:
+    friend MapBuilder;
+
+    RoadId _road_id;
 
     SignId _signal_id;
 
@@ -113,10 +214,9 @@ namespace road {
 
     double _roll;
 
-    std::vector<LaneValidity> _validities;
-
     std::vector<SignalDependency> _dependencies;
 
+    geom::Transform _transform;
   };
 
 } // road

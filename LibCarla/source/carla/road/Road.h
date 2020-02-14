@@ -108,6 +108,11 @@ namespace road {
       return _info.GetInfos<T>();
     }
 
+    template <typename T>
+    std::vector<const T*> GetInfosInRange(const double min_s, const double max_s) const {
+      return _info.GetInfos<T>(min_s, max_s);
+    }
+
     auto GetLaneSections() const {
       return MakeListView(
           iterator::make_map_values_const_iterator(_lane_sections.begin()),

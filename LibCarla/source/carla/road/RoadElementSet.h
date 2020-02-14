@@ -53,6 +53,19 @@ namespace road {
           _vec.rend());
     }
 
+    /// Return a list of elements that have a key value in the range [min_k, max_k]
+    auto GetSubsetInRange(const key_type min_k, const key_type max_k) const {
+      auto low_bound = (std::lower_bound(_vec.begin(), _vec.end(), min_k, LessComp()));
+      auto up_bound = (std::upper_bound(_vec.begin(), _vec.end(), max_k, LessComp()));
+      return MakeListView((low_bound), (up_bound));
+    }
+
+    auto GetReverseSubsetInRange(const key_type min_k, const key_type max_k) const {
+      auto low_bound = (std::lower_bound(_vec.begin(), _vec.end(), min_k, LessComp()));
+      auto up_bound = (std::upper_bound(low_bound, _vec.end(), max_k, LessComp()));
+      return MakeListView(std::make_reverse_iterator(up_bound), std::make_reverse_iterator(low_bound));
+    }
+
     bool empty() const {
       return _vec.empty();
     }

@@ -70,6 +70,10 @@ namespace road {
       return _roads.size();
     }
 
+    const std::unordered_map<SignId, std::unique_ptr<Signal>> &GetSignals() const {
+      return _signals;
+    }
+
   private:
 
     friend class MapBuilder;
@@ -82,7 +86,7 @@ namespace road {
 
     std::unordered_map<JuncId, Junction> _junctions;
 
-    std::unordered_map<SignId, std::shared_ptr<Signal>> _signals;
+    std::unordered_map<SignId, std::unique_ptr<Signal>> _signals;
   };
 
 } // namespace road

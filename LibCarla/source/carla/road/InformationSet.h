@@ -44,6 +44,26 @@ namespace road {
       return it.IsAtEnd() ? nullptr : &*it;
     }
 
+    /// Return all infos given a type in a given range of the road
+    template <typename T>
+    std::vector<const T *> GetInfos(const double min_s, const double max_s) const {
+      std::vector<const T *> vec;
+      if(min_s < max_s) {
+        auto it = element::MakeRoadInfoIterator<T>(
+            _road_set.GetSubsetInRange(min_s, max_s)); //reverse
+        for (; !it.IsAtEnd(); ++it) {
+          vec.emplace_back(&*it);
+        }
+      } else {
+        auto it = element::MakeRoadInfoIterator<T>(
+            _road_set.GetReverseSubsetInRange(max_s, min_s)); //reverse
+        for (; !it.IsAtEnd(); ++it) {
+          vec.emplace_back(&*it);
+        }
+      }
+      return vec;
+    }
+
   private:
 
     RoadElementSet<std::unique_ptr<element::RoadInfo>> _road_set;
