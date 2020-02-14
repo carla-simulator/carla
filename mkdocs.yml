@@ -14,7 +14,6 @@ nav:
   - 'Linux build': 'how_to_build_on_linux.md'
   - 'Windows build': 'how_to_build_on_windows.md'
   - 'Update CARLA': 'update_carla.md'
-  - "Get latest content": 'dev/how_to_upgrade_content.md'
   - 'Build system': 'dev/build_system.md'
   - 'Running in a Docker': 'carla_docker.md'
   - 'F.A.Q.': 'faq.md'
