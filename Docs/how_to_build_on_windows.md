@@ -51,12 +51,6 @@ Get the 2017 version from [here](https://developerinsider.co/download-visual-stu
 !!! Important
     Having other Visual Studio versions may cause conflict during the build process, even if these have been uninstalled (Visual Studio is not that good at getting rid of itself and erasing registers). To completely clean Visual Studio from the computer run `.\InstallCleanup.exe -full` found in `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout`. This may need admin permissions.   
 
-- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`][recommendedlink].
-Just press the `Win` button and search for `x64`
-(be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this
-Command Prompt can change depending on the language you have Visual Studio installed.
-- [Enable a 64-Bit Visual C++ Toolset on the Command Line][toolsetlink] 
-(the instructions will depend on the version of VS that you have).
 
 <h4>Unreal Engine 4.22</h4> 
 
