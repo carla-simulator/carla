@@ -196,11 +196,11 @@ pipeline
                                 }
                             }
                         }
-                        stage('windows unit tests')
-                        {
-                            agent { label 'windows && build' }
-                            steps { bat 'rem Not Implemented'}
-                        }
+                        // stage('windows unit tests')
+                        // {
+                        //     agent { label 'windows && build' }
+                        //     steps { bat 'rem Not Implemented'}
+                        // }
                         stage('windows retrieve content')
                         {
                             agent { label 'windows && build' }
@@ -228,20 +228,20 @@ pipeline
                                 always {
                                     archiveArtifacts 'Dist/*.zip'
                                     stash includes: 'Dist/CARLA*.zip', name: 'windows_package'
-                                    stash includes: 'Examples/', name: 'windows_examples'
+                                    // stash includes: 'Examples/', name: 'windows_examples'
                                 }
                             }
                         }
-                        stage('windows smoke test')
-                        {
-                            agent { label 'windows && build' }
-                            steps { bat 'rem Not Implemented'}
-                        }
-                        stage('windows deploy')
-                        {
-                            agent { label 'windows && build' }
-                            steps { bat 'rem Not Implemented'}
-                        }
+                        // stage('windows smoke test')
+                        // {
+                        //     agent { label 'windows && build' }
+                        //     steps { bat 'rem Not Implemented'}
+                        // }
+                        // stage('windows deploy')
+                        // {
+                        //     agent { label 'windows && build' }
+                        //     steps { bat 'rem Not Implemented'}
+                        // }
                     }
                 }
             }

@@ -6,11 +6,6 @@
 
 #pragma once
 
-#if _WIN32
-  #define NTDDI_VERSION NTDDI_VISTA
-  #define WINVER _WIN32_WINNT_VISTA
-  #define _WIN32_WINNT _WIN32_WINNT_VISTA
-#endif
 
 #include <algorithm>
 #include <memory>
