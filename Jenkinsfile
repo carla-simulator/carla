@@ -2,11 +2,6 @@ pipeline
 {
     agent none
 
-    environment
-    {
-        UE4_ROOT = '/home/jenkins/UnrealEngine_4.22'
-    }
-
     options
     {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
@@ -20,6 +15,10 @@ pipeline
             {
                 stage('ubuntu')
                 {
+                    environment
+                    {
+                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.22'
+                    }
                     stages
                     {
                         stage('ubuntu setup')
@@ -148,6 +147,10 @@ pipeline
                 }
                 stage('windows')
                 {
+                    environment
+                    {
+                        UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.22'
+                    }
                     stages
                     {
                         stage('windows setup')
