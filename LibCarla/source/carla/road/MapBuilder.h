@@ -340,7 +340,7 @@ namespace road {
     void CreateJunctionBoundingBoxes(Map &map);
 
     /// Solves the signal references in the road
-    void SolveSignalReferences();
+    void SolveSignalReferencesAndTransforms();
 
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
@@ -365,7 +365,7 @@ namespace road {
     std::unordered_map<Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
         _temp_lane_info_container;
 
-    std::unordered_map<SignId, std::shared_ptr<Signal>>
+    std::unordered_map<SignId, std::unique_ptr<Signal>>
         _temp_signal_container;
 
     std::vector<element::RoadInfoSignal*> _temp_signal_reference_container;

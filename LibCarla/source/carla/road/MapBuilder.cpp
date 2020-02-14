@@ -37,8 +37,6 @@ namespace road {
 
     CreatePointersBetweenRoadSegments();
 
-    SolveSignalReferences();
-
     for (auto &&info : _temp_road_info_container) {
       DEBUG_ASSERT(info.first != nullptr);
       info.first->_info = InformationSet(std::move(info.second));
@@ -48,6 +46,9 @@ namespace road {
       DEBUG_ASSERT(info.first != nullptr);
       info.first->_info = InformationSet(std::move(info.second));
     }
+
+    // compute transform requires the roads to have the RoadInfo
+    SolveSignalReferencesAndTransforms();
 
     // remove temporal already used information
     _temp_road_info_container.clear();
@@ -247,25 +248,26 @@ namespace road {
         const double hOffset,
         const double pitch,
         const double roll) {
-      _temp_signal_container[signal_id] = std::make_shared<Signal>(
-        signal_id,
-        s,
-        t,
-        name,
-        dynamic,
-        orientation,
-        zOffset,
-        country,
-        type,
-        subtype,
-        value,
-        unit,
-        height,
-        width,
-        text,
-        hOffset,
-        pitch,
-        roll);
+      _temp_signal_container[signal_id] = std::make_unique<Signal>(
+          road->GetId(),
+          signal_id,
+          s,
+          t,
+          name,
+          dynamic,
+          orientation,
+          zOffset,
+          country,
+          type,
+          subtype,
+          value,
+          unit,
+          height,
+          width,
+          text,
+          hOffset,
+          pitch,
+          roll);
 
       return AddSignalReference(road, signal_id, s, t, orientation);
     }
@@ -279,7 +281,10 @@ namespace road {
 
       _temp_road_info_container[road].emplace_back(std::make_unique<element::RoadInfoSignal>(
           signal_id, s_position, t_position, signal_reference_orientation));
-      return static_cast<element::RoadInfoSignal*>(_temp_road_info_container[road].back().get());
+      auto road_info_signal = static_cast<element::RoadInfoSignal*>(
+          _temp_road_info_container[road].back().get());
+      _temp_signal_reference_container.emplace_back(road_info_signal);
+      return road_info_signal;
     }
 
     void MapBuilder::AddValidityToSignalReference(
@@ -726,11 +731,24 @@ namespace road {
     }
   }
 
-  void MapBuilder::SolveSignalReferences() {
+  void MapBuilder::SolveSignalReferencesAndTransforms() {
     for(auto signal_reference : _temp_signal_reference_container){
       signal_reference->_signal =
-          _temp_signal_container[signal_reference->_signal_id];
+          _temp_signal_container[signal_reference->_signal_id].get();
     }
+
+    for(auto& signal_pair : _temp_signal_container){
+      auto& signal = signal_pair.second;
+      DirectedPoint point = GetRoad(signal->_road_id)->GetDirectedPointIn(signal->_s);
+      point.ApplyLateralOffset(static_cast<float>(-signal->_t));
+      point.location.y *= -1; // Unreal Y axis hack
+      geom::Transform transform(point.location, geom::Rotation(
+          static_cast<float>(signal->_pitch),
+          static_cast<float>(-(point.tangent + signal->_hOffset)),
+          static_cast<float>(signal->_roll)));
+      signal->_transform = transform;
+    }
+
     _map_data._signals = std::move(_temp_signal_container);
   }
 

@@ -86,6 +86,15 @@ namespace road {
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
+
+    struct SignalSearchData {
+      const element::RoadInfoSignal *signal;
+      Waypoint waypoint;
+      double accumulated_s = 0;
+    };
+    std::vector<SignalSearchData> GetSignalsInDistance(
+        Waypoint waypoint, double distance, bool stop_at_junction = false) const;
+
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================

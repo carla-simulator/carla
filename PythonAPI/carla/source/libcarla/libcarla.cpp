@@ -91,6 +91,14 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
       return result; \
     }
 
+#define CALL_RETURNING_LIST_3(cls, fn, T1_, T2_, T3_) +[](const cls &self, T1_ t1, T2_ t2, T3_ t3) { \
+      boost::python::list result; \
+      for (auto &&item : self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3))) { \
+        result.append(item); \
+      } \
+      return result; \
+    }
+
 #define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &self) { \
       auto optional = self.fn(); \
       return OptionalToPythonObject(optional); \
