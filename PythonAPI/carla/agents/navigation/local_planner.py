@@ -286,7 +286,7 @@ def _compute_connection(current_waypoint, next_waypoint):
     c = c % 360.0
 
     diff_angle = (n - c) % 180.0
-    if diff_angle < 1.0:
+    if diff_angle < 20.0 and diff_angle > 160.0:
         return RoadOption.STRAIGHT
     elif diff_angle > 90.0:
         return RoadOption.LEFT
