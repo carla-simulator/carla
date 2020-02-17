@@ -86,12 +86,14 @@ namespace road {
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
-
+    /// Data structure for the signal search
     struct SignalSearchData {
       const element::RoadInfoSignal *signal;
       Waypoint waypoint;
       double accumulated_s = 0;
     };
+
+    /// Searches signals from an initial waypoint until the defined distance.
     std::vector<SignalSearchData> GetSignalsInDistance(
         Waypoint waypoint, double distance, bool stop_at_junction = false) const;
 
