@@ -75,7 +75,11 @@ TrafficManager::TrafficManager(
           }
         }
       }
-      close(sock);
+      #ifdef _WIN32
+        closesocket(sock);
+      #else
+        close(sock);
+      #endif
     }
     return localIP;
   };

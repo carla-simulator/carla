@@ -12,11 +12,15 @@
 #include <unordered_set>
 #include <vector>
 
-#include <sys/socket.h> ///< socket
-#include <netinet/in.h> ///< sockaddr_in
-#include <arpa/inet.h>  ///< getsockname
-#include <unistd.h>     ///< close
-
+#if _WIN32
+  #include <winsock2.h>   ///< socket
+  #include <Ws2tcpip.h>
+#else
+  #include <sys/socket.h> ///< socket
+  #include <netinet/in.h> ///< sockaddr_in
+  #include <arpa/inet.h>  ///< getsockname
+  #include <unistd.h>     ///< close
+#endif
 #include "carla/client/Actor.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
