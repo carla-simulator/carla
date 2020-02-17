@@ -200,9 +200,9 @@ void TrafficManager::Reset() {
   if(singleton_pointer){
     carla::log_info("TrafficManager::Restarting...");
     carla::client::detail::EpisodeProxy episodeProxy = singleton_pointer->GetEpisodeProxy();
+    episodeProxy = episodeProxy.Lock()->GetCurrentEpisode();
     uint16_t port = singleton_pointer->port();
     Release();
-    // TODO: create the TM again
     TrafficManager(episodeProxy, port);
   }
   carla::log_info("TrafficManager::Reset end");
