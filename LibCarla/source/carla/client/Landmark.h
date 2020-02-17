@@ -59,6 +59,7 @@ namespace client {
     static const std::string RecomendedSpeedEnd(); // = "381";
   };
 
+  /// Class containing a reference to RoadInfoSignal
   class Landmark : private MovableNonCopyable {
   public:
 
@@ -166,7 +167,7 @@ namespace client {
         _signal(signal),
         _distance_from_search(distance_from_search) {}
 
-    SharedPtr<Waypoint> _waypoint;
+    SharedPtr<Waypoint> _waypoint; /// waypoint where the signal is affecting
 
     const road::element::RoadInfoSignal* _signal;
 
