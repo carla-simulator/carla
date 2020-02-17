@@ -322,8 +322,6 @@ namespace road {
       lane_tangent = static_cast<float>(computed_width.second);
     }
 
-    // log_warning("Got to computetransform, road: ", road.GetId(), " ",
-    // road.GetLength());
     // get a directed point in s and apply the computed lateral offet
     DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
 
