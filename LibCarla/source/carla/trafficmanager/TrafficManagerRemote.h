@@ -10,10 +10,8 @@
 #include <vector>
 
 #include "carla/client/Actor.h"
-
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
-
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/trafficmanager/TrafficManagerClient.h"
 
@@ -21,7 +19,6 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-
 using TLS = carla::rpc::TrafficLightState;
 using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 
@@ -31,16 +28,14 @@ class TrafficManagerRemote : public TrafficManagerBase {
 
 public:
 
-  /// To start the TrafficManager.
+  /// To start the traffic manager.
   void Start() {}
 
-  /// To stop the TrafficManager.
+  /// To stop the traffic manager.
   void Stop() {}
 
-  /// Constructor store remote location information
-  TrafficManagerRemote(
-    const std::pair<std::string, uint16_t> &_serverTM,
-    carla::client::detail::EpisodeProxy &episodeProxy);
+  /// Constructor store remote location information.
+  TrafficManagerRemote(const std::pair<std::string, uint16_t> &_serverTM, carla::client::detail::EpisodeProxy &episodeProxy);
 
   /// Destructor.
   virtual ~TrafficManagerRemote();
@@ -51,9 +46,6 @@ public:
   /// This method unregisters a vehicle from traffic manager.
   void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
-  /// This method kills a vehicle. (Not working right now)
-  /// void DestroyVehicle(const ActorPtr &actor);
-
   /// Set target velocity specific to a vehicle.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
@@ -61,30 +53,30 @@ public:
   void SetGlobalPercentageSpeedDifference(float const percentage);
 
   /// Set collision detection rules between vehicles.
-  void SetCollisionDetection(
-    const ActorPtr &reference_actor,
-    const ActorPtr &other_actor,
-    const bool detect_collision);
+  void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);
 
   /// Method to force lane change on a vehicle.
   /// Direction flag can be set to true for left and false for right.
   void SetForceLaneChange(const ActorPtr &actor, const bool direction);
 
-  /// Enable / disable automatic lane change on a vehicle.
+  /// Enable/disable automatic lane change on a vehicle.
   void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
   /// Method to specify how much distance a vehicle should maintain to
   /// the leading vehicle.
   void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-  /// Method to specify the % chance of ignoring collisions with all walkers
+  /// Method to specify the % chance of ignoring collisions with any walker.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-  /// Method to specify the % chance of ignoring collisions with all vehicles
+  /// Method to specify the % chance of ignoring collisions with any vehicle.
   void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
 
-  /// Method to specify the % chance of running a red light
+  /// Method to specify the % chance of running any traffic light
   void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+  /// Method to specify the % chance of running any traffic sign
+  void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
 
   /// Method to switch traffic manager into synchronous execution.
   void SetSynchronousMode(bool mode);
@@ -98,18 +90,19 @@ public:
   /// Method to reset all traffic lights.
   void ResetAllTrafficLights();
 
-  /// Get carla episode information
+  /// Get CARLA episode information.
   carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 
-  /// Call to remote server to check its health
+  /// Method to check server is alive or not.
   void HealthCheckRemoteTM();
 
 private:
 
-  /// Remote client using IP & port information it connects to remote RPC TM Server
+  /// Remote client using the IP and port information it connects to
+  /// as remote RPC traffic manager server.
   TrafficManagerClient client;
 
-  /// Carla's client connection object.
+  /// CARLA client connection object.
   carla::client::detail::EpisodeProxy episodeProxyTM;
 };
 

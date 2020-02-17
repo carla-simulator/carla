@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
+
 #include "carla/client/TrafficLight.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/DebugHelper.h"
@@ -27,6 +28,7 @@ TrafficManagerLocal::TrafficManagerLocal(
     episodeProxyTM(episodeProxy),
     debug_helper(carla::client::DebugHelper{episodeProxyTM}),
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
+
   const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();
@@ -41,41 +43,41 @@ TrafficManagerLocal::TrafficManagerLocal(
   planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
 
   localization_stage = std::make_unique<LocalizationStage>(
-      "Localization stage",
-      localization_planner_messenger, localization_collision_messenger,
-      localization_traffic_light_messenger,
-      registered_actors, *local_map.get(),
-      parameters, debug_helper,
-      episodeProxyTM);
+    "Localization stage",
+    localization_planner_messenger, localization_collision_messenger,
+    localization_traffic_light_messenger,
+    registered_actors, *local_map.get(),
+    parameters, debug_helper,
+    episodeProxyTM);
 
   collision_stage = std::make_unique<CollisionStage>(
-      "Collision stage",
-      localization_collision_messenger, collision_planner_messenger,
-      parameters, debug_helper);
+    "Collision stage",
+    localization_collision_messenger, collision_planner_messenger,
+    parameters, debug_helper);
 
   traffic_light_stage = std::make_unique<TrafficLightStage>(
-      "Traffic light stage",
-      localization_traffic_light_messenger, traffic_light_planner_messenger,
-      parameters, debug_helper);
+    "Traffic light stage",
+    localization_traffic_light_messenger, traffic_light_planner_messenger,
+    parameters, debug_helper);
 
   planner_stage = std::make_unique<MotionPlannerStage>(
-      "Motion planner stage",
-      localization_planner_messenger,
-      collision_planner_messenger,
-      traffic_light_planner_messenger,
-      planner_control_messenger,
-      parameters,
-      longitudinal_PID_parameters,
-      longitudinal_highway_PID_parameters,
-      lateral_PID_parameters,
-      lateral_highway_PID_parameters,
-      debug_helper);
+    "Motion planner stage",
+    localization_planner_messenger,
+    collision_planner_messenger,
+    traffic_light_planner_messenger,
+    planner_control_messenger,
+    parameters,
+    longitudinal_PID_parameters,
+    longitudinal_highway_PID_parameters,
+    lateral_PID_parameters,
+    lateral_highway_PID_parameters,
+    debug_helper);
 
   control_stage = std::make_unique<BatchControlStage>(
-      "Batch control stage",
-      planner_control_messenger,
-      episodeProxyTM,
-      parameters);
+    "Batch control stage",
+    planner_control_messenger,
+    episodeProxyTM,
+    parameters);
 
   Start();
 }
@@ -86,6 +88,7 @@ TrafficManagerLocal::~TrafficManagerLocal() {
 }
 
 void TrafficManagerLocal::Start() {
+
   localization_collision_messenger->Start();
   localization_traffic_light_messenger->Start();
   localization_planner_messenger->Start();
@@ -101,6 +104,7 @@ void TrafficManagerLocal::Start() {
 }
 
 void TrafficManagerLocal::Stop() {
+
   localization_collision_messenger->Stop();
   localization_traffic_light_messenger->Stop();
   localization_planner_messenger->Stop();
@@ -116,6 +120,7 @@ void TrafficManagerLocal::Stop() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+
   carla::log_info("TrafficManagerLocal registering", actor_list.size(),"vehicles");
   registered_actors.Insert(actor_list);
   carla::log_info("TrafficManagerLocal registered_actors has", registered_actors.Size());
@@ -133,10 +138,7 @@ void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percent
   parameters.SetGlobalPercentageSpeedDifference(percentage);
 }
 
-void TrafficManagerLocal::SetCollisionDetection(
-    const ActorPtr &reference_actor,
-    const ActorPtr &other_actor,
-    const bool detect_collision) {
+void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
   parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
 
@@ -152,12 +154,10 @@ void TrafficManagerLocal::SetDistanceToLeadingVehicle(const ActorPtr &actor, con
   parameters.SetDistanceToLeadingVehicle(actor, distance);
 }
 
-/// Method to specify the % chance of ignoring collisions with all walkers
 void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
   parameters.SetPercentageIgnoreWalkers(actor, perc);
 }
 
-/// Method to specify the % chance of ignoring collisions with all vehicles
 void TrafficManagerLocal::SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
   parameters.SetPercentageIgnoreVehicles(actor, perc);
 }
@@ -166,6 +166,9 @@ void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const
   parameters.SetPercentageRunningLight(actor, perc);
 }
 
+void TrafficManagerLocal::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
+  parameters.SetPercentageRunningSign(actor, perc);
+}
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto& elem : tl_to_freeze) {
@@ -181,19 +184,17 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
   auto Filter = [&](auto &actors, auto &wildcard_pattern) {
     std::vector<carla::client::detail::ActorVariant> filtered;
     for (auto &&actor : actors) {
-      if (carla::StringUtil::Match
-          ( carla::client::detail::ActorVariant(actor).GetTypeId()
-              , wildcard_pattern)) {
+      if (carla::StringUtil::Match(carla::client::detail::ActorVariant(actor).GetTypeId(), wildcard_pattern)) {
         filtered.push_back(actor);
       }
     }
     return filtered;
   };
 
-  /// Get all actors of the world
+  // Get all actors of the world.
   auto world_actorsList = episodeProxyTM.Lock()->GetAllTheActorsInTheEpisode();
 
-  /// Filter based on wildcard_pattern
+  // Filter based on wildcard pattern.
   const auto world_traffic_lights = Filter(world_actorsList, "*traffic_light*");
 
   std::vector<TLGroup> list_of_all_groups;
@@ -227,29 +228,24 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
   }
 }
 
-/// Method to switch traffic manager into synchronous execution.
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
   parameters.SetSynchronousMode(mode);
 }
 
-/// Method to set Tick timeout for synchronous execution.
 void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {
   parameters.SetSynchronousModeTimeOutInMiliSecond(time);
 }
 
-/// Method to provide synchronous tick
 bool TrafficManagerLocal::SynchronousTick() {
   return control_stage->RunStep();
 }
 
-/// Get carla episode information
 carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
   return episodeProxyTM;
 }
 
 std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
-  /// Get valid registered vehicle count
   return registered_actors.GetIDList();
 }
 
