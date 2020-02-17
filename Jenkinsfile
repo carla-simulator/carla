@@ -226,8 +226,8 @@ pipeline
                             }
                             post {
                                 always {
-                                    archiveArtifacts 'Dist/*.zip'
-                                    stash includes: 'Dist/CARLA*.zip', name: 'windows_package'
+                                    archiveArtifacts 'Build/UE4Carla/*.zip'
+                                    // stash includes: 'Build/UE4Carla/CARLA*.zip', name: 'windows_package'
                                     // stash includes: 'Examples/', name: 'windows_examples'
                                 }
                             }

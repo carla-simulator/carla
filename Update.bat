@@ -19,8 +19,8 @@ for /F "delims=" %%a in (%CONTENT_VERSIONS%) do (
    set "lastLine=%%a"
 )
 set CONTENT_ID=%lastLine:~-16,16%
+set CONTENT_LINK=http://carla-assets-internal.s3.amazonaws.com/Content/%CONTENT_ID%.tar.gz
 if "%CONTENT_ID:~0,2%"=="20" (
-  set CONTENT_LINK=http://carla-assets-internal.s3.amazonaws.com/Content/%CONTENT_ID%.tar.gz
   set CONTENT_FILE=%CONTENT_FOLDER%/%CONTENT_ID%.tar.gz
   set CONTENT_FILE_TAR=%CONTENT_FOLDER%/%CONTENT_ID%.tar
   echo %CONTENT_ID%
@@ -34,9 +34,9 @@ rem ============================================================================
 rem -- Download the content ----------------------------------------------------
 rem ============================================================================
 
-rem echo Downloading "%CONTENT_LINK%"...
-rem powershell -Command "Start-BitsTransfer -Source '%CONTENT_LINK%' -Destination '%CONTENT_FOLDER%'"
-rem if %errorlevel% neq 0 goto error_download
+echo Downloading "%CONTENT_LINK%"...
+powershell -Command "Start-BitsTransfer -Source '%CONTENT_LINK%' -Destination '%CONTENT_FOLDER%'"
+if %errorlevel% neq 0 goto error_download
 
 echo %FILE_N% Extracting content from "%CONTENT_FILE%", this can take a while...
 if exist "%ProgramW6432%/7-Zip/7z.exe" (
