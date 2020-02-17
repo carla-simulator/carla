@@ -20,7 +20,8 @@ TrafficManagerLocal::TrafficManagerLocal(
     float perc_difference_from_limit,
     carla::client::detail::EpisodeProxy &episodeProxy,
     uint16_t &RPCportTM)
-  : longitudinal_PID_parameters(longitudinal_PID_parameters),
+  : TrafficManagerBase(RPCportTM),
+    longitudinal_PID_parameters(longitudinal_PID_parameters),
     longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
     lateral_PID_parameters(lateral_PID_parameters),
     lateral_highway_PID_parameters(lateral_highway_PID_parameters),

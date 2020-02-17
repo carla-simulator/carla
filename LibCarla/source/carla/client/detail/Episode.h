@@ -96,6 +96,8 @@ namespace detail {
 
     void OnEpisodeStarted();
 
+    void OnEpisodeChanged();
+
     Client &_client;
 
     AtomicSharedPtr<const EpisodeState> _state;
@@ -113,6 +115,8 @@ namespace detail {
     const streaming::Token _token;
 
     bool _pending_exceptions = false;
+
+    bool _episode_changed = false;
   };
 
 } // namespace detail

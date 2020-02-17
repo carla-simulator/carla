@@ -31,7 +31,7 @@ public:
   virtual void Stop() = 0;
 
   /// Protected constructor for singleton lifecycle management.
-  TrafficManagerBase() {};
+  TrafficManagerBase(uint16_t port) : _port(port) {};
 
   /// Destructor.
   virtual ~TrafficManagerBase() {};
@@ -87,6 +87,13 @@ public:
 
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
+
+  uint16_t port() const {
+    return _port;
+  }
+
+protected:
+  uint16_t _port = TM_DEFAULT_PORT;
 };
 
 } // namespace traffic_manager

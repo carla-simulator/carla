@@ -18,7 +18,8 @@ namespace traffic_manager {
 TrafficManagerRemote::TrafficManagerRemote(
     const std::pair<std::string, uint16_t> &_serverTM,
     carla::client::detail::EpisodeProxy &episodeProxy)
-  : client(_serverTM.first, _serverTM.second),
+  : TrafficManagerBase(_serverTM.second),
+    client(_serverTM.first, _serverTM.second),
     episodeProxyTM(episodeProxy) {
 
   /// Local thread to check server status

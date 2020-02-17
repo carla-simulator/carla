@@ -66,6 +66,8 @@ public:
   /// Public release method to clear allocated data
   static void Release();
 
+  static void Reset();
+
   /// Private constructor for singleton life cycle management.
   explicit TrafficManager(
     carla::client::detail::EpisodeProxy episodeProxy,

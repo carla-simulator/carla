@@ -20,8 +20,8 @@ std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
 
 /// Private constructor for singleton life cycle management.
 TrafficManager::TrafficManager(
-  carla::client::detail::EpisodeProxy episodeProxy,
-  uint16_t port) {
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port) {
 
   /// Get Local IP details
   auto GetLocalIP = [=](const uint16_t sport)-> std::pair<std::string, uint16_t> {
@@ -186,10 +186,26 @@ TrafficManager::TrafficManager(
 }
 
 void TrafficManager::Release() {
+  carla::log_info("TrafficManager::Release");
   if(singleton_pointer) {
+    carla::log_info("TrafficManager::Releasing...", singleton_pointer->port());
     TrafficManagerBase *base_ptr = singleton_pointer.release();
     delete base_ptr;
   }
+  carla::log_info("TrafficManager::Release end");
+}
+
+void TrafficManager::Reset() {
+  carla::log_info("TrafficManager::Reset");
+  if(singleton_pointer){
+    carla::log_info("TrafficManager::Restarting...");
+    carla::client::detail::EpisodeProxy episodeProxy = singleton_pointer->GetEpisodeProxy();
+    uint16_t port = singleton_pointer->port();
+    Release();
+    // TODO: create the TM again
+    TrafficManager(episodeProxy, port);
+  }
+  carla::log_info("TrafficManager::Reset end");
 }
 
 } // namespace traffic_manager
