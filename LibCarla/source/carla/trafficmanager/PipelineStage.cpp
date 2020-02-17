@@ -9,7 +9,8 @@
 namespace carla {
 namespace traffic_manager {
 
-PipelineStage::PipelineStage(std::string stage_name)
+PipelineStage::PipelineStage(
+    std::string stage_name)
   : stage_name(stage_name),
     performance_diagnostics(PerformanceDiagnostics(stage_name)) {
   run_stage.store(false);
@@ -42,14 +43,12 @@ void PipelineStage::Update() {
     // Receive data.
     DataReceiver();
 
-    // Receive data.
     if(run_stage.load()){
       performance_diagnostics.RegisterUpdate(true);
       Action();
       performance_diagnostics.RegisterUpdate(false);
     }
 
-    // Receive data.
     if(run_stage.load()) {
       DataSender();
     }

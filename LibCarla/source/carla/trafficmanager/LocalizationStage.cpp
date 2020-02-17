@@ -17,13 +17,13 @@ namespace LocalizationConstants {
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
-  static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float HIGHWAY_SPEED = 50.0f / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
   static const float BLOCKED_TIME_THRESHOLD = 90.0f;
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
-  static const float STOPPED_VELOCITY_THRESHOLD = 0.4f;  // meters per second.
+  static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
 
 } // namespace LocalizationConstants
 
@@ -55,13 +55,10 @@ namespace LocalizationConstants {
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
-
     // Initializing the registered actors container state.
     registered_actors_state = -1;
-
     // Initializing buffer lists.
     buffer_list = std::make_shared<BufferList>();
-
     // Initializing maximum idle time to null.
     maximum_idle_time = std::make_pair(nullptr, 0.0);
     // Initializing srand.
@@ -104,6 +101,7 @@ namespace LocalizationConstants {
       if (buffer_list->find(actor_id) == buffer_list->end()) {
         buffer_list->insert({actor_id, Buffer()});
       }
+
       Buffer &waypoint_buffer = buffer_list->at(actor_id);
 
       // Purge passed waypoints.
@@ -196,8 +194,8 @@ namespace LocalizationConstants {
 
       float distance = 0.0f; // TODO: use in PID
 
-      // Filtering out false junctions on highways.
-      // On highways, if there is only one possible path and the section is
+      // Filtering out false junctions on highways:
+      // on highways, if there is only one possible path and the section is
       // marked as intersection, ignore it.
       const auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       const float speed_limit = vehicle_reference->GetSpeedLimit();
@@ -216,7 +214,7 @@ namespace LocalizationConstants {
 
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
-        if (speed_limit > HIGHWAY_SPEED*3.6f) {
+        if (speed_limit*3.6f > HIGHWAY_SPEED) {
           for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
             if (swp->GetNextWaypoint().size() > 1) {
@@ -228,13 +226,13 @@ namespace LocalizationConstants {
         }
       }
 
-      // Reset the variables when no longer approaching an intersection
+      // Reset the variables when no longer approaching a junction.
       if (!approaching_junction && approached[actor_id]){
         final_safe_points[actor_id] = nullptr;
         approached[actor_id] = false;
       }
 
-      // Only do once, when the intersection has just been seen.
+      // Only do once, when the junction has just been seen.
       else if (approaching_junction && !approached[actor_id]){
 
         SimpleWaypointPtr final_point = nullptr;
@@ -295,7 +293,7 @@ namespace LocalizationConstants {
     std::set<uint32_t> worldActorId;
     std::vector<ActorPtr> actor_list_to_be_deleted;
 
-    /// Filter Function to collect the Data
+    // Filter function to collect the data.
     auto Filter = [&](auto &actors, auto &wildcard_pattern) {
       std::vector<carla::client::detail::ActorVariant> filtered;
       for (auto &&actor : actors) {
@@ -306,18 +304,18 @@ namespace LocalizationConstants {
       return filtered;
     };
 
-    /// Get all World Actor
+    // Get all the actors.
     auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
 
-    /// Filter with Vehicle
+    // Filter with vehicle wildcard.
     auto vehicles = Filter(world_actorsList, "vehicle.*");
 
-    /// Building a Set of Vehicle Id of the World
+    // Building a set of vehicle ids in the world.
     for (const auto &actor : vehicles) {
       worldActorId.insert(actor.GetId());
     }
 
-    /// Search for Invalid / Destroyed Vehicles
+    // Search for invalid/destroyed vehicles.
     for (auto &actor : actor_list) {
       if (worldActorId.find(actor->GetId()) == worldActorId.end()) {
         actor_list_to_be_deleted.emplace_back(actor);
@@ -325,7 +323,7 @@ namespace LocalizationConstants {
       }
     }
 
-    /// Clearing the registered Actor List
+    // Clearing the registered actor list.
     if(!actor_list_to_be_deleted.empty()) {
       registered_actors.Remove(actor_list_to_be_deleted);
       actor_list.clear();
@@ -333,8 +331,8 @@ namespace LocalizationConstants {
       isDeletedActorsPresent = true;
     }
 
-    // Building a list of registered actors and
-    // connecting the vehicle ids to their position indices on data arrays.
+    // Building a list of registered actors and connecting
+    // the vehicle ids to their position indices on data arrays.
 
     if (isDeletedActorsPresent  || (registered_actors_state != registered_actors.GetState())) {
       actor_list.clear();
@@ -518,7 +516,7 @@ namespace LocalizationConstants {
               for (auto& candidate_lane_wp: other_neighbouring_lanes) {
                 if (candidate_lane_wp != nullptr &&
                     track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
-                    speed_limit < HIGHWAY_SPEED) {
+                    speed_limit*3.6f < HIGHWAY_SPEED) {
                   distant_lane_availability = true;
                 }
               }

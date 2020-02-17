@@ -131,7 +131,6 @@ namespace PlannerConstants {
       state = current_state;
 
       // Constructing the actuation signal.
-
       PlannerToControlData &message = current_control_frame->at(i);
       message.actor = actor;
       message.throttle = actuation_signal.throttle;
