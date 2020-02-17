@@ -92,8 +92,13 @@ public:
     return _port;
   }
 
+  bool IsServer() const {
+    return _is_server;
+  }
+
 protected:
   uint16_t _port = TM_DEFAULT_PORT;
+  bool _is_server = false;
 };
 
 } // namespace traffic_manager

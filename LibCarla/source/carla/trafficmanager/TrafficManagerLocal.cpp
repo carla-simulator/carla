@@ -28,6 +28,9 @@ TrafficManagerLocal::TrafficManagerLocal(
     episodeProxyTM(episodeProxy),
     debug_helper(carla::client::DebugHelper{episodeProxyTM}),
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
+
+  _is_server = true;
+
   const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();

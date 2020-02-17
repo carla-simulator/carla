@@ -37,7 +37,7 @@ TrafficManagerRemote::TrafficManagerRemote(
         client.HealthCheckRemoteTM();
 
         /// Until connection active
-      } while (true);
+      } while (_keep_alive);
     } catch (...) {
 
       std::string rhost("");
@@ -55,8 +55,11 @@ TrafficManagerRemote::TrafficManagerRemote(
           "but the system failed to connect at " + strtmserver);
 
       /// TSet the error message
-      this->episodeProxyTM.Lock()->AddPendingException(errmsg);
+      if(_keep_alive) {
+        this->episodeProxyTM.Lock()->AddPendingException(errmsg);
+      }
     }
+    _cv.notify_one();
   });
 
   /// detach thread to run it independently
@@ -64,7 +67,20 @@ TrafficManagerRemote::TrafficManagerRemote(
 }
 
 /// Destructor.
-TrafficManagerRemote :: ~TrafficManagerRemote() {}
+TrafficManagerRemote::~TrafficManagerRemote() {
+  Stop();
+}
+
+void TrafficManagerRemote::Start() {
+  _keep_alive = true;
+}
+
+void TrafficManagerRemote::Stop() {
+  _keep_alive = false;
+  std::unique_lock<std::mutex> lock(_mutex);
+  std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
+  _cv.wait_for(lock, wait_time);
+}
 
 /// This method registers a vehicle with the traffic manager.
 void TrafficManagerRemote::RegisterVehicles(

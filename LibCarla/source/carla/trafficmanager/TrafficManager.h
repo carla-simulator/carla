@@ -178,6 +178,18 @@ public:
     DEBUG_ASSERT(singleton_pointer != nullptr);
     return singleton_pointer->SynchronousTick();
   }
+
+protected:
+
+  static void CreateTrafficManagerServer(
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port);
+
+
+  static void CreateTrafficManagerClient(
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port);
+
 };
 
 } // namespace traffic_manager
