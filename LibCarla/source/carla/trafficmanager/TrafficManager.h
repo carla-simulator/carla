@@ -54,7 +54,7 @@ namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 
-/// The function of this class is to integrate all the various stages of
+/// This class integrates all the various stages of
 /// the traffic manager appropriately using messengers.
 class TrafficManager {
 
@@ -103,10 +103,7 @@ public:
   }
 
   /// Set collision detection rules between vehicles.
-  void SetCollisionDetection(
-    const ActorPtr &reference_actor,
-    const ActorPtr &other_actor,
-    const bool detect_collision) {
+  void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
   }
@@ -118,7 +115,7 @@ public:
     singleton_pointer->SetForceLaneChange(actor, direction);
   }
 
-  /// Enable / disable automatic lane change on a vehicle.
+  /// Enable/disable automatic lane change on a vehicle.
   void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetAutoLaneChange(actor, enable);
@@ -131,24 +128,25 @@ public:
     singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
   }
 
-  /// Method to specify the % chance of ignoring collisions with all walkers
+  /// Method to specify the % chance of ignoring collisions with any walker.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetPercentageIgnoreWalkers(actor, perc);
   }
 
-  /// Method to specify the % chance of ignoring collisions with all vehicles
+  /// Method to specify the % chance of ignoring collisions with any vehicle.
   void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetPercentageIgnoreVehicles(actor, perc);
   }
 
+  /// Method to specify the % chance of running a sign.
   void SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageRunningLight(actor, perc);
+    singleton_pointer->SetPercentageRunningSign(actor, perc);
   }
 
-  /// Method to specify the % chance of running a red light
+  /// Method to specify the % chance of running a light.
   void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetPercentageRunningLight(actor, perc);
@@ -166,13 +164,13 @@ public:
     singleton_pointer->SetSynchronousMode(mode);
   }
 
-  /// Method to set Tick timeout for synchronous execution.
+  /// Method to set tick timeout for synchronous execution.
   void SetSynchronousModeTimeOutInMiliSecond(double time) {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     singleton_pointer->SetSynchronousModeTimeOutInMiliSecond(time);
   }
 
-  /// Method to provide synchronous tick
+  /// Method to provide synchronous tick.
   bool SynchronousTick() {
     DEBUG_ASSERT(singleton_pointer != nullptr);
     return singleton_pointer->SynchronousTick();

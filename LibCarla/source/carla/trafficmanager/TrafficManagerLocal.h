@@ -42,7 +42,6 @@ namespace carla {
 namespace traffic_manager {
 
   using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-
   using TLS = carla::rpc::TrafficLightState;
   using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 
@@ -88,10 +87,10 @@ namespace traffic_manager {
     /// Parameterization object.
     Parameters parameters;
 
-    /// Traffic manager server instance
+    /// Traffic manager server instance.
     TrafficManagerServer server;
 
-    /// Method to check if traffic lights are frozen.
+    /// Method to check if all traffic lights are frozen in a group.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
 
   public:
@@ -121,9 +120,6 @@ namespace traffic_manager {
     /// This method unregisters a vehicle from traffic manager.
     void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
-    /// This method kills a vehicle. (Not working right now)
-    /// void DestroyVehicle(const ActorPtr &actor);
-
     /// Set target velocity specific to a vehicle.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
@@ -131,30 +127,30 @@ namespace traffic_manager {
     void SetGlobalPercentageSpeedDifference(float const percentage);
 
     /// Set collision detection rules between vehicles.
-    void SetCollisionDetection(
-        const ActorPtr &reference_actor,
-        const ActorPtr &other_actor,
-        const bool detect_collision);
+    void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);
 
     /// Method to force lane change on a vehicle.
     /// Direction flag can be set to true for left and false for right.
     void SetForceLaneChange(const ActorPtr &actor, const bool direction);
 
-    /// Enable / disable automatic lane change on a vehicle.
+    /// Enable/disable automatic lane change on a vehicle.
     void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
     /// Method to specify how much distance a vehicle should maintain to
     /// the leading vehicle.
     void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
-    /// Method to specify the % chance of ignoring collisions with all walkers
+    /// Method to specify the % chance of ignoring collisions with any walker.
     void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-    /// Method to specify the % chance of ignoring collisions with all vehicles
+    /// Method to specify the % chance of ignoring collisions with any vehicle.
     void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
 
-    /// Method to specify the % chance of running a red light
+    /// Method to specify the % chance of running any traffic light.
     void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+    /// Method to specify the % chance of running any traffic sign.
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
 
     /// Method to switch traffic manager into synchronous execution.
     void SetSynchronousMode(bool mode);
@@ -162,16 +158,16 @@ namespace traffic_manager {
     /// Method to set Tick timeout for synchronous execution.
     void SetSynchronousModeTimeOutInMiliSecond(double time);
 
-    /// Method to provide synchronous tick
+    /// Method to provide synchronous tick.
     bool SynchronousTick();
 
-    /// Method to reset all traffic lights.
+    /// Method to reset all traffic light groups to the initial stage.
     void ResetAllTrafficLights();
 
-    /// Get carla episode information
+    /// Get CARLA episode information.
     carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 
-    /// Get list of all registered vehicles
+    /// Get list of all registered vehicles.
     std::vector<ActorId> GetRegisteredVehiclesIDs();
   };
 

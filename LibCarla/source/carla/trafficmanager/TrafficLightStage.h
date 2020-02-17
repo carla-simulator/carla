@@ -70,7 +70,7 @@ namespace traffic_manager {
     uint64_t number_of_vehicles;
 
 
-    void DrawLight(TLS traffic_light_state, const Actor &ego_actor, const cg::Location &ego_location) const;
+    void DrawLight(TLS traffic_light_state, const Actor &ego_actor) const;
 
   public:
 

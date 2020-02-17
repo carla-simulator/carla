@@ -15,7 +15,7 @@
 namespace carla {
 namespace traffic_manager {
 
-/// Provides communication with the rpc of TrafficManagerServer
+/// Provides communication with the rpc of TrafficManagerServer.
 class TrafficManagerClient {
 
 public:
@@ -26,49 +26,47 @@ public:
   TrafficManagerClient &operator=(const TrafficManagerClient &) = default;
   TrafficManagerClient &operator=(TrafficManagerClient &&) = default;
 
-  /// Parametric constructor to initialize the parameters
+  /// Parametric constructor to initialize the parameters.
   TrafficManagerClient(
       const std::string &_host,
       const uint16_t &_port)
     : tmhost(_host),
       tmport(_port) {
 
-    /// Create client instance
+    /// Create client instance.
       if(!_client) {
         _client = new ::rpc::client(tmhost, tmport);
         _client->set_timeout(TM_TIMEOUT);
       }
   }
 
-  /// Destructor
+  /// Destructor method.
   ~TrafficManagerClient() {
-
-    /// If client exists
     if(_client) {
       delete _client;
       _client = nullptr;
     }
   };
 
-  /// Set parameters
+  /// Set parameters.
   void setServerDetails(const std::string &_host, const uint16_t &_port) {
     tmhost = _host;
     tmport = _port;
   }
 
-  /// Get parameters
+  /// Get parameters.
   void getServerDetails(std::string &_host, uint16_t &_port) {
     _host = tmhost;
     _port = tmport;
   }
 
-  /// Register vehicles to remote TM server via RPC client
+  /// Register vehicles to remote traffic manager server via RPC client.
   void RegisterVehicle(const std::vector<carla::rpc::Actor> &actor_list) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("register_vehicle", std::move(actor_list));
   }
 
-  /// Unregister vehicles to remote TM server via RPC client
+  /// Unregister vehicles to remote traffic manager server via RPC client.
   void UnregisterVehicle(const std::vector<carla::rpc::Actor> &actor_list) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("unregister_vehicle", std::move(actor_list));
@@ -87,10 +85,7 @@ public:
   }
 
   /// Set collision detection rules between vehicles.
-  void SetCollisionDetection
-    ( const carla::rpc::Actor &reference_actor
-    , const carla::rpc::Actor &other_actor
-    , const bool detect_collision) {
+  void SetCollisionDetection(const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_collision_detection", reference_actor, other_actor, detect_collision);
   }
@@ -102,7 +97,7 @@ public:
     _client->call("set_force_lane_change", actor, direction);
   }
 
-  /// Enable / disable automatic lane change on a vehicle.
+  /// Enable/disable automatic lane change on a vehicle.
   void SetAutoLaneChange(const carla::rpc::Actor &actor, const bool enable) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_auto_lane_change", actor, enable);
@@ -115,22 +110,28 @@ public:
     _client->call("set_distance_to_leading_vehicle", actor, distance);
   }
 
-  /// Method to specify the % chance of ignoring collisions with all walkers
+  /// Method to specify the % chance of ignoring collisions with any walker.
   void SetPercentageIgnoreWalkers(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_ignore_walkers", actor, percentage);
   }
 
-    /// Method to specify the % chance of ignoring collisions with all vehicles
+  /// Method to specify the % chance of ignoring collisions with any vehicle.
   void SetPercentageIgnoreVehicles(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_ignore_vehicles", actor, percentage);
   }
 
-  /// Method to specify the % chance of running a red light
+  /// Method to specify the % chance of running a traffic sign.
   void SetPercentageRunningLight(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_running_light", actor, percentage);
+  }
+
+  /// Method to specify the % chance of running any traffic sign.
+  void SetPercentageRunningSign(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_percentage_running_sign", actor, percentage);
   }
 
   /// Method to switch traffic manager into synchronous execution.
@@ -139,24 +140,25 @@ public:
     _client->call("set_synchronous_mode", mode);
   }
 
-  /// Method to set Tick timeout for synchronous execution.
+  /// Method to set tick timeout for synchronous execution.
   void SetSynchronousModeTimeOutInMiliSecond(const double time) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_synchronous_mode_timeout_in_milisecond", time);
   }
 
-  /// Method to reset all traffic lights.
+  /// Method to provide synchronous tick.
   bool SynchronousTick() {
     DEBUG_ASSERT(_client != nullptr);
     return _client->call("synchronous_tick").as<bool>();
   }
 
-  /// Method to reset all traffic lights.
+  /// Method to reset all traffic light groups to the initial stage.
   void ResetAllTrafficLights() {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("reset_all_traffic_lights");
   }
 
+  /// Check if remote traffic manager is alive
   void HealthCheckRemoteTM() {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("health_check_remote_TM");
@@ -164,10 +166,10 @@ public:
 
 private:
 
-  /// rpc client
+  /// RPC client.
   ::rpc::client *_client = nullptr;
 
-  /// server port and host
+  /// Server port and host.
   std::string tmhost;
   uint16_t    tmport;
 };

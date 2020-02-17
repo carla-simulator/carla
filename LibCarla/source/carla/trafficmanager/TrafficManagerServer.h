@@ -29,9 +29,9 @@ public:
   TrafficManagerServer &operator=(const TrafficManagerServer &) = default;
   TrafficManagerServer &operator=(TrafficManagerServer &&) = default;
 
-  /// here RPCPort is the TM local instance RPC server port where
-  /// it can listen to remote TM(s) and apply the changes to
-  /// LOcal instance vis TrafficManagerBase *
+  /// Here RPCPort is the traffic manager local instance RPC server port where
+  /// it can listen to remote traffic managers and apply the changes to
+  /// local instance through a TrafficManagerBase pointer.
   TrafficManagerServer(
       uint16_t &RPCPort,
       carla::traffic_manager::TrafficManagerBase *tm)
@@ -40,30 +40,28 @@ public:
     uint16_t counter = 0;
     while(counter < MIN_TRY_COUNT) {
       try {
-        /// Create server instance
+        /// Create server instance.
         server = new ::rpc::server(RPCPort);
 
       } catch(...) {
-        /// Update port number and try again
+        /// Update port number and try again.
         std::cout << "TM Server STATUS is FAILED ..... port: " << RPCPort << std::endl;
         counter ++;
       }
 
-      /// If server created
+      /// If server created.
       if(server != nullptr) break;
     }
 
-    /// If server still not created
+    /// If server still not created throw a runtime exception.
     if(server == nullptr) {
 
-      /// Through run time error
       carla::throw_exception(std::runtime_error(
         "trying to create rpc server for traffic manager; "
         "but the system failed to create because of bind error."));
-    }
-    /// If server creation successful
-    else {
-      // Binding a lambda function to the name "register_vehicle".
+    } else {
+      /// If the server creation was successful we are
+      /// binding a lambda function to the name "register_vehicle".
       server->bind("register_vehicle", [=](std :: vector <carla::rpc::Actor> _actor_list) {
         std::vector<ActorPtr> actor_list;
         for (auto &&actor : _actor_list) {
@@ -93,14 +91,10 @@ public:
       });
 
       /// Set collision detection rules between vehicles.
-      server->bind("set_collision_detection", [=]
-        ( const carla::rpc::Actor &reference_actor
-        , const carla::rpc::Actor &other_actor
-        , const bool detect_collision) {
-          tm->SetCollisionDetection
-            ( carla::client::detail::ActorVariant(reference_actor).Get(tm->GetEpisodeProxy())
-            , carla::client::detail::ActorVariant(other_actor).Get(tm->GetEpisodeProxy())
-            , detect_collision);
+      server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
+        const auto reference = carla::client::detail::ActorVariant(reference_actor).Get(tm->GetEpisodeProxy());
+        const auto other = carla::client::detail::ActorVariant(other_actor).Get(tm->GetEpisodeProxy());
+        tm->SetCollisionDetection(reference, other, detect_collision);
       });
 
       /// Method to force lane change on a vehicle.
@@ -109,7 +103,7 @@ public:
         tm->SetForceLaneChange(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), direction);
       });
 
-      /// Enable / disable automatic lane change on a vehicle.
+     /// Enable/disable automatic lane change on a vehicle.
       server->bind("set_auto_lane_change", [=](carla::rpc::Actor actor, const bool enable) {
         tm->SetAutoLaneChange(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), enable);
       });
@@ -120,17 +114,22 @@ public:
         tm->SetDistanceToLeadingVehicle(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), distance);
       });
 
-      /// Method to specify the % chance of running a red light
+      /// Method to specify the % chance of running any traffic light.
       server->bind("set_percentage_running_light", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageRunningLight(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
-        /// Method to specify the % chance of ignoring collisions with all walkers
+      /// Method to specify the % chance of running any traffic sign.
+      server->bind("set_percentage_running_sign", [=](carla::rpc::Actor actor, const float percentage) {
+        tm->SetPercentageRunningSign(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+      });
+
+        /// Method to specify the % chance of ignoring collisions with any walker.
       server->bind("set_percentage_ignore_walkers", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageIgnoreWalkers(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
-        /// Method to specify the % chance of ignoring collisions with all vehicles
+        /// Method to specify the % chance of ignoring collisions with any vehicle.
       server->bind("set_percentage_ignore_vehicles", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageIgnoreVehicles(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
@@ -140,12 +139,12 @@ public:
         tm->SetSynchronousMode(mode);
       });
 
-      /// Method to set Tick timeout for synchronous execution.
+      /// Method to set tick timeout for synchronous execution.
       server->bind("set_synchronous_mode_timeout_in_milisecond", [=](const double time) {
         tm->SetSynchronousModeTimeOutInMiliSecond(time);
       });
 
-      /// Method to reset all traffic lights.
+      /// Method to provide synchronous tick.
       server->bind("synchronous_tick", [=]() -> bool {
         return tm->SynchronousTick();
       });
@@ -155,17 +154,17 @@ public:
         tm->ResetAllTrafficLights();
       });
 
-      /// Method to check server is Alive or not
+      /// Method to check server is alive or not.
       server->bind("health_check_remote_TM", [=](){});
 
-      /// Run TM server to respond of any user client in async mode
+      /// Run traffic manager server to respond of any
+      /// user client in asynchronous mode.
       server->async_run();
     }
   }
 
   ~TrafficManagerServer() {
     if(server) {
-      //server->close_sessions();
       server->stop();
       delete server;
       server = nullptr;
@@ -178,10 +177,10 @@ public:
 
 private:
 
-  /// TM server RPC port
+  /// Traffic manager server RPC port
   uint16_t _RPCPort;
 
-  /// Server instance to
+  /// Server instance
   ::rpc::server *server = nullptr;
 };
 

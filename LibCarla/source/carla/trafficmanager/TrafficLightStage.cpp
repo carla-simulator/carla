@@ -162,8 +162,9 @@ namespace traffic_manager {
     frame_selector = !frame_selector;
   }
 
-  void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor, const cg::Location &ego_location) const {
+  void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor) const {
 
+    const cg::Location ego_location = ego_actor->GetLocation();
     if (traffic_light_state == TLS::Green) {
       debug_helper.DrawString(
           cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
