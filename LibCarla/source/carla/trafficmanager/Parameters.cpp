@@ -13,10 +13,10 @@ namespace traffic_manager {
 
 Parameters::Parameters() {
 
-  /// Set default synchronous mode false
+  /// Set default synchronous mode to false.
   synchronous_mode.store(false);
 
-  /// Set default synchronous mode time out
+  /// Set default synchronous mode time out.
   synchronous_time_out = std::chrono::duration<int, std::milli>(10);
 }
 
@@ -33,37 +33,24 @@ void Parameters::SetGlobalPercentageSpeedDifference(const float percentage) {
   global_percentage_difference_from_limit = new_percentage;
 }
 
-void Parameters::SetCollisionDetection
-  ( const ActorPtr &reference_actor
-  , const ActorPtr &other_actor
-  , const bool detect_collision)
-{
+void Parameters::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
   const ActorId reference_id = reference_actor->GetId();
   const ActorId other_id = other_actor->GetId();
 
-  if (detect_collision)
-  {
-    if (ignore_collision.Contains(reference_id))
-    {
+  if (detect_collision) {
+    if (ignore_collision.Contains(reference_id)) {
       std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-      if (actor_set->Contains(other_id))
-      {
+      if (actor_set->Contains(other_id)) {
         actor_set->Remove({other_actor});
       }
     }
-  }
-  else
-  {
-    if (ignore_collision.Contains(reference_id))
-    {
+  } else {
+    if (ignore_collision.Contains(reference_id)) {
       std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
-      if (!actor_set->Contains(other_id))
-      {
+      if (!actor_set->Contains(other_id)) {
         actor_set->Insert({other_actor});
       }
-    }
-    else
-    {
+    } else {
       std::shared_ptr<AtomicActorSet> actor_set = std::make_shared<AtomicActorSet>();
       actor_set->Insert({other_actor});
       auto entry = std::make_pair(reference_id, actor_set);
@@ -141,8 +128,7 @@ ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
   const ActorId actor_id = actor->GetId();
   ChangeLaneInfo change_lane_info;
 
-  if (force_lane_change.Contains(actor_id))
-  {
+  if (force_lane_change.Contains(actor_id)) {
     change_lane_info = force_lane_change.GetValue(actor_id);
   }
 

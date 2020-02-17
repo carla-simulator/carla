@@ -57,12 +57,11 @@ namespace traffic_manager {
     /// Synchronous mode switch.
     std::atomic<bool> synchronous_mode;
 
-
   public:
     Parameters();
     ~Parameters();
 
-    /// Set target velocity specific to a vehicle.
+    /// Set target velocity for a specific vehicle.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
     /// Set global target velocity.
@@ -78,7 +77,7 @@ namespace traffic_manager {
     /// Direction flag can be set to true for left and false for right.
     void SetForceLaneChange(const ActorPtr &actor, const bool direction);
 
-    /// Enable / disable automatic lane change on a vehicle.
+    /// Enable/disable automatic lane change on a vehicle.
     void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
     /// Method to specify how much distance a vehicle should maintain to
@@ -124,23 +123,20 @@ namespace traffic_manager {
     /// Method to set % to ignore any vehicle.
     void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-    /// Synchronous mode
-
     /// Method to get synchronous mode.
     bool GetSynchronousMode();
 
     /// Method to set synchronous mode.
     void SetSynchronousMode(const bool mode_switch = true);
 
-    /// Synchronous mode time out
+    /// Get synchronous mode time out
     double GetSynchronousModeTimeOutInMiliSecond();
 
-    /// Synchronous mode time out.
+    /// Set Synchronous mode time out.
     void SetSynchronousModeTimeOutInMiliSecond(const double time);
 
-    /// Synchronous mode time out.
+    /// Synchronous mode time out variable.
     std::chrono::duration<double, std::milli> synchronous_time_out;
-
 
   };
 

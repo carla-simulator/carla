@@ -40,6 +40,7 @@ namespace traffic_manager {
 
     // Selecting the output frame based on the selection key.
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
+
     // Looping over registered actors.
     for (uint64_t i = 0u; i < number_of_vehicles && localization_frame != nullptr; ++i) {
 
@@ -68,6 +69,7 @@ namespace traffic_manager {
 
         traffic_light_hazard = true;
       }
+
       // Handle entry negotiation at non-signalised junction.
       else if (look_ahead_point->CheckJunction() &&
                !ego_vehicle->IsAtTrafficLight() &&
@@ -113,11 +115,9 @@ namespace traffic_manager {
                 last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
               }
             } else {
-
               junction_last_ticket.insert({junction_id, current_time +
                                            chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
             }
-
             if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
               vehicle_last_ticket.at(ego_actor_id) = junction_last_ticket.at(junction_id);
             } else {
@@ -137,17 +137,17 @@ namespace traffic_manager {
       TrafficLightToPlannerData &message = current_planner_frame->at(i);
       message.traffic_light_hazard = traffic_light_hazard;
     }
-
   }
 
   void TrafficLightStage::DataReceiver() {
+
     localization_frame = localization_messenger->Peek();
 
     // Allocating new containers for the changed number of registered vehicles.
-    if (localization_frame != nullptr &&
-        number_of_vehicles != (*localization_frame.get()).size()) {
+    if (localization_frame != nullptr && number_of_vehicles != (*localization_frame.get()).size()) {
 
       number_of_vehicles = static_cast<uint64_t>((*localization_frame.get()).size());
+
       // Allocating output frames.
       planner_frame_a = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<TrafficLightToPlannerFrame>(number_of_vehicles);
@@ -162,32 +162,24 @@ namespace traffic_manager {
     frame_selector = !frame_selector;
   }
 
-  void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor) const {
-    std::string str;
-    auto ego_location = ego_actor->GetLocation();
+  void TrafficLightStage::DrawLight(TLS traffic_light_state, const Actor &ego_actor, const cg::Location &ego_location) const {
+
     if (traffic_light_state == TLS::Green) {
-      str="Green";
       debug_helper.DrawString(
           cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
-          str,
+          "Green",
           false,
           {0u, 255u, 0u}, 0.1f, true);
-    }
-
-    else if (traffic_light_state == TLS::Yellow) {
-      str="Yellow";
+    } else if (traffic_light_state == TLS::Yellow) {
       debug_helper.DrawString(
           cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
-          str,
+          "Yellow",
           false,
           {255u, 255u, 0u}, 0.1f, true);
-    }
-
-    else {
-      str="Red";
+    } else {
       debug_helper.DrawString(
           cg::Location(ego_location.x, ego_location.y, ego_location.z+1.0f),
-          str,
+          "Red",
           false,
           {255u, 0u, 0u}, 0.1f, true);
     }

@@ -38,6 +38,7 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/detail/ActorVariant.h"
+
 namespace carla {
 namespace traffic_manager {
 
@@ -133,6 +134,7 @@ namespace traffic_manager {
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
+
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
 
