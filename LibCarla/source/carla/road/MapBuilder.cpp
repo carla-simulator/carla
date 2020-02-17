@@ -742,6 +742,7 @@ namespace road {
       DirectedPoint point = GetRoad(signal->_road_id)->GetDirectedPointIn(signal->_s);
       point.ApplyLateralOffset(static_cast<float>(-signal->_t));
       point.location.y *= -1; // Unreal Y axis hack
+      point.location.z += static_cast<float>(signal->_zOffset);
       geom::Transform transform(point.location, geom::Rotation(
           static_cast<float>(signal->_pitch),
           static_cast<float>(-(point.tangent + signal->_hOffset)),

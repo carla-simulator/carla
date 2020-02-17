@@ -251,6 +251,7 @@ void export_map() {
   ;
 
   class_<cc::Landmark, boost::noncopyable, boost::shared_ptr<cc::Landmark>>("Landmark", no_init)
+    .add_property("road_id", &cc::Landmark::GetRoadId)
     .add_property("distance", &cc::Landmark::GetDistance)
     .add_property("s", &cc::Landmark::GetS)
     .add_property("t", &cc::Landmark::GetT)
