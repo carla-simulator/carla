@@ -379,7 +379,7 @@
       - param_name: distance
         type: float
         doc: >
-          The maximum distance to search for landmarks from the current waypoint.
+          Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).
       - param_name: stop_at_junction
         type: bool
         default: False
@@ -394,11 +394,11 @@
       - param_name: distance
         type: float
         doc: >
-          The maximum distance to search for landmarks from the current waypoint.
+          Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).
       - param_name: type
         type: str
         doc: >
-          The type of landmarks to search.
+          Type of landmarks to search.
       - param_name: stop_at_junction
         type: bool
         default: False
@@ -406,7 +406,7 @@
           Enables or disables the landmark search through junctions.
       return: list(carla.Landmark)
       doc: >
-        Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.
+        Returns a list of landmarks in the road of a certain type from the current waypoint until the specified distance.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -441,25 +441,26 @@
   - class_name: LandmarkOrientation
     # - DESCRIPTION ------------------------
     doc: >
-      Class defining the orientation of a landmark in the road.
+      Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Positive
       doc: >
-        Positive direction of the road's geometry definition (negative lanes).
+        The landmark faces towards vehicles going on the same direction as the road's geometry definition (lanes 0 and negative in OpenDRIVE).
     - var_name: Negative
       doc: >
-        Negative direction of the road's geometry definition (positive lanes).
+        The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE).
     - var_name: Both
       doc: >
-        Affects lanes in both directions of the road.
+        Affects vehicles going in both directions of the road.
     # --------------------------------------
 
   - class_name: LandmarkType
     # - DESCRIPTION ------------------------
     doc: >
-      Class containing a set of landmarks using the country code OpenDRIVE.
-      See section 6.10 in the OpenDrive 1.5M specification.
+      Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).  
+
+      __carla.Landmark does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Danger
@@ -569,57 +570,62 @@
   - class_name: Landmark
     # - DESCRIPTION ------------------------
     doc: >
-      Class containing the definition of a signal affecting a specific road.
+      Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE]([OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf)) definition of the landmarks and their representation in the simulation.  
+      This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.  
+
+      Landmarks will be accessed by carla.Waypoint objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: road_id
       type: int
       doc: >
-        Id of the road where this signal is defined. This road may be different from the road this signal is currently affecting.
+        The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.  
+        
+        <small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>
     - var_name: distance
       type: float
       doc: >
-        Remaining distance to the signal from the waypoint calling `get_landmarks` or `get_landmarks_of_type`.
+        Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).
     - var_name: s
       type: float
       doc: >
-        Distance position of the signal along the geometry of the road `road_id`.
+        Distance where the landmark is positioned along the geometry of the road `road_id`.
     - var_name: t
       type: float
       doc: >
-        Lateral position of the signal along the geometry of the road `road_id`.
+        Lateral distance where the landmark is positioned from the edge of the road `road_id`.
     - var_name: id
       type: str
       doc: >
-        Unique id of the signal in the OpenDRIVE file.
+        Unique ID of the landmark in the OpenDRIVE file.
     - var_name: name
       type: str
       doc: >
-        Name of the signal in the in the OpenDRIVE file.
+        Name of the landmark in the in the OpenDRIVE file.
     - var_name: is_dynamic
       type: bool
       doc: >
-        Indicates if the signal state changes over time such as traffic lights.
+        Indicates if the landmark has state changes over time such as traffic lights.
     - var_name: orientation
-      type: LandmarkOrientation
+      type: carla.LandmarkOrientation
       doc: >
-        Indicates if the signal state changes over time such as traffic lights.
+        Indicates which lanes the landmark is facing towards to.
     - var_name: z_offset
       type: float
       doc: >
-        Elevation from the ground of the signal.
+        Height where the landmark is placed.
     - var_name: country
       type: str
       doc: >
-        Country code where this signal is defined (default to OpenDRIVE).
+        Country code where the landmark is defined (default to OpenDRIVE is Germany 2017).
     - var_name: type
       type: str
       doc: >
-        Type identification of the signal according to country code.
+        Type identificator of the landmark according to the country code.
     - var_name: sub_type
       type: str
       doc: >
-        Subtype identification of the signal according to country code.
+        Subtype identificator of the landmark according to the country code.
     - var_name: value
       type: float
       doc: >
@@ -627,7 +633,7 @@
     - var_name: unit
       type: str
       doc: >
-        Units of attribute `value`.
+        Units of measurement for the attribute `value`.
     - var_name: height
       type: float
       doc: >
@@ -643,30 +649,30 @@
     - var_name: h_offset
       type: float
       doc: >
-        Heading of the signal relative to the orientation of the road.
+        Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE. 
     - var_name: pitch
       type: float
       doc: >
-        Pitch of the signal.
+        Pitch rotation of the signal.
     - var_name: roll
       type: float
       doc: >
-        Roll of the signal.
+        Roll rotation of the signal.
     - var_name: waypoint
       type: carla.Waypoint
       doc: >
-        The waypoint where this signal is producing an effect in the road.
+        A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.
     - var_name: transform
       type: carla.Transform
       doc: >
-        The position and orientation of this signal in the world.
+        The location and orientation of the landmark in the simulation.
     # - METHODS ----------------------------
     methods:
     - def_name: get_lane_validities
       return: list(tuple(int))
       doc: >
-        Returns a list of pairs of lane ids defining to which lanes this signal is producing an effect.
-
-        The pair defines a range of lanes (from_lane_id, to_lane_id).
+        Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:  
+        
+        <small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>
     # --------------------------------------
 ...
