@@ -22,7 +22,7 @@ nav:
   - '1st. World and client': 'core_world.md'
   - '2nd. Actors and blueprints': 'core_actors.md'
   - '3rd. Maps and navigation': 'core_map.md'
-  - '4th. Sensors and data': 'cameras_and_sensors.md'
+  - '4th. Sensors and data': 'core_sensors.md'
 - Advanced steps:
   - 'Recorder': 'recorder_and_playback.md'
   - 'Rendering options': 'rendering_options.md'

@@ -64,3 +64,23 @@ Some more complex elements and features in CARLA are listed here to make newcome
   - **Rendering options:** Some advanced configuration options in CARLA that allow for different graphics quality, off-screen rendering and a no-rendering mode. 
   - **Simulation time and synchrony:** Everything regarding the simulation time and how does the server run the simulation depending on clients.  
   - **Traffic manager:** This module is in charge of every vehicle set to autopilot mode. It conducts the traffic in the city for the simulation to look like a real urban environment. 
+
+---------------
+That sums up the basics necessary to understand CARLA. 
+However, these broad strokes are just a big picture of the system.The next step should be learning more about the world of the simulation and the clients connecting to it. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
+<div text-align: center>
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="forum.carla.org" target="_blank" class="btn btn-neutral" title="CARLA forum">
+CARLA forum</a>
+</p>
+</div>
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="../core_world" target="_blank" class="btn btn-neutral" title="1st. World and client">
+1st. World and client</a>
+</p>
+</div>
+</div>
