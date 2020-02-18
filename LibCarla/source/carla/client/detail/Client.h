@@ -74,6 +74,8 @@ namespace detail {
 
     void LoadEpisode(std::string map_name);
 
+    void LoadOpenDriveEpisode(std::string opendrive);
+
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();

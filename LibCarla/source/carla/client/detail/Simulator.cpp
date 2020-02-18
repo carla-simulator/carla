@@ -82,6 +82,10 @@ namespace detail {
     throw_exception(std::runtime_error("failed to connect to newly created map"));
   }
 
+  void Simulator::LoadOpenDriveEpisode(std::string opendrive) {
+    _client.LoadOpenDriveEpisode(std::move(opendrive));
+  }
+
   // ===========================================================================
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================
