@@ -10,7 +10,7 @@
   * [Python API tutorial](core_concepts.md)
   * [Rendering options](rendering_options.md)
   * [Simulation time and synchrony](simulation_time_and_synchrony.md)
-  * [Cameras and sensors](cameras_and_sensors.md)
+  * [Cameras and sensors](core_sensors.md)
   * [F.A.Q.](faq.md)
 
 <h3>Building from source</h3>

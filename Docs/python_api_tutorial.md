@@ -335,7 +335,7 @@ In this example we have attached a camera to a vehicle, and told the camera to
 save to disk each of the images that are going to be generated.
 
 The full list of sensors and their measurement is explained in
-[Cameras and sensors](cameras_and_sensors.md).
+[Cameras and sensors](core_sensors.md).
 
 #### Other actors
 

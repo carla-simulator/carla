@@ -157,7 +157,7 @@ CARLA forum</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../cameras_and_sensors" target="_blank" class="btn btn-neutral" title="4th. Sensors and data">
+<a href="../core_sensors" target="_blank" class="btn btn-neutral" title="4th. Sensors and data">
 4th. Sensors and data</a>
 </p>
 </div>
