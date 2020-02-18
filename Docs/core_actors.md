@@ -145,7 +145,7 @@ Actors are not destroyed when the Python script finishes, they remain and the wo
 ##Types of actors  
 <h4>Sensors</h4>
 
-Sensors are actors that produce a stream of data. They are so important and vast that they will be properly written about on their own section: [4th. Sensors and data](cameras_and_sensors.md). 
+Sensors are actors that produce a stream of data. They are so important and vast that they will be properly written about on their own section: [4th. Sensors and data](core_sensors.md). 
 So far, let's just take a look at a common sensor spawning routine: 
 
 ```py
