@@ -1901,37 +1901,39 @@ Returns a list of pairs of waypoints. Every tuple on the list contains first an 
 ---
 
 ## carla.Landmark<a name="carla.Landmark"></a>
-Class containing the definition of a signal affecting a specific road.  
+Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE]([OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf)) definition of the landmarks and their representation in the simulation.   This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.  
+Landmarks will be accessed by [carla.Waypoint](#carla.Waypoint) objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
-Id of the road where this signal is defined. This road may be different from the road this signal is currently affecting.  
+The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.  
+<small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>.  
 - <a name="carla.Landmark.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
-Remaining distance to the signal from the waypoint calling `get_landmarks` or `get_landmarks_of_type`.  
+Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).  
 - <a name="carla.Landmark.s"></a>**<font color="#f8805a">s</font>** (_float_)  
-Distance position of the signal along the geometry of the road `road_id`.  
+Distance where the landmark is positioned along the geometry of the road `road_id`.  
 - <a name="carla.Landmark.t"></a>**<font color="#f8805a">t</font>** (_float_)  
-Lateral position of the signal along the geometry of the road `road_id`.  
+Lateral distance where the landmark is positioned from the edge of the road `road_id`.  
 - <a name="carla.Landmark.id"></a>**<font color="#f8805a">id</font>** (_str_)  
-Unique id of the signal in the OpenDRIVE file.  
+Unique ID of the landmark in the OpenDRIVE file.  
 - <a name="carla.Landmark.name"></a>**<font color="#f8805a">name</font>** (_str_)  
-Name of the signal in the in the OpenDRIVE file.  
+Name of the landmark in the in the OpenDRIVE file.  
 - <a name="carla.Landmark.is_dynamic"></a>**<font color="#f8805a">is_dynamic</font>** (_bool_)  
-Indicates if the signal state changes over time such as traffic lights.  
-- <a name="carla.Landmark.orientation"></a>**<font color="#f8805a">orientation</font>** (_LandmarkOrientation_)  
-Indicates if the signal state changes over time such as traffic lights.  
+Indicates if the landmark has state changes over time such as traffic lights.  
+- <a name="carla.Landmark.orientation"></a>**<font color="#f8805a">orientation</font>** (_[carla.LandmarkOrientation](#carla.LandmarkOrientation)_)  
+Indicates which lanes the landmark is facing towards to.  
 - <a name="carla.Landmark.z_offset"></a>**<font color="#f8805a">z_offset</font>** (_float_)  
-Elevation from the ground of the signal.  
+Height where the landmark is placed.  
 - <a name="carla.Landmark.country"></a>**<font color="#f8805a">country</font>** (_str_)  
-Country code where this signal is defined (default to OpenDRIVE).  
+Country code where the landmark is defined (default to OpenDRIVE is Germany 2017).  
 - <a name="carla.Landmark.type"></a>**<font color="#f8805a">type</font>** (_str_)  
-Type identification of the signal according to country code.  
+Type identificator of the landmark according to the country code.  
 - <a name="carla.Landmark.sub_type"></a>**<font color="#f8805a">sub_type</font>** (_str_)  
-Subtype identification of the signal according to country code.  
+Subtype identificator of the landmark according to the country code.  
 - <a name="carla.Landmark.value"></a>**<font color="#f8805a">value</font>** (_float_)  
 Value printed in the signal (e.g. speed limit, maximum weight, etc).  
 - <a name="carla.Landmark.unit"></a>**<font color="#f8805a">unit</font>** (_str_)  
-Units of attribute `value`.  
+Units of measurement for the attribute `value`.  
 - <a name="carla.Landmark.height"></a>**<font color="#f8805a">height</font>** (_float_)  
 Total height of the signal.  
 - <a name="carla.Landmark.width"></a>**<font color="#f8805a">width</font>** (_float_)  
@@ -1939,39 +1941,40 @@ Total width of the signal.
 - <a name="carla.Landmark.text"></a>**<font color="#f8805a">text</font>** (_str_)  
 Additional text in the signal.  
 - <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float_)  
-Heading of the signal relative to the orientation of the road.  
+Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
 - <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
-Pitch of the signal.  
+Pitch rotation of the signal.  
 - <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll of the signal.  
+Roll rotation of the signal.  
 - <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
-The waypoint where this signal is producing an effect in the road.  
+A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
 - <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-The position and orientation of this signal in the world.  
+The location and orientation of the landmark in the simulation.  
 
 <h3>Methods</h3>
 - <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of pairs of lane ids defining to which lanes this signal is producing an effect.
-The pair defines a range of lanes (from_lane_id, to_lane_id).  
+Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:  
+<small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
     - **Return:** _list(tuple(int))_  
 
 ---
 
 ## carla.LandmarkOrientation<a name="carla.LandmarkOrientation"></a>
-Class defining the orientation of a landmark in the road.  
+Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LandmarkOrientation.Positive"></a>**<font color="#f8805a">Positive</font>**  
-Positive direction of the road's geometry definition (negative lanes).  
+The landmark faces towards vehicles going on the same direction as the road's geometry definition (lanes 0 and negative in OpenDRIVE).  
 - <a name="carla.LandmarkOrientation.Negative"></a>**<font color="#f8805a">Negative</font>**  
-Negative direction of the road's geometry definition (positive lanes).  
+The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE).  
 - <a name="carla.LandmarkOrientation.Both"></a>**<font color="#f8805a">Both</font>**  
-Affects lanes in both directions of the road.  
+Affects vehicles going in both directions of the road.  
 
 ---
 
 ## carla.LandmarkType<a name="carla.LandmarkType"></a>
-Class containing a set of landmarks using the country code OpenDRIVE. See section 6.10 in the OpenDrive 1.5M specification.  
+Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).  
+__[carla.Landmark](#carla.Landmark) does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LandmarkType.Danger"></a>**<font color="#f8805a">Danger</font>**  
@@ -4424,12 +4427,13 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
 >>>>>>> Fixed docs.
     - **Parameters:**
-        - `distance` (_float_) – The maximum distance to search for landmarks from the current waypoint.  
+        - `distance` (_float_) – Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).  
         - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Waypoint.get_landmarks_of_type"></a>**<font color="#7fb800">get_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**type**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
-Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.  
+Returns a list of landmarks in the road of a certain type from the current waypoint until the specified distance.  
     - **Parameters:**
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         - `distance` (_float_) – The approximate distance between waypoints.  
@@ -4456,6 +4460,10 @@ Returns a list of landmarks in the road of a certain type from the current waypo
 =======
         - `distance` (_float_) – The maximum distance to search for landmarks from the current waypoint.  
         - `type` (_str_) – The type of landmarks to search.  
+=======
+        - `distance` (_float_) – Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).  
+        - `type` (_str_) – Type of landmarks to search.  
+>>>>>>> Documentation second draft
         - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
