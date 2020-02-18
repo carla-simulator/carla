@@ -889,15 +889,15 @@ namespace road {
     const size_t last_index = mesh.GetLastVertexIndex();
     const size_t bottom_left_index = connection_index_1;  // local quad index: 1
     const size_t bottom_right_index = connection_index_2; // local quad index: 2
-    const size_t top_left_index = last_index - 1;     // local quad index: 3
-    const size_t top_right_index = last_index;        // local quad index: 4
+    const size_t top_left_index = last_index - 1;         // local quad index: 3
+    const size_t top_right_index = last_index;            // local quad index: 4
 
     // Vertex order is counter clockwise:
     // First triangle: 1 -> 2 -> 4
     mesh.AddIndex(bottom_left_index);  // local quad index: 1
     mesh.AddIndex(bottom_right_index); // local quad index: 2
     mesh.AddIndex(top_right_index);    // local quad index: 4
-    // Seccond triangle: 1 -> 4 -> 3
+    // Second triangle: 1 -> 4 -> 3
     mesh.AddIndex(bottom_left_index);  // local quad index: 1
     mesh.AddIndex(top_right_index);    // local quad index: 4
     mesh.AddIndex(top_left_index);     // local quad index: 3
@@ -914,10 +914,13 @@ namespace road {
     auto loc_l = static_cast<geom::Vector3D>(wp_trnasf.location) +
         (wp_trnasf.GetRightVector() * -lane_width);
 
+    if (lane.GetType() == Lane::LaneType::Driving) {
+
+    }
     // Apply an offset to the Sidewalks
-    if (lane.GetType() == Lane::LaneType::Sidewalk) {
-      // RoadRunner doesn't export it right now and as a workarround
-      // 15.24 cm is the exact height that match with RoadRunner sidewalks
+    else if (lane.GetType() == Lane::LaneType::Sidewalk) {
+      // RoadRunner doesn't export it right now and as a workarround where 15.24 cm
+      // is the exact height that match with most of the RoadRunner sidewalks
       loc_r.z += 0.1524f;
       loc_l.z += 0.1524f;
       /// TODO: use the OpenDRIVE 5.3.7.2.1.1.9 Lane Height Record
@@ -934,7 +937,7 @@ namespace road {
       for (const auto &lane_section : road.GetLaneSections()) {
         for (const auto &lane_pair : lane_section.GetLanes()) {
           const auto &lane = lane_pair.second;
-          // The lane 0 have no physical representation in OpenDRIVE
+          // The lane with lane_id 0 have no physical representation in OpenDRIVE
           if (lane.GetId() == 0) {
             continue;
           }
@@ -946,13 +949,19 @@ namespace road {
               lane_section.GetDistance() + EPSILON };
           Waypoint current_wp = initial_waypoint;
           bool first_waypoint = true;
+
+          if (lane.GetType() == Lane::LaneType::Sidewalk) {
+            out_mesh.AddMaterial("sidewalk");
+          } else {
+            out_mesh.AddMaterial("road");
+          }
+
           do {
             // Get the location of the edges of the current lane at the current waypoint
             const auto edges = GetWaypointCornerPosition(*this, current_wp, lane);
-
             // This condition avoids adding indexes in the initial first waypoint
             if(first_waypoint) {
-              // add vertices only
+              // Add vertices only
               out_mesh.AddVertex(edges.first);
               out_mesh.AddVertex(edges.second);
               first_waypoint = false;
@@ -976,6 +985,7 @@ namespace road {
             ExtrudeMeshEdge(
                 out_mesh, edges.first, edges.second, last_index - 1, last_index);
           }
+          out_mesh.EndMaterial();
         }
       }
     }

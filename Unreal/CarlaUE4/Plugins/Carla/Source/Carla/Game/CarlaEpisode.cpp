@@ -16,6 +16,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
@@ -98,6 +100,34 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
     ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
+}
+
+bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
+{
+  if (OpenDriveString.IsEmpty())
+  {
+    return false;
+  }
+
+  /// @TODO: check for OpenDrive validity
+
+
+  UE_LOG(LogCarla, Warning, TEXT("Storing the new OpenDriveMap.xodr..."));
+  // Copy the OpenDrive as a file in the serverside
+  FFileHelper::SaveStringToFile(
+      OpenDriveString,
+      *(FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/OpenDriveMap.xodr"),
+      FFileHelper::EEncodingOptions::ForceUTF8,
+      &IFileManager::Get());
+  UE_LOG(LogCarla, Warning, TEXT("Done!"));
+
+  // Changing the map with this function, makes impossible to spawn vehicles
+  // need more investigation
+  // UGameplayStatics::OpenLevel(
+  //     GetWorld(), "/Game/Carla/Maps/OpenDriveMap.umap", true);
+  // ApplySettings(FEpisodeSettings{});
+
+  return true;
 }
 
 void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
