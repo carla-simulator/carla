@@ -104,6 +104,12 @@ namespace LocalizationConstants {
 
       Buffer &waypoint_buffer = buffer_list->at(actor_id);
 
+      // Clear buffer if vehicle is too far from the first waypoint in the buffer.
+      if (!waypoint_buffer.empty() &&
+          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > 10.0f) {
+        waypoint_buffer.clear();
+      }
+
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
         float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
