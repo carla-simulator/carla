@@ -67,7 +67,7 @@ namespace detail {
 
     EpisodeProxy LoadEpisode(std::string map_name);
 
-    void LoadOpenDriveEpisode(std::string opendrive);
+    EpisodeProxy LoadOpenDriveEpisode(std::string opendrive);
 
     /// @}
     // =========================================================================

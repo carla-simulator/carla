@@ -129,9 +129,9 @@ namespace detail {
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name));
   }
 
-  void Client::LoadOpenDriveEpisode(std::string opendrive) {
+  void Client::CopyOpenDriveToServer(std::string opendrive) {
     // Await response, we need to be sure in this one.
-    _pimpl->CallAndWait<void>("load_new_opendrive_episode", std::move(opendrive));
+    _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive));
   }
 
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
