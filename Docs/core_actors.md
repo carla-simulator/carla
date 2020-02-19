@@ -261,7 +261,7 @@ CARLA forum</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../core_actors" target="_blank" class="btn btn-neutral" title="3rd. Maps and navigation">
+<a href="../core_map" target="_blank" class="btn btn-neutral" title="3rd. Maps and navigation">
 3rd. Maps and navigation</a>
 </p>
 </div>
