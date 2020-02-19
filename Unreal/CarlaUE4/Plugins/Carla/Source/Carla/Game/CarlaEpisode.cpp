@@ -112,14 +112,12 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
   /// @TODO: check for OpenDrive validity
 
 
-  UE_LOG(LogCarla, Warning, TEXT("Storing the new OpenDriveMap.xodr..."));
   // Copy the OpenDrive as a file in the serverside
   FFileHelper::SaveStringToFile(
       OpenDriveString,
       *(FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/OpenDriveMap.xodr"),
       FFileHelper::EEncodingOptions::ForceUTF8,
       &IFileManager::Get());
-  UE_LOG(LogCarla, Warning, TEXT("Done!"));
 
   // Changing the map with this function, makes impossible to spawn vehicles
   // need more investigation
