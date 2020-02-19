@@ -102,17 +102,14 @@ namespace detail {
       const size_t worker_threads)
     : _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)) {}
 
-  // DEMO: Channeling multi-client communication for traffic manager.
   bool Client::IsTrafficManagerRunning(uint16_t port) const {
     return _pimpl->CallAndWait<bool>("is_traffic_manager_running", port);
   }
 
-  // DEMO: Channeling multi-client communication for traffic manager.
   std::pair<std::string, uint16_t> Client::GetTrafficManagerRunning(uint16_t port) const {
-	return _pimpl->CallAndWait<std::pair<std::string, uint16_t>>("get_traffic_manager_running", port);
+    return _pimpl->CallAndWait<std::pair<std::string, uint16_t>>("get_traffic_manager_running", port);
   };
 
-  // DEMO: Channeling multi-client communication for traffic manager.
   void Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
     _pimpl->CallAndWait<void>("add_traffic_manager_running", trafficManagerInfo);
   };

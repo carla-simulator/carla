@@ -72,8 +72,7 @@ public:
     BindActions();
   }
 
-  // DEMO: Channeling multi-client communication for traffic manager.
-  // < port , ip >
+  /// Map of pairs < port , ip > with all the Traffic Managers active in the simulation
   std::map<uint16_t, std::string> TrafficManagerInfo;
 
   carla::rpc::Server Server;
@@ -157,14 +156,14 @@ void FCarlaServer::FPimpl::BindActions()
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
 
-  // DEMO: Channeling multi-client communication for traffic manager.
+  /// Looks for a Traffic Manager running on port
   BIND_SYNC(is_traffic_manager_running) << [this] (uint16_t port) ->R<bool>
   {
     return (TrafficManagerInfo.find(port) != TrafficManagerInfo.end());
   };
 
-  // DEMO: Channeling multi-client communication for traffic manager.
-  // < ip, port >
+  /// Gets a pair filled with the <IP, port> of the Trafic Manager running on port.
+  /// If there is no Traffic Manager running the pair will be ("", 0)
   BIND_SYNC(get_traffic_manager_running) << [this] (uint16_t port) ->R<std::pair<std::string, uint16_t>>
   {
     auto it = TrafficManagerInfo.find(port);
@@ -174,7 +173,7 @@ void FCarlaServer::FPimpl::BindActions()
     return std::pair<std::string, uint16_t>("",0);
   };
 
-  // DEMO: Channeling multi-client communication for traffic manager.
+  /// Add a new Traffic Manager running on <IP, port>
   BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<void>
   {
     TrafficManagerInfo.insert(

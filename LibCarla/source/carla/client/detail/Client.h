@@ -62,13 +62,14 @@ namespace detail {
 
     ~Client();
 
-    /// DEMO: Channeling multi-client communication for traffic manager.
+    /// Querry to know if a Traffic Manager is running on port
     bool IsTrafficManagerRunning(uint16_t port) const;
 
-    // DEMO: Channeling multi-client communication for traffic manager.
+    /// Gets a pair filled with the <IP, port> of the Trafic Manager running on port.
+    /// If there is no Traffic Manager running the pair will be ("", 0)
     std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const;
 
-    /// DEMO: Channeling multi-client communication for traffic manager.
+    /// Informs the server that a Traffic Manager is running on <IP, port>
     void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const;
 
     void DestroyTrafficManager(uint16_t port) const;
