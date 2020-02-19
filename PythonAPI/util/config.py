@@ -203,9 +203,9 @@ def main():
         world = client.reload_world()
     elif args.xodr_path is not None:
         if os.path.exists(args.xodr_path):
-            with open(args.xodr_path) as file:
+            with open(args.xodr_path) as od_file:
                 try:
-                    data = file.read()
+                    data = od_file.read()
                 except OSError:
                     print('file could not be readed.')
                     sys.exit()
