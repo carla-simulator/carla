@@ -33,6 +33,7 @@ nav:
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'cpp_reference.md'
   - 'Recorder binary file format': 'recorder_binary_file_format.md'
+  - "Sensors' documentation": 'ref_sensors.md'  
 - How to... (general):
   - 'Add a new sensor': 'dev/how_to_add_a_new_sensor.md'
   - 'Add friction triggers': "how_to_add_friction_triggers.md"

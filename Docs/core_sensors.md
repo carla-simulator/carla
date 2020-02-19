@@ -128,22 +128,19 @@ __Retrieve data:__ every simulation step.
 
 ---------------
 That is a wrap on sensors and how do these retrieve simulation data.  
-There is yet a lot to learn about CARLA, but this has been the last of the first steps. Now it is time to really discover the possibilities of CARLA. 
-However, here is a brief guidance for some of the different paths that are opened right now: 
+Thus, this was the last step of this introduction to CARLA. However there is yet a lot to learn about CARLA. Here are some different paths opened at the moment: 
 
-* __For those who want to gain some practise__: 
-> Python Cookbook
+* __Gain some practise__: if diving alone in CARLA is still frightening, it may be a good idea to try some of the code recipes provided in this documentation and combine them with the example scripts or some ideas of your own. 
 
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="python_cookbook.md" target="_blank" class="btn btn-neutral" title="Python cookbook">
-CARLA forum</a>
+<a href="python_cookbook.md" target="_blank" class="btn btn-neutral" title="Code recipes">
+Code recipes</a>
 </p>
 </div>
 
-* __For those who want to continue learning__: 
-> Advanced step
+* __Continue learning__: there are other more advanced features in CARLA such as rendering options, traffic manager, the recorder, and some more. Now that some fundaments on CARLA have been provided, it is a good moment to learn about these. 
  
 <div class="build-buttons">
 <!-- Latest release button -->
@@ -153,20 +150,18 @@ Configuring the simulation</a>
 </p>
 </div>
 
-* __For those who want to experiment freely__: 
-> References
+* __Experiment freely__: but don't forget to take a look at the __References__ section of this documentation. They contain detailed information on the classes in the Python API, sensors and their outputs, and much more. 
 
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="python_api.md" target="_blank" class="btn btn-neutral" title="Go to the Python API">
+<a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
 </p>
 </div>
 
 
-* __For those who have something to say__: 
-> Forum
+* __Give your two cents__: speak your mind whatever it is going around. Any doubts, suggestions and ideas about CARLA are welcome in the forum.
 
 <div class="build-buttons">
 <!-- Latest release button -->
