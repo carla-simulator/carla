@@ -40,8 +40,6 @@ TrafficManagerRemote::TrafficManagerRemote(
       client.getServerDetails(rhost, rport);
 
       std::string strtmserver(rhost + ":" + std::to_string(rport));
-      std::string errmsg("Trying to connect rpc server of traffic manager; "
-                        "but the system failed to connect at " + strtmserver);
 
       /// Create error msg
       std::string errmsg(
