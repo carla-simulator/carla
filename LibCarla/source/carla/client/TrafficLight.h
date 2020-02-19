@@ -12,54 +12,57 @@
 namespace carla {
 namespace client {
 
-  class TrafficLight : public TrafficSign {
-  public:
+class TrafficLight : public Actor {
 
-    explicit TrafficLight(ActorInitializer init) : TrafficSign(std::move(init)) {}
+public:
 
-    void SetState(rpc::TrafficLightState state);
+  explicit TrafficLight(ActorInitializer init) : Actor(std::move(init)) {}
 
-    /// Return the current state of the traffic light.
-    ///
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    rpc::TrafficLightState GetState() const;
+  void SetState(rpc::TrafficLightState state);
 
-    void SetGreenTime(float green_time);
+  /// Return the current state of the traffic light.
+  ///
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  rpc::TrafficLightState GetState() const;
 
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    float GetGreenTime() const;
+  void SetGreenTime(float green_time);
 
-    void SetYellowTime(float yellow_time);
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  float GetGreenTime() const;
 
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    float GetYellowTime() const;
+  void SetYellowTime(float yellow_time);
 
-    void SetRedTime(float red_time);
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  float GetYellowTime() const;
 
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    float GetRedTime() const;
+  void SetRedTime(float red_time);
 
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    float GetElapsedTime() const;
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  float GetRedTime() const;
 
-    void Freeze(bool freeze);
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  float GetElapsedTime() const;
 
-    /// @note This function does not call the simulator, it returns the data
-    /// received in the last tick.
-    bool IsFrozen() const;
+  void Freeze(bool freeze);
 
-    uint32_t GetPoleIndex();
+  /// @note This function does not call the simulator, it returns the data
+  /// received in the last tick.
+  bool IsFrozen() const;
 
-    /// Return all traffic lights in the group this one belongs to.
-    ///
-    /// @note This function calls the simulator
-    std::vector<SharedPtr<TrafficLight>> GetGroupTrafficLights();
-  };
+  /// Returns the index of the pole in the traffic light group
+  uint32_t GetPoleIndex();
+
+  /// Return all traffic lights in the group this one belongs to.
+  ///
+  /// @note This function calls the simulator
+  std::vector<SharedPtr<TrafficLight>> GetGroupTrafficLights();
+
+};
 
 } // namespace client
 } // namespace carla
