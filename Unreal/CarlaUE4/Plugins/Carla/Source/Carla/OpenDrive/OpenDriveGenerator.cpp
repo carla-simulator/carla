@@ -42,14 +42,14 @@ bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
 
   if (OpenDrive.IsEmpty())
   {
-    UE_LOG(LogCarla, Warning, TEXT("The OpenDrive is empty"));
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive is empty"));
     return false;
   }
 
   CarlaMap = OpenDriveLoader::Load(carla::rpc::FromFString(OpenDrive));
   if (!CarlaMap.has_value())
   {
-    UE_LOG(LogCarla, Warning, TEXT("The OpenDrive is invalid or not supported"));
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive is invalid or not supported"));
     return false;
   }
 
@@ -71,7 +71,7 @@ void AOpenDriveGenerator::GenerateRoadMesh()
 {
   if (!IsOpenDriveValid())
   {
-    UE_LOG(LogCarla, Warning, TEXT("The OpenDrive has not been loaded"));
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
     return;
   }
 
@@ -126,7 +126,7 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
   if (!Success)
   {
-    UE_LOG(LogCarla, Warning, TEXT("The road collision mesh could not be generated!"));
+    UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
   }
 }
 
@@ -134,7 +134,7 @@ void AOpenDriveGenerator::GeneratePoles()
 {
   if (!IsOpenDriveValid())
   {
-    UE_LOG(LogCarla, Warning, TEXT("The OpenDrive has not been loaded"));
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
     return;
   }
   /// TODO: To implement
@@ -144,7 +144,7 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
 {
   if (!IsOpenDriveValid())
   {
-    UE_LOG(LogCarla, Warning, TEXT("The OpenDrive has not been loaded"));
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
     return;
   }
 
