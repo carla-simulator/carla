@@ -13,8 +13,6 @@
 #include "carla/opendrive/OpenDriveParser.h"
 #include <compiler/enable-ue4-macros.h>
 
-#include "Carla/OpenDrive/OpenDrive.h"
-
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -94,14 +92,9 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  ParseOpenDrive(MapName);
 
-  boost::optional<carla::road::Map> map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-  if (!map.has_value()) {
-    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-  } else {
-    Episode->MapGeoReference = map->GetGeoReference();
-  }
+  //SpawnSignals();
 
 }
 
@@ -186,4 +179,41 @@ void ACarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
+}
+
+void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
+{
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  if (!map.has_value()) {
+    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
+  } else {
+    Episode->MapGeoReference = map->GetGeoReference();
+  }
+}
+
+void ACarlaGameModeBase::SpawnSignals()
+{
+  carla::road::MapData& MapData = Map.GetMap();
+  const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>> Signals = MapData.GetSignals();
+
+  UE_LOG(LogCarla, Warning, TEXT("Num of signals = %d"), Signals.size());
+
+  auto World = GetWorld();
+  check(World != nullptr);
+
+  for(const auto& Signal : Signals) {
+    const carla::geom::Transform Transform = Signal.second->GetTransform();
+    DrawDebugPoint(
+      World,
+      Transform.location,
+      50.0f,
+      FColor(0, 255, 0),
+      true,
+    )
+  }
+
+
+
+
 }
