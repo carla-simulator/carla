@@ -35,20 +35,14 @@ TrafficManager::TrafficManager(
 }
 
 void TrafficManager::Release() {
-  carla::log_info("TrafficManager::Release");
   if(singleton_pointer) {
-    carla::log_info("TrafficManager::Releasing...", singleton_pointer->port());
     TrafficManagerBase *base_ptr = singleton_pointer.release();
     delete base_ptr;
   }
-  carla::log_info("TrafficManager::Release end");
 }
 
 void TrafficManager::Reset() {
-  carla::log_info("TrafficManager::Reset");
   if(singleton_pointer) {
-    carla::log_info("TrafficManager::Restarting...");
-
     // Detect wich type of TM has been spawned before
     bool tm_server = singleton_pointer->IsServer();
 
@@ -66,12 +60,19 @@ void TrafficManager::Reset() {
     if(tm_server) {
       CreateTrafficManagerServer(episodeProxy, port);
     } else {
-      CreateTrafficManagerClient(episodeProxy, port);
+      int count = 0;
+      while(count < MIN_TRY_COUNT) {
+        std::this_thread::sleep_for(500ms);
+        if(CreateTrafficManagerClient(episodeProxy, port)){
+          break;
+        }
+        count++;
+      }
+      if(count >= MIN_TRY_COUNT){
+        log_error("Traffic Manager client could not reconnect");
+      }
     }
-
-    assert(singleton_pointer != nullptr);
   }
-  carla::log_info("TrafficManager::Reset end");
 }
 
 void TrafficManager::CreateTrafficManagerServer(
@@ -158,19 +159,23 @@ void TrafficManager::CreateTrafficManagerServer(
   /// Set this client as the TM to server
   episodeProxy.Lock()->AddTrafficManagerRunning(serverTM);
 
+  #if DEBUG_PRINT_TM
   /// Print status
-  std::cout 	<< "NEW@: Registered TM at "
+  std::cout << "NEW@: Registered TM at "
         << serverTM.first  << ":"
         << serverTM.second << " ..... SUCCESS."
         << std::endl;
+  #endif
 
   /// Set the pointer of the instance
   singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
 }
 
-void TrafficManager::CreateTrafficManagerClient(
+bool TrafficManager::CreateTrafficManagerClient(
     carla::client::detail::EpisodeProxy episodeProxy,
     uint16_t port) {
+
+  bool result = false;
 
   if(episodeProxy.Lock()->IsTrafficManagerRunning(port)) {
 
@@ -192,7 +197,7 @@ void TrafficManager::CreateTrafficManagerClient(
 
         #if DEBUG_PRINT_TM
         // Test print
-        std::cout 	<< "OLD@: Registered TM at "
+        std::cout << "OLD@: Registered TM at "
               << serverTM.first  << ":"
               << serverTM.second << " ..... TRY "
               << std::endl;
@@ -200,14 +205,10 @@ void TrafficManager::CreateTrafficManagerClient(
         /// Try to reset all traffic lights
         tm_ptr->HealthCheckRemoteTM();
 
-        /// Test print
-        std::cout 	<< "OLD@: Registered TM at "
-              << serverTM.first  << ":"
-              << serverTM.second << " ..... SUCCESS "
-              << std::endl;
-
         /// Set the pointer of the instance
         singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+
+        result = true;
       }
     }
 
@@ -227,7 +228,7 @@ void TrafficManager::CreateTrafficManagerClient(
     }
   }
 
-
+  return result;
 }
 
 } // namespace traffic_manager

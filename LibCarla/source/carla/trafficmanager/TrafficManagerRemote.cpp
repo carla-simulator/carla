@@ -51,6 +51,7 @@ TrafficManagerRemote::TrafficManagerRemote(
         this->episodeProxyTM.Lock()->AddPendingException(errmsg);
       }
     }
+    _keep_alive = false;
     _cv.notify_one();
   });
 
@@ -67,10 +68,12 @@ void TrafficManagerRemote::Start() {
 }
 
 void TrafficManagerRemote::Stop() {
-  _keep_alive = false;
-  std::unique_lock<std::mutex> lock(_mutex);
-  std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
-  _cv.wait_for(lock, wait_time);
+  if(_keep_alive) {
+    _keep_alive = false;
+    std::unique_lock<std::mutex> lock(_mutex);
+    std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
+    _cv.wait_for(lock, wait_time);
+  }
 }
 
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {

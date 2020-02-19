@@ -184,7 +184,7 @@ protected:
     uint16_t port);
 
 
-  static void CreateTrafficManagerClient(
+  static bool CreateTrafficManagerClient(
     carla::client::detail::EpisodeProxy episodeProxy,
     uint16_t port);
 

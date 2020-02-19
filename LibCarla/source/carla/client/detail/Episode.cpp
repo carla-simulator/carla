@@ -145,7 +145,6 @@ using namespace std::chrono_literals;
   }
 
 void Episode::OnEpisodeChanged() {
-  carla::log_info("Episode::OnEpisodeChanged");
   traffic_manager::TrafficManager::Reset();
 }
 
