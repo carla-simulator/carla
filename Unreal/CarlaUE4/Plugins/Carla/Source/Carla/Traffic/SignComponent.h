@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Carla/OpenDrive/OpenDrive.h"
 #include "SignComponent.generated.h"
 
 
@@ -14,7 +15,7 @@ class CARLA_API USignComponent : public UActorComponent
 
 public:
   // Sets default values for this component's properties
-  USignComponent();
+  USignComponent(carla::road::SignId SignId);
 
 protected:
   // Called when the game starts
@@ -24,6 +25,11 @@ public:
   // Called every frame
   virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+
+private:
+  carla::road::SignId Id;
+
+  FTransform Transform;
 
 
 };
