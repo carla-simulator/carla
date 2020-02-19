@@ -71,27 +71,23 @@ using namespace std::chrono_literals;
           auto exception(self->_pending_exceptions_msg);
           // Notify waiting threads that exception occurred
           self->_snapshot.SetException(std::runtime_error(exception));
-
-        }
-
-        /// Episode change
-        else if((next->GetEpisodeId() != prev->GetEpisodeId())) {
-          /// Create exception for the error message
-          auto exception(
-            "trying to access an expired episode; a new episode was started "
-            "in the simulation but an object tried accessing the old one.");
-
-          // Notify waiting threads and do the callbacks.
-          self->_snapshot.SetException(std::runtime_error(exception));
         }
         /// Sensor case: inconsistent data
         else {
+          bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
+
           do {
             if (prev->GetFrame() >= next->GetFrame()) {
               self->_on_tick_callbacks.Call(next);
               return;
             }
           } while (!self->_state.compare_exchange(&prev, next));
+
+          /// Episode change
+          if(!episode_changed && self->_episode_changed){
+            self->OnEpisodeChanged();
+          }
+          self->_episode_changed = episode_changed;
 
           // Notify waiting threads and do the callbacks.
           self->_snapshot.SetValue(next);
@@ -147,6 +143,11 @@ using namespace std::chrono_literals;
     _navigation.reset();
     traffic_manager::TrafficManager::Release();
   }
+
+void Episode::OnEpisodeChanged() {
+  carla::log_info("Episode::OnEpisodeChanged");
+  traffic_manager::TrafficManager::Reset();
+}
 
 } // namespace detail
 } // namespace client

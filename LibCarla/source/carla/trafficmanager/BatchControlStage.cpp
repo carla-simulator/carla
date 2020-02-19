@@ -33,7 +33,7 @@ void BatchControlStage::Action() {
     carla::rpc::VehicleControl vehicle_control;
 
       const PlannerToControlData &element = data_frame->at(i);
-      if (!element.actor->IsAlive()) {
+      if (!element.actor || !element.actor->IsAlive()) {
         continue;
       }
       const carla::ActorId actor_id = element.actor->GetId();

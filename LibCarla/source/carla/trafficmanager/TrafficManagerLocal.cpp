@@ -21,13 +21,16 @@ TrafficManagerLocal::TrafficManagerLocal(
     float perc_difference_from_limit,
     carla::client::detail::EpisodeProxy &episodeProxy,
     uint16_t &RPCportTM)
-  : longitudinal_PID_parameters(longitudinal_PID_parameters),
+  : TrafficManagerBase(RPCportTM),
+    longitudinal_PID_parameters(longitudinal_PID_parameters),
     longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
     lateral_PID_parameters(lateral_PID_parameters),
     lateral_highway_PID_parameters(lateral_highway_PID_parameters),
     episodeProxyTM(episodeProxy),
     debug_helper(carla::client::DebugHelper{episodeProxyTM}),
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
+
+  _is_server = true;
 
   const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);

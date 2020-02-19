@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -28,11 +30,11 @@ class TrafficManagerRemote : public TrafficManagerBase {
 
 public:
 
-  /// To start the traffic manager.
-  void Start() {}
+  /// To start the TrafficManager.
+  void Start();
 
-  /// To stop the traffic manager.
-  void Stop() {}
+  /// To stop the TrafficManager.
+  void Stop();
 
   /// Constructor store remote location information.
   TrafficManagerRemote(const std::pair<std::string, uint16_t> &_serverTM, carla::client::detail::EpisodeProxy &episodeProxy);
@@ -104,6 +106,12 @@ private:
 
   /// CARLA client connection object.
   carla::client::detail::EpisodeProxy episodeProxyTM;
+
+  std::condition_variable _cv;
+
+  std::mutex _mutex;
+
+  bool _keep_alive = true;
 };
 
 } // namespace traffic_manager

@@ -66,7 +66,9 @@ public:
   /// Public release method to clear allocated data
   static void Release();
 
-  /// Explicit constructor for singleton life cycle management.
+  static void Reset();
+
+  /// Private constructor for singleton life cycle management.
   explicit TrafficManager(
     carla::client::detail::EpisodeProxy episodeProxy,
     uint16_t port = TM_DEFAULT_PORT);
@@ -174,6 +176,18 @@ public:
     DEBUG_ASSERT(singleton_pointer != nullptr);
     return singleton_pointer->SynchronousTick();
   }
+
+protected:
+
+  static void CreateTrafficManagerServer(
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port);
+
+
+  static void CreateTrafficManagerClient(
+    carla::client::detail::EpisodeProxy episodeProxy,
+    uint16_t port);
+
 };
 
 } // namespace traffic_manager

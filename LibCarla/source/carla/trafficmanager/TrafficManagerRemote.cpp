@@ -17,7 +17,8 @@ namespace traffic_manager {
 TrafficManagerRemote::TrafficManagerRemote(
     const std::pair<std::string, uint16_t> &_serverTM,
     carla::client::detail::EpisodeProxy &episodeProxy)
-  : client(_serverTM.first, _serverTM.second),
+  : TrafficManagerBase(_serverTM.second),
+    client(_serverTM.first, _serverTM.second),
     episodeProxyTM(episodeProxy) {
 
   std::thread _thread = std::thread([this] () {
@@ -29,7 +30,8 @@ TrafficManagerRemote::TrafficManagerRemote(
 
         client.HealthCheckRemoteTM();
 
-      } while (true);
+        /// Until connection active
+      } while (_keep_alive);
     } catch (...) {
 
       std::string rhost("");
@@ -41,14 +43,37 @@ TrafficManagerRemote::TrafficManagerRemote(
       std::string errmsg("Trying to connect rpc server of traffic manager; "
                         "but the system failed to connect at " + strtmserver);
 
-      this->episodeProxyTM.Lock()->AddPendingException(errmsg);
+      /// Create error msg
+      std::string errmsg(
+          "Trying to connect rpc server of traffic manager; "
+          "but the system failed to connect at " + strtmserver);
+
+      /// TSet the error message
+      if(_keep_alive) {
+        this->episodeProxyTM.Lock()->AddPendingException(errmsg);
+      }
     }
+    _cv.notify_one();
   });
 
   _thread.detach();
 }
 
-TrafficManagerRemote::~TrafficManagerRemote() {}
+/// Destructor.
+TrafficManagerRemote::~TrafficManagerRemote() {
+  Stop();
+}
+
+void TrafficManagerRemote::Start() {
+  _keep_alive = true;
+}
+
+void TrafficManagerRemote::Stop() {
+  _keep_alive = false;
+  std::unique_lock<std::mutex> lock(_mutex);
+  std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
+  _cv.wait_for(lock, wait_time);
+}
 
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
   std::vector<carla::rpc::Actor> actor_list;
