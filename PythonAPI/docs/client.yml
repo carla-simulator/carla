@@ -89,6 +89,16 @@
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed.
     # --------------------------------------
+    - def_name: generate_opendrive_world
+      params:
+      - param_name: opendrive
+        type: str
+        doc: >
+          OpenDRIVE data as `string`.
+      doc: >
+        Similar to client.load_map(map_name), but loads a new world with a basic physical
+        topology automatically generated from the custom OpenDRIVE `string`.
+    # --------------------------------------
     - def_name: start_recorder
       params:
       - param_name: filename
