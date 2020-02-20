@@ -1862,12 +1862,12 @@ Returns a list of pairs of waypoints. Every tuple on the list contains first an 
 ---
 
 ## carla.Landmark<a name="carla.Landmark"></a>
-Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE]([OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf)) definition of the landmarks and their representation in the simulation.   This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.  
+Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) definition of the landmarks and their representation in the simulation. This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.
 Landmarks will be accessed by [carla.Waypoint](#carla.Waypoint) objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
-The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.  
+The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.
 <small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>.  
 - <a name="carla.Landmark.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
 Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).  
@@ -1914,7 +1914,7 @@ The location and orientation of the landmark in the simulation.
 
 <h3>Methods</h3>
 - <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
-Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:  
+Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:
 <small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
     - **Return:** _list(tuple(int))_  
 
@@ -1934,7 +1934,7 @@ Affects vehicles going in both directions of the road.
 ---
 
 ## carla.LandmarkType<a name="carla.LandmarkType"></a>
-Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).  
+Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).
 __[carla.Landmark](#carla.Landmark) does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.  
 
 <h3>Instance Variables</h3>
