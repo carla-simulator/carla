@@ -1,14 +1,14 @@
 ---
 - module_name: carla
   doc: >
-        
+
   # - CLASSES ------------------------------
   classes:
   - class_name: Client
     # - DESCRIPTION ------------------------
     doc: >
       The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of the ones it is in charge of.
-        
+
         The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](recorder_and_playback.md) is some information about how to use this recorder.
     # - PROPERTIES -------------------------
     instance_variables:
@@ -25,7 +25,7 @@
         type: int
         default: 2000
         doc: >
-          TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001. 
+          TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.
       - param_name: worker_threads
         type: int
         default: 0
@@ -40,20 +40,20 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. Each command is different and has its own parameters. These are supported so far:            
-            [SpawnActor](#command.SpawnActor)  
-            [DestroyActor](#command.DestroyActor)    
-            [ApplyVehicleControl](#command.ApplyVehicleControl)  
-            [ApplyWalkerControl](#command.ApplyWalkerControl)   
-            [ApplyTransform](#command.ApplyTransform)    
-            [ApplyVelocity](#command.ApplyVelocity)   
-            [ApplyAngularVelocity](#command.ApplyAngularVelocity)   
-            [ApplyImpulse](#command.ApplyImpulse)    
-            [SetSimulatePhysics](#command.SetSimulatePhysics)    
-            [SetAutopilot](#command.SetAutopilot)    
+          A list of commands to execute in batch. Each command is different and has its own parameters. These are supported so far:
+            [SpawnActor](#command.SpawnActor)
+            [DestroyActor](#command.DestroyActor)
+            [ApplyVehicleControl](#command.ApplyVehicleControl)
+            [ApplyWalkerControl](#command.ApplyWalkerControl)
+            [ApplyTransform](#command.ApplyTransform)
+            [ApplyVelocity](#command.ApplyVelocity)
+            [ApplyAngularVelocity](#command.ApplyAngularVelocity)
+            [ApplyImpulse](#command.ApplyImpulse)
+            [SetSimulatePhysics](#command.SetSimulatePhysics)
+            [SetAutopilot](#command.SetAutopilot)
       doc: >
-        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one. 
-        [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.   
+        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.
+        [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
       params:
@@ -67,38 +67,38 @@
           A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_.
       return: list(command.Response)
       doc: >
-        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors. 
+        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
     # --------------------------------------
     - def_name: get_available_maps
       params:
       return: list(str)
       doc: >
-        Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:  
-          ['/Game/Carla/Maps/Town01',  
-          '/Game/Carla/Maps/Town02',  
-          '/Game/Carla/Maps/Town03',  
-          '/Game/Carla/Maps/Town04',  
-          '/Game/Carla/Maps/Town05',  
-          '/Game/Carla/Maps/Town06',  
-          '/Game/Carla/Maps/Town07']    
+        Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
+          ['/Game/Carla/Maps/Town01',
+          '/Game/Carla/Maps/Town02',
+          '/Game/Carla/Maps/Town03',
+          '/Game/Carla/Maps/Town04',
+          '/Game/Carla/Maps/Town05',
+          '/Game/Carla/Maps/Town06',
+          '/Game/Carla/Maps/Town07']
     # --------------------------------------
     - def_name: get_client_version
       params:
       return: str
       doc: >
-        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities. 
+        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.
     # --------------------------------------
     - def_name: get_server_version
       params:
       return: str
       doc: >
-        Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version. 
+        Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.
     # --------------------------------------
     - def_name: get_world
       params:
       return: carla.World
       doc: >
-        Returns the world object currently active in the simulation. This world will be later used for example to load maps. 
+        Returns the world object currently active in the simulation. This world will be later used for example to load maps.
     # --------------------------------------
     - def_name: load_world
       params:
@@ -112,7 +112,7 @@
     # --------------------------------------
     - def_name: reload_world
       params:
-      raises: RuntimeError when corresponding. 
+      raises: RuntimeError when corresponding.
       doc: >
         Deletes the current world and creates a new one using the same map and default settings. Every actor in the previous world will be
         destroyed.
@@ -122,29 +122,40 @@
       - param_name: name
         type: str
         doc: >
-          Name of the file containing the information of the simulation. 
+          Name of the file containing the information of the simulation.
       - param_name: start
         type: float
         doc: >
-          Time in seconds where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished. 
+          Time in seconds where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.
       - param_name: duration
         type: float
         doc: >
-          Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
+          Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.
       - param_name: follow_id
         type: int
         doc: >
           ID of the actor to follow. If this is 0 then camera is disabled.
       doc: >
-        The server will start running the simulation `name` previously recorded. The time to start and stop can be stated and if the recreation finishes, the vehicles will continue their behaviour as usual, managed by the server. During the simulation we can follow a specific actor using its ID. 
+        The server will start running the simulation `name` previously recorded. The time to start and stop can be stated and if the recreation finishes, the vehicles will continue their behaviour as usual, managed by the server. During the simulation we can follow a specific actor using its ID.
+    # --------------------------------------
+    - def_name: generate_opendrive_world
+      params:
+      - param_name: opendrive
+        type: str
+        doc: >
+          OpenDRIVE data as `string`.
+      doc: >
+        Loads a new world with a basic physical topology generated from an OpenDRIVE file passed as `string`.
+        It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
+        Cars can drive around the map, but there are no graphics besides the road and sidewalks.
     # --------------------------------------
     - def_name: set_replayer_time_factor
       params:
       - param_name: time_factor
         type: float
         default: 1.0
-        doc: >     
-            1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).            
+        doc: >
+            1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).
       doc: >
         When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.
     # --------------------------------------
@@ -153,7 +164,7 @@
       - param_name: seconds
         type: float
         doc: >
-          New timeout value in seconds. Default is 5 seconds. 
+          New timeout value in seconds. Default is 5 seconds.
       doc: >
         Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
@@ -166,11 +177,11 @@
       - param_name: min_time
         type: float
         doc: >
-          Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds. 
+          Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.
       - param_name: min_distance
         type: float
         doc: >
-          Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters. 
+          Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.
       doc: >
         The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
      # --------------------------------------
@@ -183,19 +194,19 @@
       - param_name: category1
         type: single char
         doc: >
-          Character variable specifying a first type of actor involved in the collision. 
+          Character variable specifying a first type of actor involved in the collision.
       - param_name: category2
         type: single char
         doc: >
-          Character variable specifying the second type of actor involved in the collision. 
+          Character variable specifying the second type of actor involved in the collision.
       doc: >
         The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved.
-        The categories will be specified in `category1` and `category2` as follows:  
-          'h' = Hero, the one vehicle that can be controlled manually or managed by the user.   
-          'v' = Vehicle  
-          'w' = Walker  
-          't' = Traffic light  
-          'o' = Other  
+        The categories will be specified in `category1` and `category2` as follows:
+          'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
+          'v' = Vehicle
+          'w' = Walker
+          't' = Traffic light
+          'o' = Other
           'a' = Any
         If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa.
         If you want to see all the collisions (filter off) you can use 'a' for both parameters.
@@ -204,15 +215,15 @@
       params:
       - param_name: filename
         type: str
-        doc: > 
+        doc: >
           Name or absolute path of the file recorded, depending on your previous choice.
       - param_name: show_all
         type: bool
         default: false
         doc: >
-          When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary. 
+          When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.
       doc: >
-        The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](recorder_binary_file_format.md) is some more information about how to read the recorder file. 
+        The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](recorder_binary_file_format.md) is some more information about how to read the recorder file.
     # --------------------------------------
     - def_name: start_recorder
       params:
@@ -221,11 +232,11 @@
         doc: >
           Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
       doc: >
-        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
+        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
     # --------------------------------------
     - def_name: stop_recorder
       params:
       doc: >
-        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.  
+        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
     # --------------------------------------
 ...
