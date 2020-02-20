@@ -7,6 +7,7 @@
 #include "carla/opendrive/OpenDriveParser.h"
 
 #include "carla/Logging.h"
+#include "carla/opendrive/parser/ControllerParser.h"
 #include "carla/opendrive/parser/GeoReferenceParser.h"
 #include "carla/opendrive/parser/GeometryParser.h"
 #include "carla/opendrive/parser/JunctionParser.h"
@@ -43,6 +44,7 @@ namespace opendrive {
     parser::TrafficGroupParser::Parse(xml, map_builder);
     parser::SignalParser::Parse(xml, map_builder);
     parser::ObjectParser::Parse(xml, map_builder);
+    parser::ControllerParser::Parse(xml, map_builder);
 
     return map_builder.Build();
   }

@@ -40,9 +40,12 @@ public:
     return *Episode;
   }
 
-  boost::optional<carla::road::Map>& Map() const {
+  const boost::optional<carla::road::Map>& GetMap() const {
     return Map;
   }
+
+  UFUNCTION(Exec, CallInEditor)
+  void DebugShowSignals(bool enable);
 
 protected:
 

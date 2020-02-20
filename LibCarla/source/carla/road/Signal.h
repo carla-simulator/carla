@@ -217,6 +217,8 @@ namespace road {
     std::vector<SignalDependency> _dependencies;
 
     geom::Transform _transform;
+
+    std::set<ContId> _controllers;
   };
 
 } // road

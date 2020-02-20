@@ -15,7 +15,12 @@ class CARLA_API USignComponent : public UActorComponent
 
 public:
   // Sets default values for this component's properties
-  USignComponent(carla::road::SignId SignId);
+  USignComponent();
+
+  void SetSignId(carla::road::SignId SignId)
+  {
+    Id = SignId;
+  }
 
 protected:
   // Called when the game starts
