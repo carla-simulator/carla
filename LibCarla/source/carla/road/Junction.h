@@ -83,6 +83,8 @@ namespace road {
 
     std::unordered_map<ConId, Connection> _connections;
 
+    std::set<ContId> _controllers;
+
     carla::geom::BoundingBox _bounding_box;
   };
 

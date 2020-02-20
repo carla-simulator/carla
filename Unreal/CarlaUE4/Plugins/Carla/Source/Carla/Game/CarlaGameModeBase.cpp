@@ -13,6 +13,9 @@
 #include "carla/opendrive/OpenDriveParser.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
+
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -94,7 +97,7 @@ void ACarlaGameModeBase::InitGame(
 
   ParseOpenDrive(MapName);
 
-  //SpawnSignals();
+  SpawnSignals();
 
 }
 
@@ -185,35 +188,105 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
 {
   std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-  if (!map.has_value()) {
+  if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
   } else {
-    Episode->MapGeoReference = map->GetGeoReference();
+    Episode->MapGeoReference = Map->GetGeoReference();
   }
 }
 
 void ACarlaGameModeBase::SpawnSignals()
 {
-  carla::road::MapData& MapData = Map.GetMap();
-  const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>> Signals = MapData.GetSignals();
+
+  //const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>>
+  const auto& Signals = Map->GetSignals();
+  const auto& Controllers = Map->GetControllers();
 
   UE_LOG(LogCarla, Warning, TEXT("Num of signals = %d"), Signals.size());
+  UE_LOG(LogCarla, Warning, TEXT("Num of controllers = %d"), Controllers.size());
 
+  for(const auto& controller : Controllers) {
+    const auto& signals = controller.second->GetSignals();
+    const auto& junctions = controller.second->GetJunctions();
+
+    UE_LOG(LogCarla, Warning, TEXT("ContID = %s - Num of signals %d - Num of junctions %d"),
+      *FString(controller.first.c_str()),
+      signals.size(),
+      junctions.size());
+
+    for(const auto& signal : signals) {
+      UE_LOG(LogCarla, Warning, TEXT("Signal = %s"), *FString(signal.c_str()));
+    }
+
+    for(const auto& junction : junctions) {
+      UE_LOG(LogCarla, Warning, TEXT("Junction = %d"), junction);
+    }
+
+  }
+
+}
+
+void ACarlaGameModeBase::DebugShowSignals(bool enable)
+{
   auto World = GetWorld();
   check(World != nullptr);
 
-  for(const auto& Signal : Signals) {
-    const carla::geom::Transform Transform = Signal.second->GetTransform();
-    DrawDebugPoint(
-      World,
-      Transform.location,
-      50.0f,
-      FColor(0, 255, 0),
-      true,
-    )
+  if(!Map)
+  {
+    return;
   }
 
+  if(!enable)
+  {
+    UKismetSystemLibrary::FlushDebugStrings(World);
+    UKismetSystemLibrary::FlushPersistentDebugLines(World);
+    return;
+  }
+
+  //const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>>
+  const auto& Signals = Map->GetSignals();
+  const auto& Controllers = Map->GetControllers();
+
+  for(const auto& Signal : Signals) {
+    const auto& ODSignal = Signal.second;
+    const FTransform Transform = ODSignal->GetTransform();
+    const FVector Location = Transform.GetLocation();
+    const FQuat Rotation = Transform.GetRotation();
+    const FVector Up = Rotation.GetUpVector();
+    DrawDebugSphere(
+      World,
+      Location,
+      50.0f,
+      10,
+      FColor(0, 255, 0),
+      true
+    );
+
+    FString Text = FString(ODSignal->GetSignalId().c_str());
+    Text += FString(" - ");
+    Text += FString(ODSignal->GetName().c_str());
+
+    UKismetSystemLibrary::DrawDebugString (
+      World,
+      Location + Up * 250.0f,
+      Text,
+      nullptr,
+      FLinearColor(0, 255, 0, 255)
+    );
+
+    FString Text2 = FString(ODSignal->GetType().c_str());
+    Text2 += FString(" - ");
+    Text2 += FString(ODSignal->GetSubtype().c_str());
+
+    UKismetSystemLibrary::DrawDebugString (
+      World,
+      Location + Up * 175.0f,
+      Text,
+      nullptr,
+      FLinearColor(0, 255, 0, 255),
+      10000.0f
+    );
 
 
-
+  }
 }
