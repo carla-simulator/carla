@@ -19,10 +19,9 @@
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
 
 This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.  
-Collision detectors do not have any configurable attribute.
+To ensure that any collision is detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved and thus, which object is it.    
 
-!!! note
-    This sensor creates "fake" actors when it collides with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+Collision detectors do not have any configurable attribute.
 
 <h4>Output attributes: </h4>
 
@@ -41,17 +40,18 @@ Collision detectors do not have any configurable attribute.
 * __Blueprint:__ sensor.camera.depth
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step. 
 
-Provides a view over the scene codifying the distance of each pixel to the camera (also known as **depth buffer** or **z-buffer**) to create a depth map of the elements.  
-[carla.colorConverter](python_api.md#carla.ColorConverter)
+The camera provides a raw data of the scene codifying the distance of each pixel to the camera (also known as **depth buffer** or **z-buffer**) to create a depth map of the elements.  
 
-
-The image codifies depth value per pixel using 3 channels of the RGB color space, from less to more significant bytes: R -> G -> B. The actual distance in meters can be
+The image codifies depth value per pixel using 3 channels of the RGB color space, from less to more significant bytes: _R -> G -> B_. The actual distance in meters can be
 decoded with:
 
 ```
 normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
 in_meters = 1000 * normalized
 ```
+
+The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.  
+There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects. 
 
 ![ImageDepth](img/capture_depth.png)
 
@@ -131,12 +131,14 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 ##Lane invasion detector 
 
 * __Blueprint:__ sensor.other.lane_invasion
-* __Output:__ [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) per lane marking crossed. 
-
-> _This sensor is a work in progress, currently very limited._
+* __Output:__ [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) per crossing.
 
 Registers an event each time its parent crosses a lane marking.  
-The sensor uses road data provided by the OpenDRIVE description of the map to determine whether the parent vehicle is invading another lane. Thus, there may be discrepancies between the lanes visible by the cameras and the lanes registered by this sensor, as information does not come directly from the simulation.
+The sensor uses road data provided by the OpenDRIVE description of the map to determine whether the parent vehicle is invading another lane by considering the space between wheels.  
+However there are some things to be taken into consideration:  
+
+* Discrepancies between the OpenDRIVE file and the map will create irregularities such as crossing lanes that are not visible in the map. 
+* The output retrieves a list of crossed lane markings: the computation is done in OpenDRIVE and considering the whole space between the four wheels as a whole. Thus, there may be more than one lane being crossed at the same time. 
 
 This sensor does not have any configurable attribute.
 
@@ -158,14 +160,15 @@ This sensor does not have any configurable attribute.
 ##Lidar raycast sensor 
 
 * __Blueprint:__ sensor.lidar.ray_cast
-* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step. Each one contains []
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step.
 
 This sensor simulates a rotating Lidar implemented using ray-casting.  
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every frame:  
-`points_per_second / (FPS * channels)`
+`points_per_channel_each_step = points_per_second / (FPS * channels)`
 
 A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics is not updated so all the points in a measurement reflect the same "static picture" of the scene.  
-This output also acts as a list of the [`carla.Location`](python_api.md#carla.Location) for every point:
+
+This output contains a cloud of simulation points and thus, can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
 ```py
 for location in lidar_measurement:
@@ -238,23 +241,33 @@ Registers an event every time the parent actor has an obstacle ahead.
 * __Blueprint:__ sensor.other.radar
 * __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step.  
 
-Creates a 2D point map that models elements in sight and their speed regarding the sensor. This can be used to shape elements and evaluate their movement and direction.  
+The sensor creates a conic view that is translated to a 2D point map of the elements in sight and their speed regarding the sensor. This can be used to shape elements and evaluate their movement and direction. Due to the use of polar coordinates, the points will concentrate around the center of the view.  
 The points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection). 
+
+The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away: 
+
+![ImageRadar](img/sensor_radar.png)
 
 | Blueprint attribute   | Type  | Default | Description |
 | --------------------- | ----  | ------- | ----------- |
-| `horizontal_fov`      | float |         | Horizontal field of view in degrees. |
-| `points_per_second`   | int   |         | Points generated by all lasers per second. |
-| `range`               | float |         | Maximum distance to measure/raycast in meters. |
-| `sensor_tick`         | float |         | Seconds between sensor captures (ticks). |
-| `vertical_fov`        | float |         | Vertical field of view in degrees. |
+| `horizontal_fov`      | float | 30      | Horizontal field of view in degrees. |
+| `points_per_second`   | int   | 1500    | Points generated by all lasers per second. |
+| `range`               | float | 100     | Maximum distance to measure/raycast in meters. |
+| `sensor_tick`         | float | 0.0     | Seconds between sensor captures (ticks). |
+| `vertical_fov`        | float | 30      | Vertical field of view in degrees. |
 
 <h4>Output attributes</h4>
 
-| Sensor data attribute  | Type                                             | Description |
-| ---------------------- | ------------------------------------------------ | ----------- |
-|                        |                                                  |             |
-|                        |                                                  |             |
+| Sensor data attribute  | Type                                                             | Description |
+| ---------------------- | ---------------------------------------------------------------- | ----------- |
+| raw_data               | list([carla.RadarDetection](python_api.md#carla.RadarDetection)) | The list of points detected |
+
+| RadarDetection attributes | Type  |  Description |
+| ------------------------- | ----  | ------------ |
+| `altitude`                | float | Altitude angle in radians. |
+| `azimuth`                 | float | Azimuth angle in radians. |
+| `depth`                   | float | Distance in meters. |
+| `velocity`                | float | Velocity towards the sensor. |
 
 ---------------
 ##RGB camera 
@@ -364,10 +377,11 @@ Since these effects are provided by UE, please make sure to check their document
 * __Blueprint:__ sensor.camera.semantic_segmentation
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step. 
 
-This camera classifies every object in sight by displaying it in a different color according to its class (e.g., pedestrians in a different color than vehicles). This is implemented by tagging every object in the scene before hand (either at begin play or on spawn). The objects are classified by their relative file path in the project. E.g., every mesh stored in the _"Unreal/CarlaUE4/Content/Static/Pedestrians"_ folder is tagged as `Pedestrian`.  
-[carla.colorConverter](python_api.md#carla.ColorConverter)
-
-The server provides an image with the tag information **encoded in the red channel**: A pixel with a red value of `x` belongs to an object with tag `x`.  
+This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).  
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
+ 
+The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.  
+This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.  
 The following tags are currently available:
 
 | Value | Tag          | Converted color |
