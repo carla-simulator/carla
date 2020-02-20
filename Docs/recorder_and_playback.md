@@ -1,6 +1,7 @@
 <h1> Recorder </h1>  
 
-This is one of the advanced CARLA features. It allows to record and reenact a simulation while providing with a complete log of the events happened and a few queries to ease the trace and study of those. 
+This is one of the advanced CARLA features. It allows to record and reenact a simulation while providing with a complete log of the events happened and a few queries to ease the trace and study of those.  
+To learn about the generated file and its specifics take a look at this [reference](recorder_binary_file_format.md). 
 
   * [__Recording__](#recording)  
   * [__Simulation playback__](#simulation-playback):  
@@ -84,7 +85,7 @@ For instance, with a time factor of __20x__ traffic flow is easily appreciated:
 ---------------
 ##Recorded file
 
-The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered, but setting the parameter `show_all` would return all the information for every frame.  
+The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered, but setting the parameter `show_all` would return all the information for every frame. The specifics on how the data is stored are detailed in the [recorder's reference](recorder_binary_file_format.md).  
 The following example only would retrieve remarkable events:
 
 ```py
@@ -272,3 +273,14 @@ Two modes of detail: by default it only shows frames where some event is recorde
 | `-f`            | Filename.     |
 | `-t` <small>(optional)</small> | Time to move `-d` before being considered blocked. |
 | `-d` <small>(optional)</small> | Distance to move to not be considered blocked. |
+
+
+---------------
+Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter: 
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>
