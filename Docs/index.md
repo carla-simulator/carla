@@ -5,6 +5,49 @@
     or later. For the documentation of the stable version please switch to the
     [stable branch](https://carla.readthedocs.io/en/stable/).
 
+ <div style="display: flex">
+
+  <div style="flex: 50%">
+  ------------
+  <h3>Getting started</h3>
+  Brief summary on CARLA.  
+  Also how to install the releases.  
+  <br>
+  <p style="padding-left:30px">
+  <a href="../getting_started/introduction">Introduction</a>
+  <br>
+  <a href="../getting_started/quickstart">Quickstart installation</a>
+  </p>
+
+
+  </div>
+
+  <div style="flex: 50%">
+  ------------
+  <h3>Building CARLA</h3>
+  Install the CARLA build on Linux or Windows.  
+  Update CARLA 
+  
+  <a href="../getting_started/introduction">Introduction</a>
+  <br>
+  <a href="../getting_started/quickstart">Quickstart installation</a>
+
+
+
+  </div>
+
+</div> 
+
+<table>
+<th>Quickstart</th><th>Hello</th>
+  <colgroup>
+    <col span="2" style="background-color:red">
+    <col style="background-color:yellow">
+  </colgroup>
+<tr><td>A</td><td>B</td></tr>
+<caption>this is my caption</caption>
+</table>
+
 <h3>Quick start</h3>
 
   * [Python API tutorial](core_concepts.md)
