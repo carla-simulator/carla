@@ -127,7 +127,7 @@ Otherwise, visit the __First steps__ section to learn about CARLA:
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../python_api_tutorial" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Start reading First steps">
 Go to First steps</a>
 </p>
 </div>
