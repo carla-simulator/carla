@@ -10,6 +10,7 @@
 
 #include "Vehicle/CarlaWheeledVehicleState.h"
 #include "Vehicle/VehicleControl.h"
+#include "Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
@@ -108,9 +109,15 @@ public:
     return State;
   }
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehiclePhysicsControl GetVehiclePhysicsControl();
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FVehicleLightState GetVehicleLightState();
+
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
+
+  void SetVehicleLightState(const FVehicleLightState &LightState);
 
   /// @}
   // ===========================================================================
@@ -186,6 +193,9 @@ protected:
 
   virtual void BeginPlay() override;
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void RefreshLightState(const FVehicleLightState &VehicleLightState);
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -199,6 +209,7 @@ private:
   {
     EVehicleInputPriority Priority = EVehicleInputPriority::INVALID;
     FVehicleControl Control;
+    FVehicleLightState LightState;
   }
   InputControl;
 

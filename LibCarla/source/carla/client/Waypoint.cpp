@@ -7,6 +7,7 @@
 #include "carla/client/Waypoint.h"
 
 #include "carla/client/Map.h"
+#include "carla/client/Junction.h"
 
 namespace carla {
 namespace client {
@@ -27,6 +28,13 @@ namespace client {
     return _parent->GetMap().IsJunction(_waypoint.road_id);
   }
 
+  SharedPtr<Junction> Waypoint::GetJunction() const {
+    if (IsJunction()) {
+      return _parent->GetJunction(*this);
+    }
+    return nullptr;
+  }
+
   double Waypoint::GetLaneWidth() const {
     return _parent->GetMap().GetLaneWidth(_waypoint);
 
@@ -43,6 +51,68 @@ namespace client {
     for (auto &waypoint : waypoints) {
       result.emplace_back(SharedPtr<Waypoint>(new Waypoint(_parent, std::move(waypoint))));
     }
+    return result;
+  }
+
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetPrevious(double distance) const {
+    auto waypoints = _parent->GetMap().GetPrevious(_waypoint, distance);
+    std::vector<SharedPtr<Waypoint>> result;
+    result.reserve(waypoints.size());
+    for (auto &waypoint : waypoints) {
+      result.emplace_back(SharedPtr<Waypoint>(new Waypoint(_parent, std::move(waypoint))));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetNextUntilLaneEnd(double distance) const {
+    std::vector<SharedPtr<Waypoint>> result;
+    std::vector<SharedPtr<Waypoint>> next = GetNext(distance);
+
+    while (next.size() == 1 && next.front()->GetRoadId() == GetRoadId()) {
+      result.emplace_back(next.front());
+      next = result.back()->GetNext(distance);
+    }
+    double current_s = GetDistance();
+    if(result.size()) {
+      current_s = result.back()->GetDistance();
+    }
+    double remaining_length;
+    double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
+    if(_waypoint.lane_id < 0) {
+      remaining_length = road_length - current_s;
+    } else {
+      remaining_length = current_s;
+    }
+    remaining_length -= std::numeric_limits<double>::epsilon();
+    result.emplace_back(result.back()->GetNext(remaining_length).front());
+
+    return result;
+  }
+
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetPreviousUntilLaneStart(double distance) const {
+    std::vector<SharedPtr<Waypoint>> result;
+    std::vector<SharedPtr<Waypoint>> prev = GetPrevious(distance);
+
+    while (prev.size() == 1 && prev.front()->GetRoadId() == GetRoadId()) {
+      result.emplace_back(prev.front());
+      prev = result.back()->GetPrevious(distance);
+    }
+
+    double current_s = GetDistance();
+    if(result.size()) {
+      current_s = result.back()->GetDistance();
+    }
+
+    double remaining_length;
+    double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
+    if(_waypoint.lane_id < 0) {
+      remaining_length = road_length - current_s;
+    } else {
+      remaining_length = current_s;
+    }
+    remaining_length -= std::numeric_limits<double>::epsilon();
+    result.emplace_back(result.back()->GetPrevious(remaining_length).front());
+
     return result;
   }
 
