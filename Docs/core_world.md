@@ -160,16 +160,8 @@ actor_snapshot = world_snapshot.find(actual_actor.id) #Get an actor's snapshot
 <h4>World settings</h4>
 
 The world also has access to some advanced configurations for the simulation that determine rendering conditions, steps in the simulation time and synchrony between clients and server. These are advanced concepts that do better if untouched by newcomers.  
-For the time being let's say that CARLA by default runs in with its best quality, with a variable time-step and asynchronously. The helper class is [carla.WorldSettings](python_api.md#carla.WorldSettings). To dive further in this matters take a look at the __Advanced steps__ section of the documentation and read about [configuring the simulation](configuring_the_simulation.md).
+For the time being let's say that CARLA by default runs in with its best quality, with a variable time-step and asynchronously. The helper class is [carla.WorldSettings](python_api.md#carla.WorldSettings). To dive further in this matters take a look at the __Advanced steps__ section of the documentation and read about [synchrony and time-step](simulation_time_and_synchrony.md) or [rendering_options.md](../rendering_options).
 
-__THIS IS TO BE DELETED AND MOVED TO SYNC AND TIME-STEP__
-```py
-# Wait for the next tick and retrieve the snapshot of the tick.
-world_snapshot = world.wait_for_tick()
-
-# Register a callback to get called every time we receive a new snapshot.
-world.on_tick(lambda world_snapshot: do_something(world_snapshot))
-```
 ---------------
 That is a wrap on the world and client objects, the very first steps in CARLA.  
 The next step should be learning more about actors and blueprints to give life to the simulation. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
