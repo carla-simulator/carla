@@ -3,6 +3,7 @@
   * [Requirements](#requirements)
   * [Downloading CARLA](#downloading-carla)
   * [Running CARLA](#running-carla)
+	* Command-line options  
   * [Updating CARLA](#updating-carla)
   * [Summary](#summary)
 ---------------
@@ -61,6 +62,32 @@ A window will open, containing a view over the city. This is the "spectator" vie
 
 !!! note
     If the firewall or any other application are blocking the TCP ports needed, these can be manually changed by adding to the previous command the argument: `-carla-port=N`, being `N` the desired port. The second will be automatically set to `N+1`.
+
+<h4>Command-line options</h4>
+
+There are some configuration options available when launching CARLA::  
+
+  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
+  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
+  * `-quality-level={Low,Epic}` Change graphics quality level.
+  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
+
+[ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
+```sh
+> ./CarlaUE4.sh -carla-rpc-port=3000
+```
+However, some may not be available (especially those provided by UE). For said reason, the script in `PythonAPI/util/config.py` provides for some more configuration options: 
+```sh
+> ./config.py --no-rendering      # Disable rendering
+> ./config.py --map Town05        # Change map
+> ./config.py --weather ClearNoon # Change weather
+```
+
+To check all the available configurations, run the following command:
+
+```sh
+> ./config.py --help
+```
 
 ---------------
 ##Updating CARLA
