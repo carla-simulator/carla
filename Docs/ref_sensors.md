@@ -19,7 +19,7 @@
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
 
 This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.  
-To ensure that any collision is detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved and thus, which object is it.    
+To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 Collision detectors do not have any configurable attribute.
 
@@ -38,7 +38,7 @@ Collision detectors do not have any configurable attribute.
 ##Depth camera 
 
 * __Blueprint:__ sensor.camera.depth
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step. 
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise). 
 
 The camera provides a raw data of the scene codifying the distance of each pixel to the camera (also known as **depth buffer** or **z-buffer**) to create a depth map of the elements.  
 
@@ -56,7 +56,6 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 ![ImageDepth](img/capture_depth.png)
 
 
-
 <h4>Basic camera attributes</h4>
 
 | Blueprint attribute | Type  | Default | Description |
@@ -64,7 +63,7 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 | `image_size_x`      | int   | 800     | Image width in pixels. |
 | `image_size_y`      | int   | 600     | Image height in pixels.  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees. |
-| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 
 <h4>Camera lens distortion attributes</h4>
 
@@ -93,9 +92,22 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 ##GNSS sensor 
 
 * __Blueprint:__ sensor.other.gnss
-* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) per step. 
+* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) per step (unless `sensor_tick` says otherwise). 
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
+
+<h4>GNSS attributes</h4>
+
+| Blueprint attribute  | Type  | Default | Description |
+| -------------------- | ----  | ------- | ----------- |
+| `noise_alt_bias`     | float | 0.0     | Mean parameter in the noise model for altitude. |
+| `noise_alt_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for altitude. |
+| `noise_lat_bias`     | float | 0.0     | Mean parameter in the noise model for latitude. |
+| `noise_lat_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for latitude. |
+| `noise_lon_bias`     | float | 0.0     | Mean parameter in the noise model for longitude. |
+| `noise_lon_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for longitude. |
+| `noise_seed`         | int   | 0       | Initializer for a pseudorandom number generator. |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 
 <h4>Output attributes</h4>
 
@@ -112,9 +124,26 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 ##IMU sensor 
 
 * __Blueprint:__ sensor.other.imu
-* __Output:__ [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) per step.
+* __Output:__ [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) per step (unless `sensor_tick` says otherwise).
 
 Provides measures that accelerometer, gyroscope and compass would retrieve for the parent object. The data is collected from the object's current state.
+
+<h4>IMU attributes</h4>
+
+| Blueprint attribute   | Type  | Default | Description |
+| --------------------- | ----  | ------- | ----------- |
+| `noise_accel_stddev_x`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (X axis). |
+| `noise_accel_stddev_y`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (Y axis). |
+| `noise_accel_stddev_z`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (Z axis). |
+| `noise_gyro_bias_x`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (X axis). |
+| `noise_gyro_bias_y`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (Y axis). |
+| `noise_gyro_bias_z`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (Z axis). |
+| `noise_gyro_stddev_x` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (X axis). |
+| `noise_gyro_stddev_y` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Y axis). |
+| `noise_gyro_stddev_z` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Z axis). |
+| `noise_seed`          | int   | 0       | Initializer for a pseudorandom number generator. |
+| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+
 
 <h4>Output attributes</h4>
 
@@ -160,13 +189,13 @@ This sensor does not have any configurable attribute.
 ##Lidar raycast sensor 
 
 * __Blueprint:__ sensor.lidar.ray_cast
-* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step.
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
 This sensor simulates a rotating Lidar implemented using ray-casting.  
-The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every frame:  
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:  
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
-A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics is not updated so all the points in a measurement reflect the same "static picture" of the scene.  
+A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.  
 
 This output contains a cloud of simulation points and thus, can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
@@ -191,7 +220,7 @@ for location in lidar_measurement:
 | `rotation_frequency` | float | 10.0    | Lidar rotation frequency. |
 | `upper_fov`          | float | 10.0    | Angle in degrees of the highest laser. |
 | `lower_fov`          | float | -30.0   | Angle in degrees of the lowest laser. |
-| `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 
 <h4>Output attributes</h4>
 
@@ -209,12 +238,11 @@ for location in lidar_measurement:
 ##Obstacle detector 
 
 * __Blueprint:__ sensor.other.obstacle
-* __Output:__ [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) per obstacle detected. 
+* __Output:__ [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) per obstacle (unless `sensor_tick` says otherwise). 
 
-Registers an event every time the parent actor has an obstacle ahead. 
-
-!!! Note
-    This sensor creates "fake" actors when it detects obstacles with something that is not an actor, this is so we can retrieve the semantic tags of the object we hit.
+Registers an event every time the parent actor has an obstacle ahead.  
+In order to anticipate obstacles, the sensor creates a capsular shape ahead of the parent vehicle and uses it to check for collisions.  
+To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
@@ -222,7 +250,7 @@ Registers an event every time the parent actor has an obstacle ahead.
 | `hit_radius`         | float | 0.5     | Radius of the trace. |
 | `only_dynamics`      | bool  | false   | If true, the trace will only consider dynamic objects. |
 | `debug_linetrace`    | bool  | false   | If true, the trace will be visible. |
-| `sensor_tick`        | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 
 <h4>Output attributes</h4>
 
@@ -239,10 +267,17 @@ Registers an event every time the parent actor has an obstacle ahead.
 ##Radar sensor 
 
 * __Blueprint:__ sensor.other.radar
-* __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step.  
+* __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step (unless `sensor_tick` says otherwise).  
 
 The sensor creates a conic view that is translated to a 2D point map of the elements in sight and their speed regarding the sensor. This can be used to shape elements and evaluate their movement and direction. Due to the use of polar coordinates, the points will concentrate around the center of the view.  
-The points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection). 
+
+Points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection), which specifies their polar coordinates, distance and velocity.  
+This raw data provided by the radar sensor can be easily converted to a format manageable by __numpy__:
+```py
+# To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
+points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
+points = np.reshape(points, (len(radar_data), 4))
+``` 
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away: 
 
@@ -253,7 +288,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 | `horizontal_fov`      | float | 30      | Horizontal field of view in degrees. |
 | `points_per_second`   | int   | 1500    | Points generated by all lasers per second. |
 | `range`               | float | 100     | Maximum distance to measure/raycast in meters. |
-| `sensor_tick`         | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 | `vertical_fov`        | float | 30      | Vertical field of view in degrees. |
 
 <h4>Output attributes</h4>
@@ -273,7 +308,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 ##RGB camera 
 
 * __Blueprint:__ sensor.camera.rgb
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step.
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
 
 The "RGB" camera acts as a regular camera capturing images from the scene.  
 [carla.colorConverter](python_api.md#carla.ColorConverter)
@@ -303,7 +338,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `image_size_y`      | int   | 600     | Image height in pixels. |
 | `iso`               | float | 1200.0  | The camera sensor sensitivity. |
 | `gamma`             | float | 2.2     | Target gamma value of the camera. |
-| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 | `shutter_speed`     | float | 60.0    | The camera shutter speed in seconds (1.0 / s). |
 
 <h4>Camera lens distortion attributes</h4>
@@ -375,7 +410,7 @@ Since these effects are provided by UE, please make sure to check their document
 ##Semantic segmentation camera 
 
 * __Blueprint:__ sensor.camera.semantic_segmentation
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step. 
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).  
 
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).  
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
@@ -413,7 +448,7 @@ The following tags are currently available:
 | `fov`               | float | 90.0    | Horizontal field of view in degrees. |
 | `image_size_x`      | int   | 800     | Image width in pixels. |
 | `image_size_y`      | int   | 600     | Image height in pixels. |
-| `sensor_tick`       | float | 0.0     | Seconds between sensor captures (ticks). |
+| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
 
 <h4>Camera lens distortion attributes</h4>
 
