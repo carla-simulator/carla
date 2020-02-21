@@ -136,7 +136,7 @@ Thus, this was the last step of this introduction to CARLA. However there is yet
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="python_cookbook.md" target="_blank" class="btn btn-neutral" title="Code recipes">
+<a href="../python_cookbook" target="_blank" class="btn btn-neutral" title="Code recipes">
 Code recipes</a>
 </p>
 </div>
@@ -146,8 +146,8 @@ Code recipes</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="configuring_the_simulation.md" target="_blank" class="btn btn-neutral" title="Configuring the simulation">
-Configuring the simulation</a>
+<a href="../simulation_time_and_synchrony" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
+Synchrony and time-step</a>
 </p>
 </div>
 
@@ -156,7 +156,7 @@ Configuring the simulation</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
+<a href="../python_api" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
 </p>
 </div>
