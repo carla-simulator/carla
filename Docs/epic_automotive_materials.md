@@ -15,7 +15,7 @@ Epic Games' [Automotive Materials][automatlink] package can be downloaded for
 free from the Unreal Engine Marketplace.
 
 !!! note
-Unfortunately Linux based machines don't have official support for Epic Game Store / Unreal Asset Store. In order to access the purchased assets you need to download this Java package: https://github.com/neutrino-steak/UE4LinuxLauncher
+    Unfortunately Linux based machines don't have official support for Epic Game Store / Unreal Asset Store. In order to access the purchased assets you need to download [this](https://github.com/neutrino-steak/UE4LinuxLauncher) this Java package to do it.
 
   1. Install Epic Games Launcher from [www.unrealengine.com](https://www.unrealengine.com).
   2. Buy the [Automotive Materials][automatlink] package for $0.
