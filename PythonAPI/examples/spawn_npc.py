@@ -148,7 +148,7 @@ def main():
             blueprint.set_attribute('role_name', 'autopilot')
             batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
 
-        for response in client.apply_batch_sync(batch):
+        for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:
                 logging.error(response.error)
             else:
