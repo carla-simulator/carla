@@ -340,7 +340,7 @@ points in a measurement reflect the same "static picture" of the scene.
 
 !!! tip
     Running the simulator at
-    [fixed time-step](configuring_the_simulation.md#fixed-time-step) it is
+    [fixed time-step](simulation_time_and_synchrony.md) it is
     possible to tune the horizontal angle of each measurement. By adjusting the
     frame rate and the rotation frequency is possible, for instance, to get a
     360 view each measurement.
