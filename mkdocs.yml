@@ -25,7 +25,8 @@ nav:
   - '4th. Sensors and data': 'cameras_and_sensors.md'
 - Advanced steps:
   - 'Recorder': 'recorder_and_playback.md'
-  - 'Configuring the simulation': 'configuring_the_simulation.md'
+  - 'Rendering options': 'rendering_options.md'
+  - 'Simulation time and synchrony': 'simulation_time_and_synchrony.md'
 - References: 
   - 'Python API reference': 'python_api.md'
   - 'Code recipes': 'python_cookbook.md'

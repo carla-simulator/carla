@@ -31,7 +31,7 @@ Follow [Art Guide][artlink] for creating the Skeletal Mesh and Physics Asset. An
   Add the animation graph as shown in the links given above
   (or look for it in other cars' animation, like Mustang).
 
-  4. Create folder `Content/Blueprints/Vehicles/<vehicle-model>`
+  4. Create folder `Content/Carla/Blueprints/Vehicles/<vehicle-model>`
 
   5. Inside that folder create two blueprint classes derived from "VehicleWheel" class.
   Call them `<vehicle-model>_FrontWheel` and `<vehicle-model>_RearWheel`. Set their "Shape Radius"
