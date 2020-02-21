@@ -160,7 +160,7 @@ actor_snapshot = world_snapshot.find(actual_actor.id) #Get an actor's snapshot
 <h4>World settings</h4>
 
 The world also has access to some advanced configurations for the simulation that determine rendering conditions, steps in the simulation time and synchrony between clients and server. These are advanced concepts that do better if untouched by newcomers.  
-For the time being let's say that CARLA by default runs in with its best quality, with a variable time-step and asynchronously. The helper class is [carla.WorldSettings](python_api.md#carla.WorldSettings). To dive further in this matters take a look at the __Advanced steps__ section of the documentation and read about [configuring the simulation](configuring_the_simulation.md)
+For the time being let's say that CARLA by default runs in with its best quality, with a variable time-step and asynchronously. The helper class is [carla.WorldSettings](python_api.md#carla.WorldSettings). To dive further in this matters take a look at the __Advanced steps__ section of the documentation and read about [configuring the simulation](configuring_the_simulation.md).
 
 __THIS IS TO BE DELETED AND MOVED TO SYNC AND TIME-STEP__
 ```py
