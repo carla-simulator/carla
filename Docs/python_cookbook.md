@@ -1,5 +1,5 @@
 
-<h1> Python Cookbook </h1>
+<h1> Code recipes </h1>
 
 This section contains a list of recipes that complement the [tutorial](../python_api_tutorial/)
 and are used to illustrate the use of Python API methods.
