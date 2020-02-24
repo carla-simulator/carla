@@ -173,7 +173,7 @@ class LocalPlanner(object):
             :param debug: boolean flag to activate waypoints debugging
             :return: control
         """
-        debug = True
+
         if target_speed is not None:
             self._target_speed = target_speed
         else:
