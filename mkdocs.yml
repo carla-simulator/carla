@@ -50,6 +50,9 @@ nav:
   - 'Create a sensor': 'tuto_D_create_sensor.md'
   - 'Make a release': 'tuto_D_make_release.md'
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
+- ROS bridge:
+  - 'ROS bridge installation': 'ros_installation.md'
+  - 'Supported features': 'ros_topics_ref.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'
