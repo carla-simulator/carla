@@ -162,19 +162,21 @@ This variable should be added to `~/.bashrc` or `~/.profile` to set it persisten
 
 <h4>make CARLA</h4>
 
-The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder: 
+The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder:  
+
+!!! Warning
+    Make sure to run __make launch__ to prepare the server and __make PythonAPI__ for the client.  
+    Alternativelly __make libcarla__ will prepare the CARLA library to be imported anywhere. 
 
   * __launch__ will compile the server simulator and launch it in Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with WASD keys and rotated by clicking the scene while moving the mouse around:  
 ```sh
 make launch
-``` 
-
-!!! Note
-    The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time (needed to cook the content to launch). Agree in order to open the project. Also, during the first launch Unreal Editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.  
+```  
+The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. Also, during the first launch Unreal Editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.  
 
   * __PythonAPI__ will compile the API client, necessary to grant control over the simulation. It is only needed the first time (remember to run it again when the CARLA code is updated). After building it, scripts can run. The following example will spawn some life into the city: 
 ```sh
-make PythonAPI && cd PythonAPI/examples && python tm_spawn_npc.py
+make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
 ``` 
 !!! Note
     If the simulation is running at very low FPS rates, open the UE4.22 editor and go to "Edit>Editor preferences>Performance" and disable: **Use less CPU when in background**. 
