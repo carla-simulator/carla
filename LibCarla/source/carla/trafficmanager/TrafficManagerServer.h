@@ -34,25 +34,31 @@ public:
   /// local instance through a TrafficManagerBase pointer.
   TrafficManagerServer(
       uint16_t &RPCPort,
-      carla::traffic_manager::TrafficManagerBase *tm)
+      carla::traffic_manager::TrafficManagerBase* /* tm */)
     : _RPCPort(RPCPort) {
-
+    carla::log_info("TrafficManagerServer CTR", _RPCPort);
     uint16_t counter = 0;
     while(counter < MIN_TRY_COUNT) {
       try {
-        /// Create server instance.
-        server = new ::rpc::server(RPCPort);
 
-      } catch(...) {
+        /// Create server instance.
+        //server = new ::rpc::server(RPCPort);
+
+      } catch(std::exception& e) {
         /// Update port number and try again.
-        std::cout << "TM Server STATUS is FAILED ..... port: " << RPCPort << std::endl;
-        counter ++;
+        std::cout << "TM Server STATUS is FAILED... port: " << RPCPort << " - " << e.what() << std::endl ;
+        std::this_thread::sleep_for(500ms);
       }
 
       /// If server created.
-      if(server != nullptr) break;
+      if(server != nullptr) {
+        std::cout << "TM Server Created... port: " << RPCPort << std::endl ;
+        break;
+      }
+      carla::log_info("TrafficManagerServer CTR (", _RPCPort,")... try", counter);
+      counter ++;
     }
-
+/*
     /// If server still not created throw a runtime exception.
     if(server == nullptr) {
 
@@ -161,14 +167,19 @@ public:
       /// user client in asynchronous mode.
       server->async_run();
     }
+    */
+    carla::log_info("TrafficManagerServer CTR end", _RPCPort);
   }
 
   ~TrafficManagerServer() {
+    carla::log_info("TrafficManagerServer DTR");
     if(server) {
+      carla::log_info("TrafficManagerServer DTRing....");
       server->stop();
       delete server;
       server = nullptr;
     }
+    carla::log_info("TrafficManagerServer DTR end");
   }
 
   uint16_t port() const {
@@ -182,6 +193,7 @@ private:
 
   /// Server instance
   ::rpc::server *server = nullptr;
+
 };
 
 } // namespace traffic_manager

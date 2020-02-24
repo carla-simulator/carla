@@ -36,6 +36,12 @@ public:
   /// To stop the TrafficManager.
   void Stop();
 
+  /// To release the traffic manager.
+  void Release();
+
+  /// To reset the traffic manager.
+  void Reset();
+
   /// Constructor store remote location information.
   TrafficManagerRemote(const std::pair<std::string, uint16_t> &_serverTM, carla::client::detail::EpisodeProxy &episodeProxy);
 

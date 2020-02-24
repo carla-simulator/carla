@@ -17,8 +17,7 @@ namespace traffic_manager {
 TrafficManagerRemote::TrafficManagerRemote(
     const std::pair<std::string, uint16_t> &_serverTM,
     carla::client::detail::EpisodeProxy &episodeProxy)
-  : TrafficManagerBase(_serverTM.second),
-    client(_serverTM.first, _serverTM.second),
+  : client(_serverTM.first, _serverTM.second),
     episodeProxyTM(episodeProxy) {
 
   std::thread _thread = std::thread([this] () {
@@ -29,6 +28,8 @@ TrafficManagerRemote::TrafficManagerRemote(
         std::this_thread::sleep_for(wait_time);
 
         client.HealthCheckRemoteTM();
+
+        std::cout << "TM Remote Keep Alive" << std::endl ;
 
         /// Until connection active
       } while (_keep_alive);
@@ -60,7 +61,7 @@ TrafficManagerRemote::TrafficManagerRemote(
 
 /// Destructor.
 TrafficManagerRemote::~TrafficManagerRemote() {
-  Stop();
+  Release();
 }
 
 void TrafficManagerRemote::Start() {
@@ -74,6 +75,15 @@ void TrafficManagerRemote::Stop() {
     std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
     _cv.wait_for(lock, wait_time);
   }
+}
+
+void TrafficManagerRemote::Release() {
+  Stop();
+}
+
+void TrafficManagerRemote::Reset() {
+  Stop();
+  Start();
 }
 
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {

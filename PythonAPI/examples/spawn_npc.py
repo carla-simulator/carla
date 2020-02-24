@@ -246,7 +246,7 @@ def main():
         if args.sync and synchronous_master:
             settings = world.get_settings()
             settings.synchronous_mode = False
-            settings.fixed_delta_seconds = 0
+            settings.fixed_delta_seconds = None
             world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(vehicles_list))

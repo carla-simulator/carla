@@ -30,8 +30,14 @@ public:
   /// To stop the traffic manager.
   virtual void Stop() = 0;
 
+  /// To release the traffic manager.
+  virtual void Release() = 0;
+
+  /// To reset the traffic manager.
+  virtual void Reset() = 0;
+
   /// Protected constructor for singleton lifecycle management.
-  TrafficManagerBase(uint16_t port) : _port(port) {};
+  TrafficManagerBase() {};
 
   /// Destructor.
   virtual ~TrafficManagerBase() {};
@@ -89,17 +95,12 @@ public:
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 
-  uint16_t port() const {
-    return _port;
-  }
-
   bool IsServer() const {
     return _is_server;
   }
 
 protected:
 
-  uint16_t _port = TM_DEFAULT_PORT;
   bool _is_server = false;
 
 };

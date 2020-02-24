@@ -58,7 +58,7 @@ namespace traffic_manager {
     std::vector<float> lateral_highway_PID_parameters;
 
     /// Set of all actors registered with traffic manager.
-    AtomicActorSet registered_actors;
+    //AtomicActorSet registered_actors;
 
     /// Pointer to local map cache.
     std::shared_ptr<InMemoryMap> local_map;
@@ -67,7 +67,7 @@ namespace traffic_manager {
     carla::client::detail::EpisodeProxy episodeProxyTM;
 
     /// Carla's debug helper object.
-    carla::client::DebugHelper debug_helper;
+    //carla::client::DebugHelper debug_helper;
 
     /// Pointers to messenger objects connecting stage pairs.
     std::shared_ptr<CollisionToPlannerMessenger> collision_planner_messenger;
@@ -88,7 +88,7 @@ namespace traffic_manager {
     Parameters parameters;
 
     /// Traffic manager server instance.
-    TrafficManagerServer server;
+    //TrafficManagerServer server;
 
     /// Method to check if all traffic lights are frozen in a group.
     bool CheckAllFrozen(TLGroup tl_to_freeze);
@@ -113,6 +113,12 @@ namespace traffic_manager {
 
     /// To stop the TrafficManager.
     void Stop();
+
+    /// To release the traffic manager.
+    void Release();
+
+    /// To reset the traffic manager.
+    void Reset();
 
     /// This method registers a vehicle with the traffic manager.
     void RegisterVehicles(const std::vector<ActorPtr> &actor_list);

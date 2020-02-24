@@ -18,21 +18,20 @@ TrafficManagerLocal::TrafficManagerLocal(
     std::vector<float> longitudinal_highway_PID_parameters,
     std::vector<float> lateral_PID_parameters,
     std::vector<float> lateral_highway_PID_parameters,
-    float perc_difference_from_limit,
-    carla::client::detail::EpisodeProxy &episodeProxy,
-    uint16_t &RPCportTM)
-  : TrafficManagerBase(RPCportTM),
-    longitudinal_PID_parameters(longitudinal_PID_parameters),
+    float /* perc_difference_from_limit */,
+    carla::client::detail::EpisodeProxy& episodeProxy,
+    uint16_t& /* RPCportTM */)
+  : longitudinal_PID_parameters(longitudinal_PID_parameters),
     longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
     lateral_PID_parameters(lateral_PID_parameters),
     lateral_highway_PID_parameters(lateral_highway_PID_parameters),
-    episodeProxyTM(episodeProxy),
-    debug_helper(carla::client::DebugHelper{episodeProxyTM}),
-    server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
+    episodeProxyTM(episodeProxy)/*,
+    debug_helper(carla::client::DebugHelper{episodeProxyTM})/ *,
+    server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this)))*/ {
 
   _is_server = true;
 
-  const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
+  /*const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();
 
@@ -83,51 +82,67 @@ TrafficManagerLocal::TrafficManagerLocal(
     parameters);
 
   Start();
+  */
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
-  episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
-  Stop();
+  carla::log_info("TrafficManagerLocal::DTR");
+  Release();
+  auto ptr = episodeProxyTM.TryLock();
+  carla::log_info("TrafficManagerLocal::DTR end");
 }
 
 void TrafficManagerLocal::Start() {
+  carla::log_info("TrafficManagerLocal::Start");
+  // localization_collision_messenger->Start();
+  // localization_traffic_light_messenger->Start();
+  // localization_planner_messenger->Start();
+  // collision_planner_messenger->Start();
+  // traffic_light_planner_messenger->Start();
+  // planner_control_messenger->Start();
 
-  localization_collision_messenger->Start();
-  localization_traffic_light_messenger->Start();
-  localization_planner_messenger->Start();
-  collision_planner_messenger->Start();
-  traffic_light_planner_messenger->Start();
-  planner_control_messenger->Start();
-
-  localization_stage->Start();
-  collision_stage->Start();
-  traffic_light_stage->Start();
-  planner_stage->Start();
-  control_stage->Start();
+  // localization_stage->Start();
+  // collision_stage->Start();
+  // traffic_light_stage->Start();
+  // planner_stage->Start();
+  // control_stage->Start();
+  carla::log_info("TrafficManagerLocal::Start end");
 }
 
 void TrafficManagerLocal::Stop() {
+  carla::log_info("TrafficManagerLocal::Stop");
+  // localization_collision_messenger->Stop();
+  // localization_traffic_light_messenger->Stop();
+  // localization_planner_messenger->Stop();
+  // collision_planner_messenger->Stop();
+  // traffic_light_planner_messenger->Stop();
+  // planner_control_messenger->Stop();
 
-  localization_collision_messenger->Stop();
-  localization_traffic_light_messenger->Stop();
-  localization_planner_messenger->Stop();
-  collision_planner_messenger->Stop();
-  traffic_light_planner_messenger->Stop();
-  planner_control_messenger->Stop();
-
-  localization_stage->Stop();
-  collision_stage->Stop();
-  traffic_light_stage->Stop();
-  planner_stage->Stop();
-  control_stage->Stop();
+  // localization_stage->Stop();
+  // collision_stage->Stop();
+  // traffic_light_stage->Stop();
+  // planner_stage->Stop();
+  // control_stage->Stop();
+  carla::log_info("TrafficManagerLocal::Stop end");
 }
 
-void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  registered_actors.Insert(actor_list);
+void TrafficManagerLocal::Release() {
+  //episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
+  Stop();
 }
 
-void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  registered_actors.Remove(actor_list);
+void TrafficManagerLocal::Reset() {
+  Stop();
+  // TODO: update episode
+  Start();
+}
+
+void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr>& /* actor_list */) {
+  //registered_actors.Insert(actor_list);
+}
+
+void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr>& /* actor_list */) {
+  //registered_actors.Remove(actor_list);
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -180,7 +195,7 @@ bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
 }
 
 void TrafficManagerLocal::ResetAllTrafficLights() {
-
+/*
   auto Filter = [&](auto &actors, auto &wildcard_pattern) {
     std::vector<carla::client::detail::ActorVariant> filtered;
     for (auto &&actor : actors) {
@@ -226,6 +241,8 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
       tln->Freeze(true);
     }
   }
+
+  */
 }
 
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
@@ -246,7 +263,7 @@ carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
 
 std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
-  return registered_actors.GetIDList();
+  return {};//registered_actors.GetIDList();
 }
 
 } // namespace traffic_manager
