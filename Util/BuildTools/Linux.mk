@@ -12,7 +12,7 @@ launch-only:
 import: CarlaUE4Editor
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.py $(ARGS)
 
-package: CarlaUE4Editor PythonAPI
+package: CarlaUE4Editor PythonAPI build.utils
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
