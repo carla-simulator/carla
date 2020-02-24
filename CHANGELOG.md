@@ -1,4 +1,6 @@
 ## latest
+  * Improved manual_control by adding realistic throttle
+  * Added new Behavior agent
   * Added junction class as queryable object from waypoint
   * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
   * Vehicles get destroyed when they are stuck in Traffic Manager
