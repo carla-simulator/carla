@@ -140,7 +140,6 @@ class GlobalRoutePlanner(object):
                         entry_waypoint=end_wp, exit_waypoint=path[-1],
                         entry_vector=None, exit_vector=None, net_vector=None,
                         intersection=end_wp.is_junction, type=RoadOption.LANEFOLLOW)
-                print(len(path) + 1)
 
     def _localize(self, location):
         """
