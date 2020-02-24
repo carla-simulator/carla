@@ -128,8 +128,7 @@ __Retrieve data:__ every simulation step.
 | Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |
 
 ---------------
-That is a wrap on sensors and how do these retrieve simulation data.  
-Thus, this was the last step of this introduction to CARLA. However there is yet a lot to learn about CARLA. Here are some different paths opened at the moment: 
+That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Here are some different paths opened at the moment: 
 
 * __Gain some practise__: if diving alone in CARLA is still frightening, it may be a good idea to try some of the code recipes provided in this documentation and combine them with the example scripts or some ideas of your own. 
 
@@ -162,7 +161,7 @@ Python API reference</a>
 </div>
 
 
-* __Give your two cents__: speak your mind whatever it is going around. Any doubts, suggestions and ideas about CARLA are welcome in the forum.
+* __Give your two cents__: share your thoughts. Any doubts, suggestions and ideas about CARLA are welcome in the forum.
 
 <div class="build-buttons">
 <!-- Latest release button -->
