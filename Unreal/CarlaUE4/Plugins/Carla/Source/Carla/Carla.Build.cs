@@ -42,6 +42,11 @@ public class Carla : ModuleRules
       }
       );
 
+	 if (Target.Type == TargetType.Editor)
+	 {
+		PublicDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
+	 }
+
     PrivateDependencyModuleNames.AddRange(
       new string[]
       {

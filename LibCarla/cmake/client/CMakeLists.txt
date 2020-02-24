@@ -192,11 +192,11 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
-file(GLOB libcarla_cephes_sources
-    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
-    "${libcarla_source_thirdparty_path}/cephes/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
-install(FILES ${libcarla_cephes_sources} DESTINATION include/cephes)
+file(GLOB libcarla_odr_spiral_sources
+    "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
+    "${libcarla_source_thirdparty_path}/odrSpiral/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_odr_spiral_sources}")
+install(FILES ${libcarla_odr_spiral_sources} DESTINATION include/odrSpiral)
 
 file(GLOB libcarla_moodycamel_sources
     "${libcarla_source_thirdparty_path}/moodycamel/*.h")
@@ -209,6 +209,12 @@ file(GLOB libcarla_pugixml_sources
     "${libcarla_source_thirdparty_path}/pugixml/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
+
+file(GLOB libcarla_carla_trafficmanager_sources
+    "${libcarla_source_path}/carla/trafficmanager/*.cpp"
+    "${libcarla_source_path}/carla/trafficmanager/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
+install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

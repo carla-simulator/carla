@@ -68,7 +68,7 @@ private:
 
   void SendLineTraces(float DeltaTime);
 
-  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation, const FVector& ForwardVector);
+  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation);
 
   FRadarData RadarData;
 

@@ -15,6 +15,7 @@
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerBoneControl.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
@@ -47,7 +48,7 @@ namespace detail {
       : endpoint(host + ":" + std::to_string(port)),
         rpc_client(host, port),
         streaming_client(host) {
-      rpc_client.set_timeout(1000u);
+      rpc_client.set_timeout(5000u);
       streaming_client.AsyncRun(
           worker_threads > 0u ? worker_threads : std::thread::hardware_concurrency());
     }
@@ -179,10 +180,21 @@ namespace detail {
     return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", vehicle);
   }
 
+  rpc::VehicleLightState Client::GetVehicleLightState(
+      const rpc::ActorId &vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::VehicleLightState>("get_vehicle_light_state", vehicle);
+  }
+
   void Client::ApplyPhysicsControlToVehicle(
       const rpc::ActorId &vehicle,
       const rpc::VehiclePhysicsControl &physics_control) {
     return _pimpl->AsyncCall("apply_physics_control", vehicle, physics_control);
+  }
+
+  void Client::SetLightStateToVehicle(
+      const rpc::ActorId &vehicle,
+      const rpc::VehicleLightState &light_state) {
+    return _pimpl->AsyncCall("apply_vehicle_light_state", vehicle, light_state);
   }
 
   rpc::Actor Client::SpawnActor(

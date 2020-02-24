@@ -272,7 +272,8 @@ class HUD (object):
 
     def _init_hud_params(self):
         """Initialized visual parameters such as font text and size"""
-        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+        font_name = 'courier' if os.name == 'nt' else 'mono'
+        fonts = [x for x in pygame.font.get_fonts() if font_name in x]
         default_font = 'ubuntumono'
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)

@@ -33,6 +33,7 @@
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -412,8 +413,12 @@ void FCarlaServer::FPimpl::BindActions()
 
     FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
     FVector CurrentLocation = CurrentTransform.GetLocation();
+    NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
 
-    NewLocation.Z = CurrentLocation.Z;
+    // if difference between Z position is small, then we keep current, otherwise we set the new one
+    // (to avoid Z fighting position and falling pedestrians)
+    if (NewLocation.Z - CurrentLocation.Z < 100.0f)
+      NewLocation.Z = CurrentLocation.Z;
 
     NewTransform.SetLocation(NewLocation);
 
@@ -524,6 +529,24 @@ void FCarlaServer::FPimpl::BindActions()
     return cr::VehiclePhysicsControl(Vehicle->GetVehiclePhysicsControl());
   };
 
+  BIND_SYNC(get_vehicle_light_state) << [this](
+      cr::ActorId ActorId) -> R<cr::VehicleLightState>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to get actor physics control: actor is not a vehicle");
+    }
+
+    return cr::VehicleLightState(Vehicle->GetVehicleLightState());
+  };
+
   BIND_SYNC(apply_physics_control) << [this](
       cr::ActorId ActorId,
       cr::VehiclePhysicsControl PhysicsControl) -> R<void>
@@ -541,6 +564,27 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_vehicle_light_state) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleLightState LightState) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply actor light state: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor light state: actor is not a vehicle");
+    }
+
+    Vehicle->SetVehicleLightState(FVehicleLightState(LightState));
 
     return R<void>::Success();
   };

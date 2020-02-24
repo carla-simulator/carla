@@ -8,10 +8,11 @@
 
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/road/Map.h"
 #include "carla/road/element/LaneMarking.h"
-#include "carla/rpc/MapInfo.h"
 #include "carla/road/Lane.h"
+#include "carla/road/Map.h"
+#include "carla/road/RoadTypes.h"
+#include "carla/rpc/MapInfo.h"
 
 #include <string>
 
@@ -20,6 +21,7 @@ namespace geom { class GeoLocation; }
 namespace client {
 
   class Waypoint;
+  class Junction;
 
   class Map
     : public EnableSharedFromThis<Map>,
@@ -53,6 +55,11 @@ namespace client {
         bool project_to_road = true,
         uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
+    SharedPtr<Waypoint> GetWaypointXODR(
+        carla::road::RoadId road_id,
+        carla::road::LaneId lane_id,
+        float s) const;
+
     using TopologyList = std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>>;
 
     TopologyList GetTopology() const;
@@ -66,6 +73,13 @@ namespace client {
     const geom::GeoLocation &GetGeoReference() const;
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
+
+    SharedPtr<Junction> GetJunction(const Waypoint &waypoint) const;
+
+    /// Returns a pair of waypoints (start and end) for each lane in the
+    /// junction
+    std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(
+        road::JuncId id, road::Lane::LaneType type) const;
 
   private:
 

@@ -33,6 +33,7 @@ RUN apt-get update ; \
     autoconf \
     libtool \
     rsync \
+    libxml2-dev \
     aria2 && \
   pip2 install setuptools && \
   pip3 install setuptools && \
