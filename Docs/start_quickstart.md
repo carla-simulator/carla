@@ -2,6 +2,8 @@
 
   * [Requirements](#requirements)
   * [Downloading CARLA](#downloading-carla)
+	* a) apt-get installation  
+	* b) Repository download  
   * [Running CARLA](#running-carla)
 	* Command-line options  
   * [Updating CARLA](#updating-carla)
@@ -24,6 +26,25 @@ If you have [pip](https://pip.pypa.io/en/stable/installing/) in your system, you
 ```    
 ---
 ## Downloading CARLA
+
+There is an __apt repository__ for CARLA 0.9.7. This is the easiest way to get that release in Linux.  
+To get another release in Linux or install CARLA in Windows: __download the repository__.  
+Both methods will set CARLA ready to run. 
+
+<h4>a) apt-get CARLA 0.9.7</h4>
+
+First, add the repository to the system: 
+```sh
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
+sudo add-apt-repository "deb [trusted=yes] http://34.227.255.250/carla-0.9.7/ bionic main"
+```
+Then, simply install it. CARLA will be in the `/opt/` folder, where other software such as ROS install themselves: 
+```sh
+sudo apt-get update
+sudo apt-get install carla
+```
+
+<h4>b) Downloading the repository</h4>
 
 <div class="build-buttons">
 <p>
@@ -58,6 +79,8 @@ Linux:
 Windows:
 CarlaUE4.exe
 ```
+!!! Important
+    In the __apt-get__ installation, `CarlaUE4.sh` can be found in `/opt/carla/bin/`, instead of the main `/carla/` folder where it normally is. 
 
 A window will open, containing a view over the city. This is the "spectator" view. To fly around the city use the mouse and WASD keys (while clicking). The simulator is now running as a server, waiting for a client app to connect and interact with the world.
 
