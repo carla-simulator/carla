@@ -9,19 +9,21 @@
 """ This module implements an agent that roams around a track following random waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-from agents.navigation.basic.agent import Agent, AgentState
-from agents.navigation.basic.local_planner import LocalPlanner
+from agents.navigation.agent import Agent, AgentState
+from agents.navigation.local_planner import LocalPlanner
 
 
 class RoamingAgent(Agent):
     """
     RoamingAgent implements a basic agent that navigates scenes making random
     choices when facing an intersection.
+
     This agent respects traffic lights and other vehicles.
     """
 
     def __init__(self, vehicle):
         """
+
         :param vehicle: actor to apply to local planner logic onto
         """
         super(RoamingAgent, self).__init__(vehicle)
@@ -70,4 +72,3 @@ class RoamingAgent(Agent):
             control = self._local_planner.run_step()
 
         return control
-

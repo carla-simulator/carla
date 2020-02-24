@@ -32,6 +32,7 @@ class Agent(object):
 
     def __init__(self, vehicle):
         """
+
         :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
@@ -61,6 +62,7 @@ class Agent(object):
         """
         Method to check if there is a red light affecting us. This version of
         the method is compatible with both European and US style traffic lights.
+
         :param lights_list: list containing TrafficLight objects
         :return: a tuple given by (bool_flag, traffic_light), where
                  - bool_flag is True if there is a traffic light in RED
@@ -76,6 +78,7 @@ class Agent(object):
     def _is_light_red_europe_style(self, lights_list):
         """
         This method is specialized to check European style traffic lights.
+
         :param lights_list: list containing TrafficLight objects
         :return: a tuple given by (bool_flag, traffic_light), where
                  - bool_flag is True if there is a traffic light in RED
@@ -103,6 +106,7 @@ class Agent(object):
     def _is_light_red_us_style(self, lights_list, debug=False):
         """
         This method is specialized to check US style traffic lights.
+
         :param lights_list: list containing TrafficLight objects
         :return: a tuple given by (bool_flag, traffic_light), where
                  - bool_flag is True if there is a traffic light in RED
@@ -153,9 +157,11 @@ class Agent(object):
         into account the road and lane the target vehicle is on and run a
         geometry test to check if the target vehicle is under a certain distance
         in front of our ego vehicle.
+
         WARNING: This method is an approximation that could fail for very large
          vehicles, which center is actually on a different lane but their
          extension falls within the ego vehicle lane.
+
         :param vehicle_list: list of potential obstacle to check
         :return: a tuple given by (bool_flag, vehicle), where
                  - bool_flag is True if there is a vehicle ahead blocking us
@@ -196,4 +202,3 @@ class Agent(object):
         control.hand_brake = False
 
         return control
-

@@ -50,6 +50,7 @@ class VehiclePIDController():
         """
         Execute one step of control invoking both lateral and longitudinal PID controllers to reach a target waypoint
         at a given target_speed.
+
         :param target_speed: desired vehicle speed
         :param waypoint: target location encoded as a waypoint
         :return: distance (in meters) to the waypoint
@@ -90,6 +91,7 @@ class PIDLongitudinalController():
     def run_step(self, target_speed, debug=False):
         """
         Execute one step of longitudinal control to reach a given target speed.
+
         :param target_speed: target speed in Km/h
         :return: throttle control in the range [0, 1]
         """
@@ -103,6 +105,7 @@ class PIDLongitudinalController():
     def _pid_control(self, target_speed, current_speed):
         """
         Estimate the throttle of the vehicle based on the PID equations
+
         :param target_speed:  target speed in Km/h
         :param current_speed: current speed of the vehicle in Km/h
         :return: throttle control in the range [0, 1]
@@ -143,6 +146,7 @@ class PIDLateralController():
     def run_step(self, waypoint):
         """
         Execute one step of lateral control to steer the vehicle towards a certain waypoin.
+
         :param waypoint: target waypoint
         :return: steering control in the range [-1, 1] where:
             -1 represent maximum steering to left
@@ -153,6 +157,7 @@ class PIDLateralController():
     def _pid_control(self, waypoint, vehicle_transform):
         """
         Estimate the steering angle of the vehicle based on the PID equations
+
         :param waypoint: target waypoint
         :param vehicle_transform: current transform of the vehicle
         :return: steering control in the range [-1, 1]
@@ -182,4 +187,3 @@ class PIDLateralController():
 
         return np.clip((self._K_P * _dot) + (self._K_D * _de /
                                              self._dt) + (self._K_I * _ie * self._dt), -1.0, 1.0)
-

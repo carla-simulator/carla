@@ -13,7 +13,7 @@ from collections import deque
 import random
 
 import carla
-from agents.navigation.basic.controller import VehiclePIDController
+from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import distance_vehicle, draw_waypoints
 
 
@@ -35,6 +35,7 @@ class LocalPlanner(object):
     LocalPlanner implements the basic behavior of following a trajectory of waypoints that is generated on-the-fly.
     The low-level motion of the vehicle is computed by using two PID controllers, one is used for the lateral control
     and the other for the longitudinal control (cruise speed).
+
     When multiple paths are available (intersections) this local planner makes a random choice.
     """
 
@@ -48,10 +49,14 @@ class LocalPlanner(object):
         :param opt_dict: dictionary of arguments with the following semantics:
             dt -- time difference between physics control in seconds. This is typically fixed from server side
                   using the arguments -benchmark -fps=F . In this case dt = 1/F
+
             target_speed -- desired cruise speed in Km/h
+
             sampling_radius -- search radius for next waypoints in seconds: e.g. 0.5 seconds ahead
+
             lateral_control_dict -- dictionary of arguments to setup the lateral PID controller
                                     {'K_P':, 'K_D':, 'K_I':, 'dt'}
+
             longitudinal_control_dict -- dictionary of arguments to setup the longitudinal PID controller
                                         {'K_P':, 'K_D':, 'K_I':, 'dt'}
         """
@@ -88,6 +93,7 @@ class LocalPlanner(object):
     def _init_controller(self, opt_dict):
         """
         Controller initialization.
+
         :param opt_dict: dictionary of arguments.
         :return:
         """
@@ -138,6 +144,7 @@ class LocalPlanner(object):
     def set_speed(self, speed):
         """
         Request new target speed.
+
         :param speed: new target speed in Km/h
         :return:
         """
@@ -146,6 +153,7 @@ class LocalPlanner(object):
     def _compute_next_waypoints(self, k=1):
         """
         Add new waypoints to the trajectory queue.
+
         :param k: how many waypoints to compute
         :return:
         """
@@ -182,6 +190,7 @@ class LocalPlanner(object):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
         follow the waypoints trajectory.
+
         :param debug: boolean flag to activate waypoints debugging
         :return:
         """
@@ -240,6 +249,7 @@ def _retrieve_options(list_waypoints, current_waypoint):
     """
     Compute the type of connection between the current active waypoint and the multiple waypoints present in
     list_waypoints. The result is encoded as a list of RoadOption enums.
+
     :param list_waypoints: list with the possible target waypoints in case of multiple options
     :param current_waypoint: current active waypoint
     :return: list of RoadOption enums representing the type of connection from the active waypoint to each
@@ -261,6 +271,7 @@ def _compute_connection(current_waypoint, next_waypoint):
     """
     Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
     (next_waypoint).
+
     :param current_waypoint: active waypoint
     :param next_waypoint: target waypoint
     :return: the type of topological connection encoded as a RoadOption enum:
@@ -281,4 +292,3 @@ def _compute_connection(current_waypoint, next_waypoint):
         return RoadOption.LEFT
     else:
         return RoadOption.RIGHT
-

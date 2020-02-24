@@ -11,7 +11,7 @@ import numpy as np
 import networkx as nx
 
 import carla
-from agents.navigation.basic.local_planner import RoadOption
+from agents.navigation.local_planner import RoadOption
 from agents.tools.misc import vector
 
 
@@ -240,6 +240,7 @@ class GlobalRoutePlanner(object):
         """
         This method returns the last successive intersection edge
         from a starting index on the route.
+
         This helps moving past tiny intersection edges to calculate
         proper turn decisions.
         """
@@ -401,4 +402,3 @@ class GlobalRoutePlanner(object):
                             break
 
         return route_trace
-

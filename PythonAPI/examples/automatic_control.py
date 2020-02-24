@@ -59,8 +59,8 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.behavior.behavior_agent import BehaviorAgent  # pylint: disable=import-error
-from agents.navigation.basic.roaming_agent import RoamingAgent  # pylint: disable=import-error
-from agents.navigation.basic.basic_agent import BasicAgent  # pylint: disable=import-error
+from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
+from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 
 
 # ==============================================================================
@@ -687,7 +687,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args.filter)
+        world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
 
         if args.agent == "Roaming":
@@ -722,7 +722,7 @@ def game_loop(args):
                 continue
 
             if args.agent == "Roaming" or args.agent == "Basic":
-                if controller.parse_events(client, world):
+                if controller.parse_events():
                     return
 
                 # as soon as the server is ready continue!
@@ -822,7 +822,7 @@ def main():
     argparser.add_argument("-a", "--agent", type=str,
                            choices=["Behavior", "Roaming", "Basic"],
                            help="select which agent to run",
-                           default="Behavior")
+                           default="Roaming")
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
