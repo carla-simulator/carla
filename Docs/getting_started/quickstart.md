@@ -65,7 +65,7 @@ A window will open, containing a view over the city. This is the "spectator" vie
 
 <h4>Command-line options</h4>
 
-There are some configuration options available when launching CARLA::  
+There are some configuration options available when launching CARLA:  
 
   * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
   * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
