@@ -17,7 +17,9 @@ To learn about the generated file and its specifics take a look at this [referen
 
 All the data is written in a binary file on the server side only. However, the recorder is managed using the [carla.Client](python_api.md#carla.Client).  
 To reenact the simulation, actors will be updated on every frame according to the data contained in the recorded file. Actors that appear in the simulation will be either moved or re-spawned to emulate the recording. Those that do not appear in the recording will continue their way as if nothing happened.  
-By the end of the simulation playback, vehicles will automatically be set to autopilot, but pedestrians will stop at their current location. 
+
+!!! Important
+    By the end of the playback, vehicles will be set to autopilot, but __pedestrians will stop at their current location__. 
 
 The information registered by the recorder basically includes:  
 
@@ -25,7 +27,7 @@ The information registered by the recorder basically includes:
 * __Traffic lights:__ State changes.  
 * __Vehicles and pedestrians:__ Position and orientation. 
 
-To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.   
+To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
 
 ```py
 client.start_recorder("/home/carla/recording01.log")
@@ -43,12 +45,12 @@ client.stop_recorder()
 ---------------
 ##Simulation playback
 
-A playback can be started at any point during a simulation only specifying the file name.   
+A playback can be started at any point during a simulation only specifying the file name.  
 
 ```py
 client.replay_file("recording01.log")
 ```
-This method allows for some parameters to specify which part of the simulation is:
+Additionally, this method allows for some parameters to specify which segment of the recording is reenacted:
 
 ```py
 client.replay_file("recording01.log", start, duration, camera)
@@ -56,7 +58,7 @@ client.replay_file("recording01.log", start, duration, camera)
 | Parameters | Description                                           | Notes |
 | ---------- | ----------------------------------------------------- | ----- |
 | `start`    | Recording time in seconds to start the simulation at. | If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.  |
-| `duration` | Seconds to playback. 0 is all the recording.          | By the end of the playback, all remaining actors will enable autopilot mode. |
+| `duration` | Seconds to playback. 0 is all the recording.          | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop. |
 | `camera`   | ID of the actor that the camera will focus on.        | By default the spectator will move freely. |
 
 !!! Note
@@ -135,7 +137,7 @@ Duration: 60.3753 seconds
 
 <h4>Collisions</h4> 
 
-In order to record collisions, vehicles must have a [collision detector](cameras_and_sensors.md) attached. Collisions can be queried using different flags, one of them being the `role_name = hero`, which is normally assigned to vehicles managed by the user when spawning.  
+In order to record collisions, vehicles must have a [collision detector](cameras_and_sensors.md) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
 Currently, the actor types that can be used in the query are:  
 
 * __h__ = Hero
@@ -204,7 +206,7 @@ For the sake of comprehension, let's make an example to look for vehicles stoppe
 client.show_recorder_actors_blocked("col3.log", 60, 100)
 ```
 
-The output is sorted by __duration__ which is the time it took to stop being "blocked", to move the `min_distance`:
+The output is sorted by __duration__, which states how long it took to stop being "blocked" and move the `min_distance`:
 
 ```
 Version: 1
@@ -239,7 +241,7 @@ Some of the provided scripts in `PythonAPI/examples` facilitate the use of the r
 | -------------- | ------------ |
 | `-f`           | Filename.     |
 | `-n` <small>(optional)</small>| Vehicles to spawn. Default is 10. |
-| `-n` <small>(optional)</small>| Duration of the recording. |
+| `-t` <small>(optional)</small>| Duration of the recording. |
 
 * __start_replaying.py__: starts the playback of a recording. Starting time, duration and actor to follow can be set.
 
