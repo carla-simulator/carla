@@ -23,8 +23,6 @@ void export_trafficmanager() {
     class_<Parameters>("TM_Parameters").def(vector_indexing_suite<Parameters>());
 
     class_<carla::traffic_manager::TrafficManager>("TrafficManager", no_init)
-      .def("register_vehicles", &carla::traffic_manager::TrafficManager::RegisterVehicles)
-      .def("unregister_vehicles", &carla::traffic_manager::TrafficManager::UnregisterVehicles)
       .def("set_vehicle_max_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)
       .def("set_global_max_speed_difference", &carla::traffic_manager::TrafficManager::SetGlobalPercentageSpeedDifference)
       .def("set_collision_detection", &carla::traffic_manager::TrafficManager::SetCollisionDetection)
