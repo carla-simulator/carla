@@ -17,7 +17,8 @@
   * Fixed docker build of .BIN for pedestrian navigation
   * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
-  * Fixed agent failures due to API changes in `is_within_distance_ahead()`
+  * Fixed agent failures due to API changes in is_within_distance_ahead()
+  * Fixed assertion bug when using LibCarla
   * Fixed incorrect doppler velocity for RADAR sensor
   * Fixed documentation links
   * Upgraded Boost to 1.72.0
@@ -54,6 +55,7 @@
   * Fixed an error in `automatic_control.py` failing because the `Num Lock` key
   * Fixed client_bounding_boxes.py example script
   * Fixed materials and semantic segmentation issues regarding importing assets
+  * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
