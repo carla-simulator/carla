@@ -24,7 +24,7 @@ wget -c "${FBXSDK_URL}" -P "${CARLA_DOCKER_UTILS_FOLDER}"
 echo "Unpacking..."
 mkdir -p "${FBX2OBJ_DEP_FOLDER}"
 tar -xvzf "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz" -C "${CARLA_DOCKER_UTILS_FOLDER}" "${LIB_NAME}"
-rm ${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz
+rm "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz"
 
 echo "Installing..."
 echo -e "y\nyes\nn\n" | "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}" "${FBX2OBJ_DEP_FOLDER}"
