@@ -181,8 +181,6 @@ class World(object):
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
-        weather = self.world.get_weather()
-        self.world.set_weather(weather)
 
     def restart(self):
         self.player_max_speed = 1.589
@@ -215,8 +213,6 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-            weather = self.world.get_weather()
-            self.world.set_weather(weather)
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -301,7 +297,8 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock):
-        current_lights = self._lights
+        if isinstance(self._control, carla.VehicleControl):
+            current_lights = self._lights
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -382,6 +379,8 @@ class KeyboardControl(object):
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                    elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
+                        current_lights ^= carla.VehicleLightState.Special1
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
                         current_lights ^= carla.VehicleLightState.HighBeam
                     elif event.key == K_l:
@@ -919,9 +918,6 @@ class CameraManager(object):
     def toggle_camera(self):
         self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
         self.set_sensor(self.index, notify=False, force_respawn=True)
-        world = self._parent.get_world()
-        weather = world.get_weather()
-        world.set_weather(weather)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
