@@ -429,10 +429,10 @@ class KeyboardControl(object):
             self._control.throttle = min(self._control.throttle + 0.01, 1)
             self._control.brake = 0
         elif keys[K_DOWN] or keys[K_s]:
-            self._control.brake = 1
-            self._control.throttle = max(self._control.throttle - 0.03, 0)
+            self._control.brake = min(self._control.brake + 0.2, 1)
+            self._control.throttle = 0
         else:
-            self._control.throttle = max(self._control.throttle - 0.01, 0)
+            self._control.throttle = max(self._control.throttle - 0.03, 0)
             self._control.brake = 0
 
         steer_increment = 5e-4 * milliseconds

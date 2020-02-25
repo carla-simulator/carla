@@ -822,7 +822,7 @@ def main():
     argparser.add_argument("-a", "--agent", type=str,
                            choices=["Behavior", "Roaming", "Basic"],
                            help="select which agent to run",
-                           default="Roaming")
+                           default="Behavior")
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
