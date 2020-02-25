@@ -51,6 +51,7 @@ using namespace std::chrono_literals;
   }
 
   void Episode::Listen() {
+    carla::log_info("Episode::Listen");
     std::weak_ptr<Episode> weak = shared_from_this();
     _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
@@ -84,10 +85,10 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           /// Episode change
-          if(!episode_changed && self->_episode_changed){
+          if(episode_changed) {
+            carla::log_info("==== EPISODE CHANGE ==== ");
             self->OnEpisodeChanged();
           }
-          self->_episode_changed = episode_changed;
 
           // Notify waiting threads and do the callbacks.
           self->_snapshot.SetValue(next);
@@ -103,6 +104,7 @@ using namespace std::chrono_literals;
         }
       }
     });
+    carla::log_info("Episode::Listen end");
   }
 
   boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {
@@ -145,7 +147,9 @@ using namespace std::chrono_literals;
   }
 
 void Episode::OnEpisodeChanged() {
+  carla::log_info("Episode::OnEpisodeChanged");
   traffic_manager::TrafficManager::Reset();
+  carla::log_info("Episode::OnEpisodeChanged end");
 }
 
 } // namespace detail

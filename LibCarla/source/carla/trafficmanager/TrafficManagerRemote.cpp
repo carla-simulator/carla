@@ -20,8 +20,19 @@ TrafficManagerRemote::TrafficManagerRemote(
   : client(_serverTM.first, _serverTM.second),
     episodeProxyTM(episodeProxy) {
 
-  std::thread _thread = std::thread([this] () {
+  Start();
 
+}
+
+/// Destructor.
+TrafficManagerRemote::~TrafficManagerRemote() {
+  Release();
+}
+
+void TrafficManagerRemote::Start() {
+  _keep_alive = true;
+
+  std::thread _thread = std::thread([this] () {
     std::chrono::milliseconds wait_time(TM_TIMEOUT);
     try {
       do {
@@ -59,15 +70,6 @@ TrafficManagerRemote::TrafficManagerRemote(
   _thread.detach();
 }
 
-/// Destructor.
-TrafficManagerRemote::~TrafficManagerRemote() {
-  Release();
-}
-
-void TrafficManagerRemote::Start() {
-  _keep_alive = true;
-}
-
 void TrafficManagerRemote::Stop() {
   if(_keep_alive) {
     _keep_alive = false;
@@ -83,6 +85,10 @@ void TrafficManagerRemote::Release() {
 
 void TrafficManagerRemote::Reset() {
   Stop();
+
+  carla::client::detail::EpisodeProxy episode_proxy = episodeProxyTM.Lock()->GetCurrentEpisode();
+  episodeProxyTM = episode_proxy;
+
   Start();
 }
 

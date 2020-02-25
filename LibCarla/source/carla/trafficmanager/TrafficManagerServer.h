@@ -34,7 +34,7 @@ public:
   /// local instance through a TrafficManagerBase pointer.
   TrafficManagerServer(
       uint16_t &RPCPort,
-      carla::traffic_manager::TrafficManagerBase* /* tm */)
+      carla::traffic_manager::TrafficManagerBase* tm)
     : _RPCPort(RPCPort) {
     carla::log_info("TrafficManagerServer CTR", _RPCPort);
     uint16_t counter = 0;
@@ -42,7 +42,7 @@ public:
       try {
 
         /// Create server instance.
-        //server = new ::rpc::server(RPCPort);
+        server = new ::rpc::server(RPCPort);
 
       } catch(std::exception& e) {
         /// Update port number and try again.
@@ -58,7 +58,7 @@ public:
       carla::log_info("TrafficManagerServer CTR (", _RPCPort,")... try", counter);
       counter ++;
     }
-/*
+
     /// If server still not created throw a runtime exception.
     if(server == nullptr) {
 
@@ -167,7 +167,7 @@ public:
       /// user client in asynchronous mode.
       server->async_run();
     }
-    */
+
     carla::log_info("TrafficManagerServer CTR end", _RPCPort);
   }
 

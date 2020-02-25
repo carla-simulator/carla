@@ -110,8 +110,8 @@ namespace detail {
     return _pimpl->CallAndWait<std::pair<std::string, uint16_t>>("get_traffic_manager_running", port);
   };
 
-  void Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
-    _pimpl->CallAndWait<void>("add_traffic_manager_running", trafficManagerInfo);
+  bool Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+    return _pimpl->CallAndWait<bool>("add_traffic_manager_running", trafficManagerInfo);
   };
 
   void Client::DestroyTrafficManager(uint16_t port) const {
@@ -141,8 +141,10 @@ namespace detail {
   }
 
   void Client::LoadEpisode(std::string map_name) {
+    carla::log_info("Client::LoadEpisode");
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name));
+    carla::log_info("Client::LoadEpisode end");
   }
 
   rpc::EpisodeInfo Client::GetEpisodeInfo() {

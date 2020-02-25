@@ -25,7 +25,7 @@ void PipelineStage::Start() {
   if(worker_thread) {
     Stop();
   }
-  //worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
+  worker_thread = std::make_unique<std::thread>(&PipelineStage::Update, this);
 }
 
 void PipelineStage::Stop() {

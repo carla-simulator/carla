@@ -68,6 +68,7 @@ namespace detail {
   // ===========================================================================
 
   EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+    carla::log_info("Simulator::LoadEpisode", map_name);
     const auto id = GetCurrentEpisode().GetId();
     _client.LoadEpisode(std::move(map_name));
     size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;

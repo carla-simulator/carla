@@ -224,20 +224,19 @@ private:
     uint16_t port);
 
   TrafficManagerBase* GetTM(uint16_t port) const {
-    _mutex.lock();
+    std::lock_guard<std::mutex> lock(_mutex);
     auto it = _tm_map.find(port);
     if (it != _tm_map.end()) {
       _mutex.unlock();
       return it->second.get();
     }
-    _mutex.unlock();
     return nullptr;
   }
 
   static std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> _tm_map;
+  static std::mutex _mutex;
 
   uint16_t _port = TM_DEFAULT_PORT;
-  mutable std::recursive_mutex _mutex;
 
 };
 

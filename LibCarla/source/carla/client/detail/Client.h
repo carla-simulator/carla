@@ -70,7 +70,7 @@ namespace detail {
     std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const;
 
     /// Informs the server that a Traffic Manager is running on <IP, port>
-    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const;
+    bool AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const;
 
     void DestroyTrafficManager(uint16_t port) const;
 

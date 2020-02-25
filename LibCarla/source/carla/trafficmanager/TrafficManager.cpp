@@ -16,6 +16,7 @@ namespace carla {
 namespace traffic_manager {
 
 std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> TrafficManager::_tm_map;
+std::mutex TrafficManager::_mutex;
 
 TrafficManager::TrafficManager(
     carla::client::detail::EpisodeProxy episode_proxy,
@@ -24,16 +25,16 @@ TrafficManager::TrafficManager(
   carla::log_info("TrafficManager::CTR");
   if(!GetTM(_port)){
     // Check if a TM server already exists and connect to it
-/*    if(!CreateTrafficManagerClient(episode_proxy, port)) {
+    if(!CreateTrafficManagerClient(episode_proxy, port)) {
       // As TM server not running, create one
-    }
-  */
       CreateTrafficManagerServer(episode_proxy, port);
+    }
   }
   carla::log_info("TrafficManager::CTR end");
 }
 
 void TrafficManager::Release() {
+  std::lock_guard<std::mutex> lock(_mutex);
   carla::log_info("TrafficManager::Release", _tm_map.size());
   for(auto& tm : _tm_map) {
     tm.second->Release();
@@ -45,33 +46,28 @@ void TrafficManager::Release() {
 }
 
 void TrafficManager::Reset() {
-  // TODO: reset all TMs
-  /*for(auto& tm : _tm_map) {
-    tm.second->ResetTM(tm.first);
-  }*/
+  std::lock_guard<std::mutex> lock(_mutex);
+  carla::log_info("TrafficManager::Reset");
   for(auto& tm : _tm_map) {
     tm.second->Reset();
   }
+  carla::log_info("TrafficManager::Reset end");
 }
 
 void TrafficManager::ReleaseTM(uint16_t port) {
-  _mutex.lock();
+  std::lock_guard<std::mutex> lock(_mutex);
   carla::log_info("TrafficManager::ReleaseTM");
 
   auto it = _tm_map.find(port);
 
   if(it != _tm_map.end()) {
-    carla::log_info("TrafficManager::Releasing TM", port, "...");
-    TrafficManagerBase *base_ptr = it->second.release();
-    delete base_ptr;
     _tm_map.erase(it);
   }
   carla::log_info("TrafficManager::ReleaseTM end");
-  _mutex.unlock();
 }
 
 void TrafficManager::ResetTM(uint16_t port) {
-  _mutex.lock();
+  std::lock_guard<std::mutex> lock(_mutex);
   carla::log_info("TrafficManager::ResetTM");
   TrafficManagerBase* tm = GetTM(port);
   if(tm) {
@@ -104,7 +100,6 @@ void TrafficManager::ResetTM(uint16_t port) {
     }
   }
   carla::log_info("TrafficManager::ResetTM end");
-  _mutex.unlock();
 }
 
 void TrafficManager::CreateTrafficManagerServer(
@@ -165,9 +160,6 @@ void TrafficManager::CreateTrafficManagerServer(
     return localIP;
   };
 
-  /// Set default port
-  uint16_t RPCportTM = port;
-
   /// Define local constants
   const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
   const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
@@ -185,10 +177,10 @@ void TrafficManager::CreateTrafficManagerServer(
     lateral_highway_param,
     perc_difference_from_limit,
     episode_proxy,
-    RPCportTM);
+    port);
 
   /// Get TM server info (Local IP & PORT)
-  serverTM = GetLocalIP(RPCportTM);
+  serverTM = GetLocalIP(port);
 
   /// Set this client as the TM to server
   episode_proxy.Lock()->AddTrafficManagerRunning(serverTM);
@@ -204,11 +196,14 @@ void TrafficManager::CreateTrafficManagerServer(
   /// Set the pointer of the instance
   _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
   carla::log_info("TrafficManager::CreateTrafficManagerServer", port,"end (", _tm_map.size(),")");
+
 }
 
 bool TrafficManager::CreateTrafficManagerClient(
     carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
+
+  carla::log_info("TrafficManager::CreateTrafficManagerClient", port);
 
   bool result = false;
 
@@ -261,8 +256,9 @@ bool TrafficManager::CreateTrafficManagerClient(
             << std::endl;
       #endif
     }
-  }
 
+  }
+  carla::log_info("TrafficManager::CreateTrafficManagerClient end", port);
   return result;
 }
 

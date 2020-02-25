@@ -62,6 +62,7 @@ namespace detail {
     /// @{
 
     EpisodeProxy ReloadEpisode() {
+      carla::log_info("Simulator::ReloadEpisode");
       return LoadEpisode("");
     }
 
@@ -178,8 +179,8 @@ namespace detail {
     }
 
     /// Informs that a Traffic Manager is running on <IP, port>
-    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
-      _client.AddTrafficManagerRunning(trafficManagerInfo);
+    bool AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+      return _client.AddTrafficManagerRunning(trafficManagerInfo);
     }
 
     void DestroyTrafficManager(uint16_t port) const {
