@@ -116,6 +116,11 @@ namespace road {
     }
 
     template <typename T>
+    std::vector<const T*> GetInfos() const {
+      return _info.GetInfos<T>();
+    }
+
+    template <typename T>
     const T *GetObject(const double s) const {
       return _objects.GetObject<T>(s);
     }

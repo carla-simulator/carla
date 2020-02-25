@@ -29,7 +29,7 @@ Use ARROWS or WASD keys for control.
     I            : toggle interior light
 
     TAB          : change sensor position
-    `            : next sensor
+    ` or N       : next sensor
     [1-9]        : change to sensor [1-9]
     G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
@@ -111,6 +111,7 @@ try:
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_m
+    from pygame.locals import K_n
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
@@ -296,7 +297,8 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock):
-        current_lights = self._lights
+        if isinstance(self._control, carla.VehicleControl):
+            current_lights = self._lights
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -318,6 +320,8 @@ class KeyboardControl(object):
                 elif event.key == K_g:
                     world.toggle_radar()
                 elif event.key == K_BACKQUOTE:
+                    world.camera_manager.next_sensor()
+                elif event.key == K_n:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
@@ -375,6 +379,8 @@ class KeyboardControl(object):
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                    elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
+                        current_lights ^= carla.VehicleLightState.Special1
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
                         current_lights ^= carla.VehicleLightState.HighBeam
                     elif event.key == K_l:

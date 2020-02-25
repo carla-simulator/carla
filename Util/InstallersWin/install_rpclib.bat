@@ -65,7 +65,7 @@ echo %FILE_N% Generating build...
 
 cmake .. -G "Visual Studio 15 2017 Win64"^
         -DCMAKE_BUILD_TYPE=Release^
-        -RPCLIB_BUILD_EXAMPLES=OFF^
+        -DRPCLIB_BUILD_EXAMPLES=OFF^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX=%RPC_INSTALL_DIR%^
         %RPC_SRC_DIR%

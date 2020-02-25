@@ -51,6 +51,28 @@ Typically we won't need the client object anymore, all the objects created by
 the world will connect to the IP and port provided if they need to. These
 operations are usually done in the background and are transparent to the user.
 
+Changing the map
+----------------
+
+The map can be changed from the Python API with
+
+```py
+world = client.load_world('Town01')
+```
+
+this creates an empty world with default settings. The list of currently
+available maps can be retrieved with
+
+```py
+print(client.get_available_maps())
+```
+
+To reload the world using the current active map, use
+
+```py
+world = client.reload_world()
+```
+
 #### Blueprints
 
 A blueprint contains the information necessary to create a new actor. For

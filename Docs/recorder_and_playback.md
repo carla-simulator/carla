@@ -1,6 +1,33 @@
 # Recording and Replaying system
 
 CARLA includes now a recording and replaying API, that allows to record a simulation in a file and
+later replay that simulation. The file is written on server side only, and it includes which
+**actors are created or destroyed** in the simulation, the **state of the traffic lights**
+and the **position** and **orientation** of all vehicles and pedestrians.
+
+To start recording we only need to supply a file name:
+
+```py
+client.start_recorder("recording01.log")
+```
+
+To stop the recording, we need to call:
+
+```py
+client.stop_recorder()
+```
+
+At any point we can replay a simulation, specifying the filename:
+
+```py
+client.replay_file("recording01.log")
+```
+
+The replayer replicates the actor and traffic light information of the recording each frame.
+
+For more details, [Recorder and Playback system](recorder_and_playback.md)
+
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and
 later replay that simulation. The file is written on the server side only, and it includes which
 **actors are created or destroyed** in the simulation, the **state of the traffic lights** and
 the **position** and **orientation** of all vehicles and pedestrians.

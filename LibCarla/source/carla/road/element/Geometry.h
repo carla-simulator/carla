@@ -8,6 +8,8 @@
 
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/CubicPolynomial.h"
+#include "carla/geom/Rtree.h"
 
 namespace carla {
 namespace road {
@@ -16,7 +18,9 @@ namespace element {
   enum class GeometryType : unsigned int {
     LINE,
     ARC,
-    SPIRAL
+    SPIRAL,
+    POLY3,
+    POLY3PARAM
   };
 
   struct DirectedPoint {
@@ -80,8 +84,7 @@ namespace element {
         _length(length),
         _start_position_offset(start_offset),
         _heading(heading),
-        _start_position(start_pos)
-    {}
+        _start_position(start_pos) {}
 
   protected:
 
@@ -188,6 +191,153 @@ namespace element {
 
     double _curve_start;
     double _curve_end;
+  };
+
+  class GeometryPoly3 final : public Geometry {
+  public:
+
+    GeometryPoly3(
+        double start_offset,
+        double length,
+        double heading,
+        const geom::Location &start_pos,
+        double a,
+        double b,
+        double c,
+        double d)
+      : Geometry(GeometryType::POLY3, start_offset, length, heading, start_pos),
+        _a(a),
+        _b(b),
+        _c(c),
+        _d(d) {
+      _poly.Set(a, b, c, d);
+      PreComputeSpline();
+    }
+
+    double Geta() const {
+      return _a;
+    }
+    double Getb() const {
+      return _b;
+    }
+    double Getc() const {
+      return _c;
+    }
+    double Getd() const {
+      return _d;
+    }
+
+    DirectedPoint PosFromDist(double dist) const override;
+
+    std::pair<float, float> DistanceTo(const geom::Location &) const override;
+
+  private:
+
+    geom::CubicPolynomial _poly;
+
+    double _a;
+    double _b;
+    double _c;
+    double _d;
+
+    struct RtreeValue {
+      double u = 0;
+      double v = 0;
+      double s = 0;
+      double t = 0;
+    };
+    using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
+    using TreeElement = Rtree::TreeElement;
+    Rtree _rtree;
+    void PreComputeSpline();
+  };
+
+  class GeometryParamPoly3 final : public Geometry {
+  public:
+
+    GeometryParamPoly3(
+        double start_offset,
+        double length,
+        double heading,
+        const geom::Location &start_pos,
+        double aU,
+        double bU,
+        double cU,
+        double dU,
+        double aV,
+        double bV,
+        double cV,
+        double dV,
+        bool arcLength)
+      : Geometry(GeometryType::POLY3PARAM, start_offset, length, heading, start_pos),
+        _aU(aU),
+        _bU(bU),
+        _cU(cU),
+        _dU(dU),
+        _aV(aV),
+        _bV(bV),
+        _cV(cV),
+        _dV(dV),
+        _arcLength(arcLength) {
+        _polyU.Set(aU, bU, cU, dU);
+        _polyV.Set(aV, bV, cV, dV);
+        PreComputeSpline();
+    }
+
+    double GetaU() const {
+      return _aU;
+    }
+    double GetbU() const {
+      return _bU;
+    }
+    double GetcU() const {
+      return _cU;
+    }
+    double GetdU() const {
+      return _dU;
+    }
+    double GetaV() const {
+      return _aV;
+    }
+    double GetbV() const {
+      return _bV;
+    }
+    double GetcV() const {
+      return _cV;
+    }
+    double GetdV() const {
+      return _dV;
+    }
+
+    DirectedPoint PosFromDist(double dist) const override;
+
+    std::pair<float, float> DistanceTo(const geom::Location &) const override;
+
+  private:
+
+    geom::CubicPolynomial _polyU;
+    geom::CubicPolynomial _polyV;
+    double _aU;
+    double _bU;
+    double _cU;
+    double _dU;
+    double _aV;
+    double _bV;
+    double _cV;
+    double _dV;
+    bool _arcLength;
+
+    struct RtreeValue {
+      double u = 0;
+      double v = 0;
+      double s = 0;
+      double t_u = 0;
+      double t_v = 0;
+    };
+    using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
+    using TreeElement = Rtree::TreeElement;
+    Rtree _rtree;
+    void PreComputeSpline();
   };
 
 } // namespace element

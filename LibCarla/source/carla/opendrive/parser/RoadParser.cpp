@@ -164,6 +164,11 @@ namespace parser {
         offset.d = node_offset.attribute("d").as_double();
         road.section_offsets.emplace_back(offset);
       }
+      // Add default lane offset if none is found
+      if(road.section_offsets.size() == 0) {
+        LaneOffset offset { 0.0, 0.0, 0.0, 0.0, 0.0 };
+        road.section_offsets.emplace_back(offset);
+      }
 
       // lane sections
       for (pugi::xml_node node_section : node_road.child("lanes").children("laneSection")) {

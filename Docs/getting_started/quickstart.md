@@ -12,7 +12,7 @@ The quickstart installation uses a pre-packaged version of CARLA. This comprises
 However, some requirements are still a must.  
 
   * __Server side:__ A good GPU will be needed to run a highly realistic environment (4GB minimum). A dedicated GPU is highly advised for machine learning. 
-  * __Client side:__ The API is accessed via command line. To do so, [Python](https://www.python.org/downloads/) is necessary, and also a good internet connection and two TCP ports (2000 and 1 by default). 
+  * __Client side:__ The API is accessed via command line. To do so, [Python](https://www.python.org/downloads/) is necessary, and also a good internet connection and two TCP ports (2000 and 2001 by default). 
   * __System requirements:__ Any 64-bits OS should run the corresponding version of CARLA.
   * __Other requirements:__  Only two specific Python modules: [Pygame](https://www.pygame.org/download.shtml), to create graphics directly with Python and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
 
