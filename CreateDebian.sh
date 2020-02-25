@@ -47,8 +47,8 @@ dh_make --indep --createorig -y  #to create necessary file structure for debian 
 cd debian/
 
 #removing unnecessary files
-rm *.ex
-rm *.EX
+rm ./*.ex
+rm ./*.EX
 
 rm control
 
