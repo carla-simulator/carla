@@ -175,6 +175,9 @@ if not defined install_boost (
     goto failed
 )
 
+copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\rational.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\rational.hpp"
+copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\read.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\geometry\io\wkt\read.hpp"
+
 rem ============================================================================
 rem -- Assets download URL -----------------------------------------------------
 rem ============================================================================

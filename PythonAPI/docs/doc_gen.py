@@ -77,6 +77,10 @@ class MarkdownFile:
     def title_html(self, strongness, buf):
         self._data = join([
             self._data, '\n', self.list_depth(), '<h', str(strongness), '>', buf, '</h', str(strongness), '>\n'])
+    
+    def inherit_join(self, inh):
+        self._data = join([
+            self._data,'<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
@@ -431,25 +435,22 @@ class Documentation:
         return md.data()
 
     def gen_body(self):
-        """Generates the documentaion body"""
+        """Generates the documentation body"""
         md = MarkdownFile()
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name
             # Generate class doc (if any)
             if valid_dic_val(module, 'classes'):
-                for cl in sorted(module['classes']):
+                for cl in sorted(module['classes'], key = lambda i: i['class_name']):
                     class_name = cl['class_name']
                     class_key = join([module_key, class_name], '.')
+                    current_title = module_name+'.'+class_name
+                    md.title(2, join([current_title,'<a name="'+current_title+'"></a>']))
                     inherits = ''
                     if valid_dic_val(cl, 'parent'):
-                        inherits = small(parentheses(create_hyperlinks(cl['parent'])))
-                    md.title(2, join([
-                        module_name, '.',
-                        class_name,
-                        html_key(class_key),
-                        inherits, ' ',
-                        small(italic('class'))]))
+                        inherits = italic(create_hyperlinks(cl['parent']))
+                        md.inherit_join(inherits)
                     # Class main doc
                     if valid_dic_val(cl, 'doc'):
                         md.textn(create_hyperlinks(md.prettify_doc(cl['doc'])))

@@ -1,130 +1,136 @@
-<h1>How to build CARLA on Windows</h1>
+<h1>Windows build</h1>
+  * [__Requirements__](#requirements):  
+	* System specifics
+  * [__Necessary software__](#necessary-software):  
+	* Minor installations: CMake, git, make, Python3 x64  
+	* Visual Studio 2017
+	* Unreal Engine 4.22 
+  * [__CARLA build__](#carla-build): 
+	* Clone repository  
+	* Get assets  
+	* make CARLA
+
+The build process can be quite long and tedious. This documentation tries to make things clear and provides for a **[F.A.Q.](../faq)** with solutions for the most common starting issues. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Windows. Feel free to login and become part of the community. 
+
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+CARLA forum</a>
+</p>
+</div>
 ---
+##Requirements
+<h4>System specifics</h4>
 
-<h3>Necessary software</h3>
+  * __x64 system:__ The simulator should run in any Windows system currently available as long as it is a 64 bits OS. 
+  * __30GB disk space:__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.  
+  * __An adequate GPU:__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning. 
+  * __Two TCP ports and good internet connection:__ 2000 and 2001 by default. Be sure neither firewall nor any other application are blocking these. 
+---
+##Necessary software
+<h4>Minor installations</h4>
+Some software is needed for the build process the installation of which is quite straightforward.  
 
-- [Git](https://git-scm.com/downloads)
-- [Make](http://gnuwin32.sourceforge.net/packages/make.htm)
-- [CMake](https://cmake.org/download/)
-- [Python3 x64](https://www.python.org/downloads/)
+* [CMake](https://cmake.org/download/): Generates standard build files from simple configuration files.
+* [Git](https://git-scm.com/downloads): Version control system to manage CARLA repositories. 
+* [Make](http://gnuwin32.sourceforge.net/packages/make.htm): Executable generator. 
+* [Python3 x64](https://www.python.org/downloads/): Main script language that CARLA provides support to. Having a x32 version installed may cause conflict even if the x64 is also there, so it is highly advisable to uninstall these.  
 
-!!! important
-    Be sure that these programs are added to your environment path, so you can use them from
-    your command prompt.
+!!! Important
+    Be sure that these programs are added to your [environment path](https://www.java.com/en/download/help/path.xml), so you can use them from your command prompt. The path values to add lead to the _bin_ directories for each software. 
 
-!!! important
-    If make complains about missing libintl3.dll or/and libiconv2.dll please donwload the
-    [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the
-    bin contento into the make installation path.
 
-Also:
+<h4>Visual Studio 2017</h4>
 
-- [Unreal Engine](https://www.unrealengine.com/download) (v4.22.x)
-- [Visual Studio](https://www.visualstudio.com/downloads/) (2017)
+Get the 2017 version from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). **Community** is the free version. Two elements will be needed to set up the environment for the build process. These must be added when using the Visual Studio Installer:  
 
-Make sure all the modules of the **requirements.txt** files are installed.
+* **Windows 8.1 SDK**: On the right there is an _Installation details_ section. Find this SDK and select it. 
+* **x64 Visual C++ Toolset**: In the main _Workloads_ section, choose **Desktop development with C++**. Thus will enable a x64 command prompt that will be used for the build. After installing, check this up by pressing the `Win` button and search for `x64` (be careful to **not open a `x86_x64` prompt**). The name of this command prompt can change a bit depending on the Visual Studio installed.  
 
-<h3>Environment Setup</h3>
+!!! Important
+    Having other Visual Studio versions may cause conflict during the build process, even if these have been uninstalled (Visual Studio is not that good at getting rid of itself and erasing registers). To completely clean Visual Studio from the computer run `.\InstallCleanup.exe -full` found in `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout`. This may need admin permissions.   
 
-In order to build CARLA you must **enable the x64 Visual C++ Toolset**.
-The Windows 8.1 SDK is also required for installation.
-We recommend to use this environment for everything you do in this tutorial.
-You have different options:
 
-- **Recomended:** Use [`Visual Studio x64 Native Tools Command Prompt`][recommendedlink].
-Just press the `Win` button and search for `x64`
-(be careful to not **unintentionally open a `x86_x64` prompt**), because the name of this
-Command Prompt can change depending on the lenguage you have Visual Studio installed.
-- [Enable a 64-Bit Visual C++ Toolset on the Command Line][toolsetlink] 
-(the instructions will depend on the version of VS that you have).
+<h4>Unreal Engine 4.22</h4> 
 
-[recommendedlink]: https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs
-[toolsetlink]: https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
+Go to the [Unreal Engine](https://www.unrealengine.com/download) site and download the Epic Games Launcher. In the _Library_ section, inside the _Engine versions_ panel, download any Unreal Engine 4.22.x version. After installing it, make sure to run it in order to be sure that everything was properly installed.   
 
-<h3>Clone the repository</h3>
+!!! Note
+    This note will only be relevant if issues arise during the build process and manual build is required. Having VS2017 and UE4.22 installed, a **Generate Visual Studio project files** option should appear when doing right-click on **.uproject** files. If this option is not available, something went wrong while installing Unreal Engine and it may need to be reinstalled. Create a simple Unreal Engine project to check up.  
 
-Go to the path you want to install CARLA and use git to download the project
-using the following command:
+---
+# CARLA build
+
+!!! Important
+    Lots of things have happened so far. It is highly advisable to do a quick restart of the system.  
+
+<h4>Clone repository</h4>
+
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="https://github.com/carla-simulator/carla" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<span class="icon icon-github"></span> CARLA repository</a>
+</p>
+</div>
+
+The project can be found in GitHub. It should be either downloaded and extracted or cloned on the local computer. To do so, open the **x64 terminal** previously installed and go to the path where CARLA will be installed. Then, run the following command: 
 
 ```cmd
-git clone https://github.com/carla-simulator/carla.git
+git clone https://github.com/carla-simulator/carla
 ```
 
-and get in the created folder:
+Now the latest content for the project, known as `master` branch in the repository, has been copied in local. 
 
+!!! Note
+    The `master` branch contains the latest fixes and features. Stable code is inside the `stable` branch, and it can be built by changing the branch. The same goes for previous CARLA releases. Always remember to check the current branch in git with `git branch`. 
+
+<h3>Get assets</h3>
+
+Only the assets package, the visual content, is yet to be downloaded. `\Util\ContentVersions.txt` contains the links to the assets for every CARLA version. These must be extracted in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
+Download the **latest** assets to work with the current version of CARLA. When working with branches containing previous releases of CARLA, make sure to download the proper assets.
+
+<h3>make CARLA</h3>
+
+Go to the root CARLA folder, the one cloned from the repository. It is time to do the automatic build. The process may take a while, it will download and install the necessary libraries. It might take 20-40 minutes, depending on hardware and internet connection. There are different make commands to build the different modules:   
+
+* **launch** will compile the server simulator and launch it in Unreal Engine. Press Play to start the spectator view and close the editor window to exit. Camera can be moved with WASD keys and rotated by clicking the scene while moving the mouse around: 
 ```cmd
-cd carla
+make launch
 ```
 
-<h3>Download CARLA contents</h3>
+!!! Note
+    The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time (needed to cook the content to launch). Agree in order to open the project. Also, during the first launch Unreal Editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.
 
-Depending on the Carla version that you are unsing download one of the links that you can find
-in `\Util\ContentVersions.txt` and extract the content to `Unreal\CarlaUE4\Content\Carla`,
-if the path doesn't exist, create it.
+* **PythonAPI** will compile the API client, necessary to grant control over the simulation. It is only needed the first time (remember to run it again when the CARLA code is updated). After building it, scripts can run. The following example will spawn some life into the city:   
+```cmd
+make PythonAPI && cd PythonAPI/Examples && python tm_spawn_npc.py
+```
 
-# Build CARLA
----
+!!! Note
+    If the simulation is running at very low FPS rates, open the UE4.22 editor and go to "Edit>Editor preferences>Performance" and disable: **Use less CPU when in background**. 
 
-Once you have downloaded the repo and extract the Carla contents you can start with
-the automatic build. The process may take a while, it will download and install the
-necessary libraries (Boost, RPCLib and googletest). Expect 20-40 minutes,
-depending on your hardware and internet connection.
-If you get any error comment on [GitHub #647](https://github.com/carla-simulator/carla/issues/647)
-issue or just ask on the [Windows Discord channel](https://discord.gg/42KJdRj).
-
-<h3>Build commands</h3>
+Now everything is ready to go and CARLA has been successfully built. Here is a brief summary of the most useful `make` commands available:  
 
 | Command | Description |
 | --- | --- |
-| `make help` | Print all available commands |
-| `make launch` | Launches Carla Editor |
-| `make package` | Builds CARLA and creates a packaged version for distribution |
-| `make clean` | Deletes all the binaries and temporals generated by the build system |
-| `make rebuild` | Rebuilds Carla project, dependencies not build |
+| `make help` | Prints all available commands. |
+| `make launch` | Launches CARLA Editor. |
+| `make PythonAPI` | Builds the CARLA client. |
+| `make package` | Builds CARLA and creates a packaged version for distribution. |
+| `make clean` | Deletes all the binaries and temporals generated by the build system. |
+| `make rebuild` | make clean and make launch both in one command. |
+
+Keep reading this section to learn more about how to update CARLA, the build itself and some advanced configuration options.
+Otherwise, visit the __First steps__ section to learn about CARLA: 
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="../python_api_tutorial" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+Go to First steps</a>
+</p>
+</div>
 
 
-If you build Carla for the first time or after you clean the project it will probably ask you to
-build the `UE4Editor-CarlaUE4.dll` and `UE4Editor-Carla.dll` also (as is needed for coocking the
-content for launch Carla), agree and the project will be opened in the Unreal Engine in a few minutes.
 
-Example of building Carla 0.9.0 for first time:
-
-```cmd
-1) git clone https://github.com/carla-simulator/carla.git
-2) Download https://drive.google.com/uc?id=1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx&export=download
-3) Extract to Unreal/CarlaUE4/Content/Carla
-4) make launch
-```
-
-# Update CARLA
----
-
-Every new release of CARLA we release a new package with the latest changes in the CARLA assets.
-To download the latest version and recompile CARLA, run:
-
-```cmd
-1) make clean  # Deletes all the binaries and temporals generated by the build system
-2) git pull    # Download the last CARLA modifications
-3) Download the latest version of assets (if needed)
-4) make launch # Build and launch CARLA
-```
-
-# Possible build errors
----
-
-If you also have installed other version of Visual Studio or Microsoft Compiler and get any error
-during the build as C2440 or C2672 this is probably because is not using the 2017 compiler,
-so try first to uninstall the other ones and rebuild again.
-
-If you would like to keep the other version of Visual Studio edit
-```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` adding the following lines:
-
-```xml
-<VCProjectFileGenerator>
-    <Version>VisualStudio2017</Version>
-</VCProjectFileGenerator>
-
-<WindowsPlatform>
-    <Compiler>VisualStudio2017</Compiler>
-</WindowsPlatform>
-```

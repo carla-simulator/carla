@@ -11,6 +11,10 @@
 namespace carla {
 namespace geom {
 
+  double Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
+    return std::acos(Dot(a, b) / (a.Length() * b.Length()));
+  }
+
   std::pair<float, float> Math::DistanceSegmentToPoint(
       const Vector3D &p,
       const Vector3D &v,
@@ -30,7 +34,7 @@ namespace geom {
       Vector3D p,
       Vector3D start_pos,
       const float length,
-      float heading,   // [radians]
+      float heading,       // [radians]
       float curvature) {
 
     /// @todo: Because Unreal's coordinates, hacky way to correct
@@ -100,8 +104,8 @@ namespace geom {
         0.0f);
     const float end_dist = Distance2D(end_pos, rotated_p);
     return (start_dist < end_dist) ?
-           std::make_pair(0.0f, start_dist) :
-           std::make_pair(length, end_dist);
+        std::make_pair(0.0f, start_dist) :
+        std::make_pair(length, end_dist);
   }
 
   Vector3D Math::RotatePointOnOrigin2D(Vector3D p, float angle) {

@@ -16,15 +16,20 @@ Use ARROWS or WASD keys for control.
 
     W            : throttle
     S            : brake
-    AD           : steer
+    A/D          : steer left/right
     Q            : toggle reverse
     Space        : hand-brake
     P            : toggle autopilot
     M            : toggle manual transmission
     ,/.          : gear up/down
 
+    L            : toggle next light type
+    SHIFT + L    : toggle high beam
+    Z/X          : toggle right/left blinker
+    I            : toggle interior light
+
     TAB          : change sensor position
-    `            : next sensor
+    ` or N       : next sensor
     [1-9]        : change to sensor [1-9]
     G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
@@ -106,11 +111,16 @@ try:
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_m
+    from pygame.locals import K_n
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_w
+    from pygame.locals import K_l
+    from pygame.locals import K_i
+    from pygame.locals import K_z
+    from pygame.locals import K_x
     from pygame.locals import K_MINUS
     from pygame.locals import K_EQUALS
 except ImportError:
@@ -269,11 +279,14 @@ class World(object):
 
 
 class KeyboardControl(object):
+    """Class that handles keyboard input."""
     def __init__(self, world, start_in_autopilot):
         self._autopilot_enabled = start_in_autopilot
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
+            self._lights = carla.VehicleLightState.NONE
             world.player.set_autopilot(self._autopilot_enabled)
+            world.player.set_light_state(self._lights)
         elif isinstance(world.player, carla.Walker):
             self._control = carla.WalkerControl()
             self._autopilot_enabled = False
@@ -284,6 +297,7 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock):
+        current_lights = self._lights
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -306,6 +320,8 @@ class KeyboardControl(object):
                     world.toggle_radar()
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
+                elif event.key == K_n:
+                    world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
@@ -324,7 +340,7 @@ class KeyboardControl(object):
                     client.stop_recorder()
                     world.recording_enabled = False
                     # work around to fix camera at start of replaying
-                    currentIndex = world.camera_manager.index
+                    current_index = world.camera_manager.index
                     world.destroy_sensors()
                     # disable autopilot
                     self._autopilot_enabled = False
@@ -332,7 +348,7 @@ class KeyboardControl(object):
                     world.hud.notification("Replaying file 'manual_recording.rec'")
                     # replayer
                     client.replay_file("manual_recording.rec", world.recording_start, 0, 0)
-                    world.camera_manager.set_sensor(currentIndex)
+                    world.camera_manager.set_sensor(current_index)
                 elif event.key == K_MINUS and (pygame.key.get_mods() & KMOD_CTRL):
                     if pygame.key.get_mods() & KMOD_SHIFT:
                         world.recording_start -= 10
@@ -357,14 +373,53 @@ class KeyboardControl(object):
                         self._control.gear = max(-1, self._control.gear - 1)
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
-                    elif event.key == K_p and not (pygame.key.get_mods() & KMOD_CTRL):
+                    elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
                         self._autopilot_enabled = not self._autopilot_enabled
                         world.player.set_autopilot(self._autopilot_enabled)
-                        world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                        world.hud.notification(
+                            'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+                    elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
+                        current_lights ^= carla.VehicleLightState.HighBeam
+                    elif event.key == K_l:
+                        # Use 'L' key to switch between lights:
+                        # closed -> position -> low beam -> fog
+                        if not self._lights & carla.VehicleLightState.Position:
+                            world.hud.notification("Position lights")
+                            current_lights |= carla.VehicleLightState.Position
+                        else:
+                            world.hud.notification("Low beam lights")
+                            current_lights |= carla.VehicleLightState.LowBeam
+                        if self._lights & carla.VehicleLightState.LowBeam:
+                            world.hud.notification("Fog lights")
+                            current_lights |= carla.VehicleLightState.Fog
+                        if self._lights & carla.VehicleLightState.Fog:
+                            world.hud.notification("Lights off")
+                            current_lights ^= carla.VehicleLightState.Position
+                            current_lights ^= carla.VehicleLightState.LowBeam
+                            current_lights ^= carla.VehicleLightState.Fog
+                    elif event.key == K_i:
+                        current_lights ^= carla.VehicleLightState.Interior
+                    elif event.key == K_z:
+                        current_lights ^= carla.VehicleLightState.LeftBlinker
+                    elif event.key == K_x:
+                        current_lights ^= carla.VehicleLightState.RightBlinker
+
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
+                # Set automatic control-related vehicle lights
+                if self._control.brake:
+                    current_lights |= carla.VehicleLightState.Brake
+                else: # Remove the Brake flag
+                    current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Brake
+                if self._control.reverse:
+                    current_lights |= carla.VehicleLightState.Reverse
+                else: # Remove the Reverse flag
+                    current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Reverse
+                if current_lights != self._lights: # Change the light state only if necessary
+                    self._lights = current_lights
+                    world.player.set_light_state(carla.VehicleLightState(self._lights))
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
             world.player.apply_control(self._control)
@@ -426,7 +481,7 @@ class HUD(object):
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
-        self.help = HelpText(pygame.font.Font(mono, 24), width, height)
+        self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0
         self.frame = 0
         self.simulation_time = 0
@@ -585,17 +640,19 @@ class FadingText(object):
 
 
 class HelpText(object):
+    """Helper class to handle text output using pygame"""
     def __init__(self, font, width, height):
         lines = __doc__.split('\n')
         self.font = font
-        self.dim = (680, len(lines) * 22 + 12)
+        self.line_space = 18
+        self.dim = (780, len(lines) * self.line_space + 12)
         self.pos = (0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
         self.surface.fill((0, 0, 0, 0))
         for n, line in enumerate(lines):
             text_texture = self.font.render(line, True, (255, 255, 255))
-            self.surface.blit(text_texture, (22, n * 22))
+            self.surface.blit(text_texture, (22, n * self.line_space))
             self._render = False
         self.surface.set_alpha(220)
 
