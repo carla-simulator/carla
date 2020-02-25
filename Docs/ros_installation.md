@@ -14,8 +14,8 @@ The ROS bridge enables communication between ROS and CARLA so that both software
 ##Requirements
 <h4>ROS melodic</h4>
 
-  * __ROS melodic:__ follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). 
-  * __CARLA:__ any version later than __XX__ should work properly. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
+  * __ROS Kinetic/Melodic:__ follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). Some ROS packages could be necessary, depending on the user needs, such as [rviz](https://wiki.ros.org/ainstein_radar_rviz_plugins) to visualize ROS data.  
+  * __CARLA:__ only __CARLA 0.9.7__ and later versions are supported. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
 
 !!! Important
     Make sure that both CARLA and ROS work properly before continuing with the installation. 
@@ -25,10 +25,18 @@ The ROS bridge enables communication between ROS and CARLA so that both software
 
 <h4>a) apt-get ROS bridge</h4>
 
-First add the apt repository 
+First add the apt repository: 
+
+* __For ROS Melodic:__
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 81061A1A042F527D &&
 sudo add-apt-repository "deb [trusted=yes] http://34.227.255.250/carla-ros-bridge-melodic/ bionic main"
+```
+
+* __For ROS Kinetic:__
+```sh
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE2A0CDC0161D6C
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-ros-bridge-kinetic xenial main"
 ```
 
 Then simply install the ROS bridge:

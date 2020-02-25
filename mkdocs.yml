@@ -52,7 +52,9 @@ nav:
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - ROS bridge:
   - 'ROS bridge installation': 'ros_installation.md'
-  - 'Supported features': 'ros_topics_ref.md'
+  - 'Messages reference': 'ros_msgs.md'
+  - 'Launch reference': 'ros_launchs.md'
+  #- 'Supported features': 'ros_topics_ref.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'
