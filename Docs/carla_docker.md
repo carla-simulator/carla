@@ -45,11 +45,11 @@ docker pull carlasim/carla:0.8.2
 Running CARLA under docker:
 
 ```sh
-docker run -p 2000-2002:2000-2002 --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=0 carlasim/carla:0.8.4
+docker run -p 2000-2002:2000-2002 --runtime=nvidia -e --gpus all carlasim/carla:0.8.4
 ```
 
 The `-p 2000-2002:2000-2002` argument is to redirect host ports for the docker container.
-Use `NVIDIA_VISIBLE_DEVICES=<gpu_number>` to select the GPU.
+Use `--gpus '"device=<gpu_01>,<gpu_02>"'` to specify which GPUs should run CARLA. Take a look at this [NVIDIA documentation](https://github.com/NVIDIA/nvidia-docker) to learn other syntax options.
 
 You can also pass parameters to the CARLA executable. With this you can chose the town and
 select the port that is going to be used:
