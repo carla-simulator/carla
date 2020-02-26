@@ -62,7 +62,6 @@ namespace detail {
     /// @{
 
     EpisodeProxy ReloadEpisode() {
-      carla::log_info("Simulator::ReloadEpisode");
       return LoadEpisode("");
     }
 

@@ -85,8 +85,6 @@ void BatchControlStage::DataSender() {
 
 
 bool BatchControlStage::RunStep() {
-  carla::log_info("BatchControlStage::RunStep");
-
   // Set run set flag.
   run_step.store(true);
 

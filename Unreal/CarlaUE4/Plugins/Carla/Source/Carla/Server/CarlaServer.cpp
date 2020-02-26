@@ -87,8 +87,6 @@ public:
 
 private:
 
-  void DebugPrintState(std::string f);
-
   void BindActions();
 };
 
@@ -153,14 +151,6 @@ private:
 // -- Bind Actions -------------------------------------------------------------
 // =============================================================================
 
-void FCarlaServer::FPimpl::DebugPrintState(std::string f) {
-  carla::log_info("FCarlaServer -",f);
-  for (auto& it : TrafficManagerInfo) {
-    carla::log_info(" ",it.second,":",it.first);
-  }
-  carla::log_info("================================================");
-}
-
 void FCarlaServer::FPimpl::BindActions()
 {
   namespace cr = carla::rpc;
@@ -169,8 +159,6 @@ void FCarlaServer::FPimpl::BindActions()
   /// Looks for a Traffic Manager running on port
   BIND_SYNC(is_traffic_manager_running) << [this] (uint16_t port) ->R<bool>
   {
-    carla::log_info("is_traffic_manager_running on",port);
-    DebugPrintState("is_traffic_manager_running");
     return (TrafficManagerInfo.find(port) != TrafficManagerInfo.end());
   };
 
@@ -193,10 +181,8 @@ void FCarlaServer::FPimpl::BindActions()
     if(it == TrafficManagerInfo.end()) {
       TrafficManagerInfo.insert(
         std::pair<uint16_t, std::string>(port, trafficManagerInfo.first));
-      DebugPrintState("add_traffic_manager_running (success)" + std::to_string(port));
       return true;
     }
-    DebugPrintState("add_traffic_manager_running (fail)" + std::to_string(port));
     return false;
 
   };
@@ -206,10 +192,8 @@ void FCarlaServer::FPimpl::BindActions()
     auto it = TrafficManagerInfo.find(port);
     if(it != TrafficManagerInfo.end()) {
       TrafficManagerInfo.erase(it);
-      DebugPrintState("destroy_traffic_manager (founded) " + std::to_string(port));
       return true;
     }
-    DebugPrintState("destroy_traffic_manager (not founded) " + std::to_string(port));
     return false;
   };
 

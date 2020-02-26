@@ -141,10 +141,8 @@ namespace detail {
   }
 
   void Client::LoadEpisode(std::string map_name) {
-    carla::log_info("Client::LoadEpisode");
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name));
-    carla::log_info("Client::LoadEpisode end");
   }
 
   rpc::EpisodeInfo Client::GetEpisodeInfo() {

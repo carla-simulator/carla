@@ -10,7 +10,7 @@
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/Exception.h"
 
-#define DEBUG_PRINT_TM  1
+#define DEBUG_PRINT_TM  0
 
 namespace carla {
 namespace traffic_manager {
@@ -22,7 +22,7 @@ TrafficManager::TrafficManager(
     carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port)
   : _port(port) {
-  carla::log_info("TrafficManager::CTR");
+
   if(!GetTM(_port)){
     // Check if a TM server already exists and connect to it
     if(!CreateTrafficManagerClient(episode_proxy, port)) {
@@ -30,92 +30,35 @@ TrafficManager::TrafficManager(
       CreateTrafficManagerServer(episode_proxy, port);
     }
   }
-  carla::log_info("TrafficManager::CTR end");
 }
 
 void TrafficManager::Release() {
   std::lock_guard<std::mutex> lock(_mutex);
-  carla::log_info("TrafficManager::Release", _tm_map.size());
   for(auto& tm : _tm_map) {
     tm.second->Release();
     TrafficManagerBase *base_ptr = tm.second.release();
     delete base_ptr;
   }
   _tm_map.clear();
-  carla::log_info("TrafficManager::Release end");
 }
 
 void TrafficManager::Reset() {
   std::lock_guard<std::mutex> lock(_mutex);
-  carla::log_info("TrafficManager::Reset");
   for(auto& tm : _tm_map) {
     tm.second->Reset();
   }
-  carla::log_info("TrafficManager::Reset end");
 }
 
 void TrafficManager::Tick() {
   std::lock_guard<std::mutex> lock(_mutex);
-  carla::log_info("TrafficManager::Tick");
   for(auto& tm : _tm_map) {
     tm.second->SynchronousTick();
   }
-  carla::log_info("TrafficManager::Tick end");
-}
-
-void TrafficManager::ReleaseTM(uint16_t port) {
-  std::lock_guard<std::mutex> lock(_mutex);
-  carla::log_info("TrafficManager::ReleaseTM");
-
-  auto it = _tm_map.find(port);
-
-  if(it != _tm_map.end()) {
-    _tm_map.erase(it);
-  }
-  carla::log_info("TrafficManager::ReleaseTM end");
-}
-
-void TrafficManager::ResetTM(uint16_t port) {
-  std::lock_guard<std::mutex> lock(_mutex);
-  carla::log_info("TrafficManager::ResetTM");
-  TrafficManagerBase* tm = GetTM(port);
-  if(tm) {
-    carla::log_info("TrafficManager::Reseting TM", port, "...");
-
-    bool is_server = tm->IsServer();
-
-    // Update episode information
-    carla::client::detail::EpisodeProxy episode_proxy = tm->GetEpisodeProxy();
-    episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
-
-    // Release
-    ReleaseTM(port);
-
-    // Create again the TM
-    if(is_server) {
-      CreateTrafficManagerServer(episode_proxy, port);
-    } else {
-      int count = 0;
-      while(count < MIN_TRY_COUNT) {
-        std::this_thread::sleep_for(500ms);
-        if(CreateTrafficManagerClient(episode_proxy, port)){
-          break;
-        }
-        count++;
-      }
-      if(count >= MIN_TRY_COUNT){
-        log_error("Traffic Manager client could not reconnect");
-      }
-    }
-  }
-  carla::log_info("TrafficManager::ResetTM end");
 }
 
 void TrafficManager::CreateTrafficManagerServer(
     carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
-
-  carla::log_info("TrafficManager::CreateTrafficManagerServer", port);
 
   // Get local IP details.
   auto GetLocalIP = [=](const uint16_t sport)-> std::pair<std::string, uint16_t> {
@@ -204,15 +147,12 @@ void TrafficManager::CreateTrafficManagerServer(
 
   /// Set the pointer of the instance
   _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
-  carla::log_info("TrafficManager::CreateTrafficManagerServer", port,"end (", _tm_map.size(),")");
 
 }
 
 bool TrafficManager::CreateTrafficManagerClient(
     carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
-
-  carla::log_info("TrafficManager::CreateTrafficManagerClient", port);
 
   bool result = false;
 
@@ -221,8 +161,6 @@ bool TrafficManager::CreateTrafficManagerClient(
     /// Get TM server info (Remote IP & PORT)
     std::pair<std::string, uint16_t> serverTM =
       episode_proxy.Lock()->GetTrafficManagerRunning(port);
-
-    carla::log_info("TrafficManager running at", serverTM.first,":",serverTM.second);
 
     /// Set remote TM server IP and port
     TrafficManagerRemote* tm_ptr = new(std::nothrow)
@@ -267,7 +205,7 @@ bool TrafficManager::CreateTrafficManagerClient(
     }
 
   }
-  carla::log_info("TrafficManager::CreateTrafficManagerClient end", port);
+
   return result;
 }
 

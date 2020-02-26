@@ -38,14 +38,11 @@ TrafficManagerLocal::TrafficManagerLocal(
 }
 
 TrafficManagerLocal::~TrafficManagerLocal() {
-  carla::log_info("TrafficManagerLocal::DTR");
   episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
   Release();
-  carla::log_info("TrafficManagerLocal::DTR end");
 }
 
 void TrafficManagerLocal::Start() {
-  carla::log_info("TrafficManagerLocal::Start");
 
   const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
@@ -108,11 +105,9 @@ void TrafficManagerLocal::Start() {
   planner_stage->Start();
   control_stage->Start();
 
-  carla::log_info("TrafficManagerLocal::Start end");
 }
 
 void TrafficManagerLocal::Stop() {
-  carla::log_info("TrafficManagerLocal::Stop");
   localization_collision_messenger->Stop();
   localization_traffic_light_messenger->Stop();
   localization_planner_messenger->Stop();
@@ -125,11 +120,9 @@ void TrafficManagerLocal::Stop() {
   traffic_light_stage->Stop();
   planner_stage->Stop();
   control_stage->Stop();
-  carla::log_info("TrafficManagerLocal::Stop end");
 }
 
 void TrafficManagerLocal::Release() {
-  carla::log_info("TrafficManagerLocal::Release");
   Stop();
   localization_collision_messenger.reset();
   localization_traffic_light_messenger.reset();
@@ -142,11 +135,9 @@ void TrafficManagerLocal::Release() {
   traffic_light_stage.reset();
   planner_stage.reset();
   control_stage.reset();
-  carla::log_info("TrafficManagerLocal::Release end");
 }
 
 void TrafficManagerLocal::Reset() {
-  carla::log_info("TrafficManagerLocal::Reset");
 
   Release();
 
@@ -154,7 +145,6 @@ void TrafficManagerLocal::Reset() {
   episodeProxyTM = episode_proxy;
 
   Start();
-  carla::log_info("TrafficManagerLocal::Reset end");
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr>& actor_list) {

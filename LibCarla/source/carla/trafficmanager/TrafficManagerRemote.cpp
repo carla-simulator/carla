@@ -40,8 +40,6 @@ void TrafficManagerRemote::Start() {
 
         client.HealthCheckRemoteTM();
 
-        std::cout << "TM Remote Keep Alive" << std::endl ;
-
         /// Until connection active
       } while (_keep_alive);
     } catch (...) {

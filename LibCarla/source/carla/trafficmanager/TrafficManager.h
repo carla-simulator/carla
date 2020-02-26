@@ -79,10 +79,6 @@ public:
 
   static void Tick();
 
-  void ReleaseTM(uint16_t port);
-
-  void ResetTM(uint16_t port);
-
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
