@@ -13,7 +13,6 @@ the most important ones.
   * [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu): 
 	* Docker: recommended approach
 	* Deprecated: emulate the virtual display
-  * [__Command line options__](#command-line-options) 
 
 
 !!! Important
