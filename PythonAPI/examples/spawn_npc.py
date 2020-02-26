@@ -96,7 +96,6 @@ def main():
         synchronous_master = False
 
         if args.sync:
-            traffic_manager.set_synchronous_mode(True)
             settings = world.get_settings()
             if not settings.synchronous_mode:
                 synchronous_master = True
@@ -218,7 +217,6 @@ def main():
         if not args.sync or not synchronous_master:
             world.wait_for_tick()
         else:
-            traffic_manager.synchronous_tick()
             world.tick()
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
@@ -236,7 +234,6 @@ def main():
 
         while True:
             if args.sync and synchronous_master:
-                traffic_manager.synchronous_tick()
                 world.tick()
             else:
                 world.wait_for_tick()

@@ -91,7 +91,7 @@ namespace CollisionStageConstants {
           collision_distance = cg::Math::Clamp(collision_distance, MIN_COLLISION_RADIUS, MAX_COLLISION_RADIUS);
 
           // Temporary fix to (0,0,0) bug
-          if (other_location.x != 0 && other_location.y != 0 && other_location.z != 0) {
+          if (!(other_location.x == 0 && other_location.y == 0 && other_location.z == 0)) {
 
             if (other_actor_id != ego_actor_id &&
                 (cg::Math::DistanceSquared(ego_location, other_location)
