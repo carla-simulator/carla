@@ -14,51 +14,51 @@
 namespace carla {
 namespace road {
 
-class MapBuilder;
+  class MapBuilder;
 
-class Controller : private MovableNonCopyable {
+  class Controller : private MovableNonCopyable {
 
-public:
+  public:
 
-  Controller(
-      ContId id,
-      std::string name,
-      uint32_t sequence)
-    : _id(id),
-      _name(name),
-      _sequence(sequence){}
+    Controller(
+        ContId id,
+        std::string name,
+        uint32_t sequence)
+      : _id(id),
+        _name(name),
+        _sequence(sequence){}
 
-  const ContId& GetControllerId() const{
-    return _id;
-  }
+    const ContId& GetControllerId() const{
+      return _id;
+    }
 
-  const std::string& GetName() const {
-    return _name;
-  }
+    const std::string& GetName() const {
+      return _name;
+    }
 
-  const uint32_t &GetSequence() const {
-    return _sequence;
-  }
+    const uint32_t &GetSequence() const {
+      return _sequence;
+    }
 
-  const std::set<SignId>&  GetSignals() const {
-    return _signals;
-  }
+    const std::set<SignId>&  GetSignals() const {
+      return _signals;
+    }
 
-  const std::set<JuncId>&  GetJunctions() const {
-    return _junctions;
-  }
+    const std::set<JuncId>&  GetJunctions() const {
+      return _junctions;
+    }
 
-private:
+  private:
 
-  friend MapBuilder;
+    friend MapBuilder;
 
-  ContId _id;
-  std::string _name;
-  uint32_t _sequence;
+    ContId _id;
+    std::string _name;
+    uint32_t _sequence;
 
-  std::set<JuncId> _junctions;
-  std::set<SignId> _signals;
-};
+    std::set<JuncId> _junctions;
+    std::set<SignId> _signals;
+  };
 
 } // namespace road
 } // namespace carla
