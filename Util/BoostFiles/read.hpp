@@ -5,8 +5,8 @@
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 // Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2014, 2015.
-// Modifications copyright (c) 2014-2015 Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014, 2015, 2018.
+// Modifications copyright (c) 2014-2018 Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -39,7 +39,7 @@
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/algorithms/append.hpp>
 #include <boost/geometry/algorithms/clear.hpp>
-#include <boost/geometry/algorithms/detail/equals/point_point.hpp>
+#include <boost/geometry/algorithms/detail/disjoint/point_point.hpp>
 
 #include <boost/geometry/core/access.hpp>
 #include <boost/geometry/core/coordinate_dimension.hpp>
@@ -51,7 +51,6 @@
 #include <boost/geometry/core/point_type.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
 #include <boost/geometry/core/tags.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 
 #include <boost/geometry/geometries/concepts/check.hpp>
 
@@ -127,8 +126,7 @@ struct parsing_assigner
 
         // Stop at end of tokens, or at "," ot ")"
         bool finished = (it == end || *it == "," || *it == ")");
-
-        BOOST_TRY
+	BOOST_TRY
         {
             // Initialize missing coordinates to default constructor (zero)
             // OR
@@ -156,7 +154,7 @@ struct parsing_assigner
             BOOST_RETHROW;
         }
         BOOST_CATCH_END
-
+        
         parsing_assigner<Point, Dimension + 1, DimensionCount>::apply(
                         (finished ? it : ++it), end, point, wkt);
     }
@@ -300,7 +298,7 @@ struct stateful_range_appender<Geometry, open>
             should_append
                 = is_next_expected
                 || pt_index < core_detail::closure::minimum_ring_size<open>::value
-                || !detail::equals::equals_point_point(point, first_point);
+                || disjoint(point, first_point);
         }
         ++pt_index;
 
@@ -311,6 +309,17 @@ struct stateful_range_appender<Geometry, open>
     }
 
 private:
+    static inline bool disjoint(point_type const& p1, point_type const& p2)
+    {
+        // TODO: pass strategy
+        typedef typename strategy::disjoint::services::default_strategy
+            <
+                point_type, point_type
+            >::type strategy_type;
+
+        return detail::disjoint::disjoint_point_point(p1, p2, strategy_type());
+    }
+
     size_type pt_index;
     point_type first_point;
 };

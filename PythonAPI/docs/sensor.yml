@@ -1,19 +1,33 @@
 ---
 - module_name: carla
-  doc: >
   # - CLASSES ------------------------------
   classes:
   - class_name: Sensor
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      A sensor actor.
+      Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at carla.World to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from carla.SensorData (depending on the sensor).             
+           
+        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](/cameras_and_sensors/), but the list of those available in CARLA so far goes as follow:        
+        <b>Receive data on every tick:</b>       
+        - Gnss sensor.        
+        - IMU sensor.         
+        - Radar.        
+        - [Depth camera](/cameras_and_sensors/#sensorcameradepth).        
+        - [Lidar raycast](/cameras_and_sensors/#sensorlidarray_cast).             
+        - [RGB camera](/cameras_and_sensors/#sensorcamerargb).        
+        - [Semantic Segmentation camera](/cameras_and_sensors/#sensorcamerasemantic_segmentation).        
+        <b>Only receive data when triggered:</b>        
+        - [Collision detector](/cameras_and_sensors/#sensorothercollision).       
+        - [Lane invasion detector](/cameras_and_sensors/#sensorotherlane_invasion).      
+        - [Obstacle detector](/cameras_and_sensors/#sensorotherobstacle).
+
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: is_listening
       type: boolean
       doc: >
-        Is true if the sensor is listening for data
+        When <b>True</b> the sensor will be waiting for data. 
     # - METHODS ----------------------------
     methods:
     - def_name: listen
@@ -21,17 +35,14 @@
       - param_name: callback
         type: function
         doc: >
-          Register a callback to be executed each time a new measurement is
-          received. The callback must accept a single argument containing the
-          sensor data; the type of this object varies depending on the type of
-          sensor, but they all derive from carla.SensorData.
+          The called function with one argument containing the sensor data.
       doc: >
+        The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type carla.SensorData to work with. 
     # --------------------------------------
     - def_name: stop
       doc: >
-        Stops listening for data
+        Commands the sensor to stop listening for data.
     # --------------------------------------
     - def_name: __str__
-      doc: >
     # --------------------------------------
 ...
