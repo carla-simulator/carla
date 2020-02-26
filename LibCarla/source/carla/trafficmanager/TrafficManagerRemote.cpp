@@ -180,7 +180,7 @@ void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
 }
 
 bool TrafficManagerRemote::SynchronousTick() {
-  return client.SynchronousTick();
+  return false;
 }
 
 void TrafficManagerRemote::HealthCheckRemoteTM() {

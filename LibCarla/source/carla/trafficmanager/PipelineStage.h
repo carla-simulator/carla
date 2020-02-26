@@ -34,8 +34,9 @@ namespace traffic_manager {
   class PipelineStage {
 
   private:
-
     std::unique_ptr<std::thread> worker_thread;
+
+  protected:
     /// Flag to start/stop stage.
     std::atomic<bool> run_stage;
     /// Stage name string.

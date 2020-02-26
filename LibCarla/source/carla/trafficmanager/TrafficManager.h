@@ -77,6 +77,8 @@ public:
 
   static void Reset();
 
+  static void Tick();
+
   void ReleaseTM(uint16_t port);
 
   void ResetTM(uint16_t port);

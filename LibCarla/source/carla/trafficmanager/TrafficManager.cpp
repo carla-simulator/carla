@@ -54,6 +54,15 @@ void TrafficManager::Reset() {
   carla::log_info("TrafficManager::Reset end");
 }
 
+void TrafficManager::Tick() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  carla::log_info("TrafficManager::Tick");
+  for(auto& tm : _tm_map) {
+    tm.second->SynchronousTick();
+  }
+  carla::log_info("TrafficManager::Tick end");
+}
+
 void TrafficManager::ReleaseTM(uint16_t port) {
   std::lock_guard<std::mutex> lock(_mutex);
   carla::log_info("TrafficManager::ReleaseTM");
