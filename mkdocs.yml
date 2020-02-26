@@ -26,7 +26,7 @@ nav:
 - Advanced steps:
   - 'Recorder': 'recorder_and_playback.md'
   - 'Rendering options': 'rendering_options.md'
-  - 'Simulation time and synchrony': 'simulation_time_and_synchrony.md'
+  - 'Synchrony and time-step': 'simulation_time_and_synchrony.md'
 - References: 
   - 'Python API reference': 'python_api.md'
   - 'Code recipes': 'python_cookbook.md'
