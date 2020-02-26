@@ -12,15 +12,18 @@
   * Enabled Mesh distance fields
   * API extensions:
     - Added new methods to `BoundingBox`: `contains()`, `get_local_vertices()` and `get_world_vertices(transform)`
-    - Added new function to get a waypoint specifying parameters from the openDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
+    - Added new function to get a waypoint specifying parameters from the OpenDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
+  * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
-  * Fixed agent failures due to API changes in `is_within_distance_ahead()`
+  * Fixed agent failures due to API changes in is_within_distance_ahead()
+  * Fixed assertion bug when using LibCarla
   * Fixed incorrect doppler velocity for RADAR sensor
-
+  * Fixed documentation links
+  * Upgraded Boost to 1.72.0
 
 ## CARLA 0.9.7
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
@@ -54,6 +57,7 @@
   * Fixed an error in `automatic_control.py` failing because the `Num Lock` key
   * Fixed client_bounding_boxes.py example script
   * Fixed materials and semantic segmentation issues regarding importing assets
+  * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6
