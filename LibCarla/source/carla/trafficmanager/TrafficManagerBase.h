@@ -48,13 +48,15 @@ public:
   /// This method unregisters a vehicle from traffic manager.
   virtual void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) = 0;
 
-  /// Set target velocity specific to a vehicle.
+  /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   virtual void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) = 0;
 
-  /// Set global target velocity.
+  /// Set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   virtual void SetGlobalPercentageSpeedDifference(float const percentage) = 0;
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   virtual void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) = 0;
 
   /// Method to force lane change on a vehicle.

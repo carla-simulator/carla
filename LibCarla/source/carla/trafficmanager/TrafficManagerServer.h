@@ -74,7 +74,7 @@ public:
       });
 
 
-      // Binding a lambda function to the name "unregister_vehicle".
+      /// Binding a lambda function to the name "unregister_vehicle".
       server->bind("unregister_vehicle", [=](std :: vector <carla::rpc::Actor> _actor_list) {
         std::vector<ActorPtr> actor_list;
         for (auto &&actor : _actor_list) {
@@ -83,17 +83,19 @@ public:
         tm->UnregisterVehicles(actor_list);
       });
 
-      /// Set target velocity specific to a vehicle.
+      /// Method to set a vehicle's % decrease in velocity with respect to the speed limit.
+      /// If less than 0, it's a % increase.
       server->bind("set_percentage_speed_difference", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageSpeedDifference(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
-      /// Set global target velocity.
+      /// Method to set a global % decrease in velocity with respect to the speed limit.
+      /// If less than 0, it's a % increase.
       server->bind("set_global_percentage_speed_difference", [=](const float percentage) {
         tm->SetGlobalPercentageSpeedDifference(percentage);
       });
 
-      /// Set collision detection rules between vehicles.
+      /// Method to set collision detection rules between vehicles.
       server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
         const auto reference = carla::client::detail::ActorVariant(reference_actor).Get(tm->GetEpisodeProxy());
         const auto other = carla::client::detail::ActorVariant(other_actor).Get(tm->GetEpisodeProxy());

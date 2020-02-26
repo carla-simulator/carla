@@ -95,7 +95,8 @@ public:
     }
   }
 
-  /// Set target velocity specific to a vehicle.
+  /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
@@ -103,7 +104,8 @@ public:
     }
   }
 
-  /// Set global target velocity.
+  /// Set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage){
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
@@ -111,7 +113,7 @@ public:
     }
   }
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){

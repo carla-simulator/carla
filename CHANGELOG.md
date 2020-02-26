@@ -1,14 +1,14 @@
 ## latest
   * Traffic Manager:
-    - Added benchmark.
-    - Added synchronous mode.
-    - Fixed change map error.
-    - Added multiclient architecture.
-    - Added multi Traffic Manager architecture.
-    - Fixed linkage between waypoints.
-    - Implemented intersection anticipation.
-    - Implemented vehicle destruction when stuck.
-    - Implemented tunable parameters.
+    - Added benchmark
+    - Added synchronous mode
+    - Fixed change map error
+    - Added multiclient architecture
+    - Added multi Traffic Manager architecture
+    - Fixed linkage between waypoints
+    - Implemented intersection anticipation
+    - Implemented vehicle destruction when stuck
+    - Implemented tunable parameters
   * Added junction class as queryable object from waypoint
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
