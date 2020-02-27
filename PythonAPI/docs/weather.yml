@@ -6,38 +6,54 @@
   - class_name: WeatherParameters
     # - DESCRIPTION ------------------------
     doc: >
-      WeatherParameters class is used for requesting and changing the lighting and weather conditions inside the world.
+      This class defines objects containing lightning and weather specifications that can later be applied in carla.World. So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
+        Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py). 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: cloudiness
       type: float
       doc: >
-        Weather cloudiness. Values range from 0 to 100.
+        Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. 
     # --------------------------------------
     - var_name: precipitation
       type: float
       doc: >
-        Precipitation amount for controlling rain intensity. Values range from 0 to 100.
+        Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain. 
     # --------------------------------------
     - var_name: precipitation_deposits
       type: float
       doc: >
-        Precipitation deposits for controlling the area of puddles on roads. Values range from 0 to 100.
+        Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations. 
     # --------------------------------------
     - var_name: wind_intensity
       type: float
       doc: >
-        Wind intensity. Values range from 0 to 100.
+        Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues. 
+    # --------------------------------------
+    - var_name: fog_density
+      type: float
+      doc: >
+        Fog density. It only affects the RGB camera sensor. Values range from 0 to 100.
+    # --------------------------------------
+    - var_name: fog_distance
+      type: float
+      doc: >
+        Fog start distance (in meters). Values range from 0 to infinite.
+    # --------------------------------------
+    - var_name: wetness
+      type: float
+      doc: >
+        Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.
     # --------------------------------------
     - var_name: sun_azimuth_angle
       type: float
       doc: >
-        The azimuth angle of the sun in degrees. Values range from 0 to 360.
+        The azimuth angle of the sun in degrees. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine. 
     # --------------------------------------
     - var_name: sun_altitude_angle
       type: float
       doc: >
-        Altitude angle of the sun in degrees. Values range from -90 to 90.
+        Altitude angle of the sun in degrees. Values range from -90 to 90 corresponding to midnight and midday each.
 
     # - METHODS ----------------------------
     methods:
@@ -46,39 +62,53 @@
       - param_name: cloudiness
         type: float
         default: 0.0
+        doc: >
+          0 is a clear sky, 100 complete overcast. 
       - param_name: precipitation
         type: float
         default: 0.0
+        doc: >
+          0 is no rain at all, 100 a heavy rain. 
       - param_name: precipitation_deposits
         type: float
         default: 0.0
+        doc: >
+          0 means no puddles on the road, 100 means roads completely capped by rain. 
       - param_name: wind_intensity
         type: float
         default: 0.0
+        doc: >
+          0 is calm, 100 a strong wind. 
       - param_name: sun_azimuth_angle
         type: float
         default: 0.0
+        doc: >
+          90 is midday, -90 is midnight. 
       - param_name: sun_altitude_angle
         type: float
         default: 0.0
+        doc: >
+          0 is an arbitrary North, 180 its corresponding South.  
+      note: >
+        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
       doc: >
-        WeatherParameters constructor
+        Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
       return: bool
       doc: >
-        Returns True if `self` and `other` are equal
+        Returns <b>True</b> if both objects' variables are the same. 
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
       return: bool
       doc: >
-        Returns True if `self` and `other` are not equal
+        Returns <b>True</b> if both objects' variables are different. 
     # --------------------------------------
     - def_name: __str__
-      doc: > 
+      doc: >
     # --------------------------------------
 ...

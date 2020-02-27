@@ -88,6 +88,10 @@ namespace client {
       _simulator->SetReplayerTimeFactor(time_factor);
     }
 
+    void SetReplayerIgnoreHero(bool ignore_hero) {
+      _simulator->SetReplayerIgnoreHero(ignore_hero);
+    }
+
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {

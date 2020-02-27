@@ -8,6 +8,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 
@@ -21,6 +22,7 @@ namespace client {
 
     using Control = rpc::VehicleControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
+    using LightState = rpc::VehicleLightState::LightState;
 
     explicit Vehicle(ActorInitializer init);
 
@@ -35,6 +37,9 @@ namespace client {
     /// Apply physics control to this vehicle.
     void ApplyPhysicsControl(const PhysicsControl &physics_control);
 
+    /// Sets a @a LightState to this vehicle.
+    void SetLightState(const LightState &light_state);
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data
@@ -45,6 +50,12 @@ namespace client {
     ///
     /// @warning This function does call the simulator.
     PhysicsControl GetPhysicsControl() const;
+
+    /// Return the current open lights (LightState) of this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
+    LightState GetLightState() const;
 
     /// Return the speed limit currently affecting this vehicle.
     ///

@@ -20,14 +20,14 @@ except IndexError:
 import carla
 
 SUN_PRESETS = {
-    'day': (90.0, 220.0),
-    'night': (-90.0, 220.0),
-    'sunset': (181.0, 100.0)}
+    'day': (60.0, 0.0),
+    'night': (-90.0, 0.0),
+    'sunset': (0.5, 180.0)}
 
 WEATHER_PRESETS = {
-    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 50.0, 0.0],
-    'overcast': [80.0, 0.0, 0.0, 50.0, 0.0, 50.0, 10.0],
-    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 50.0, 100.0]}
+    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0],
+    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 10.0],
+    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 100.0]}
 
 
 def apply_sun_presets(args, weather):
@@ -49,6 +49,9 @@ def apply_weather_presets(args, weather):
             weather.precipitation = WEATHER_PRESETS[args.weather][1]
             weather.precipitation_deposits = WEATHER_PRESETS[args.weather][2]
             weather.wind_intensity = WEATHER_PRESETS[args.weather][3]
+            weather.fog_density = WEATHER_PRESETS[args.weather][4]
+            weather.fog_distance = WEATHER_PRESETS[args.weather][5]
+            weather.wetness = WEATHER_PRESETS[args.weather][6]
         else:
             print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
