@@ -67,7 +67,7 @@ sensor.listen(lambda data: do_something(data))
 
 ...
 
-# This supposed collision sensor would print everytime a collision is detected. 
+# This collision sensor would print everytime a collision is detected. 
 def callback(event):
     for actor_id in event:
         vehicle = world_ref().get_actor(actor_id)
@@ -95,14 +95,14 @@ Sensor data differs a lot between sensor types, but it is always tagged with:
  
 <h4>Cameras</h4>
 
-These sensors take a shot of the world from their point of view and then use the helper class  to alter this image and provide different types of information.  
+These sensors take a shot of the world from their point of view and then use the helper class to alter this image and provide different types of information.  
 __Retrieve data:__ every simulation step.  
 
 | Sensor | Output | Overview |
 | ---------- | ---------- | ---------- |
-| Depth | [carla.Image](python_api.md#carla.Image) | Combines the photo with the distance of the elements on scene to provide with a gray-scale depth map. |
+| Depth | [carla.Image](python_api.md#carla.Image) | Renders the depth of the elements in the field of view in a gray-scale depth map. |
 | RGB | [carla.Image](python_api.md#carla.Image) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
-| Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Uses the tags of the different actors in the photo to group the elements by color. |
+| Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |
 
 <h4>Detectors</h4>
 
@@ -128,7 +128,7 @@ __Retrieve data:__ every simulation step.
 | Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |
 
 ---------------
-That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Here are some different paths opened at the moment: 
+That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Some of the different paths to follow now are listed here: 
 
 * __Gain some practise__: if diving alone in CARLA is still frightening, it may be a good idea to try some of the code recipes provided in this documentation and combine them with the example scripts or some ideas of your own. 
 
