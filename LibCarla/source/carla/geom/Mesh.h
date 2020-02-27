@@ -121,9 +121,6 @@ namespace geom {
     /// Returns the index of the last added vertex (number of vertices).
     size_t GetLastVertexIndex() const;
 
-    /// TODO: delete this, it's just for debug.
-    void ShowInfo() const;
-
   private:
 
     // =========================================================================
