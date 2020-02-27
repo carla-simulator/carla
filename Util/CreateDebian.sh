@@ -3,8 +3,24 @@
 #This script builds debian package for CARLA
 #Working with Ubuntu 18.04
 
+#Adding maintainer name 
+DEBFULLNAME=Carla\ Simulator\ Team
+export DEBFULLNAME
+
+#replace carla-0.9.7 with your desired carla-<version>
+CARLA_DIR=carla-0.9.7
+CARLA_VERSION=0.9.7
+
+#replace these urls with desired carla release url additional-maps url
+CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.7.tar.gz
+ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
+
+#replace the tar file name with additional maps
+#if you do not have additional map then comment line 12, 37, 39 
+NEW_TOWNS=AdditionalMaps_0.9.7.tar.gz
+
 #Check if Carla-<version> release is already downloaded
-FILE=$(pwd)/carla-debian/carla-0.9.7/ImportAssets.sh #replace carla-0.9.7 with your desired carla-<version>
+FILE=$(pwd)/carla-debian/${CARLA_DIR}/ImportAssets.sh 
 if [ -f "$FILE" ]; then
     ImportAssetscheck=1
 else 
@@ -13,18 +29,18 @@ fi
 
 sudo apt-get install build-essential dh-make
 mkdir carla-debian/
-mkdir carla-debian/carla-0.9.7
-cd carla-debian/carla-0.9.7
+mkdir carla-debian/${CARLA_DIR}
+cd carla-debian/${CARLA_DIR}
 
 
 #If carla release is not already downloaded then it will download
 if [ ${ImportAssetscheck} == 0 ]
 then
-	#replace below urls with your desired carla release urls
-	curl http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.7.tar.gz | tar xz
-	wget http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
 	
-	mv AdditionalMaps_0.9.7.tar.gz Import/
+	curl ${CARLA_RELEASE_REPO} | tar xz
+    wget ${ADDITIONALMAPS}
+	
+	mv ${NEW_TOWNS} Import/
 	
 fi
 
@@ -42,7 +58,7 @@ chmod +x "/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
 "/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 $@
 EOF
 
-dh_make --indep --createorig -y  #to create necessary file structure for debian packaging
+dh_make -e carla.simulator@gmail.com --indep --createorig -y  #to create necessary file structure for debian packaging
 
 cd debian/
 
@@ -59,7 +75,7 @@ Section: simulator
 Priority: optional
 Maintainer: Carla Simulator Team <carla.simulator@gmail.com>
 Build-Depends: debhelper (>= 10)
-Standards-Version: 0.9.7
+Standards-Version: ${CARLA_VERSION}
 Homepage: http://carla.org/
 
 Package: carla
@@ -94,17 +110,17 @@ EOF
 rm postinst
 
 #Adding Carla library path (carla.pth) to site-packages, during post installation.
-#Change Carla version according to need
+#Change Carla version as required
 cat>> postinst << EOF
 #!/bin/sh
 
 SITEDIR=\$(python3 -c 'import site; site._script()' --user-site)
 mkdir -p "\$SITEDIR"
-echo "/opt/carla/PythonAPI/carla/dist/carla-0.9.7-py3.5-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+echo "/opt/carla/PythonAPI/carla/dist/${CARLA_DIR}-py3.5-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
 
 SITEDIR=\$(python2 -c 'import site; site._script()' --user-site)
 mkdir -p "\$SITEDIR"
-echo "/opt/carla/PythonAPI/carla/dist/carla-0.9.7-py2.7-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+echo "/opt/carla/PythonAPI/carla/dist/${CARLA_DIR}-py2.7-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
 
 chmod +x /opt/carla/bin/CarlaUE4.sh
 
@@ -159,7 +175,14 @@ exit 0
 
 EOF
 
+rm copyright
+mv ../LICENSE ./copyright
+
+#Updating debian/Changelog
+awk '{sub(/unstable/,"stable")}1' changelog > tmp && mv tmp changelog
+
 cd ..
+
 debuild --no-lintian -uc -us -b #building debian package
-cd ..
-# install debian package using "sudo dpkg -i carla_0.9.7-1_amd64.deb"
+
+#install debian package using "sudo dpkg -i ../carla_<version>_amd64.deb"
