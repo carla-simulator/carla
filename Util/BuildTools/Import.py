@@ -138,7 +138,7 @@ def generate_package_file(package_name, props, maps):
 
         output_json["props"].append({
             "name": name,
-            "path": path,
+            "source": path,
             "size": size,
         })
 
@@ -148,7 +148,7 @@ def generate_package_file(package_name, props, maps):
         use_carla_materials = umap["use_carla_materials"] if "use_carla_materials" in umap else False
         output_json["maps"].append({
             "name": umap["name"],
-            "path": path,
+            "source": path,
             "use_carla_materials": use_carla_materials
         })
 
