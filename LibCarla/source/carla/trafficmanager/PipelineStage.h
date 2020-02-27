@@ -63,7 +63,7 @@ namespace traffic_manager {
 
   public:
 
-    PipelineStage(std::string stage_name);
+    PipelineStage(const std::string &stage_name);
 
     virtual ~PipelineStage();
 

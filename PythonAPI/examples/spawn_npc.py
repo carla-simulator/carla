@@ -232,6 +232,9 @@ def main():
 
         print('spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
+        # example of how to use parameters
+        traffic_manager.global_percentage_speed_difference(30.0)
+
         while True:
             if args.sync and synchronous_master:
                 world.tick()

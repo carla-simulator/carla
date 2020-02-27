@@ -10,7 +10,7 @@ namespace carla {
 namespace traffic_manager {
 
 PipelineStage::PipelineStage(
-    std::string stage_name)
+    const std::string &stage_name)
   : stage_name(stage_name),
     performance_diagnostics(PerformanceDiagnostics(stage_name)) {
   run_stage.store(false);

@@ -15,20 +15,14 @@
 void export_trafficmanager() {
     namespace cc = carla::client;
     using namespace boost::python;
-    using ActorList = std::vector<carla::SharedPtr<cc::Actor>>;
-    using Parameters = std::vector<float>;
-
-    class_<ActorList>("TM_ActorList").def(vector_indexing_suite<ActorList>());
-
-    class_<Parameters>("TM_Parameters").def(vector_indexing_suite<Parameters>());
 
     class_<carla::traffic_manager::TrafficManager>("TrafficManager", no_init)
-      .def("set_vehicle_max_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)
-      .def("set_global_max_speed_difference", &carla::traffic_manager::TrafficManager::SetGlobalPercentageSpeedDifference)
-      .def("set_collision_detection", &carla::traffic_manager::TrafficManager::SetCollisionDetection)
+      .def("vehicle_percentage_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)
+      .def("global_percentage_speed_difference", &carla::traffic_manager::TrafficManager::SetGlobalPercentageSpeedDifference)
+      .def("collision_detection", &carla::traffic_manager::TrafficManager::SetCollisionDetection)
       .def("force_lane_change", &carla::traffic_manager::TrafficManager::SetForceLaneChange)
-      .def("set_auto_lane_change", &carla::traffic_manager::TrafficManager::SetAutoLaneChange)
-      .def("set_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
+      .def("auto_lane_change", &carla::traffic_manager::TrafficManager::SetAutoLaneChange)
+      .def("distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetDistanceToLeadingVehicle)
       .def("reset_traffic_lights", &carla::traffic_manager::TrafficManager::ResetAllTrafficLights)
       .def("ignore_walkers_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreWalkers)
       .def("ignore_vehicles_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreVehicles)
