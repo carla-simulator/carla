@@ -12,9 +12,7 @@
 #include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
 
-// #include "Interface_CollisionDataProvider.h"
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
-// #include "Engine/Source/Runtime/PhysicsCore/Private/Interface_CollisionDataProvider.h"
 #include "PhysicsEngine/BodySetupEnums.h"
 #include "ProceduralMeshComponent.h"
 
@@ -30,10 +28,6 @@ AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitial
   RoadMesh->bUseAsyncCooking = true;
   RoadMesh->bUseComplexAsSimpleCollision = true;
   RoadMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-  // RoadMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-  // RoadMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
-  // RoadMesh->SetGenerateOverlapEvents(true);
-  // RoadMesh->SetNotifyRigidBodyCollision(true);
 }
 
 bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
