@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,11 +12,11 @@ namespace traffic_manager {
 BatchControlStage::BatchControlStage(
       std::string stage_name,
       std::shared_ptr<PlannerToControlMessenger> messenger,
-      carla::client::detail::EpisodeProxy &episodeProxy,
+      carla::client::detail::EpisodeProxy &episode_proxy,
       Parameters &parameters)
     : PipelineStage(stage_name),
       messenger(messenger),
-      episodeProxyBCS(episodeProxy),
+      episode_proxy_bcs(episode_proxy),
       parameters(parameters) {
 
   // Initializing number of vehicles to zero in the beginning.
@@ -67,7 +67,7 @@ void BatchControlStage::DataSender() {
 
   if (commands != nullptr) {
     // Run asynchronous mode commands.
-    episodeProxyBCS.Lock()->ApplyBatch(*commands.get(), false);
+    episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
   }
 
   // Limiting updates to 100 frames per second.

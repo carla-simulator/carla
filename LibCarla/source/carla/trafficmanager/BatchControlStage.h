@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,8 +11,8 @@
 #include <memory>
 #include <mutex>
 
-#include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/Simulator.h"
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/Command.h"
@@ -39,7 +39,7 @@ private:
   /// Pointer to a messenger from Motion Planner.
   std::shared_ptr<PlannerToControlMessenger> messenger;
   /// Reference to CARLA client connection object.
-  carla::client::detail::EpisodeProxy episodeProxyBCS;
+  carla::client::detail::EpisodeProxy episode_proxy_bcs;
   /// Array to hold command batch.
   std::shared_ptr<std::vector<carla::rpc::Command>> commands;
   /// Number of vehicles registered with the traffic manager.
@@ -57,7 +57,7 @@ public:
 
   BatchControlStage(std::string stage_name,
                     std::shared_ptr<PlannerToControlMessenger> messenger,
-                    carla::client::detail::EpisodeProxy &episodeProxy,
+                    carla::client::detail::EpisodeProxy &episode_proxy,
                     Parameters &parameters);
 
   ~BatchControlStage();

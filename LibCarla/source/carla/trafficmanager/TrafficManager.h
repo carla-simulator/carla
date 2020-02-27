@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -53,7 +53,7 @@ class TrafficManager {
 public:
   /// Public constructor for singleton life cycle management.
   explicit TrafficManager(
-    carla::client::detail::EpisodeProxy episodeProxy,
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port = TM_DEFAULT_PORT);
 
   TrafficManager(const TrafficManager& other) {

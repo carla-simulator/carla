@@ -121,7 +121,6 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     const auto frame = _client.SendTickCue();
     SynchronizeFrame(frame, *_episode);
-    //RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
     return frame;
   }
 

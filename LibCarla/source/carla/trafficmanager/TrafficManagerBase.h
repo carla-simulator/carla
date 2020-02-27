@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -97,13 +97,7 @@ public:
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 
-  bool IsServer() const {
-    return _is_server;
-  }
-
 protected:
-
-  bool _is_server = false;
 
 };
 

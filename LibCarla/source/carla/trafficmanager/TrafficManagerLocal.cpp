@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -28,8 +28,6 @@ TrafficManagerLocal::TrafficManagerLocal(
     episodeProxyTM(episodeProxy),
     debug_helper(carla::client::DebugHelper{episodeProxyTM}),
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
-
-  _is_server = true;
 
   parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
