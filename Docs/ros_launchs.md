@@ -3,8 +3,17 @@
 --------------
 ##carla_ackermann_control.launch
 
+Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages when these are not ideal to connect an AD stack. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. It can be installed using: 
+```sh
+pip install --user simple-pid
+```
+Initial parameters can be set in: `share/carla_ackermann_control/config/settings.yaml`.  
+It is possible to modify the parameters during runtime via ROS dynamic reconfigure.  
+
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](../ros_msgs#carlaegovehiclemsg).  
+Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radians__.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -19,6 +28,31 @@
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/control_info</b></font> — [carla_ackermann_control.EgoVehicleControlInfo](../ros_msgs#egovehiclecontrolinfomsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_updates</b></font> — [dynamic_reconfigure/Config](http://wiki.ros.org/dynamic_reconfigure)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+
+---------------
+##carla_example_ego_vehicle.launch
+
+<!---NODE-->
+<h4 style="margin-bottom: 5px"> <u>carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
+Launches a new vehicle with an initial position and waits for world information.  
+
+<p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
+
+* <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+
+---------------
+##carla_infrastructure.launch
+
+Requires an argument `infrastructure_sensor_definition_file:=<absolute_path>` to run. 
+
+<!---NODE-->
+<h4 style="margin-bottom: 5px"> <u>/carla_infrastructure</u> <small><i>(Node)</i></small> </h4>
+Spawns the infrastructure sensors passed as arguments.  
+
+<p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+
 
 ---------------
 ##carla_ros_bridge.launch
@@ -43,6 +77,8 @@ Receives the debug shapes being drawn, which include: arrows, points, cubes and 
 
 --------------
 ##carla_ros_bridge_with_ackermann_control.launch
+
+Launches two basic nodes, one to retrieve simulation data and another one to control a vehicle using [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm). 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
@@ -117,21 +153,21 @@ Receives the debug shapes being drawn, which include: arrows, points, cubes and 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
-* <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/view/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](../ros_msgs#carlacollisioneventmsg)
-* <font color="80ba10"><b>/carla/ego_vehicle/gnss/gnss1/fix</b></font> — [sensor_msgs.NavSatFix](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/NavSatFix.html) 
-* <font color="80ba10"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](../ros_msgs#carlalaneinvasioneventmsg)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/camera/rgb/view/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
+* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](../ros_msgs#carlacollisioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/gnss/gnss1/fix</b></font> — [sensor_msgs.NavSatFix](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/NavSatFix.html) 
+* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](../ros_msgs#carlalaneinvasioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
  
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
-* <font color="f8815c"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
+* <font color="80ba10"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
