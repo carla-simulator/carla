@@ -4,7 +4,7 @@ source $(dirname "$0")/Environment.sh
 
 function get_source_code_checksum {
   local EXCLUDE='*__pycache__*'
-  find ${LIBCARLA_ROOT_FOLDER}/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
 }
 
 # ==============================================================================
