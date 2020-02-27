@@ -54,6 +54,11 @@ inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
   Replayer.SetTimeFactor(TimeFactor);
 }
 
+inline void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
+{
+  Replayer.SetIgnoreHero(IgnoreHero);
+}
+
 void ACarlaRecorder::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);

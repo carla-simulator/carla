@@ -1,4 +1,4 @@
-<h1>Simulation time and synchrony</h1>
+<h1>Synchrony and time-step</h1>
 
 This section deals with two concepts that are fundamental to fully comprehend CARLA and gain control over it to achieve the desired results. There are different configurations that define how does time go by in the simulation and how does the server running said simulation work. The following sections will dive deep into these concepts:
 
@@ -10,7 +10,7 @@ This section deals with two concepts that are fundamental to fully comprehend CA
   * [__Client-server synchrony__](#client-server-synchrony)
 	* Setting synchronous mode  
 	* Using synchronous mode 
-  * [__Synchrony and time-step__](#synchrony-and-time-step)
+  * [__Possible configurations__](#possible-configurations)
 
 ---------------
 ##Simulation time-step
@@ -100,6 +100,7 @@ Must be mentioned that synchronous mode cannot be enabled using the script, only
 
 The synchronous mode becomes specially relevant when running with slow clients applications and when synchrony between different elements, such as sensors, is needed.  If the client is too slow and the server does not wait for it, the amount of information received will be impossible to manage and it can easily be mixed. On a similar tune, if there are ten sensors waiting to retrieve data and the server is sending all these information without waiting for all of them to have the previous one, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
 As a little extension to the previous code, in the following fragment, the client creates a camera sensor that puts the image data received in the current step in a queue and sends ticks to the server only after retrieving it from the queue. A more complex example regarding several sensors can be found [here][syncmodelink].
+
 ```py
 settings = world.get_settings()
 settings.synchronous_mode = True
@@ -115,12 +116,23 @@ while True:
 ```
 [syncmodelink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/synchronous_mode.py
 
+
 !!! Important
     Data coming from GPU-based sensors (cameras) is usually generated with a delay of a couple of frames when compared with CPU based sensors, so synchrony is essential here. 
 
 
+The world also has asynchrony methods to make the client wait for a server tick or do something when it is received: 
+
+```py
+# Wait for the next tick and retrieve the snapshot of the tick.
+world_snapshot = world.wait_for_tick()
+
+# Register a callback to get called every time we receive a new snapshot.
+world.on_tick(lambda world_snapshot: do_something(world_snapshot))
+```
+
 ----------------
-##Synchrony and time-step 
+##Possible configurations 
 
 The configuration of both concepts explained in this page, simulation time-step and client-server synchrony, leads for different types of simulation and results. Here is a brief summary on the possibilities and a better explanation of the reasoning behind it: 
 

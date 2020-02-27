@@ -199,6 +199,8 @@ namespace detail {
 
     void SetReplayerTimeFactor(double time_factor);
 
+    void SetReplayerIgnoreHero(bool ignore_hero);
+
     void SubscribeToStream(
         const streaming::Token &token,
         std::function<void(Buffer)> callback);

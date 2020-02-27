@@ -69,7 +69,7 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.69.0
+BOOST_VERSION=1.72.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
@@ -157,12 +157,12 @@ else
   rm -Rf ${BOOST_BASENAME}-source
   rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-fi
+  # Boost patch for exception handling
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
+  # ---
 
-# Boost patch for exception handling
-cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-# ---
+fi
 
 unset BOOST_BASENAME
 

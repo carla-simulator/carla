@@ -319,6 +319,10 @@ namespace detail {
     _pimpl->AsyncCall("set_replayer_time_factor", time_factor);
   }
 
+  void Client::SetReplayerIgnoreHero(bool ignore_hero) {
+    _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
