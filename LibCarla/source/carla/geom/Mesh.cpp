@@ -22,7 +22,7 @@ namespace geom {
     }
 
     // if there are indices, the amount must be multiple of 3
-    if (!_indexes.empty() and _indexes.size() % 3 != 0) {
+    if (!_indexes.empty() && _indexes.size() % 3 != 0) {
       std::cout << "Mesh validation error: the index amount must be multiple of 3." << std::endl;
       return false;
     }
@@ -56,7 +56,6 @@ namespace geom {
     if (!_materials.empty()) {
       if (_materials.back().index_end == 0) {
         std::cout << "last material was not closed, closing it..." << std::endl;
-        // return;
         EndMaterial();
       }
     }
@@ -80,16 +79,6 @@ namespace geom {
       return;
     }
     _materials.back().index_end = close_index;
-  }
-
-  /// TODO: delete this, it's just for debug
-  void Mesh::ShowInfo() const {
-    std::cout << "----------------------" << std::endl;
-    std::cout << "Vertices: " << _vertices.size() << std::endl;
-    std::cout << "Normals:  " << _normals.size() << std::endl;
-    std::cout << "Indexes:  " << _indexes.size() << std::endl;
-    std::cout << "Uvs:      " << _uvs.size() << std::endl;
-    std::cout << "----------------------" << std::endl;
   }
 
   std::string Mesh::GenerateOBJ() const {

@@ -4,7 +4,7 @@
   * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
   * Vehicles get destroyed when they are stuck in Traffic Manager
   * Implemented intersection anticipation algorithm in Traffic Manager
-  * Added simple physical map generateion from standalone OpenDRIVE data
+  * Added simple physical map generation from standalone OpenDRIVE data
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
@@ -14,7 +14,7 @@
     - Added new methods to `BoundingBox`: `contains()`, `get_local_vertices()` and `get_world_vertices(transform)`
     - Added new function to get a waypoint specifying parameters from the OpenDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
-    - Added `calra.client.generate_opendrive_world(opendrive)` that loads a map with custom OpenDRIVE basic physical topology
+    - Added `carla.client.generate_opendrive_world(opendrive)` that loads a map with custom OpenDRIVE basic physical topology
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
