@@ -107,7 +107,6 @@ namespace CollisionStageConstants {
                       (other_actor_type[0] == 'w' && parameters.GetPercentageIgnoreWalkers(ego_actor) <= (rand() % 101))) {
 
                     collision_hazard = true;
-                    break;
                   }
                 }
               }
