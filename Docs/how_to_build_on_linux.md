@@ -148,6 +148,8 @@ Run the script to get the assets:
 ```sh
 ./Update.sh
 ```
+!!! Important
+    To get the assets still in development visit the [Update CARLA](../update_carla#get-development-assets) page and read __Get development assets__. 
 
 
 <h4>Set the environment variable </h4>
