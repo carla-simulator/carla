@@ -1,10 +1,10 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "InMemoryMap.h"
+#include "carla/trafficmanager/InMemoryMap.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -244,7 +244,7 @@ namespace MapConstants {
   }
 
   std::string InMemoryMap::MakeGridKey(std::pair<int, int> grid_key) {
-    return std::to_string(grid_key.first) + std::to_string(grid_key.second);
+    return std::to_string(grid_key.first) + "#" + std::to_string(grid_key.second);
   }
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {

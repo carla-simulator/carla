@@ -56,9 +56,9 @@ namespace client {
         uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
     SharedPtr<Waypoint> GetWaypointXODR(
-        carla::road::RoadId road_id,
-        carla::road::LaneId lane_id,
-        float s) const;
+      carla::road::RoadId road_id,
+      carla::road::LaneId lane_id,
+      float s) const;
 
     using TopologyList = std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>>;
 

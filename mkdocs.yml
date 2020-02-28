@@ -7,7 +7,7 @@ extra_css: [extra.css]
 
 nav:
 - Home: 'index.md'
-- Getting started: 
+- Getting started:
   - 'Introduction': 'getting_started/introduction.md'
   - 'Quick start': 'getting_started/quickstart.md'
 - Building CARLA:
@@ -27,7 +27,7 @@ nav:
   - 'Recorder': 'recorder_and_playback.md'
   - 'Rendering options': 'rendering_options.md'
   - 'Synchrony and time-step': 'simulation_time_and_synchrony.md'
-- References: 
+- References:
   - 'Python API reference': 'python_api.md'
   - 'Code recipes': 'python_cookbook.md'
   - 'Blueprint Library': 'bp_library.md'

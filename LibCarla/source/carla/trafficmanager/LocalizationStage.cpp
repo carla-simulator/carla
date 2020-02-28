@@ -1,10 +1,11 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "LocalizationStage.h"
+#include "carla/trafficmanager/LocalizationStage.h"
+#include "carla/client/DebugHelper.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -16,13 +17,13 @@ namespace LocalizationConstants {
   static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
-  static const float HIGHWAY_SPEED = 50 / 3.6f;
+  static const float HIGHWAY_SPEED = 50.0f / 3.6f;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
   static const uint64_t UNREGISTERED_ACTORS_SCAN_INTERVAL = 10;
   static const float BLOCKED_TIME_THRESHOLD = 90.0f;
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
-  static const float STOPPED_VELOCITY_THRESHOLD = 0.4f;  // meters per second.
+  static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
 
 } // namespace LocalizationConstants
 
@@ -36,8 +37,8 @@ namespace LocalizationConstants {
       AtomicActorSet &registered_actors,
       InMemoryMap &local_map,
       Parameters &parameters,
-      cc::DebugHelper &debug_helper,
-      cc::World& world)
+      carla::client::DebugHelper &debug_helper,
+      carla::client::detail::EpisodeProxy &episodeProxy)
     : PipelineStage(stage_name),
       planner_messenger(planner_messenger),
       collision_messenger(collision_messenger),
@@ -46,7 +47,7 @@ namespace LocalizationConstants {
       local_map(local_map),
       parameters(parameters),
       debug_helper(debug_helper),
-      world(world) {
+      episode_proxy_ls(episodeProxy) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;
@@ -54,15 +55,15 @@ namespace LocalizationConstants {
     traffic_light_frame_selector = true;
     // Initializing the number of vehicles to zero in the begining.
     number_of_vehicles = 0u;
-
     // Initializing the registered actors container state.
     registered_actors_state = -1;
-
     // Initializing buffer lists.
     buffer_list = std::make_shared<BufferList>();
-
     // Initializing maximum idle time to null.
     maximum_idle_time = std::make_pair(nullptr, 0.0);
+    // Initializing srand.
+    srand(static_cast<unsigned>(time(NULL)));
+
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -78,7 +79,7 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
     // Selecting current timestamp from the world snapshot.
-    current_timestamp = world.GetSnapshot().GetTimestamp();
+    current_timestamp = episode_proxy_ls.Lock()->GetWorldSnapshot().GetTimestamp();
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -100,17 +101,24 @@ namespace LocalizationConstants {
       if (buffer_list->find(actor_id) == buffer_list->end()) {
         buffer_list->insert({actor_id, Buffer()});
       }
+
       Buffer &waypoint_buffer = buffer_list->at(actor_id);
+
+      // Clear buffer if vehicle is too far from the first waypoint in the buffer.
+      if (!waypoint_buffer.empty() &&
+          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > 10.0f) {
+        waypoint_buffer.clear();
+      }
 
       // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
+        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
 
         while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, waypoint_buffer.front()->GetLocation(), true);
+            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
           }
         }
       }
@@ -134,7 +142,7 @@ namespace LocalizationConstants {
           !front_waypoint->CheckJunction()) {
 
         SimpleWaypointPtr change_over_point = AssignLaneChange(
-            vehicle, force_lane_change, lane_change_direction);
+            vehicle, vehicle_location, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
           auto number_of_pops = waypoint_buffer.size();
@@ -183,8 +191,8 @@ namespace LocalizationConstants {
         target_waypoint = waypoint_buffer.at(j);
       }
       const cg::Location target_location = target_waypoint->GetLocation();
-      float dot_product = DeviationDotProduct(vehicle, target_location);
-      float cross_product = DeviationCrossProduct(vehicle, target_location);
+      float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
+      float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
       dot_product = 1.0f - dot_product;
       if (cross_product < 0.0f) {
         dot_product *= -1.0f;
@@ -192,8 +200,8 @@ namespace LocalizationConstants {
 
       float distance = 0.0f; // TODO: use in PID
 
-      // Filtering out false junctions on highways.
-      // On highways, if there is only one possible path and the section is
+      // Filtering out false junctions on highways:
+      // on highways, if there is only one possible path and the section is
       // marked as intersection, ignore it.
       const auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       const float speed_limit = vehicle_reference->GetSpeedLimit();
@@ -212,7 +220,7 @@ namespace LocalizationConstants {
 
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
-        if (speed_limit > HIGHWAY_SPEED*3.6f) {
+        if (speed_limit*3.6f > HIGHWAY_SPEED) {
           for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
             if (swp->GetNextWaypoint().size() > 1) {
@@ -224,13 +232,13 @@ namespace LocalizationConstants {
         }
       }
 
-      // Reset the variables when no longer approaching an intersection
+      // Reset the variables when no longer approaching a junction.
       if (!approaching_junction && approached[actor_id]){
         final_safe_points[actor_id] = nullptr;
         approached[actor_id] = false;
       }
 
-      // Only do once, when the intersection has just been seen.
+      // Only do once, when the junction has just been seen.
       else if (approaching_junction && !approached[actor_id]){
 
         SimpleWaypointPtr final_point = nullptr;
@@ -261,7 +269,9 @@ namespace LocalizationConstants {
         } else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
           actor_ptr = unregistered_actors.at(overlapping_actor_id);
         }
-        collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
+        if (actor_ptr!=nullptr) {
+          collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
+        }
         collision_message.safe_point_after_junction = final_safe_points[actor_id];
       }
       collision_message.closest_waypoint = waypoint_buffer.front();
@@ -285,16 +295,58 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DataReceiver() {
+    bool is_deleted_actors_present = false;
+    std::set<uint32_t> world_actor_id;
+    std::vector<ActorPtr> actor_list_to_be_deleted;
 
-    // Building a list of registered actors and
-    // connecting the vehicle ids to their position indices on data arrays.
+    // Filter function to collect the data.
+    auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+      std::vector<carla::client::detail::ActorVariant> filtered;
+      for (auto &&actor : actors) {
+        if (carla::StringUtil::Match(carla::client::detail::ActorVariant(actor).GetTypeId(), wildcard_pattern)) {
+          filtered.push_back(actor);
+        }
+      }
+      return filtered;
+    };
 
-    if (registered_actors_state != registered_actors.GetState()) {
+    // Get all the actors.
+    auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
 
+    // Filter with vehicle wildcard.
+    auto vehicles = Filter(world_actors_list, "vehicle.*");
+
+    // Building a set of vehicle ids in the world.
+    for (const auto &actor : vehicles) {
+      world_actor_id.insert(actor.GetId());
+    }
+
+    // Search for invalid/destroyed vehicles.
+    for (auto &actor : actor_list) {
+      if (world_actor_id.find(actor->GetId()) == world_actor_id.end()) {
+        actor_list_to_be_deleted.emplace_back(actor);
+        track_traffic.DeleteActor(actor->GetId());
+      }
+    }
+
+    // Clearing the registered actor list.
+    if(!actor_list_to_be_deleted.empty()) {
+      registered_actors.Remove(actor_list_to_be_deleted);
+      actor_list.clear();
+      actor_list = registered_actors.GetList();
+      is_deleted_actors_present = true;
+    }
+
+    // Building a list of registered actors and connecting
+    // the vehicle ids to their position indices on data arrays.
+
+    if (is_deleted_actors_present || (registered_actors_state != registered_actors.GetState())) {
+      actor_list.clear();
+      actor_list_to_be_deleted.clear();
       actor_list = registered_actors.GetList();
       uint64_t index = 0u;
       vehicle_id_to_index.clear();
-      for (auto &actor: actor_list) {
+      for (auto &actor : actor_list) {
         vehicle_id_to_index.insert({actor->GetId(), index});
         ++index;
       }
@@ -303,9 +355,7 @@ namespace LocalizationConstants {
 
     // Allocating new containers for the changed number of registered vehicles.
     if (number_of_vehicles != actor_list.size()) {
-
       number_of_vehicles = static_cast<uint64_t>(actor_list.size());
-
       // Allocating output frames to be shared with the motion planner stage.
       planner_frame_a = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
       planner_frame_b = std::make_shared<LocalizationToPlannerFrame>(number_of_vehicles);
@@ -316,7 +366,6 @@ namespace LocalizationConstants {
       traffic_light_frame_a = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
       traffic_light_frame_b = std::make_shared<LocalizationToTrafficLightFrame>(number_of_vehicles);
     }
-
   }
 
   void LocalizationStage::DataSender() {
@@ -361,31 +410,48 @@ namespace LocalizationConstants {
 
   void LocalizationStage::ScanUnregisteredVehicles() {
     ++unregistered_scan_duration;
-    // Periodically check for actors not spawned by TrafficManager.
-    if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
-      unregistered_scan_duration = 0;
+  // Periodically check for actors not spawned by TrafficManager.
+  if (unregistered_scan_duration == UNREGISTERED_ACTORS_SCAN_INTERVAL) {
+    unregistered_scan_duration = 0;
 
-      const auto world_actors = world.GetActors()->Filter("vehicle.*");
-      const auto world_walker = world.GetActors()->Filter("walker.*");
-      // Scanning for vehicles.
-      for (auto actor: *world_actors.get()) {
-        const auto unregistered_id = actor->GetId();
-        if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
-            unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, actor});
+    auto Filter = [&](auto &actors, auto &wildcard_pattern) {
+      std::vector<carla::client::detail::ActorVariant> filtered;
+      for (auto &&actor : actors) {
+        if (carla::StringUtil::Match
+             ( carla::client::detail::ActorVariant(actor).GetTypeId()
+             , wildcard_pattern)) {
+          filtered.push_back(actor);
         }
       }
-      // Scanning for pedestrians.
-      for (auto walker: *world_walker.get()) {
-        const auto unregistered_id = walker->GetId();
-        if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-          unregistered_actors.insert({unregistered_id, walker});
-        }
+      return filtered;
+    };
+
+    /// Get all actors of the world
+    auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
+
+    /// Filter based on wildcard_pattern
+    const auto world_actors = Filter(world_actors_list, "vehicle.*");
+    const auto world_walker = Filter(world_actors_list, "walker.*");
+
+    // Scanning for vehicles.
+    for (auto actor: world_actors) {
+      const auto unregistered_id = actor.GetId();
+      if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
+          unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+        unregistered_actors.insert({unregistered_id, actor.Get(episode_proxy_ls)});
       }
     }
+    // Scanning for pedestrians.
+    for (auto walker: world_walker) {
+      const auto unregistered_id = walker.GetId();
+      if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
+        unregistered_actors.insert({unregistered_id, walker.Get(episode_proxy_ls)});
+      }
+    }
+  }
 
     // Regularly update unregistered actors.
-    const auto current_snapshot = world.GetSnapshot();
+    const auto current_snapshot = episode_proxy_ls.Lock()->GetWorldSnapshot();
     for (auto it = unregistered_actors.cbegin(); it != unregistered_actors.cend();) {
       if (registered_actors.Contains(it->first) || !current_snapshot.Contains(it->first)) {
         track_traffic.DeleteActor(it->first);
@@ -412,10 +478,9 @@ namespace LocalizationConstants {
     }
   }
 
-  SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, bool force, bool direction) {
+  SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, const cg::Location &vehicle_location, bool force, bool direction) {
 
     const ActorId actor_id = vehicle->GetId();
-    const cg::Location vehicle_location = vehicle->GetLocation();
     const float vehicle_velocity = vehicle->GetVelocity().Length();
     const float speed_limit = boost::static_pointer_cast<cc::Vehicle>(vehicle)->GetSpeedLimit();
 
@@ -457,7 +522,7 @@ namespace LocalizationConstants {
               for (auto& candidate_lane_wp: other_neighbouring_lanes) {
                 if (candidate_lane_wp != nullptr &&
                     track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0 &&
-                    speed_limit < HIGHWAY_SPEED) {
+                    speed_limit*3.6f < HIGHWAY_SPEED) {
                   distant_lane_availability = true;
                 }
               }
@@ -471,7 +536,7 @@ namespace LocalizationConstants {
                   cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE) {
 
                 const float squared_vehicle_distance = cg::Math::DistanceSquared(other_location, vehicle_location);
-                const float deviation_dot = DeviationDotProduct(vehicle, other_location);
+                const float deviation_dot = DeviationDotProduct(vehicle, vehicle_location, other_location);
 
                 if (deviation_dot > 0.0f) {
 
@@ -556,16 +621,16 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
     // First Waypoint before the junction
     const SimpleWaypointPtr initial_point;
-    uint initial_index = 0;
+    uint64_t initial_index = 0;
     // First Waypoint after the junction
     SimpleWaypointPtr safe_point = nullptr;
-    uint safe_index = 0;
+    uint64_t safe_index = 0;
     // Vehicle position after the junction
     SimpleWaypointPtr final_point = nullptr;
     // Safe space after the junction
     const float safe_distance = 1.5f*length;
 
-    for (uint j = 0u; j < waypoint_buffer.size(); ++j){
+    for (uint64_t j = 0u; j < waypoint_buffer.size(); ++j){
       if (waypoint_buffer.at(j)->CheckJunction()){
         initial_index = j;
         break;
@@ -578,7 +643,7 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     // 2) Search for the end of the intersection (if it is in the buffer)
-    for (uint i = initial_index; i < waypoint_buffer.size(); ++i){
+    for (uint64_t i = initial_index; i < waypoint_buffer.size(); ++i){
 
       if (!waypoint_buffer.at(i)->CheckJunction()){
         safe_point = waypoint_buffer.at(i);
@@ -592,9 +657,9 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
       while (waypoint_buffer.back()->CheckJunction()) {
 
           std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-          uint selection_index = 0u;
+          uint64_t selection_index = 0u;
           if (next_waypoints.size() > 1) {
-            selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+            selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
           }
 
           waypoint_buffer.push_back(next_waypoints.at(selection_index));
@@ -609,8 +674,8 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
     }
 
     // 3) Search for final_point (again, if it is in the buffer)
-  
-    for(uint k = safe_index; k < waypoint_buffer.size(); ++k){
+
+    for(uint64_t k = safe_index; k < waypoint_buffer.size(); ++k){
 
       if(safe_point->Distance(waypoint_buffer.at(k)->GetLocation()) > safe_distance){
         final_point = waypoint_buffer.at(k);
@@ -624,10 +689,10 @@ SimpleWaypointPtr LocalizationStage::GetSafeLocationAfterJunction(const Vehicle 
 
         // Record the last point as a safe one and save it
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-        uint selection_index = 0u;
+        uint64_t selection_index = 0u;
         // Pseudo-randomized path selection if found more than one choice.
         if (next_waypoints.size() > 1) {
-          selection_index = static_cast<uint>(rand()) % next_waypoints.size();
+          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
 
         waypoint_buffer.push_back(next_waypoints.at(selection_index));
