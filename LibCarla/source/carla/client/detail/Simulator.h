@@ -166,7 +166,7 @@ namespace detail {
     	return _client.GetEndpoint();
     }
 
-    /// Querry to know if a Traffic Manager is running on port
+    /// Query to know if a Traffic Manager is running on port
     bool IsTrafficManagerRunning(uint16_t port) const {
       return _client.IsTrafficManagerRunning(port);
     }
