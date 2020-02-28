@@ -1,1 +1,9 @@
-dist
+dist/*
+
+!dist/addOBJ.py
+!dist/build.bat
+!dist/build.sh
+!dist/get_xodr_crosswalks.py
+
+fbx/build
+fbx/dependencies

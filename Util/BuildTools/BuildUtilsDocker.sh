@@ -1,32 +1,41 @@
-echo "Building FBX2OBJ"
-echo "----------------"
+#! /bin/bash
 
-FBXSDK_URL=https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-0-1/fbx202001_fbxsdk_linux.tar.gz
+source $(dirname "$0")/Environment.sh
 
-cd Util/DockerUtils
-mkdir dist
-cp . dist/ -r
-cd dist
-cd fbx
+FBX2OBJ_DIST=${CARLA_DOCKER_UTILS_FOLDER}/dist
+FBX2OBJ_FOLDER=${CARLA_DOCKER_UTILS_FOLDER}/fbx
+FBX2OBJ_BUILD_FOLDER=${FBX2OBJ_FOLDER}/build
+FBX2OBJ_DEP_FOLDER=${FBX2OBJ_FOLDER}/dependencies
 
-echo "Download FBX SDK 2020"
-wget -c ${FBXSDK_URL} -O fbx202001_fbxsdk_linux.tar.gz
+if [ -f "${FBX2OBJ_DIST}/FBX2OBJ" ]; then
+  log "FBX SDK already installed."
+  exit
+fi
 
-echo "Unpacking"
-tar -xvzf fbx202001_fbxsdk_linux.tar.gz
-rm fbx202001_fbxsdk_linux.tar.gz
+log "Downloading and preparing FBX SDK..."
 
-echo "Installing"
-printf "y\nyes\nn\n" | ./fbx202001_fbxsdk_linux
-rm fbx202001_fbxsdk_linux
+LIB_NAME=fbx202001_fbxsdk_linux
+FBXSDK_URL=https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-0-1/${LIB_NAME}.tar.gz
+
+echo "Downloading FBX SDK 2020"
+
+wget -c "${FBXSDK_URL}" -P "${CARLA_DOCKER_UTILS_FOLDER}"
+
+echo "Unpacking..."
+mkdir -p "${FBX2OBJ_DEP_FOLDER}"
+tar -xvzf "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz" -C "${CARLA_DOCKER_UTILS_FOLDER}" "${LIB_NAME}"
+rm "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz"
+
+echo "Installing..."
+echo -e "y\nyes\nn\n" | "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}" "${FBX2OBJ_DEP_FOLDER}"
+echo
+rm "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}"
 
 echo "Compiling FBX2OBJ..."
-mkdir build
-cd build
-cmake ..
-make
+mkdir -p "${FBX2OBJ_DIST}"
 
-echo "Copy binary FBX2OBJ"
-mv FBX2OBJ ../..
-cd ../..
-rm -Rf build
+cmake -S "${FBX2OBJ_FOLDER}" -B "${FBX2OBJ_BUILD_FOLDER}"
+
+make -C "${FBX2OBJ_BUILD_FOLDER}" install
+
+log "Success!"
