@@ -67,6 +67,8 @@ namespace detail {
 
     EpisodeProxy LoadEpisode(std::string map_name);
 
+    EpisodeProxy LoadOpenDriveEpisode(std::string opendrive);
+
     /// @}
     // =========================================================================
     /// @name Access to current episode

@@ -22,6 +22,7 @@ namespace client {
 
   class Map;
   class Junction;
+  class Landmark;
 
   class Waypoint
     : public EnableSharedFromThis<Waypoint>,
@@ -89,6 +90,15 @@ namespace client {
     boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
     road::element::LaneMarking::LaneChange GetLaneChange() const;
+
+    /// Returns a list of landmarks from the current position to a certain distance
+    std::vector<SharedPtr<Landmark>> GetAllLandmakrsInDistance(
+        double distance, bool stop_at_junction = false) const;
+
+    /// Returns a list of landmarks from the current position to a certain distance
+    /// Filters by specified type
+    std::vector<SharedPtr<Landmark>> GetLandmakrsOfTypeInDistance(
+        double distance, std::string filter_type, bool stop_at_junction = false) const;
 
   private:
 

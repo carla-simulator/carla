@@ -9,6 +9,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/geom/Transform.h"
 #include "carla/road/MapData.h"
+#include "carla/geom/Mesh.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
@@ -85,6 +86,17 @@ namespace road {
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
+    /// Data structure for the signal search
+    struct SignalSearchData {
+      const element::RoadInfoSignal *signal;
+      Waypoint waypoint;
+      double accumulated_s = 0;
+    };
+
+    /// Searches signals from an initial waypoint until the defined distance.
+    std::vector<SignalSearchData> GetSignalsInDistance(
+        Waypoint waypoint, double distance, bool stop_at_junction = false) const;
+
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================
@@ -118,12 +130,15 @@ namespace road {
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
-    //Generate waypoints of the junction
+    /// Generate waypoints of the junction
     std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const;
 
     Junction* GetJunction(JuncId id);
 
     const Junction* GetJunction(JuncId id) const;
+
+    /// Buids a mesh based on the OpenDRIVE
+    geom::Mesh GenerateGeometry(double distance) const;
 
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
