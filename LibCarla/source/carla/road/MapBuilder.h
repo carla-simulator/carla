@@ -7,7 +7,8 @@
 #pragma once
 
 #include "carla/road/Map.h"
-#include "carla/road/element/RoadObjectCrosswalk.h"
+#include "carla/road/element/RoadInfoCrosswalk.h"
+#include "carla/road/element/RoadInfoSignal.h"
 
 #include <boost/optional.hpp>
 
@@ -150,8 +151,8 @@ namespace road {
     //     const double t);
 
     // Signal methods
-    void AddSignal(
-        const RoadId road_id,
+    element::RoadInfoSignal* AddSignal(
+        Road* road,
         const SignId signal_id,
         const double s,
         const double t,
@@ -171,11 +172,22 @@ namespace road {
         const double pitch,
         const double roll);
 
-    void AddValidityToLastAddedSignal(
-        const RoadId road_id,
+    element::RoadInfoSignal* AddSignalReference(
+        Road* road,
         const SignId signal_id,
+        const double s_position,
+        const double t_position,
+        const std::string signal_reference_orientation);
+
+    void AddValidityToSignalReference(
+        element::RoadInfoSignal* signal_reference,
         const LaneId from_lane,
         const LaneId to_lane);
+
+    void AddDependencyToSignal(
+        const SignId signal_id,
+        const std::string dependency_id,
+        const std::string dependency_type);
 
     // called from junction parser
     void AddJunction(
@@ -305,31 +317,6 @@ namespace road {
         const double max,
         const std::string unit);
 
-    void AddValidityToSignal(
-        const RoadId road_id,
-        const SignId signal_id,
-        const LaneId from_lane,
-        const LaneId to_lane);
-
-    void AddValidityToSignalReference(
-        const RoadId road_id,
-        const SignId signal_reference_id,
-        const LaneId from_lane,
-        const LaneId to_lane);
-
-    void AddSignalReference(
-        const RoadId road_id,
-        const SignId signal_reference_id,
-        const double s_position,
-        const double t_position,
-        const std::string signal_reference_orientation);
-
-    void AddDependencyToSignal(
-        const RoadId road_id,
-        const SignId signal_id,
-        const uint32_t dependency_id,
-        const std::string dependency_type);
-
     Road *GetRoad(
         const RoadId road_id);
 
@@ -352,6 +339,9 @@ namespace road {
     /// Create the bounding boxes of each junction
     void CreateJunctionBoundingBoxes(Map &map);
 
+    /// Solves the signal references in the road
+    void SolveSignalReferencesAndTransforms();
+
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
 
@@ -370,13 +360,15 @@ namespace road {
     /// Map to temporary store all the road and lane infos until the map is
     /// built, so they can be added all together.
     std::unordered_map<Road *, std::vector<std::unique_ptr<element::RoadInfo>>>
-    _temp_road_info_container;
-
-    std::unordered_map<Road *, std::vector<std::unique_ptr<element::RoadObject>>>
-    _temp_road_object_container;
+        _temp_road_info_container;
 
     std::unordered_map<Lane *, std::vector<std::unique_ptr<element::RoadInfo>>>
-    _temp_lane_info_container;
+        _temp_lane_info_container;
+
+    std::unordered_map<SignId, std::unique_ptr<Signal>>
+        _temp_signal_container;
+
+    std::vector<element::RoadInfoSignal*> _temp_signal_reference_container;
 
   };
 

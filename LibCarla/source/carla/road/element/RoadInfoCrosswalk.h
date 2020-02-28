@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/road/element/RoadObject.h"
+#include "carla/road/element/RoadInfo.h"
 
 namespace carla {
 namespace road {
@@ -19,10 +19,10 @@ namespace element {
     CrosswalkPoint(double _u, double _v, double _z) : u(_u), v(_v), z(_z) {};
   };
 
-  class RoadObjectCrosswalk final : public RoadObject {
+  class RoadInfoCrosswalk final : public RoadInfo {
   public:
 
-    RoadObjectCrosswalk(
+    RoadInfoCrosswalk(
         const double s,
         const std::string name,
         const double t,
@@ -34,7 +34,7 @@ namespace element {
         const double width,
         const double length,
         const std::vector<CrosswalkPoint> points)
-      : RoadObject(s),
+      : RoadInfo(s),
         _name(name),
         _t(t),
         _zOffset(zOffset),
@@ -46,7 +46,7 @@ namespace element {
         _length(length),
         _points(points) {}
 
-    void AcceptVisitor(RoadObjectVisitor &v) final {
+    void AcceptVisitor(RoadInfoVisitor &v) final {
       v.Visit(*this);
     }
 

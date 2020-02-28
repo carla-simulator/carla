@@ -53,6 +53,10 @@ namespace geom {
       return rotation.GetForwardVector();
     }
 
+    Vector3D GetRightVector() const {
+      return rotation.GetRightVector();
+    }
+
     /// Applies this transformation to @a in_point (first translation then rotation).
     void TransformPoint(Vector3D &in_point) const {
       auto out_point = in_point;

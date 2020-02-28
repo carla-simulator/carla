@@ -10,6 +10,7 @@
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
 #include <carla/road/element/LaneMarking.h>
+#include <carla/client/Landmark.h>
 
 #include <ostream>
 #include <fstream>
@@ -56,6 +57,16 @@ static auto GetJunctionWaypoints(const carla::client::Junction &self, const carl
   py::list result;
   for (auto &pair : topology) {
     result.append(py::make_tuple(pair.first, pair.second));
+  }
+  return result;
+}
+
+static auto GetLaneValidities(const carla::client::Landmark &self){
+  namespace py = boost::python;
+  auto &validities = self.GetValidities();
+  py::list result;
+  for(auto &validity : validities) {
+    result.append(py::make_tuple(validity._from_lane, validity._to_lane));
   }
   return result;
 }
@@ -132,6 +143,12 @@ void export_map() {
     .value("Grass", cre::LaneMarking::Type::Grass)
     .value("Curb", cre::LaneMarking::Type::Curb)
   ;
+
+  enum_<cr::SignalOrientation>("LandmarkOrientation")
+    .value("Positive", cr::SignalOrientation::Positive)
+    .value("Negative", cr::SignalOrientation::Negative)
+    .value("Both", cr::SignalOrientation::Both)
+  ;
   // ===========================================================================
   // -- Map --------------------------------------------------------------------
   // ===========================================================================
@@ -180,10 +197,12 @@ void export_map() {
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, GetNext, double), (args("distance")))
     .def("previous", CALL_RETURNING_LIST_1(cc::Waypoint, GetPrevious, double), (args("distance")))
     .def("next_until_lane_end", CALL_RETURNING_LIST_1(cc::Waypoint, GetNextUntilLaneEnd, double), (args("distance")))
-    .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance")))
+    .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance", "stop_at_junction")))
     .def("get_right_lane", &cc::Waypoint::GetRight)
     .def("get_left_lane", &cc::Waypoint::GetLeft)
     .def("get_junction", &cc::Waypoint::GetJunction, (args("lane_type")))
+    .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmakrsInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
+    .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmakrsOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -191,5 +210,69 @@ void export_map() {
     .add_property("id", &cc::Junction::GetId)
     .add_property("bounding_box", &cc::Junction::GetBoundingBox)
     .def("get_waypoints", &GetJunctionWaypoints)
+  ;
+
+  class_<cc::LandmarkType>("LandmarkType", no_init)
+    .add_static_property("Danger", &cc::LandmarkType::Danger)
+    .add_static_property("LanesMerging", &cc::LandmarkType::LanesMerging)
+    .add_static_property("CautionPedestrian", &cc::LandmarkType::CautionPedestrian)
+    .add_static_property("CautionBicycle", &cc::LandmarkType::CautionBicycle)
+    .add_static_property("LevelCrossing", &cc::LandmarkType::LevelCrossing)
+    .add_static_property("Stop", &cc::LandmarkType::Stop)
+    .add_static_property("Yield", &cc::LandmarkType::Yield)
+    .add_static_property("MandatoryTurnDirection", &cc::LandmarkType::MandatoryTurnDirection)
+    .add_static_property("MandatoryLeftRightDirection", &cc::LandmarkType::MandatoryLeftRightDirection)
+    .add_static_property("TwoChoiceTurnDirection", &cc::LandmarkType::TwoChoiceTurnDirection)
+    .add_static_property("Roundabout", &cc::LandmarkType::Roundabout)
+    .add_static_property("PassRightLeft", &cc::LandmarkType::PassRightLeft)
+    .add_static_property("AccessForbidden", &cc::LandmarkType::AccessForbidden)
+    .add_static_property("AccessForbiddenMotorvehicles", &cc::LandmarkType::AccessForbiddenMotorvehicles)
+    .add_static_property("AccessForbiddenTrucks", &cc::LandmarkType::AccessForbiddenTrucks)
+    .add_static_property("AccessForbiddenBicycle", &cc::LandmarkType::AccessForbiddenBicycle)
+    .add_static_property("AccessForbiddenWeight", &cc::LandmarkType::AccessForbiddenWeight)
+    .add_static_property("AccessForbiddenWidth", &cc::LandmarkType::AccessForbiddenWidth)
+    .add_static_property("AccessForbiddenHeight", &cc::LandmarkType::AccessForbiddenHeight)
+    .add_static_property("AccessForbiddenWrongDirection", &cc::LandmarkType::AccessForbiddenWrongDirection)
+    .add_static_property("ForbiddenUTurn", &cc::LandmarkType::ForbiddenUTurn)
+    .add_static_property("MaximumSpeed", &cc::LandmarkType::MaximumSpeed)
+    .add_static_property("ForbiddenOvertakingMotorvehicles", &cc::LandmarkType::ForbiddenOvertakingMotorvehicles)
+    .add_static_property("ForbiddenOvertakingTrucks", &cc::LandmarkType::ForbiddenOvertakingTrucks)
+    .add_static_property("AbsoluteNoStop", &cc::LandmarkType::AbsoluteNoStop)
+    .add_static_property("RestrictedStop", &cc::LandmarkType::RestrictedStop)
+    .add_static_property("HasWayNextIntersection", &cc::LandmarkType::HasWayNextIntersection)
+    .add_static_property("PriorityWay", &cc::LandmarkType::PriorityWay)
+    .add_static_property("PriorityWayEnd", &cc::LandmarkType::PriorityWayEnd)
+    .add_static_property("CityBegin", &cc::LandmarkType::CityBegin)
+    .add_static_property("CityEnd", &cc::LandmarkType::CityEnd)
+    .add_static_property("Highway", &cc::LandmarkType::Highway)
+    .add_static_property("DeadEnd", &cc::LandmarkType::DeadEnd)
+    .add_static_property("RecomendedSpeed", &cc::LandmarkType::RecomendedSpeed)
+    .add_static_property("RecomendedSpeedEnd", &cc::LandmarkType::RecomendedSpeedEnd)
+  ;
+
+  class_<cc::Landmark, boost::noncopyable, boost::shared_ptr<cc::Landmark>>("Landmark", no_init)
+    .add_property("road_id", &cc::Landmark::GetRoadId)
+    .add_property("distance", &cc::Landmark::GetDistance)
+    .add_property("s", &cc::Landmark::GetS)
+    .add_property("t", &cc::Landmark::GetT)
+    .add_property("id", &cc::Landmark::GetId)
+    .add_property("name", &cc::Landmark::GetName)
+    .add_property("is_dynamic", &cc::Landmark::IsDynamic)
+    .add_property("orientation", &cc::Landmark::GetOrientation)
+    .add_property("z_offset", &cc::Landmark::GetZOffset)
+    .add_property("country", &cc::Landmark::GetCountry)
+    .add_property("type", &cc::Landmark::GetType)
+    .add_property("sub_type", &cc::Landmark::GetSubType)
+    .add_property("value", &cc::Landmark::GetValue)
+    .add_property("unit", &cc::Landmark::GetUnit)
+    .add_property("height", &cc::Landmark::GetHeight)
+    .add_property("width", &cc::Landmark::GetWidth)
+    .add_property("text", &cc::Landmark::GetText)
+    .add_property("h_offset", &cc::Landmark::GethOffset)
+    .add_property("pitch", &cc::Landmark::GetPitch)
+    .add_property("roll", &cc::Landmark::GetRoll)
+    .add_property("waypoint", &cc::Landmark::GetWaypoint)
+    .add_property("transform", CALL_RETURNING_COPY(cc::Landmark, GetTransform))
+    .def("get_lane_validities", &GetLaneValidities)
   ;
 }

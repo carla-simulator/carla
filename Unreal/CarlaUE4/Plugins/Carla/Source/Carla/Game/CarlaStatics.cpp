@@ -12,8 +12,10 @@
 TArray<FString> UCarlaStatics::GetAllMapNames()
 {
   TArray<FString> TmpStrList, MapNameList;
-  IFileManager::Get().FindFilesRecursive(MapNameList, *FPaths::ProjectContentDir(), TEXT("*.umap"), true, false, false);
+  IFileManager::Get().FindFilesRecursive(
+      MapNameList, *FPaths::ProjectContentDir(), TEXT("*.umap"), true, false, false);
   MapNameList.RemoveAll( [](const FString &Name) { return Name.Contains("TestMaps");});
+  MapNameList.RemoveAll( [](const FString &Name) { return Name.Contains("OpenDriveMap");});
   for (int i = 0; i < MapNameList.Num(); i++) {
       MapNameList[i].ParseIntoArray(TmpStrList, TEXT("Content/"), true);
       MapNameList[i] = TmpStrList[1];

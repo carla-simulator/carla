@@ -234,14 +234,22 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive)))
+    {
+      RESPOND_ERROR("opendrive could not be correctly parsed");
+    }
+    return R<void>::Success();
+  };
+
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_episode_info) << [this]() -> R<cr::EpisodeInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    return cr::EpisodeInfo{
-             Episode->GetId(),
-                 BroadcastStream.token()};
+    return cr::EpisodeInfo{Episode->GetId(), BroadcastStream.token()};
   };
 
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
