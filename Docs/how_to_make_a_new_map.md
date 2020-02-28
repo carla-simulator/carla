@@ -12,8 +12,6 @@ Files needed:
 It is possible to modify an existing CARLA map, check out the [map customization][custommaplink]
 tutorial.
 
-[custommaplink]: /dev/map_customization
-
 The following steps will introduce the RoadRunner software for map creation. If the map is
 created by other software, go to this [section](#3-importing-into-unreal).
 
@@ -24,7 +22,7 @@ in a few steps you will be able to create an impressive scene. You can download
 a trial of RoadRunner at VectorZero's web page.
 
 <div class="vector-zero">
-  <a href="https://www.vectorzero.io/"><img src="../img/VectorZeroAndIcon.webp"/></a>
+  <a href="https://www.vectorzero.io/"><img src="./img/VectorZeroAndIcon.webp"/></a>
 </div> <br>
 
 Read VectorZero's RoadRunner [documentation][rr_docs] to install it and get started.
@@ -87,7 +85,7 @@ and the second part shows how to import a map from other software that generates
     i.e. `mapname.fbx` `mapname.xodr`.
 
 We have also created a new way to import assets into Unreal,
-check this [`guide`](../asset_packages_for_dist/)!
+check this [`guide`](./asset_packages_for_dist.md)!
 
 ### 3.1 Importing from RoadRunner
 
@@ -376,3 +374,6 @@ Now pedestrians will be able to spawn randomly and walk on the selected meshes!
     * Unreal shortcuts to find materials and assets:
         * `Right-click on the Asset > Browse to Asset`
         * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
+
+
+[custommaplink]: /Docs/dev/map_customization.md

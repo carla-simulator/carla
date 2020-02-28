@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -35,9 +35,9 @@
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/PerformanceDiagnostics.h"
 
-#include "carla/client/detail/Simulator.h"
-#include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/detail/ActorVariant.h"
+#include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -91,7 +91,7 @@ namespace traffic_manager {
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
     /// Reference to carla client connection object.
-    carla::client::detail::EpisodeProxy episodeProxyLS;
+    carla::client::detail::EpisodeProxy episode_proxy_ls;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;

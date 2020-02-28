@@ -61,13 +61,15 @@ namespace traffic_manager {
     Parameters();
     ~Parameters();
 
-    /// Set target velocity for a specific vehicle.
+    /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+    /// If less than 0, it's a % increase.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
-    /// Set global target velocity.
+    /// Set a global % decrease in velocity with respect to the speed limit.
+    /// If less than 0, it's a % increase.
     void SetGlobalPercentageSpeedDifference(float const percentage);
 
-    /// Set collision detection rules between vehicles.
+    /// Method to set collision detection rules between vehicles.
     void SetCollisionDetection(
         const ActorPtr &reference_actor,
         const ActorPtr &other_actor,

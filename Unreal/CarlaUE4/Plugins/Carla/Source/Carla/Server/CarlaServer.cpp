@@ -174,11 +174,17 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   /// Add a new Traffic Manager running on <IP, port>
-  BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<void>
+  BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<bool>
   {
-    TrafficManagerInfo.insert(
-      std::pair<uint16_t, std::string>(trafficManagerInfo.second, trafficManagerInfo.first));
-    return R<void>::Success();
+    uint16_t port = trafficManagerInfo.second;
+    auto it = TrafficManagerInfo.find(port);
+    if(it == TrafficManagerInfo.end()) {
+      TrafficManagerInfo.insert(
+        std::pair<uint16_t, std::string>(port, trafficManagerInfo.first));
+      return true;
+    }
+    return false;
+
   };
 
   BIND_SYNC(destroy_traffic_manager) << [this] (uint16_t port) ->R<bool>
@@ -930,6 +936,13 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_replayer_ignore_hero) << [this](bool ignore_hero) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreHero(ignore_hero);
     return R<void>::Success();
   };
 

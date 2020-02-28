@@ -84,10 +84,9 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           /// Episode change
-          if(!episode_changed && self->_episode_changed){
+          if(episode_changed) {
             self->OnEpisodeChanged();
           }
-          self->_episode_changed = episode_changed;
 
           // Notify waiting threads and do the callbacks.
           self->_snapshot.SetValue(next);

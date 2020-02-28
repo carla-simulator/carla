@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@ namespace carla {
 namespace traffic_manager {
 
 PipelineStage::PipelineStage(
-    std::string stage_name)
+    const std::string &stage_name)
   : stage_name(stage_name),
     performance_diagnostics(PerformanceDiagnostics(stage_name)) {
   run_stage.store(false);

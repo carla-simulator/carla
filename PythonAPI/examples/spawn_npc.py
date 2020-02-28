@@ -96,7 +96,6 @@ def main():
         synchronous_master = False
 
         if args.sync:
-            traffic_manager.set_synchronous_mode(True)
             settings = world.get_settings()
             if not settings.synchronous_mode:
                 synchronous_master = True
@@ -148,7 +147,7 @@ def main():
             blueprint.set_attribute('role_name', 'autopilot')
             batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
 
-        for response in client.apply_batch_sync(batch):
+        for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:
                 logging.error(response.error)
             else:
@@ -218,7 +217,6 @@ def main():
         if not args.sync or not synchronous_master:
             world.wait_for_tick()
         else:
-            traffic_manager.synchronous_tick()
             world.tick()
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
@@ -234,9 +232,11 @@ def main():
 
         print('spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(vehicles_list), len(walkers_list)))
 
+        # example of how to use parameters
+        traffic_manager.global_percentage_speed_difference(30.0)
+
         while True:
             if args.sync and synchronous_master:
-                traffic_manager.synchronous_tick()
                 world.tick()
             else:
                 world.wait_for_tick()
@@ -246,7 +246,7 @@ def main():
         if args.sync and synchronous_master:
             settings = world.get_settings()
             settings.synchronous_mode = False
-            settings.fixed_delta_seconds = 0
+            settings.fixed_delta_seconds = None
             world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(vehicles_list))

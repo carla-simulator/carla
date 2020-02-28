@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,6 +29,7 @@ namespace traffic_manager {
     frame_selector = true;
     // Initializing number of vehicles to zero in the beginning.
     number_of_vehicles = 0u;
+    /// @todo: replace with RandomEngine
     // Initializing srand.
     srand(static_cast<unsigned>(time(NULL)));
 

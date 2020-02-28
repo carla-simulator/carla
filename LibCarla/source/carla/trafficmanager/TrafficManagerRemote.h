@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -36,6 +36,12 @@ public:
   /// To stop the TrafficManager.
   void Stop();
 
+  /// To release the traffic manager.
+  void Release();
+
+  /// To reset the traffic manager.
+  void Reset();
+
   /// Constructor store remote location information.
   TrafficManagerRemote(const std::pair<std::string, uint16_t> &_serverTM, carla::client::detail::EpisodeProxy &episodeProxy);
 
@@ -48,13 +54,15 @@ public:
   /// This method unregisters a vehicle from traffic manager.
   void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
-  /// Set target velocity specific to a vehicle.
+  /// Method to set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
-  /// Set global target velocity.
+  /// Method to set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage);
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);
 
   /// Method to force lane change on a vehicle.

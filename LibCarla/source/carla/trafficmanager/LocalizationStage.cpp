@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -47,7 +47,7 @@ namespace LocalizationConstants {
       local_map(local_map),
       parameters(parameters),
       debug_helper(debug_helper),
-      episodeProxyLS(episodeProxy) {
+      episode_proxy_ls(episodeProxy) {
 
     // Initializing various output frame selectors.
     planner_frame_selector = true;
@@ -79,7 +79,7 @@ namespace LocalizationConstants {
         traffic_light_frame_selector ? traffic_light_frame_a : traffic_light_frame_b;
 
     // Selecting current timestamp from the world snapshot.
-    current_timestamp = episodeProxyLS.Lock()->GetWorldSnapshot().GetTimestamp();
+    current_timestamp = episode_proxy_ls.Lock()->GetWorldSnapshot().GetTimestamp();
 
     // Looping over registered actors.
     for (uint64_t i = 0u; i < actor_list.size(); ++i) {
@@ -295,8 +295,8 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DataReceiver() {
-    bool isDeletedActorsPresent = false;
-    std::set<uint32_t> worldActorId;
+    bool is_deleted_actors_present = false;
+    std::set<uint32_t> world_actor_id;
     std::vector<ActorPtr> actor_list_to_be_deleted;
 
     // Filter function to collect the data.
@@ -311,19 +311,19 @@ namespace LocalizationConstants {
     };
 
     // Get all the actors.
-    auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
+    auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
 
     // Filter with vehicle wildcard.
-    auto vehicles = Filter(world_actorsList, "vehicle.*");
+    auto vehicles = Filter(world_actors_list, "vehicle.*");
 
     // Building a set of vehicle ids in the world.
     for (const auto &actor : vehicles) {
-      worldActorId.insert(actor.GetId());
+      world_actor_id.insert(actor.GetId());
     }
 
     // Search for invalid/destroyed vehicles.
     for (auto &actor : actor_list) {
-      if (worldActorId.find(actor->GetId()) == worldActorId.end()) {
+      if (world_actor_id.find(actor->GetId()) == world_actor_id.end()) {
         actor_list_to_be_deleted.emplace_back(actor);
         track_traffic.DeleteActor(actor->GetId());
       }
@@ -334,13 +334,13 @@ namespace LocalizationConstants {
       registered_actors.Remove(actor_list_to_be_deleted);
       actor_list.clear();
       actor_list = registered_actors.GetList();
-      isDeletedActorsPresent = true;
+      is_deleted_actors_present = true;
     }
 
     // Building a list of registered actors and connecting
     // the vehicle ids to their position indices on data arrays.
 
-    if (isDeletedActorsPresent  || (registered_actors_state != registered_actors.GetState())) {
+    if (is_deleted_actors_present || (registered_actors_state != registered_actors.GetState())) {
       actor_list.clear();
       actor_list_to_be_deleted.clear();
       actor_list = registered_actors.GetList();
@@ -427,31 +427,31 @@ namespace LocalizationConstants {
     };
 
     /// Get all actors of the world
-    auto world_actorsList = episodeProxyLS.Lock()->GetAllTheActorsInTheEpisode();
+    auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
 
     /// Filter based on wildcard_pattern
-    const auto world_actors = Filter(world_actorsList, "vehicle.*");
-    const auto world_walker = Filter(world_actorsList, "walker.*");
+    const auto world_actors = Filter(world_actors_list, "vehicle.*");
+    const auto world_walker = Filter(world_actors_list, "walker.*");
 
     // Scanning for vehicles.
     for (auto actor: world_actors) {
       const auto unregistered_id = actor.GetId();
       if (vehicle_id_to_index.find(unregistered_id) == vehicle_id_to_index.end() &&
           unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-        unregistered_actors.insert({unregistered_id, actor.Get(episodeProxyLS)});
+        unregistered_actors.insert({unregistered_id, actor.Get(episode_proxy_ls)});
       }
     }
     // Scanning for pedestrians.
     for (auto walker: world_walker) {
       const auto unregistered_id = walker.GetId();
       if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
-        unregistered_actors.insert({unregistered_id, walker.Get(episodeProxyLS)});
+        unregistered_actors.insert({unregistered_id, walker.Get(episode_proxy_ls)});
       }
     }
   }
 
     // Regularly update unregistered actors.
-    const auto current_snapshot = episodeProxyLS.Lock()->GetWorldSnapshot();
+    const auto current_snapshot = episode_proxy_ls.Lock()->GetWorldSnapshot();
     for (auto it = unregistered_actors.cbegin(); it != unregistered_actors.cend();) {
       if (registered_actors.Contains(it->first) || !current_snapshot.Contains(it->first)) {
         track_traffic.DeleteActor(it->first);

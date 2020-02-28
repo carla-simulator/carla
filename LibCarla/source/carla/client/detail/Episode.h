@@ -115,8 +115,6 @@ namespace detail {
     const streaming::Token _token;
 
     bool _pending_exceptions = false;
-
-    bool _episode_changed = false;
   };
 
 } // namespace detail

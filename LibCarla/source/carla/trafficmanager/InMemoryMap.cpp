@@ -244,7 +244,7 @@ namespace MapConstants {
   }
 
   std::string InMemoryMap::MakeGridKey(std::pair<int, int> grid_key) {
-    return std::to_string(grid_key.first) + std::to_string(grid_key.second);
+    return std::to_string(grid_key.first) + "#" + std::to_string(grid_key.second);
   }
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {

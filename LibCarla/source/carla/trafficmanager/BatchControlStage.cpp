@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,11 +12,11 @@ namespace traffic_manager {
 BatchControlStage::BatchControlStage(
       std::string stage_name,
       std::shared_ptr<PlannerToControlMessenger> messenger,
-      carla::client::detail::EpisodeProxy &episodeProxy,
+      carla::client::detail::EpisodeProxy &episode_proxy,
       Parameters &parameters)
     : PipelineStage(stage_name),
       messenger(messenger),
-      episodeProxyBCS(episodeProxy),
+      episode_proxy_bcs(episode_proxy),
       parameters(parameters) {
 
   // Initializing number of vehicles to zero in the beginning.
@@ -66,80 +66,28 @@ void BatchControlStage::DataSender() {
   bool synch_mode = parameters.GetSynchronousMode();
 
   if (commands != nullptr) {
-
-    // Check which mode to operate.
-    if (synch_mode)	{
-
-      // Get step_execution_mutex lock.
-      std::unique_lock<std::mutex> lock(step_execution_mutex);
-
-      // Wait for signal to process.
-      while (!run_step.load()) {
-
-        send_control_notifier.wait_for(lock, 1ms, [this]() { return run_step.load(); });
-      }
-
-      // Send information to server.
-      episodeProxyBCS.Lock()->ApplyBatchSync(*commands.get(), false);
-
-      // Set flag the work done.
-      run_step.store(false);
-
-      // Notify sender.
-      step_execution_notifier.notify_one();
-    } else {
-
-      // Run asynchronous mode commands.
-      episodeProxyBCS.Lock()->ApplyBatch(*commands.get(), false);
-    }
+    // Run asynchronous mode commands.
+    episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
   }
 
   // Limiting updates to 100 frames per second.
   if (!synch_mode) {
     std::this_thread::sleep_for(10ms);
+  } else {
+    std::unique_lock<std::mutex> lock(step_execution_mutex);
+    // Get timeout value in milliseconds.
+    double timeout = parameters.GetSynchronousModeTimeOutInMiliSecond();
+    // Wait for service to finish.
+    step_execution_notifier.wait_for(lock, timeout * 1ms, [this]() { return run_step.load(); });
+    run_step.store(false);
   }
 }
 
 
 bool BatchControlStage::RunStep() {
-
-  // Get step_execution_mutex lock.
-  std::unique_lock<std::mutex> lock(step_execution_mutex);
-
-  // Get timeout value in milliseconds.
-  double timeout = parameters.GetSynchronousModeTimeOutInMiliSecond();
-
-  // Get start time.
-  auto st = std::chrono::high_resolution_clock::now();
-
   // Set run set flag.
   run_step.store(true);
 
-  // Notify the sender thread.
-  send_control_notifier.notify_one();
-
-  // Wait for service to finish.
-  while (true) {
-
-    // Wait for signal.
-    step_execution_notifier.wait_for(lock, 1ms, [this]() { return !run_step.load(); });
-
-    // If time out occurred.
-    if (run_step.load()) {
-
-      // Get end time processing time.
-      auto en = std::chrono::high_resolution_clock::now();
-
-      // Get time gap.
-      std::chrono::duration<double, std::milli> elapsed = en - st;
-
-      // Return fail if time out happens.
-      if (elapsed.count() > timeout) return false;
-
-    } else {
-      break;
-    }
-  }
   return true;
 }
 

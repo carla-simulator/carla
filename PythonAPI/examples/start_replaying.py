@@ -51,7 +51,7 @@ def main():
         type=float,
         help='duration (default: 0.0)')
     argparser.add_argument(
-        '-f', '--recorder_filename',
+        '-f', '--recorder-filename',
         metavar='F',
         default="test1.log",
         help='recorder filename (test1.log)')
@@ -62,11 +62,15 @@ def main():
         type=int,
         help='camera follows an actor (ex: 82)')
     argparser.add_argument(
-        '-x', '--time_factor',
+        '-x', '--time-factor',
         metavar='X',
         default=1.0,
         type=float,
         help='time factor (default 1.0)')
+    argparser.add_argument(
+        '-i', '--ignore-hero',
+        action='store_true',
+        help='ignore hero vehicles')
     args = argparser.parse_args()
 
     try:
@@ -74,7 +78,13 @@ def main():
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
 
+        # set the time factor for the replayer
         client.set_replayer_time_factor(args.time_factor)
+
+        # set to ignore the hero vehicles or not
+        client.set_replayer_ignore_hero(args.ignore_hero)
+
+        # replay the session
         print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera))
 
     finally:

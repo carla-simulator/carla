@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,68 +15,49 @@
 namespace carla {
 namespace traffic_manager {
 
-// Unique pointer to hold the traffic manager instance.
-std::unique_ptr<TrafficManagerBase> TrafficManager::singleton_pointer = nullptr;
+std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> TrafficManager::_tm_map;
+std::mutex TrafficManager::_mutex;
 
-// Explicit constructor for singleton life cycle management.
 TrafficManager::TrafficManager(
-    carla::client::detail::EpisodeProxy episodeProxy,
-    uint16_t port) {
+    carla::client::detail::EpisodeProxy episode_proxy,
+    uint16_t port)
+  : _port(port) {
 
-  /// Check singleton instance already created or not
-  if (!singleton_pointer) {
-    CreateTrafficManagerClient(episodeProxy, port);
-  }
-
-  /// As TM server not running
-  if(!singleton_pointer) {
-    CreateTrafficManagerServer(episodeProxy, port);
-  }
-}
-
-void TrafficManager::Release() {
-  if(singleton_pointer) {
-    TrafficManagerBase *base_ptr = singleton_pointer.release();
-    delete base_ptr;
-  }
-}
-
-void TrafficManager::Reset() {
-  if(singleton_pointer) {
-    // Detect wich type of TM has been spawned before
-    bool tm_server = singleton_pointer->IsServer();
-
-    // Update episode information
-    carla::client::detail::EpisodeProxy episodeProxy = singleton_pointer->GetEpisodeProxy();
-    episodeProxy = episodeProxy.Lock()->GetCurrentEpisode();
-
-    // Save port to restart TM again after releasing using the same port
-    uint16_t port = singleton_pointer->port();
-
-    // Release
-    Release();
-
-    // Create again the TM
-    if(tm_server) {
-      CreateTrafficManagerServer(episodeProxy, port);
-    } else {
-      int count = 0;
-      while(count < MIN_TRY_COUNT) {
-        std::this_thread::sleep_for(500ms);
-        if(CreateTrafficManagerClient(episodeProxy, port)){
-          break;
-        }
-        count++;
-      }
-      if(count >= MIN_TRY_COUNT){
-        log_error("Traffic Manager client could not reconnect");
-      }
+  if(!GetTM(_port)){
+    // Check if a TM server already exists and connect to it
+    if(!CreateTrafficManagerClient(episode_proxy, port)) {
+      // As TM server not running, create one
+      CreateTrafficManagerServer(episode_proxy, port);
     }
   }
 }
 
+void TrafficManager::Release() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->Release();
+    TrafficManagerBase *base_ptr = tm.second.release();
+    delete base_ptr;
+  }
+  _tm_map.clear();
+}
+
+void TrafficManager::Reset() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->Reset();
+  }
+}
+
+void TrafficManager::Tick() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->SynchronousTick();
+  }
+}
+
 void TrafficManager::CreateTrafficManagerServer(
-    carla::client::detail::EpisodeProxy episodeProxy,
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
 
   // Get local IP details.
@@ -131,9 +112,6 @@ void TrafficManager::CreateTrafficManagerServer(
     return localIP;
   };
 
-  /// Set default port
-  uint16_t RPCportTM = port;
-
   /// Define local constants
   const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
   const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
@@ -150,14 +128,14 @@ void TrafficManager::CreateTrafficManagerServer(
     lateral_param,
     lateral_highway_param,
     perc_difference_from_limit,
-    episodeProxy,
-    RPCportTM);
+    episode_proxy,
+    port);
 
   /// Get TM server info (Local IP & PORT)
-  serverTM = GetLocalIP(RPCportTM);
+  serverTM = GetLocalIP(port);
 
   /// Set this client as the TM to server
-  episodeProxy.Lock()->AddTrafficManagerRunning(serverTM);
+  episode_proxy.Lock()->AddTrafficManagerRunning(serverTM);
 
   #if DEBUG_PRINT_TM
   /// Print status
@@ -168,26 +146,25 @@ void TrafficManager::CreateTrafficManagerServer(
   #endif
 
   /// Set the pointer of the instance
-  singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+  _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
+
 }
 
 bool TrafficManager::CreateTrafficManagerClient(
-    carla::client::detail::EpisodeProxy episodeProxy,
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
 
   bool result = false;
 
-  if(episodeProxy.Lock()->IsTrafficManagerRunning(port)) {
+  if(episode_proxy.Lock()->IsTrafficManagerRunning(port)) {
 
     /// Get TM server info (Remote IP & PORT)
     std::pair<std::string, uint16_t> serverTM =
-      episodeProxy.Lock()->GetTrafficManagerRunning(port);
-
-    carla::log_info("TrafficManager running at", serverTM.first,":",serverTM.second);
+      episode_proxy.Lock()->GetTrafficManagerRunning(port);
 
     /// Set remote TM server IP and port
     TrafficManagerRemote* tm_ptr = new(std::nothrow)
-      TrafficManagerRemote(serverTM, episodeProxy);
+      TrafficManagerRemote(serverTM, episode_proxy);
 
     /// Try to connect to remote TM server
     try {
@@ -206,7 +183,7 @@ bool TrafficManager::CreateTrafficManagerClient(
         tm_ptr->HealthCheckRemoteTM();
 
         /// Set the pointer of the instance
-        singleton_pointer = std::unique_ptr<TrafficManagerBase>(tm_ptr);
+        _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
 
         result = true;
       }
@@ -226,6 +203,7 @@ bool TrafficManager::CreateTrafficManagerClient(
             << std::endl;
       #endif
     }
+
   }
 
   return result;

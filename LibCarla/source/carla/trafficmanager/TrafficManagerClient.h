@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -72,19 +72,21 @@ public:
     _client->call("unregister_vehicle", std::move(actor_list));
   }
 
-  /// Set target velocity specific to a vehicle.
+  /// Method to set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const carla::rpc::Actor &_actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_speed_difference", std::move(_actor), percentage);
   }
 
-  /// Set global target velocity.
+  /// Method to set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_global_percentage_speed_difference", percentage);
   }
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_collision_detection", reference_actor, other_actor, detect_collision);

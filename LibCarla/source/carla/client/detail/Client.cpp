@@ -110,8 +110,8 @@ namespace detail {
     return _pimpl->CallAndWait<std::pair<std::string, uint16_t>>("get_traffic_manager_running", port);
   };
 
-  void Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
-    _pimpl->CallAndWait<void>("add_traffic_manager_running", trafficManagerInfo);
+  bool Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+    return _pimpl->CallAndWait<bool>("add_traffic_manager_running", trafficManagerInfo);
   };
 
   void Client::DestroyTrafficManager(uint16_t port) const {
@@ -333,6 +333,10 @@ namespace detail {
 
   void Client::SetReplayerTimeFactor(double time_factor) {
     _pimpl->AsyncCall("set_replayer_time_factor", time_factor);
+  }
+
+  void Client::SetReplayerIgnoreHero(bool ignore_hero) {
+    _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
   }
 
   void Client::SubscribeToStream(

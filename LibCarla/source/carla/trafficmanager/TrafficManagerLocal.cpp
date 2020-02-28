@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,10 +19,9 @@ TrafficManagerLocal::TrafficManagerLocal(
     std::vector<float> lateral_PID_parameters,
     std::vector<float> lateral_highway_PID_parameters,
     float perc_difference_from_limit,
-    carla::client::detail::EpisodeProxy &episodeProxy,
-    uint16_t &RPCportTM)
-  : TrafficManagerBase(RPCportTM),
-    longitudinal_PID_parameters(longitudinal_PID_parameters),
+    carla::client::detail::EpisodeProxy& episodeProxy,
+    uint16_t& RPCportTM)
+  : longitudinal_PID_parameters(longitudinal_PID_parameters),
     longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
     lateral_PID_parameters(lateral_PID_parameters),
     lateral_highway_PID_parameters(lateral_highway_PID_parameters),
@@ -30,13 +29,22 @@ TrafficManagerLocal::TrafficManagerLocal(
     debug_helper(carla::client::DebugHelper{episodeProxyTM}),
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
-  _is_server = true;
+  parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
+
+  Start();
+
+}
+
+TrafficManagerLocal::~TrafficManagerLocal() {
+  episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
+  Release();
+}
+
+void TrafficManagerLocal::Start() {
 
   const carla::SharedPtr<cc::Map> world_map = episodeProxyTM.Lock()->GetCurrentMap();
   local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
   local_map->SetUp();
-
-  parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
 
   localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
   localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
@@ -82,16 +90,6 @@ TrafficManagerLocal::TrafficManagerLocal(
     episodeProxyTM,
     parameters);
 
-  Start();
-}
-
-TrafficManagerLocal::~TrafficManagerLocal() {
-  episodeProxyTM.Lock()->DestroyTrafficManager(server.port());
-  Stop();
-}
-
-void TrafficManagerLocal::Start() {
-
   localization_collision_messenger->Start();
   localization_traffic_light_messenger->Start();
   localization_planner_messenger->Start();
@@ -104,10 +102,10 @@ void TrafficManagerLocal::Start() {
   traffic_light_stage->Start();
   planner_stage->Start();
   control_stage->Start();
+
 }
 
 void TrafficManagerLocal::Stop() {
-
   localization_collision_messenger->Stop();
   localization_traffic_light_messenger->Stop();
   localization_planner_messenger->Stop();
@@ -122,11 +120,36 @@ void TrafficManagerLocal::Stop() {
   control_stage->Stop();
 }
 
-void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
+void TrafficManagerLocal::Release() {
+  Stop();
+  localization_collision_messenger.reset();
+  localization_traffic_light_messenger.reset();
+  localization_planner_messenger.reset();
+  collision_planner_messenger.reset();
+  traffic_light_planner_messenger.reset();
+  planner_control_messenger.reset();
+  localization_stage.reset();
+  collision_stage.reset();
+  traffic_light_stage.reset();
+  planner_stage.reset();
+  control_stage.reset();
+}
+
+void TrafficManagerLocal::Reset() {
+
+  Release();
+
+  carla::client::detail::EpisodeProxy episode_proxy = episodeProxyTM.Lock()->GetCurrentEpisode();
+  episodeProxyTM = episode_proxy;
+
+  Start();
+}
+
+void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr>& actor_list) {
   registered_actors.Insert(actor_list);
 }
 
-void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
+void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr>& actor_list) {
   registered_actors.Remove(actor_list);
 }
 
@@ -226,6 +249,7 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
       tln->Freeze(true);
     }
   }
+
 }
 
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {

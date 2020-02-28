@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,7 +11,7 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
-#define MIN_TRY_COUNT       10
+#define MIN_TRY_COUNT       20
 #define TM_DEFAULT_PORT     8000
 
 namespace carla {
@@ -30,8 +30,14 @@ public:
   /// To stop the traffic manager.
   virtual void Stop() = 0;
 
+  /// To release the traffic manager.
+  virtual void Release() = 0;
+
+  /// To reset the traffic manager.
+  virtual void Reset() = 0;
+
   /// Protected constructor for singleton lifecycle management.
-  TrafficManagerBase(uint16_t port) : _port(port) {};
+  TrafficManagerBase() {};
 
   /// Destructor.
   virtual ~TrafficManagerBase() {};
@@ -42,13 +48,15 @@ public:
   /// This method unregisters a vehicle from traffic manager.
   virtual void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) = 0;
 
-  /// Set target velocity specific to a vehicle.
+  /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   virtual void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) = 0;
 
-  /// Set global target velocity.
+  /// Set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   virtual void SetGlobalPercentageSpeedDifference(float const percentage) = 0;
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   virtual void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) = 0;
 
   /// Method to force lane change on a vehicle.
@@ -89,18 +97,7 @@ public:
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 
-  uint16_t port() const {
-    return _port;
-  }
-
-  bool IsServer() const {
-    return _is_server;
-  }
-
 protected:
-
-  uint16_t _port = TM_DEFAULT_PORT;
-  bool _is_server = false;
 
 };
 

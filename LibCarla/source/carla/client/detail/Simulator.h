@@ -178,8 +178,8 @@ namespace detail {
     }
 
     /// Informs that a Traffic Manager is running on <IP, port>
-    void AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
-      _client.AddTrafficManagerRunning(trafficManagerInfo);
+    bool AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+      return _client.AddTrafficManagerRunning(trafficManagerInfo);
     }
 
     void DestroyTrafficManager(uint16_t port) const {
@@ -402,6 +402,10 @@ namespace detail {
 
     void SetReplayerTimeFactor(double time_factor) {
       _client.SetReplayerTimeFactor(time_factor);
+    }
+
+    void SetReplayerIgnoreHero(bool ignore_hero) {
+      _client.SetReplayerIgnoreHero(ignore_hero);
     }
 
     /// @}

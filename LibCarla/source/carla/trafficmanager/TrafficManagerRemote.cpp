@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,12 +17,22 @@ namespace traffic_manager {
 TrafficManagerRemote::TrafficManagerRemote(
     const std::pair<std::string, uint16_t> &_serverTM,
     carla::client::detail::EpisodeProxy &episodeProxy)
-  : TrafficManagerBase(_serverTM.second),
-    client(_serverTM.first, _serverTM.second),
+  : client(_serverTM.first, _serverTM.second),
     episodeProxyTM(episodeProxy) {
 
-  std::thread _thread = std::thread([this] () {
+  Start();
 
+}
+
+/// Destructor.
+TrafficManagerRemote::~TrafficManagerRemote() {
+  Release();
+}
+
+void TrafficManagerRemote::Start() {
+  _keep_alive = true;
+
+  std::thread _thread = std::thread([this] () {
     std::chrono::milliseconds wait_time(TM_TIMEOUT);
     try {
       do {
@@ -58,15 +68,6 @@ TrafficManagerRemote::TrafficManagerRemote(
   _thread.detach();
 }
 
-/// Destructor.
-TrafficManagerRemote::~TrafficManagerRemote() {
-  Stop();
-}
-
-void TrafficManagerRemote::Start() {
-  _keep_alive = true;
-}
-
 void TrafficManagerRemote::Stop() {
   if(_keep_alive) {
     _keep_alive = false;
@@ -74,6 +75,19 @@ void TrafficManagerRemote::Stop() {
     std::chrono::milliseconds wait_time(TM_TIMEOUT + 1000);
     _cv.wait_for(lock, wait_time);
   }
+}
+
+void TrafficManagerRemote::Release() {
+  Stop();
+}
+
+void TrafficManagerRemote::Reset() {
+  Stop();
+
+  carla::client::detail::EpisodeProxy episode_proxy = episodeProxyTM.Lock()->GetCurrentEpisode();
+  episodeProxyTM = episode_proxy;
+
+  Start();
 }
 
 void TrafficManagerRemote::RegisterVehicles(const std::vector<ActorPtr> &_actor_list) {
@@ -164,7 +178,7 @@ void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
 }
 
 bool TrafficManagerRemote::SynchronousTick() {
-  return client.SynchronousTick();
+  return false;
 }
 
 void TrafficManagerRemote::HealthCheckRemoteTM() {

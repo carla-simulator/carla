@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,19 +8,11 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <unordered_set>
 #include <vector>
 
-#if _WIN32
-  #include <winsock2.h>   ///< socket
-  #include <Ws2tcpip.h>
-#else
-  #include <sys/socket.h> ///< socket
-  #include <netinet/in.h> ///< sockaddr_in
-  #include <arpa/inet.h>  ///< getsockname
-  #include <unistd.h>     ///< close
-#endif
 #include "carla/client/Actor.h"
 #include "carla/client/BlueprintLibrary.h"
 #include "carla/client/Map.h"
@@ -30,6 +22,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
+#include "carla/Sockets.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
@@ -57,136 +50,185 @@ using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 /// the traffic manager appropriately using messengers.
 class TrafficManager {
 
-private:
-  /// Pointer to hold representative TM class
-  static std::unique_ptr<TrafficManagerBase> singleton_pointer;
-
 public:
-
-  /// Public release method to clear allocated data
-  static void Release();
-
-  static void Reset();
-
-  /// Private constructor for singleton life cycle management.
+  /// Public constructor for singleton life cycle management.
   explicit TrafficManager(
-    carla::client::detail::EpisodeProxy episodeProxy,
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port = TM_DEFAULT_PORT);
 
-  TrafficManager(const TrafficManager &) = default;
+  TrafficManager(const TrafficManager& other) {
+    _port = other._port;
+  }
+
   TrafficManager(TrafficManager &&) = default;
 
   TrafficManager &operator=(const TrafficManager &) = default;
   TrafficManager &operator=(TrafficManager &&) = default;
 
+  static void Release();
+
+  static void Reset();
+
+  static void Tick();
+
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->RegisterVehicles(actor_list);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->RegisterVehicles(actor_list);
+    }
   }
 
   /// This method unregisters a vehicle from traffic manager.
   void UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->UnregisterVehicles(actor_list);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->UnregisterVehicles(actor_list);
+    }
   }
 
-  /// Set target velocity specific to a vehicle.
+  /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageSpeedDifference(actor, percentage);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetPercentageSpeedDifference(actor, percentage);
+    }
   }
 
-  /// Set global target velocity.
+  /// Set a global % decrease in velocity with respect to the speed limit.
+  /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage){
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetGlobalPercentageSpeedDifference(percentage);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalPercentageSpeedDifference(percentage);
+    }
   }
 
-  /// Set collision detection rules between vehicles.
+  /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetCollisionDetection(reference_actor, other_actor, detect_collision);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetCollisionDetection(reference_actor, other_actor, detect_collision);
+    }
   }
 
   /// Method to force lane change on a vehicle.
   /// Direction flag can be set to true for left and false for right.
   void SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetForceLaneChange(actor, direction);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetForceLaneChange(actor, direction);
+    }
   }
 
   /// Enable/disable automatic lane change on a vehicle.
   void SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetAutoLaneChange(actor, enable);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetAutoLaneChange(actor, enable);
+    }
   }
 
   /// Method to specify how much distance a vehicle should maintain to
   /// the leading vehicle.
   void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetDistanceToLeadingVehicle(actor, distance);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetDistanceToLeadingVehicle(actor, distance);
+    }
   }
 
   /// Method to specify the % chance of ignoring collisions with any walker.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageIgnoreWalkers(actor, perc);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetPercentageIgnoreWalkers(actor, perc);
+    }
   }
 
   /// Method to specify the % chance of ignoring collisions with any vehicle.
   void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageIgnoreVehicles(actor, perc);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetPercentageIgnoreVehicles(actor, perc);
+    }
   }
 
   /// Method to specify the % chance of running a sign.
   void SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageRunningSign(actor, perc);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetPercentageRunningSign(actor, perc);
+    }
   }
 
   /// Method to specify the % chance of running a light.
   void SetPercentageRunningLight(const ActorPtr &actor, const float perc){
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetPercentageRunningLight(actor, perc);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetPercentageRunningLight(actor, perc);
+    }
   }
 
   /// Method to reset all traffic lights.
   void ResetAllTrafficLights() {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->ResetAllTrafficLights();
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->ResetAllTrafficLights();
+    }
   }
 
   /// Method to switch traffic manager into synchronous execution.
   void SetSynchronousMode(bool mode) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetSynchronousMode(mode);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetSynchronousMode(mode);
+    }
   }
 
   /// Method to set tick timeout for synchronous execution.
   void SetSynchronousModeTimeOutInMiliSecond(double time) {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    singleton_pointer->SetSynchronousModeTimeOutInMiliSecond(time);
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetSynchronousModeTimeOutInMiliSecond(time);
+    }
   }
 
   /// Method to provide synchronous tick.
   bool SynchronousTick() {
-    DEBUG_ASSERT(singleton_pointer != nullptr);
-    return singleton_pointer->SynchronousTick();
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      return tm_ptr->SynchronousTick();
+    }
+    return false;
   }
 
-protected:
+private:
 
-  static void CreateTrafficManagerServer(
-    carla::client::detail::EpisodeProxy episodeProxy,
+  void CreateTrafficManagerServer(
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port);
 
 
-  static bool CreateTrafficManagerClient(
-    carla::client::detail::EpisodeProxy episodeProxy,
+  bool CreateTrafficManagerClient(
+    carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port);
+
+  TrafficManagerBase* GetTM(uint16_t port) const {
+    std::lock_guard<std::mutex> lock(_mutex);
+    auto it = _tm_map.find(port);
+    if (it != _tm_map.end()) {
+      _mutex.unlock();
+      return it->second.get();
+    }
+    return nullptr;
+  }
+
+  static std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> _tm_map;
+  static std::mutex _mutex;
+
+  uint16_t _port = TM_DEFAULT_PORT;
 
 };
 
