@@ -37,7 +37,7 @@ namespace std {
 
     using argument_type = carla::road::element::Waypoint;
 
-    using result_type = uint64_t;
+    using result_type = unsigned long;
 
     /// Generates an unique id for @a waypoint based on its road_id, lane_id,
     /// section_id, and "s" offset. The "s" offset is truncated to half

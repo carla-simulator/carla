@@ -22,8 +22,7 @@ namespace client {
   /// @todo Works as a list but its actually a map. We should assess the use
   /// cases and reconsider this implementation.
   class BlueprintLibrary
-    : public EnableSharedFromThis<BlueprintLibrary>,
-      private NonCopyable {
+    : public EnableSharedFromThis<BlueprintLibrary> {
     using map_type = std::unordered_map<std::string, ActorBlueprint>;
   public:
 

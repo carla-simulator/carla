@@ -27,6 +27,7 @@ Install
 *.so
 *.stackdump
 *.sublime-workspace
+*.swp
 *.workspace
 *CodeCompletionFolders.txt
 *CodeLitePreProcessor.txt
@@ -45,3 +46,4 @@ _out*
 _site
 core
 profiler.csv
+Content.tar.gz

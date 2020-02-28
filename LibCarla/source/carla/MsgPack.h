@@ -8,6 +8,10 @@
 
 #include "carla/Buffer.h"
 
+#ifdef __APPLE__
+#define MSGPACK_DISABLE_LEGACY_NIL
+#endif
+
 #include <rpc/msgpack.hpp>
 
 namespace carla {

@@ -224,10 +224,18 @@ if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_client STATIC ${libcarla_sources})
 
-  target_include_directories(carla_client SYSTEM PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}"
-      "${RECAST_INCLUDE_PATH}")
+  if (APPLE)
+    target_include_directories(carla_client SYSTEM PRIVATE
+        "${BOOST_INCLUDE_PATH}"
+        "${RPCLIB_INCLUDE_PATH}"
+        "${RECAST_INCLUDE_PATH}"
+        "/usr/local/include")
+  else (APPLE)
+    target_include_directories(carla_client SYSTEM PRIVATE
+        "${BOOST_INCLUDE_PATH}"
+        "${RPCLIB_INCLUDE_PATH}"
+        "${RECAST_INCLUDE_PATH}")
+  endif (APPLE)
 
   if (BUILD_RSS_VARIANT)
     target_compile_definitions(carla_client PRIVATE RSS_ENABLED)

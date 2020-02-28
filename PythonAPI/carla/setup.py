@@ -68,6 +68,38 @@ def get_libcarla_extensions():
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
             extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+
+        elif platform.system() == 'Darwin':
+            pwd = os.path.dirname(os.path.realpath(__file__))
+            pylib = "libboost_python%d%d.a" % (sys.version_info.major,
+                                               sys.version_info.minor)
+            extra_link_args = [
+                os.path.join(pwd, 'dependencies/lib/libcarla_client.a'),
+                os.path.join(pwd, 'dependencies/lib/librpc.a'),
+                os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
+                os.path.join(pwd, 'dependencies/lib/libRecast.a'),
+                os.path.join(pwd, 'dependencies/lib/libDetour.a'),
+                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
+                os.path.join(pwd, 'dependencies/lib', pylib)]
+            extra_compile_args = [
+                '-isystem', 'dependencies/include/system',
+                '-mmacosx-version-min=10.13',
+                '-fPIC', '-std=c++14', '-Wno-missing-braces', 
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
+            ]
+            if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
+                print('Building AD RSS variant.')
+                extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad-rss.a')]
+
+            if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+                print('Travis CI build detected: disabling PNG support.')
+                extra_link_args += ['-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
+            else:
+                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
+
         else:
             raise NotImplementedError
     elif os.name == "nt":

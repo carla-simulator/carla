@@ -18,7 +18,10 @@ Config/CarlaSettings.ini
 Config/DefaultEditor.ini
 
 *.code-workspace
+*.xcworkspace
 .idea
 .vscode
 CMakeLists.txt
 Makefile
+Makefile.original
+

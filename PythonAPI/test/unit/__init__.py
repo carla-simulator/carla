@@ -6,12 +6,19 @@
 
 import glob
 import os
+import platform
 import sys
 
 try:
+    if platform.system() == 'Darwin':
+        hosttype = 'macosx-*-x86_64'
+    elif os.name == 'nt':
+        hosttype = 'win-amd64'
+    else:
+        hosttype = 'linux-x86_64'
     sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+        hosttype))[0])
 except IndexError:
     pass
