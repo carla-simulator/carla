@@ -30,11 +30,27 @@ Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radi
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
 
 ---------------
-##carla_example_ego_vehicle.launch
+##carla_ego_vehicle.launch
+
+Spawns an ego vehicle (`role-name="ego_vehicle"`) with the argument `sensor_definition_file` being this the location of a __.json__ file describing sensors attached to the vehicle. The format for this file is explained [here](https://github.com/carla-simulator/ros-bridge/tree/master/carla_ego_vehicle).  
+To spawn the vehicle at a specific location, publish in: `/carla/ego_vehicle/initialpose` or use __RVIZ__ and select a position with: __2D Pose estimate__. 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
-Launches a new vehicle with an initial position and waits for world information.  
+Spawns an ego vehicle with sensors attached and waits for world information.  
+
+<p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
+
+* <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+
+---------------
+##carla_example_ego_vehicle.launch
+As [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`), only this uses a provided file to pass the sensors attached to the vehicle. Said file can be found in: `share/carla_ego_vehicle/config/sensors.json`. 
+
+<!---NODE-->
+<h4 style="margin-bottom: 5px"> <u>carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
+Spawns an ego vehicle with sensors attached and waits for world information.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
@@ -43,14 +59,14 @@ Launches a new vehicle with an initial position and waits for world information.
 
 ---------------
 ##carla_infrastructure.launch
-
-Requires an argument `infrastructure_sensor_definition_file:=<absolute_path>` to run. 
+Spawns infrastructure sensors and requires the argument `infrastructure_sensor_definition_file` with the location of a __.json__ file describing these sensors.
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_infrastructure</u> <small><i>(Node)</i></small> </h4>
 Spawns the infrastructure sensors passed as arguments.  
 
-<p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
+<p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
+
 * <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
 
 
