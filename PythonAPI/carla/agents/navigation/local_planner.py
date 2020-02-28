@@ -14,7 +14,7 @@ import random
 
 import carla
 from agents.navigation.controller import VehiclePIDController
-from agents.tools.misc import distance_vehicle, draw_waypoints
+from agents.tools.misc import draw_waypoints
 
 
 class RoadOption(Enum):
@@ -242,7 +242,6 @@ class LocalPlanner(object):
         return control
 
     def done(self):
-        vehicle_transform = self._vehicle.get_transform()
         return len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0
 
 def _retrieve_options(list_waypoints, current_waypoint):
