@@ -16,7 +16,7 @@ CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/
 ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
 
 #replace the tar file name with additional maps
-#if you do not have additional map then comment line 12, 37, 39 
+#if you do not have additional map then comment line 16, 20, 41, 43 
 NEW_TOWNS=AdditionalMaps_0.9.7.tar.gz
 
 #Check if Carla-<version> release is already downloaded
@@ -110,7 +110,6 @@ EOF
 rm postinst
 
 #Adding Carla library path (carla.pth) to site-packages, during post installation.
-#Change Carla version as required
 cat>> postinst << EOF
 #!/bin/sh
 
