@@ -1,4 +1,4 @@
-<h1>How to upgrade content</h1>
+# How to upgrade content
 
 Our content resides on a separate [Git LFS repository][contentrepolink]. As part
 of our build system, we generate and upload a package containing the latest

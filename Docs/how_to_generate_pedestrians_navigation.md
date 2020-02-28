@@ -1,4 +1,4 @@
-<h1>How to generate the pedestrian navigation info</h1>
+# How to generate the pedestrian navigation info
 ### Introduction
 
 The pedestrians to walk need information about the map in a specific format. That file that describes the map for navigation is a binary file with extension `.BIN`, and they are saved in the **Nav** folder of the map. Each map needs a `.BIN` file with the same name that the map, so automatically can be loaded with the map.

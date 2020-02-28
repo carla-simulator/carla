@@ -1,4 +1,4 @@
-<h1> Recorder </h1>  
+# Recorder  
 
 This is one of the advanced CARLA features. It allows to record and reenact a simulation while providing with a complete log of the events happened and a few queries to ease the trace and study of those.  
 To learn about the generated file and its specifics take a look at this [reference](recorder_binary_file_format.md). 
@@ -64,7 +64,7 @@ client.replay_file("recording01.log", start, duration, camera)
 !!! Note
     These parameters allows to recall an event and then let the simulation run free, as vehicles will be set to autopilot when the recording stops. 
 
-<h4>Setting a time factor</h4> 
+####Setting a time factor
 
 The time factor will determine the playback speed.  
 
@@ -135,7 +135,7 @@ Duration: 60.3753 seconds
 ---------------
 ##Queries
 
-<h4>Collisions</h4> 
+####Collisions
 
 In order to record collisions, vehicles must have a [collision detector](../ref_sensors#collision-detector) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
 Currently, the actor types that can be used in the query are:  
@@ -184,7 +184,7 @@ In this case, the playback showed this:
 
 ![collision](img/collision1.gif)
 
-<h4>Blocked actors</h4> 
+####Blocked actors
 
 This query is used to detect vehicles that where stucked during the recording. An actor is considered blocked if it does not move a minimum distance in a certain time. This definition is made by the user during the query:
 

@@ -1,4 +1,4 @@
-<h1>Documentation Standard</h1>
+# Documentation Standard
 
 This document will serve as a guide and example of some rules that need to be
 followed in order to contribute to the documentation.
@@ -6,8 +6,9 @@ followed in order to contribute to the documentation.
 We use a mix of markdown and HTML tags to customize the documentation along with an
 [`extra.css`](https://github.com/carla-simulator/carla/tree/master/Docs/extra.css) file.
 
-Rules
------
+-------
+## Rules
+
 
   * Leave always an empty line between sections and at the end of the document.
   * Writting should not exceed `100` columns, except for HTML related content, markdown tables,
@@ -20,7 +21,8 @@ Rules
   * Use `------` underlining a Heading or `#` hierarchy to make headings and show them in the
   navigation bar.
 
-<h3>Exceptions:</h3>
+--------
+## Exceptions
 
   * Documentation generated via python scripts like PythonAPI reference
 

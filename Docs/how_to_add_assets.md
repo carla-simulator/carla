@@ -1,4 +1,4 @@
-<h1>How to add assets</h1>
+# How to add assets
 
 Adding a vehicle
 ----------------

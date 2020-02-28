@@ -1,4 +1,4 @@
-<h1>F.A.Q.</h1>
+# F.A.Q.
 
 Some of the most common issues regarding CARLA installation and builds are listed hereunder. More issues can be found in the [GitHub issues][issuelink] for the project. In case a doubt is not listed here, take a look at the forum and feel free to post it.
 [issuelink]: https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+ 

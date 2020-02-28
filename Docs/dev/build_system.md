@@ -1,4 +1,4 @@
-<h1>Build system</h1>
+#Build system
 
 > _This document is a work in progress, only the Linux build system is taken into account here._
 

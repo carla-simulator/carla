@@ -1,4 +1,4 @@
-<h1>4th. Sensors and data</h1>
+# 4th. Sensors and data
 
 The last step in this introduction to CARLA are sensors. They allow to retrieve data from the surroundings and so, are crucial to use CARLA as a learning environment for driving agents.  
 This page summarizes everything necessary to start handling sensors including some basic information about the different types available and a step-by-step of their life cycle. The specifics for every sensor can be found in their [reference](ref_sensors.md)
@@ -24,7 +24,7 @@ The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of a
 
 Despite their differences, the way the user manages every sensor is quite similar. 
 
-<h4>Setting</h4>
+####Setting
 
 As with every other actor, the first step is to find the proper blueprint in the library and set specific attributes to get the desired results. This is essential when handling sensors, as their capabilities depend on the way these are set. Their attributes are detailed in the [sensors' reference](ref_sensors.md). 
 
@@ -40,7 +40,7 @@ blueprint.set_attribute('fov', '110')
 blueprint.set_attribute('sensor_tick', '1.0')
 ``` 
 
-<h4>Spawning</h4>
+####Spawning
 
 Sensors are also spawned like any other actor, only this time the two optional parameters, `attachment_to` and `attachment_type` are crucial. They should be attached to another actor, usually a vehicle, to follow it around and gather the information regarding its surroundings.  
 There are two types of attachment:  
@@ -55,7 +55,7 @@ sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 !!! Important
     When spawning an actor with attachment, remember that its location should be relative to its parent, not global. 
 
-<h4>Listening</h4>
+####Listening
 
 Every sensor has a [`listen()`](python_api.md#carla.Sensor.listen) method that is called every time the sensor retrieves data.  
 This method has one argument: `callback`, which is a [lambda expression](https://www.w3schools.com/python/python_lambda.asp) of a function, defining what should the sensor do when data is retrieved.  
@@ -93,7 +93,7 @@ Sensor data differs a lot between sensor types, but it is always tagged with:
 ---------------
 ##Types of sensors  
  
-<h4>Cameras</h4>
+####Cameras
 
 These sensors take a shot of the world from their point of view and then use the helper class to alter this image and provide different types of information.  
 __Retrieve data:__ every simulation step.  
@@ -104,7 +104,7 @@ __Retrieve data:__ every simulation step.
 | RGB | [carla.Image](python_api.md#carla.Image) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
 | Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |
 
-<h4>Detectors</h4>
+####Detectors
 
 Sensors that retrieve data when a parent object they are attached to registers a specific event in the simulation.  
 __Retrieve data:__ when triggered.  
@@ -115,7 +115,7 @@ __Retrieve data:__ when triggered.
 | Lane invasion | [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) | Registers when its parent crosses a lane marking. |
 | Obstacle | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleEvent) | Detects possible obstacles ahead of its parent. |
 
-<h4>Other</h4>
+####Other
 
 This group gathers sensors with different functionalities: navigation, measure physical properties of an object and provide 2D and 3D models of the scene.  
 __Retrieve data:__ every simulation step.  

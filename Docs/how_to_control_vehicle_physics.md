@@ -1,4 +1,4 @@
-<h1>How to control vehicle physics</h1>
+# How to control vehicle physics
 
 Physics properties can be tuned for vehicles and its wheels.
 These changes are applied **only** on runtime, and values are set back to default ones when
