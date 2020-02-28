@@ -29,6 +29,16 @@ void ATrafficLightGroup::SetFrozenGroup(bool InFreeze)
   bIsFrozen = InFreeze;
 }
 
+void ATrafficLightGroup::ResetGroup()
+{
+  for(auto * Controller : Controllers)
+  {
+    Controller->ResetState();
+  }
+  CurrentController = 0;
+  Timer = Controllers[CurrentController]->NextState();
+}
+
 // Called every frame
 void ATrafficLightGroup::Tick(float DeltaTime)
 {

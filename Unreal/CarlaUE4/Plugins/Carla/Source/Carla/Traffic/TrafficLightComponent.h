@@ -18,6 +18,7 @@ class ATrafficLightGroup;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLightChangeDispatcher);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_RetVal(ETrafficLightState, FLightChangeDispatcher);
 
+/// Class representing an OpenDRIVE Traffic Signal
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CARLA_API UTrafficLightComponent : public USignComponent
 {

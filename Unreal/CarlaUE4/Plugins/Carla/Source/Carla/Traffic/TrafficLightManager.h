@@ -9,10 +9,11 @@
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
 #include "Game/CarlaGameModeBase.h"
+#include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
 
-// Class In charge of creating and assigning traffic
-// light groups, controllers and components.
+/// Class In charge of creating and assigning traffic
+/// light groups, controllers and components.
 UCLASS()
 class CARLA_API ATrafficLightManager : public AActor
 {
@@ -36,6 +37,9 @@ public:
   UFUNCTION(BlueprintCallable)
   UTrafficLightComponent* GetTrafficLight(FString SignId);
 
+  UFUNCTION(CallInEditor)
+  void GenerateTrafficLights();
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
@@ -57,4 +61,12 @@ private:
   // Mapped references to individual TrafficLightComponents
   UPROPERTY()
   TMap<FString, UTrafficLightComponent *> TrafficLights;
+
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TSubclassOf<AActor> TrafficLightModel;
+
+  UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  USceneComponent *SceneComponent;
+
+  boost::optional<carla::road::Map> Map;
 };

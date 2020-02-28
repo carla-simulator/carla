@@ -11,6 +11,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
 #include "carla/opendrive/OpenDriveParser.h"
+#include "carla/road/element/RoadInfoSignal.h"
 #include <compiler/enable-ue4-macros.h>
 
 #include "DrawDebugHelpers.h"
@@ -286,7 +287,54 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
       FLinearColor(0, 255, 0, 255),
       10000.0f
     );
-
-
   }
+
+  auto waypoints = Map->GenerateWaypointsOnRoadEntries();
+  for (auto & waypoint : waypoints)
+  {
+    auto SignalReferences = Map->GetLane(waypoint).GetRoad()->GetInfos<carla::road::element::RoadInfoSignal>();
+    for (auto *SignalReference : SignalReferences)
+    {
+      double current_s = waypoint.s;
+      double signal_s = SignalReference->GetS();
+
+      double delta_s = signal_s - current_s;
+      FTransform ReferenceTransform;
+      if (delta_s == 0)
+      {
+        ReferenceTransform = Map->ComputeTransform(waypoint);
+      }
+      else if (waypoint.lane_id < 0)
+      {
+        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
+        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
+      }
+      else if(waypoint.lane_id > 0)
+      {
+        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
+        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
+      }
+      else
+      {
+        continue;
+      }
+      DrawDebugSphere(
+          World,
+          ReferenceTransform.GetLocation(),
+          50.0f,
+          10,
+          FColor(0, 255, 0),
+          true
+      );
+
+      DrawDebugLine(
+          World,
+          ReferenceTransform.GetLocation(),
+          FTransform(SignalReference->GetSignal()->GetTransform()).GetLocation(),
+          FColor(0, 255, 0),
+          true
+      );
+    }
+  }
+
 }
