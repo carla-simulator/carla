@@ -29,16 +29,17 @@ print(client.get_available_maps())
 ```
 So far there are seven different maps available. Each of these has a specific structure or unique features that are useful for different purposes, so a brief sum up on these: 
 
-Town | Summary
--- | --
-__Town 01__ | As __Town 02__, a basic town layout with all "T junctions". These are the most stable.
-__Town 02__ | As __Town 01__, a basic town layout with all "T junctions". These are the most stable.
-__Town 03__ | The most complex town with a roundabout, unevenness, a tunnel. Essentially a medley.
-__Town 04__ | An infinite loop in a highway.
-__Town 05__ | Squared-grid town with cross junctions and a bridge.
-__Town 06__ | Long highways with a lane exit and a [Michigan left](https://en.wikipedia.org/wiki/Michigan_left).
-__Town 07__ | A rural environment with narrow roads, barely non traffic lights and barns.
+|Town | Summary |
+| -- | -- |
+|__Town 01__ | As __Town 02__, a basic town layout with all "T junctions". These are the most stable.|
+|__Town 02__ | As __Town 01__, a basic town layout with all "T junctions". These are the most stable.|
+|__Town 03__ | The most complex town with a roundabout, unevenness, a tunnel. Essentially a medley.|
+|__Town 04__ | An infinite loop in a highway.|
+|__Town 05__ | Squared-grid town with cross junctions and a bridge.|
+|__Town 06__ | Long highways with a lane exit and a [Michigan left](https://en.wikipedia.org/wiki/Michigan_left). |
+|__Town 07__ | A rural environment with narrow roads, barely non traffic lights and barns.|  
 
+<br>
 Users can also [customize a map](dev/map_customization.md) or even [create a new map](how_to_make_a_new_map.md) to be used in CARLA. These are more advanced steps and have been developed in their own tutorials.  
 
 

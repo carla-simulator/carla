@@ -87,9 +87,9 @@ Sensor data differs a lot between sensor types, but it is always tagged with:
 | --------------------- | ------ | ----------- |
 | `frame`               | int    | Frame number when the measurement took place. |
 | `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the episode. |
-| `transform`           | carla.Transform | World reference of the sensor at the time of the measurement. |
+| `transform`           | carla.Transform | World reference of the sensor at the time of the measurement. |  
 
-
+<br>
 ---------------
 ##Types of sensors  
  
@@ -102,8 +102,9 @@ __Retrieve data:__ every simulation step.
 | ---------- | ---------- | ---------- |
 | Depth | [carla.Image](python_api.md#carla.Image) | Renders the depth of the elements in the field of view in a gray-scale depth map. |
 | RGB | [carla.Image](python_api.md#carla.Image) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
-| Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |
+| Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |  
 
+<br>
 ####Detectors
 
 Sensors that retrieve data when a parent object they are attached to registers a specific event in the simulation.  
@@ -113,8 +114,9 @@ __Retrieve data:__ when triggered.
 | ---------- | ---------- | ---------- |
 | Collision | [carla.CollisionEvent](python_api.md#carla.CollisionEvent) | Retrieves collisions between its parent and other actors. |
 | Lane invasion | [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) | Registers when its parent crosses a lane marking. |
-| Obstacle | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleEvent) | Detects possible obstacles ahead of its parent. |
+| Obstacle | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleEvent) | Detects possible obstacles ahead of its parent. |  
 
+<br>
 ####Other
 
 This group gathers sensors with different functionalities: navigation, measure physical properties of an object and provide 2D and 3D models of the scene.  
@@ -125,8 +127,9 @@ __Retrieve data:__ every simulation step.
 | GNSS | [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) | Retrieves the geolocation location of the sensor. |
 | IMU | [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) | Comprises an accelerometer, a gyroscope and a compass. |
 | Lidar raycast | [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) | A rotating lidar retrieving a cloud of points to generate a 3D model the surroundings. |
-| Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |
+| Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |  
 
+<br>
 ---------------
 That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Some of the different paths to follow now are listed here: 
 

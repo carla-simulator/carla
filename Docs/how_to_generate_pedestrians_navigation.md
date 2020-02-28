@@ -21,7 +21,9 @@ We have several types of meshes for navigation. The meshes need to be identified
 | Grass     | `Road_Crosswalk` | Pedestrians can walk over these meshes but as a second option if no ground is found. |
 | Road      | `Road_Grass` | Pedestrians won't be allowed to walk on it unless we specify some percentage of pedestrians that will be allowed. |
 | Crosswalk | `Road_Road`, `Road_Curb`, `Road_Gutter` or `Road_Marking` | Pedestrians can cross the roads only through these meshes. |
-| Block     | any other name | Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...). |
+| Block     | any other name | Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...). |  
+
+<br>
 
 For instance, all road meshes need to start with `Road_Road` e.g: `Road_Road_Mesh_1`, `Road_Road_Mesh_2`...
 

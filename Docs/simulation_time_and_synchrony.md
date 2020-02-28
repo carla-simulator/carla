@@ -139,7 +139,9 @@ The configuration of both concepts explained in this page, simulation time-step 
 |  | __Fixed time-step__ | __Variable time-step__ |
 | --- | --- | --- |
 | __Synchronous mode__ | Client is in total control over the simulation and its information. | Risk of non reliable simulations. |
-| __Asynchronous mode__ | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations. |
+| __Asynchronous mode__ | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations. |  
+
+<br>
 
 * __Synchronous mode + variable time-step:__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and, if the server needs to wait for the client to compute the steps, this is likely to happen. Simulation time and physics then will not be in synchrony and thus, the simulation is not reliable.  
 
