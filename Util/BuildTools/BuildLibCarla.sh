@@ -2,6 +2,11 @@
 
 source $(dirname "$0")/Environment.sh
 
+function get_source_code_checksum {
+  local EXCLUDE='*__pycache__*'
+  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+}
+
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -146,9 +151,19 @@ function build_libcarla {
   mkdir -p ${M_BUILD_FOLDER}
   pushd "${M_BUILD_FOLDER}" >/dev/null
 
-  if [ ! -f "build.ninja" ]; then
+  CHECKSUM_FILE=checksum.txt
 
-set -e -x
+  if [ ! -f "${CHECKSUM_FILE}" ] ; then
+    NEEDS_CMAKE=true
+  elif [ "$(cat ${CHECKSUM_FILE})" != "$(get_source_code_checksum)" ] ; then
+    log "Re-running cmake, some files were added or removed."
+    NEEDS_CMAKE=true
+  else
+    NEEDS_CMAKE=false
+  fi
+
+  if ${NEEDS_CMAKE} ; then
+
     cmake \
         -G "Eclipse CDT4 - Ninja" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE:-$1} \
@@ -159,6 +174,8 @@ set -e -x
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
         ${CMAKE_EXTRA_OPTIONS} \
         ${CARLA_ROOT_FOLDER}
+
+    get_source_code_checksum > ${CHECKSUM_FILE}
 
   fi
 

@@ -54,6 +54,13 @@ public:
   UFUNCTION(BlueprintCallable)
   bool LoadNewEpisode(const FString &MapString);
 
+  /// Load a new map generating the mesh from OpenDRIVE data and
+  /// start a new episode.
+  ///
+  /// If @a MapString is empty, it fails.
+  UFUNCTION(BlueprintCallable)
+  bool LoadNewOpendriveEpisode(const FString &OpenDriveString);
+
   // ===========================================================================
   // -- Episode settings -------------------------------------------------------
   // ===========================================================================
