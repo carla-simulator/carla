@@ -176,6 +176,19 @@ Contains the information needed to apply a movement controller to a walker.
 | `jump`      | bool                   | If true, the walker will jump. |
 
 ---------------
+##CarlaWaypoint.msg
+
+Summarizes data regarding a waypoint. 
+
+| Field         | Type               | Description                   |
+| ------------- | ------------------ | ----------------------------- |
+| `road_id`     | int32              | OpenDRIVE road's id.  |
+| `section_id`  | int32              | OpenDRIVE section's id, based on the order that they are originally defined. |
+| `lane_id`     | int32              | OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. |
+| `is_junction` | bool               | __True__ if the current Waypoint is on a junction as defined by OpenDRIVE. |
+| `pose`        | geometry_msgs/Pose | ??? | <!---- what?>
+
+---------------
 ##CarlaWorldInfo.msg
 
 Information about the current CARLA map (name and OpenDRIVE). 

@@ -132,7 +132,7 @@ The parameters available refer to:
 * __Synchronous mode:__ 
 	* __If false (default):__ data is published on every `world.on_tick()` and every `sensor.listen()` callbacks.  
 	* __If true:__ the bridge waits for all sensor data that is expected before the next tick. This might slow down the overall simulation but ensures reproducible results.  
-* __Wait for vehicle command:__ in synchronous mode, this boolean determines if a vehicle command should be received before executing the next tick. 
+* __Wait for vehicle command:__ in synchronous mode, pauses the tick until a vehicle control is completted. 
 * __Simulation time-step:__ simulation time (delta seconds) between simulation steps. __It must be lower than 0.1__. Take a look at the [documentation](../simulation_time_and_synchrony) to learn more about this.  
 * __Role names for the Ego vehicles:__ a role names to identify ego vehicles. These will be controllable from ROS and thus, relevant topics will be created.  
 
