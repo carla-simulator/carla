@@ -754,9 +754,9 @@ namespace road {
       point.location.y *= -1; // Unreal Y axis hack
       point.location.z += static_cast<float>(signal->_zOffset);
       geom::Transform transform(point.location, geom::Rotation(
-          static_cast<float>(signal->_pitch),
-          static_cast<float>(-(point.tangent + signal->_hOffset)),
-          static_cast<float>(signal->_roll)));
+          geom::Math::ToDegrees(static_cast<float>(signal->_pitch)),
+          geom::Math::ToDegrees(static_cast<float>(-(point.tangent + signal->_hOffset))),
+          geom::Math::ToDegrees(static_cast<float>(signal->_roll))));
       signal->_transform = transform;
     }
 

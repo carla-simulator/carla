@@ -28,7 +28,7 @@ struct FTrafficLightStage
 };
 
 // Maps a controller from OpenDrive.
-// Controls the asociated traffic lights and its cycles
+// Controls the asociated traffic lights and contains its cycles
 UCLASS(BlueprintType)
 class CARLA_API UTrafficLightController : public UObject
 {
@@ -39,7 +39,7 @@ public:
   UTrafficLightController();
 
   UFUNCTION(BlueprintCallable)
-  void SetState(TArray<FTrafficLightStage> States);
+  void SetStates(TArray<FTrafficLightStage> States);
 
   UFUNCTION(BlueprintPure)
   const FTrafficLightStage &GetCurrentState() const;

@@ -8,11 +8,18 @@
 #include "Game/CarlaStatics.h"
 #include <string>
 
-ATrafficLightManager::ATrafficLightManager() {
+ATrafficLightManager::ATrafficLightManager()
+{
   PrimaryActorTick.bCanEverTick = false;
+  SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+  RootComponent = SceneComponent;
+
+  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightFinder( TEXT( "Blueprint'/Game/Carla/Blueprints/Test.Test'" ) );
+  TrafficLightModel = TrafficLightFinder.Object->GeneratedClass;
 }
 
-void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLight) {
+void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLight)
+{
   // Cast to std::string
   carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLight->GetSignId())));
 
@@ -73,11 +80,55 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   TrafficLights.Add(TrafficLight->GetSignId(), TrafficLight);
 }
 
-const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap() {
-  if(!GameMode) {
-    GameMode = UCarlaStatics::GetGameMode(this);
+const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
+{
+  // if(!GameMode) {
+  //   GameMode = UCarlaStatics::GetGameMode(this);
+  // }
+  // return GameMode->GetMap();
+  if (!Map.has_value())
+  {
+    FString MapName = GetWorld()->GetName();
+    std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+    Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+    if (!Map.has_value()) {
+      UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
+    }
   }
-  return GameMode->GetMap();
+  return Map;
+}
+
+void ATrafficLightManager::GenerateTrafficLights()
+{
+  if(!TrafficLightModel)
+  {
+    carla::log_warning("Error: no traffic light model.");
+    return;
+  }
+  const auto& Signals = GetMap()->GetSignals();
+  for(const auto& ControllerPair : GetMap()->GetControllers())
+  {
+    const auto& Controller = ControllerPair.second;
+    for(const auto& SignalId : Controller->GetSignals())
+    {
+      const auto& Signal = Signals.at(SignalId);
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+      carla::log_warning("Creating Signal", SignalId);
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      AActor * TrafficLight = GetWorld()->SpawnActor<AActor>(TrafficLightModel, SpawnTransform.GetLocation(), FRotator(SpawnTransform.GetRotation()), SpawnParams);
+
+      carla::log_warning("Actor Spawned");
+      UTrafficLightComponent *TrafficLightComponent = NewObject<UTrafficLightComponent>(TrafficLight);
+      TrafficLightComponent->SetSignId(SignalId.c_str());
+      TrafficLightComponent->RegisterComponent();
+      TrafficLightComponent->AttachToComponent(TrafficLight->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
+      carla::log_warning("Component Created");
+    }
+  }
 }
 
 // Called when the game starts

@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TrafficLightGroup.h"
 #include "TrafficLightManager.h"
+#include "TrafficLightInterface.h"
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()
@@ -37,6 +38,8 @@ void UTrafficLightComponent::BeginPlay()
   // Register this component
   ATrafficLightManager *TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerArray.Top());
   TrafficLightManager->RegisterLightComponent(this);
+
+  carla::log_warning("Registering light", TCHAR_TO_UTF8(*GetSignId()));
 }
 
 // Called every frame
@@ -50,6 +53,10 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
 {
   LightState = NewState;
   LightChangeDispatcher.Broadcast();
+  if (GetOwner()->Implements<UTrafficLightInterface>())
+  {
+    ITrafficLightInterface::Execute_LightChanged(GetOwner(), LightState);
+  }
 }
 
 ETrafficLightState UTrafficLightComponent::GetLightState() const
