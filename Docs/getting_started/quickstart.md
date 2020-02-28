@@ -99,11 +99,11 @@ The packaged version requires no updates. The content is bundled and thus, tied 
 
 That concludes the quickstart installation process. In case any unexpected error or issue occurs, the [CARLA forum](https://forum.carla.org/) is open to everybody. There is an _Installation issues_ category to post this kind of problems and doubts. 
 
-So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script and retrieve data. Thus will access all of the capabilities that CARLA provides. Next step should be  visiting the _First steps_ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](../python_api.md).
+So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script and retrieve data. Thus will access all of the capabilities that CARLA provides. Next step should be  visiting the __First steps__ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](../python_api.md).
 
 <div class="build-buttons">
 <p>
-<a href="../../python_api_tutorial" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../../core_concepts" target="_blank" class="btn btn-neutral" title="Go to first steps">
 Go to: First steps</a>
 </p>
 </div>

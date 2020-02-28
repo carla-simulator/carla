@@ -9,7 +9,7 @@ Files needed:
 * Binaries `.fbx` - All meshes you need to build the map, i.e., roads, lanemarking, sidewalk, ect.
 * OpenDRIVE `.xodr` - Road network information that cars need to circulate on the map.
 
-It is possible to modify an existing CARLA map, check out the [map customization][custommaplink]
+It is possible to modify an existing CARLA map, check out the [map customization](../dev/map_customization)
 tutorial.
 
 The following steps will introduce the RoadRunner software for map creation. If the map is
@@ -374,6 +374,3 @@ Now pedestrians will be able to spawn randomly and walk on the selected meshes!
     * Unreal shortcuts to find materials and assets:
         * `Right-click on the Asset > Browse to Asset`
         * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
-
-
-[custommaplink]: /Docs/dev/map_customization.md

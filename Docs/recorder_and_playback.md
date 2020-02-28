@@ -137,7 +137,7 @@ Duration: 60.3753 seconds
 
 <h4>Collisions</h4> 
 
-In order to record collisions, vehicles must have a [collision detector](cameras_and_sensors.md) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
+In order to record collisions, vehicles must have a [collision detector](../ref_sensors#collision-detector) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
 Currently, the actor types that can be used in the query are:  
 
 * __h__ = Hero
