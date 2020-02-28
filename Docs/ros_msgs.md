@@ -21,7 +21,7 @@ The [CarlaActorList.msg](#carlaactorlist) message is a list of these items.
 | ----------- | ------ | ----------- |
 | `id`        | uint32 | The ID of the actor. |
 | `parent_id` | uint32 | The ID of the parent actor. `0` if no parent available. |
-| `type`      | string | ???            | <!---- What is this exactly?>
+| `type`      | string | The identifier of the blueprint this actor was based on. |
 | `rolename`  | string | Role assigned to the actor when spawned. |
 
 ---------------
@@ -143,7 +143,7 @@ Details the current world settings of hte simulation.
 | `frame`                    | uint64  | Current framen umber.         |
 | `fixed_delta_seconds`      | float32 | Simulation time between last and current step. |
 | `synchronous_mode`         | bool    | If true, synchronous mode is enabled. |
-| `synchronous_mode_running` | bool    | ??? | <!---- What is this exactly?>
+| `synchronous_mode_running` | bool    | True when the simulation is running. False when it is paused. |
 
 ---------------
 ##CarlaTrafficLightStatus.msg
@@ -152,7 +152,7 @@ Contains a constant definition regarding the state of a traffic light.
 
 | Field                      | Type    | Description                               |
 | -------------------------- | ------- | ----------------------------------------- |
-| `id`                       | uint32  | ID of the traffic light actor. ??? |  <!---- Contains also pole and group??>
+| `id`                       | uint32  | ID of the traffic light actor. |
 | `state`                    | uint8   | __RED__=0,__YELLOW__=1, __GREEN__=2, __OFF__=3, __UNKNOWN__=4 |
 
 ---------------
@@ -182,8 +182,8 @@ Information about the current CARLA map (name and OpenDRIVE).
 
 | Field       | Type    | Description                   |
 | ----------- | ------- | ----------------------------- |
-| `map_name`  | string  | Name of the CARLA map loaded in the current world.  ??? |  <!---- Is it? Or OpenDRIVE name file?>
-| `opendrive` | string  | ??? | <!---- Namefile of the OpenDRIVE map, whole map parsed as string or what??>
+| `map_name`  | string  | Name of the CARLA map loaded in the current world. |
+| `opendrive` | string  | .xodr OpenDRIVE file of the current map as a string. |
 
 ---------------
 ##EgoVehicleControlCurrent.msg
@@ -194,7 +194,7 @@ Represents the current time and the speed and acceleration values of the vehicle
 | ----------- | -------- | ----------------------------- |
 | `time_sec`  | float32  | Current time when the controller is applied. |
 | `speed`     | float32  | Current speed applied by the controller. |
-| `speed_abs` | float32  | ??? |  <!---- what?>
+| `speed_abs` | float32  | Speed as an absolute value. | 
 | `accel`     | float32  | Current acceleration applied by the controller. |
 
 ---------------
@@ -219,13 +219,12 @@ Represents the maximum values that restrict the controller. It is part of a `Car
 
 | Field                | Type     | Description                   |
 | -------------------- | -------- | ----------------------------- |
-| `max_steering_angle` | float32  | Max. steering angle permitted to the controller. |
-| `max_speed`          | float32  | Max. speed permitted to the controller. |
-| `max_accel`          | float32  | Max. acceleration permitted to the controller. |
-| `max_decel`          | float32  | ??? |<!---- what?>
-| `min_accel`          | float32  | ??? |<!---- what?>
+| `max_steering_angle` | float32  | Max. steering angle for a vehicle. |
+| `max_speed`          | float32  | Max. speed for a vehicle. |
+| `max_accel`          | float32  | Max. acceleration for a vehicle. |
+| `max_decel`          | float32  | Max. deceleration for a vehicle. Default: __8 m/s^2__ |
+| `min_accel`          | float32  | Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled. |
 | `max_pedal`          | float32  | ??? |<!---- what?>
-
 
 ---------------
 ##EgoVehicleControlStatus.msg
@@ -243,7 +242,6 @@ Represents the current status of the ego vehicle controller. It is part of a `Ca
 | `brake_upper_border`             | float32 | ??? Borders for lay off pedal. |<!---- what?>
 | `throttle_lower_border`          | float32 | ??? Borders for lay off pedal. |<!---- what?>
 
-
 ---------------
 ##EgoVehicleControlTarget.msg
 
@@ -253,6 +251,6 @@ Represents the target vallues for the variables of the ego vehicle controller. I
 | ---------------- | -------- | ----------------------------- |
 | `steering_angle` | float32  | Target steering angle for the controller. |
 | `speed`          | float32  | Target speed for the controller. |
-| `speed_abs`      | float32  | ??? | <!---- what?>
+| `speed_abs`      | float32  | Speed as an absolute value. |
 | `accel`          | float32  | Target acceleration for the controller. |
 | `jerk`           | float32  | Target jerk for the controller. |
