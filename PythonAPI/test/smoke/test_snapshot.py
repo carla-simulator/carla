@@ -14,7 +14,7 @@ class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
         self.world = self.client.reload_world()
 
-        # TODO: Check why the world settings aren't applied after a reload
+        # Check why the world settings aren't applied after a reload
         self.settings = self.world.get_settings()
         settings = carla.WorldSettings(
             no_rendering_mode=False,
