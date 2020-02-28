@@ -15,7 +15,7 @@
 
 class ATrafficLightManager;
 
-// Class with the logic of semaphors
+/// Class which implements the state changing of traffic lights
 UCLASS()
 class CARLA_API ATrafficLightGroup : public AActor
 {
@@ -26,7 +26,8 @@ public:
   ATrafficLightGroup();
 
   UFUNCTION(BlueprintPure)
-  TArray<UTrafficLightController*>& GetControllers() {
+  TArray<UTrafficLightController*>& GetControllers()
+  {
     return Controllers;
   }
 
@@ -35,6 +36,9 @@ public:
 
   UFUNCTION(BlueprintPure)
   int GetJunctionId() const;
+
+  UFUNCTION(BlueprintCallable)
+  void ResetGroup();
 
 protected:
   // Called when the game starts or when spawned

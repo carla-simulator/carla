@@ -11,7 +11,7 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "SignComponent.generated.h"
 
-
+/// Class representing an OpenDRIVE Signal
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CARLA_API USignComponent : public USceneComponent
 {

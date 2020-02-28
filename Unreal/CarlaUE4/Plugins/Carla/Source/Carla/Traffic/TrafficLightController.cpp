@@ -11,10 +11,10 @@ UTrafficLightController::UTrafficLightController()
 
 }
 
-void UTrafficLightController::SetState(TArray<FTrafficLightStage> States)
+void UTrafficLightController::SetStates(TArray<FTrafficLightStage> States)
 {
   LightStates = States;
-  CurrentState = 0;
+  ResetState();
 }
 
 const FTrafficLightStage &UTrafficLightController::GetCurrentState() const
