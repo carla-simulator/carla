@@ -72,6 +72,7 @@ Spawns the infrastructure sensors passed as arguments.
 
 ---------------
 ##carla_ros_bridge.launch
+Creates a node with some basic communication between CARLA and ROS.  
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
@@ -98,6 +99,8 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
+Publishes the data regarding the current state of the simulation: world, objects, trafic lights, actors... 
+Receives the debug shapes being drawn, which include: arrows, points, cubes and line strips.10px 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
@@ -113,6 +116,8 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](../ros_msgs#carlaegovehiclemsg).  
+Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radians__.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -131,9 +136,12 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 --------------
 ##carla_ros_bridge_with_example_ego_vehicle.launch
 
+Spawns an ego vehicle with sensors attached and starts communication between CARLA and ROS sharing current simulation state, sensor and ego vehicle data. 
+The ego vehicle is set ready to be used in manual control. 
+
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
-
+This node is in charge of most of the communication between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/debug_marker</b></font> — [visualization_msgs.MarkerArray](http://docs.ros.org/melodic/api/visualization_msgs/html/msg/MarkerArray.html)
@@ -166,6 +174,8 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
+Retrieves from CARLA information regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
+The information retrieved includes both static and current state, the sensor data registered on every step and the general settings of the simulation. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -187,6 +197,7 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
+Spawns an ego vehicle with sensors attached and waits for world information.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -195,9 +206,10 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 ---------------
 ##carla_ros_bridge_with_rviz.launch
-
+Starts some basic communication between CARLA and ROS and launches an instance of RVIZ ready to retrieve Lidar data. 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
+Shares information between CARLA and ROS regarding the curent simulation state. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
@@ -213,6 +225,7 @@ Launches two basic nodes, one to retrieve simulation data and another one to con
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/rviz</u> <small><i>(Node)</i></small> </h4>
+Runs an instance of RVIZ waiting for Lidar data. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
@@ -257,9 +270,27 @@ The information retrieved includes both static and current state, the sensor dat
 
 --------------
 ##carla_pcl_recorder.launch
+Creates a pointcloud map for the current CARLA level by letting an ego vehicle in autopilot mode roam around with a Lidar sensor attached.  
+The captured point clouds are saved in the `/tmp/pcl_capture` directory. Once the capture is done, the overall size can be reduced: 
+```sh
+#create one point cloud file
+pcl_concatenate_points_pcd /tmp/pcl_capture/*.pcd
+
+#filter duplicates
+pcl_voxel_grid -leaf 0.1,0.1,0.1 output.pcd map.pcd
+
+#verify the result
+pcl_viewer map.pcd
+```
+
+In order to run it, the launch file requires some functionality that is not part of the python egg-file, so the PYTHONPATH has to be extended: 
+```sh
+export PYTHONPATH=<path-to-carla>/PythonAPI/carla/dist/carla-<version_and_arch>.egg:<path-to-carla>/PythonAPI/carla/
+```
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
+This node is in charge of most of the communication between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -293,6 +324,8 @@ The information retrieved includes both static and current state, the sensor dat
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
+Retrieves from CARLA information regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
+The information retrieved includes both static and current state, the sensor data registered on every step and the general settings of the simulation. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -314,6 +347,7 @@ The information retrieved includes both static and current state, the sensor dat
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
+Spawns an ego vehicle with sensors attached and waits for world information.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -321,6 +355,7 @@ The information retrieved includes both static and current state, the sensor dat
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/enable_autopilot_rostopic</u> <small><i>(Node)</i></small> </h4>  
+Changes between autopilot and manual control modes. 
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
@@ -329,6 +364,7 @@ The information retrieved includes both static and current state, the sensor dat
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/pcl_recorder_node</u> <small><i>(Node)</i></small> </h4>  
+Receives the cloud point data to map the surroundings. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -337,8 +373,20 @@ The information retrieved includes both static and current state, the sensor dat
 --------------
 ##carla_waypoint_publisher.launch
 
+Calculates a waypoint route for an ego vehicle.  
+The calculated route is published in: `/carla/<ego vehicle name>/waypoints`.  
+The goal is either read from the ROS topic `/carla/<ROLE NAME>/goal`, if available, or a fixed spawnpoint is used.  
+The prefered way of setting a goal is to click __2D Nav Goal__ in RVIZ.
+
+
+In order to run it, the launch file requires some functionality that is not part of the python egg-file, so the PYTHONPATH has to be extended: 
+```sh
+export PYTHONPATH=$PYTHONPATH:<path-to-carla>/PythonAPI/carla-<carla_version_and_arch>.egg:<path-to-carla>/PythonAPI/carla/
+```
+
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_waypoint_publisher</u> <small><i>(Node)</i></small> </h4>
+Uses the current pose of the ego vehicle with role-name `ego_vehicle` as starting point. If the vehicle is respawned or moved, the route is newly calculated.
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
