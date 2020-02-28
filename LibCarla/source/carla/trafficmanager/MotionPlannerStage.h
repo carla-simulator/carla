@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,9 +29,8 @@ namespace traffic_manager {
 
   /// The class is responsible for aggregating information from various stages
   /// like the localization stage, traffic light stage, collision detection
-  /// stage
-  /// and actuation signals from the PID controller and makes decisions on
-  /// how to move the vehicle to follow it's trajectory safely.
+  /// stage and actuation signals from the PID controller and makes decisions
+  /// on how to move the vehicle to follow it's trajectory safely.
   class MotionPlannerStage : public PipelineStage {
 
   private:

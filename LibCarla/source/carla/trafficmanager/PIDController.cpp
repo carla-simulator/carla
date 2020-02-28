@@ -1,10 +1,11 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PIDController.h"
+#include "carla/trafficmanager/PIDController.h"
+
 #include <algorithm>
 
 namespace carla {
@@ -14,6 +15,9 @@ namespace PIDControllerConstants {
 
   const float MAX_THROTTLE = 0.7f;
   const float MAX_BRAKE = 1.0f;
+
+  // PID will be stable only over 20 FPS.
+  const float dt = 1/20.0f;
 
 } // namespace PIDControllerConstants
 
@@ -39,13 +43,6 @@ namespace PIDControllerConstants {
       0.0f
     };
 
-    // Calculating dt for 'D' and 'I' controller components.
-    const chr::duration<float> duration = current_state.time_instance - previous_state.time_instance;
-    (void) duration; //const float dt = duration.count(); Remove.
-
-    // PID will be stable only over 20 FPS.
-    const float dt = 1/20.0f;
-
     // Calculating integrals.
     current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
     current_state.distance_integral = distance * dt + previous_state.distance_integral;
@@ -59,10 +56,6 @@ namespace PIDControllerConstants {
       StateEntry previous_state,
       const std::vector<float> &longitudinal_parameters,
       const std::vector<float> &lateral_parameters) const {
-
-    // Calculating dt for updating the integral component.
-    const chr::duration<float> duration = present_state.time_instance - previous_state.time_instance;
-    const float dt = duration.count();
 
     // Longitudinal PID calculation.
     const float expr_v =

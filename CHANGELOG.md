@@ -1,11 +1,18 @@
 ## latest
 
+  * Traffic Manager:
+    - Added benchmark
+    - Added synchronous mode
+    - Fixed change map error
+    - Added multiclient architecture
+    - Added multi Traffic Manager architecture
+    - Fixed linkage between waypoints
+    - Implemented intersection anticipation
+    - Implemented vehicle destruction when stuck
+    - Implemented tunable parameters
   * Added landmark class for signal-related queries.
   * Added support to parse OpenDRIVE signals.
   * Added junction class as queryable object from waypoint
-  * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
-  * Vehicles get destroyed when they are stuck in Traffic Manager
-  * Implemented intersection anticipation algorithm in Traffic Manager
   * Added simple physical map generation from standalone OpenDRIVE data
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
@@ -42,7 +49,7 @@
   * Added new sensor: Radar
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
-  * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Added Traffic Manager to replace autopilot in managing the NPC vehicles
   * Improved pedestrians navigation
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters
@@ -66,7 +73,6 @@
   * Fixed an error in `automatic_control.py` failing because the `Num Lock` key
   * Fixed client_bounding_boxes.py example script
   * Fixed materials and semantic segmentation issues regarding importing assets
-  * Added TrafficManager to replace autopilot in managing the NPC vehicles
   * Fixed ObstacleSensor to return HitDistance instead of HitRadius
 
 ## CARLA 0.9.6

@@ -1,247 +1,213 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "TrafficManager.h"
+#include "carla/client/Client.h"
+#include "carla/client/World.h"
+#include "carla/trafficmanager/TrafficManager.h"
+#include "carla/trafficmanager/TrafficManagerBase.h"
+#include "carla/Exception.h"
 
-#include "carla/client/TrafficLight.h"
+#define DEBUG_PRINT_TM  0
 
 namespace carla {
 namespace traffic_manager {
 
-  TrafficManager::TrafficManager(
-      std::vector<float> longitudinal_PID_parameters,
-      std::vector<float> longitudinal_highway_PID_parameters,
-      std::vector<float> lateral_PID_parameters,
-      std::vector<float> lateral_highway_PID_parameters,
-      float perc_difference_from_limit,
-      cc::Client &client_connection)
-    : longitudinal_PID_parameters(longitudinal_PID_parameters),
-      longitudinal_highway_PID_parameters(longitudinal_highway_PID_parameters),
-      lateral_PID_parameters(lateral_PID_parameters),
-      lateral_highway_PID_parameters(lateral_highway_PID_parameters),
-      client_connection(client_connection),
-      world(client_connection.GetWorld()),
-      debug_helper(client_connection.GetWorld().MakeDebugHelper()) {
+std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> TrafficManager::_tm_map;
+std::mutex TrafficManager::_mutex;
 
-    const WorldMap world_map = world.GetMap();
-    local_map = std::make_shared<traffic_manager::InMemoryMap>(world_map);
-    local_map->SetUp();
+TrafficManager::TrafficManager(
+    carla::client::detail::EpisodeProxy episode_proxy,
+    uint16_t port)
+  : _port(port) {
 
-    parameters.SetGlobalPercentageSpeedDifference(perc_difference_from_limit);
-
-    localization_collision_messenger = std::make_shared<LocalizationToCollisionMessenger>();
-    localization_traffic_light_messenger = std::make_shared<LocalizationToTrafficLightMessenger>();
-    collision_planner_messenger = std::make_shared<CollisionToPlannerMessenger>();
-    localization_planner_messenger = std::make_shared<LocalizationToPlannerMessenger>();
-    traffic_light_planner_messenger = std::make_shared<TrafficLightToPlannerMessenger>();
-    planner_control_messenger = std::make_shared<PlannerToControlMessenger>();
-
-    localization_stage = std::make_unique<LocalizationStage>(
-        "Localization stage",
-        localization_planner_messenger, localization_collision_messenger,
-        localization_traffic_light_messenger,
-        registered_actors, *local_map.get(),
-        parameters, debug_helper,
-        world);
-
-    collision_stage = std::make_unique<CollisionStage>(
-        "Collision stage",
-        localization_collision_messenger, collision_planner_messenger,
-        parameters, debug_helper);
-
-    traffic_light_stage = std::make_unique<TrafficLightStage>(
-        "Traffic light stage",
-        localization_traffic_light_messenger, traffic_light_planner_messenger,
-        parameters, debug_helper);
-
-    planner_stage = std::make_unique<MotionPlannerStage>(
-        "Motion planner stage",
-        localization_planner_messenger,
-        collision_planner_messenger,
-        traffic_light_planner_messenger,
-        planner_control_messenger,
-        parameters,
-        longitudinal_PID_parameters,
-        longitudinal_highway_PID_parameters,
-        lateral_PID_parameters,
-        lateral_highway_PID_parameters,
-        debug_helper);
-
-    control_stage = std::make_unique<BatchControlStage>(
-        "Batch control stage",
-        planner_control_messenger, client_connection);
-
-    Start();
-  }
-
-  TrafficManager::~TrafficManager() {
-
-    Stop();
-  }
-
-  std::unique_ptr<TrafficManager> TrafficManager::singleton_pointer = nullptr;
-
-  TrafficManager& TrafficManager::GetInstance(cc::Client &client_connection) {
-
-    if (singleton_pointer == nullptr) {
-
-      const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
-      const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
-      const std::vector<float> lateral_param = {10.0f, 0.02f, 1.0f};
-      const std::vector<float> lateral_highway_param = {9.0f, 0.02f, 1.0f};
-      const float perc_difference_from_limit = 30.0f;
-
-      TrafficManager* tm_ptr = new TrafficManager(
-        longitudinal_param, longitudinal_highway_param, lateral_param, lateral_highway_param,
-        perc_difference_from_limit, client_connection
-      );
-
-      singleton_pointer = std::unique_ptr<TrafficManager>(tm_ptr);
+  if(!GetTM(_port)){
+    // Check if a TM server already exists and connect to it
+    if(!CreateTrafficManagerClient(episode_proxy, port)) {
+      // As TM server not running, create one
+      CreateTrafficManagerServer(episode_proxy, port);
     }
-
-    return *singleton_pointer.get();
   }
+}
 
-  std::unique_ptr<cc::Client> TrafficManager::singleton_local_client = nullptr;
-
-  cc::Client& TrafficManager::GetUniqueLocalClient() {
-
-    if (singleton_local_client == nullptr) {
-      cc::Client* client = new cc::Client("localhost", 2000);
-      singleton_local_client = std::unique_ptr<cc::Client>(client);
-    }
-
-    return *singleton_local_client.get();
+void TrafficManager::Release() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->Release();
+    TrafficManagerBase *base_ptr = tm.second.release();
+    delete base_ptr;
   }
+  _tm_map.clear();
+}
 
-  void TrafficManager::RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    registered_actors.Insert(actor_list);
+void TrafficManager::Reset() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->Reset();
   }
+}
 
-  void TrafficManager::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-    registered_actors.Remove(actor_list);
+void TrafficManager::Tick() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  for(auto& tm : _tm_map) {
+    tm.second->SynchronousTick();
   }
+}
 
-  void TrafficManager::Start() {
+void TrafficManager::CreateTrafficManagerServer(
+    carla::client::detail::EpisodeProxy episode_proxy,
+    uint16_t port) {
 
-    localization_collision_messenger->Start();
-    localization_traffic_light_messenger->Start();
-    localization_planner_messenger->Start();
-    collision_planner_messenger->Start();
-    traffic_light_planner_messenger->Start();
-    planner_control_messenger->Start();
-
-    localization_stage->Start();
-    collision_stage->Start();
-    traffic_light_stage->Start();
-    planner_stage->Start();
-    control_stage->Start();
-  }
-
-  void TrafficManager::Stop() {
-
-    localization_collision_messenger->Stop();
-    localization_traffic_light_messenger->Stop();
-    localization_planner_messenger->Stop();
-    collision_planner_messenger->Stop();
-    traffic_light_planner_messenger->Stop();
-    planner_control_messenger->Stop();
-
-    localization_stage->Stop();
-    collision_stage->Stop();
-    traffic_light_stage->Stop();
-    planner_stage->Stop();
-    control_stage->Stop();
-
-  }
-
-  void TrafficManager::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
-    parameters.SetPercentageSpeedDifference(actor, percentage);
-  }
-
-  void TrafficManager::SetGlobalPercentageSpeedDifference(const float percentage) {
-    parameters.SetGlobalPercentageSpeedDifference(percentage);
-  }
-
-  void TrafficManager::SetCollisionDetection(
-      const ActorPtr &reference_actor,
-      const ActorPtr &other_actor,
-      const bool detect_collision) {
-
-    parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
-  }
-
-  void TrafficManager::SetForceLaneChange(const ActorPtr &actor, const bool direction) {
-
-    parameters.SetForceLaneChange(actor, direction);
-  }
-
-  void TrafficManager::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
-
-    parameters.SetAutoLaneChange(actor, enable);
-  }
-
-  void TrafficManager::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance) {
-
-    parameters.SetDistanceToLeadingVehicle(actor, distance);
-  }
-
-  void TrafficManager::SetPercentageIgnoreActors(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageIgnoreActors(actor, perc);
-  }
-
-  void TrafficManager::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
-
-    parameters.SetPercentageRunningLight(actor, perc);
-  }
-
-
-  bool TrafficManager::CheckAllFrozen(TLGroup tl_to_freeze) {
-    for (auto& elem : tl_to_freeze) {
-      if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void TrafficManager::ResetAllTrafficLights() {
-    const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-    std::vector<TLGroup> list_of_all_groups;
-    TLGroup tl_to_freeze;
-    std::vector<carla::ActorId> list_of_ids;
-    for (auto tl : *world_traffic_lights.get()) {
-      if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-        const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-        list_of_all_groups.push_back(tl_group);
-        for (uint64_t i=0u; i<tl_group.size(); i++) {
-          list_of_ids.push_back(tl_group.at(i).get()->GetId());
-          if(i!=0u) {
-            tl_to_freeze.push_back(tl_group.at(i));
+  // Get local IP details.
+  auto GetLocalIP = [=](const uint16_t sport)-> std::pair<std::string, uint16_t> {
+    std::pair<std::string, uint16_t> localIP;
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if(sock == INVALID_INDEX) {
+      #if DEBUG_PRINT_TM
+      std::cout << "Error number 1: " << errno << std::endl;
+      std::cout << "Error message: " << strerror(errno) << std::endl;
+      #endif
+    } else {
+      int err;
+      sockaddr_in loopback;
+      std::memset(&loopback, 0, sizeof(loopback));
+      loopback.sin_family = AF_INET;
+      loopback.sin_addr.s_addr = INADDR_LOOPBACK;
+      loopback.sin_port = htons(9);
+      err = connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+      if(err == INVALID_INDEX) {
+        #if DEBUG_PRINT_TM
+        std::cout << "Error number 2: " << errno << std::endl;
+        std::cout << "Error message: " << strerror(errno) << std::endl;
+        #endif
+      } else {
+        socklen_t addrlen = sizeof(loopback);
+        err = getsockname(sock, reinterpret_cast<struct sockaddr*> (&loopback), &addrlen);
+        if(err == INVALID_INDEX) {
+          #if DEBUG_PRINT_TM
+          std::cout << "Error number 3: " << errno << std::endl;
+          std::cout << "Error message: " << strerror(errno) << std::endl;
+          #endif
+        } else {
+          char buffer[IP_DATA_BUFFER_SIZE];
+          const char* p = inet_ntop(AF_INET, &loopback.sin_addr, buffer, IP_DATA_BUFFER_SIZE);
+          if(p != NULL) {
+            localIP = std::pair<std::string, uint16_t>(std::string(buffer), sport);
+          } else {
+            #if DEBUG_PRINT_TM
+            std::cout << "Error number 4: " << errno << std::endl;
+            std::cout << "Error message: " << strerror(errno) << std::endl;
+            #endif
           }
         }
       }
+      #ifdef _WIN32
+        closesocket(sock);
+      #else
+        close(sock);
+      #endif
     }
+    return localIP;
+  };
 
-    for (TLGroup& tl_group : list_of_all_groups) {
-      tl_group.front()->SetState(TLS::Green);
-      std::for_each(
-          tl_group.begin()+1, tl_group.end(),
-          [] (auto& tl) {tl->SetState(TLS::Red);});
-    }
+  /// Define local constants
+  const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
+  const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
+  const std::vector<float> lateral_param = {9.0f, 0.02f, 1.0f};
+  const std::vector<float> lateral_highway_param = {7.0f, 0.02f, 1.0f};
+  const float perc_difference_from_limit = 30.0f;
 
-    while (!CheckAllFrozen(tl_to_freeze)) {
-      for (auto& tln : tl_to_freeze) {
-        tln->SetState(TLS::Red);
-        tln->Freeze(true);
+  std::pair<std::string, uint16_t> serverTM;
+
+  /// Create local instance of TM
+  TrafficManagerLocal* tm_ptr = new TrafficManagerLocal(
+    longitudinal_param,
+    longitudinal_highway_param,
+    lateral_param,
+    lateral_highway_param,
+    perc_difference_from_limit,
+    episode_proxy,
+    port);
+
+  /// Get TM server info (Local IP & PORT)
+  serverTM = GetLocalIP(port);
+
+  /// Set this client as the TM to server
+  episode_proxy.Lock()->AddTrafficManagerRunning(serverTM);
+
+  #if DEBUG_PRINT_TM
+  /// Print status
+  std::cout << "NEW@: Registered TM at "
+        << serverTM.first  << ":"
+        << serverTM.second << " ..... SUCCESS."
+        << std::endl;
+  #endif
+
+  /// Set the pointer of the instance
+  _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
+
+}
+
+bool TrafficManager::CreateTrafficManagerClient(
+    carla::client::detail::EpisodeProxy episode_proxy,
+    uint16_t port) {
+
+  bool result = false;
+
+  if(episode_proxy.Lock()->IsTrafficManagerRunning(port)) {
+
+    /// Get TM server info (Remote IP & PORT)
+    std::pair<std::string, uint16_t> serverTM =
+      episode_proxy.Lock()->GetTrafficManagerRunning(port);
+
+    /// Set remote TM server IP and port
+    TrafficManagerRemote* tm_ptr = new(std::nothrow)
+      TrafficManagerRemote(serverTM, episode_proxy);
+
+    /// Try to connect to remote TM server
+    try {
+
+      /// Check memory allocated or not
+      if(tm_ptr != nullptr) {
+
+        #if DEBUG_PRINT_TM
+        // Test print
+        std::cout << "OLD@: Registered TM at "
+              << serverTM.first  << ":"
+              << serverTM.second << " ..... TRY "
+              << std::endl;
+        #endif
+        /// Try to reset all traffic lights
+        tm_ptr->HealthCheckRemoteTM();
+
+        /// Set the pointer of the instance
+        _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
+
+        result = true;
       }
     }
+
+    /// If Connection error occurred
+    catch (...) {
+
+      /// Clear previously allocated memory
+      delete tm_ptr;
+
+      #if DEBUG_PRINT_TM
+      /// Test print
+      std::cout 	<< "OLD@: Registered TM at "
+            << serverTM.first  << ":"
+            << serverTM.second << " ..... FAILED "
+            << std::endl;
+      #endif
+    }
+
   }
+
+  return result;
+}
 
 } // namespace traffic_manager
 } // namespace carla

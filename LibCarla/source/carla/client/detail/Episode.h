@@ -85,17 +85,26 @@ namespace detail {
       nav->SetPedestriansCrossFactor(percentage);
     }
 
+    void AddPendingException(std::string e) {
+      _pending_exceptions = true;
+      _pending_exceptions_msg = e;
+    }
+
   private:
 
     Episode(Client &client, const rpc::EpisodeInfo &info);
 
     void OnEpisodeStarted();
 
+    void OnEpisodeChanged();
+
     Client &_client;
 
     AtomicSharedPtr<const EpisodeState> _state;
 
     AtomicSharedPtr<WalkerNavigation> _navigation;
+
+    std::string _pending_exceptions_msg;
 
     CachedActorList _actors;
 
@@ -104,6 +113,8 @@ namespace detail {
     RecurrentSharedFuture<WorldSnapshot> _snapshot;
 
     const streaming::Token _token;
+
+    bool _pending_exceptions = false;
   };
 
 } // namespace detail
