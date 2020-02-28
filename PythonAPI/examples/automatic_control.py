@@ -114,8 +114,6 @@ class World(object):
         self.recording_enabled = False
         self.recording_start = 0
 
-        # Set the seed if requested by user
-
     def restart(self, args):
         """Restart the world"""
         # Keep same camera config if the camera manager exists.
@@ -675,7 +673,6 @@ def game_loop(args):
     pygame.font.init()
     world = None
     tot_target_reached = 0
-    stop = False
     num_min_waypoints = 21
 
     try:
@@ -750,9 +747,6 @@ def game_loop(args):
 
                 elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
                     print("Target reached, mission accomplished...")
-                    stop = True
-
-                if stop:
                     break
 
                 speed_limit = world.player.get_speed_limit()
