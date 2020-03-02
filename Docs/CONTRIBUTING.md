@@ -1,4 +1,4 @@
-Contributing to CARLA
+# Contributing to CARLA
 =====================
 
 We are more than happy to accept contributions!
@@ -10,8 +10,8 @@ How can I contribute?
 * Improving documentation
 * Code contributions
 
-Reporting bugs
---------------
+---------
+## Reporting bugs
 
 Use our [issue section][issueslink] on GitHub. Please check before that the
 issue is not already reported, and make sure you have read our
@@ -21,8 +21,8 @@ issue is not already reported, and make sure you have read our
 [docslink]: http://carla.readthedocs.io
 [faqlink]: http://carla.readthedocs.io/en/latest/faq/
 
-Feature requests
-----------------
+---------
+## Feature requests
 
 Please check first the list of [feature requests][frlink]. If it is not there
 and you think is a feature that might be interesting for users, please submit
@@ -30,8 +30,8 @@ your request as a new issue.
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
 
-Improving documentation
------------------------
+-------
+## Improving documentation
 
 If you feel something is missing in the documentation, please don't hesitate to
 open an issue to let us know. Even better, if you think you can improve it
@@ -61,8 +61,8 @@ Once you are done with your changes, please submit a pull-request.
   > mkdocs serve
 ```
 
-Code contributions
-------------------
+------------
+## Code contributions
 
 So you are considering making a code contribution, great! We love to have
 contributions from the community.

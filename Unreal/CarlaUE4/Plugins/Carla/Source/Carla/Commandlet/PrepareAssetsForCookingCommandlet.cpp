@@ -24,17 +24,20 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1.M_Road1'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNodeAux(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
+  static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
+      "Material'/Game/Carla/Static/GenericMaterials/CheapMaterials/M_SideWalkCheap01'"));
 
   MarkingNodeMaterial = (UMaterial *) MarkingNode.Object;
   RoadNodeMaterial = (UMaterial *) RoadNode.Object;
   MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
+  SidewalkNodeMaterial = (UMaterial *) SidewalkNode.Object;
 #endif
 }
 #if WITH_EDITORONLY_DATA
@@ -126,7 +129,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         MeshAsset->MarkPackageDirty();
       }
 
-      // rotate all meshes 180 degrees to fit with OpenDRIVE info 
+      // rotate all meshes 180 degrees to fit with OpenDRIVE info
       // (seems that new version of RoadRunner is doing this)
       // MeshActor->SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
 
@@ -148,6 +151,10 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         else if (AssetName.Contains(SSTags::R_TERRAIN))
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
+        }
+        else if (AssetName.Contains(SSTags::R_SIDEWALK))
+        {
+          MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
         }
       }
     }
@@ -221,10 +228,6 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   {
     SavePackage(PackagePath, Package);
   }
-
-  #if WITH_EDITOR
-  UEditorLoadingAndSavingUtils::SaveMap(World, PackagePath);
-  #endif
 
   return bPackageSaved;
 }
@@ -325,6 +328,7 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
     // Will not save package if it already exists
     return false;
   }
+
   return UPackage::SavePackage(Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 }
@@ -383,9 +387,10 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     FString RoadsPath     = BasePath + SSTags::ROAD       + MapPath;
     FString RoadLinesPath = BasePath + SSTags::ROADLINES  + MapPath;
     FString TerrainPath   = BasePath + SSTags::TERRAIN    + MapPath;
+    FString SidewalkPath  = BasePath + SSTags::SIDEWALK   + MapPath;
 
     // Spawn assets located in semantic segmentation fodlers
-    TArray<FString> DataPath = {DefaultPath, RoadsPath, RoadLinesPath, TerrainPath};
+    TArray<FString> DataPath = {DefaultPath, RoadsPath, RoadLinesPath, TerrainPath, SidewalkPath};
 
     TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
 

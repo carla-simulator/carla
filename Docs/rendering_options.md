@@ -1,4 +1,4 @@
-<h1>Rendering options</h1>
+# Rendering options
 
 Before you start running your own experiments there are few details to take into
 account at the time of configuring your simulation. In this document we cover
@@ -11,12 +11,8 @@ the most important ones.
   * [__Off-screen mode__](#off-screen-mode)  
 	* Off-screen Vs no-rendering
   * [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu): 
-	* Requirements
-	* Configure the X
-	* Emulate the virtual display
-	* Extra
-	* Running CARLA
-  * [__Command line options__](#command-line-options) 
+	* Docker: recommended approach
+	* Deprecated: emulate the virtual display
 
 
 !!! Important
@@ -25,7 +21,7 @@ the most important ones.
 ---------------
 ##Graphics quality
 
-<h4>Vulkan vs OpenGL</h4>
+####Vulkan vs OpenGL
 
 Vulkan is the default graphics API used by Unreal Engine and CARLA (if installed). It consumes more memory, but performs faster and makes for a better frame rate. However, it is quite experimental, especially in Linux, and it may lead to some issues.  
 For said reasons, there is the option to change to OpenGL simply by using a flag when running CARLA. The same flag works for both Linux and Windows: 
@@ -36,7 +32,7 @@ cd carla && ./CarlaUE4.sh -opengl
 When working with the build version of CARLA it is Unreal Engine the one that needs to be set to use OpenGL. [Here][UEdoc] is a documentation regarding different command line options for Unreal Engine. 
 [UEdoc]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments/index.html
 
-<h4>Quality levels</h4>
+####Quality levels
 
 CARLA also allows for two different graphic quality levels named as __Epic__, the default, and __Low__, which disables all post-processing, shadows and the drawing distance is set to 50m instead of infinite and makes the simulation run significantly faster.  
 Low mode is not only used when precision is nonessential or there are technical limitations, but also to train agents under conditions with simpler data or regarding only close elements. 
@@ -86,11 +82,11 @@ Unreal Engine needs for a screen in order to run, but there is a workaround for 
 The simulator launches but there is no available window. However, it can be connected in the usual manner and scripts run the same way. For the sake of understanding let's sake that this mode tricks Unreal Engine into running in a fake screen.
 
 
-<h4>Off-screen vs no-rendering</h4>
+####Off-screen vs no-rendering
 
 These may look similar but are indeed quite different. It is important to understand the disctintion them to prevent misunderstandings. In off-screen Unreal Engine is working as usual and rendering is computed as usual. The only difference is that there is no available display. In no-rendering, it is Unreal Engine the one that is said to avoid rendering and thus, graphics are not computed. For said reasons, GPU sensors return data when off-screen and no-rendering mode can be enabled at will. 
 
-<h4>Setting off-screen mode</h4>
+####Setting off-screen mode
 
 Right now this is __only possible in Linux while using OpenGL__ instead of Vulkan. Unreal Engine crushes when Vulkan is running off-screen, and this issue is yet to be fixed by Epic. 
 
@@ -103,10 +99,22 @@ DISPLAY= ./CarlaUE4.sh -opengl
 Note that this method, in multi-GPU environments, does not allow to choose the GPU that the simulator will use for rendering. To do so, read the following section.
 
 ---------------
-##Running off-scren using a preferred GPU  
+##Running off-screen using a preferred GPU  
 
-!!! note
-    There is an alternative solution with mixed results using SDL2 for CUDA enabled devices in the issue [#225](https://github.com/carla-simulator/carla/issues/225).
+####Docker: recommended approach 
+
+The best way to run a headless CARLA and select the GPU is to [__run CARLA in a Docker__](../carla_docker). 
+This section contains an alternative tutorial, but this method is deprecated and performance is much worse. However, it is here just in case, for those who Docker is not an option. 
+
+  <details>
+    <summary><h4 style="display:inline">
+    Deprecated: emulate the virtual display
+    </h4></summary>
+
+!!! Warning
+    This tutorial is deprecated. To run headless CARLA, please [__run CARLA in a Docker__](../carla_docker). 
+
+* __Requirements:__  
 
 This tutorial only works in Linux and makes it possible for a remote server using several graphical cards to use CARLA on all GPUs. This is also translatable to a desktop user trying to use CARLA with a GPU that is not plugged to any screen. To achieve that, the steps can be summarized as:  
 
@@ -115,8 +123,6 @@ __2.__ Use VNC and VGL to simulate a display connected to any GPU.
 __3.__ Run CARLA.  
 
 This tutorial was tested in Ubuntu 16.04 using NVIDIA 384.11 drivers.
-
-<h4> Requirements </h4>  
 
   * __[Latest Nvidia drivers](http://www.nvidia.es/Download/index.aspx)__ 
   * __[OpenGL](https://www.khronos.org/opengl/wiki/Getting_Started)__: needed to use Virtual GL (VGL). OpenGL can be installed via apt:  
@@ -133,15 +139,15 @@ sudo apt install x11-xserver-utils libxrandr-dev
 ```
 !!! Warning
     Make sure that VNC version is compatible with Unreal. The one above worked properly during the making of this tutorial. 
+  
 
-
-<h4>Configure the X</h4>
+* __Configure the X__
 
 Generate a X compatible with the Nvdia installed and able to run without display:
 
-    sudo nvidia-xconfig -a --use-display-device=None --virtual=1280x1024
+    sudo nvidia-xconfig -a --use-display-device=None --virtual=1280x1024  
 
-<h4> Emulate the virtual display </h4>
+* __Emulate the virtual display__
 
 Run a Xorg. Here number 7 is used, but it could be labeled with any free number:
 
@@ -156,17 +162,17 @@ If everything is working fine the following command will run glxinfo on Xserver 
     DISPLAY=:8 vglrun -d :7.0 glxinfo
 
 !!! Important
-    To run on other GPU, change the `7.X` pattern in the previous command. To set it to GPU 1: `DISPLAY=:8 vglrun -d :7.1 glxinfo` 
+    To run on other GPU, change the `7.X` pattern in the previous command. To set it to GPU 1: `DISPLAY=:8 vglrun -d :7.1 glxinfo`  
 
-<h4> Extra </h4>
+* __Extra__
 
 To disable the need of sudo when creating the `nohup Xorg` go to `/etc/X11/Xwrapper.config` and change `allowed_users=console` to `allowed_users=anybody`. 
 
 It may be needed to stop all Xorg servers before running `nohup Xorg`. The command for that could change depending on your system. Generally for Ubuntu 16.04 use:
 
-    sudo service lightdm stop
+    sudo service lightdm stop  
 
-<h4> Running CARLA </h4>
+* __Running CARLA__
 
 To run CARLA on a certain `<gpu_number>` in a certain `$CARLA_PATH` use the following command:
 
@@ -174,6 +180,8 @@ To run CARLA on a certain `<gpu_number>` in a certain `$CARLA_PATH` use the foll
 
 !!! Note
     The `8` and `7.X` variables in the previous command depend on which were used while emulating the virtual display.
+
+</details>
 
 ----------------
 

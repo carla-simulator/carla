@@ -7,7 +7,7 @@ extra_css: [extra.css]
 
 nav:
 - Home: 'index.md'
-- Getting started: 
+- Getting started:
   - 'Introduction': 'getting_started/introduction.md'
   - 'Quick start': 'getting_started/quickstart.md'
 - Building CARLA:
@@ -22,17 +22,18 @@ nav:
   - '1st. World and client': 'core_world.md'
   - '2nd. Actors and blueprints': 'core_actors.md'
   - '3rd. Maps and navigation': 'core_map.md'
-  - '4th. Sensors and data': 'cameras_and_sensors.md'
+  - '4th. Sensors and data': 'core_sensors.md'
 - Advanced steps:
   - 'Recorder': 'recorder_and_playback.md'
   - 'Rendering options': 'rendering_options.md'
-  - 'Simulation time and synchrony': 'simulation_time_and_synchrony.md'
-- References: 
+  - 'Synchrony and time-step': 'simulation_time_and_synchrony.md'
+- References:
   - 'Python API reference': 'python_api.md'
   - 'Code recipes': 'python_cookbook.md'
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'cpp_reference.md'
   - 'Recorder binary file format': 'recorder_binary_file_format.md'
+  - "Sensors reference": 'ref_sensors.md'  
 - How to... (general):
   - 'Add a new sensor': 'dev/how_to_add_a_new_sensor.md'
   - 'Add friction triggers': "how_to_add_friction_triggers.md"
@@ -42,7 +43,6 @@ nav:
   - 'Generate pedestrian navigation': 'how_to_generate_pedestrians_navigation.md'
   - "Link Epic's Automotive Materials": 'epic_automotive_materials.md'
   - 'Map customization': 'dev/map_customization.md'
-  - 'Running without display and selecting GPUs': 'carla_headless.md'
 - How to... (content):
   - 'Add assets': 'how_to_add_assets.md'
   - 'Create and import a new map': 'how_to_make_a_new_map.md'

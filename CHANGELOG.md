@@ -1,10 +1,21 @@
 ## latest
-  * Improved manual_control by adding realistic throttle
+
+  * Improved manual_control by adding realistic throttle and brake
   * Added new Behavior agent
+  * Traffic Manager:
+    - Added benchmark
+    - Added synchronous mode
+    - Fixed change map error
+    - Added multiclient architecture
+    - Added multi Traffic Manager architecture
+    - Fixed linkage between waypoints
+    - Implemented intersection anticipation
+    - Implemented vehicle destruction when stuck
+    - Implemented tunable parameters
+  * Added landmark class for signal-related queries.
+  * Added support to parse OpenDRIVE signals.
   * Added junction class as queryable object from waypoint
-  * Fixed linkage between waypoints in InMemoryMap in Traffic Manager
-  * Vehicles get destroyed when they are stuck in Traffic Manager
-  * Implemented intersection anticipation algorithm in Traffic Manager
+  * Added simple physical map generation from standalone OpenDRIVE data
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
@@ -14,16 +25,25 @@
     - Added new methods to `BoundingBox`: `contains()`, `get_local_vertices()` and `get_world_vertices(transform)`
     - Added new function to get a waypoint specifying parameters from the OpenDRIVE: `map.get_waypoint_xodr(road_id, lane_id, s)`
     - Added 3 new parameters for the `carla.Weather`: `fog_density`, `fog_distance`, and (ground) `wetness`
+    - Added `carla.client.generate_opendrive_world(opendrive)` that loads a map with custom OpenDRIVE basic physical topology
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
   * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
-  * Fixed agent failures due to API changes in `is_within_distance_ahead()`
+  * Fixed agent failures due to API changes in is_within_distance_ahead()
+  * Fixed assertion bug when using LibCarla
   * Fixed incorrect doppler velocity for RADAR sensor
   * Fixed documentation links
+  * Upgraded Boost to 1.72.0
+  * Recorder feature:
+    - Added an option (-i) when replaying a session to ignore the hero vehicles
+  * Fixed import pipeline bugs:
+    - Crash when no pedestrian navmesh is present
+    - Automatically imported static meshes not properly tagged
 
 ## CARLA 0.9.7
+
   * Upgraded parameters of Unreal/CarlaUE4/Config/DefaultInput.ini to prevent mouse freeze
   * Add build variant with AD RSS library integration with RSS sensor and result visualisation
   * Support for OpenGL and Vulkan in docker + headless mode
@@ -31,7 +51,7 @@
   * Added new sensor: Radar
   * Exposed rgb camera attributes: exposure, depth of field, tonemapper, color correction, and chromatic aberration
   * Now all the camera-based sensors are provided with an additional parametrized lens distortion shader
-  * Added TrafficManager to replace autopilot in managing the NPC vehicles
+  * Added Traffic Manager to replace autopilot in managing the NPC vehicles
   * Improved pedestrians navigation
   * API changes:
     - Lidar: `range` is now set in meters, not in centimeters

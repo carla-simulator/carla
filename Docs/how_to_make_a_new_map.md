@@ -1,7 +1,8 @@
-<h1>How to create and import a new map</h1>
+# How to create and import a new map
 
 ![Town03](img/create_map_01.jpg)
 
+-----
 ## 1 Create a new map
 
 Files needed:
@@ -9,12 +10,13 @@ Files needed:
 * Binaries `.fbx` - All meshes you need to build the map, i.e., roads, lanemarking, sidewalk, ect.
 * OpenDRIVE `.xodr` - Road network information that cars need to circulate on the map.
 
-It is possible to modify an existing CARLA map, check out the [map customization][custommaplink]
+It is possible to modify an existing CARLA map, check out the [map customization](../dev/map_customization)
 tutorial.
 
 The following steps will introduce the RoadRunner software for map creation. If the map is
 created by other software, go to this [section](#3-importing-into-unreal).
 
+------ 
 ## 2 Create a new map with RoadRunner
 
 RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy,
@@ -22,7 +24,7 @@ in a few steps you will be able to create an impressive scene. You can download
 a trial of RoadRunner at VectorZero's web page.
 
 <div class="vector-zero">
-  <a href="https://www.vectorzero.io/"><img src="./img/VectorZeroAndIcon.webp"/></a>
+  <a href="https://www.vectorzero.io/"><img src="../img/VectorZeroAndIcon.webp"/></a>
 </div> <br>
 
 Read VectorZero's RoadRunner [documentation][rr_docs] to install it and get started.
@@ -36,7 +38,7 @@ They also have very useful [tutorials][rr_tutorials] on how to use RoadRunner, c
 !!! important
     Create the map centered arround (0, 0).
 
-## 2.1 Validate the map
+#### 2.1 Validate the map
 
 * Check that all connections and geometries seem correct.
 
@@ -51,8 +53,8 @@ button and export.
     The _OpenDrive Preview Tool_ button lets you test the integrity of the current map.
     If there is any error with map junctions, click on `Maneuver Tool`
     and `Rebuild Maneuver Roads` buttons.
-
-## 2.2 Export the map
+  
+#### 2.2 Export the map
 
 After verifying that everything is correct, it is time to export the map to CARLA.
 
@@ -75,6 +77,7 @@ _check VectorZeros's [documentation][exportlink]._
 
 [exportlink]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/752779356/Exporting+to+CARLA
 
+-------
 ## 3 Importing into Unreal
 
 This section is divided into two. The first part shows how to import a map from RoadRunner
@@ -87,9 +90,9 @@ and the second part shows how to import a map from other software that generates
 We have also created a new way to import assets into Unreal,
 check this [`guide`](./asset_packages_for_dist.md)!
 
-### 3.1 Importing from RoadRunner
+#### 3.1 Importing from RoadRunner
 
-#### 3.1.1 Plugin Installation
+##### 3.1.1 Plugin Installation
 
 RoadRunner provides a series of plugins that make the importing simpler.
 
@@ -100,7 +103,7 @@ RoadRunner provides a series of plugins that make the importing simpler.
 
 3. Rebuild the plugin.
 
-##### Rebuild on Windows
+###### Rebuild on Windows
 
 1. Generate project files.
 
@@ -108,7 +111,7 @@ RoadRunner provides a series of plugins that make the importing simpler.
 
 2. Open the project and build the plugins.
 
-##### Rebuild on Linux
+###### Rebuild on Linux
 
 ```sh
 > UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
@@ -118,7 +121,7 @@ Finally, restart Unreal Engine and make sure the checkbox is on for both plugins
 
 ![rr_ue_plugins](img/rr-ue4_plugins.png)
 
-#### 3.1.2 Importing
+##### 3.1.2 Importing
 
   1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
    with the `Import` button.
@@ -144,7 +147,7 @@ The new map should now appear next to the others in the Unreal Engine _Content B
 
 And that's it! The map is ready!
 
-### 3.2 Importing from the files
+#### 3.2 Importing from the files
 
 This is the generic way to import maps into Unreal.
 
@@ -154,7 +157,7 @@ and paste it in the new level, otherwise, the map will be in the dark.
 
 ![ue_illumination](img/ue_illumination.png)
 
-#### 3.2.1 Binaries (.fbx)
+##### 3.2.1 Binaries (.fbx)
 
 1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
   with the `Import` button. Make sure the following options are unchecked:
@@ -238,7 +241,7 @@ Content
 
 ![ue__semantic_segmentation](img/ue_ssgt.png)
 
-#### 3.2.2 OpenDRIVE (.xodr)
+##### 3.2.2 OpenDRIVE (.xodr)
 
 1. Copy the `.xodr` file inside the `Content/Carla/Maps/OpenDrive` folder.
 2. Open the Unreal level and drag the _Open Drive Actor_ inside the level.
@@ -248,6 +251,7 @@ It will read the level's name, search the Opendrive file with the same name and 
 
 And that's it! Now the road network information is loaded into the map.
 
+-------
 ## 4. Setting up traffic behavior
 
 Once everything is loaded into the level, it is time to create traffic behavior.
@@ -261,7 +265,7 @@ Once everything is loaded into the level, it is time to create traffic behavior.
 This will generate a bunch of _RoutePlanner_ and _VehicleSpawnPoint_ actors that make
 it possible for vehicles to spawn and go in autopilot mode.
 
-## 4.1 Traffic lights and signs
+#### 4.1 Traffic lights and signs
 
 To regulate the traffic, traffic lights and signs must be placed all over the map.
 
@@ -287,6 +291,7 @@ might need some tweaking and testing to fit perfectly into the city.
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
+----------
 ## 5 Adding pedestrian navigation areas
 
 To make a navigable mesh for pedestrians, we use the _Recast & Detour_ library.<br>
@@ -335,6 +340,7 @@ Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to bu
 
 Now pedestrians will be able to spawn randomly and walk on the selected meshes!
 
+----------
 ## Tips and Tricks
 
 * Traffic light group controls wich traffic light is active (green state) at each moment.
@@ -374,6 +380,3 @@ Now pedestrians will be able to spawn randomly and walk on the selected meshes!
     * Unreal shortcuts to find materials and assets:
         * `Right-click on the Asset > Browse to Asset`
         * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
-
-
-[custommaplink]: /Docs/dev/map_customization.md

@@ -1,4 +1,4 @@
-<h1>How to add friction triggers</h1>
+# How to add friction triggers
 
 *Friction Triggers* are box triggers that can be added on runtime and let users define
 a different friction of the vehicles' wheels when being inside those type of triggers.

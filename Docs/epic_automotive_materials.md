@@ -1,4 +1,4 @@
-<h1>How to link Epic's Automotive Materials</h1>
+# How to link Epic's Automotive Materials
 
 !!! important
     Since version 0.8.0 CARLA does not use Epic's _Automotive Materials_ by
@@ -15,8 +15,7 @@ Epic Games' [Automotive Materials][automatlink] package can be downloaded for
 free from the Unreal Engine Marketplace.
 
 !!! note
-    Unfortunately, Unreal's Marketplace is only available on Windows, so you
-    need a Windows machine to download this package.
+    Unfortunately Linux based machines don't have official support for Epic Game Store / Unreal Marketplace. In order to access the purchased assets download [this Java Package](https://github.com/neutrino-steak/UE4LinuxLauncher).
 
   1. Install Epic Games Launcher from [www.unrealengine.com](https://www.unrealengine.com).
   2. Buy the [Automotive Materials][automatlink] package for $0.

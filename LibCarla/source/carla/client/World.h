@@ -35,6 +35,8 @@ namespace client {
 
     explicit World(detail::EpisodeProxy episode) : _episode(std::move(episode)) {}
 
+    ~World(){}
+
     World(const World &) = default;
     World(World &&) = default;
 
@@ -126,6 +128,10 @@ namespace client {
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};
     }
+
+    detail::EpisodeProxy GetEpisode() const {
+      return _episode;
+    };
 
   private:
 

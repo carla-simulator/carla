@@ -62,17 +62,31 @@ namespace detail {
 
     ~Client();
 
+    /// Querry to know if a Traffic Manager is running on port
+    bool IsTrafficManagerRunning(uint16_t port) const;
+
+    /// Gets a pair filled with the <IP, port> of the Trafic Manager running on port.
+    /// If there is no Traffic Manager running the pair will be ("", 0)
+    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const;
+
+    /// Informs the server that a Traffic Manager is running on <IP, port>
+    bool AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const;
+
+    void DestroyTrafficManager(uint16_t port) const;
+
     void SetTimeout(time_duration timeout);
 
     time_duration GetTimeout() const;
 
-    const std::string &GetEndpoint() const;
+    const std::string GetEndpoint() const;
 
     std::string GetClientVersion();
 
     std::string GetServerVersion();
 
     void LoadEpisode(std::string map_name);
+
+    void CopyOpenDriveToServer(std::string opendrive);
 
     rpc::EpisodeInfo GetEpisodeInfo();
 
@@ -198,6 +212,8 @@ namespace detail {
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
 
     void SetReplayerTimeFactor(double time_factor);
+
+    void SetReplayerIgnoreHero(bool ignore_hero);
 
     void SubscribeToStream(
         const streaming::Token &token,

@@ -1,10 +1,12 @@
-<h1>Quickstart</h1>
+#Quick start
 
   * [Requirements](#requirements)
   * [Downloading CARLA](#downloading-carla)
   * [Running CARLA](#running-carla)
+	* Command-line options  
   * [Updating CARLA](#updating-carla)
   * [Summary](#summary)
+
 ---------------
 ##Requirements
 
@@ -62,6 +64,32 @@ A window will open, containing a view over the city. This is the "spectator" vie
 !!! note
     If the firewall or any other application are blocking the TCP ports needed, these can be manually changed by adding to the previous command the argument: `-carla-port=N`, being `N` the desired port. The second will be automatically set to `N+1`.
 
+####Command-line options
+
+There are some configuration options available when launching CARLA:  
+
+  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
+  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
+  * `-quality-level={Low,Epic}` Change graphics quality level.
+  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
+
+[ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
+```sh
+> ./CarlaUE4.sh -carla-rpc-port=3000
+```
+However, some may not be available (especially those provided by UE). For said reason, the script in `PythonAPI/util/config.py` provides for some more configuration options: 
+```sh
+> ./config.py --no-rendering      # Disable rendering
+> ./config.py --map Town05        # Change map
+> ./config.py --weather ClearNoon # Change weather
+```
+
+To check all the available configurations, run the following command:
+
+```sh
+> ./config.py --help
+```
+
 ---------------
 ##Updating CARLA
 
@@ -72,11 +100,11 @@ The packaged version requires no updates. The content is bundled and thus, tied 
 
 That concludes the quickstart installation process. In case any unexpected error or issue occurs, the [CARLA forum](https://forum.carla.org/) is open to everybody. There is an _Installation issues_ category to post this kind of problems and doubts. 
 
-So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script and retrieve data. Thus will access all of the capabilities that CARLA provides. Next step should be  visiting the _First steps_ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](../python_api.md).
+So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script and retrieve data. Thus will access all of the capabilities that CARLA provides. Next step should be  visiting the __First steps__ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](../python_api.md).
 
 <div class="build-buttons">
 <p>
-<a href="../../python_api_tutorial" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../../core_concepts" target="_blank" class="btn btn-neutral" title="Go to first steps">
 Go to: First steps</a>
 </p>
 </div>

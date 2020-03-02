@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,13 +15,14 @@ namespace LocalizationConstants {
 
   using namespace LocalizationConstants;
 
-  float DeviationCrossProduct(Actor actor, const cg::Location &target_location) {
+  float DeviationCrossProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location) {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0.0f;
     heading_vector = heading_vector.MakeUnitVector();
-    cg::Location next_vector = target_location - actor->GetLocation();
+    cg::Location next_vector = target_location - vehicle_location;
     next_vector.z = 0.0f;
+
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
       const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
@@ -31,7 +32,7 @@ namespace LocalizationConstants {
     }
   }
 
-  float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset) {
+  float DeviationDotProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location, bool rear_offset) {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     heading_vector.z = 0.0f;
@@ -39,15 +40,16 @@ namespace LocalizationConstants {
     cg::Location next_vector;
 
     if (!rear_offset) {
-      next_vector = target_location - actor->GetLocation();
+      next_vector = target_location - vehicle_location;
     } else {
       const auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor);
       const float vehicle_half_length = vehicle_ptr->GetBoundingBox().extent.x;
       next_vector = target_location - (cg::Location(-1* vehicle_half_length * heading_vector)
-                                        + vehicle_ptr->GetLocation());
+                                        + vehicle_location);
     }
 
     next_vector.z = 0.0f;
+
     if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon()) {
       next_vector = next_vector.MakeUnitVector();
       const float dot_product = cg::Math::Dot(next_vector, heading_vector);
@@ -61,14 +63,14 @@ namespace LocalizationConstants {
 
   void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint) {
 
-    // Add actor entry if not present.
+    // Add actor entry, if not present.
     if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
       actor_to_grids.insert({actor_id, {}});
     }
 
     std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
 
-    // Clear current actor from all grids containing current actor.
+    // Clear current actor from all grids containing itself.
     for (auto& grid_id: current_grids) {
       if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
         ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
@@ -87,7 +89,7 @@ namespace LocalizationConstants {
       GeoGridId ggid = waypoint->GetGeodesicGridId();
       current_grids.insert(ggid);
 
-      // Add grid entry if not present.
+      // Add grid entry, if not present.
       if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
         grid_to_actors.insert({ggid, {}});
       }
@@ -102,28 +104,29 @@ namespace LocalizationConstants {
 
   void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer& buffer) {
 
-    // Add actor entry if not present.
-    if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
-      actor_to_grids.insert({actor_id, {}});
-    }
+    if (!buffer.empty()) {
 
-    std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+      // Add actor entry, if not present.
+      if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
+        actor_to_grids.insert({actor_id, {}});
+      }
 
-    // Clear current actor from all grids containing current actor.
-    for (auto& grid_id: current_grids) {
-      if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
-        ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
-        if (actor_ids.find(actor_id) != actor_ids.end()) {
-          actor_ids.erase(actor_id);
+      std::unordered_set<GeoGridId>& current_grids = actor_to_grids.at(actor_id);
+
+      // Clear current actor from all grids containing itself.
+      for (auto& grid_id: current_grids) {
+        if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+          ActorIdSet& actor_ids = grid_to_actors.at(grid_id);
+          if (actor_ids.find(actor_id) != actor_ids.end()) {
+            actor_ids.erase(actor_id);
+          }
         }
       }
-    }
 
-    // Clear all grids current actor is tracking.
-    current_grids.clear();
+      // Clear all grids the current actor is tracking.
+      current_grids.clear();
 
-    // Step through buffer and update grid list for actor and actor list for grids.
-    if (!buffer.empty()) {
+      // Step through buffer and update grid list for actor and actor list for grids.
       uint64_t buffer_size = buffer.size();
       uint64_t step_size = static_cast<uint64_t>(std::floor(buffer_size/BUFFER_STEP_THROUGH));
       for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {

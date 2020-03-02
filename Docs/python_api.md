@@ -1,3 +1,4 @@
+#Python API reference
 ## carla.Actor<a name="carla.Actor"></a>
 CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).  
 
@@ -314,7 +315,7 @@ Parses the location and extent of the bounding box to string.
 
 ## carla.Client<a name="carla.Client"></a>
 The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of the ones it is in charge of.
-  
+
   The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](recorder_and_playback.md) is some information about how to use this recorder.  
 
 <h3>Methods</h3>
@@ -325,18 +326,18 @@ Client constructor.
         - `port` (_int_) – TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.  
         - `worker_threads` (_int_) – Number of working threads used for background updates. If 0, use all available concurrency.  
 - <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
-Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.  [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
+Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
-        - `commands` (_list_) – A list of commands to execute in batch. Each command is different and has its own parameters. These are supported so far:            
-  [SpawnActor](#command.SpawnActor)  
-  [DestroyActor](#command.DestroyActor)    
-  [ApplyVehicleControl](#command.ApplyVehicleControl)  
-  [ApplyWalkerControl](#command.ApplyWalkerControl)   
-  [ApplyTransform](#command.ApplyTransform)    
-  [ApplyVelocity](#command.ApplyVelocity)   
-  [ApplyAngularVelocity](#command.ApplyAngularVelocity)   
-  [ApplyImpulse](#command.ApplyImpulse)    
-  [SetSimulatePhysics](#command.SetSimulatePhysics)    
+        - `commands` (_list_) – A list of commands to execute in batch. Each command is different and has its own parameters. These are supported so far:
+  [SpawnActor](#command.SpawnActor)
+  [DestroyActor](#command.DestroyActor)
+  [ApplyVehicleControl](#command.ApplyVehicleControl)
+  [ApplyWalkerControl](#command.ApplyWalkerControl)
+  [ApplyTransform](#command.ApplyTransform)
+  [ApplyVelocity](#command.ApplyVelocity)
+  [ApplyAngularVelocity](#command.ApplyAngularVelocity)
+  [ApplyImpulse](#command.ApplyImpulse)
+  [SetSimulatePhysics](#command.SetSimulatePhysics)
   [SetAutopilot](#command.SetAutopilot).  
 - <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**</font>)  
 Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.  
@@ -345,13 +346,13 @@ Executes a list of commands on a single simulation step, blocks until the comman
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_.  
     - **Return:** _list(command.Response)_  
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:  
-  ['/Game/Carla/Maps/Town01',  
-  '/Game/Carla/Maps/Town02',  
-  '/Game/Carla/Maps/Town03',  
-  '/Game/Carla/Maps/Town04',  
-  '/Game/Carla/Maps/Town05',  
-  '/Game/Carla/Maps/Town06',  
+Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
+  ['/Game/Carla/Maps/Town01',
+  '/Game/Carla/Maps/Town02',
+  '/Game/Carla/Maps/Town03',
+  '/Game/Carla/Maps/Town04',
+  '/Game/Carla/Maps/Town05',
+  '/Game/Carla/Maps/Town06',
   '/Game/Carla/Maps/Town07'].  
     - **Return:** _list(str)_  
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
@@ -377,6 +378,10 @@ The server will start running the simulation `name` previously recorded. The tim
         - `start` (_float_) – Time in seconds where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
         - `duration` (_float_) – Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) – ID of the actor to follow. If this is 0 then camera is disabled.  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>)  
+Loads a new world with a basic physical topology generated from an OpenDRIVE file passed as `string`. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
+    - **Parameters:**
+        - `opendrive` (_str_) – OpenDRIVE data as `string`.  
 - <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
 When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
     - **Parameters:**
@@ -392,12 +397,12 @@ The terminal will show the information registered for actors considered blocked.
         - `min_time` (_float_) – Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.  
         - `min_distance` (_float_) – Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.  
 - <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  
-The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows:  
-  'h' = Hero, the one vehicle that can be controlled manually or managed by the user.   
-  'v' = Vehicle  
-  'w' = Walker  
-  't' = Traffic light  
-  'o' = Other  
+The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows:
+  'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
+  'v' = Vehicle
+  'w' = Walker
+  't' = Traffic light
+  'o' = Other
   'a' = Any
 If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa. If you want to see all the collisions (filter off) you can use 'a' for both parameters.  
     - **Parameters:**
@@ -660,6 +665,154 @@ Returns a list of pairs of waypoints. Every tuple on the list contains first an 
     - **Parameters:**
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Type of lanes to get the waypoints.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint)))_  
+
+---
+
+## carla.Landmark<a name="carla.Landmark"></a>
+Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) definition of the landmarks and their representation in the simulation. This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.
+Landmarks will be accessed by [carla.Waypoint](#carla.Waypoint) objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
+The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.
+<small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>.  
+- <a name="carla.Landmark.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
+Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).  
+- <a name="carla.Landmark.s"></a>**<font color="#f8805a">s</font>** (_float_)  
+Distance where the landmark is positioned along the geometry of the road `road_id`.  
+- <a name="carla.Landmark.t"></a>**<font color="#f8805a">t</font>** (_float_)  
+Lateral distance where the landmark is positioned from the edge of the road `road_id`.  
+- <a name="carla.Landmark.id"></a>**<font color="#f8805a">id</font>** (_str_)  
+Unique ID of the landmark in the OpenDRIVE file.  
+- <a name="carla.Landmark.name"></a>**<font color="#f8805a">name</font>** (_str_)  
+Name of the landmark in the in the OpenDRIVE file.  
+- <a name="carla.Landmark.is_dynamic"></a>**<font color="#f8805a">is_dynamic</font>** (_bool_)  
+Indicates if the landmark has state changes over time such as traffic lights.  
+- <a name="carla.Landmark.orientation"></a>**<font color="#f8805a">orientation</font>** (_[carla.LandmarkOrientation](#carla.LandmarkOrientation)_)  
+Indicates which lanes the landmark is facing towards to.  
+- <a name="carla.Landmark.z_offset"></a>**<font color="#f8805a">z_offset</font>** (_float_)  
+Height where the landmark is placed.  
+- <a name="carla.Landmark.country"></a>**<font color="#f8805a">country</font>** (_str_)  
+Country code where the landmark is defined (default to OpenDRIVE is Germany 2017).  
+- <a name="carla.Landmark.type"></a>**<font color="#f8805a">type</font>** (_str_)  
+Type identificator of the landmark according to the country code.  
+- <a name="carla.Landmark.sub_type"></a>**<font color="#f8805a">sub_type</font>** (_str_)  
+Subtype identificator of the landmark according to the country code.  
+- <a name="carla.Landmark.value"></a>**<font color="#f8805a">value</font>** (_float_)  
+Value printed in the signal (e.g. speed limit, maximum weight, etc).  
+- <a name="carla.Landmark.unit"></a>**<font color="#f8805a">unit</font>** (_str_)  
+Units of measurement for the attribute `value`.  
+- <a name="carla.Landmark.height"></a>**<font color="#f8805a">height</font>** (_float_)  
+Total height of the signal.  
+- <a name="carla.Landmark.width"></a>**<font color="#f8805a">width</font>** (_float_)  
+Total width of the signal.  
+- <a name="carla.Landmark.text"></a>**<font color="#f8805a">text</font>** (_str_)  
+Additional text in the signal.  
+- <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float_)  
+Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
+- <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
+Pitch rotation of the signal.  
+- <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
+Roll rotation of the signal.  
+- <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
+A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
+- <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+The location and orientation of the landmark in the simulation.  
+
+<h3>Methods</h3>
+- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
+Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:
+<small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
+    - **Return:** _list(tuple(int))_  
+
+---
+
+## carla.LandmarkOrientation<a name="carla.LandmarkOrientation"></a>
+Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.LandmarkOrientation.Positive"></a>**<font color="#f8805a">Positive</font>**  
+The landmark faces towards vehicles going on the same direction as the road's geometry definition (lanes 0 and negative in OpenDRIVE).  
+- <a name="carla.LandmarkOrientation.Negative"></a>**<font color="#f8805a">Negative</font>**  
+The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE).  
+- <a name="carla.LandmarkOrientation.Both"></a>**<font color="#f8805a">Both</font>**  
+Affects vehicles going in both directions of the road.  
+
+---
+
+## carla.LandmarkType<a name="carla.LandmarkType"></a>
+Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).
+__[carla.Landmark](#carla.Landmark) does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.LandmarkType.Danger"></a>**<font color="#f8805a">Danger</font>**  
+Type 101.  
+- <a name="carla.LandmarkType.LanesMerging"></a>**<font color="#f8805a">LanesMerging</font>**  
+Type 121.  
+- <a name="carla.LandmarkType.CautionPedestrian"></a>**<font color="#f8805a">CautionPedestrian</font>**  
+Type 133.  
+- <a name="carla.LandmarkType.CautionBicycle"></a>**<font color="#f8805a">CautionBicycle</font>**  
+Type 138.  
+- <a name="carla.LandmarkType.LevelCrossing"></a>**<font color="#f8805a">LevelCrossing</font>**  
+Type 150.  
+- <a name="carla.LandmarkType.Stop"></a>**<font color="#f8805a">Stop</font>**  
+Type 206.  
+- <a name="carla.LandmarkType.Yield"></a>**<font color="#f8805a">Yield</font>**  
+Type 205.  
+- <a name="carla.LandmarkType.MandatoryTurnDirection"></a>**<font color="#f8805a">MandatoryTurnDirection</font>**  
+Type 209.  
+- <a name="carla.LandmarkType.MandatoryLeftRightDirection"></a>**<font color="#f8805a">MandatoryLeftRightDirection</font>**  
+Type 211.  
+- <a name="carla.LandmarkType.TwoChoiceTurnDirection"></a>**<font color="#f8805a">TwoChoiceTurnDirection</font>**  
+Type 214.  
+- <a name="carla.LandmarkType.Roundabout"></a>**<font color="#f8805a">Roundabout</font>**  
+Type 215.  
+- <a name="carla.LandmarkType.PassRightLeft"></a>**<font color="#f8805a">PassRightLeft</font>**  
+Type 222.  
+- <a name="carla.LandmarkType.AccessForbidden"></a>**<font color="#f8805a">AccessForbidden</font>**  
+Type 250.  
+- <a name="carla.LandmarkType.AccessForbiddenMotorvehicles"></a>**<font color="#f8805a">AccessForbiddenMotorvehicles</font>**  
+Type 251.  
+- <a name="carla.LandmarkType.AccessForbiddenTrucks"></a>**<font color="#f8805a">AccessForbiddenTrucks</font>**  
+Type 253.  
+- <a name="carla.LandmarkType.AccessForbiddenBicycle"></a>**<font color="#f8805a">AccessForbiddenBicycle</font>**  
+Type 254.  
+- <a name="carla.LandmarkType.AccessForbiddenWeight"></a>**<font color="#f8805a">AccessForbiddenWeight</font>**  
+Type 263.  
+- <a name="carla.LandmarkType.AccessForbiddenWidth"></a>**<font color="#f8805a">AccessForbiddenWidth</font>**  
+Type 264.  
+- <a name="carla.LandmarkType.AccessForbiddenHeight"></a>**<font color="#f8805a">AccessForbiddenHeight</font>**  
+Type 265.  
+- <a name="carla.LandmarkType.AccessForbiddenWrongDirection"></a>**<font color="#f8805a">AccessForbiddenWrongDirection</font>**  
+Type 267.  
+- <a name="carla.LandmarkType.ForbiddenUTurn"></a>**<font color="#f8805a">ForbiddenUTurn</font>**  
+Type 272.  
+- <a name="carla.LandmarkType.MaximumSpeed"></a>**<font color="#f8805a">MaximumSpeed</font>**  
+Type 274.  
+- <a name="carla.LandmarkType.ForbiddenOvertakingMotorvehicles"></a>**<font color="#f8805a">ForbiddenOvertakingMotorvehicles</font>**  
+Type 276.  
+- <a name="carla.LandmarkType.ForbiddenOvertakingTrucks"></a>**<font color="#f8805a">ForbiddenOvertakingTrucks</font>**  
+Type 277.  
+- <a name="carla.LandmarkType.AbsoluteNoStop"></a>**<font color="#f8805a">AbsoluteNoStop</font>**  
+Type 283.  
+- <a name="carla.LandmarkType.RestrictedStop"></a>**<font color="#f8805a">RestrictedStop</font>**  
+Type 286.  
+- <a name="carla.LandmarkType.HasWayNextIntersection"></a>**<font color="#f8805a">HasWayNextIntersection</font>**  
+Type 301.  
+- <a name="carla.LandmarkType.PriorityWay"></a>**<font color="#f8805a">PriorityWay</font>**  
+Type 306.  
+- <a name="carla.LandmarkType.PriorityWayEnd"></a>**<font color="#f8805a">PriorityWayEnd</font>**  
+Type 307.  
+- <a name="carla.LandmarkType.CityBegin"></a>**<font color="#f8805a">CityBegin</font>**  
+Type 310.  
+- <a name="carla.LandmarkType.CityEnd"></a>**<font color="#f8805a">CityEnd</font>**  
+Type 311.  
+- <a name="carla.LandmarkType.Highway"></a>**<font color="#f8805a">Highway</font>**  
+Type 330.  
+- <a name="carla.LandmarkType.RecomendedSpeed"></a>**<font color="#f8805a">RecomendedSpeed</font>**  
+Type 380.  
+- <a name="carla.LandmarkType.RecomendedSpeedEnd"></a>**<font color="#f8805a">RecomendedSpeedEnd</font>**  
+Type 381.  
 
 ---
 
@@ -1611,6 +1764,19 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
     - **Parameters:**
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
+Returns a list of landmarks in the road from the current waypoint until the specified distance.  
+    - **Parameters:**
+        - `distance` (_float_) – Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).  
+        - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Waypoint.get_landmarks_of_type"></a>**<font color="#7fb800">get_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**type**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
+Returns a list of landmarks in the road of a certain type from the current waypoint until the specified distance.  
+    - **Parameters:**
+        - `distance` (_float_) – Distance to search for landmarks from the current waypoint (metres in OpenDRIVE).  
+        - `type` (_str_) – Type of landmarks to search.  
+        - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---

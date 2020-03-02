@@ -69,7 +69,7 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.69.0
+BOOST_VERSION=1.72.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
@@ -157,12 +157,12 @@ else
   rm -Rf ${BOOST_BASENAME}-source
   rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-fi
+  # Boost patch for exception handling
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
+  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
+  # ---
 
-# Boost patch for exception handling
-cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-# ---
+fi
 
 unset BOOST_BASENAME
 
@@ -309,7 +309,8 @@ RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
 
-if [[ -d "${RECAST_BASENAME}-install" ]] ; then
+if [[ -d "${RECAST_BASENAME}-install" &&
+      -f "${RECAST_BASENAME}-install/bin/RecastBuilder" ]] ; then
   log "${RECAST_BASENAME} already installed."
 else
   rm -Rf \
@@ -352,6 +353,12 @@ else
   mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
   mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
 
+fi
+
+# make sure the RecastBuilder is corrctly copied
+RECAST_INSTALL_DIR="${CARLA_BUILD_FOLDER}/../Util/DockerUtils/dist"
+if [[ ! -f "${RECAST_INSTALL_DIR}/RecastBuilder" ]]; then
+  cp "${RECAST_BASENAME}-install/bin/RecastBuilder" "${RECAST_INSTALL_DIR}/"
 fi
 
 unset RECAST_BASENAME

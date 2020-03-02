@@ -101,7 +101,7 @@ class MarkdownFile:
 
     def not_title(self, buf):
         self._data = join([
-            self._data, '\n', self.list_depth(), '<h1>', buf, '</h1>', '\n'])
+            self._data, '\n', self.list_depth(), '#', buf, '\n'])
 
     def title(self, strongness, buf):
         self._data = join([

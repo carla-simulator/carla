@@ -175,6 +175,10 @@ def main():
         '-b', '--list-blueprints',
         metavar='FILTER',
         help='list available blueprints matching FILTER (use \'*\' to list them all)')
+    argparser.add_argument(
+        '-x', '--xodr-path',
+        metavar='XODR_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenDRIVE')
 
     if len(sys.argv) < 2:
         argparser.print_help()
@@ -197,6 +201,19 @@ def main():
     elif args.reload_map:
         print('reload map.')
         world = client.reload_world()
+    elif args.xodr_path is not None:
+        if os.path.exists(args.xodr_path):
+            with open(args.xodr_path) as od_file:
+                try:
+                    data = od_file.read()
+                except OSError:
+                    print('file could not be readed.')
+                    sys.exit()
+            print('load opendrive map %r.' % os.path.basename(args.xodr_path))
+            world = client.generate_opendrive_world(data)
+        else:
+            print('file not found.')
+
     else:
         world = client.get_world()
 
