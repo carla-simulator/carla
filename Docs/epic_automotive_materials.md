@@ -1,4 +1,4 @@
-<h1>How to link Epic's Automotive Materials</h1>
+# How to link Epic's Automotive Materials
 
 !!! important
     Since version 0.8.0 CARLA does not use Epic's _Automotive Materials_ by

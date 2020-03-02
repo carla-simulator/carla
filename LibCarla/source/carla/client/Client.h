@@ -6,12 +6,15 @@
 
 #pragma once
 
-#include "carla/PythonUtil.h"
-#include "carla/client/World.h"
 #include "carla/client/detail/Simulator.h"
+#include "carla/client/World.h"
+#include "carla/PythonUtil.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
 namespace client {
+
+  using namespace carla::traffic_manager;
 
   class Client {
   public:
@@ -31,6 +34,10 @@ namespace client {
     /// operation taking longer than @a timeout throws rpc::timeout.
     void SetTimeout(time_duration timeout) {
       _simulator->SetNetworkingTimeout(timeout);
+    }
+
+    time_duration GetTimeout() {
+      return _simulator->GetNetworkingTimeout();
     }
 
     /// Return the version string of this client API.
@@ -62,6 +69,16 @@ namespace client {
     /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};
+    }
+
+    /// Return an instance of the TrafficManager currently active in the simulator.
+    TrafficManager GetInstanceTM(uint16_t port = TM_DEFAULT_PORT) const {
+      return TrafficManager(_simulator->GetCurrentEpisode(), port);
+    }
+
+    /// Return an instance of the Episode currently active in the simulator.
+    carla::client::detail::EpisodeProxy GetCurrentEpisode() const {
+      return _simulator->GetCurrentEpisode();
     }
 
     std::string StartRecorder(std::string name) {
@@ -111,6 +128,7 @@ namespace client {
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;
+
   };
 
   inline Client::Client(

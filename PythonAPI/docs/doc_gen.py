@@ -33,7 +33,7 @@ class MarkdownFile:
         self._data = ""
         self._list_depth = 0
         self.endl = '  \n'
-
+    
     def data(self):
         return self._data
 
@@ -69,6 +69,10 @@ class MarkdownFile:
 
     def textn(self, buf):
         self._data = join([self._data, self.list_depth(), buf, self.endl])
+
+    def first_title(self):
+        self._data = join([
+            self._data, '#Python API reference'])
 
     def title(self, strongness, buf):
         self._data = join([
@@ -437,6 +441,7 @@ class Documentation:
     def gen_body(self):
         """Generates the documentation body"""
         md = MarkdownFile()
+        md.first_title()
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name

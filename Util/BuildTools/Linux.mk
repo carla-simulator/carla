@@ -9,10 +9,10 @@ launch: LibCarla.server.release
 launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
-import: CarlaUE4Editor
+import: CarlaUE4Editor PythonAPI build.utils
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.py $(ARGS)
 
-package: CarlaUE4Editor PythonAPI build.utils
+package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
@@ -134,5 +134,5 @@ deploy:
 pretty:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Prettify.sh $(ARGS)
 
-build.utils:
+build.utils: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh

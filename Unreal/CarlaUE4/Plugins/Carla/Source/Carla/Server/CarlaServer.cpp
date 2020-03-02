@@ -41,6 +41,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+#include <map>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -70,6 +71,9 @@ public:
   {
     BindActions();
   }
+
+  /// Map of pairs < port , ip > with all the Traffic Managers active in the simulation
+  std::map<uint16_t, std::string> TrafficManagerInfo;
 
   carla::rpc::Server Server;
 
@@ -151,6 +155,47 @@ void FCarlaServer::FPimpl::BindActions()
 {
   namespace cr = carla::rpc;
   namespace cg = carla::geom;
+
+  /// Looks for a Traffic Manager running on port
+  BIND_SYNC(is_traffic_manager_running) << [this] (uint16_t port) ->R<bool>
+  {
+    return (TrafficManagerInfo.find(port) != TrafficManagerInfo.end());
+  };
+
+  /// Gets a pair filled with the <IP, port> of the Trafic Manager running on port.
+  /// If there is no Traffic Manager running the pair will be ("", 0)
+  BIND_SYNC(get_traffic_manager_running) << [this] (uint16_t port) ->R<std::pair<std::string, uint16_t>>
+  {
+    auto it = TrafficManagerInfo.find(port);
+    if(it != TrafficManagerInfo.end()) {
+      return std::pair<std::string, uint16_t>(it->second, it->first);
+    }
+    return std::pair<std::string, uint16_t>("",0);
+  };
+
+  /// Add a new Traffic Manager running on <IP, port>
+  BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<bool>
+  {
+    uint16_t port = trafficManagerInfo.second;
+    auto it = TrafficManagerInfo.find(port);
+    if(it == TrafficManagerInfo.end()) {
+      TrafficManagerInfo.insert(
+        std::pair<uint16_t, std::string>(port, trafficManagerInfo.first));
+      return true;
+    }
+    return false;
+
+  };
+
+  BIND_SYNC(destroy_traffic_manager) << [this] (uint16_t port) ->R<bool>
+  {
+    auto it = TrafficManagerInfo.find(port);
+    if(it != TrafficManagerInfo.end()) {
+      TrafficManagerInfo.erase(it);
+      return true;
+    }
+    return false;
+  };
 
   BIND_ASYNC(version) << [] () -> R<std::string>
   {

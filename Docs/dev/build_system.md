@@ -1,4 +1,4 @@
-<h1>Build system</h1>
+#Build system
 
 > _This document is a work in progress, only the Linux build system is taken into account here._
 
@@ -49,8 +49,9 @@ Two configurations:
 | **Requires**    | rpclib, gtest, boost | rpclib, boost
 | **std runtime** | LLVM's `libc++` | Default `libstdc++` |
 | **Output**      | headers and test exes | `libcarla_client.a` |
-| **Required by** | Carla plugin | PythonAPI |
+| **Required by** | Carla plugin | PythonAPI |  
 
+<br>
 #### CarlaUE4 and Carla plugin
 
 Both compiled at the same step with Unreal Engine build tool. They require the

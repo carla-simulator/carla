@@ -126,6 +126,10 @@ namespace detail {
       _client.SetTimeout(timeout);
     }
 
+    time_duration GetNetworkingTimeout() {
+      return _client.GetTimeout();
+    }
+
     std::string GetClientVersion() {
       return _client.GetClientVersion();
     }
@@ -159,6 +163,34 @@ namespace detail {
     /// @name Access to global objects in the episode
     // =========================================================================
     /// @{
+
+    std :: string GetEndpoint() {
+    	return _client.GetEndpoint();
+    }
+
+    /// Query to know if a Traffic Manager is running on port
+    bool IsTrafficManagerRunning(uint16_t port) const {
+      return _client.IsTrafficManagerRunning(port);
+    }
+
+    /// Gets a pair filled with the <IP, port> of the Trafic Manager running on port.
+    /// If there is no Traffic Manager running the pair will be ("", 0)
+    std::pair<std::string, uint16_t> GetTrafficManagerRunning(uint16_t port) const {
+      return _client.GetTrafficManagerRunning(port);
+    }
+
+    /// Informs that a Traffic Manager is running on <IP, port>
+    bool AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+      return _client.AddTrafficManagerRunning(trafficManagerInfo);
+    }
+
+    void DestroyTrafficManager(uint16_t port) const {
+      _client.DestroyTrafficManager(port);
+    }
+
+    void AddPendingException(std::string e) {
+      _episode->AddPendingException(e);
+    }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
 

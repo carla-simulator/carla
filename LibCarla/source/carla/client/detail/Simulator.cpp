@@ -16,6 +16,7 @@
 #include "carla/client/TimeoutException.h"
 #include "carla/client/WalkerAIController.h"
 #include "carla/client/detail/ActorFactory.h"
+#include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -47,6 +48,7 @@ namespace detail {
     while (frame > episode.GetState()->GetTimestamp().frame) {
       std::this_thread::yield();
     }
+    carla::traffic_manager::TrafficManager::Tick();
   }
 
   // ===========================================================================
@@ -128,7 +130,6 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     const auto frame = _client.SendTickCue();
     SynchronizeFrame(frame, *_episode);
-    RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
     return frame;
   }
 

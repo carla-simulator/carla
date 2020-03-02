@@ -10,12 +10,15 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 #include <exception>
 
 namespace carla {
 namespace client {
 namespace detail {
+
+using namespace std::chrono_literals;
 
   static auto &CastData(const sensor::SensorData &data) {
     using target_t = const sensor::data::RawEpisodeState;
@@ -51,33 +54,52 @@ namespace detail {
     std::weak_ptr<Episode> weak = shared_from_this();
     _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
-      if (self != nullptr) {
-        auto data = sensor::Deserializer::Deserialize(std::move(buffer));
 
+      if (self != nullptr) {
+
+        auto data = sensor::Deserializer::Deserialize(std::move(buffer));
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
-        do {
-          if (prev->GetFrame() >= next->GetFrame()) {
-            self->_on_tick_callbacks.Call(next);
-            return;
+
+        /// Check for pending exceptions (Mainly TM server closed)
+        if(self->_pending_exceptions) {
+
+          /// Mark pending exception false
+          self->_pending_exceptions = false;
+
+          /// Create exception for the error message
+          auto exception(self->_pending_exceptions_msg);
+          // Notify waiting threads that exception occurred
+          self->_snapshot.SetException(std::runtime_error(exception));
+        }
+        /// Sensor case: inconsistent data
+        else {
+          bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
+
+          do {
+            if (prev->GetFrame() >= next->GetFrame()) {
+              self->_on_tick_callbacks.Call(next);
+              return;
+            }
+          } while (!self->_state.compare_exchange(&prev, next));
+
+          /// Episode change
+          if(episode_changed) {
+            self->OnEpisodeChanged();
           }
-        } while (!self->_state.compare_exchange(&prev, next));
 
-        if (next->GetEpisodeId() != prev->GetEpisodeId()) {
-          self->OnEpisodeStarted();
+          // Notify waiting threads and do the callbacks.
+          self->_snapshot.SetValue(next);
+
+          // Tick navigation.
+          auto navigation = self->_navigation.load();
+          if (navigation != nullptr) {
+            navigation->Tick(self);
+          }
+
+          // Call user callbacks.
+          self->_on_tick_callbacks.Call(next);
         }
-
-        // Notify waiting threads and do the callbacks.
-        self->_snapshot.SetValue(next);
-
-        // Tick navigation.
-        auto navigation = self->_navigation.load();
-        if (navigation != nullptr) {
-          navigation->Tick(self);
-        }
-
-        // Call user callbacks.
-        self->_on_tick_callbacks.Call(next);
       }
     });
   }
@@ -118,7 +140,12 @@ namespace detail {
     _actors.Clear();
     _on_tick_callbacks.Clear();
     _navigation.reset();
+    traffic_manager::TrafficManager::Release();
   }
+
+void Episode::OnEpisodeChanged() {
+  traffic_manager::TrafficManager::Reset();
+}
 
 } // namespace detail
 } // namespace client

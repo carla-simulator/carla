@@ -1,4 +1,4 @@
-<h1> Recorder </h1>  
+# Recorder  
 
 This is one of the advanced CARLA features. It allows to record and reenact a simulation while providing with a complete log of the events happened and a few queries to ease the trace and study of those.  
 To learn about the generated file and its specifics take a look at this [reference](recorder_binary_file_format.md). 
@@ -59,12 +59,14 @@ client.replay_file("recording01.log", start, duration, camera)
 | ---------- | ----------------------------------------------------- | ----- |
 | `start`    | Recording time in seconds to start the simulation at. | If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.  |
 | `duration` | Seconds to playback. 0 is all the recording.          | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop. |
-| `camera`   | ID of the actor that the camera will focus on.        | By default the spectator will move freely. |
+| `camera`   | ID of the actor that the camera will focus on.        | By default the spectator will move freely. |  
+
+<br>
 
 !!! Note
     These parameters allows to recall an event and then let the simulation run free, as vehicles will be set to autopilot when the recording stops. 
 
-<h4>Setting a time factor</h4> 
+####Setting a time factor
 
 The time factor will determine the playback speed.  
 
@@ -75,7 +77,9 @@ client.set_replayer_time_factor(2.0)
 ```
 | Parameters    | Default | Fast motion | slow motion |
 | ------------- | ------- | ----------- | ----------- |
-| `time_factor` | __1.0__ | __>1.0__    | __<1.0__    |
+| `time_factor` | __1.0__ | __>1.0__    | __<1.0__    |  
+
+<br>
 
 !!! Important
     Over 2.0 position interpolation is disabled and just updated. Pedestrians' animations are not affected by the time factor.  
@@ -135,9 +139,9 @@ Duration: 60.3753 seconds
 ---------------
 ##Queries
 
-<h4>Collisions</h4> 
+####Collisions
 
-In order to record collisions, vehicles must have a [collision detector](cameras_and_sensors.md) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
+In order to record collisions, vehicles must have a [collision detector](../ref_sensors#collision-detector) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
 Currently, the actor types that can be used in the query are:  
 
 * __h__ = Hero
@@ -184,7 +188,7 @@ In this case, the playback showed this:
 
 ![collision](img/collision1.gif)
 
-<h4>Blocked actors</h4> 
+####Blocked actors
 
 This query is used to detect vehicles that where stucked during the recording. An actor is considered blocked if it does not move a minimum distance in a certain time. This definition is made by the user during the query:
 
@@ -195,7 +199,9 @@ client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
 | Parameters     | Description                                               | Default |
 | -------------- | --------------------------------------------------------- | ----- |
 | `min_time`     | Minimum seconds to move `min_distance`.                   | 30 secs. |
-| `min_distance` | Minimum centimeters to move to not be considered blocked. | 10 cm. |
+| `min_distance` | Minimum centimeters to move to not be considered blocked. | 10 cm. |  
+
+<br> 
 
 !!! Note
     Take into account that vehicles are stopped at traffic lights sometimes for longer than expected.  
@@ -241,7 +247,9 @@ Some of the provided scripts in `PythonAPI/examples` facilitate the use of the r
 | -------------- | ------------ |
 | `-f`           | Filename.     |
 | `-n` <small>(optional)</small>| Vehicles to spawn. Default is 10. |
-| `-t` <small>(optional)</small>| Duration of the recording. |
+| `-t` <small>(optional)</small>| Duration of the recording. |  
+
+<br>
 
 * __start_replaying.py__: starts the playback of a recording. Starting time, duration and actor to follow can be set.
 
@@ -250,7 +258,9 @@ Some of the provided scripts in `PythonAPI/examples` facilitate the use of the r
 | `-f`           | Filename.     |
 | `-s` <small>(optional)</small>| Starting time. Default is 0. |
 | `-d` <small>(optional)</small>| Duration. Default is all. |
-| `-c` <small>(optional)</small>| ID of the actor to follow. |
+| `-c` <small>(optional)</small>| ID of the actor to follow. |  
+
+<br>
 
 * __show_recorder_file_info.py__: shows all the information in the recording file.  
 Two modes of detail: by default it only shows frames where some event is recorded. The second shows all information for all frames.
@@ -258,7 +268,9 @@ Two modes of detail: by default it only shows frames where some event is recorde
 | Parameters     | Description  |
 | -------------- | ------------ |
 | `-f`           | Filename.     |
-| `-s` <small>(optional)</small>| Flag to show all details. |
+| `-s` <small>(optional)</small>| Flag to show all details. |  
+
+<br>
 
 * __show_recorder_collisions.py__: shows recorded collisions between two actors of type __A__ and __B__ defined using a series of flags: `-t = vv` would show all collisions between vehicles. 
 
@@ -274,8 +286,9 @@ Two modes of detail: by default it only shows frames where some event is recorde
 | --------------- | ------------ |
 | `-f`            | Filename.     |
 | `-t` <small>(optional)</small> | Time to move `-d` before being considered blocked. |
-| `-d` <small>(optional)</small> | Distance to move to not be considered blocked. |
+| `-d` <small>(optional)</small> | Distance to move to not be considered blocked. |  
 
+<br>
 
 ---------------
 Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter: 

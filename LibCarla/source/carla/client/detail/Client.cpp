@@ -102,6 +102,22 @@ namespace detail {
       const size_t worker_threads)
     : _pimpl(std::make_unique<Pimpl>(host, port, worker_threads)) {}
 
+  bool Client::IsTrafficManagerRunning(uint16_t port) const {
+    return _pimpl->CallAndWait<bool>("is_traffic_manager_running", port);
+  }
+
+  std::pair<std::string, uint16_t> Client::GetTrafficManagerRunning(uint16_t port) const {
+    return _pimpl->CallAndWait<std::pair<std::string, uint16_t>>("get_traffic_manager_running", port);
+  };
+
+  bool Client::AddTrafficManagerRunning(std::pair<std::string, uint16_t> trafficManagerInfo) const {
+    return _pimpl->CallAndWait<bool>("add_traffic_manager_running", trafficManagerInfo);
+  };
+
+  void Client::DestroyTrafficManager(uint16_t port) const {
+    _pimpl->AsyncCall("destroy_traffic_manager", port);
+  }
+
   Client::~Client() = default;
 
   void Client::SetTimeout(time_duration timeout) {
@@ -112,7 +128,7 @@ namespace detail {
     return _pimpl->GetTimeout();
   }
 
-  const std::string &Client::GetEndpoint() const {
+  const std::string Client::GetEndpoint() const {
     return _pimpl->endpoint;
   }
 

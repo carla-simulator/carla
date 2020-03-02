@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -64,10 +64,10 @@ namespace traffic_manager {
   /// Returns the cross product (z component value) between the vehicle's
   /// heading vector and the vector along the direction to the next
   /// target waypoint on the horizon.
-  float DeviationCrossProduct(Actor actor, const cg::Location &target_location);
+  float DeviationCrossProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location);
   /// Returns the dot product between the vehicle's heading vector and
   /// the vector along the direction to the next target waypoint on the horizon.
-  float DeviationDotProduct(Actor actor, const cg::Location &target_location, bool rear_offset=false);
+  float DeviationDotProduct(Actor actor, const cg::Location &vehicle_location, const cg::Location &target_location, bool rear_offset=false);
 
 } // namespace traffic_manager
 } // namespace carla

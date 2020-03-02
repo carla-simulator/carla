@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -42,6 +42,16 @@ namespace traffic_manager {
       return actor_list;
     }
 
+    std::vector<ActorId> GetIDList() {
+
+      std::lock_guard<std::mutex> lock(modification_mutex);
+      std::vector<ActorId> actor_list;
+      for (auto it = actor_set.begin(); it != actor_set.end(); ++it) {
+        actor_list.push_back(it->first);
+      }
+      return actor_list;
+    }
+
     void Insert(std::vector<ActorPtr> actor_list) {
 
       std::lock_guard<std::mutex> lock(modification_mutex);
@@ -76,8 +86,16 @@ namespace traffic_manager {
 
     bool Contains(ActorId id) {
 
+      std::lock_guard<std::mutex> lock(modification_mutex);
       return actor_set.find(id) != actor_set.end();
     }
+
+    size_t Size() {
+
+      std::lock_guard<std::mutex> lock(modification_mutex);
+      return actor_set.size();
+    }
+
   };
 
 } // namespace traffic_manager
