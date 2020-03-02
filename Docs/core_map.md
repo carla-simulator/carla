@@ -10,7 +10,7 @@ After discussing about the world and its actors, it is time to put everything in
   * [__Map navigation__](#map-navigation)
 
 ---
-## The map  
+## The map
 
 Understanding the map in CARLA is equivalent to understanding the road. All of the maps have an OpenDRIVE file defining the road layout fully annotated. The way the [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) defines roads, lanes, junctions, etc. is extremely important. It determines the possibilities of the API and the reasoning behind many decisions made.  
 The Python API provides a higher level querying system to navigate these roads. It is constantly evolving to provide a wider set of tools.
