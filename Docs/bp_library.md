@@ -1,6 +1,6 @@
 
 #Blueprint Library
-The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) available to the user in CARLA.  
+The Blueprint Library ([`carla.BlueprintLibrary`](python_api.md#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) available to the user in CARLA.  
 
 Here is an example code for printing all actor blueprints and their attributes:  
 ```py
@@ -11,7 +11,7 @@ for blueprint in blueprints:
        print('  - {}'.format(attr))
 ```
   
-Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).  
+Check out our [introduction to blueprints](core_actors.md).  
 
 ### controller
 - **<font color="#498efc">controller.ai.walker</font>**  

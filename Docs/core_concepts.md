@@ -1,7 +1,7 @@
 # Core concepts
 
 This section summarizes the main features and modules in CARLA. While this page is just an overview, the rest of the information can be found in their respective pages, including fragments of code and in-depth explanations.  
-In order to learn everything about the different classes and methods in the API, take a look at the [Python API reference](python_api.md). There is also another reference named [Code recipes](python_cookbook.md) containing some of the most common fragments of code regarding different functionalities that could be specially useful during these first steps. 
+In order to learn everything about the different classes and methods in the API, take a look at the [Python API reference](python_api.md). There is also another reference named [Code recipes](ref_code_recipes.md) containing some of the most common fragments of code regarding different functionalities that could be specially useful during these first steps. 
 
   * [__First steps__](#first-steps)  
 	* 1st. World and client
@@ -14,8 +14,8 @@ In order to learn everything about the different classes and methods in the API,
     **This documentation refers to CARLA 0.9.X**. <br>
     The API changed significantly from previous versions (0.8.X). There is another documentation regarding those versions that can be found [here](https://carla.readthedocs.io/en/stable/getting_started/). 
 
----------------
-##First steps
+---
+## First steps
 
 #### 1st. World and client
 
@@ -55,8 +55,8 @@ Sensors are one of the most important actors in CARLA and their use can be quite
 
 Sensors wait for some event to happen to gather data and then call for a function defining what they should do. Depending on which, sensors retrieve different types of data in different ways and their usage varies substantially. 
 
----------------
-##Advanced steps  
+---
+## Advanced steps  
 
 Some more complex elements and features in CARLA are listed here to make newcomers familiar with their existence. However it is highly encouraged to first take a closer look to the pages regarding the first steps in order to learn the basics. 
 
@@ -65,7 +65,7 @@ Some more complex elements and features in CARLA are listed here to make newcome
   - **Simulation time and synchrony:** Everything regarding the simulation time and how does the server run the simulation depending on clients.  
   - **Traffic manager:** This module is in charge of every vehicle set to autopilot mode. It conducts the traffic in the city for the simulation to look like a real urban environment. 
 
----------------
+---
 That sums up the basics necessary to understand CARLA. 
 However, these broad strokes are just a big picture of the system.The next step should be learning more about the world of the simulation and the clients connecting to it. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
 <div text-align: center>
