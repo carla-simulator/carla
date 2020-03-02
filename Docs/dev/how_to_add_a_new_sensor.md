@@ -1,4 +1,4 @@
-<h1>How to add a new sensor</h1>
+# How to add a new sensor
 
 This tutorial explains the basics for adding a new sensor to CARLA. It provides
 the necessary steps to implement a sensor in Unreal Engine 4 (UE4) and expose

@@ -1,4 +1,4 @@
-<h1>How to make a release</h1>
+# How to make a release
 
 > _This document is meant for developers that want to publish a new release._
 

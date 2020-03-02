@@ -1,5 +1,5 @@
 
-<h1>Blueprint Library</h1>
+#Blueprint Library
 The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) available to the user in CARLA.  
 
 Here is an example code for printing all actor blueprints and their attributes:  
@@ -594,13 +594,6 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `object_type` (_String_)
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">vehicle.ford.mustang</font>**  
-    - **Attributes:**
-        - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>
-        - `number_of_wheels` (_Int_)
-        - `object_type` (_String_)
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">vehicle.gazelle.omafiets</font>**  
     - **Attributes:**
         - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>
@@ -632,7 +625,7 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `object_type` (_String_)
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">vehicle.lincoln.mkz2017</font>**  
+- **<font color="#498efc">vehicle.lincoln.lincoln</font>**  
     - **Attributes:**
         - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>
         - `number_of_wheels` (_Int_)
@@ -647,6 +640,13 @@ Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">vehicle.mini.cooperst</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `sticky_control` (_Bool_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">vehicle.mustang.mustang</font>**  
     - **Attributes:**
         - `color` (_RGBColor_)<sub>_ – Modifiable_</sub>
         - `number_of_wheels` (_Int_)

@@ -1,4 +1,4 @@
-<h1>Quickstart</h1>
+#Quick start
 
   * [Requirements](#requirements)
   * [Downloading CARLA](#downloading-carla)
@@ -6,6 +6,7 @@
 	* Command-line options  
   * [Updating CARLA](#updating-carla)
   * [Summary](#summary)
+
 ---------------
 ##Requirements
 
@@ -63,7 +64,7 @@ A window will open, containing a view over the city. This is the "spectator" vie
 !!! note
     If the firewall or any other application are blocking the TCP ports needed, these can be manually changed by adding to the previous command the argument: `-carla-port=N`, being `N` the desired port. The second will be automatically set to `N+1`.
 
-<h4>Command-line options</h4>
+####Command-line options
 
 There are some configuration options available when launching CARLA:  
 

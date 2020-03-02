@@ -1,4 +1,4 @@
-<h1>How to generate the pedestrian navigation info</h1>
+# How to generate the pedestrian navigation info
 ### Introduction
 
 The pedestrians to walk need information about the map in a specific format. That file that describes the map for navigation is a binary file with extension `.BIN`, and they are saved in the **Nav** folder of the map. Each map needs a `.BIN` file with the same name that the map, so automatically can be loaded with the map.
@@ -21,7 +21,9 @@ We have several types of meshes for navigation. The meshes need to be identified
 | Grass     | `Road_Crosswalk` | Pedestrians can walk over these meshes but as a second option if no ground is found. |
 | Road      | `Road_Grass` | Pedestrians won't be allowed to walk on it unless we specify some percentage of pedestrians that will be allowed. |
 | Crosswalk | `Road_Road`, `Road_Curb`, `Road_Gutter` or `Road_Marking` | Pedestrians can cross the roads only through these meshes. |
-| Block     | any other name | Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...). |
+| Block     | any other name | Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...). |  
+
+<br>
 
 For instance, all road meshes need to start with `Road_Road` e.g: `Road_Road_Mesh_1`, `Road_Road_Mesh_2`...
 

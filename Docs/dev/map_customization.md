@@ -1,4 +1,4 @@
-<h1>Map customization</h1>
+# Map customization
 
 > _This document is a work in progress and might be incomplete._
 
@@ -11,11 +11,11 @@ Creating a new map
     this guide will suggest duplicating an existing level instead of creating
     one from scratch.
 
-<h4>Requirements</h4>
+#### Requirements
 
  - Checkout and build Carla from source on [Linux](../how_to_build_on_linux.md) or [Windows](../how_to_build_on_windows.md)
 
-<h4>Creating</h4>
+#### Creating
 
 - Duplicate an existing map
 - Remove everything you don't need from the map
@@ -66,7 +66,7 @@ SplinemeshRepeater
 !!! Bug
     See [#35 SplineMeshRepeater loses its collider mesh](https://github.com/carla-simulator/carla/issues/35)
 
-<h4>Standard use:</h4>
+#### Standard use
 
 SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
 the Carla Project to help building urban environments; It repeats and aligns a
@@ -92,7 +92,7 @@ the lower point possible with the rest of the mesh pointing positive (Preferably
 by the X axis)
 
 
-<h4>Specific Walls (Dynamic material)</h4>
+#### Specific Walls (Dynamic material)
 
 In the project folder "Content/Static/Walls" are included some specific assets
 to be used with this SplineMeshRepeater with a series of special

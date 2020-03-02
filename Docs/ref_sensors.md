@@ -1,4 +1,4 @@
-<h1>Sensors' documentation</h1>
+# Sensors' documentation
 
   * [__Collision detector__](#collision-detector)  
   * [__Depth camera__](#depth-camera)  
@@ -23,7 +23,7 @@ To ensure that collisions with any kind of object are detected, the server creat
 
 Collision detectors do not have any configurable attribute.
 
-<h4>Output attributes: </h4>
+#### Output attributes 
 
 | Sensor data attribute  | Type                                             | Description |
 | ---------------------- | -----------                                      | ----------- |
@@ -56,16 +56,18 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 ![ImageDepth](img/capture_depth.png)
 
 
-<h4>Basic camera attributes</h4>
+#### Basic camera attributes
 
 | Blueprint attribute | Type  | Default | Description |
 | ------------------- | ----  | ------- | ----------- |
 | `image_size_x`      | int   | 800     | Image width in pixels. |
 | `image_size_y`      | int   | 600     | Image height in pixels.  |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees. |
-| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
-<h4>Camera lens distortion attributes</h4>
+<br>
+
+#### Camera lens distortion attributes
 
 | Blueprint attribute      | Type  | Default | Description |
 |--------------------------|-------|---------|-------------|
@@ -74,9 +76,11 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 | `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
 | `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
 | `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |
+| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute | Type                                             | Description |
 | --------------------- | ------------------------------------------------ | ----------- |
@@ -96,7 +100,7 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
 
-<h4>GNSS attributes</h4>
+#### GNSS attributes
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
@@ -107,9 +111,11 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 | `noise_lon_bias`     | float | 0.0     | Mean parameter in the noise model for longitude. |
 | `noise_lon_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for longitude. |
 | `noise_seed`         | int   | 0       | Initializer for a pseudorandom number generator. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute  | Type                                             | Description |
 | ---------------------- | ------------------------------------------------ | ----------- |
@@ -128,7 +134,7 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 
 Provides measures that accelerometer, gyroscope and compass would retrieve for the parent object. The data is collected from the object's current state.
 
-<h4>IMU attributes</h4>
+#### IMU attributes
 
 | Blueprint attribute   | Type  | Default | Description |
 | --------------------- | ----  | ------- | ----------- |
@@ -142,10 +148,11 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | `noise_gyro_stddev_y` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Y axis). |
 | `noise_gyro_stddev_z` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Z axis). |
 | `noise_seed`          | int   | 0       | Initializer for a pseudorandom number generator. |
-| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
+<br>
 
-<h4>Output attributes</h4>
+#### Output attributes
 
 | Sensor data attribute | Type                                             | Description |
 | --------------------- | ------------------------------------------------ | ----------- |
@@ -174,7 +181,7 @@ This sensor does not have any configurable attribute.
 !!! Important
     This sensor works fully on the client-side. 
 
-<h4>Output attributes</h4>
+#### Output attributes
 
 | Sensor data attribute   | Type                                                       | Description |
 | ----------------------- | ---------------------------------------------------------- | ----------- |
@@ -210,7 +217,7 @@ for location in lidar_measurement:
 
 ![LidarPointCloud](img/lidar_point_cloud.gif)
 
-<h4>Lidar attributes</h4>
+#### Lidar attributes
 
 | Blueprint attribute  | Type  | Default | Description |
 | -------------------- | ----  | ------- | ----------- |
@@ -220,9 +227,11 @@ for location in lidar_measurement:
 | `rotation_frequency` | float | 10.0    | Lidar rotation frequency. |
 | `upper_fov`          | float | 10.0    | Angle in degrees of the highest laser. |
 | `lower_fov`          | float | -30.0   | Angle in degrees of the lowest laser. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute      | Type                                             | Description |
 | -------------------------- | ------------------------------------------------ | ----------- |
@@ -235,7 +244,7 @@ for location in lidar_measurement:
 | `raw_data`                 | bytes                                            | Array of 32-bits floats (XYZ of each point). |
 
 ---------------
-##Obstacle detector 
+## Obstacle detector 
 
 * __Blueprint:__ sensor.other.obstacle
 * __Output:__ [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) per obstacle (unless `sensor_tick` says otherwise). 
@@ -250,9 +259,11 @@ To ensure that collisions with any kind of object are detected, the server creat
 | `hit_radius`         | float | 0.5     | Radius of the trace. |
 | `only_dynamics`      | bool  | false   | If true, the trace will only consider dynamic objects. |
 | `debug_linetrace`    | bool  | false   | If true, the trace will be visible. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute  | Type                                             | Description |
 | ---------------------- | ------------------------------------------------ | ----------- |
@@ -264,7 +275,7 @@ To ensure that collisions with any kind of object are detected, the server creat
 | `distance`             | float                                            | Distance from `actor` to `other_actor`. |
 
 ---------------
-##Radar sensor 
+## Radar sensor 
 
 * __Blueprint:__ sensor.other.radar
 * __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step (unless `sensor_tick` says otherwise).  
@@ -289,9 +300,11 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 | `points_per_second`   | int   | 1500    | Points generated by all lasers per second. |
 | `range`               | float | 100     | Maximum distance to measure/raycast in meters. |
 | `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |
-| `vertical_fov`        | float | 30      | Vertical field of view in degrees. |
+| `vertical_fov`        | float | 30      | Vertical field of view in degrees. |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute  | Type                                                             | Description |
 | ---------------------- | ---------------------------------------------------------------- | ----------- |
@@ -305,7 +318,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 | `velocity`                | float | Velocity towards the sensor. |
 
 ---------------
-##RGB camera 
+## RGB camera 
 
 * __Blueprint:__ sensor.camera.rgb
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
@@ -328,7 +341,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 
 ![ImageRGB](img/capture_scenefinal.png)
 
-<h4>Basic camera attributes</h4>
+#### Basic camera attributes
 
 | Blueprint attribute | Type  | Default | Description |
 |---------------------|-------|---------|-------------|
@@ -339,9 +352,11 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `iso`               | float | 1200.0  | The camera sensor sensitivity. |
 | `gamma`             | float | 2.2     | Target gamma value of the camera. |
 | `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
-| `shutter_speed`     | float | 60.0    | The camera shutter speed in seconds (1.0 / s). |
+| `shutter_speed`     | float | 60.0    | The camera shutter speed in seconds (1.0 / s). |  
 
-<h4>Camera lens distortion attributes</h4>
+<br>
+
+#### Camera lens distortion attributes
 
 | Blueprint attribute      | Type  | Default | Description |
 |--------------------------|-------|---------|-------------|
@@ -350,9 +365,11 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
 | `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
 | `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |
+| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
 
-<h4>Advanced camera attributes</h4>
+<br>
+
+#### Advanced camera attributes
 
 Since these effects are provided by UE, please make sure to check their documentation:
 
@@ -390,11 +407,13 @@ Since these effects are provided by UE, please make sure to check their document
 | `tint`                               | float | 0.0        | White balance temperature tint. Adjusts cyan and magenta color ranges. This should be used along with the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural. |
 | `chromatic_aberration_intensity`     | float | 0.0        | Scaling factor to control color shifting, more noticeable on the screen borders. |
 | `chromatic_aberration_offset`        | float | 0.0        | Normalized distance to the center of the image where the effect takes place. |
-| `enable_postprocess_effects`         | bool  | True       | Post-process effects activation. |
+| `enable_postprocess_effects`         | bool  | True       | Post-process effects activation. |  
+
+<br>
 
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
-<h4>Output attributes</h4>
+#### Output attributes
 
 | Sensor data attribute | Type                                             | Description |
 | --------------------- | ------------------------------------------------ | ----------- |
@@ -433,7 +452,9 @@ The following tags are currently available:
 |    9  | Vegetation   | (107, 142,  35) |
 |   10  | Car          | (  0,   0, 142) |
 |   11  | Wall         | (102, 102, 156) |
-|   12  | Traffic sign | (220, 220,   0) |
+|   12  | Traffic sign | (220, 220,   0) |  
+
+<br>
 
 !!! Note
     **Adding new tags**:
@@ -441,16 +462,18 @@ The following tags are currently available:
 
 ![ImageSemanticSegmentation](img/capture_semseg.png)
 
-<h4>Basic camera attributes</h4>
+#### Basic camera attributes
 
 | Blueprint attribute | Type  | Default | Description |
 | ------------------- | ----  | ------- | ----------- |
 | `fov`               | float | 90.0    | Horizontal field of view in degrees. |
 | `image_size_x`      | int   | 800     | Image width in pixels. |
 | `image_size_y`      | int   | 600     | Image height in pixels. |
-| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
 
-<h4>Camera lens distortion attributes</h4>
+<br>
+
+#### Camera lens distortion attributes
 
 | Blueprint attribute      | Type  | Default | Description |
 |------------------------- |------ |---------|-------------|
@@ -459,9 +482,11 @@ The following tags are currently available:
 | `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
 | `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
 | `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |
+| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
 
-<h4>Output attributes</h4>
+<br>
+
+#### Output attributes
 
 | Sensor data attribute | Type                                             | Description |
 | --------------------- | ------------------------------------------------ | ----------- |
@@ -471,4 +496,6 @@ The following tags are currently available:
 | `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
 | `timestamp`           | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
 | `transform`           | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `width`               | int                                              | Image width in pixels. |
+| `width`               | int                                              | Image width in pixels. |  
+
+<br> 
