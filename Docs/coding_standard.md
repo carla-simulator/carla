@@ -1,13 +1,13 @@
-<h1>Coding standard</h1>
+# Coding standard
 
-General
-=======
+-------
+## General
 
   * Use spaces, not tabs.
   * Avoid adding trailing whitespace as it creates noise in the diffs.
 
-Python
-------
+-------
+## Python
 
   * Comments should not exceed 80 columns, code should not exceed 120 columns.
   * All code must be compatible with Python 2.7, 3.5, and 3.6.
@@ -19,8 +19,8 @@ Python
 [pylintlink]: https://www.pylint.org/
 [pep8link]: https://www.python.org/dev/peps/pep-0008/
 
-C++
----
+-------
+## C++
 
   * Comments should not exceed 80 columns, code may exceed this limit a bit in
     rare occasions if it results in clearer code.

@@ -1,4 +1,4 @@
-<h1>Walker Bone Control</h1>
+# Walker Bone Control
 
 In this tutorial we describe how to manually control and animate the
 skeletons of walkers from the CARLA Python API. The reference of

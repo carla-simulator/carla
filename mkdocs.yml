@@ -43,7 +43,6 @@ nav:
   - 'Generate pedestrian navigation': 'how_to_generate_pedestrians_navigation.md'
   - "Link Epic's Automotive Materials": 'epic_automotive_materials.md'
   - 'Map customization': 'dev/map_customization.md'
-  - 'Running without display and selecting GPUs': 'carla_headless.md'
 - How to... (content):
   - 'Add assets': 'how_to_add_assets.md'
   - 'Create and import a new map': 'how_to_make_a_new_map.md'

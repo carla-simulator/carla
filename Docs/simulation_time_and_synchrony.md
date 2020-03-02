@@ -1,4 +1,4 @@
-<h1>Synchrony and time-step</h1>
+# Synchrony and time-step 
 
 This section deals with two concepts that are fundamental to fully comprehend CARLA and gain control over it to achieve the desired results. There are different configurations that define how does time go by in the simulation and how does the server running said simulation work. The following sections will dive deep into these concepts:
 
@@ -22,7 +22,7 @@ The time-step can be fixed or variable depending on user preferences, and CARLA 
 !!! Note
     After reading this section it would be a great idea to go for the following one, __Client-server synchrony__, especially the part about synchrony and time-step. Both are related concepts and affect each other when using CARLA. 
 
-<h4>Variable time-step</h4>
+####Variable time-step
 
 This is the default mode in CARLA. When the time-step is variable, the simulation time that goes by between steps will be the time that the server takes to compute these. 
 In order to set the simulation to a variable time-step the code could look like this: 
@@ -36,7 +36,7 @@ The provided script  `PythonAPI/util/config.py` automatically sets time-step wit
 cd PythonAPI/util && ./config.py --delta-seconds 0
 ``` 
 
-<h4>Fixed time-step</h4>
+####Fixed time-step
 
 Going for a fixed time-step makes the server run a simulation where the elapsed time remains constant between steps. If it is set to 0.5 seconds, there will be two frames per simulated second. 
 Using the same time increment on each step is the best way to gather data from the simulation, as physics and sensor data will correspond to an easy to comprehend moment of the simulation. Also, if the server is fast enough, it makes possible to simulate longer time periods in less real time.  
@@ -52,7 +52,7 @@ Thus, the simulator will take twenty steps (1/0.05) to recreate one second of th
 cd PythonAPI/util && ./config.py --delta-seconds 0.05
 ``` 
 
-<h4>Tips when recording the simulation</h4>
+####Tips when recording the simulation
 
 CARLA has a [recorder feature](recorder_and_playback.md) that allows a simulation to be recorded and then reenacted. However, when looking for precision, some things need to be taken into account.  
 If the simulation ran with a fixed time-step, reenacting it will be easy, as the server can be set to the same time-step used in the original simulation. However, if the simulation used a variable time-step, things are a bit more complicated.  
@@ -61,7 +61,7 @@ Secondly, the server can be forced to reproduce the exact same time-steps passin
 Finally there is also the float-point arithmetic error that working with a variable time-step introduces. As the simulation is running with a time-step equal to the real one, being real time a continuous and simulation one a float variable, the time-steps show decimal limitations. The time that is cropped for each step is an error that accumulates and prevents the simulation from a precise repetition of what has happened. 
 
 
-<h4>Time-step limitations</h4>
+####Time-step limitations
 
 Physics must be computed within very low time steps to be precise. The more time goes by, the more variables and chaos come to place and so, the more defective the simulation will be. 
 CARLA uses up to 6 substeps to compute physics in every step, each with a maximum delta time of 0.016667s.  
@@ -96,7 +96,7 @@ cd PythonAPI/util && ./config.py --no-sync
 ``` 
 Must be mentioned that synchronous mode cannot be enabled using the script, only disabled. Enabling the synchronous mode makes the server wait for a client tick, and using this script the user cannot send ticks when desired. 
 
-<h4>Using synchronous mode</h4>
+####Using synchronous mode
 
 The synchronous mode becomes specially relevant when running with slow clients applications and when synchrony between different elements, such as sensors, is needed.  If the client is too slow and the server does not wait for it, the amount of information received will be impossible to manage and it can easily be mixed. On a similar tune, if there are ten sensors waiting to retrieve data and the server is sending all these information without waiting for all of them to have the previous one, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
 As a little extension to the previous code, in the following fragment, the client creates a camera sensor that puts the image data received in the current step in a queue and sends ticks to the server only after retrieving it from the queue. A more complex example regarding several sensors can be found [here][syncmodelink].
@@ -139,7 +139,9 @@ The configuration of both concepts explained in this page, simulation time-step 
 |  | __Fixed time-step__ | __Variable time-step__ |
 | --- | --- | --- |
 | __Synchronous mode__ | Client is in total control over the simulation and its information. | Risk of non reliable simulations. |
-| __Asynchronous mode__ | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations. |
+| __Asynchronous mode__ | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations. |  
+
+<br>
 
 * __Synchronous mode + variable time-step:__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and, if the server needs to wait for the client to compute the steps, this is likely to happen. Simulation time and physics then will not be in synchrony and thus, the simulation is not reliable.  
 

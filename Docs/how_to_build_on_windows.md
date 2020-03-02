@@ -1,4 +1,4 @@
-<h1>Windows build</h1>
+#Windows build
   * [__Requirements__](#requirements):  
 	* System specifics
   * [__Necessary software__](#necessary-software):  
@@ -21,7 +21,7 @@ CARLA forum</a>
 </div>
 ---
 ##Requirements
-<h4>System specifics</h4>
+####System specifics
 
   * __x64 system:__ The simulator should run in any Windows system currently available as long as it is a 64 bits OS. 
   * __30GB disk space:__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.  
@@ -29,7 +29,7 @@ CARLA forum</a>
   * __Two TCP ports and good internet connection:__ 2000 and 2001 by default. Be sure neither firewall nor any other application are blocking these. 
 ---
 ##Necessary software
-<h4>Minor installations</h4>
+####Minor installations
 Some software is needed for the build process the installation of which is quite straightforward.  
 
 * [CMake](https://cmake.org/download/): Generates standard build files from simple configuration files.
@@ -41,7 +41,7 @@ Some software is needed for the build process the installation of which is quite
     Be sure that these programs are added to your [environment path](https://www.java.com/en/download/help/path.xml), so you can use them from your command prompt. The path values to add lead to the _bin_ directories for each software. 
 
 
-<h4>Visual Studio 2017</h4>
+####Visual Studio 2017
 
 Get the 2017 version from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). **Community** is the free version. Two elements will be needed to set up the environment for the build process. These must be added when using the Visual Studio Installer:  
 
@@ -52,7 +52,7 @@ Get the 2017 version from [here](https://developerinsider.co/download-visual-stu
     Having other Visual Studio versions may cause conflict during the build process, even if these have been uninstalled (Visual Studio is not that good at getting rid of itself and erasing registers). To completely clean Visual Studio from the computer run `.\InstallCleanup.exe -full` found in `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout`. This may need admin permissions.   
 
 
-<h4>Unreal Engine 4.22</h4> 
+####Unreal Engine 4.22
 
 Go to the [Unreal Engine](https://www.unrealengine.com/download) site and download the Epic Games Launcher. In the _Library_ section, inside the _Engine versions_ panel, download any Unreal Engine 4.22.x version. After installing it, make sure to run it in order to be sure that everything was properly installed.   
 
@@ -60,12 +60,12 @@ Go to the [Unreal Engine](https://www.unrealengine.com/download) site and downlo
     This note will only be relevant if issues arise during the build process and manual build is required. Having VS2017 and UE4.22 installed, a **Generate Visual Studio project files** option should appear when doing right-click on **.uproject** files. If this option is not available, something went wrong while installing Unreal Engine and it may need to be reinstalled. Create a simple Unreal Engine project to check up.  
 
 ---
-# CARLA build
+##CARLA build
 
 !!! Important
     Lots of things have happened so far. It is highly advisable to do a quick restart of the system.  
 
-<h4>Clone repository</h4>
+####Clone repository
 
 <div class="build-buttons">
 <!-- Latest release button -->
@@ -86,12 +86,12 @@ Now the latest content for the project, known as `master` branch in the reposito
 !!! Note
     The `master` branch contains the latest fixes and features. Stable code is inside the `stable` branch, and it can be built by changing the branch. The same goes for previous CARLA releases. Always remember to check the current branch in git with `git branch`. 
 
-<h3>Get assets</h3>
+####Get assets
 
 Only the assets package, the visual content, is yet to be downloaded. `\Util\ContentVersions.txt` contains the links to the assets for every CARLA version. These must be extracted in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
 Download the **latest** assets to work with the current version of CARLA. When working with branches containing previous releases of CARLA, make sure to download the proper assets.
 
-<h3>make CARLA</h3>
+####make CARLA
 
 Go to the root CARLA folder, the one cloned from the repository. It is time to do the automatic build. The process may take a while, it will download and install the necessary libraries. It might take 20-40 minutes, depending on hardware and internet connection. There are different make commands to build the different modules:   
 
@@ -122,8 +122,9 @@ Now everything is ready to go and CARLA has been successfully built. Here is a b
 | `make PythonAPI` | Builds the CARLA client. |
 | `make package`   | Builds CARLA and creates a packaged version for distribution. |
 | `make clean`     | Deletes all the binaries and temporals generated by the build system. |
-| `make rebuild`   | make clean and make launch both in one command. |
+| `make rebuild`   | make clean and make launch both in one command. |  
 
+<br>
 Keep reading this section to learn more about how to update CARLA, the build itself and some advanced configuration options.
 Otherwise, visit the __First steps__ section to learn about CARLA: 
 <div class="build-buttons">

@@ -1,4 +1,4 @@
-<h1>1st. World and client</h1>
+# 1st. World and client
 
 This is bound to be one of the first topics to learn about when entering CARLA. The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.  
 This tutorial goes from defining the basics and creation of these elements to describing their possibilities without entering into higher complex matters. If any doubt or issue arises during the reading, the [CARLA forum](forum.carla.org/) is there to solve them.  
@@ -21,7 +21,7 @@ Besides that, the client is also able to access other CARLA modules, features an
 The __carla.Client__ class is explained thoroughly in the [PythonAPI reference](python_api.md#carla.Client). 
 
 
-<h4>Client creation</h4>
+####Client creation
 
 Two things are needed: The IP address identifying it and two TCP ports the client will be using to communicate with the server. There is an optional third parameter, an `int` to set the working threads that by default is set to all (`0`). [This code recipe](python_cookbook.md#parse-client-creation-arguments) shows how to parse these as arguments when running the script. 
 
@@ -41,7 +41,7 @@ It is possible to have many clients connected, as it is common to have more than
 !!! Note
     Client and server have different `libcarla` modules. If the versions differ due to different origin commits, issues may arise. This will not normally the case, but it can be checked using the `get_client_version()` and `get_server_version()` methods. 
 
-<h4>World connection</h4>
+####World connection
 
 Being the simulation running, a configured client can connect and retrieve the current world easily: 
 
@@ -58,7 +58,7 @@ world = client.load_world('Town01')
 
 Every world object has an `id` or episode. Everytime the client calls for `load_world()` or `reload_world()` the previous one is destroyed and the new one is created from from scratch without rebooting Unreal Engine, so this episode will change. 
 
-<h4>Other client utilities</h4>
+####Other client utilities
 
 The main purpose of the client object is to get or change the world and many times, it is no longer used after that. However, this object is in charge of two other main tasks: accessing to advanced CARLA features and applying command batches.  
 The list of features that are accessed from the client object are:  
@@ -87,7 +87,7 @@ This class acts as the major ruler of the simulation and its instance should be 
 
 In fact, some of the most important methods of this class are the _getters_. They summarize all the information the world has access to. More explicit information regarding the World class can be found in the [Python API reference](python_api.md#carla.World).
 
-<h4>Actors</h4>
+####Actors
 
 The world has different methods related with actors that allow it to:  
 
@@ -99,7 +99,7 @@ The world has different methods related with actors that allow it to:
 
 Explanations on spawning will be conducted in the second step of this guide: [2nd. Actors and blueprints](core_actors.md), as it requires some understanding on the blueprint library, attributes, etc. Keep reading or visit the [Python API reference](python_api.md) to learn more about this matter. 
 
-<h4>Weather</h4>
+####Weather
 
 The weather is not a class on its own, but a world setting. However, there is a helper class named [carla.WeatherParameters](python_api.md#carla.WeatherParameters) that allows to define a series of visual characteristics such as sun orientation, cloudiness, lightning, wind and much more. The changes can then be applied using the world as the following example does:  
 ```py
@@ -122,7 +122,7 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 !!! Note
     Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors. 
 
-<h4>Debugging</h4>
+#### Debugging
 
 World objects have a public attribute that defines a [carla.DebugHelper](python_api.md#carla.DebugHelper) object. It allows for different shapes to be drawn during the simulation in order to trace the events happening. The following example would access the attribute to draw a red box at an actor's location and rotation. 
 
@@ -133,7 +133,7 @@ debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.V
 
 This example is extended in this [code recipe](python_cookbook.md#debug-bounding-box-recipe) to draw boxes for every actor in a world snapshot. Take a look at it and at the Python API reference to learn more about this.  
 
-<h4>World snapshots</h4>
+#### World snapshots
 
 Contains the state of every actor in the simulation at a single frame, a sort of still image of the world with a time reference. This feature makes sure that all the information contained comes from the same simulation step without the need of using synchronous mode. 
 
@@ -157,7 +157,7 @@ for actor_snapshot in world_snapshot: #Get the actor and the snapshot informatio
 actor_snapshot = world_snapshot.find(actual_actor.id) #Get an actor's snapshot
 ```
 
-<h4>World settings</h4>
+#### World settings
 
 The world also has access to some advanced configurations for the simulation that determine rendering conditions, steps in the simulation time and synchrony between clients and server. These are advanced concepts that do better if untouched by newcomers.  
 For the time being let's say that CARLA by default runs in with its best quality, with a variable time-step and asynchronously. The helper class is [carla.WorldSettings](python_api.md#carla.WorldSettings). To dive further in this matters take a look at the __Advanced steps__ section of the documentation and read about [synchrony and time-step](simulation_time_and_synchrony.md) or [rendering_options.md](../rendering_options).
