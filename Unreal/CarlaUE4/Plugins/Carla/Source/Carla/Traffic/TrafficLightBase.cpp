@@ -51,6 +51,8 @@ void ATrafficLightBase::OnConstruction(const FTransform &Transform)
 
 void ATrafficLightBase::Tick(float DeltaSeconds)
 {
+  Super::Tick(DeltaSeconds);
+
   if (TimeIsFrozen)
   {
     return;

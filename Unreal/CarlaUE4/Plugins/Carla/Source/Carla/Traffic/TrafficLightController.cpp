@@ -77,3 +77,30 @@ void UTrafficLightController::ResetState()
   CurrentState = (LightStates.Num() - 1);
   SetTrafficLightsState(GetCurrentState().State);
 }
+
+float UTrafficLightController::GetGreenTime() const
+{
+  return GetStateTime(ETrafficLightState::Green);
+}
+
+float UTrafficLightController::GetYellowTime() const
+{
+  return GetStateTime(ETrafficLightState::Yellow);
+}
+
+float UTrafficLightController::GetRedTime() const
+{
+  return GetStateTime(ETrafficLightState::Red);
+}
+
+float UTrafficLightController::GetStateTime(const ETrafficLightState State) const
+{
+  for(auto& LightState : LightStates)
+  {
+    if(LightState.State == State)
+    {
+      return LightState.Time;
+    }
+  }
+  return 0.0f;
+}
