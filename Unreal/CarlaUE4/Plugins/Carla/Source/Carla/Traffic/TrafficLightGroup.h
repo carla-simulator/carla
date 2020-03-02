@@ -25,20 +25,26 @@ public:
   // Sets default values for this actor's properties
   ATrafficLightGroup();
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Group", BlueprintPure)
   TArray<UTrafficLightController*>& GetControllers()
   {
     return Controllers;
   }
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
   void SetFrozenGroup(bool InFreeze);
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
+  bool IsFrozen();
+
+  UFUNCTION(Category = "Traffic Group", BlueprintPure)
   int GetJunctionId() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
   void ResetGroup();
+
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
+  float GetElapsedTime() const;
 
 protected:
   // Called when the game starts or when spawned
@@ -50,6 +56,7 @@ protected:
 private:
 
   friend ATrafficLightManager;
+
   UPROPERTY(Category = "Traffic Group", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
 
@@ -57,7 +64,10 @@ private:
   TArray<UTrafficLightController*> Controllers;
 
   UPROPERTY()
-  float Timer = 0;
+  float Timer = 0.0f;
+
+  UPROPERTY()
+  float CurrentStateTimer = 0.0f;
 
   UPROPERTY()
   int CurrentController = 0;
