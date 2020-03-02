@@ -1,4 +1,4 @@
-<h1>CARLA messages</h1>
+# CARLA messages
 
 The following reference lists all the CARLA messages available in the ROS bridge. These will can be used to enable communication in both ways.  
 Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum: 
@@ -11,8 +11,8 @@ CARLA forum</a>
 </p>
 </div>
 
----------------
-##CarlaActorInfo.msg
+---
+## CarlaActorInfo.msg
 
 Comprises the information regarding an actor to be shared between ROS and CARLA.  
 The [CarlaActorList.msg](#carlaactorlist) message is a list of these items. 
@@ -24,8 +24,8 @@ The [CarlaActorList.msg](#carlaactorlist) message is a list of these items.
 | `type`      | string | The identifier of the blueprint this actor was based on. |
 | `rolename`  | string | Role assigned to the actor when spawned. |
 
----------------
-##CarlaActorList.msg
+---
+## CarlaActorList.msg
 
 Contains a list of messages with some basic information for CARLA actors.
 
@@ -33,8 +33,8 @@ Contains a list of messages with some basic information for CARLA actors.
 | ----------- | ---------------- | ----------- |
 | `actors`    | [CarlaActorInfo](#carlaactorinfomsg)[] | List of messages with actors' information. |
 
----------------
-##CarlaCollisionEvent.msg
+---
+## CarlaCollisionEvent.msg
 
 Registers information regarding a collision event detected by the collision sensor of an actor.
 
@@ -44,8 +44,8 @@ Registers information regarding a collision event detected by the collision sens
 | `other_actor_id` | uint32                | ID of the actor against whom the collision was detected.  |
 | `normal_impulse` | geometry_msgs/Vector3 | Vector representing resulting impulse from the collision. |
 
----------------
-##CarlaControl.msg
+---
+## CarlaControl.msg
 
 These messages are used to control the simulation while in synchronous mode. The constant defined is translated as stepping commands.  
 
@@ -56,8 +56,8 @@ These messages are used to control the simulation while in synchronous mode. The
 !!! Important
     In synchronous mode, only the ROS bridge client is allowed to tick.
 
----------------
-##CarlaEgoVehicleControl.msg
+---
+## CarlaEgoVehicleControl.msg
 
 Messages sent to apply a control to a vehicle in both modes, normal and manual. These are published in a stack. 
 
@@ -72,8 +72,8 @@ Messages sent to apply a control to a vehicle in both modes, normal and manual. 
 | `gear`              | int32   | Changes between the available gears in a vehicle. |
 | `manual_gear_shift` | bool    | If ture, the gears will be shifted using `gear`. |
 
----------------
-##CarlaEgoVehicleInfo.msg
+---
+## CarlaEgoVehicleInfo.msg
 
 Contains some static information regarding a vehicle, mostly the attributes that used to define its physics.  
 
@@ -95,8 +95,8 @@ Contains some static information regarding a vehicle, mostly the attributes that
 | `drag_coefficient`                            | float32                                                 | Drag coefficient of the vehicle's chassis. |
 | `center_of_mass`                              | geometry_msgs/Vector3                                   | The center of mass of the vehicle. |
 
----------------
-##CarlaEgoVehicleInfoWheel.msg
+---
+## CarlaEgoVehicleInfoWheel.msg
 
 Contains some static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfo) message.
 
@@ -110,8 +110,8 @@ Contains some static information regarding a wheel that will be part of a [Carla
 | `max_handbrake_torque` | float32               | The maximum handbrake torque in Nm. |
 | `position`             | gemoetry_msgs/Vector3 | World position of the wheel. |
 
----------------
-##CarlaEgoVehicleStatus.msg
+---
+## CarlaEgoVehicleStatus.msg
 
 Details the current status of the vehicle as an object in the world.  
 
@@ -123,8 +123,8 @@ Details the current status of the vehicle as an object in the world.
 | `orientation` | geometry_msgs/Quaternion                          | Current orientation of the vehicle. |
 | `control`     | [CarlaEgoVehicleControl](#carlaegovehiclecontrol) | Current control values as reported by CARLA. |
 
----------------
-##CarlaLaneInvasionEvent.msg
+---
+## CarlaLaneInvasionEvent.msg
 
 These messages are used to publish lane invasions detected by a lane-invasion sensor attached to a vehicle. The invasions detected in the last step are passed as a list with a constant definition to identify the lane crossed.  
 
@@ -133,8 +133,8 @@ These messages are used to publish lane invasions detected by a lane-invasion se
 | `header`       | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
 | `crossed_lane_markings` | int32[] | __LANE_MARKING_OTHER__=0 <br> __LANE_MARKING_BROKEN__=1 <br> __LANE_MARKING_SOLID__=2 |
 
----------------
-##CarlaStatus.msg
+---
+## CarlaStatus.msg
 
 Details the current world settings of hte simulation. 
 
@@ -145,8 +145,8 @@ Details the current world settings of hte simulation.
 | `synchronous_mode`         | bool    | If true, synchronous mode is enabled. |
 | `synchronous_mode_running` | bool    | True when the simulation is running. False when it is paused. |
 
----------------
-##CarlaTrafficLightStatus.msg
+---
+## CarlaTrafficLightStatus.msg
 
 Contains a constant definition regarding the state of a traffic light. 
 
@@ -155,8 +155,8 @@ Contains a constant definition regarding the state of a traffic light.
 | `id`                       | uint32  | ID of the traffic light actor. |
 | `state`                    | uint8   | __RED__=0,__YELLOW__=1, __GREEN__=2, __OFF__=3, __UNKNOWN__=4 |
 
----------------
-##CarlaTrafficLightStatusList.msg
+---
+## CarlaTrafficLightStatusList.msg
 
 Comprises a list of all traffic lights with their status. 
 
@@ -164,8 +164,8 @@ Comprises a list of all traffic lights with their status.
 | ---------------- | ----------------------------------------------------- | ---------------- |
 | `traffic_lights` | [CarlaTrafficLightStatus](#carlatrafficlightstatus)[] | A list of messages summarizing traffic light states. |
 
----------------
-##CarlaWalkerControl.msg
+---
+## CarlaWalkerControl.msg
 
 Contains the information needed to apply a movement controller to a walker. 
 
@@ -175,8 +175,8 @@ Contains the information needed to apply a movement controller to a walker.
 | `speed`     | float32                | A scalar value to control the walker's speed. |
 | `jump`      | bool                   | If true, the walker will jump. |
 
----------------
-##CarlaWaypoint.msg
+---
+## CarlaWaypoint.msg
 
 Summarizes data regarding a waypoint. 
 
@@ -188,8 +188,8 @@ Summarizes data regarding a waypoint.
 | `is_junction` | bool               | __True__ if the current Waypoint is on a junction as defined by OpenDRIVE. |
 | `pose`        | [geometry_msgs/Pose](http://docs.ros.org/api/geometry_msgs/html/msg/Pose.html) | Position and orientation of the waypoint. |
 
----------------
-##CarlaWorldInfo.msg
+---
+## CarlaWorldInfo.msg
 
 Information about the current CARLA map (name and OpenDRIVE). 
 
@@ -198,8 +198,8 @@ Information about the current CARLA map (name and OpenDRIVE).
 | `map_name`  | string  | Name of the CARLA map loaded in the current world. |
 | `opendrive` | string  | .xodr OpenDRIVE file of the current map as a string. |
 
----------------
-##EgoVehicleControlCurrent.msg
+---
+## EgoVehicleControlCurrent.msg
 
 Represents the current time and the speed and acceleration values of the vehicle used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
@@ -210,8 +210,8 @@ Represents the current time and the speed and acceleration values of the vehicle
 | `speed_abs` | float32  | Speed as an absolute value. | 
 | `accel`     | float32  | Current acceleration applied by the controller. |
 
----------------
-##EgoVehicleControlInfo.msg
+---
+## EgoVehicleControlInfo.msg
 
 Contains all the current values used within an Ackermann controller. These messages are useful for debugging. 
 
@@ -225,8 +225,8 @@ Contains all the current values used within an Ackermann controller. These messa
 | `output`       | [CarlaEgoVehicleControl](#carlaegovehiclecontrolmsg)                    | Output controller that will be applied in CARLA. |
 
 
----------------
-##EgoVehicleControlMaxima.msg
+---
+## EgoVehicleControlMaxima.msg
 
 Represents the maximum values that restrict the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
@@ -239,8 +239,8 @@ Represents the maximum values that restrict the controller. It is part of a `Car
 | `min_accel`          | float32  | Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled. |
 | `max_pedal`          | float32  | ??? |<!---- what?>
 
----------------
-##EgoVehicleControlStatus.msg
+---
+## EgoVehicleControlStatus.msg
 
 Represents the current status of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
@@ -255,8 +255,8 @@ Represents the current status of the ego vehicle controller. It is part of a `Ca
 | `brake_upper_border`             | float32 | ??? Borders for lay off pedal. |<!---- what?>
 | `throttle_lower_border`          | float32 | ??? Borders for lay off pedal. |<!---- what?>
 
----------------
-##EgoVehicleControlTarget.msg
+---
+## EgoVehicleControlTarget.msg
 
 Represents the target vallues for the variables of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
