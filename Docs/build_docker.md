@@ -17,7 +17,7 @@ This method requires a version of NVIDIA drivers >=390.
     Docker requires sudo to run. Follow this guide to add users to the docker sudo
     group <https://docs.docker.com/install/linux/linux-postinstall/>
 
-####Docker CE
+#### Docker CE
 
 For our tests we used the Docker CE version.
 To install Docker CE we recommend using [this tutorial][tutoriallink]
