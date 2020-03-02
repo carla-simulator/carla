@@ -12,8 +12,8 @@
   * [__Semantic segmentation camera__](#semantic-segmentation-camera)  
 
 
----------------
-##Collision detector 
+---
+## Collision detector 
 
 * __Blueprint:__ sensor.other.collision
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
@@ -34,8 +34,8 @@ Collision detectors do not have any configurable attribute.
 | `other_actor`          | [carla.Actor](python_api.md#carla.Actor)         | Actor against whom the parent collided. |
 | `normal_impulse`       | [carla.Vector3D](python_api.md#carla.Vector3D)   | Normal impulse result of the collision. |
 
----------------
-##Depth camera 
+---
+## Depth camera 
 
 * __Blueprint:__ sensor.camera.depth
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise). 
@@ -92,8 +92,8 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 | `fov`                 | float                                            | Horizontal field of view in degrees. |
 | `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
 
----------------
-##GNSS sensor 
+---
+## GNSS sensor 
 
 * __Blueprint:__ sensor.other.gnss
 * __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) per step (unless `sensor_tick` says otherwise). 
@@ -126,8 +126,8 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 | `longitude`            | double                                           | Longitude of the actor. |
 | `altitude`             | double                                           | Altitude of the actor. |
 
----------------
-##IMU sensor 
+---
+## IMU sensor 
 
 * __Blueprint:__ sensor.other.imu
 * __Output:__ [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) per step (unless `sensor_tick` says otherwise).
@@ -163,8 +163,8 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | `gyroscope`           | [carla.Vector3D](python_api.md#carla.Vector3D)   | Measures angular velocity in `rad/sec`. |
 | `compass`             | float                                            | Orientation in radians. North  is `(0.0, -1.0, 0.0)` in UE. |
 
----------------
-##Lane invasion detector 
+---
+## Lane invasion detector 
 
 * __Blueprint:__ sensor.other.lane_invasion
 * __Output:__ [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) per crossing.
@@ -192,8 +192,8 @@ This sensor does not have any configurable attribute.
 | `crossed_lane_markings` | list([carla.LaneMarking](python_api.md#carla.LaneMarking)) | List of lane markings that have been crossed. |
 
 
----------------
-##Lidar raycast sensor 
+---
+## Lidar raycast sensor 
 
 * __Blueprint:__ sensor.lidar.ray_cast
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
@@ -212,8 +212,7 @@ for location in lidar_measurement:
 ```
 
 !!! Tip
-    Running the simulator at [fixed time-step](configuring_the_simulation.md#fixed-time-step) it is possible to tune the rotation for each measurement. Adjust the
-    step and the rotation frequency to get, for instance, a 360 view each measurement.
+    Running the simulator at [fixed time-step](adv_synchrony_timestep.md) it is possible to tune the rotation for each measurement. Adjust the step and the rotation frequency to get, for instance, a 360 view each measurement.
 
 ![LidarPointCloud](img/lidar_point_cloud.gif)
 
@@ -243,7 +242,7 @@ for location in lidar_measurement:
 | `get_point_count(channel)` | int                                              | Number of points per channel captured this frame. |
 | `raw_data`                 | bytes                                            | Array of 32-bits floats (XYZ of each point). |
 
----------------
+---
 ## Obstacle detector 
 
 * __Blueprint:__ sensor.other.obstacle
@@ -274,7 +273,7 @@ To ensure that collisions with any kind of object are detected, the server creat
 | `other_actor`          | [carla.Actor](python_api.md#carla.Actor)         | Actor detected as an obstacle. |
 | `distance`             | float                                            | Distance from `actor` to `other_actor`. |
 
----------------
+---
 ## Radar sensor 
 
 * __Blueprint:__ sensor.other.radar
@@ -317,7 +316,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 | `depth`                   | float | Distance in meters. |
 | `velocity`                | float | Velocity towards the sensor. |
 
----------------
+---
 ## RGB camera 
 
 * __Blueprint:__ sensor.camera.rgb
@@ -425,8 +424,8 @@ Since these effects are provided by UE, please make sure to check their document
 | `fov`                 | float                                            | Horizontal field of view in degrees. |
 | `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
 
----------------
-##Semantic segmentation camera 
+---
+## Semantic segmentation camera 
 
 * __Blueprint:__ sensor.camera.semantic_segmentation
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).  
