@@ -492,8 +492,6 @@ Vehicle too close: vehicle.mercedes-benz.coupe
 
 That's it, we have a new sensor working!
 
-- - -
-
 ---
 ## Appendix: Reusing buffers
 

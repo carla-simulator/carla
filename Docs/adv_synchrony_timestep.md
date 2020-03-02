@@ -72,7 +72,7 @@ Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater ther
     __Do not use a time-step greater than 0.1s.__<br>
     As explained above, the physics will not be representative for the simulation. The original issue can be found here: Ref. [#695](https://github.com/carla-simulator/carla/issues/695)
 
---- 
+---
 ## Client-server synchrony 
 
 CARLA is built over a client-server architecture. This has been previously stated: the server runs the simulation and the client retrieves information and demands for changes in the world. But how do these two elements communicate?  

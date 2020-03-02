@@ -29,7 +29,7 @@ CARLA forum</a>
     <a href="../start_quickstart"><b>
     Quickstart installation
     </b></a>
-        — Get the CARLA releases. 
+        — Get the CARLA releases.  
   </p>
 
 ## Building CARLA
@@ -57,7 +57,7 @@ CARLA forum</a>
     <a href="../build_faq"><b>
     F.A.Q.
     </b></a>
-        — Some of the most frequent issues for newcomers. 
+        — Some of the most frequent issues for newcomers.  
   </p>
 
 ## First steps

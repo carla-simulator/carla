@@ -17,11 +17,11 @@ This section will cover the basics: from spawning up to destruction and their di
     * Walkers
 
 ---
-## Blueprints  
+## Blueprints
 
 This layouts allow the user to smoothly add new actors into the simulation. They basically are already-made models with a series of attributes listed, some of which are modifiable and others are not: vehicle color, amount of channels in a lidar sensor, _fov_ in a camera, a walker's speed. All of these can be changed at will. All the available blueprints are listed in the [blueprint library](bp_library.md) with their attributes and a tag to identify which can be set by the user.  
 
-####Managing the blueprint library
+#### Managing the blueprint library
 
 There is a [carla.BlueprintLibrary](python_api.md#carla.BlueprintLibrary) class containing a list of [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) elements. It is the world object who can provide access to an instance of it:
 ```py
