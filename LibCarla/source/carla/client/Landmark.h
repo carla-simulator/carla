@@ -27,8 +27,8 @@ namespace client {
     static const std::string CautionPedestrian(); // = "133";
     static const std::string CautionBicycle(); // = "138";
     static const std::string LevelCrossing(); // = "150";
-    static const std::string Yield(); // = "205";
-    static const std::string Stop(); // = "206";
+    static const std::string YieldSign(); // = "205";
+    static const std::string StopSign(); // = "206";
     static const std::string MandatoryTurnDirection(); // = "209" // Left, right or forward
     static const std::string MandatoryLeftRightDirection(); // = "211";
     static const std::string TwoChoiceTurnDirection(); // = "214" // Forward-left, forward-right, left-right

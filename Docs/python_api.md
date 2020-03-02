@@ -755,9 +755,9 @@ Type 133.
 Type 138.  
 - <a name="carla.LandmarkType.LevelCrossing"></a>**<font color="#f8805a">LevelCrossing</font>**  
 Type 150.  
-- <a name="carla.LandmarkType.Stop"></a>**<font color="#f8805a">Stop</font>**  
+- <a name="carla.LandmarkType.StopSign"></a>**<font color="#f8805a">Stop</font>**  
 Type 206.  
-- <a name="carla.LandmarkType.Yield"></a>**<font color="#f8805a">Yield</font>**  
+- <a name="carla.LandmarkType.YieldSign"></a>**<font color="#f8805a">Yield</font>**  
 Type 205.  
 - <a name="carla.LandmarkType.MandatoryTurnDirection"></a>**<font color="#f8805a">MandatoryTurnDirection</font>**  
 Type 209.  
