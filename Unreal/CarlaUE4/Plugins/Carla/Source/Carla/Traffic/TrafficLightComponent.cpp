@@ -7,9 +7,10 @@
 
 #include "TrafficLightComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "TrafficLightController.h"
 #include "TrafficLightGroup.h"
-#include "TrafficLightManager.h"
 #include "TrafficLightInterface.h"
+#include "TrafficLightManager.h"
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()

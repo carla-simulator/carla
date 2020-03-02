@@ -17,16 +17,14 @@ ATrafficLightGroup::ATrafficLightGroup()
   RootComponent = SceneComponent;
 }
 
-// Called when the game starts or when spawned
-void ATrafficLightGroup::BeginPlay()
-{
-  Super::BeginPlay();
-
-}
-
 void ATrafficLightGroup::SetFrozenGroup(bool InFreeze)
 {
   bIsFrozen = InFreeze;
+}
+
+bool ATrafficLightGroup::IsFrozen()
+{
+  return bIsFrozen;
 }
 
 void ATrafficLightGroup::ResetGroup()
@@ -37,6 +35,19 @@ void ATrafficLightGroup::ResetGroup()
   }
   CurrentController = 0;
   Timer = Controllers[CurrentController]->NextState();
+  CurrentStateTimer = Timer;
+}
+
+float ATrafficLightGroup::GetElapsedTime() const
+{
+  return (CurrentStateTimer - Timer);
+}
+
+// Called when the game starts or when spawned
+void ATrafficLightGroup::BeginPlay()
+{
+  Super::BeginPlay();
+
 }
 
 // Called every frame
@@ -75,6 +86,7 @@ void ATrafficLightGroup::NextController()
   CurrentController = (CurrentController + 1) % Controllers.Num();
   UTrafficLightController* controller = Controllers[CurrentController];
   Timer = controller->NextState();
+  CurrentStateTimer = Timer;
 }
 
 int ATrafficLightGroup::GetJunctionId() const

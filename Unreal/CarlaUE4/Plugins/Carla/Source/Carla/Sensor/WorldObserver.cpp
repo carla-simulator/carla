@@ -8,6 +8,9 @@
 #include "Carla/Sensor/WorldObserver.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficLightComponent.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/Walker/WalkerController.h"
 
 #include "CoreGlobals.h"
@@ -64,18 +67,67 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
     auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
     if (TrafficLight != nullptr)
     {
-      using TLS = carla::rpc::TrafficLightState;
-      state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
-      state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
-      state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
-      state.traffic_light_data.red_time = TrafficLight->GetRedTime();
-      state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
-      state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
-      state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+
+      UActorComponent* TrafficLightComponent = TrafficLight->FindComponentByClass<UTrafficLightComponent>();
+
+      if(TrafficLightComponent == nullptr) {
+        // Old way: traffic lights are actors
+        using TLS = carla::rpc::TrafficLightState;
+        state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
+        state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
+        state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
+        state.traffic_light_data.red_time = TrafficLight->GetRedTime();
+        state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
+        state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
+        state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+      }
     }
   }
 
   return state;
+}
+
+static void FWorldObserver_GetActorComponentsState(
+  const FActorView &View,
+  const FActorRegistry &Registry,
+  TArray<carla::sensor::data::ComponentDynamicState>& Out)
+{
+  using AType = FActorView::ActorType;
+
+  if (AType::TrafficLight == View.GetActorType())
+  {
+    auto TrafficLightActor = Cast<ATrafficLightBase>(View.GetActor());
+    if (TrafficLightActor == nullptr)
+    {
+      return;
+    }
+
+    TArray<UTrafficLightComponent*> TrafficLights;
+    TrafficLightActor->GetComponents<UTrafficLightComponent>(TrafficLights);
+
+    for(auto& TrafficLight : TrafficLights)
+    {
+      using TLS = carla::rpc::TrafficLightState;
+
+      UTrafficLightController* Controller =  TrafficLight->GetController();
+      ATrafficLightGroup* Group = TrafficLight->GetGroup();
+
+      carla::sensor::data::ComponentDynamicState CompState;
+      CompState.transform = TrafficLight->GetComponentTransform();
+      CompState.state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetLightState());
+      CompState.state.traffic_light_data.green_time = Controller->GetGreenTime();
+      CompState.state.traffic_light_data.yellow_time = Controller->GetYellowTime();
+      CompState.state.traffic_light_data.red_time = Controller->GetRedTime();
+      CompState.state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+      CompState.state.traffic_light_data.time_is_frozen = Group->IsFrozen();
+      // Nobody is using right now, perhaps we should remove it?
+      CompState.state.traffic_light_data.pole_index = 0;
+
+      Out.Push(CompState);
+    }
+
+  }
+
 }
 
 static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
@@ -106,6 +158,7 @@ static carla::Buffer FWorldObserver_Serialize(
 {
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
+  using ComponentDynamicState = carla::sensor::data::ComponentDynamicState;
 
   const auto &Registry = Episode.GetActorRegistry();
 
@@ -138,9 +191,20 @@ static carla::Buffer FWorldObserver_Serialize(
       carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
       FWorldObserver_GetAngularVelocity(*View.GetActor()),
       FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
-      FWorldObserver_GetActorState(View, Registry)
+      0,
+      FWorldObserver_GetActorState(View, Registry),
     };
+
+    TArray<ComponentDynamicState> ComponentsState;
+    FWorldObserver_GetActorComponentsState(View, Registry, ComponentsState);
+    info.num_components = ComponentsState.Num();
+
     write_data(info);
+
+    for(auto& CompState : ComponentsState)
+    {
+      write_data(CompState);
+    }
   }
 
   check(begin == buffer.end());

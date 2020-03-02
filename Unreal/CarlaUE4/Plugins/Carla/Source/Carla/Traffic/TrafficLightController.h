@@ -38,59 +38,74 @@ public:
 
   UTrafficLightController();
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void SetStates(TArray<FTrafficLightStage> States);
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Controller", BlueprintPure)
   const FTrafficLightStage &GetCurrentState() const;
 
   // Updates traffic light components to the next state
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   float NextState();
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Controller", BlueprintPure)
   const TArray<UTrafficLightComponent *> &GetTrafficLights();
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Controller", BlueprintPure)
   const FString &GetControllerId() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void SetControllerId(const FString &Id);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void AddTrafficLight(UTrafficLightComponent * TrafficLight);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   bool IsCycleFinished() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void SetTrafficLightsState(ETrafficLightState NewState);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   int GetSequence() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void SetSequence(int InSequence);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   void ResetState();
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  float GetGreenTime() const;
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  float GetYellowTime() const;
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  float GetRedTime() const;
+
 private:
 
-  UPROPERTY(EditAnywhere)
+  float GetStateTime(const ETrafficLightState State) const;
+
+  UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   FString ControllerId;
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   int CurrentState = 0;
 
   // Pairs with the state of the semaphors (time - state) e.g. 10s in green
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   TArray<FTrafficLightStage> LightStates = {
-      {10, ETrafficLightState::Green}, {3, ETrafficLightState::Yellow}, {2, ETrafficLightState::Red}};
+    {10, ETrafficLightState::Green},
+    { 3, ETrafficLightState::Yellow},
+    { 2, ETrafficLightState::Red}
+  };
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   TArray<UTrafficLightComponent *> TrafficLights;
 
   // Sequence within junction (unused for now)
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   int Sequence = 0;
 };

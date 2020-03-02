@@ -13,6 +13,7 @@
 
 class ATrafficLightManager;
 class ATrafficLightGroup;
+class UTrafficLightController;
 
 // Delegate to define dispatcher
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLightChangeDispatcher);
@@ -27,17 +28,20 @@ public:
   // Sets default values for this component's properties
   UTrafficLightComponent();
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetLightState(ETrafficLightState NewState);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   ETrafficLightState GetLightState() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetFrozenGroup(bool InFreeze);
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Light", BlueprintPure)
   ATrafficLightGroup* GetGroup();
+
+  UFUNCTION(Category = "Traffic Light", BlueprintPure)
+  UTrafficLightController* GetController();
 
 protected:
   // Called when the game starts
@@ -52,9 +56,13 @@ private:
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
   ETrafficLightState LightState;
 
-  UPROPERTY(BlueprintAssignable, Category = "Traffic Light")
+  UPROPERTY(Category = "Traffic Light", BlueprintAssignable)
   FLightChangeDispatcher LightChangeDispatcher;
 
   UPROPERTY()
   ATrafficLightGroup *TrafficLightGroup = nullptr;
+
+  UPROPERTY()
+  UTrafficLightController *TrafficLightController = nullptr;
+
 };

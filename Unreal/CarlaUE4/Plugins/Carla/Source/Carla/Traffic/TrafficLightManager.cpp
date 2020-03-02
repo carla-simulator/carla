@@ -71,6 +71,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   auto *TrafficLightController = TrafficControllers[ControllerId.c_str()];
 
   TrafficLight->TrafficLightGroup = TrafficLightGroup;
+  TrafficLight->TrafficLightController = TrafficLightController;
 
   // Add signal to controller
   TrafficLightController->AddTrafficLight(TrafficLight);
