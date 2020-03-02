@@ -9,13 +9,13 @@ After discussing about the world and its actors, it is time to put everything in
 	* Waypoints  
   * [__Map navigation__](#map-navigation)
 
----------------
-##The map  
+---
+## The map  
 
 Understanding the map in CARLA is equivalent to understanding the road. All of the maps have an OpenDRIVE file defining the road layout fully annotated. The way the [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) defines roads, lanes, junctions, etc. is extremely important. It determines the possibilities of the API and the reasoning behind many decisions made.  
 The Python API provides a higher level querying system to navigate these roads. It is constantly evolving to provide a wider set of tools.
 
-####Changing the map
+#### Changing the map
 
 This was briefly mentioned in [1st. World and client](core_world.md), so let's expand a bit on it: __To change the map, the world has to change too__. Everything will be rebooted and created from scratch, besides the Unreal Editor itself.  
 Using `reload_world()` creates a new instance of the world with the same map while `load_world()` is used to change the current one:  
@@ -40,10 +40,11 @@ So far there are seven different maps available. Each of these has a specific st
 |__Town 07__ | A rural environment with narrow roads, barely non traffic lights and barns.|  
 
 <br>
-Users can also [customize a map](dev/map_customization.md) or even [create a new map](how_to_make_a_new_map.md) to be used in CARLA. These are more advanced steps and have been developed in their own tutorials.  
+
+Users can also [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_map_creation.md) to be used in CARLA. These are more advanced steps and have been developed in their own tutorials.  
 
 
-####Lanes
+#### Lanes
 
 The different types of lane as defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API in [carla.LaneType](python_api.md#carla.LaneType). The surrounding lane markings for each lane can also be accessed using [carla.LaneMarking](python_api.md#carla.LaneMarkingType).  
 A lane marking is defined by: a [carla.LaneMarkingType](python_api.md#carla.LaneMarkingType) and a [carla.LaneMarkingColor](python_api.md#carla.LaneMarkingColor), a __width__ to state thickness and a variable stating lane changing permissions with [carla.LaneChange](python_api.md#carla.LaneChange).  
@@ -59,7 +60,7 @@ left_lanemarking_type = waypoint.left_lane_marking.type()
 lane_change = waypoint.lane_change
 ```
 
-####Junctions
+#### Junctions
 
 To ease managing junctions with OpenDRIVE, the [carla.Junction](python_api.md#carla.Junction) class provides for a bounding box to state whereas lanes or vehicles are inside of it.  
 There is also a method to get a pair of waypoints per lane determining the starting and ending point inside the junction boundaries for each lane:  
@@ -67,7 +68,7 @@ There is also a method to get a pair of waypoints per lane determining the start
 waypoints_junc = my_junction.get_waypoints()
 ```
 
-####Waypoints
+#### Waypoints
 
 [carla.Waypoint](python_api.md#carla.Waypoint) objects are 3D-directed points that are prepared to mediate between the world and the openDRIVE definition of the road.  
 Each waypoint contains a [carla.Transform](python_api.md#carla.Transform) summarizing a point on the map inside a lane and the orientation of the lane. The variables `road_id`,`section_id`,`lane_id` and `s` that translate this transform to the OpenDRIVE road and are used to create an __identifier__ of the waypoint.  
@@ -103,8 +104,8 @@ while True:
 Waypoints can also find their equivalent at the center of an adjacent lane (if said lane exists) using `get_right_lane()` and `get_left_lane()`. This is useful to find the next waypoint on a neighbour lane to then perform a lane change: 
 
 
----------------
-##Map Navigation
+---
+## Map Navigation
 
 The instance of the map is provided by the world. Once it is retrieved, it provides acces to different methods that will be useful to create routes and make vehicles roam around the city and reach goal destinations:  
 ```py
@@ -144,7 +145,7 @@ my_geolocation = map.transform_to_geolocation(vehicle.transform)
 info_map = map.to_opendrive()
 ```
 
----------------
+---
 That is a wrap as regarding maps and navigation around the cities in CARLA.  
 The next step should be learning more about sensors, the different types and the data they retrieve. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
 <div text-align: center>

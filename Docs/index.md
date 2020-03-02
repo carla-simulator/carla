@@ -1,13 +1,13 @@
-<h1>CARLA Documentation</h1>
+# CARLA Documentation
 
 Welcome to the CARLA documentation. 
 
 This page contains the index with a brief explanation on the different sections for clarity. 
 Feel free to explore the documentation on your own, however, here are a few tips for newcomers:
 
-* __Install CARLA__: visit the [Quickstart installation](../dev/quickstart) to get the CARLA releases or make the build for a desired platform. 
-* __Start using CARLA__: there is a section titled [First steps](../core_concepts), highly recommended for newcomers.
-* __Doubts on the API__: there is a handy [Python API reference](../python_api) to consult classes and methods.
+* __Install CARLA__: visit the [Quickstart installation](start_quickstart.md) to get the CARLA releases or make the build for a desired platform. 
+* __Start using CARLA__: there is a section titled [First steps](core_concepts.md), highly recommended for newcomers.
+* __Doubts on the API__: there is a handy [Python API reference](python_api.md) to consult classes and methods.
 
 Besides that, there is also the CARLA forum where the community gathers to share issues, suggestions and solutions: 
 <div class="build-buttons">
@@ -15,51 +15,52 @@ Besides that, there is also the CARLA forum where the community gathers to share
 CARLA forum</a>
 </div>
 
-!!! important
+!!! Important
     This is documentation for CARLA 0.9.0 or later. Previous documentation is in the [stable branch](https://carla.readthedocs.io/en/stable/).
----------------
 
-  <h3>Getting started</h3>
+---
+
+## Getting started
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../getting_started/introduction"><b>
+    <a href="../start_introduction"><b>
     Introduction
     </b></a>
         — Capabilities and intentions behind the project.  
-    <a href="../getting_started/quickstart"><b>
+    <a href="../start_quickstart"><b>
     Quickstart installation
     </b></a>
         — Get the CARLA releases. 
   </p>
 
-  <h3>Building CARLA</h3>
+## Building CARLA
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../how_to_build_on_linux"><b>
+    <a href="../build_linux"><b>
     Linux build
     </b></a>
         — Make the build on Linux.  
-    <a href="../how_to_build_on_windows"><b>
+    <a href="../build_windows"><b>
     Windows build
     </b></a>
         — Make the build on Windows.  
-    <a href="../update_carla"><b>
+    <a href="../build_update"><b>
     Update CARLA
     </b></a>
         — Get up to date with the latest content.  
-    <a href="../dev/build_system"><b>
+    <a href="../build_system"><b>
     Build system
     </b></a>
         — Learn about the build and how it is made.  
-    <a href="../carla_docker"><b>
+    <a href="../build_docker"><b>
     Running in a Docker
     </b></a>
         — Run CARLA using a container solution.  
-    <a href="../faq"><b>
+    <a href="../build_faq"><b>
     F.A.Q.
     </b></a>
         — Some of the most frequent issues for newcomers. 
   </p>
 
-  <h3>First steps</h3>
+## First steps
   <p style="padding-left:30px;line-height:1.8">
     <a href="../core_concepts"><b>
     Core concepts
@@ -78,36 +79,36 @@ CARLA forum</a>
     </b></a>
         — Discover the different maps and how to move around.  
     <a href="../core_sensors"><b> 
-    (broken) 4th. Sensors and data
+    4th. Sensors and data
     </b></a>
         — Retrieve simulation data using sensors.  
 
- <h3>Advanced steps</h3>
+## Advanced steps
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../recorder_and_playback"><b>
+    <a href="../adv_recorder"><b>
     Recorder
     </b></a>
         — Store all the events in a simulation a play it again.  
-    <a href="../rendering_options"><b>
+    <a href="../adv_rendering_options"><b>
     Rendering options
     </b></a>
         — Different settings, from quality to no-render or off-screen runs.  
-    <a href="../simulation_time_and_synchrony"><b>
+    <a href="../adv_synchrony_timestep"><b>
     Synchrony and time-step
     </b></a>
         — Client-server communication and simulation time.  
-    <a href="../traffic_manager"><b>
-    (broken) Traffic manager
-    </b></a>
+    <b>
+    (soon) Traffic manager
+    </b>
         — Feature to handle autopilot vehicles and emulate traffic.  
 
-<h3>References</h3>
+## References
   <p style="padding-left:30px;line-height:1.8">
     <a href="../python_api"><b>
     Python API reference
     </b></a>
         — Classes and methods in the Python API.  
-    <a href="../python_cookbook"><b>
+    <a href="../ref_code_recipes"><b>
     Code recipes
     </b></a>
         — Code fragments commonly used.  
@@ -115,95 +116,95 @@ CARLA forum</a>
     Blueprint library
     </b></a>
         — Blueprints provided to spawn actors.  
-    <a href="../cpp_reference"><b>
+    <a href="../ref_cpp"><b>
     C++ reference
     </b></a>
         — Classes and methods in CARLA C++.  
-    <a href="../recorder_binary_file_format"><b>
+    <a href="../ref_recorder_binary_file_format"><b>
     Recorder binary file format
     </b></a>
         — Detailed explanation of the recorder file format.  
     <a href="../ref_sensors"><b>
-    (broken) Sensors reference
+    Sensors reference
     </b></a>
         — Everything about sensors and the data they retrieve.  
 
-<h3>Tutorials — General</h3>
+## Tutorials — General
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../how_to_add_friction_triggers"><b>
+    <a href="../tuto_G_add_friction_triggers"><b>
     Add friction triggers
     </b></a>
         — Define dynamic box triggers for wheels.  
-    <a href="../how_to_control_vehicle_physics"><b>
+    <a href="../tuto_G_control_vehicle_physics"><b>
     Control vehicle physics
     </b></a>
         — Set runtime changes on a vehicle physics.  
-    <a href="../walker_bone_control"><b>
+    <a href="../tuto_G_control_walker_skeletons"><b>
     Control walker skeletons
     </b></a>
         — Skeleton and animation for walkers explained.  
 
-<h3>Tutorials — Assets</h3>
+## Tutorials — Assets
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../dev/how_to_upgrade_content"><b>
-    Contribute with new assets
-    </b></a>
-        — Add new content to CARLA.  
-    <a href="../how_to_add_assets"><b>
+    <a href="../tuto_A_import_assets"><b>
     Import new assets
     </b></a>
         — Use personal assets in CARLA.  
-    <a href="../dev/map_customization"><b>
-    Map customization
-    </b></a>
-        — Edit an existing map.  
-    <a href="../how_to_make_a_new_map"><b>
+    <a href="../tuto_A_map_creation"><b>
     Map creation 
     </b></a>
         — Guidelines to create a new map.  
-    <a href="../asset_packages_for_dist"><b>
+    <a href="../tuto_A_map_customization"><b>
+    Map customization
+    </b></a>
+        — Edit an existing map.  
+    <a href="../tuto_A_standalone_packages"><b>
     Standalone asset packages 
     </b></a>
         — Import assets into Unreal Engine and prepare them for package distribution.  
-    <a href="../epic_automotive_materials"><b>
-    Use Automotive materials
+    <a href="../tuto_A_epic_automotive_materials"><b>
+    Use Epic's Automotive materials
     </b></a>
         — Apply Epic's set of Automotive materials to vehicles for a more realistic painting.
-    <a href="../how_to_model_vehicles"><b>
+    <a href="../tuto_A_vehicle_modelling"><b>  
     Vehicle modelling
     </b></a>
         — Guidelines to create a new vehicle for CARLA.  
 
-<h3>Tutorials — Developers</h3>
+## Tutorials — Developers
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../dev/how_to_add_a_new_sensor"><b>
+    <a href="../tuto_D_contribute_assets"><b>
+    Contribute with new assets
+    </b></a>
+        — Add new content to CARLA.  
+    <a href="../tuto_D_create_sensor"><b>
     Create a sensor
     </b></a>
         — The basics on how to add a new sensor to CARLA.  
-    <a href="../dev/how_to_make_a_release"><b>
+    <a href="../tuto_D_make_release"><b>
     Make a release
     </b></a>
         — For developers who want to publish a release.  
-    <a href="../bp_library"><b>
-    Pedestrian navigation physics
+    <a href="../tuto_D_generate_pedestrian_navigation"><b>
+    Generate pedestrian navigation
     </b></a>
         — Generate the information needed for walkers to navigate a map.  
 
-<h3>Contributing</h3>
+## Contributing
   <p style="padding-left:30px;line-height:1.8">
-    <a href="../CONTRIBUTING"><b>
-    General guidelines
+    <a href="../cont_contribution_guidelines"><b>
+    Contribution guidelines
     </b></a>
         — The different ways to contribute to CARLA.  
-    <a href="../coding_standard"><b>
-    Coding standard
-    </b></a>
-        — Guidelines to write proper code.  
-    <a href="../doc_standard"><b>
-    Documentation standard
-    </b></a>
-        — Guidelines to write proper documentation.  
-    <a href="../CODE_OF_CONDUCT"><b>
+    <a href="../cont_code_of_conduct"><b>
     Code of conduct
     </b></a>
         — Some standards for CARLA, rights and duties for contributors.  
+    <a href="../cont_coding_standard"><b>
+    Coding standard
+    </b></a>
+        — Guidelines to write proper code.  
+    <a href="../cont_doc_standard"><b>
+    Documentation standard
+    </b></a>
+        — Guidelines to write proper documentation.  
