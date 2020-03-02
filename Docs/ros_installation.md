@@ -1,4 +1,4 @@
-<h1>ROS bridge installation</h1>
+# ROS bridge installation
 
   * [__Requirements__](#requirements)  
   * [__Bridge installation__](#bridge-installation)  
@@ -12,9 +12,9 @@ The ROS bridge enables two-way communication between ROS and CARLA.
 In order to do so, the information from the CARLA server is translated to ROS topics. For example, the information retrieved by sensors is structured to fit ROS structure.  
 And also vice versa, the messages sent between nodes in ROS get translated to commands to be applied in CARLA. This is commonly used to update the state of a vehicle and apply controllers.  
 
----------------
-##Requirements
-<h4>ROS melodic</h4>
+---
+## Requirements
+#### ROS melodic
 
   * __ROS Kinetic/Melodic:__ follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). Some ROS packages could be necessary, depending on the user needs, such as [rviz](https://wiki.ros.org/ainstein_radar_rviz_plugins) to visualize ROS data.  
   * __CARLA 0.9.7:__ only this and later versions are supported. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
@@ -22,10 +22,10 @@ And also vice versa, the messages sent between nodes in ROS get translated to co
 !!! Important
     Make sure that both CARLA and ROS work properly before continuing with the installation. 
 
----------------
-##Bridge installation 
+---
+## Bridge installation 
 
-<h4>a) apt-get ROS bridge</h4>
+#### a) apt-get ROS bridge
 
 First add the apt repository: 
 
@@ -47,7 +47,7 @@ sudo apt-get update &&
 sudo apt-get install carla-ros-bridge
 ```
 
-<h4>b) Repository download</h4>
+#### b) Repository download
 
 In order to use the ROS bridge a catkin workspace is needed. The ROS bridge should be cloned and built in there to be available.  
 The following fragment creates a new workspace and clones the repository in there.  
@@ -69,8 +69,8 @@ rosdep install --from-paths src --ignore-src -r
 catkin_make
 ```
 
----------------
-##Run the ROS bridge
+---
+## Run the ROS bridge
 
 __1) run CARLA:__ the way to do so will depend on the the CARLA installation chosen, so here is a brief summary:  
 
@@ -106,7 +106,7 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_rviz.launch
 roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch
 ```
 
-<h4>ImportError: no module named CARLA</h4>
+#### ImportError: no module named CARLA
 
 The path to CARLA Python is missing. The apt-get installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the _.egg_ file (included). Use the one, that is supported by the Python version installed:
 
@@ -120,9 +120,8 @@ To check the installation, import CARLA from Python and wait for a sucess messag
 python -c 'import carla;print("Success")'
 ```
 
-
----------------
-##Setting CARLA
+---
+## Setting CARLA
 
 There is some configuration for CARLA available from the ROS bridge. This can be setup by editing the file: [`share/carla_ros_bridge/config/settings.yaml`](https://github.com/carla-simulator/ros-bridge/blob/master/carla_ros_bridge/config/settings.yaml).
 
@@ -140,7 +139,7 @@ The parameters available refer to:
 !!! Warning
     In synchronous mode, only the ros-bridge is allowed to tick. Other CARLA clients must passively wait.
 
-<h4>Synchronous mode</h4>
+#### Synchronous mode
 
 The following topic allows to control the stepping when in synchronous mode:  
 

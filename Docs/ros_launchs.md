@@ -1,7 +1,7 @@
-<h1>CARLA launch</h1>
+# CARLA launch
 
---------------
-##carla_ackermann_control.launch
+---
+## carla_ackermann_control.launch
 
 Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages when these are not ideal to connect an AD stack. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. It can be installed using: 
 ```sh
@@ -29,8 +29,8 @@ Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radi
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_updates</b></font> — [dynamic_reconfigure/Config](http://wiki.ros.org/dynamic_reconfigure)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
 
----------------
-##carla_ego_vehicle.launch
+---
+## carla_ego_vehicle.launch
 
 Spawns an ego vehicle (`role-name="ego_vehicle"`) with the argument `sensor_definition_file` being this the location of a __.json__ file describing sensors attached to the vehicle. The format for this file is explained [here](https://github.com/carla-simulator/ros-bridge/tree/master/carla_ego_vehicle).  
 To spawn the vehicle at a specific location, publish in: `/carla/ego_vehicle/initialpose` or use __RVIZ__ and select a position with: __2D Pose estimate__. 
@@ -44,8 +44,8 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 * <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
 * <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
 
----------------
-##carla_example_ego_vehicle.launch
+---
+## carla_example_ego_vehicle.launch
 As [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`), only this uses a provided file to pass the sensors attached to the vehicle. Said file can be found in: `share/carla_ego_vehicle/config/sensors.json`. 
 
 <!---NODE-->
@@ -57,8 +57,8 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 * <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
 * <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
 
----------------
-##carla_infrastructure.launch
+---
+## carla_infrastructure.launch
 Spawns infrastructure sensors and requires the argument `infrastructure_sensor_definition_file` with the location of a __.json__ file describing these sensors.
 
 <!---NODE-->
@@ -69,9 +69,8 @@ Spawns the infrastructure sensors passed as arguments.
 
 * <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
 
-
----------------
-##carla_ros_bridge.launch
+---
+## carla_ros_bridge.launch
 Creates a node with some basic communication between CARLA and ROS.  
 
 <!---NODE-->
@@ -91,9 +90,8 @@ Receives the debug shapes being drawn, which include: arrows, points, cubes and 
 * <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
 * <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
 
-
---------------
-##carla_ros_bridge_with_ackermann_control.launch
+---
+## carla_ros_bridge_with_ackermann_control.launch
 
 Launches two basic nodes, one to retrieve simulation data and another one to control a vehicle using [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm). 
 
@@ -133,8 +131,8 @@ Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radi
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_updates</b></font> — [dynamic_reconfigure/Config](http://wiki.ros.org/dynamic_reconfigure)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
 
---------------
-##carla_ros_bridge_with_example_ego_vehicle.launch
+---
+## carla_ros_bridge_with_example_ego_vehicle.launch
 
 Spawns an ego vehicle with sensors attached and starts communication between CARLA and ROS sharing current simulation state, sensor and ego vehicle data. 
 The ego vehicle is set ready to be used in manual control. 
@@ -204,8 +202,8 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 * <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
 
 
----------------
-##carla_ros_bridge_with_rviz.launch
+---
+## carla_ros_bridge_with_rviz.launch
 Starts some basic communication between CARLA and ROS and launches an instance of RVIZ ready to retrieve Lidar data. 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
@@ -234,8 +232,8 @@ Runs an instance of RVIZ waiting for Lidar data.
 * <font color="f8815c"><b>/carla/ego_vehicle/lidar/front/point_cloud</b></font> — [sensor_msgs.PointCloud2](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/PointCloud2.html)
 
 
---------------
-##carla_manual_control.launch
+---
+## carla_manual_control.launch
 
 A ROS version of the CARLA script `manual_control.py` that receives and manages the information using ROS topics. It has some prerequisites:  
 
@@ -268,8 +266,8 @@ The information retrieved includes both static and current state, the sensor dat
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
---------------
-##carla_pcl_recorder.launch
+---
+## carla_pcl_recorder.launch
 Creates a pointcloud map for the current CARLA level by letting an ego vehicle in autopilot mode roam around with a Lidar sensor attached.  
 The captured point clouds are saved in the `/tmp/pcl_capture` directory. Once the capture is done, the overall size can be reduced: 
 ```sh
@@ -370,8 +368,8 @@ Receives the cloud point data to map the surroundings.
 
 * <font color="80ba10"><b>/carla/ego_vehicle/lidar/lidar1/point_cloud</b></font> — [sensor_msgs.PointCloud2](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/PointCloud2.html)
 
---------------
-##carla_waypoint_publisher.launch
+---
+## carla_waypoint_publisher.launch
 
 Calculates a waypoint route for an ego vehicle.  
 The calculated route is published in: `/carla/<ego vehicle name>/waypoints`.  
