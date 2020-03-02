@@ -36,10 +36,10 @@ void UTrafficLightComponent::BeginPlay()
   }
 
   // Register this component
-  ATrafficLightManager *TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerArray.Top());
-  TrafficLightManager->RegisterLightComponent(this);
+  ATrafficLightManager *TrafficLightManager =
+      Cast<ATrafficLightManager>(TrafficLightManagerArray.Top());
 
-  carla::log_warning("Registering light", TCHAR_TO_UTF8(*GetSignId()));
+  TrafficLightManager->RegisterLightComponent(this);
 }
 
 // Called every frame
