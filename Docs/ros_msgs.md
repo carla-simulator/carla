@@ -80,7 +80,7 @@ Contains some static information regarding a vehicle, mostly the attributes that
 | Field                                         | Type                                                    | Description |
 | --------------------------------------------- | ------------------------------------------------------- | ----------- |
 | `id`                                          | uint32                                                  | ID of the vehicle actor. |
-| `type`                                        | string                                                  | ??? | <!---- What is this exactly?>
+| `type`                                        | string                                                  | The identifier of the blueprint this vehicle was based on. |
 | `rolename`                                    | string                                                  | Role assigned to the vehicle. |
 | `wheels`                                      | [CarlaEgoVehicleInfoWheel](#carlaegovehicleinfowheel)[] | List of messages with information regarding wheels. |
 | `max_rpm`                                     | float32                                                 | Maximum RPM of the vehicle's engine. |
@@ -186,7 +186,7 @@ Summarizes data regarding a waypoint.
 | `section_id`  | int32              | OpenDRIVE section's id, based on the order that they are originally defined. |
 | `lane_id`     | int32              | OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. |
 | `is_junction` | bool               | __True__ if the current Waypoint is on a junction as defined by OpenDRIVE. |
-| `pose`        | geometry_msgs/Pose | ??? | <!---- what?>
+| `pose`        | [geometry_msgs/Pose](http://docs.ros.org/api/geometry_msgs/html/msg/Pose.html) | Position and orientation of the waypoint. |
 
 ---------------
 ##CarlaWorldInfo.msg
