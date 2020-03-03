@@ -44,7 +44,7 @@ public:
     return Map;
   }
 
-  UFUNCTION(Exec, CallInEditor)
+  UFUNCTION(Exec, CallInEditor, DevelopmentOnly)
   void DebugShowSignals(bool enable);
 
 protected:
@@ -64,8 +64,6 @@ private:
   void SpawnActorFactories();
 
   void ParseOpenDrive(const FString &MapName);
-
-  void SpawnSignals();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
