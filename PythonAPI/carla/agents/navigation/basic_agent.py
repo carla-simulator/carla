@@ -35,7 +35,7 @@ class BasicAgent(Agent):
         self._state = AgentState.NAVIGATING
         args_lateral_dict = {
             'K_P': 1,
-            'K_D': 0.02,
+            'K_D': 0.4,
             'K_I': 0,
             'dt': 1.0/20.0}
         self._local_planner = LocalPlanner(
