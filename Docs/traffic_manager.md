@@ -30,7 +30,7 @@ Users need to be granted some control by setting parameters that allow, force or
 #### Architecture
 The inner structure is divided in stages can be somehow visualized through code, they have their equivalent in the c++ code (.cpp files) foun inside `/libcarla`. There are other inner parts of the TM, such as as setting up the map, but they are managed internally and mostly only done once, so these are not as fundamental to understand the whole.  
 Each stage class runs on a different thread and has its independent operations and goals. Communication with the rest is managed through messages facilitating synchronous messaging between the different stages. The information flows only in one direction. In this way, for each stage or class there are methods and tools that can be located in one or many stages with a very specific structure and purpose. 
-The following diagram is a summary of the internal architecture of the Traffic Manager. Main bodies are the different stages, blue arrows represent messenger classes that facilitate __asynchronous communication?__, __black arrows represent non-concurrent data flow__. 
+The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies are the different stages, green ones are additional modules needed during the different stages and the arrows represent communication managed by messenger classes between the different elements. 
 
 <div style="text-align:center">
 <img src="../img/traffic_manager_diagram.png">
@@ -38,27 +38,40 @@ The following diagram is a summary of the internal architecture of the Traffic M
 
 #### Stages
 
-__1. Localization Stage:__ For each vehicle registered to the TM, maintains a list of waypoints ahead it to follow. The buffer list of waypoints is not created every iteration but updated. The buffer is deleted though when lane changes are applied to create a new one with the corresponding trajectory. The amount of waypoints contained in said list varies depending on the vehicle's speed, being greater the faster it goes. The localization stage contains a __spacial hashing__ which summarizes the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+__1. Localization Stage:__ for each vehicle registered to the TM, maintains a list of waypoints ahead it to follow. The buffer list of waypoints is not created every iteration but updated. The buffer is deleted though when lane changes are applied to create a new one with the corresponding trajectory. The amount of waypoints contained in said list varies depending on the vehicle's speed, being greater the faster it goes. The localization stage contains a __spacial hashing__ which summarizes the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
 
-* __Related .cpp files:__ `LocalizationStage.cpp`.  
+* __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
-__2. Collision Stage:__ Checks possible collisions for every vehicle. For each pairs of overlapping actors in the list contained by the localization stage, it extends a __geodesic boundary__. These are extended bounding bodies that represent the vehicle along its trajectory. Collisions between two geodesic boundaries are communicated to the __Motion planner stage__ that will manage them.  
+__2. Collision Stage:__ checks possible collisions for every vehicle. For each pairs of overlapping actors in the list contained by the localization stage, it extends a __geodesic boundary__. These are extended bounding bodies that represent the vehicle along its trajectory. Collisions between two geodesic boundaries are communicated to the __Motion planner stage__ that will manage them.  
 
 * __Related .cpp files:__ `CollisionStage.cpp`.  
 
-__3. Traffic Light Stage:__ Manages some general traffic regulations, mainly priority at junctions. Whenever there is a traffic light, if red, a __traffic hazard__ is set to true. Non signaled junctions are managed with a ticket system. When coming closer to these, a __geodesic boundary__ is extended through the intersection along the vehicle's trajectory. If there is another vehicle inside of it, the parent waits for the junction to be free.  
+__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. Whenever there is a traffic light, if red, a __traffic hazard__ is set to true. Non signaled junctions are managed with a ticket system. When coming closer to these, a __geodesic boundary__ is extended through the intersection along the vehicle's trajectory. If there is another vehicle inside of it, the parent waits for the junction to be free.  
 
 * __Related .cpp files:__ `TrafficLightStage.cpp`.  
 
-__4. Motion Planner Stage:__ Aggregates all the information gathered through the previous stages. Their guidance is adjusted with actuation signals provided by a PID controller, this stage makes decisions on how to move the vehicles. It computes all the commands needed for every vehicle and then send these to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicate it to the apply control stage.  
+__4. Motion Planner Stage:__ aggregates all the information gathered through the previous stages. Their guidance is adjusted with actuation signals provided by a PID controller, this stage makes decisions on how to move the vehicles. It computes all the commands needed for every vehicle and then send these to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicate it to the apply control stage.  
 
 * __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
-__5. Apply Control Stage:__ Receives actuation signals (such as throttle, brake, steer) from the Motion planner stage and commands these to the simulator in batches to control every vehicles' movement. It mainly uses the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
+__5. Apply Control Stage:__ receives actuation signals (such as throttle, brake, steer) from the Motion planner stage and commands these to the simulator in batches to control every vehicles' movement. It mainly uses the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 
+#### Additional modules
+
+__Memory map:__ in order to ease computation costs during the localization stage, the map is divided into a grid of waypoints, so that these are not calculated every time. These waypoints are not the usual _carla.Waypoint_ accessible from the API but a specific data structure designed according to the needs of the TM. The grid of waypoints representing the road map is at the same time divided into different sections, each of them representing little portions of the road, for instance a junction. These sections are numbered and connected so that it is easier to locate a vehicle on the map and to identify which vehicle are close to it.  
+
+* __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
+
+__PID controller:__ the TM module contains its own PID controller to regulate throttle, brake and steering according to an intended result. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+
+* __Related .cpp files:__ `PIDController.cpp`.  
+
+---
 ## Using the Traffic Manager 
+
+#### General considerations
 
 First of all there are some general behaviour patterns the TM will generate that should be understood beforehand. These statements inherent to the way the TM is implemented:  
 
@@ -67,32 +80,42 @@ First of all there are some general behaviour patterns the TM will generate that
 * __Lane change is currently disabled:__ it can be enabled through the API, though right now some issues may happen. Disabling lane changes will also ban overtakings between vehicles in the same lane. 
 * __Junction priority does not follow traffic regulations:__ the TM has a ticket system to be used while junction complexity is solved. This may cause some issues such as a vehicle inside a roundabout yielding to a vehicle trying to get in. 
 
-The Traffic Manager provides with a set of possibilities that can interfere with how the traffic is conducted or set specific rules for a vehicle. Thus, the user can aim for different behaviours in both a general and specific sense. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
+The TM provides with a set of possibilities that decide how the traffic is conducted or set specific rules for a vehicle. Thus, the user can aim for different behaviours in both a general and specific sense. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
-__Traffic Manager fundamental methods:__  
+<table style="width:100%">
+  <col width="150">
+  <tr>
+    <td><b> TM creation: </b></td>
+    <td> <li><br>1. Get a TM instance for a client.</li> </td>
+  </tr>
+  <tr>
+    <td><b>Safety conditions: </b></td>
+    <td><br> 
+    1. Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
+    2. Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
+    3. Reset traffic lights. 
+    </td>
+  </tr>
+  <tr>
+    <td><b>Collision managing: </b></td>
+    <td><br>
+    1. Enable/Disable collisions between a vehicle and a specific actor.  <br>
+    2. Make a vehicle ignore all the other vehicles. <br>
+    3. Make a vehicle ignore all the walkers.  <br>
+    4. Make a vehicle ignore all the traffic lights. 
+    </td>
+  </tr>
+  <tr>
+    <td><b>Lane changes: </b></td>
+    <td><br>
+    1. Force a lane change disregarding possible collisions. <br>
+    2. Enable/Disable lane changes for a vehicle.  
+    </td>
+  </tr>
+</table>
+<br>
 
-* Get a TM instance from a client.  
-* Register/Unregister vehicles from the TM's lists.  
-
-__Safety conditions:__  
-
-* Set a minimum distance between stopped vehicles to be used for a vehicle or all of them. This will also affect the minimum moving distance. 
-* Set an intended speed regarding current speed limitation for a specific vehicle or all of them. 
-* Reset traffic lights. 
-
-__Collision managing:__  
-
-* Enable/Disable collisions between a vehicle and a specific actor. 
-* Make a vehicle ignore all the other vehicles.
-* Make a vehicle ignore all the walkers. 
-* Make a vehicle ignore all the traffic lights. 
-
-__Lane changes:__  
-
-* Force a lane change disregarding possible collisions. 
-* Enable/Disable lane changes for a vehicle.  
-
-By default, vehicles will not ignore any Actor, drive at their current speed limit and leave 1 meter of safety distance between them.  
+By default, vehicles will not ignore any actor, drive at their current speed limit and leave 1 meter of safety distance between them.  
 All of these properties can be easily managed as any other _set()_ method would. 
 
 #### Creating a Traffic Manager
@@ -112,15 +135,14 @@ Now the TM needs some vehicles to be in charge of. In order to do so, enable the
 !!! Note 
     In multiclient situations, creating or connecting to a TM is not that straightforward. Take a look into the [other considerations](#other-considerations) section to learn more about this. 
 
-There is a script in `/PythonAPI/examples` named as `spawn_npc` that connects to the TM automatically when spawning vehicles:  
-
-* `spawn_npc`: does not allow the user access to the TM and so, runs it with default conditions. There is no explicit attempt to create an instance of the TM with a specific port, so when the autopilot is set to __True__, it tries to connect with a TM in default port `8000` and creates it in said client if it does not exist. 
-```sh
+The script `spawn_npc.py` in `/PythonAPI/examples` creates a TM instance in the port passed as argument and registers every vehicle spawned to it by setting the autopilot to True on a batch.
+```py
+traffic_manager = client.get_trafficmanager(args.tm_port)
 ...
 batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
+...
+traffic_manager.global_percentage_speed_difference(30.0)
 ```
-
-Right now there is no way to check which Traffic Managers have been created so far. A connection will be attempted when trying to get the instance and if there is no TM using 
 
 #### Setting a Traffic Manager
 
@@ -154,7 +176,67 @@ for v in my_vehicles:
 
 #### Stopping a Traffic Manager
 
-The TM is not an actor that needs to be destroyed, it will stop when the corresponding client does so. This is automatically managed by the API so the user does not have to take care of it.
+The TM is not an actor that needs to be destroyed, it will stop when the corresponding client does so. This is automatically managed by the API so the user does not have to take care of it.  
+However, it is important that when shutting down a TM, the vehicles registered to it are destroyed. Otherwise, they will stop at place, as no one will be conducting them. The script `spawn_npc.py` does this automatically. 
+
+!!! Warning 
+    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read the following section. 
+
+---
+## Multiclient and multiTM management
+
+#### Different Traffic Manager definitions 
+
+When working with different clients containing different TM, understanding inner implementation of the TM in the client-server architecture becomes specially relevant. There is one ruling these scenarios: __the port is the key__.  
+
+A client creates a TM by communicating with the server and passing the intended port to be used for said purpose. The port can either be stated or not, using the default as `8000`.  
+
+```py 
+tm01 = client01.get_trafficmanager() # tm01 --> tm01 (p=8000)
+```
+```py
+tm02 = client02.get_trafficmanager(5000) # tm02(p=5000) --> tm02 (p=5000)
+```
+
+The previous code creates two different TM, as both have different ports and none of them was previously occupied by another TM. These are __TM-Servers__: instances of the TM created on free ports.  
+
+However, if a client tries to create a TM using a port that is already assigned to another TM, __it will not create its own but connect to the one already existing__. These are __TM-Clients__: instances of the TM created in an occupied port, which connect to the previous existing one.  
+
+```py 
+tm03 = client03.get_trafficmanager() # tm03 --> tm01 (p=8000). 
+```
+```py
+tm04 = client04.get_trafficmanager(5000) # tm04(p=5000) --> tm02 (p=5000)
+```
+
+!!! Important
+    Note how the default creation of a TM uses always `port=8000`, and so, only the first time a __TM-Server__ is created. The rest will be __TM-Clients__ connecting to it.
+
+The omniscient CARLA server keeps register of all these instances internally and everytime a TM is created, it stores the port and also the client IP that links to it. For said reason, TM are also accessible using both the ip and the port, but this case will return an error in case any of the pair is wrong.  
+
+```py 
+tm05 = client05.get_trafficmanager(6000) # tm05(ip=tm02,p=6000) --> ERROR, wrong IP. 
+```
+```py
+tm06 = client06.get_trafficmanager(5000) # tm06(ip=tm02,p=5000) --> tm02 (p=5000)
+```
+
+!!! Note
+    Right now there is no way to check which TM have been created so far. A connection will be attempted when trying to create an instance.  
+
+#### Multiclient VS MultiTM
+
+Based on the different definitions for a TM, successfully creating a TM can lead to two different results:  
+
+* __TM-Server:__ when the port is free. This type of TM is in charge of its own logic, managed in `TrafficManagerLocal.cpp`.  
+
+* __TM-Client:__ when the port is occupied. This type of TM is not in charge of its own logic. It gets the information from a __TM-Server__, the one that is actually in the intended port. They retrieve the information from the original TM using `TrafficManagerRemote.cpp`.
+
+That creates a clear distinction between having multiple clients and multiple Traffic Managers running: 
+
+* __Multiclient scenario:__ when there is only one TM-Server, but there are other TM-Clients created with the same port definition that are actually connecting to said TM-Server.  
+
+* __MultiTM scenario:__ when there are different TM-Server, created with different port definitions.  
 
 ---
 ## Other considerations
@@ -163,35 +245,15 @@ The TM is a module constantly envolving and trying to adapt the range of possibi
 
 #### FPS limitations
 
-The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. This is specially relevant when working in the night mode __table with relation between cars+night mode+city to fps?__
-For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
+The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
 
-> how to run it in synchronous mode. 
+!!! Important
+    The FPS limitations are specially relevant when working in the night mode. 
 
-When different clients work in __synchronous mode__ with the server, the server waits for a tick that may come from any client. If more than one client ticks, the synchrony will fail, as the server will move forward on every tick. For said reason, it is important to have one leading client while the rest remain silent. This is specially relevant when working in sync. with the __scenario runner__, which runs a TM. In this case, the TM will be subordinated to the scenario runner and wait for it. 
+#### Synchronous mode
 
-#### Multiclient management
-
-When working with different clients containing different TM, understanding inner implementation of the TM in the client-server architecture becomes specially relevant. There is one ruling these scenarios: __the port is the key__.  
-
-A client (cl) creates a Traffic Manager (tm) by communicating with the server (s) and passing the intended port to be used for said purpose. The port can either be stated or not, using the default as `8000`.  
-
-`cl_01 --> s --> tm_01 (p=8000)`  
-`cl_02(p=5000) --> s --> tm_02 (p=5000)`  
-
-If a client tries to create a TM using a port that is already assigned to another TM, it will not create its own but connect to the one already existing. The reason for this is that __there cannot be two Traffic Managers sharing the same port__. This is specially relevant when using the default creation, as this will only create a TM in the client if port `8000` has not been assigned yet. Otherwise, it  will connect with the TM created (in this case) by `cl_01` in port `8000`.  
-
-`cl_03 --> s --> tm_01 (p=8000)`  
-`cl_04(p=5000) --> s --> tm_02 (p=5000)`  
-`cl_05(p=6000) --> s --> tm_03 (p=6000)`  
-
-The omniscient server keeps register of all these things internally and everytime a TM is created, it stores the port and also the client ip that links to it. For said reason, Traffic Managers are also accessible using both the ip and the port, but this case will return an error in case any of the pair is wrong.  
-
-`cl_06(ip=cl_02,p=6000) --> s --> ERROR`  
-`cl_07(ip=cl02,p=5000) --> s --> tm_02 (p=5000)`  
-
-
-__Anything else worth mentioning?? Other ways to break it??__
+When different clients work in __synchronous mode__ with the server, the server waits for a tick that may come from any client. If more than one client ticks, the synchrony will fail, as the server will move forward on every tick.  
+For said reason, it is important to have one leading client while the rest remain silent. This is specially relevant when working in sync. with the __scenario runner__, which runs a TM. In this case, the TM will be subordinated to the scenario runner and wait for it. 
 
 ---
 ## Summary
