@@ -1,14 +1,6 @@
 #Python API reference
 ## carla.Actor<a name="carla.Actor"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
 CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](bp_library.md).  
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Actor.attributes"></a>**<font color="#f8805a">attributes</font>** (_dict_)  
@@ -234,52 +226,13 @@ Returns the velocity vector registered for an actor in that tick.
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for cameras and sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for cameras and sensors. [Here](../python_cookbook/#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
 With this fixed attatchment the object follow its parent position strictly.  
 - <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-<<<<<<< HEAD
 An attachment that expands or retracts depending on camera situation. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them.  
-=======
-An attachment that expands or retracts depending on camera situation. SpringArms are an Unreal Engine component so [check this out](../python_cookbook/#attach-sensors-recipe) to learn some more about them.  
-<<<<<<< HEAD
-=======
-Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).<br> Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!
-
-<h3>Instance Variables</h3>
-- <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**
-Standard fixed attachment.
-- <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**
-Attachment that expands or retracts based on camera situation.
->>>>>>> Python documentation.
-<<<<<<< HEAD
->>>>>>> Python documentation.
-=======
-=======
-Class that defines the attachment options. See [carla.World.spawn_actor](#carla.World.spawn_actor).<br> Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!  
-
-<h3>Instance Variables</h3>
-- <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
-Standard fixed attachment.  
-- <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-Attachment that expands or retracts based on camera situation.  
->>>>>>> Fixed docs.
->>>>>>> Fixed docs.
-=======
->>>>>>> Updated docs.
 
 ---
 
@@ -316,18 +269,7 @@ Returns the blueprint corresponding to that identifier.
 ---
 
 ## carla.BoundingBox<a name="carla.BoundingBox"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Helper class defining a box location and its dimensions that will later be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-Helper class defining a box location and its dimensions that will later be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
@@ -531,18 +473,7 @@ Initializes a color, black by default.
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look a this [recipe](ref_code_recipes.md#converted-image-recipe) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look a this [recipe](../python_cookbook/#converted-image-recipe) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.CityScapesPalette"></a>**<font color="#f8805a">CityScapesPalette</font>**  
@@ -557,18 +488,7 @@ No changes applied to the image.
 ---
 
 ## carla.DebugHelper<a name="carla.DebugHelper"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](../python_cookbook/#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
->>>>>>> Python documentation.
 
 <h3>Methods</h3>
 - <a name="carla.DebugHelper.draw_point"></a>**<font color="#7fb800">draw_point</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**size**=0.1f</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0f</font>)  
@@ -754,169 +674,8 @@ Returns a list of pairs of waypoints. Every tuple on the list contains first an 
 ---
 
 ## carla.Landmark<a name="carla.Landmark"></a>
-<<<<<<< HEAD
-Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE]([OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf)) definition of the landmarks and their representation in the simulation.   This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.  
-Landmarks will be accessed by [carla.Waypoint](#carla.Waypoint) objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
-The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.  
-<small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>.  
-- <a name="carla.Landmark.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
-Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).  
-- <a name="carla.Landmark.s"></a>**<font color="#f8805a">s</font>** (_float_)  
-Distance where the landmark is positioned along the geometry of the road `road_id`.  
-- <a name="carla.Landmark.t"></a>**<font color="#f8805a">t</font>** (_float_)  
-Lateral distance where the landmark is positioned from the edge of the road `road_id`.  
-- <a name="carla.Landmark.id"></a>**<font color="#f8805a">id</font>** (_str_)  
-Unique ID of the landmark in the OpenDRIVE file.  
-- <a name="carla.Landmark.name"></a>**<font color="#f8805a">name</font>** (_str_)  
-Name of the landmark in the in the OpenDRIVE file.  
-- <a name="carla.Landmark.is_dynamic"></a>**<font color="#f8805a">is_dynamic</font>** (_bool_)  
-Indicates if the landmark has state changes over time such as traffic lights.  
-- <a name="carla.Landmark.orientation"></a>**<font color="#f8805a">orientation</font>** (_[carla.LandmarkOrientation](#carla.LandmarkOrientation)_)  
-Indicates which lanes the landmark is facing towards to.  
-- <a name="carla.Landmark.z_offset"></a>**<font color="#f8805a">z_offset</font>** (_float_)  
-Height where the landmark is placed.  
-- <a name="carla.Landmark.country"></a>**<font color="#f8805a">country</font>** (_str_)  
-Country code where the landmark is defined (default to OpenDRIVE is Germany 2017).  
-- <a name="carla.Landmark.type"></a>**<font color="#f8805a">type</font>** (_str_)  
-Type identificator of the landmark according to the country code.  
-- <a name="carla.Landmark.sub_type"></a>**<font color="#f8805a">sub_type</font>** (_str_)  
-Subtype identificator of the landmark according to the country code.  
-- <a name="carla.Landmark.value"></a>**<font color="#f8805a">value</font>** (_float_)  
-Value printed in the signal (e.g. speed limit, maximum weight, etc).  
-- <a name="carla.Landmark.unit"></a>**<font color="#f8805a">unit</font>** (_str_)  
-Units of measurement for the attribute `value`.  
-- <a name="carla.Landmark.height"></a>**<font color="#f8805a">height</font>** (_float_)  
-Total height of the signal.  
-- <a name="carla.Landmark.width"></a>**<font color="#f8805a">width</font>** (_float_)  
-Total width of the signal.  
-- <a name="carla.Landmark.text"></a>**<font color="#f8805a">text</font>** (_str_)  
-Additional text in the signal.  
-- <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float_)  
-Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
-- <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
-Pitch rotation of the signal.  
-- <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll rotation of the signal.  
-- <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
-A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
-- <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-The location and orientation of the landmark in the simulation.  
-
-<h3>Methods</h3>
-- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
-Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:  
-<small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
-    - **Return:** _list(tuple(int))_  
-
----
-
-## carla.LandmarkOrientation<a name="carla.LandmarkOrientation"></a>
-Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.LandmarkOrientation.Positive"></a>**<font color="#f8805a">Positive</font>**  
-The landmark faces towards vehicles going on the same direction as the road's geometry definition (lanes 0 and negative in OpenDRIVE).  
-- <a name="carla.LandmarkOrientation.Negative"></a>**<font color="#f8805a">Negative</font>**  
-The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE).  
-- <a name="carla.LandmarkOrientation.Both"></a>**<font color="#f8805a">Both</font>**  
-Affects vehicles going in both directions of the road.  
-
----
-
-## carla.LandmarkType<a name="carla.LandmarkType"></a>
-Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).  
-__[carla.Landmark](#carla.Landmark) does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.LandmarkType.Danger"></a>**<font color="#f8805a">Danger</font>**  
-Type 101.  
-- <a name="carla.LandmarkType.LanesMerging"></a>**<font color="#f8805a">LanesMerging</font>**  
-Type 121.  
-- <a name="carla.LandmarkType.CautionPedestrian"></a>**<font color="#f8805a">CautionPedestrian</font>**  
-Type 133.  
-- <a name="carla.LandmarkType.CautionBicycle"></a>**<font color="#f8805a">CautionBicycle</font>**  
-Type 138.  
-- <a name="carla.LandmarkType.LevelCrossing"></a>**<font color="#f8805a">LevelCrossing</font>**  
-Type 150.  
-- <a name="carla.LandmarkType.Stop"></a>**<font color="#f8805a">Stop</font>**  
-Type 206.  
-- <a name="carla.LandmarkType.Yield"></a>**<font color="#f8805a">Yield</font>**  
-Type 205.  
-- <a name="carla.LandmarkType.MandatoryTurnDirection"></a>**<font color="#f8805a">MandatoryTurnDirection</font>**  
-Type 209.  
-- <a name="carla.LandmarkType.MandatoryLeftRightDirection"></a>**<font color="#f8805a">MandatoryLeftRightDirection</font>**  
-Type 211.  
-- <a name="carla.LandmarkType.TwoChoiceTurnDirection"></a>**<font color="#f8805a">TwoChoiceTurnDirection</font>**  
-Type 214.  
-- <a name="carla.LandmarkType.Roundabout"></a>**<font color="#f8805a">Roundabout</font>**  
-Type 215.  
-- <a name="carla.LandmarkType.PassRightLeft"></a>**<font color="#f8805a">PassRightLeft</font>**  
-Type 222.  
-- <a name="carla.LandmarkType.AccessForbidden"></a>**<font color="#f8805a">AccessForbidden</font>**  
-Type 250.  
-- <a name="carla.LandmarkType.AccessForbiddenMotorvehicles"></a>**<font color="#f8805a">AccessForbiddenMotorvehicles</font>**  
-Type 251.  
-- <a name="carla.LandmarkType.AccessForbiddenTrucks"></a>**<font color="#f8805a">AccessForbiddenTrucks</font>**  
-Type 253.  
-- <a name="carla.LandmarkType.AccessForbiddenBicycle"></a>**<font color="#f8805a">AccessForbiddenBicycle</font>**  
-Type 254.  
-- <a name="carla.LandmarkType.AccessForbiddenWeight"></a>**<font color="#f8805a">AccessForbiddenWeight</font>**  
-Type 263.  
-- <a name="carla.LandmarkType.AccessForbiddenWidth"></a>**<font color="#f8805a">AccessForbiddenWidth</font>**  
-Type 264.  
-- <a name="carla.LandmarkType.AccessForbiddenHeight"></a>**<font color="#f8805a">AccessForbiddenHeight</font>**  
-Type 265.  
-- <a name="carla.LandmarkType.AccessForbiddenWrongDirection"></a>**<font color="#f8805a">AccessForbiddenWrongDirection</font>**  
-Type 267.  
-- <a name="carla.LandmarkType.ForbiddenUTurn"></a>**<font color="#f8805a">ForbiddenUTurn</font>**  
-Type 272.  
-- <a name="carla.LandmarkType.MaximumSpeed"></a>**<font color="#f8805a">MaximumSpeed</font>**  
-Type 274.  
-- <a name="carla.LandmarkType.ForbiddenOvertakingMotorvehicles"></a>**<font color="#f8805a">ForbiddenOvertakingMotorvehicles</font>**  
-Type 276.  
-- <a name="carla.LandmarkType.ForbiddenOvertakingTrucks"></a>**<font color="#f8805a">ForbiddenOvertakingTrucks</font>**  
-Type 277.  
-- <a name="carla.LandmarkType.AbsoluteNoStop"></a>**<font color="#f8805a">AbsoluteNoStop</font>**  
-Type 283.  
-- <a name="carla.LandmarkType.RestrictedStop"></a>**<font color="#f8805a">RestrictedStop</font>**  
-Type 286.  
-- <a name="carla.LandmarkType.HasWayNextIntersection"></a>**<font color="#f8805a">HasWayNextIntersection</font>**  
-Type 301.  
-- <a name="carla.LandmarkType.PriorityWay"></a>**<font color="#f8805a">PriorityWay</font>**  
-Type 306.  
-- <a name="carla.LandmarkType.PriorityWayEnd"></a>**<font color="#f8805a">PriorityWayEnd</font>**  
-Type 307.  
-- <a name="carla.LandmarkType.CityBegin"></a>**<font color="#f8805a">CityBegin</font>**  
-Type 310.  
-- <a name="carla.LandmarkType.CityEnd"></a>**<font color="#f8805a">CityEnd</font>**  
-Type 311.  
-- <a name="carla.LandmarkType.Highway"></a>**<font color="#f8805a">Highway</font>**  
-Type 330.  
-- <a name="carla.LandmarkType.RecomendedSpeed"></a>**<font color="#f8805a">RecomendedSpeed</font>**  
-Type 380.  
-- <a name="carla.LandmarkType.RecomendedSpeedEnd"></a>**<font color="#f8805a">RecomendedSpeedEnd</font>**  
-Type 381.  
-
----
-
-<<<<<<< HEAD
-## carla.LaneChange<a name="carla.LaneChange"></a>
-<<<<<<< HEAD
-Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. In this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.  
-=======
-Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. In this [recipe](../python_cookbook/#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.
->>>>>>> Python documentation.
-=======
-## carla.Landmark<a name="carla.Landmark"></a>
-Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) definition of the landmarks and their representation in the simulation. This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.
-=======
 Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE]([OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf)) definition of the landmarks and their representation in the simulation. This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.
->>>>>>> Updated docs.
 Landmarks will be accessed by [carla.Waypoint](#carla.Waypoint) objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.  
->>>>>>> Fixed docs.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
@@ -1063,7 +822,7 @@ Type 381.
 ---
 
 ## carla.LaneChange<a name="carla.LaneChange"></a>
-Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. In this [recipe](../python_cookbook/#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.  
+Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. In this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneChange.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -1122,34 +881,7 @@ White by default.
 ---
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](ref_code_recipes.md#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](../python_cookbook/#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.  
->>>>>>> Python documentation.
-__Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
-- <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
-- <a name="carla.LaneMarkingType.Broken"></a>**<font color="#f8805a">Broken</font>**  
-- <a name="carla.LaneMarkingType.BrokenBroken"></a>**<font color="#f8805a">BrokenBroken</font>**  
-- <a name="carla.LaneMarkingType.BrokenSolid"></a>**<font color="#f8805a">BrokenSolid</font>**  
-- <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
-- <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
-- <a name="carla.LaneMarkingType.Solid"></a>**<font color="#f8805a">Solid</font>**  
-- <a name="carla.LaneMarkingType.SolidBroken"></a>**<font color="#f8805a">SolidBroken</font>**  
-- <a name="carla.LaneMarkingType.SolidSolid"></a>**<font color="#f8805a">SolidSolid</font>**  
-- <a name="carla.LaneMarkingType.Other"></a>**<font color="#f8805a">Other</font>**  
-=======
-=======
->>>>>>> Updated docs.
-Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](../python_cookbook/#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.
+Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](ref_code_recipes.md#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.
 __Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.  
 
 <h3>Instance Variables</h3>
@@ -1168,21 +900,7 @@ __Note on double types:__ Lane markings are defined under the OpenDRIVE standard
 ---
 
 ## carla.LaneType<a name="carla.LaneType"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. For instance in this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a [carla.Waypoint](#carla.Waypoint) for the current location of a vehicle and uses it to get the current and adjacent lane types.  
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Fixed docs.
->>>>>>> Fixed docs.
-=======
->>>>>>> Updated docs.
-Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. For instance in this [recipe](../python_cookbook/#lanes-recipe) the user creates a [carla.Waypoint](#carla.Waypoint) for the current location of a vehicle and uses it to get the current and adjacent lane types.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -1575,18 +1293,7 @@ Sets a given time (in seconds) for the yellow light to be active.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Green"></a>**<font color="#f8805a">Green</font>**  
@@ -2052,18 +1759,7 @@ Sets a speed for the walker in meters per second.
 ---
 
 ## carla.WalkerBoneControl<a name="carla.WalkerBoneControl"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](tuto_G_control_walker_skeletons.md) to learn more on how to create a walker and define its movement.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](walker_bone_control.md) to learn more on how to create a walker and define its movement.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.WalkerBoneControl.bone_transforms"></a>**<font color="#f8805a">bone_transforms</font>** (_list([name,transform])_)  
@@ -2361,18 +2057,7 @@ The client tells the server to block calling thread until a **<font color="#7fb8
 ---
 
 ## carla.WorldSettings<a name="carla.WorldSettings"></a>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 The simulation has some advanced configuration options that are contained in this class and can be managed using [carla.World](#carla.World) and its methods. These allow the user to choose between client-server synchrony/asynchrony, activation of "no rendering mode" and either if the simulation should run with a fixed or variable time-step. Check [this](adv_synchrony_timestep.md) out if you want to learn about it.  
-=======
-=======
->>>>>>> Fixed docs.
-<<<<<<< HEAD
-=======
->>>>>>> Updated docs.
-The simulation has some advanced configuration options that are contained in this class and can be managed using [carla.World](#carla.World) and its methods. These allow the user to choose between client-server synchrony/asynchrony, activation of "no rendering mode" and either if the simulation should run with a fixed or variable time-step. Check [this](../configuring_the_simulation/) out if you want to learn about it.  
->>>>>>> Python documentation.
 
 <h3>Instance Variables</h3>
 - <a name="carla.WorldSettings.synchronous_mode"></a>**<font color="#f8805a">synchronous_mode</font>** (_bool_)  
