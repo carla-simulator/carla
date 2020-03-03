@@ -97,9 +97,9 @@ CARLA forum</a>
     Synchrony and time-step
     </b></a>
         — Client-server communication and simulation time.  
-    <b>
-    (soon) Traffic manager
-    </b>
+    <a href="../adv_traffic_manager"><b>
+    Traffic Manager
+    </b></a>
         — Feature to handle autopilot vehicles and emulate traffic.  
 
 ## References

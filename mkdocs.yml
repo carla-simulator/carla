@@ -27,7 +27,7 @@ nav:
   - 'Recorder': 'adv_recorder.md'
   - 'Rendering options': 'adv_rendering_options.md'
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
-  - 'Traffic Manager': 'traffic_manager.md'
+  - 'Traffic Manager': 'adv_traffic_manager.md'
 - References:
   - 'Python API reference': 'python_api.md'
   - 'Code recipes': 'ref_code_recipes.md'
