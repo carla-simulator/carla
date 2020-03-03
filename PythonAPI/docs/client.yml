@@ -63,8 +63,9 @@
           A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.
       - param_name: due_tick_cue
         type: bool
+        default: false
         doc: >
-          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_.
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default. 
       return: list(command.Response)
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
@@ -275,18 +276,31 @@
       doc: >
         Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions. 
     # --------------------------------------
-    - def_name: ignore_actors_percentage
+    - def_name: ignore_vehicles_percentage
       params:
       - param_name: actor
         type: carla.Actor
         doc: >
-          The vehicle that is going to ignore others.
+          The vehicle that is going to ignore other vehicles.
       - param_name: perc
         type: float
         doc: >
           Between 0 and 100. Amount of times collisions will be ignored. 
       doc: >
-        During the collision detection stage, which runs every frame, this method sets a percent chance that collisions will be ignored for a vehicle.
+        During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with another vehicle will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: ignore_walkers_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle that is going to ignore walkers on scene.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times collisions will be ignored. 
+      doc: >
+        During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
     # --------------------------------------
     - def_name: ignore_lights_percentage
       params:
@@ -301,20 +315,11 @@
       doc: >
         During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle. 
     # --------------------------------------
-    - def_name: register_vehicles
-      params:
-      - param_name: actor_list
-        type: list(carla.Actor)
-        doc: >
-          List of vehicles to register. 
-      doc: >
-        Registers a series of vehicles to a traffic manager that will conduct them. 
-    # --------------------------------------
     - def_name: reset_traffic_lights
       doc: >
         Resets every traffic light in the map to its initial state. 
     # --------------------------------------
-    - def_name: set_auto_lane_change
+    - def_name: auto_lane_change
       params:
       - param_name: actor
         type: carla.Actor
@@ -327,7 +332,7 @@
       doc: >
         Turns on or off lane changing behaviour for a vehicle. 
     # --------------------------------------
-    - def_name: set_distance_to_leading_vehicle
+    - def_name: distance_to_leading_vehicle
       params:
       - param_name: actor
         type: carla.Actor
@@ -340,7 +345,7 @@
       doc: >
         Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.
     # --------------------------------------
-    - def_name: set_collision_detection
+    - def_name: collision_detection
       params:
       - param_name: reference_actor
         type: carla.Actor
@@ -357,7 +362,7 @@
       doc: >
         Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
     # --------------------------------------
-    - def_name: set_global_max_speed_difference
+    - def_name: global_percentage_speed_difference
       params:
       - param_name: percentage
         type: float
@@ -368,7 +373,7 @@
         
         Default is 30. Exceeding a speed limit can be done using negative percentages. 
     # --------------------------------------
-    - def_name: set_global_distance_to_leading_vehicle
+    - def_name: global_distance_to_leading_vehicle
       params:
       - param_name: distance
         type: float
@@ -377,7 +382,7 @@
       doc: >
         Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
     # --------------------------------------
-    - def_name: set_vehicle_max_speed_difference
+    - def_name: vehicle_percentage_speed_difference
       params:
       - param_name: actor
         type: carla.Actor
@@ -392,13 +397,3 @@
         
         Default is 30. Exceeding a speed limit can be done using negative percentages. 
     # --------------------------------------
-    - def_name: unregister_vehicles
-      params:
-      - param_name: actor_list
-        type: list(carla.Actor)
-        doc: >
-          List of vehicles to be unregistered. 
-      doc: >
-        Deletes a series of vehicles from the traffic manager's registered list to stop conducting them. 
-    # --------------------------------------
-...
