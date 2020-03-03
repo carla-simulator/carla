@@ -110,7 +110,7 @@
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------
-    - def_name: GetTrafficManager
+    - def_name: get_trafficmanager
       params:
       - param_name: client_connection
         type: int
@@ -125,8 +125,9 @@
       params:
       raises: RuntimeError when corresponding.
       doc: >
-        Deletes the current world and creates a new one using the same map and default settings. Every actor in the previous world will be
-        destroyed.
+        Reload the current world, note that a new world is created with default
+        settings using the same map. All actors present in the world will be
+        destroyed, __but__ traffic manager instances will stay alive.
     # --------------------------------------
     - def_name: replay_file
       params:
@@ -147,7 +148,8 @@
         doc: >
           ID of the actor to follow. If this is 0 then camera is disabled.
       doc: >
-        The server will start running the simulation `name` previously recorded. The time to start and stop can be stated and if the recreation finishes, the vehicles will continue their behaviour as usual, managed by the server. During the simulation we can follow a specific actor using its ID.
+        Load a new world with default settings using `map_name` map. All actors
+        present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
     # --------------------------------------
     - def_name: generate_opendrive_world
       params:
