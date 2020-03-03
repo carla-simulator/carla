@@ -478,10 +478,10 @@
     - var_name: LevelCrossing
       doc: >
         Type 150.
-    - var_name: Stop
+    - var_name: StopSign
       doc: >
         Type 206.
-    - var_name: Yield
+    - var_name: YieldSign
       doc: >
         Type 205.
     - var_name: MandatoryTurnDirection
