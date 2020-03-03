@@ -44,7 +44,7 @@ public:
     return Map;
   }
 
-  UFUNCTION(Exec, CallInEditor, DevelopmentOnly)
+  UFUNCTION(Exec, CallInEditor, meta=(DevelopmentOnly))
   void DebugShowSignals(bool enable);
 
 protected:
