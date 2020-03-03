@@ -1745,10 +1745,6 @@ States which gear is the vehicle running on.
 Class that recaps the state of the lights of a vehicle, these can be used as a flags. E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active. Lights are off by default in any situation and should be managed by the user via script. The blinkers blink automatically. _Warning: Right now, not all vehicles have been prepared to work with this functionality, this will be added to all of them in later updates_.  
 
 <h3>Instance Variables</h3>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Fixed docs.
 - <a name="carla.VehicleLightState.NONE"></a>**<font color="#f8805a">NONE</font>**  
 All lights off.  
 - <a name="carla.VehicleLightState.Position"></a>**<font color="#f8805a">Position</font>**  
@@ -1764,32 +1760,8 @@ All lights off.
 This is reserved for certain vehicles that can have special lights, like a siren.  
 - <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**  
 This is reserved for certain vehicles that can have special lights, like a siren.  
-<<<<<<< HEAD
 - <a name="carla.VehicleLightState.All"></a>**<font color="#f8805a">All</font>**  
 All lights on.  
-=======
-- <a name="carla.VehicleLightState.NONE"></a>**<font color="#f8805a">NONE</font>**
-All lights off.
-- <a name="carla.VehicleLightState.Position"></a>**<font color="#f8805a">Position</font>**
-- <a name="carla.VehicleLightState.LowBeam"></a>**<font color="#f8805a">LowBeam</font>**
-- <a name="carla.VehicleLightState.HighBeam"></a>**<font color="#f8805a">HighBeam</font>**
-- <a name="carla.VehicleLightState.Brake"></a>**<font color="#f8805a">Brake</font>**
-- <a name="carla.VehicleLightState.RightBlinker"></a>**<font color="#f8805a">RightBlinker</font>**
-- <a name="carla.VehicleLightState.LeftBlinker"></a>**<font color="#f8805a">LeftBlinker</font>**
-- <a name="carla.VehicleLightState.Reverse"></a>**<font color="#f8805a">Reverse</font>**
-- <a name="carla.VehicleLightState.Fog"></a>**<font color="#f8805a">Fog</font>**
-- <a name="carla.VehicleLightState.Interior"></a>**<font color="#f8805a">Interior</font>**
-- <a name="carla.VehicleLightState.Special1"></a>**<font color="#f8805a">Special1</font>**
-This is reserved for certain vehicles that can have special lights, like a siren.
-- <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**
-This is reserved for certain vehicles that can have special lights, like a siren.
-- <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**
-All lights on.
->>>>>>> Python documentation.
-=======
-- <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**  
-All lights on.  
->>>>>>> Fixed docs.
 
 ---
 
