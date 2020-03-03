@@ -120,7 +120,7 @@ class PIDLongitudinalController():
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._K_P * _e) + (self._K_D * _de / self._dt) + (self._K_I * _ie * self._dt), 0.0, 1.0)
+        return np.clip((self._K_P * _e) + (self._K_D * _de) + (self._K_I * _ie), 0.0, 1.0)
 
 
 class PIDLateralController():
@@ -185,5 +185,4 @@ class PIDLateralController():
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._K_P * _dot) + (self._K_D * _de /
-                                             self._dt) + (self._K_I * _ie * self._dt), -1.0, 1.0)
+        return np.clip((self._K_P * _dot) + (self._K_D * _de) + (self._K_I * _ie), -1.0, 1.0)
