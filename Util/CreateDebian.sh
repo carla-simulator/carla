@@ -15,10 +15,9 @@ CARLA_VERSION=0.9.7
 
 #replace the url with your carla release url
 CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.7.tar.gz
-CARLA_TAR=CARLA_0.9.7.tar.gz
 
 #replace the url with your required additional maps url
-#if you do not have additional map then comment line 22, 23, 41, 42 
+#if you do not have additional map then comment line 21, 22, 40, 41 
 ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
 ADDITIONALMAPS_TAR=AdditionalMaps_0.9.7.tar.gz
 
