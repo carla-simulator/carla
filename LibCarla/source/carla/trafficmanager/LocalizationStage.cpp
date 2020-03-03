@@ -107,7 +107,7 @@ namespace LocalizationConstants {
 
       // Clear buffer if vehicle is too far from the first waypoint in the buffer.
       if (!waypoint_buffer.empty() &&
-          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > 10.0f) {
+          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > 20.0f) {
           auto number_of_pops = waypoint_buffer.size();
           for (uint64_t j = 0u; j < number_of_pops; ++j) {
             PopWaypoint(waypoint_buffer, actor_id);
@@ -153,7 +153,6 @@ namespace LocalizationConstants {
           for (uint64_t j = 0u; j < number_of_pops; ++j) {
             PopWaypoint(waypoint_buffer, actor_id);
           }
-
           PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
@@ -179,6 +178,19 @@ namespace LocalizationConstants {
         }
         PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
+
+      ///////////////////////////////// DEBUG //////////////////////////////////
+      uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
+      uint b_step = 5;
+      uint b_step_size = b_size/b_step;
+      for (uint j = 0u; j < b_step; ++j) {
+        auto first = waypoint_buffer.at(j * b_step_size);
+        auto second = waypoint_buffer.at(std::min((j+1) * b_step_size, b_size-1));
+        debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
+                              second->GetLocation() + cg::Location(0, 0, 1),
+                              0.2f, {255u, 255u, 0u}, 0.1f);
+      }
+      //////////////////////////////////////////////////////////////////////////
 
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
@@ -508,20 +520,6 @@ namespace LocalizationConstants {
     // Check buffer is not empty.
     if (!waypoint_buffer.empty())
     {
-
-      ///////////////////////////////// DEBUG //////////////////////////////////
-      // uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
-      // uint b_step = 5;
-      // uint b_step_size = b_size/b_step;
-      // for (uint i = 0u; i<b_step && ((i+1) * b_step_size < b_size); i++) {
-      //   auto first = waypoint_buffer.at(i * b_step_size);
-      //   auto second = waypoint_buffer.at((i+1) * b_step_size);
-      //   debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
-      //                         second->GetLocation() + cg::Location(0, 0, 1),
-      //                         0.2f, {255u, 255u, 0u}, 0.1f);
-      // }
-      //////////////////////////////////////////////////////////////////////////
-
       // Get the left and right waypoints for the current closest waypoint.
       const SimpleWaypointPtr& current_waypoint = waypoint_buffer.front();
       const SimpleWaypointPtr left_waypoint = current_waypoint->GetLeftWaypoint();
@@ -588,12 +586,6 @@ namespace LocalizationConstants {
         const auto other_neighbouring_lanes = {other_current_waypoint->GetLeftWaypoint(),
                                                other_current_waypoint->GetRightWaypoint()};
 
-        ///////////////////////////////// DEBUG //////////////////////////////////
-        // debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 2),
-        //                        other_current_waypoint->GetLocation() + cg::Location(0, 0, 2),
-        //                        0.2f, 0.2f, {0u, 255u, 0u}, 0.1f);
-        //////////////////////////////////////////////////////////////////////////
-
         // Flags reflecting whether adjacent lanes are free near the obstacle.
         bool distant_left_lane_free = false;
         bool distant_right_lane_free = false;
@@ -610,37 +602,8 @@ namespace LocalizationConstants {
             else distant_right_lane_free = true;
 
           }
-          ///////////////////////////////// DEBUG //////////////////////////////////
-          // else if (candidate_lane_wp != nullptr) {
-
-          //   if (left_right){
-          //     debug_helper.DrawString(candidate_lane_wp->GetLocation() + cg::Location(0, 0, 4),
-          //                             "Left Occupancy: "
-          //                               + std::to_string(track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size()),
-          //                             false, {255u, 0u, 255u}, 0.1f);
-          //   } else {
-          //     debug_helper.DrawString(candidate_lane_wp->GetLocation() + cg::Location(0, 0, 5),
-          //                             "Right Occupancy: "
-          //                               + std::to_string(track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size()),
-          //                             false, {255u, 0u, 255u}, 0.1f);
-          //   }
-          //   debug_helper.DrawLine(vehicle_location + cg::Location(0, 0, 2),
-          //                         candidate_lane_wp->GetLocation() + cg::Location(0, 0, 2),
-          //                         0.2f, {0u, 255u, 255u}, 0.1f);
-          // }
-          //////////////////////////////////////////////////////////////////////////
           left_right = !left_right;
         }
-
-        ///////////////////////////////// DEBUG //////////////////////////////////
-        // if (distant_left_lane_free || distant_right_lane_free){
-        //   debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-        //                           "Distant Lanes Free", false, {0u, 255u, 0u}, 0.1f);
-        // } else {
-        //   debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-        //                           "Distant Lanes Free", false, {255u, 0u, 0u}, 0.1f);
-        // }
-        //////////////////////////////////////////////////////////////////////////
 
         // Based on what lanes are free near the obstacle,
         // find the change over point with no vehicles passing through them.
