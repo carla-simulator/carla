@@ -97,9 +97,6 @@ void ACarlaGameModeBase::InitGame(
   Episode->SetRecorder(Recorder);
 
   ParseOpenDrive(MapName);
-
-  SpawnSignals();
-
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -194,37 +191,6 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
   } else {
     Episode->MapGeoReference = Map->GetGeoReference();
   }
-}
-
-void ACarlaGameModeBase::SpawnSignals()
-{
-
-  //const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>>
-  const auto& Signals = Map->GetSignals();
-  const auto& Controllers = Map->GetControllers();
-
-  UE_LOG(LogCarla, Warning, TEXT("Num of signals = %d"), Signals.size());
-  UE_LOG(LogCarla, Warning, TEXT("Num of controllers = %d"), Controllers.size());
-
-  for(const auto& controller : Controllers) {
-    const auto& signals = controller.second->GetSignals();
-    const auto& junctions = controller.second->GetJunctions();
-
-    UE_LOG(LogCarla, Warning, TEXT("ContID = %s - Num of signals %d - Num of junctions %d"),
-      *FString(controller.first.c_str()),
-      signals.size(),
-      junctions.size());
-
-    for(const auto& signal : signals) {
-      UE_LOG(LogCarla, Warning, TEXT("Signal = %s"), *FString(signal.c_str()));
-    }
-
-    for(const auto& junction : junctions) {
-      UE_LOG(LogCarla, Warning, TEXT("Junction = %d"), junction);
-    }
-
-  }
-
 }
 
 void ACarlaGameModeBase::DebugShowSignals(bool enable)
