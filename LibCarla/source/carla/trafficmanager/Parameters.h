@@ -1,10 +1,13 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <atomic>
+#include <chrono>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -45,21 +48,28 @@ namespace traffic_manager {
     AtomicMap<ActorId, bool> auto_lane_change;
     /// Map containing % of running a traffic light.
     AtomicMap<ActorId, float> perc_run_traffic_light;
-    /// Map containing % of ignoring actors.
-    AtomicMap<ActorId, float> perc_ignore_actors;
-
+    /// Map containing % of running a traffic sign.
+    AtomicMap<ActorId, float> perc_run_traffic_sign;
+    /// Map containing % of ignoring walkers.
+    AtomicMap<ActorId, float> perc_ignore_walkers;
+    /// Map containing % of ignoring vehicles.
+    AtomicMap<ActorId, float> perc_ignore_vehicles;
+    /// Synchronous mode switch.
+    std::atomic<bool> synchronous_mode;
 
   public:
     Parameters();
     ~Parameters();
 
-    /// Set target velocity specific to a vehicle.
+    /// Set a vehicle's % decrease in velocity with respect to the speed limit.
+    /// If less than 0, it's a % increase.
     void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
-    /// Set global target velocity.
+    /// Set a global % decrease in velocity with respect to the speed limit.
+    /// If less than 0, it's a % increase.
     void SetGlobalPercentageSpeedDifference(float const percentage);
 
-    /// Set collision detection rules between vehicles.
+    /// Method to set collision detection rules between vehicles.
     void SetCollisionDetection(
         const ActorPtr &reference_actor,
         const ActorPtr &other_actor,
@@ -69,7 +79,7 @@ namespace traffic_manager {
     /// Direction flag can be set to true for left and false for right.
     void SetForceLaneChange(const ActorPtr &actor, const bool direction);
 
-    /// Enable / disable automatic lane change on a vehicle.
+    /// Enable/disable automatic lane change on a vehicle.
     void SetAutoLaneChange(const ActorPtr &actor, const bool enable);
 
     /// Method to specify how much distance a vehicle should maintain to
@@ -91,17 +101,44 @@ namespace traffic_manager {
     /// Method to query distance to leading vehicle for a given vehicle.
     float GetDistanceToLeadingVehicle(const ActorPtr &actor);
 
-    /// Method to set % to run any traffic light.
-    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
-
-    /// Method to set % to ignore any actor.
-    void SetPercentageIgnoreActors(const ActorPtr &actor, const float perc);
+    /// Method to get % to run any traffic light.
+    float GetPercentageRunningSign(const ActorPtr &actor);
 
     /// Method to get % to run any traffic light.
     float GetPercentageRunningLight(const ActorPtr &actor);
 
-    /// Method to get % to ignore any actor.
-    float GetPercentageIgnoreActors(const ActorPtr &actor);
+    /// Method to get % to ignore any vehicle.
+    float GetPercentageIgnoreVehicles(const ActorPtr &actor);
+
+    /// Method to get % to ignore any walker.
+    float GetPercentageIgnoreWalkers(const ActorPtr &actor);
+
+    /// Method to set % to run any traffic sign.
+    void SetPercentageRunningSign(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to run any traffic light.
+    void SetPercentageRunningLight(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreVehicles(const ActorPtr &actor, const float perc);
+
+    /// Method to set % to ignore any vehicle.
+    void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+
+    /// Method to get synchronous mode.
+    bool GetSynchronousMode();
+
+    /// Method to set synchronous mode.
+    void SetSynchronousMode(const bool mode_switch = true);
+
+    /// Get synchronous mode time out
+    double GetSynchronousModeTimeOutInMiliSecond();
+
+    /// Set Synchronous mode time out.
+    void SetSynchronousModeTimeOutInMiliSecond(const double time);
+
+    /// Synchronous mode time out variable.
+    std::chrono::duration<double, std::milli> synchronous_time_out;
 
   };
 

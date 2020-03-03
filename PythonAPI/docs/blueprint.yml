@@ -6,42 +6,37 @@
   - class_name: ActorAttributeType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the type of attribute of a carla.ActorAttribute.
+      CARLA provides a library of blueprints for actors in carla.BlueprintLibrary with different attributes each. This class defines the types those at carla.ActorAttribute can be as a series of enum. All this information is managed internally and listed here for a better comprehension of how CARLA works. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
-      doc: >
     - var_name: Int
-      doc: >
     - var_name: Float
-      doc: >
-    - var_name: String
-      doc: >
     - var_name: RGBColor
-      doc: >
+    - var_name: String
 
   - class_name: Color
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines a 32-bit BGRA color.
+      Class that defines a 32-bit RGBA color.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: r
       type: int
       doc: >
-        Red color (0-255)
+        Red color (0-255).
     - var_name: g
       type: int
       doc: >
-        Green color (0-255)
+        Green color (0-255).
     - var_name: b
       type: int
       doc: >
-        Blue color (0-255)
+        Blue color (0-255).
     - var_name: a
       type: int
       doc: >
-        Alpha channel (0-255)
+        Alpha channel (0-255).
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -49,124 +44,151 @@
       - param_name: r
         type: int
         default: 0
-        doc: >
       - param_name: g
         type: int
         default: 0
-        doc: >
       - param_name: b
         type: int
         default: 0
-        doc: >
       - param_name: a
         type: int
         default: 255
-        doc: >
       doc: >
-        Client constructor
+        Initializes a color, black by default. 
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
         type: carla.Color
-      doc: >
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
         type: carla.Color
-      doc: >
     # --------------------------------------
     - def_name: __str__
-      doc: >
     # --------------------------------------
 
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines an attribute of a carla.ActorBlueprint.
+      CARLA provides a library of blueprints for actors that can be accessed as carla.BlueprintLibrary. Each of these blueprints has a series of attributes defined internally. Some of these are modifiable, others are not. A list of recommended values is provided for those that can be set. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
       type: str
       doc: >
-        The attribute's identifier
+        The attribute's name and identifier in the library. 
     - var_name: type
       type: carla.ActorAttributeType
       doc: >
-        The attribute parameter type
+        The attribute's parameter type.
     - var_name: recommended_values
       type: list(str)
       doc: >
-        List of recommended values that the attribute may have.
+        A list of values suggested by those who designed the blueprint. 
     - var_name: is_modifiable
       type: bool
       doc: >
-        True if the attribute is modifiable.
+        It is <b>True</b> if the attribute's value can be modified.
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
       doc: >
-    # --------------------------------------
-    - def_name: as_int
-      doc: >
-    # --------------------------------------
-    - def_name: as_float
-      doc: >
-    # --------------------------------------
-    - def_name: as_str
-      doc: >
+        Reads the attribute as boolean value. 
     # --------------------------------------
     - def_name: as_color
       doc: >
+        Reads the attribute as carla.Color. 
     # --------------------------------------
-    - def_name: __eq__
-      params:
-      - param_name: other
-        type: bool / int / float / str / carla.Color / carla.ActorAttribute
+    - def_name: as_int
       doc: >
+        Reads the attribute as int. 
     # --------------------------------------
-    - def_name: __ne__
-      params:
-      - param_name: other
-        type: bool / int / float / str / carla.Color / carla.ActorAttribute
+    - def_name: as_float
       doc: >
+        Reads the attribute as float.  
     # --------------------------------------
-    - def_name: __nonzero__
+    - def_name: as_str
       doc: >
+        Reads the attribute as string. 
     # --------------------------------------
     - def_name: __bool__
       doc: >
+        Internal method to manage the attribute as bool. 
     # --------------------------------------
     - def_name: __int__
       doc: >
+        Internal method to manage the attribute as int. 
     # --------------------------------------
     - def_name: __float__
       doc: >
+        Internal method to manage the attribute as float. 
     # --------------------------------------
     - def_name: __str__
       doc: >
+        Parses the attribute ID and its value to string.  
     # --------------------------------------
-    - def_name: __str__
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
+        Returns true if this actor's attribute and `other` are the same. 
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: other
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
+      doc: >
+        Returns true if this actor's attribute and `other` are different. 
+    # --------------------------------------
+    - def_name: __nonzero__
+      return: bool
+      doc: >
+        Returns true if this actor's attribute is not zero or null. 
     # --------------------------------------
 
   - class_name: ActorBlueprint
     # - DESCRIPTION ------------------------
     doc: >
-      Class that contains all the necessary information for spawning an Actor.
+      CARLA provides a blueprint library for actors that can be consulted through carla.BlueprintLibrary. Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then customize some attributes and eventually spawn the actors through carla.World.   
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
       type: str
       doc: >
-        Actor blueprint identifier, e.g. `walker.pedestrian.0001`.
+        The identifier of said blueprint inside the library. E.g. `walker.pedestrian.0001`.
     - var_name: tags
       type: list(str)
       doc: >
-        List of tags of an actor blueprint e.g. `['0001', 'pedestrian', 'walker']`
+        A list of tags each blueprint has that helps describing them. E.g. `['0001', 'pedestrian', 'walker']`.
     # - METHODS ----------------------------
     methods:
+    - def_name: __iter__
+      doc: >
+        Allows iteration within this class. 
+    # --------------------------------------
+    - def_name: __len__
+      doc: >
+        Returns the amount of attributes for this blueprint. 
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+        Parses the information of this blueprint to string. 
+    # --------------------------------------
+    - def_name: has_attribute
+      return: bool
+      params:
+      - param_name: id
+        type: str
+        doc: >
+          e.g. `gender` would return **True** for pedestrians' blueprints. 
+      doc: >
+        Returns <b>True</b> if the blueprint contains the attribute `id`. 
+    # --------------------------------------
     - def_name: has_tag
       return: bool
       params:
@@ -175,7 +197,7 @@
         doc: >
           e.g. 'walker'
       doc: >
-        Returns `true` if an actor blueprint has the tag.
+        Returns <b>True</b> if the blueprint has the specified `tag` listed.
     # --------------------------------------
     - def_name: match_tags
       return: bool
@@ -183,19 +205,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Test if any of the flags or id matches wildcard_pattern.
-      note: > 
-        The wildcard_pattern follows Unix shell-style wildcards.
-    # --------------------------------------
-    - def_name: has_attribute
-      return: bool
-      params:
-      - param_name: id
-        type: str
-        doc: >
-          e.g 'gender'
-      doc: >
-        Returns `true` if the blueprint contains the specified attribute
+        Returns <b>True</b> if any of the tags listed for this blueprint matches `wildcard_pattern`. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
     # --------------------------------------
     - def_name: get_attribute
       return: carla.ActorAttribute 
@@ -203,7 +213,7 @@
       - param_name: id
         type: str
       doc: >
-        Returns the current actor attribute through its id
+        Returns the actor's attribute with `id` as identifier if existing. 
       Return: carla.ActorAttribute
     # --------------------------------------
     - def_name: set_attribute
@@ -211,64 +221,59 @@
       - param_name: id
         type: str
         doc: >
-    # --------------------------------------
+          The identifier for the attribute that is intended to be changed. 
       - param_name: value
         type: str
         doc: >
+          The new value for said attribute. 
       doc: >
-        Sets an existing attribute to the actor's blueprint
-      note: >
-        Attribute can only be set or changed if it is modifiable
-    # --------------------------------------
-    - def_name: __len__
-      doc: >
-    # --------------------------------------
-    - def_name: __iter__
-      doc: >
-    # --------------------------------------
-    - def_name: __str__
-      doc: >
+        If the `id` attribute is modifiable, changes its value to `value`. 
     # --------------------------------------
 
   - class_name: BlueprintLibrary
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides access to [blueprints](../bp_library/).
+      A class that contains the blueprints provided for actor spawning. Its main application is to return carla.ActorBlueprint objects needed to spawn actors. Each blueprint has an identifier and attributes that may or may not be modifiable. The library is automatically created by the server and can be accessed through carla.World.
+        
+        [Here](bp_library.md) is a reference containing every available blueprint and its specifics.   
     # - METHODS ----------------------------
     methods:
-    - def_name: find
-      params:
-      - param_name: id
-        type: str
-      return: carla.ActorBlueprint
-      doc: >
-        Returns a carla.ActorBlueprint through its id
-    # --------------------------------------
-    - def_name: filter
-      params:
-      - param_name: wildcard_pattern
-        type: str
-      doc: >
-        Filters a list of ActorBlueprint with id or tags matching wildcard_pattern.
-        The pattern is matched against each blueprint's id and tags.
-      note: > 
-        The wildcard_pattern follows Unix shell-style wildcards (fnmatch).
-      return: carla.BlueprintLibrary
-    # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
         type: int
       return: carla.ActorBlueprint
       doc: >
-    # --------------------------------------
-    - def_name: __len__
-      doc: >
+        Returns the blueprint stored in `pos` position inside the data structure containing them. 
     # --------------------------------------
     - def_name: __iter__
       doc: >
+        Method that allows iteration of this class. 
+    # --------------------------------------
+    - def_name: __len__
+      return: int 
+      doc: >
+        Returns the amount of blueprints comprising the library. 
     # --------------------------------------
     - def_name: __str__
+      return: string 
       doc: >
+        Parses the identifiers for every blueprint to string. 
+    # --------------------------------------
+    - def_name: filter
+      params:
+      - param_name: wildcard_pattern
+        type: str
+      doc: >
+        Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
+      return: carla.BlueprintLibrary
+    # --------------------------------------
+    - def_name: find
+      params:
+      - param_name: id
+        type: str
+      return: carla.ActorBlueprint
+      doc: >
+        Returns the blueprint corresponding to that identifier. 
     # --------------------------------------
 ...

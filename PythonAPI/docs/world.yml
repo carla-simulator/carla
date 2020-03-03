@@ -6,7 +6,7 @@
   - class_name: Timestamp
     # - DESCRIPTION ------------------------
     doc: >
-      Class that contains Timestamp simulated data.
+      Class that contains time information for simulated data. This information is automatically retrieved as part of the carla.WorldSnapshot the client gets on every frame, but might also be used in many other situations such as a carla.Sensor retrieveing data. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
@@ -24,8 +24,7 @@
     - var_name: platform_timestamp
       type: float
       doc: >
-        Time-stamp of the frame at which this measurement was taken, in seconds
-        as given by the OS.
+        Time register of the frame at which this measurement was taken given by the OS in seconds. 
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -59,167 +58,158 @@
   - class_name: ActorList
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides access to actors.
+      A class that contains every actor present on the scene and provides access to them. The list is automatically created and updated by the server and it can be returned using carla.World. 
     # - METHODS ----------------------------
     methods:
-    - def_name: find
-      params:
-      - param_name: actor_id
-        type: int
-      doc: >
-        Find an actor by ID.
-    # --------------------------------------
-    - def_name: filter
-      params:
-      - param_name: wildcard_pattern
-        type: str
-      doc: >
-        Filters a list of Actors with type_id matching wildcard_pattern.
-      note: >
-         The wildcard_pattern follows Unix shell-style wildcards (fnmatch). 
-    # --------------------------------------
     - def_name: __getitem__
+      return: carla.Actor
       params:
       - param_name: pos
         type: int
       doc: >
-    # --------------------------------------
-    - def_name: __len__
-      doc: >
+        Returns the actor corresponding to `pos` position in the list. 
     # --------------------------------------
     - def_name: __iter__
       doc: >
+        Allows the iteration for this object. 
+    # --------------------------------------
+    - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of actors listed. 
     # --------------------------------------
     - def_name: __str__
+      return: str
       doc: >
+        Parses to the ID for every actor listed.  
+    # --------------------------------------
+
+    - def_name: filter
+      return: list
+      params:
+      - param_name: wildcard_pattern
+        type: str
+      doc: >
+        Filters a list of Actors matching `wildcard_pattern` against their variable **<font color="#f8805a">type_id</font>** (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
+    # --------------------------------------
+    - def_name: find
+      return: carla.Actor
+      params:
+      - param_name: actor_id
+        type: int
+      doc: >
+        Finds an actor using its identifier and returns it or <b>None</b> if it is not present. 
     # --------------------------------------
 
   - class_name: WorldSettings
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides access to modifiable world settings.
-      Check it out in our [section](../configuring_the_simulation/)
+      The simulation has some advanced configuration options that are contained in this class and can be managed using carla.World and its methods. These allow the user to choose between client-server synchrony/asynchrony, activation of "no rendering mode" and either if the simulation should run with a fixed or variable time-step. Check [this](adv_synchrony_timestep.md) out if you want to learn about it. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: synchronous_mode
       type: bool
       doc: >
+        States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is false by default. 
     - var_name: no_rendering_mode
       type: bool
       doc: >
+        When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is false by default. 
     - var_name: fixed_delta_seconds
       type: float
       doc: >
+        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
       params:
       - param_name: synchronous_mode
         type: bool
-        default: false
+        default: False
         doc: >
+          Set this to true to enable client-server synchrony. 
       - param_name: no_rendering_mode
         type: bool
-        default: false
+        default: False
         doc: >
+          Set this to true to completely disable rendering in the simulation.
       - param_name: fixed_delta_seconds
         type: float
         default: 0.0
         doc: >
+          Set this time in seconds to get a fixed time-step in between frames. 0.0 means variable time-step and it is the default mode. 
       doc: >
+        Creates an object containing desired settings that could later be applied through carla.World and its method **<font color="#7fb800">apply_settings()</font>**.
     # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        type: carla.Timestamp
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
       doc: >
+        Returns <b>True</b> if both objects' variables are the same. 
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: other
-        type: carla.Timestamp
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
       doc: >
+        Returns <b>True</b> if both objects' variables are different. 
     # --------------------------------------
     - def_name: __str__
+      return: str
       doc: > 
+        Parses the established settings to a string and shows them in command line. 
     # --------------------------------------
 
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the attachment options. See carla.World.spawn_actor.<br>
-      Check out this [`recipe`](../python_cookbook/#attach-sensors-recipe)!
+      Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for cameras and sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class. 
       
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Rigid
       doc: >
-        Standard fixed attachment.
+        With this fixed attatchment the object follow its parent position strictly. 
     - var_name: SpringArm
       doc: >
-        Attachment that expands or retracts based on camera situation.
+        An attachment that expands or retracts depending on camera situation. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them.  
     # --------------------------------------
 
   - class_name: World
     # - DESCRIPTION ------------------------
     doc: >
-      Class that contains the current loaded map.
+      World objects are created by the client to have a place for the simulation to happen. The world contains the map we can see, meaning the asset, not the navigation map. Navigation maps are part of the carla.Map class. It also manages the weather and actors present in it. There can only be one world per simulation, but it can be changed anytime. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
       type: int
       doc: >
-        The id of the episode associated with this world.
+        The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change everytime a world is disabled or reloaded. Keeping track is useful to avoid possible issues.  
     - var_name: debug
       type: carla.DebugHelper
       doc: >
+        Responsible for creating different shapes for debugging. Take a look at its class to learn more about it. 
     # - METHODS ----------------------------
-    methods:
-    - def_name: get_blueprint_library
-      return: carla.BlueprintLibrary
+    methods:    
+    - def_name: __str__
+      return: string
       doc: >
-        Return the list of blueprints available in this world. These blueprints
-        can be used to spawn actors into the world.
-    # --------------------------------------
-    - def_name: get_map
-      return: carla.Map
-      doc: >
-        Return the map that describes this world.
-    # --------------------------------------
-    - def_name: get_spectator
-      return: carla.Actor
-      doc: >
-        Return the spectator actor. The spectator controls the view in the
-        simulator window.
-    # --------------------------------------
-    - def_name: get_settings
-      return: carla.WorldSettings
-      doc: >
-    # --------------------------------------
+        The content of the world is parsed and printed as a brief report of its current state. 
+     # --------------------------------------
     - def_name: apply_settings
       return: int
       params:
       - param_name: world_settings
         type: carla.WorldSettings
       doc: >
-        Returns the id of the frame when the settings took effect.
-    # --------------------------------------
-    - def_name: get_weather
-      return: carla.WeatherParameters
-      doc: >
-        Retrieve the weather parameters currently active in the world.
-    # --------------------------------------
-    - def_name: set_weather
-      params: 
-      - param_name: weather
-        type: carla.WeatherParameters
-      doc: >
-        Change the weather in the simulation.
-    # --------------------------------------
-    - def_name: get_snapshot
-      return: carla.WorldSnapshot
-      doc: >
-        Return a snapshot of the world at this moment.
+        This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented. 
     # --------------------------------------
     - def_name: get_actor
       return: carla.Actor
@@ -227,63 +217,134 @@
       - param_name: actor_id
         type: int
       doc: >
-        Find actor by id, return None if not found.
+        Looks up for an actor by ID and returns <b>None</b> if not found.
+    # --------------------------------------
+    - def_name: get_actors
+      return: carla.ActorList
+      params:
+      - param_name: actor_ids
+        type: list
+        default: None
+        doc: >
+          The IDs of the actors being searched. By default it is set to <b>None</b> and returns every actor on scene. 
+      doc: >
+        Retrieves a list of carla.Actor elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths. 
+    # --------------------------------------
+    - def_name: get_blueprint_library
+      return: carla.BlueprintLibrary
+      doc: >
+        Returns a list of actor blueprints available to ease the spawn of these into the world.
+    # --------------------------------------
+    - def_name: get_map
+      return: carla.Map
+      doc: >
+        Returns the object containing the navigation map used to describe this world.
     # --------------------------------------
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
-        Retrieve a random location to be used as a destination for walkers in carla.WalkerAIController.go_to_location. See [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
+        This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
     # --------------------------------------
-    - def_name: get_actors
-      return: carla.ActorList
+    - def_name: get_snapshot
+      return: carla.WorldSnapshot
       doc: >
-        By default it returns a list with every actor present in the world.
-        _A list of ids can be used as a parameter_
+        Returns a snapshot of the world at a certain moment comprising all the information about the actors.
+    # --------------------------------------
+    - def_name: get_spectator
+      return: carla.Actor
+      doc: >
+        Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.
+    # --------------------------------------
+    - def_name: get_settings
+      return: carla.WorldSettings
+      doc: >
+        Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.
+    # --------------------------------------
+    - def_name: get_weather
+      return: carla.WeatherParameters
+      doc: >
+        Retrieves an object containing weather parameters currently active in the simulation, mainly cloudiness, precipitation, wind and sun position.
+    # --------------------------------------
+    - def_name: on_tick
+      return: int
+      params:
+      - param_name: callback
+        type: carla.WorldSnapshot
+        doc: > 
+          A defined function with a snapshot as compulsory parameter that will be called every tick.  
+      doc: >
+        The method will start callbacks for a defined function `callback`. It will return the ID for this callback so it can be removed with **<font color="#7fb800">remove_on_tick()</font>**.
+    # --------------------------------------
+    - def_name: remove_on_tick
+      params:
+      - param_name: callback_id
+        type: callback
+        doc: > 
+          The callback to be removed.  
+      doc: >
+        Stops the callback for `callback_id` started with **<font color="#7fb800">on_tick()</font>**.
+    # --------------------------------------
+    - def_name: set_weather
+      params: 
+      - param_name: weather
+        type: carla.WeatherParameters
+        doc: > 
+          New conditions to be applied. 
+      doc: >
+        Changes the weather parameteres ruling the simulation to another ones defined in an object. 
     # --------------------------------------
     - def_name: spawn_actor
       return: carla.Actor
       params:
       - param_name: blueprint
-        type: carla.BlueprintLibrary
+        type: carla.ActorBlueprint
         doc: >
+          The reference from which the actor will be created. 
       - param_name: transform
         type: carla.Transform
         doc: >
-          If attached to parent, transform acts like a relative_transform to the parent actor.
+          Contains the location and orientation the actor will be spawned with. 
       - param_name: attach_to 
         type: carla.Actor
         default: None
         doc: > 
+          The parent object that the spawned actor will follow around. 
       - param_name: attachment 
         type: carla.AttachmentType
         default: Rigid
         doc: > 
+          Determines how fixed and rigorous should be the changes in position according to its parent object. 
       doc: >
-        Spawn an actor into the world based on the blueprint provided at
-        transform. If a parent is provided, the actor is attached to
-        parent.
+        The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type. 
+    # --------------------------------------
+    - def_name: tick
+      return: int
+      doc: >
+        This only has effect on synchronous mode, when both client and server move together. The method tells the server when to step to the next frame and returns the id of the newly started frame. 
     # --------------------------------------
     - def_name: try_spawn_actor
       return: carla.Actor
       params:
       - param_name: blueprint
-        type: carla.BlueprintLibrary
+        type: carla.ActorBlueprint
         doc: >
+          The reference from which the actor will be created. 
       - param_name: transform
         type: carla.Transform
         doc: >
-          If attached to parent, transform acts like a relative_transform to the parent actor.
+          Contains the location and orientation the actor will be spawned with. 
       - param_name: attach_to 
         type: carla.Actor
         default: None
         doc: > 
+          The parent object that the spawned actor will follow around. 
       - param_name: attachment 
         type: carla.AttachmentType
         default: Rigid
-        doc: >
+        doc: > 
+          Determines how fixed and rigorous should be the changes in position according to its parent object. 
       doc: >
-        Same as SpawnActor but return none on failure instead of throwing an
-        exception.
+        Same as **<font color="#7fb800">spawn_actor()</font>** but returns <b>None</b> on failure instead of throwing an exception.
     # --------------------------------------
     - def_name: wait_for_tick
       return: carla.WorldSnapshot
@@ -291,159 +352,157 @@
       - param_name: seconds
         type: float
         default: 10.0
+        doc: > 
+          Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.   
       doc: >
-        Block calling thread until a world tick is received.
-    # --------------------------------------
-    - def_name: on_tick
-      return: int
-      params:
-      - param_name: callback
-        type: carla.WorldSnapshot
-      doc: >
-        Returns the ID of the callback so it can be removed with `remove_on_tick`.
-    # --------------------------------------
-    - def_name: remove_on_tick
-      params:
-      - param_name: callback_id
-      doc: >
-        Removes on tick callbacks.
-    # --------------------------------------
-    - def_name: tick
-      return: int
-      doc: >
-        Synchronizes with the simulator and returns the id of the newly started frame (only has effect on
-        synchronous mode).
-    # --------------------------------------
-    - def_name: __str__
-      doc: >
+        The client tells the server to block calling thread until a **<font color="#7fb800">world_tick()</font>** is received.
     # --------------------------------------
 
   - class_name: DebugHelper
     # - DESCRIPTION ------------------------
     doc: >
-      Class that provides drawing debug shapes.
-      Check out this [`example`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/lane_explorer.py)
+      Helper class part of carla.World that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.
     # - METHODS ----------------------------
     methods:
     - def_name: draw_point
       params: 
       - param_name: location
         type: carla.Location
+        doc: >
+          Spot in the coordinate system to center the object. 
       - param_name: size
         type: float
         default: 0.1f
+        doc: >
+          Density of the point.  
       - param_name: color
         type: carla.Color
         default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
         default: -1.0f
-      - param_name: persistent_lines
-        type: bool
-        default: True
         doc: >
-          _Deprecated, use `life_time = 0` instead_
+          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
       doc: >
-        Draws a point in the given location.
+        Draws a point `location`.
     # --------------------------------------
     - def_name: draw_line
       params:
       - param_name: begin
         type: carla.Location
+        doc: >
+          Point in the coordinate system where the line starts. 
       - param_name: end
         type: carla.Location
+        doc: >
+          Spot in the coordinate system where the line ends. 
       - param_name: thickness
         type: float
         default: 0.1f
+        doc: >
+          Density of the line.  
       - param_name: color
         type: carla.Color
         default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
       - param_name: life_time
         type: float
         default: -1.0f
-      - param_name: persistent_lines
-        type: bool
-        default: True
         doc: >
-          _Deprecated, use `life_time = 0` instead_
+          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
       doc: >
-        Draws a line between two given locations.
+        Draws a line in between `begin` and `end`.
     # --------------------------------------
     - def_name: draw_arrow
       params:
       - param_name: begin
         type: carla.Location
+        doc: >
+          Point in the coordinate system where the arrow starts. 
       - param_name: end
         type: carla.Location
+        doc: >
+          Point in the coordinate system where the arrow ends and points towards to. 
       - param_name: thickness
         type: float
         default: 0.1f
+        doc: >
+          Density of the line.  
       - param_name: arrow_size
         type: float
         default: 0.1f
+        doc: >
+          Size of the tip of the arrow. 
       - param_name: color
         type: carla.Color
         default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
         default: -1.0f
-      - param_name: persistent_lines
-        type: bool
-        default: True
         doc: >
-          _Deprecated, use `life_time = 0` instead_
+          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
       doc: >
-        Draws an arrow between two given locations.
+        Draws an arrow from `begin` to `end` pointing in that direction.
 
     # --------------------------------------
     - def_name: draw_box
       params:
       - param_name: box
         type: carla.BoundingBox
+        doc: >
+          Object containing a location and the length of a box for every axis. 
       - param_name: rotation
         type: carla.Rotation
+        doc: >
+          Orientation of the box according to Unreal Engine's axis system. 
       - param_name: thickness
         type: float
         default: 0.1f
+        doc: >
+          Density of the lines that define the box. 
       - param_name: color
         type: carla.Color
         default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
         default: -1.0f
-      - param_name: persistent_lines
-        type: bool
-        default: True
         doc: >
-          _Deprecated, use `life_time = 0` instead_
+          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
       doc: >
-        Draws the carla.BoundingBox of a given bounding_box.<br>
-        Check out this [`recipe`](../python_cookbook/#debug-bounding-box-recipe)!
+        Draws a box, ussually to act for object colliders. 
         
     # --------------------------------------
     - def_name: draw_string
       params: 
       - param_name: location
         type: carla.Location
+        doc: >
+          Spot in the simulation where the text will be centered. 
       - param_name: text
         type: str
+        doc: >
+          Text intended to be shown in the world. 
       - param_name: draw_shadow
         type: bool
         default: False
+        doc: >
+          Casts a shadow for the string that could help in visualization. It is disabled by default.
       - param_name: color
         type: carla.Color
         default: (255,0,0)
+        doc: >
+          RGB code to color the string. Red by default. 
       - param_name: life_time
         type: float
         default: -1.0f
-      - param_name: persistent_lines
-        type: bool
-        default: true
-        doc: >
-          _Deprecated, set a high `life_time` instead_
       doc: >
-        Draws a string in a given location.
-      note: >
-        Strings can only be seen on the server-side.
+        Draws a string in a given location of the simulation which can only be seen server-side.
     # --------------------------------------
 ...

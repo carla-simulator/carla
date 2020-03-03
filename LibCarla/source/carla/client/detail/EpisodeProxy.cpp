@@ -43,11 +43,6 @@ namespace detail {
           "trying to operate on a destroyed actor; an actor's function "
           "was called, but the actor is already destroyed."));
     }
-    if (_episode_id != ptr->GetCurrentEpisodeId()) {
-      throw_exception(std::runtime_error(
-          "trying to access an expired episode; a new episode was started "
-          "in the simulation but an object tried accessing the old one."));
-    }
     return ptr;
   }
 
