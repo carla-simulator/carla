@@ -13,8 +13,8 @@
 #include "Containers/Map.h"
 #include "TrafficLightController.generated.h"
 
-// Defines a stage of a semaphor with a State and
-// the time this state lasts
+/// Defines a stage of a semaphor with a State and
+/// the time this state lasts
 USTRUCT(BlueprintType)
 struct FTrafficLightStage
 {
@@ -27,8 +27,8 @@ struct FTrafficLightStage
   ETrafficLightState State;
 };
 
-// Maps a controller from OpenDrive.
-// Controls the asociated traffic lights and contains its cycles
+/// Maps a controller from OpenDrive.
+/// Controls the asociated traffic lights and contains its cycles
 UCLASS(BlueprintType)
 class CARLA_API UTrafficLightController : public UObject
 {
