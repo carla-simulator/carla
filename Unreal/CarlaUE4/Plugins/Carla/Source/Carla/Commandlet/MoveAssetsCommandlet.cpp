@@ -21,14 +21,28 @@ UMoveAssetsCommandlet::UMoveAssetsCommandlet()
 // and for specifying the path to these meshes when spawning them in a world.
 namespace SSTags {
   // Carla Semantic Segmentation Folder Tags
-  static const FString ROAD       = TEXT("Roads");
+  static const FString ROAD       = TEXT("Road");
   static const FString ROADLINES  = TEXT("RoadLines");
   static const FString TERRAIN    = TEXT("Terrain");
+  static const FString GRASS      = TEXT("Terrain");
+  static const FString SIDEWALK   = TEXT("SideWalk");
+  static const FString CURB       = TEXT("SideWalk");
+  static const FString GUTTER     = TEXT("SideWalk");
 
   // RoadRunner Tags
-  static const FString R_ROAD     = TEXT("RoadNode");
+  //
+  // RoadRunner's mesh naming convention:
+  // mapName_meshType_meshSubtype_layerNumberNode
+  //
+  // meshType is a larger geographical tag (e.g. "Road", "Terrain")
+  // meshSubType is a denomination of the tag (e.g. "Road", "Gutter", "Ground")
+  static const FString R_ROAD     = TEXT("Road_Road");
   static const FString R_TERRAIN  = TEXT("Terrain");
-  static const FString R_MARKING  = TEXT("MarkingNode");
+  static const FString R_GRASS    = TEXT("Road_Grass");
+  static const FString R_MARKING  = TEXT("Road_Marking");
+  static const FString R_SIDEWALK = TEXT("Road_Sidewalk");
+  static const FString R_CURB     = TEXT("Road_Curb");
+  static const FString R_GUTTER   = TEXT("Road_Gutter");
 }
 
 FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) const
@@ -106,7 +120,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   AssetsObjectLibrary->GetAssetDataList(MapContents);
   AssetsObjectLibrary->ClearLoaded();
 
-  TArray<FString> DestinationPaths = {SSTags::ROAD, SSTags::ROADLINES, SSTags::TERRAIN};
+  TArray<FString> DestinationPaths = {SSTags::ROAD, SSTags::ROADLINES, SSTags::TERRAIN, SSTags::GRASS, SSTags::SIDEWALK, SSTags::CURB, SSTags::GUTTER};
 
   // Init Map with keys
   TMap<FString, TArray<UObject *>> AssetDataMap;
@@ -147,6 +161,18 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
       else if (AssetName.Contains(SSTags::R_TERRAIN))
       {
         AssetDataMap[SSTags::TERRAIN].Add(MeshAsset);
+      }
+      else if (AssetName.Contains(SSTags::R_SIDEWALK))
+      {
+        AssetDataMap[SSTags::SIDEWALK].Add(MeshAsset);
+      }
+      else if (AssetName.Contains(SSTags::R_CURB))
+      {
+        AssetDataMap[SSTags::CURB].Add(MeshAsset);
+      }
+      else if (AssetName.Contains(SSTags::R_GUTTER))
+      {
+        AssetDataMap[SSTags::GUTTER].Add(MeshAsset);
       }
     }
   }

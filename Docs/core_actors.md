@@ -1,4 +1,4 @@
-<h1>2nd. Actors and blueprints</h1>
+# 2nd. Actors and blueprints
 
 The actors in CARLA include almost everything playing a role the simulation. That includes not only vehicles and walkers but also sensors, traffic signs, traffic lights and the spectator, the camera providing the simulation's point of view. They are crucial, and so it is to have fully understanding on how to operate on them.  
 This section will cover the basics: from spawning up to destruction and their different types. However, the possibilities they present are almost endless. This is the first step to then experiment, take a look at the __How to's__ in this documentation and share doubts and ideas in the [CARLA forum](https://forum.carla.org/).  
@@ -16,12 +16,12 @@ This section will cover the basics: from spawning up to destruction and their di
     * Vehicles
     * Walkers
 
----------------
-##Blueprints  
+---
+## Blueprints
 
 This layouts allow the user to smoothly add new actors into the simulation. They basically are already-made models with a series of attributes listed, some of which are modifiable and others are not: vehicle color, amount of channels in a lidar sensor, _fov_ in a camera, a walker's speed. All of these can be changed at will. All the available blueprints are listed in the [blueprint library](bp_library.md) with their attributes and a tag to identify which can be set by the user.  
 
-<h4>Managing the blueprint library</h4>
+#### Managing the blueprint library
 
 There is a [carla.BlueprintLibrary](python_api.md#carla.BlueprintLibrary) class containing a list of [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) elements. It is the world object who can provide access to an instance of it:
 ```py
@@ -53,15 +53,15 @@ for attr in blueprint:
         blueprint.set_attribute(attr.id, random.choice(attr.recommended_values))
 ```
 !!! Note
-    Users can create their own vehicles, take a look at the tutorials in __How to... (content)__ to learn on that. Contributors can [add their new content to CARLA](dev/how_to_upgrade_content.md). 
+    Users can create their own vehicles, take a look at the tutorials in __How to... (content)__ to learn on that. Contributors can [add their new content to CARLA](tuto_D_contribute_assets.md). 
 
----------------
-##Actor life cycle  
+---
+## Actor life cycle  
 
 !!! Important
     All along this section, many different functions and methods regarding actors will be covered. The Python API provides for __[commands](python_api.md#command.SpawnActor)__ to apply batches of this common functions (such as spawning or destroying actors) in just one frame. 
 
-<h4>Spawning</h4>
+#### Spawning
 
 The world object is responsible of spawning actors and keeping track of those who are currently on scene. Besides a blueprint, only a [carla.Transform](python_api.md#carla.Transform), which basically defines a location and rotation for the actor. 
 
@@ -105,7 +105,7 @@ for speed_sign in actor_list.filter('traffic.speed_limit.*'):
     print(speed_sign.get_location())
 ```
 
-<h4>Handling</h4>
+#### Handling
 
 Once an actor si spawned, handling is quite straightforward. The [carla.Actor](python_api.md#carla.Actor) class mostly consists of _get()_ and _set()_ methods to manage the actors around the map:
 
@@ -128,7 +128,7 @@ Besides that, actors also have tags provided by their blueprints that are mostly
     Most of the methods send requests to the simulator asynchronously. The simulator queues these, but has a limited amount of time each update to parse them. Flooding the simulator with lots of "set" methods will accumulate a significant lag.
 
 
-<h4>Destruction</h4>
+#### Destruction
 
 To remove an actor from the simulation, an actor can get rid of itself and notify if successful doing so:
 
@@ -141,11 +141,11 @@ Actors are not destroyed when the Python script finishes, they remain and the wo
 !!! Important
     Destroying an actor blocks the simulator until the process finishes. 
 
----------------
-##Types of actors  
-<h4>Sensors</h4>
+---
+## Types of actors  
+#### Sensors
 
-Sensors are actors that produce a stream of data. They are so important and vast that they will be properly written about on their own section: [4th. Sensors and data](cameras_and_sensors.md). 
+Sensors are actors that produce a stream of data. They are so important and vast that they will be properly written about on their own section: [4th. Sensors and data](core_sensors.md). 
 So far, let's just take a look at a common sensor spawning routine: 
 
 ```py
@@ -159,11 +159,11 @@ This example spawns a camera sensor, attaches it to a vehicle, and tellds the ca
 * Most of the sensors will be attached to a vehicle to gather information on its surroundings. 
 * Sensors __listen__ to data. When receiving it, they call a function described with __[Lambda expressions](https://docs.python.org/3/reference/expressions.html)__, so it is advisable to learn on that beforehand <small>(6.13 in the link provided)</small>. 
 
-<h4>Spectator</h4>
+#### Spectator
 
 This unique actor is the one element placed by Unreal Engine to provide an in-game point of view. It can be used to move the view of the simulator window.
 
-<h4>Traffic signs and traffic lights</h4>
+#### Traffic signs and traffic lights
 
 So far, CARLA only is aware of some signs: stop, yield and speed limit, described with [carla.TrafficSign](python_api.md#carla.TrafficSign). Traffic lights, which are considered an inherited class named [carla.TrafficLight](python_api.md#carla.TrafficLight). __These cannot be found on the blueprint library__ and thus, cannot be spawned. They set traffic conditions and so, they are mindfully placed by developers. 
 
@@ -187,7 +187,7 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 
   * **Speed limit signs** with the speed codified in their type_id.
 
-<h4>Vehicles</h4>
+#### Vehicles
 
 [carla.Vehicle](python_api.md#carla.Vehicle) are a special type of actor that provide some better physics control. This is achieved applying four types of different controls: 
 
@@ -217,12 +217,12 @@ print(box.location)         # Location relative to the vehicle.
 print(box.extent)           # XYZ half-box extents in meters.
 ```
 
-<h4>Walkers</h4>
+#### Walkers
 
 [carla.Walker](python_api.md#carla.Walker) are moving actors and so, work in quite a similar way as vehicles do. Control over them is provided by controllers:  
 
 * __[carla.WalkerControl](python_api.md#carla.Walker)__: to move the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* __[carla.WalkerBoneControl](python_api.md#carla.Walker)__: provides control over the specific bones of the 3D model. The skeleton structure and how to control it is summarized in this __[How to](walker_bone_control.md)__. 
+* __[carla.WalkerBoneControl](python_api.md#carla.Walker)__: provides control over the specific bones of the 3D model. The skeleton structure and how to control it is summarized in this __[How to](tuto_G_control_walker_skeletons.md)__. 
 
 Walkers can be AI controlled. They do not have an autopilot mode, but there is another actor, [carla.WalkerAIController](python_api.md#carla.WalkerAIController) that, when spawned attached to a walker, can move them around: 
 
@@ -242,12 +242,12 @@ ai_controller.stop()
 ```
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, then they reach the closest point from the are where they are.  
 
-For a more advanced reference on how to use this, take a look at [this recipe](python_cookbook.md#walker-batch-recipe) where a lot of walkers is spawned and set to wander around using batches. 
+For a more advanced reference on how to use this, take a look at [this recipe](ref_code_recipes.md#walker-batch-recipe) where a lot of walkers is spawned and set to wander around using batches. 
 
 !!! Note
     To **destroy the pedestrians**, the AI controller needs to be stopped first and then, both actor and controller should be destroyed. 
 
----------------
+---
 That is a wrap as regarding actors in CARLA.  
 The next step should be learning more about the map, roads and traffic in CARLA. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
 <div text-align: center>

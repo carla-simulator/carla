@@ -13,11 +13,20 @@ from . import SyncSmokeTest
 class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
         self.world = self.client.reload_world()
+
+        # Check why the world settings aren't applied after a reload
+        self.settings = self.world.get_settings()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+
         spawn_points = self.world.get_map().get_spawn_points()[:20]
         vehicles = self.world.get_blueprint_library().filter('vehicle.*')
         batch = [(random.choice(vehicles), t) for t in spawn_points]
         batch = [carla.command.SpawnActor(*args) for args in batch]
-        response = self.client.apply_batch_sync(batch)
+        response = self.client.apply_batch_sync(batch, True)
 
         self.assertFalse(any(x.error for x in response))
         ids = [x.actor_id for x in response]

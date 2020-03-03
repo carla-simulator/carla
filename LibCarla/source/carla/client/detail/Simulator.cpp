@@ -16,6 +16,7 @@
 #include "carla/client/TimeoutException.h"
 #include "carla/client/WalkerAIController.h"
 #include "carla/client/detail/ActorFactory.h"
+#include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -47,6 +48,7 @@ namespace detail {
     while (frame > episode.GetState()->GetTimestamp().frame) {
       std::this_thread::yield();
     }
+    carla::traffic_manager::TrafficManager::Tick();
   }
 
   // ===========================================================================
@@ -80,6 +82,15 @@ namespace detail {
       }
     }
     throw_exception(std::runtime_error("failed to connect to newly created map"));
+  }
+
+  EpisodeProxy Simulator::LoadOpenDriveEpisode(std::string opendrive) {
+    // The "OpenDriveMap" is an ".umap" located in:
+    // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
+    // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
+    constexpr auto custom_opendrive_map = "OpenDriveMap";
+    _client.CopyOpenDriveToServer(std::move(opendrive));
+    return LoadEpisode(custom_opendrive_map);
   }
 
   // ===========================================================================
@@ -119,7 +130,6 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     const auto frame = _client.SendTickCue();
     SynchronizeFrame(frame, *_episode);
-    RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
     return frame;
   }
 

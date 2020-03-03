@@ -5,7 +5,7 @@
   - class_name: Actor
     # - DESCRIPTION ------------------------
     doc: >
-      CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](../bp_library/).
+      CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by carla.World and they need for a carla.ActorBlueprint to be created. These blueprints belong into a library provided by CARLA, find more about them [here](bp_library.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: attributes
@@ -23,7 +23,7 @@
     - var_name: semantic_tags
       type: list(int)
       doc: >
-        A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with "pole" and "traffic light". These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](../cameras_and_sensors/#sensor.camera.semantic_segmentation). 
+        A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with "pole" and "traffic light". These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera). 
     - var_name: type_id
       type: str
       doc: >
@@ -321,7 +321,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
-      All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to see an example. 
+      All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Green
@@ -337,7 +337,7 @@
     doc: >
       A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
            
-        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](../python_cookbook/#traffic-lights-recipe) to learn how to do so. 
+        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to learn how to do so. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state

@@ -16,6 +16,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
@@ -98,6 +100,23 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
     ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
+}
+
+bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
+{
+  if (OpenDriveString.IsEmpty())
+  {
+    return false;
+  }
+
+  // Copy the OpenDrive as a file in the serverside
+  FFileHelper::SaveStringToFile(
+      OpenDriveString,
+      *(FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/OpenDriveMap.xodr"),
+      FFileHelper::EEncodingOptions::ForceUTF8,
+      &IFileManager::Get());
+
+  return true;
 }
 
 void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)

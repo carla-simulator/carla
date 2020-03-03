@@ -7,7 +7,7 @@
 #include "carla/opendrive/parser/ObjectParser.h"
 
 #include "carla/road/MapBuilder.h"
-#include "carla/road/element/RoadObjectCrosswalk.h"
+#include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/Road.h"
 
 #include <pugixml/pugixml.hpp>
