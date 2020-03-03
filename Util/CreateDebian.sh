@@ -1,50 +1,49 @@
 #!/bin/sh
 
 #This script builds debian package for CARLA
-#Working with Ubuntu 18.04
+#Tested with Ubuntu 14.04, 16.04, 18.04 and 19.10
+
+sudo apt-get install build-essential dh-make
 
 #Adding maintainer name 
 DEBFULLNAME=Carla\ Simulator\ Team
 export DEBFULLNAME
 
-#replace carla-0.9.7 with your desired carla-<version>
+#replace carla-0.9.7 with your required carla-<version>
 CARLA_DIR=carla-0.9.7
 CARLA_VERSION=0.9.7
 
-#replace these urls with desired carla release url additional-maps url
+#replace the url with your carla release url
 CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.7.tar.gz
+CARLA_TAR=CARLA_0.9.7.tar.gz
+
+#replace the url with your required additional maps url
+#if you do not have additional map then comment line 22, 23, 41, 42 
 ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
+ADDITIONALMAPS_TAR=AdditionalMaps_0.9.7.tar.gz
 
-#replace the tar file name with additional maps
-#if you do not have additional map then comment line 16, 20, 41, 43 
-NEW_TOWNS=AdditionalMaps_0.9.7.tar.gz
-
-#Check if Carla-<version> release is already downloaded
-FILE=$(pwd)/carla-debian/${CARLA_DIR}/ImportAssets.sh 
-if [ -f "$FILE" ]; then
-    ImportAssetscheck=1
-else 
-    ImportAssetscheck=0
-fi
-
-sudo apt-get install build-essential dh-make
-mkdir carla-debian/
-mkdir carla-debian/${CARLA_DIR}
+mkdir -p carla-debian/${CARLA_DIR}
 cd carla-debian/${CARLA_DIR}
 
+#Check if Carla-<version> release is already downloaded
+FILE=$(pwd)/ImportAssets.sh 
+if [ -f "$FILE" ]; then
+	ImportAssetscheck=1
+else 
+	ImportAssetscheck=0
+fi
 
 #If carla release is not already downloaded then it will download
 if [ ${ImportAssetscheck} == 0 ]
 then
-	
 	curl ${CARLA_RELEASE_REPO} | tar xz
-    wget ${ADDITIONALMAPS}
 	
-	mv ${NEW_TOWNS} Import/
+	wget ${ADDITIONALMAPS}
+	mv ${ADDITIONALMAPS_TAR} Import/
 	
 fi
 
-./ImportAssets.sh  #importing new maps 
+./ImportAssets.sh #importing new maps 
 
 #removing unnecessary files
 rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.debug
@@ -56,6 +55,24 @@ cat >> CarlaUE4.sh <<EOF
 
 chmod +x "/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
 "/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 $@
+EOF
+
+
+rm Makefile
+
+#Making debian package to install Carla in /opt folder
+cat >> Makefile <<EOF
+binary:
+	# we are not going to build anything
+
+install:
+	mkdir -p \$(DESTDIR)/opt/carla/bin
+	cp  CarlaUE4.sh \$(DESTDIR)/opt/carla/bin
+	cp ImportAssets.sh \$(DESTDIR)/opt/carla
+	cp -r CarlaUE4 \$(DESTDIR)/opt/carla
+	cp -r Engine \$(DESTDIR)/opt/carla
+	cp -r Import \$(DESTDIR)/opt/carla
+	cp -r PythonAPI \$(DESTDIR)/opt/carla
 EOF
 
 dh_make -e carla.simulator@gmail.com --indep --createorig -y  #to create necessary file structure for debian packaging
@@ -74,18 +91,18 @@ Source: carla
 Section: simulator
 Priority: optional
 Maintainer: Carla Simulator Team <carla.simulator@gmail.com>
-Build-Depends: debhelper (>= 10)
+Build-Depends: debhelper (>= 9)
 Standards-Version: ${CARLA_VERSION}
 Homepage: http://carla.org/
 
 Package: carla
 Architecture: any
 Depends: python,
-         python-numpy,
-         python-pygame,
-         libpng16-16,
-         libjpeg8,
-         libtiff5
+	 python-numpy,
+	 python-pygame,
+	 libpng16-16,
+	 libjpeg8,
+	 libtiff5
 Description: Open-source simulator for autonomous driving research
  CARLA has been developed from the ground up to support development, training, and validation
  of autonomous driving systems. In addition to open-source code and protocols, CARLA provides 
@@ -94,18 +111,6 @@ Description: Open-source simulator for autonomous driving research
  environmental conditions, full control of all static and dynamic actors, maps generation and much more.
 EOF
 
-rm install
-
-#Making debian package to install Carla in /opt folder
-cat>> install <<EOF
-CarlaUE4.sh /opt/carla/bin
-ImportAssets.sh /opt/carla
-CarlaUE4 /opt/carla
-Engine /opt/carla
-Import /opt/carla
-PythonAPI /opt/carla
-
-EOF
 
 rm postinst
 
@@ -175,13 +180,13 @@ exit 0
 EOF
 
 rm copyright
-mv ../LICENSE ./copyright
+cp ../LICENSE ./copyright
 
 #Updating debian/Changelog
+awk '{sub(/UNRELEASED/,"stable")}1' changelog > tmp && mv tmp changelog
 awk '{sub(/unstable/,"stable")}1' changelog > tmp && mv tmp changelog
-
 cd ..
 
-debuild --no-lintian -uc -us -b #building debian package
+dpkg-buildpackage -uc -us -b #building debian package
 
 #install debian package using "sudo dpkg -i ../carla_<version>_amd64.deb"
