@@ -238,6 +238,9 @@ That creates a clear distinction between having multiple clients and multiple Tr
 
 * __MultiTM scenario:__ when there are different TM-Server, created with different port definitions.  
 
+!!! Note 
+    The script `TrafficManager.cpp` acts as a central hub managing all the different TM instances. 
+
 ---
 ## Other considerations
 
