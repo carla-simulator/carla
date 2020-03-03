@@ -46,7 +46,6 @@ void UTrafficLightComponent::BeginPlay()
 void UTrafficLightComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-  // ...
 }
 
 void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
