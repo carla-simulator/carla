@@ -851,8 +851,8 @@ void MapBuilder::CreateController(
     // Add the Controller to MapData
     auto controller_pair = _map_data._controllers.emplace(
       std::make_pair(
-        controller_id,
-        std::make_unique<Controller>(controller_id, controller_name, controller_sequence)));
+          controller_id,
+          std::make_unique<Controller>(controller_id, controller_name, controller_sequence)));
 
     DEBUG_ASSERT(controller_pair.first != _map_data._controllers.end());
     DEBUG_ASSERT(controller_pair.first->second);
