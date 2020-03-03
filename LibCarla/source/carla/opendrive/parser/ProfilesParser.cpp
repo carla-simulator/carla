@@ -54,7 +54,7 @@ namespace parser {
 
       // parse elevation profile
       pugi::xml_node node_profile = node_road.child("elevationProfile");
-      uint number_profiles = 0;
+      uint64_t number_profiles = 0;
       if (node_profile) {
         // all geometry
         for (pugi::xml_node node_elevation : node_profile.children("elevation")) {

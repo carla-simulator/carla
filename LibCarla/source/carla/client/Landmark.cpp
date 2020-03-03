@@ -24,10 +24,10 @@ namespace client {
   const std::string LandmarkType::LevelCrossing() {
     return "150";
   } // = "150";
-  const std::string LandmarkType::Yield() {
+  const std::string LandmarkType::YieldSign() {
     return "205";
   } // = "205";
-  const std::string LandmarkType::Stop() {
+  const std::string LandmarkType::StopSign() {
     return "206";
   } // = "206";
   const std::string LandmarkType::MandatoryTurnDirection() {
