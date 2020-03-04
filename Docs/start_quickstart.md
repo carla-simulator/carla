@@ -36,7 +36,7 @@ Both methods will set CARLA ready to run.
 First, add the repository to the system: 
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
-sudo add-apt-repository "deb [trusted=yes] http://34.227.255.250/carla-0.9.7/ bionic main"
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
 ```
 Then, simply install it. CARLA will be in the `/opt/` folder, where other software such as ROS install themselves: 
 ```sh

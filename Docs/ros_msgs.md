@@ -51,7 +51,9 @@ These messages are used to control the simulation while in synchronous mode. The
 
 | Field       | Type | Description |
 | ----------- | ---- | ----------- |
-| `command`   | int8 | __PLAY__=0, __PAUSE__=1, __STEP_ONCE__=2 |
+| `command`   | int8 | __PLAY__=0 <br> __PAUSE__=1 <br> __STEP_ONCE__=2 |
+
+<br>
 
 !!! Important
     In synchronous mode, only the ROS bridge client is allowed to tick.
@@ -134,15 +136,45 @@ These messages are used to publish lane invasions detected by a lane-invasion se
 | `crossed_lane_markings` | int32[] | __LANE_MARKING_OTHER__=0 <br> __LANE_MARKING_BROKEN__=1 <br> __LANE_MARKING_SOLID__=2 |
 
 ---
+## CarlaScenario.msg
+
+Details for a test scenario. 
+
+| Field          | Type               | Description                                   |
+| ---------------| ------------------ | --------------------------------------------- |
+| `name`         | string             | Name of the scenario.                         |
+| `scenario_file`| string             | Test file for the scenario.                   |
+| `destination`  | geometry_msgs/Pose | Goal location of the scenario.                |
+| `target_speed` | float64            | Desired speed to drive at during the scenario |
+
+---
+## CarlaScenarioList.msg
+
+Contains a list a series of test scenarios to run in ScenarioRunner. 
+
+| Field       | Type                                 | Description            |
+| ----------- | ------------------------------------ | ---------------------- |
+| `scenarios` | [CarlaScenario](#carlascenariomsg)[] | The list of scenarios. |
+
+---
+## CarlaScenarioRunnerStatus.msg
+
+Represents the current state of the ScenarioRunner, that can be managed using an enum definition. 
+
+| Field    | Type  | Description                                                                                                                                  |
+| -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status` | uint8 | Current state of the scenario as an enum: <br> __STOPPED__=0 <br> __STARTING__=1 <br> __RUNNING__=2 <br> __SHUTTINGDOWN__=3 <br> __ERROR__=4 |
+
+---
 ## CarlaStatus.msg
 
-Details the current world settings of hte simulation. 
+Details the current world settings of the simulation. 
 
-| Field                      | Type    | Description                   |
-| -------------------------- | ------- | ----------------------------- |
-| `frame`                    | uint64  | Current framen umber.         |
-| `fixed_delta_seconds`      | float32 | Simulation time between last and current step. |
-| `synchronous_mode`         | bool    | If true, synchronous mode is enabled. |
+| Field                      | Type    | Description                                                   |
+| -------------------------- | ------- | ------------------------------------------------------------- |
+| `frame`                    | uint64  | Current frame number.                                         |
+| `fixed_delta_seconds`      | float32 | Simulation time between last and current step.                |
+| `synchronous_mode`         | bool    | If true, synchronous mode is enabled.                         |
 | `synchronous_mode_running` | bool    | True when the simulation is running. False when it is paused. |
 
 ---
@@ -153,7 +185,7 @@ Contains a constant definition regarding the state of a traffic light.
 | Field                      | Type    | Description                               |
 | -------------------------- | ------- | ----------------------------------------- |
 | `id`                       | uint32  | ID of the traffic light actor. |
-| `state`                    | uint8   | __RED__=0,__YELLOW__=1, __GREEN__=2, __OFF__=3, __UNKNOWN__=4 |
+| `state`                    | uint8   | __RED__=0 <br> __YELLOW__=1 <br> __GREEN__=2 <br> __OFF__=3 <br> __UNKNOWN__=4 |
 
 ---
 ## CarlaTrafficLightStatusList.msg
