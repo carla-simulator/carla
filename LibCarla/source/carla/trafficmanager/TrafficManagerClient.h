@@ -166,6 +166,14 @@ public:
     _client->call("health_check_remote_TM");
   }
 
+  /// Method to specify how much distance a vehicle should maintain to
+  /// the Global leading vehicle.
+  void SetGlobalDistanceToLeadingVehicle(const float distance) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_distance_to_leading_vehicle",distance);
+  }
+
+
 private:
 
   /// RPC client.

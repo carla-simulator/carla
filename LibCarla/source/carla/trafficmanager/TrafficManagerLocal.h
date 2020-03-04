@@ -177,6 +177,10 @@ namespace traffic_manager {
 
     /// Get list of all registered vehicles.
     std::vector<ActorId> GetRegisteredVehiclesIDs();
+
+    /// Method to specify how much distance a vehicle should maintain to
+    /// the Global leading vehicle.
+    void SetGlobalDistanceToLeadingVehicle(const float distance);
   };
 
 } // namespace traffic_manager

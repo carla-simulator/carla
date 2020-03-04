@@ -56,6 +56,8 @@ namespace traffic_manager {
     AtomicMap<ActorId, float> perc_ignore_vehicles;
     /// Synchronous mode switch.
     std::atomic<bool> synchronous_mode;
+    /// Distance Margin
+    std::atomic<float> distance_margin {2.0};
 
   public:
     Parameters();
@@ -112,6 +114,9 @@ namespace traffic_manager {
 
     /// Method to get % to ignore any walker.
     float GetPercentageIgnoreWalkers(const ActorPtr &actor);
+
+     /// Method to set distance to leading vehicle for a given vehicle.
+    void SetGlobalDistanceToLeadingVehicle(const float dist);
 
     /// Method to set % to run any traffic sign.
     void SetPercentageRunningSign(const ActorPtr &actor, const float perc);

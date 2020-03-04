@@ -97,6 +97,9 @@ public:
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 
+  /// Method to set Global Distance to Leading Vehicle.
+  virtual void SetGlobalDistanceToLeadingVehicle(const float dist) = 0;
+
 protected:
 
 };
