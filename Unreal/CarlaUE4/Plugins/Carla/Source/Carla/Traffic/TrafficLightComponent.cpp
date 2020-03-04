@@ -76,3 +76,8 @@ ATrafficLightGroup* UTrafficLightComponent::GetGroup()
 {
   return TrafficLightGroup;
 }
+
+UTrafficLightController* UTrafficLightComponent::GetController()
+{
+  return TrafficLightController;
+}
