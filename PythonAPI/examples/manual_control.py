@@ -776,8 +776,8 @@ class IMUSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
-        self.accelerometer = ()
-        self.gyroscope = ()
+        self.accelerometer = (0.0, 0.0, 0.0)
+        self.gyroscope = (0.0, 0.0, 0.0)
         self.compass = 0.0
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.imu')
