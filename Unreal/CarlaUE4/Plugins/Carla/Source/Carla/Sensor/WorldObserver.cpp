@@ -166,7 +166,7 @@ static carla::Buffer FWorldObserver_Serialize(
   auto size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
 
   // Set up buffer for writing.
-  buffer.reset(size * 3);
+  buffer.reset(size);
   auto begin = buffer.begin();
   auto write_data = [&begin, &buffer, &size](const auto &data)
   {
@@ -203,9 +203,10 @@ static carla::Buffer FWorldObserver_Serialize(
     FWorldObserver_GetActorComponentsState(View, Registry, ComponentsState);
     info.num_components = ComponentsState.Num();
 
+    carla::log_warning("Actor", TCHAR_TO_UTF8(*View.GetActor()->GetName()), info.num_components);
+
     write_data(info);
 
-    /*
     if(info.num_components > 0) {
       size += info.num_components * sizeof(ComponentDynamicState);
       carla::log_warning("Num Components =", info.num_components,"(", size,")");
@@ -216,7 +217,6 @@ static carla::Buffer FWorldObserver_Serialize(
         write_data(CompState);
       }
     }
-    */
   }
 
   // Shrink buffer
