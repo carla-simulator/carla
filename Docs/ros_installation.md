@@ -32,7 +32,7 @@ First add the apt repository:
 * __Bridge for ROS Melodic:__
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 81061A1A042F527D &&
-sudo add-apt-repository "deb [trusted=yes] http://34.227.255.250/carla-ros-bridge-melodic/ bionic main"
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-ros-bridge-melodic/ bionic main"
 ```
 
 * __Bridge for ROS Kinetic:__
