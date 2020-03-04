@@ -7,14 +7,20 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/rpc/String.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
-#include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
+#include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -102,19 +108,88 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
   return bIsFileFound;
 }
 
+static FString BuildRecastBuilderFile()
+{
+  // Define filename with extension depending on if we are on Windows or not
+#if PLATFORM_WINDOWS
+  const FString RecastToolName = "RecastBuilder.exe";
+#else
+  const FString RecastToolName = "RecastBuilder";
+#endif // PLATFORM_WINDOWS
+
+  // Define path depending on the UE4 build type (Package or Editor)
+#if UE_BUILD_SHIPPING
+  const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectDir() + "Tools/" + RecastToolName);
+#else
+  const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectDir() + "../../Util/DockerUtils/dist/" + RecastToolName);
+#endif
+  return AbsoluteRecastBuilderPath;
+}
+
 bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
 {
   if (OpenDriveString.IsEmpty())
   {
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive string is empty."));
     return false;
   }
+
+  // Build the Map from the OpenDRIVE data
+  const auto CarlaMap = carla::opendrive::OpenDriveParser::Load(
+      carla::rpc::FromFString(OpenDriveString));
+
+  // Check the Map is correclty generated
+  if (!CarlaMap.has_value())
+  {
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive string is invalid or not supported"));
+    return false;
+  }
+
+  // Generate the OBJ (as string)
+  const auto RecastOBJ = CarlaMap->GenerateGeometry(2).GenerateOBJForRecast();
+
+  const FString AbsoluteOBJPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectContentDir() + "Carla/Maps/Nav/OpenDriveMap.obj");
+
+  // Store the OBJ string to a file in order to that RecastBuilder can load it
+  FFileHelper::SaveStringToFile(
+      carla::rpc::ToFString(RecastOBJ),
+      *AbsoluteOBJPath,
+      FFileHelper::EEncodingOptions::ForceUTF8,
+      &IFileManager::Get());
+
+  const FString AbsoluteXODRPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.xodr");
 
   // Copy the OpenDrive as a file in the serverside
   FFileHelper::SaveStringToFile(
       OpenDriveString,
-      *(FPaths::ProjectContentDir() + "/Carla/Maps/OpenDrive/OpenDriveMap.xodr"),
+      *AbsoluteXODRPath,
       FFileHelper::EEncodingOptions::ForceUTF8,
       &IFileManager::Get());
+
+  if (!FPaths::FileExists(AbsoluteXODRPath))
+  {
+    UE_LOG(LogCarla, Error, TEXT("ERROR: XODR not copied!"));
+    return false;
+  }
+
+  const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
+
+  if (FPaths::FileExists(AbsoluteRecastBuilderPath))
+  {
+    FPlatformProcess::CreateProc(
+        *AbsoluteRecastBuilderPath, *AbsoluteOBJPath,
+        true, false, false, nullptr, 0, nullptr, nullptr);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("'RecastBuilder' not present under '%s', "
+        "the binaries for pedestrian navigation will not be created."),
+        *AbsoluteRecastBuilderPath);
+  }
 
   return true;
 }
