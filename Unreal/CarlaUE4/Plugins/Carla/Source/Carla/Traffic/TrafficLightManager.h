@@ -8,6 +8,7 @@
 
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
+#include "TrafficSignBase.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
@@ -63,7 +64,7 @@ private:
   TMap<FString, UTrafficLightComponent *> TrafficLights;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<AActor> TrafficLightModel;
+  TSubclassOf<ATrafficSignBase> TrafficLightModel;
 
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
