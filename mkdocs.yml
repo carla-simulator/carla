@@ -34,6 +34,11 @@ nav:
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
   - "Sensors reference": 'ref_sensors.md'  
+- ROS bridge:
+  - 'ROS bridge installation': 'ros_installation.md'
+  - 'CARLA messages reference': 'ros_msgs.md'
+  - 'Launchfiles reference': 'ros_launchs.md'
+  #- 'Supported features': 'ros_topics_ref.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
@@ -50,11 +55,6 @@ nav:
   - 'Create a sensor': 'tuto_D_create_sensor.md'
   - 'Make a release': 'tuto_D_make_release.md'
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
-- ROS bridge:
-  - 'ROS bridge installation': 'ros_installation.md'
-  - 'Messages reference': 'ros_msgs.md'
-  - 'Launch reference': 'ros_launchs.md'
-  #- 'Supported features': 'ros_topics_ref.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'
