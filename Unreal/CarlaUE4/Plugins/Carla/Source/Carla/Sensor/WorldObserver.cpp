@@ -120,14 +120,12 @@ static void FWorldObserver_GetActorComponentsState(
       CompState.state.traffic_light_data.red_time = Controller->GetRedTime();
       CompState.state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
       CompState.state.traffic_light_data.time_is_frozen = Group->IsFrozen();
-      // Nobody is using right now, perhaps we should remove it?
+      // Nobody is using this right now, perhaps we should remove it?
       CompState.state.traffic_light_data.pole_index = 0;
 
       Out.Push(CompState);
     }
-
   }
-
 }
 
 static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
@@ -156,19 +154,25 @@ static carla::Buffer FWorldObserver_Serialize(
     const UCarlaEpisode &Episode,
     float DeltaSeconds)
 {
+
+  carla::log_warning("===== FWorldObserver_Serialize =====");
+
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
   using ComponentDynamicState = carla::sensor::data::ComponentDynamicState;
 
   const auto &Registry = Episode.GetActorRegistry();
 
+  auto size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
+
   // Set up buffer for writing.
-  buffer.reset(sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num());
+  buffer.reset(size * 3);
   auto begin = buffer.begin();
-  auto write_data = [&begin](const auto &data)
+  auto write_data = [&begin, &buffer, &size](const auto &data)
   {
     std::memcpy(begin, &data, sizeof(data));
     begin += sizeof(data);
+    carla::log_warning("Writting...", sizeof(data), begin - buffer.begin());
   };
 
   // Write header.
@@ -201,13 +205,27 @@ static carla::Buffer FWorldObserver_Serialize(
 
     write_data(info);
 
-    for(auto& CompState : ComponentsState)
-    {
-      write_data(CompState);
+    /*
+    if(info.num_components > 0) {
+      size += info.num_components * sizeof(ComponentDynamicState);
+      carla::log_warning("Num Components =", info.num_components,"(", size,")");
+      buffer.resize(size);
+
+      for(auto& CompState : ComponentsState)
+      {
+        write_data(CompState);
+      }
     }
+    */
   }
 
+  // Shrink buffer
+  buffer.resize(size);
+
   check(begin == buffer.end());
+
+  carla::log_warning("====================================");
+
   return std::move(buffer);
 }
 
