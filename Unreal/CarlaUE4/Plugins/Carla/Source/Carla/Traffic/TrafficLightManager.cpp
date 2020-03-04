@@ -103,6 +103,7 @@ void ATrafficLightManager::GenerateTrafficLights()
   {
     return;
   }
+
   const auto& Signals = GetMap()->GetSignals();
   for(const auto& ControllerPair : GetMap()->GetControllers())
   {
