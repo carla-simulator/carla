@@ -25,6 +25,7 @@ namespace LocalizationConstants {
   static const float BLOCKED_TIME_THRESHOLD = 90.0f;
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
+  static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
 
 } // namespace LocalizationConstants
 
@@ -107,11 +108,12 @@ namespace LocalizationConstants {
 
       // Clear buffer if vehicle is too far from the first waypoint in the buffer.
       if (!waypoint_buffer.empty() &&
-          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > 20.0f) {
-          auto number_of_pops = waypoint_buffer.size();
-          for (uint64_t j = 0u; j < number_of_pops; ++j) {
-            PopWaypoint(waypoint_buffer, actor_id);
-          }
+          cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), vehicle_location) > std::pow(30.0f, 2)) {
+
+        auto number_of_pops = waypoint_buffer.size();
+        for (uint64_t j = 0u; j < number_of_pops; ++j) {
+          PopWaypoint(waypoint_buffer, actor_id);
+        }
       }
 
       // Purge passed waypoints.
@@ -142,13 +144,20 @@ namespace LocalizationConstants {
       const bool force_lane_change = lane_change_info.change_lane;
       const bool lane_change_direction = lane_change_info.direction;
 
-      if ((parameters.GetAutoLaneChange(vehicle) || force_lane_change) &&
-          !front_waypoint->CheckJunction()) {
+      if (((parameters.GetAutoLaneChange(vehicle) || force_lane_change)&& !front_waypoint->CheckJunction())
+          && (last_lane_change_location.find(actor_id) == last_lane_change_location.end()
+              || cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location)
+                 > std::pow(INTER_LANE_CHANGE_DISTANCE, 2))) {
 
         SimpleWaypointPtr change_over_point = AssignLaneChange(
             vehicle, vehicle_location, force_lane_change, lane_change_direction);
 
         if (change_over_point != nullptr) {
+          if (last_lane_change_location.find(actor_id) != last_lane_change_location.end()) {
+            last_lane_change_location.at(actor_id) = vehicle_location;
+          } else {
+            last_lane_change_location.insert({actor_id, vehicle_location});
+          }
           auto number_of_pops = waypoint_buffer.size();
           for (uint64_t j = 0u; j < number_of_pops; ++j) {
             PopWaypoint(waypoint_buffer, actor_id);
@@ -204,7 +213,7 @@ namespace LocalizationConstants {
       ///////////////////////////////// DEBUG //////////////////////////////////
       debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 1),
                              target_location + cg::Location(0, 0, 1),
-                             0.2f, 0.2f, {0u, 255u, 255u}, 0.1f);
+                             0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
 
       uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
       uint b_step = 5;
@@ -214,7 +223,7 @@ namespace LocalizationConstants {
         auto second = waypoint_buffer.at(std::min((j+1) * b_step_size, b_size-1));
         debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
                               second->GetLocation() + cg::Location(0, 0, 1),
-                              0.2f, {255u, 255u, 0u}, 0.1f);
+                              0.2f, {255u, 255u, 0u}, 0.05f);
       }
       //////////////////////////////////////////////////////////////////////////
 
@@ -346,6 +355,7 @@ namespace LocalizationConstants {
       if (world_actor_id.find(actor->GetId()) == world_actor_id.end()) {
         actor_list_to_be_deleted.emplace_back(actor);
         track_traffic.DeleteActor(actor->GetId());
+        last_lane_change_location.erase(actor->GetId());
       }
     }
 
@@ -560,6 +570,7 @@ namespace LocalizationConstants {
           // Check if the two vehicles have acceptable angular deviation between their headings.
           if (!current_waypoint->CheckJunction()
               && !other_current_waypoint->CheckJunction()
+              && other_current_waypoint->GetWaypoint()->GetRoadId() == current_waypoint->GetWaypoint()->GetRoadId()
               && other_current_waypoint->GetWaypoint()->GetLaneId() == current_waypoint->GetWaypoint()->GetLaneId()
               && cg::Math::Dot(reference_heading, reference_to_other) > 0.0f
               && cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE)

@@ -120,6 +120,8 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Code snippet execution time profiler.
     SnippetProfiler snippet_profiler;
+    /// Map to keep track of last lane change location.
+    std::unordered_map<ActorId, cg::Location> last_lane_change_location;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
