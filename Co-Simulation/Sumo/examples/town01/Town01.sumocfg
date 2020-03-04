@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on mar 11 feb 2020 15:18:44 CET by Eclipse SUMO GUI Version 1.4.0
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="Town01.net.xml"/>
+        <route-files value="carlavtypes.rou.xml,Town01.rou.xml"/>
+    </input>
+
+    <gui_only>
+        <gui-settings-file value="viewsettings.xml"/>
+    </gui_only>
+
+</configuration>
