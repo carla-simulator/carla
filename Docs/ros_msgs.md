@@ -1,4 +1,4 @@
-# CARLA messages
+# CARLA messages reference
 
 The following reference lists all the CARLA messages available in the ROS bridge. These will can be used to enable communication in both ways.  
 Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum: 
