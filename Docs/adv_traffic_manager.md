@@ -15,11 +15,10 @@
 ---
 ## What is it?
 
-The Traffic Manager (TM for short) is a module built on top of the CARLA API in C++ that handles any group of vehicles set to autopilot mode. The goal is to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours, for example to set specific learning circumstances. To do so, every TM controls vehicles registered to it by setting autopilot to true, and is accounting for the rest by considering them unregistered. 
-The Traffic Manager is based on two ground principles:  
+The Traffic Manager, TM for short, is a module built on top of the CARLA API in C++ that is in charge of controlling vehicles inside the simulation. Its goal is to populate the simulation with realistic urban traffic conditions allowing users to customize some behaviours, for example to set specific learning circumstances. To do so, every TM controls vehicles registered to it by setting autopilot to true, and is accounting for the rest by considering them unregistered. 
 
 #### Structured design
-The TM is built on the client-side of the CARLA architecture, in order to save the server some work and not interfere with the simulation performance. For said reason, the flow of execution is divided in __stages__ that help improving computational efficiency and provide stage-related data structures that vehicles can share to communicate. This clear distintion between different sub-modules inside the TM that are accessed independently is central to the whole manager. It avoids potential bottlenecks in managing collisions and allows negotiation between cars. 
+The TM is built on the client-side of the CARLA architecture, replacing the former server-side autopilot after version 0.9.7. The execution flow is divided in __stages__ with independent operations and goals, to facilitate the development of phase-related functionalities and data structures, while also improving computational efficiency. Each stage runs on a different thread and communication with the rest is managed through messages facilitating synchronous messaging between the different stages, so the information flows only in one direction.  
 
 #### User customization
 Users need to be granted some control by setting parameters that allow, force or encourage certain behaviours. Thus, users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality, specially to train driving systems under specific and atypical circumstances. 
@@ -28,9 +27,8 @@ Users need to be granted some control by setting parameters that allow, force or
 ## How does it work?
 
 #### Architecture
-The inner structure is divided in stages can be somehow visualized through code, they have their equivalent in the c++ code (.cpp files) foun inside `/libcarla`. There are other inner parts of the TM, such as as setting up the map, but they are managed internally and mostly only done once, so these are not as fundamental to understand the whole.  
-Each stage class runs on a different thread and has its independent operations and goals. Communication with the rest is managed through messages facilitating synchronous messaging between the different stages. The information flows only in one direction. In this way, for each stage or class there are methods and tools that can be located in one or many stages with a very specific structure and purpose. 
-The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies are the different stages, green ones are additional modules needed during the different stages and the arrows represent communication managed by messenger classes between the different elements. 
+The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies are the different stages, green ones are additional modules needed during the different stages and the arrows represent communication managed by messenger classes between the different elements.  
+The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) found inside `LibCarla/source/carla/trafficmanager`. 
 
 <div style="text-align:center">
 <img src="../img/traffic_manager_diagram.png">
@@ -38,7 +36,7 @@ The following diagram is a summary of the internal architecture of the Traffic M
 
 #### Stages
 
-__1. Localization Stage:__ for each vehicle registered to the TM, maintains a list of waypoints ahead it to follow. The buffer list of waypoints is not created every iteration but updated. The buffer is deleted though when lane changes are applied to create a new one with the corresponding trajectory. The amount of waypoints contained in said list varies depending on the vehicle's speed, being greater the faster it goes. The localization stage contains a __spacial hashing__ which summarizes the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+__1. Localization Stage:__ the TM stores a list of waypoints ahead for each vehicle to follow. The buffer list of waypoints is is updated each iteration and deleted when lane changes are applied, to create a new one with the corresponding trajectory. The amount of waypoints contained in said list varies depending on the vehicle's speed, being greater the faster it goes. The localization stage contains a __spacial hashing__ which summarizes the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
 
 * __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
@@ -54,13 +52,13 @@ __4. Motion Planner Stage:__ aggregates all the information gathered through the
 
 * __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
-__5. Apply Control Stage:__ receives actuation signals (such as throttle, brake, steer) from the Motion planner stage and commands these to the simulator in batches to control every vehicles' movement. It mainly uses the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
+__5. Apply Control Stage:__ receives actuation signals (such as throttle, brake, steer) from the Motion Planner stage and commands these to the simulator in batches to control every vehicles' movement. It mainly uses the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 
 #### Additional modules
 
-__Memory map:__ in order to ease computation costs during the localization stage, the map is divided into a grid of waypoints, so that these are not calculated every time. These waypoints are not the usual _carla.Waypoint_ accessible from the API but a specific data structure designed according to the needs of the TM. The grid of waypoints representing the road map is at the same time divided into different sections, each of them representing little portions of the road, for instance a junction. These sections are numbered and connected so that it is easier to locate a vehicle on the map and to identify which vehicle are close to it.  
+__Cached map:__ in order to ease computation costs during the localization stage, the map is divided into a grid of waypoints, so that these are not calculated every time. These waypoints are not the usual _carla.Waypoint_ accessible from the API but a specific data structure designed according to the needs of the TM. The grid of waypoints representing the road map is at the same time divided into different sections, each of them representing little portions of the road, for instance a junction. These sections are numbered and connected so that it is easier to locate a vehicle on the map and to identify which vehicle are close to it.  
 
 * __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
 
