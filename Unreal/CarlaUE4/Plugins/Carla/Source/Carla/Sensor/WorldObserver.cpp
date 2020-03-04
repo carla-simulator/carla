@@ -155,24 +155,21 @@ static carla::Buffer FWorldObserver_Serialize(
     float DeltaSeconds)
 {
 
-  carla::log_warning("===== FWorldObserver_Serialize =====");
-
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
   using ComponentDynamicState = carla::sensor::data::ComponentDynamicState;
 
   const auto &Registry = Episode.GetActorRegistry();
 
-  auto size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
-
+  auto total_size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
+  auto current_size = 0;
   // Set up buffer for writing.
-  buffer.reset(size);
-  auto begin = buffer.begin();
-  auto write_data = [&begin, &buffer, &size](const auto &data)
+  buffer.reset(total_size);
+  auto write_data = [&current_size, &buffer](const auto &data)
   {
+    auto begin = buffer.begin() + current_size;
     std::memcpy(begin, &data, sizeof(data));
-    begin += sizeof(data);
-    carla::log_warning("Writting...", sizeof(data), begin - buffer.begin());
+    current_size += sizeof(data);
   };
 
   // Write header.
@@ -203,14 +200,11 @@ static carla::Buffer FWorldObserver_Serialize(
     FWorldObserver_GetActorComponentsState(View, Registry, ComponentsState);
     info.num_components = ComponentsState.Num();
 
-    carla::log_warning("Actor", TCHAR_TO_UTF8(*View.GetActor()->GetName()), info.num_components);
-
     write_data(info);
 
     if(info.num_components > 0) {
-      size += info.num_components * sizeof(ComponentDynamicState);
-      carla::log_warning("Num Components =", info.num_components,"(", size,")");
-      buffer.resize(size);
+      total_size += info.num_components * sizeof(ComponentDynamicState);
+      buffer.resize(total_size);
 
       for(auto& CompState : ComponentsState)
       {
@@ -220,11 +214,9 @@ static carla::Buffer FWorldObserver_Serialize(
   }
 
   // Shrink buffer
-  buffer.resize(size);
+  buffer.resize(current_size);
 
-  check(begin == buffer.end());
-
-  carla::log_warning("====================================");
+  check(buffer.size() == current_size);
 
   return std::move(buffer);
 }
