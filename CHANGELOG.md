@@ -14,6 +14,7 @@
   * Added support to parse OpenDRIVE signals.
   * Added junction class as queryable object from waypoint
   * Added simple physical map generation from standalone OpenDRIVE data
+  * Added support for generating walker navigation on server-side
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
