@@ -27,5 +27,6 @@ void export_trafficmanager() {
       .def("ignore_walkers_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreWalkers)
       .def("ignore_vehicles_percentage", &carla::traffic_manager::TrafficManager::SetPercentageIgnoreVehicles)
       .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight)
-      .def("ignore_signs_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningSign);
+      .def("ignore_signs_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningSign)
+      .def("set_global_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetGlobalDistanceToLeadingVehicle);
 }

@@ -177,6 +177,10 @@ void TrafficManagerLocal::SetDistanceToLeadingVehicle(const ActorPtr &actor, con
   parameters.SetDistanceToLeadingVehicle(actor, distance);
 }
 
+void TrafficManagerLocal::SetGlobalDistanceToLeadingVehicle(const float distance) {
+  parameters.SetGlobalDistanceToLeadingVehicle(distance);
+}
+
 void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
   parameters.SetPercentageIgnoreWalkers(actor, perc);
 }

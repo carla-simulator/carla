@@ -91,6 +91,7 @@ def main():
     try:
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
+        traffic_manager.set_global_distance_to_leading_vehicle(2.0)
         world = client.get_world()
 
         synchronous_master = False

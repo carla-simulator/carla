@@ -152,13 +152,19 @@ bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
 float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
 
   const ActorId actor_id = actor->GetId();
-  float distance_margin = -1.0f;
-
+  float specific_distance_margin = 0.0f;
   if (distance_to_leading_vehicle.Contains(actor_id)) {
-    distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+    specific_distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+  } else {
+    specific_distance_margin = distance_margin;
   }
+  //std::cout <<"distance_margin :- "<< distance_margin <<" " <<"Value of Specific Distance Margin - " << specific_distance_margin << std::endl;
+  return specific_distance_margin;
+}
 
-  return distance_margin;
+void Parameters::SetGlobalDistanceToLeadingVehicle(const float dist) {
+
+  distance_margin.store(dist);
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {

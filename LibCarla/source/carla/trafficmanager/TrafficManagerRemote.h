@@ -76,6 +76,9 @@ public:
   /// the leading vehicle.
   void SetDistanceToLeadingVehicle(const ActorPtr &actor, const float distance);
 
+  /// Method to specify Global Distance
+  void SetGlobalDistanceToLeadingVehicle(const float distance);
+
   /// Method to specify the % chance of ignoring collisions with any walker.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
