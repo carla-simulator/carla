@@ -14,7 +14,7 @@ namespace LocalizationConstants {
 
   static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
-  static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+  static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
@@ -143,11 +143,12 @@ namespace LocalizationConstants {
       const ChangeLaneInfo lane_change_info = parameters.GetForceLaneChange(vehicle);
       const bool force_lane_change = lane_change_info.change_lane;
       const bool lane_change_direction = lane_change_info.direction;
+      const double lane_change_distance = std::pow(std::max(10.0f * vehicle_velocity, INTER_LANE_CHANGE_DISTANCE), 2);
 
-      if (((parameters.GetAutoLaneChange(vehicle) || force_lane_change)&& !front_waypoint->CheckJunction())
+      if (((parameters.GetAutoLaneChange(vehicle) || force_lane_change) && !front_waypoint->CheckJunction())
           && (last_lane_change_location.find(actor_id) == last_lane_change_location.end()
               || cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location)
-                 > std::pow(INTER_LANE_CHANGE_DISTANCE, 2))) {
+                 > lane_change_distance )) {
 
         SimpleWaypointPtr change_over_point = AssignLaneChange(
             vehicle, vehicle_location, force_lane_change, lane_change_direction);
@@ -211,20 +212,20 @@ namespace LocalizationConstants {
       }
 
       ///////////////////////////////// DEBUG //////////////////////////////////
-      debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 1),
-                             target_location + cg::Location(0, 0, 1),
-                             0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
+      // debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 1),
+      //                        target_location + cg::Location(0, 0, 1),
+      //                        0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
 
-      uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
-      uint b_step = 5;
-      uint b_step_size = b_size/b_step;
-      for (uint j = 0u; j < b_step; ++j) {
-        auto first = waypoint_buffer.at(j * b_step_size);
-        auto second = waypoint_buffer.at(std::min((j+1) * b_step_size, b_size-1));
-        debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
-                              second->GetLocation() + cg::Location(0, 0, 1),
-                              0.2f, {255u, 255u, 0u}, 0.05f);
-      }
+      // uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
+      // uint b_step = 5;
+      // uint b_step_size = b_size/b_step;
+      // for (uint j = 0u; j < b_step; ++j) {
+      //   auto first = waypoint_buffer.at(j * b_step_size);
+      //   auto second = waypoint_buffer.at(std::min((j+1) * b_step_size, b_size-1));
+      //   debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
+      //                         second->GetLocation() + cg::Location(0, 0, 1),
+      //                         0.2f, {255u, 255u, 0u}, 0.05f);
+      // }
       //////////////////////////////////////////////////////////////////////////
 
       float distance = 0.0f; // TODO: use in PID
