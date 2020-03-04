@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue Mar  3 12:46:05 2020 by Eclipse SUMO duarouter Version 1.4.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="Town01.net.xml"/>
+        <route-files value="trips.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="Town01.rou.xml"/>
+        <alternatives-output value="Town01.rou.alt.xml"/>
+    </output>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="passenger" vClass="passenger"/>
+    <vehicle id="0" type="passenger" depart="0.00">
+        <routeDistribution last="0">
+            <route cost="60.02" probability="1.00000000" edges="-21.0.00 -9.0.00 -10.0.00 -17.0.00 4.0.00 22.0.00 21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="1" type="passenger" depart="1.00">
+        <routeDistribution last="0">
+            <route cost="37.87" probability="1.00000000" edges="24.0.00 -12.0.00 18.0.00 17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="2" type="passenger" depart="2.00">
+        <routeDistribution last="0">
+            <route cost="56.55" probability="1.00000000" edges="-17.0.00 4.0.00 22.0.00 21.0.00 2.0.00 1.0.00 -16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="3" type="passenger" depart="3.00">
+        <routeDistribution last="0">
+            <route cost="12.51" probability="1.00000000" edges="-18.0.00 -19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="4" type="passenger" depart="4.00">
+        <routeDistribution last="0">
+            <route cost="49.91" probability="1.00000000" edges="-24.0.00 5.0.00 2.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="5" type="passenger" depart="5.00">
+        <routeDistribution last="0">
+            <route cost="68.95" probability="1.00000000" edges="-16.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00 -1.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="6" type="passenger" depart="6.00">
+        <routeDistribution last="0">
+            <route cost="37.12" probability="1.00000000" edges="18.0.00 17.0.00 10.0.00 9.0.00 -22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="7" type="passenger" depart="7.00">
+        <routeDistribution last="0">
+            <route cost="31.59" probability="1.00000000" edges="22.0.00 21.0.00 2.0.00 1.0.00 -16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="8" type="passenger" depart="8.00">
+        <routeDistribution last="0">
+            <route cost="25.35" probability="1.00000000" edges="25.0.00 -2.0.00 -21.0.00 -9.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="9" type="passenger" depart="9.00">
+        <routeDistribution last="0">
+            <route cost="55.20" probability="1.00000000" edges="-12.0.00 18.0.00 17.0.00 16.0.00 -1.0.00 -25.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="10" type="passenger" depart="10.00">
+        <routeDistribution last="0">
+            <route cost="34.60" probability="1.00000000" edges="-16.0.00 10.0.00 25.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="11" type="passenger" depart="11.00">
+        <routeDistribution last="0">
+            <route cost="45.83" probability="1.00000000" edges="12.0.00 23.0.00 22.0.00 -9.0.00 -10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="12" type="passenger" depart="12.00">
+        <routeDistribution last="0">
+            <route cost="27.67" probability="1.00000000" edges="-24.0.00 -6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="13" type="passenger" depart="13.00">
+        <routeDistribution last="0">
+            <route cost="59.48" probability="1.00000000" edges="-24.0.00 -6.0.00 -7.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="14" type="passenger" depart="14.00">
+        <routeDistribution last="0">
+            <route cost="83.94" probability="1.00000000" edges="22.0.00 21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00 -23.0.00 -24.0.00 5.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="15" type="passenger" depart="15.00">
+        <routeDistribution last="0">
+            <route cost="82.00" probability="1.00000000" edges="24.0.00 23.0.00 22.0.00 21.0.00 2.0.00 1.0.00 0.0.00 19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="16" type="passenger" depart="16.00">
+        <routeDistribution last="0">
+            <route cost="22.08" probability="1.00000000" edges="24.0.00 23.0.00 22.0.00 21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="17" type="passenger" depart="17.00">
+        <routeDistribution last="0">
+            <route cost="119.66" probability="1.00000000" edges="0.0.00 6.0.00 24.0.00 -12.0.00 -19.0.00 -7.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="18" type="passenger" depart="18.00">
+        <routeDistribution last="0">
+            <route cost="27.12" probability="1.00000000" edges="25.0.00 -2.0.00 -21.0.00 -22.0.00 -23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="19" type="passenger" depart="19.00">
+        <routeDistribution last="0">
+            <route cost="37.70" probability="1.00000000" edges="-25.0.00 9.0.00 -22.0.00 -4.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="20" type="passenger" depart="20.00">
+        <routeDistribution last="0">
+            <route cost="29.10" probability="1.00000000" edges="-6.0.00 19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="21" type="passenger" depart="21.00">
+        <routeDistribution last="0">
+            <route cost="54.27" probability="1.00000000" edges="21.0.00 2.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 12.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="22" type="passenger" depart="22.00">
+        <routeDistribution last="0">
+            <route cost="66.94" probability="1.00000000" edges="-2.0.00 -3.0.00 24.0.00 23.0.00 22.0.00 21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="23" type="passenger" depart="23.00">
+        <routeDistribution last="0">
+            <route cost="8.93" probability="1.00000000" edges="21.0.00 2.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="24" type="passenger" depart="24.00">
+        <routeDistribution last="0">
+            <route cost="3.02" probability="1.00000000" edges="18.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="25" type="passenger" depart="25.00">
+        <routeDistribution last="0">
+            <route cost="55.80" probability="1.00000000" edges="-6.0.00 19.0.00 18.0.00 17.0.00 10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="26" type="passenger" depart="26.00">
+        <routeDistribution last="0">
+            <route cost="50.73" probability="1.00000000" edges="-24.0.00 -6.0.00 19.0.00 18.0.00 17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="27" type="passenger" depart="27.00">
+        <routeDistribution last="0">
+            <route cost="3.71" probability="1.00000000" edges="17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="28" type="passenger" depart="28.00">
+        <routeDistribution last="0">
+            <route cost="16.14" probability="1.00000000" edges="4.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="29" type="passenger" depart="29.00">
+        <routeDistribution last="0">
+            <route cost="56.35" probability="1.00000000" edges="-12.0.00 -19.0.00 6.0.00 24.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="30" type="passenger" depart="30.00">
+        <routeDistribution last="0">
+            <route cost="54.48" probability="1.00000000" edges="24.0.00 -12.0.00 18.0.00 17.0.00 10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="31" type="passenger" depart="31.00">
+        <routeDistribution last="0">
+            <route cost="54.86" probability="1.00000000" edges="24.0.00 23.0.00 -4.0.00 -18.0.00 12.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="32" type="passenger" depart="32.00">
+        <routeDistribution last="0">
+            <route cost="68.47" probability="1.00000000" edges="-24.0.00 -6.0.00 19.0.00 12.0.00 23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="33" type="passenger" depart="33.00">
+        <routeDistribution last="0">
+            <route cost="31.86" probability="1.00000000" edges="21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00 -23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="34" type="passenger" depart="34.00">
+        <routeDistribution last="0">
+            <route cost="71.46" probability="1.00000000" edges="16.0.00 0.0.00 19.0.00 18.0.00 17.0.00 10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="35" type="passenger" depart="35.00">
+        <routeDistribution last="0">
+            <route cost="67.15" probability="1.00000000" edges="-19.0.00 -7.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="36" type="passenger" depart="36.00">
+        <routeDistribution last="0">
+            <route cost="51.26" probability="1.00000000" edges="-12.0.00 18.0.00 4.0.00 22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="37" type="passenger" depart="37.00">
+        <routeDistribution last="0">
+            <route cost="61.37" probability="1.00000000" edges="12.0.00 23.0.00 22.0.00 21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00 -23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="38" type="passenger" depart="38.00">
+        <routeDistribution last="0">
+            <route cost="56.55" probability="1.00000000" edges="-17.0.00 4.0.00 22.0.00 21.0.00 2.0.00 1.0.00 -16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="39" type="passenger" depart="39.00">
+        <routeDistribution last="0">
+            <route cost="98.54" probability="1.00000000" edges="-3.0.00 -6.0.00 19.0.00 12.0.00 -24.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="40" type="passenger" depart="40.00">
+        <routeDistribution last="0">
+            <route cost="31.24" probability="1.00000000" edges="18.0.00 4.0.00 -23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="41" type="passenger" depart="41.00">
+        <routeDistribution last="0">
+            <route cost="68.22" probability="1.00000000" edges="-12.0.00 18.0.00 17.0.00 10.0.00 25.0.00 1.0.00 -16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="42" type="passenger" depart="42.00">
+        <routeDistribution last="0">
+            <route cost="51.43" probability="1.00000000" edges="19.0.00 18.0.00 4.0.00 22.0.00 21.0.00 2.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="43" type="passenger" depart="43.00">
+        <routeDistribution last="0">
+            <route cost="86.73" probability="1.00000000" edges="-3.0.00 24.0.00 23.0.00 22.0.00 21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="44" type="passenger" depart="44.00">
+        <routeDistribution last="0">
+            <route cost="27.87" probability="1.00000000" edges="22.0.00 -9.0.00 -10.0.00 16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="45" type="passenger" depart="45.00">
+        <routeDistribution last="0">
+            <route cost="50.26" probability="1.00000000" edges="-10.0.00 16.0.00 0.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="46" type="passenger" depart="46.00">
+        <routeDistribution last="0">
+            <route cost="2.56" probability="1.00000000" edges="21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="47" type="passenger" depart="47.00">
+        <routeDistribution last="0">
+            <route cost="55.03" probability="1.00000000" edges="12.0.00 23.0.00 22.0.00 -9.0.00 25.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="48" type="passenger" depart="48.00">
+        <routeDistribution last="0">
+            <route cost="89.30" probability="1.00000000" edges="-1.0.00 -25.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="49" type="passenger" depart="49.00">
+        <routeDistribution last="0">
+            <route cost="38.38" probability="1.00000000" edges="-2.0.00 -21.0.00 -9.0.00 -10.0.00 16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="50" type="passenger" depart="50.00">
+        <routeDistribution last="0">
+            <route cost="80.68" probability="1.00000000" edges="0.0.00 19.0.00 18.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="51" type="passenger" depart="51.00">
+        <routeDistribution last="0">
+            <route cost="70.68" probability="1.00000000" edges="12.0.00 23.0.00 22.0.00 21.0.00 -3.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="52" type="passenger" depart="52.00">
+        <routeDistribution last="0">
+            <route cost="38.37" probability="1.00000000" edges="5.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="53" type="passenger" depart="53.00">
+        <routeDistribution last="0">
+            <route cost="25.53" probability="1.00000000" edges="-1.0.00 -25.0.00 9.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="54" type="passenger" depart="54.00">
+        <routeDistribution last="0">
+            <route cost="45.86" probability="1.00000000" edges="1.0.00 -16.0.00 10.0.00 9.0.00 21.0.00 2.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="55" type="passenger" depart="55.00">
+        <routeDistribution last="0">
+            <route cost="47.46" probability="1.00000000" edges="16.0.00 -1.0.00 -25.0.00 -10.0.00 -17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="56" type="passenger" depart="56.00">
+        <routeDistribution last="0">
+            <route cost="62.92" probability="1.00000000" edges="-24.0.00 5.0.00 2.0.00 1.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="57" type="passenger" depart="57.00">
+        <routeDistribution last="0">
+            <route cost="45.08" probability="1.00000000" edges="-25.0.00 9.0.00 -22.0.00 -4.0.00 17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="58" type="passenger" depart="58.00">
+        <routeDistribution last="0">
+            <route cost="58.40" probability="1.00000000" edges="-6.0.00 19.0.00 18.0.00 17.0.00 16.0.00 -1.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="59" type="passenger" depart="59.00">
+        <routeDistribution last="0">
+            <route cost="38.56" probability="1.00000000" edges="10.0.00 25.0.00 -2.0.00 -21.0.00 -9.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="60" type="passenger" depart="60.00">
+        <routeDistribution last="0">
+            <route cost="52.03" probability="1.00000000" edges="-10.0.00 -17.0.00 -18.0.00 -19.0.00 6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="61" type="passenger" depart="61.00">
+        <routeDistribution last="0">
+            <route cost="27.22" probability="1.00000000" edges="-19.0.00 6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="62" type="passenger" depart="62.00">
+        <routeDistribution last="0">
+            <route cost="66.93" probability="1.00000000" edges="-10.0.00 -17.0.00 4.0.00 22.0.00 21.0.00 2.0.00 1.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="63" type="passenger" depart="63.00">
+        <routeDistribution last="0">
+            <route cost="40.08" probability="1.00000000" edges="18.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="64" type="passenger" depart="64.00">
+        <routeDistribution last="0">
+            <route cost="91.72" probability="1.00000000" edges="0.0.00 6.0.00 24.0.00 23.0.00 22.0.00 -9.0.00 -10.0.00 -17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="65" type="passenger" depart="65.00">
+        <routeDistribution last="0">
+            <route cost="61.18" probability="1.00000000" edges="-12.0.00 -19.0.00 -7.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="66" type="passenger" depart="66.00">
+        <routeDistribution last="0">
+            <route cost="79.94" probability="1.00000000" edges="-3.0.00 -6.0.00 19.0.00 18.0.00 17.0.00 16.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="67" type="passenger" depart="67.00">
+        <routeDistribution last="0">
+            <route cost="62.65" probability="1.00000000" edges="9.0.00 -22.0.00 -4.0.00 -18.0.00 12.0.00 23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="68" type="passenger" depart="68.00">
+        <routeDistribution last="0">
+            <route cost="35.57" probability="1.00000000" edges="-21.0.00 -22.0.00 -4.0.00 -18.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="69" type="passenger" depart="69.00">
+        <routeDistribution last="0">
+            <route cost="54.29" probability="1.00000000" edges="10.0.00 25.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="70" type="passenger" depart="70.00">
+        <routeDistribution last="0">
+            <route cost="79.30" probability="1.00000000" edges="12.0.00 -24.0.00 -6.0.00 -7.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="71" type="passenger" depart="71.00">
+        <routeDistribution last="0">
+            <route cost="57.57" probability="1.00000000" edges="-23.0.00 -12.0.00 18.0.00 17.0.00 10.0.00 25.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="72" type="passenger" depart="72.00">
+        <routeDistribution last="0">
+            <route cost="29.12" probability="1.00000000" edges="-1.0.00 -2.0.00 -21.0.00 -22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="73" type="passenger" depart="73.00">
+        <routeDistribution last="0">
+            <route cost="52.69" probability="1.00000000" edges="-3.0.00 -6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="74" type="passenger" depart="74.00">
+        <routeDistribution last="0">
+            <route cost="90.68" probability="1.00000000" edges="5.0.00 -21.0.00 -22.0.00 -23.0.00 -24.0.00 -6.0.00 19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="75" type="passenger" depart="75.00">
+        <routeDistribution last="0">
+            <route cost="74.63" probability="1.00000000" edges="-4.0.00 17.0.00 16.0.00 0.0.00 19.0.00 18.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="76" type="passenger" depart="76.00">
+        <routeDistribution last="0">
+            <route cost="22.47" probability="1.00000000" edges="2.0.00 -25.0.00 -10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="77" type="passenger" depart="77.00">
+        <routeDistribution last="0">
+            <route cost="74.85" probability="1.00000000" edges="4.0.00 -23.0.00 -12.0.00 -19.0.00 6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="78" type="passenger" depart="78.00">
+        <routeDistribution last="0">
+            <route cost="49.57" probability="1.00000000" edges="19.0.00 18.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="79" type="passenger" depart="79.00">
+        <routeDistribution last="0">
+            <route cost="58.92" probability="1.00000000" edges="25.0.00 -2.0.00 -3.0.00 24.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="80" type="passenger" depart="80.00">
+        <routeDistribution last="0">
+            <route cost="58.52" probability="1.00000000" edges="17.0.00 10.0.00 9.0.00 -22.0.00 -23.0.00 -12.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="81" type="passenger" depart="81.00">
+        <routeDistribution last="0">
+            <route cost="75.51" probability="1.00000000" edges="-18.0.00 12.0.00 23.0.00 22.0.00 21.0.00 -3.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="82" type="passenger" depart="82.00">
+        <routeDistribution last="0">
+            <route cost="37.76" probability="1.00000000" edges="-22.0.00 -23.0.00 -24.0.00 -6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="83" type="passenger" depart="83.00">
+        <routeDistribution last="0">
+            <route cost="35.39" probability="1.00000000" edges="17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="84" type="passenger" depart="84.00">
+        <routeDistribution last="0">
+            <route cost="99.74" probability="1.00000000" edges="-6.0.00 19.0.00 18.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00 -3.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="85" type="passenger" depart="85.00">
+        <routeDistribution last="0">
+            <route cost="22.00" probability="1.00000000" edges="10.0.00 9.0.00 21.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="86" type="passenger" depart="86.00">
+        <routeDistribution last="0">
+            <route cost="64.56" probability="1.00000000" edges="-10.0.00 16.0.00 0.0.00 19.0.00 18.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="87" type="passenger" depart="87.00">
+        <routeDistribution last="0">
+            <route cost="52.24" probability="1.00000000" edges="-4.0.00 17.0.00 10.0.00 9.0.00 -22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="88" type="passenger" depart="88.00">
+        <routeDistribution last="0">
+            <route cost="45.40" probability="1.00000000" edges="-18.0.00 12.0.00 23.0.00 22.0.00 -9.0.00 25.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="89" type="passenger" depart="89.00">
+        <routeDistribution last="0">
+            <route cost="63.25" probability="1.00000000" edges="23.0.00 22.0.00 21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00 -23.0.00 -12.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="90" type="passenger" depart="90.00">
+        <routeDistribution last="0">
+            <route cost="69.76" probability="1.00000000" edges="4.0.00 -23.0.00 -24.0.00 5.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="91" type="passenger" depart="91.00">
+        <routeDistribution last="0">
+            <route cost="32.71" probability="1.00000000" edges="10.0.00 9.0.00 21.0.00 2.0.00 -25.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="92" type="passenger" depart="92.00">
+        <routeDistribution last="0">
+            <route cost="36.87" probability="1.00000000" edges="-19.0.00 6.0.00 24.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="93" type="passenger" depart="93.00">
+        <routeDistribution last="0">
+            <route cost="49.39" probability="1.00000000" edges="-22.0.00 -4.0.00 -18.0.00 12.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="94" type="passenger" depart="94.00">
+        <routeDistribution last="0">
+            <route cost="42.88" probability="1.00000000" edges="24.0.00 23.0.00 22.0.00 -9.0.00 -10.0.00 -17.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="95" type="passenger" depart="95.00">
+        <routeDistribution last="0">
+            <route cost="41.08" probability="1.00000000" edges="25.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="96" type="passenger" depart="96.00">
+        <routeDistribution last="0">
+            <route cost="41.90" probability="1.00000000" edges="-21.0.00 -22.0.00 -23.0.00 -24.0.00 -6.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="97" type="passenger" depart="97.00">
+        <routeDistribution last="0">
+            <route cost="54.86" probability="1.00000000" edges="2.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 12.0.00 23.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="98" type="passenger" depart="98.00">
+        <routeDistribution last="0">
+            <route cost="15.77" probability="1.00000000" edges="-16.0.00 10.0.00"/>
+        </routeDistribution>
+    </vehicle>
+    <vehicle id="99" type="passenger" depart="99.00">
+        <routeDistribution last="0">
+            <route cost="23.52" probability="1.00000000" edges="10.0.00 9.0.00 -22.0.00"/>
+        </routeDistribution>
+    </vehicle>
+</routes>
