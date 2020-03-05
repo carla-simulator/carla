@@ -2,8 +2,8 @@
 
   * [__Requirements__](#requirements)  
   * [__Bridge installation__](#bridge-installation)  
-	* a) apt-get ROS bridge  
-	* b) Repository download  
+	* a) using apt repository  
+	* b) using source repository  
   * [__Run the ROS bridge__](#run-the-ros-bridge)  
 	* Import error: No module named CARLA  
   * [__Setting CARLA__](#setting-carla)  
@@ -25,7 +25,7 @@ And also vice versa, the messages sent between nodes in ROS get translated to co
 ---
 ## Bridge installation 
 
-#### a) apt-get ROS bridge
+#### a) Using apt repository
 
 First add the apt repository: 
 
@@ -37,17 +37,17 @@ sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-ros-bridg
 
 * __Bridge for ROS Kinetic:__
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE2A0CDC0161D6C
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE2A0CDC0161D6C &&
 sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-ros-bridge-kinetic xenial main"
 ```
 
 Then simply install the ROS bridge:
 ```sh
-sudo apt-get update &&
-sudo apt-get install carla-ros-bridge
+sudo apt update &&
+sudo apt install carla-ros-bridge-<melodic or kinetic>
 ```
 
-#### b) Repository download
+#### b) Using source repository
 
 In order to use the ROS bridge a catkin workspace is needed. The ROS bridge should be cloned and built in there to be available.  
 The following fragment creates a new workspace and clones the repository in there.  
@@ -75,12 +75,12 @@ catkin_make
 __1) run CARLA:__ the way to do so will depend on the the CARLA installation chosen, so here is a brief summary:  
 
 * __Quick start/release package:__ run `./CarlaUE4.sh` in `/carla/`. 
-* __apt-get installation:__ run `./CarlaUE4.sh` in `/opt/carla/bin/`. 
+* __apt installation:__ run `./CarlaUE4.sh` in `/opt/carla/bin/`. 
 * __Build installation:__ run `make launch` in `/carla/`. 
 
 __2) Add the source path:__ the source path for the workspace should be added so that the ROS bridge can be used from a terminal:  
 
-* __Source for apt-get ROS bridge:__
+* __Source for apt ROS bridge:__
 ```sh
 source /opt/carla-ros-bridge/<melodic or kinetic>/setup.bash
 ```
@@ -108,7 +108,7 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch
 
 #### ImportError: no module named CARLA
 
-The path to CARLA Python is missing. The apt-get installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the _.egg_ file (included). Use the one, that is supported by the Python version installed:
+The path to CARLA Python is missing. The apt installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the _.egg_ file (included). Use the one, that is supported by the Python version installed:
 
     export PYTHONPATH=$PYTHONPATH:<path/to/carla/>/PythonAPI/<your_egg_file>
 
