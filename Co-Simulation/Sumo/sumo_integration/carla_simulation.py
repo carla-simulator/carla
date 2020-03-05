@@ -51,6 +51,16 @@ class CarlaSimulation(object):
     def get_actor(self, actor_id):
         return self.world.get_actor(actor_id)
 
+    # This is a workaround to fix synchronization issues when other carla
+    # clients remove an actor in carla without waiting for tick (e.g.,
+    # running sumo co-simulation and manual control at the same time)
+    def get_actor_light_state(self, actor_id):
+        try:
+            actor = self.get_actor(actor_id)
+            return actor.get_light_state()
+        except RuntimeError:
+            return None
+
     def spawn_actor(self, blueprint, transform):
         """Spawns a new actor.
         """
