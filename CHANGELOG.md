@@ -1,5 +1,6 @@
 ## latest
 
+  * Added beta version sumo-carla co-simulation.
   * Traffic Manager:
     - Added benchmark
     - Added synchronous mode
