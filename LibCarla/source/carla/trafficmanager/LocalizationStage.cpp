@@ -512,15 +512,7 @@ namespace LocalizationConstants {
   SimpleWaypointPtr LocalizationStage::AssignLaneChange(Actor vehicle, const cg::Location &vehicle_location,
                                                         bool force, bool direction)
   {
-
-    /* TODO:
-      1. Re-introduce force and direction parameters into lane change logic.
-      2. Implement keep right rule.
-    */
-    ////////// Ignoring some parameters for the time being //////////
-    (void) force;
-    (void) direction;
-    /////////////////////////////////////////////////////////////////
+    // TODO: Implement keep right rule.
 
     const ActorId actor_id = vehicle->GetId();
     const float vehicle_velocity = vehicle->GetVelocity().Length();
@@ -548,7 +540,7 @@ namespace LocalizationConstants {
       float minimum_squared_distance = std::numeric_limits<float>::infinity();
       ActorId obstacle_actor_id = 0u;
       for (auto i = blocking_vehicles.begin();
-           i != blocking_vehicles.end() && !obstacle_too_close;
+           i != blocking_vehicles.end() && !obstacle_too_close && !force;
            ++i)
       {
         const ActorId &other_actor_id = *i;
@@ -595,7 +587,7 @@ namespace LocalizationConstants {
       }
 
       // If a valid immediate obstacle found.
-      if (!obstacle_too_close && obstacle_actor_id != 0u)
+      if (!obstacle_too_close && obstacle_actor_id != 0u && !force)
       {
         const Buffer& other_buffer = buffer_list->at(obstacle_actor_id);
         const SimpleWaypointPtr& other_current_waypoint = other_buffer.front();
@@ -630,6 +622,12 @@ namespace LocalizationConstants {
         } else if (distant_left_lane_free && left_waypoint != nullptr
                    && track_traffic.GetPassingVehicles(left_waypoint->GetId()).size() == 0)
         {
+          change_over_point = left_waypoint;
+        }
+      } else if (force) {
+        if (direction && right_waypoint != nullptr) {
+          change_over_point = right_waypoint;
+        } else if (!direction && left_waypoint != nullptr) {
           change_over_point = left_waypoint;
         }
       }
