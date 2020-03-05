@@ -267,7 +267,7 @@ def _retrieve_options(list_waypoints, current_waypoint):
     return options
 
 
-def _compute_connection(current_waypoint, next_waypoint):
+def _compute_connection(current_waypoint, next_waypoint, threshold=35):
     """
     Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
     (next_waypoint).
@@ -286,7 +286,7 @@ def _compute_connection(current_waypoint, next_waypoint):
     c = c % 360.0
 
     diff_angle = (n - c) % 180.0
-    if diff_angle < 1.0:
+    if diff_angle < threshold or diff_angle > (180 - threshold):
         return RoadOption.STRAIGHT
     elif diff_angle > 90.0:
         return RoadOption.LEFT
