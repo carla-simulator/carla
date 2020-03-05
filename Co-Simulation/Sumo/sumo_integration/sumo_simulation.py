@@ -97,15 +97,16 @@ class SumoSimulation(object):
 
         if args.sumo_host is None or args.sumo_port is None:
             logging.info('Starting new sumo server...')
-            if self.sumo_gui:
-                logging.info('Remember to press the play button in sumo-gui to start the simulation')
-
             traci.start([
                 sumo_binary,
                 "-c", args.sumo_cfg_file,
                 '--step-length', str(args.step_length),
-                '--lateral-resolution', '0.25'
+                '--lateral-resolution', '0.25',
+                '--collision.check-junctions'
             ])
+
+            if self.sumo_gui:
+                logging.info('Remember to press the play button to start the simulation')
         else:
             logging.info('Connection to sumo server. Host: {} Port: {}'.format(self.host, self.port))
             traci.init(host=self.host, port=self.port)
@@ -122,7 +123,6 @@ class SumoSimulation(object):
 
     @staticmethod
     def subscribe(actor_id):
-        # TODO(joel): Add velocity, acceleration?
         traci.vehicle.subscribe(actor_id, [
             traci.constants.VAR_TYPE, traci.constants.VAR_VEHICLECLASS,
             traci.constants.VAR_COLOR, traci.constants.VAR_LENGTH,
@@ -136,7 +136,6 @@ class SumoSimulation(object):
     def unsubscribe(actor_id):
         traci.vehicle.unsubscribe(actor_id)
 
-    # TODO(joel): Review this is correct.
     def get_net_offset(self):
         offset = traci.simulation.convertGeo(0, 0)
         return (-offset[0], -offset[1])
@@ -162,7 +161,8 @@ class SumoSimulation(object):
         ]
         transform = carla.Transform(
             carla.Location(location[0], location[1], location[2]),
-            carla.Rotation(rotation[0], rotation[1], rotation[2]))
+            carla.Rotation(rotation[0], rotation[1], rotation[2])
+        )
 
         signals = results[traci.constants.VAR_SIGNALS]
         extent = carla.Vector3D(length / 2.0, width / 2.0, height / 2.0)
@@ -195,7 +195,7 @@ class SumoSimulation(object):
         yaw = transform.rotation.yaw
 
         traci.vehicle.moveToXY(vehicle_id, "", 0, x, y, angle=yaw, keepRoute=2)
-        if signals is not None or self.args.sync_vehicle_lights:
+        if signals is not None and self.args.sync_vehicle_lights:
             traci.vehicle.setSignals(vehicle_id, signals)
 
     def synchronize_walker(self, walker_id, transform):

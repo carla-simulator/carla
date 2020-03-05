@@ -81,7 +81,7 @@ class CarlaSimulation(object):
             return False
 
         vehicle.set_transform(transform)
-        if lights is not None or self.args.sync_vehicle_lights:
+        if lights is not None and self.args.sync_vehicle_lights:
             vehicle.set_light_state(carla.VehicleLightState(lights))
 
     def synchronize_walker(self, walker_id, transform):
