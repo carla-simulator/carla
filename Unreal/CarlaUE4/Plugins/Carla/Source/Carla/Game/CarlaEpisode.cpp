@@ -120,7 +120,7 @@ static FString BuildRecastBuilderFile()
   // Define path depending on the UE4 build type (Package or Editor)
 #if UE_BUILD_SHIPPING
   const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectDir() + "Tools/" + RecastToolName);
+      FPaths::RootDir() + "Tools/" + RecastToolName);
 #else
   const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
       FPaths::ProjectDir() + "../../Util/DockerUtils/dist/" + RecastToolName);
@@ -180,9 +180,11 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
 
   if (FPaths::FileExists(AbsoluteRecastBuilderPath))
   {
+    /// @todo this can take too long to finish, clients need a method
+    /// to know if the navigation is available or not.
     FPlatformProcess::CreateProc(
         *AbsoluteRecastBuilderPath, *AbsoluteOBJPath,
-        true, false, false, nullptr, 0, nullptr, nullptr);
+        true, true, true, nullptr, 0, nullptr, nullptr);
   }
   else
   {
