@@ -1015,39 +1015,37 @@ namespace road {
               lane_section.GetId(),
               lane.GetId(),
               lane_section.GetDistance() + EPSILON };
-          bool first_waypoint = true;
 
           if (lane.GetType() == Lane::LaneType::Sidewalk) {
             out_mesh.AddMaterial("sidewalk");
           } else {
             out_mesh.AddMaterial("road");
           }
+          // Add 2 first vertices only
+          std::pair<geom::Vector3D, geom::Vector3D> edges =
+              GetWaypointCornerPositions(*this, current_wp, lane);
+          out_mesh.AddVertex(edges.first);
+          out_mesh.AddVertex(edges.second);
 
-          do {
-            // Get the location of the edges of the current lane at the current waypoint
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
-            // This condition avoids adding indexes in the initial first waypoint
-            if(first_waypoint) {
-              // Add vertices only
-              out_mesh.AddVertex(edges.first);
-              out_mesh.AddVertex(edges.second);
-              first_waypoint = false;
-            } else {
+          if (!IsLaneStraight(lane)) {
+            do {
+              // Get the location of the edges of the current lane at the current waypoint
+              edges = GetWaypointCornerPositions(*this, current_wp, lane);
               // Extrude adding vertices and joining the using indices
               const size_t last_index = out_mesh.GetLastVertexIndex();
               ExtrudeMeshEdge(
                   out_mesh, edges.first, edges.second, last_index - 1, last_index);
-            }
 
-            // Update the current waypoint's "s"
-            current_wp.s += distance;
+              // Update the current waypoint's "s"
+              current_wp.s += distance;
 
-          } while(current_wp.s < end_distance);
+            } while(current_wp.s < end_distance);
+          }
           // This ensures the mesh is constant and have no gaps between
           // segments and roads
           if (end_distance - (current_wp.s - distance) > EPSILON) {
             current_wp.s = end_distance;
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            edges = GetWaypointCornerPositions(*this, current_wp, lane);
             const size_t last_index = out_mesh.GetLastVertexIndex();
             ExtrudeMeshEdge(
                 out_mesh, edges.first, edges.second, last_index - 1, last_index);
