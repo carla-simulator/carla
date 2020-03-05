@@ -750,9 +750,10 @@ namespace road {
   // ===========================================================================
 
   // Checks whether the geometry is straight or not
-  bool IsLineStraight(const Road &road,
-      const Lane &lane,
-      const element::RoadInfoGeometry* geometry) {
+  bool IsLaneStraight(const Lane &lane) {
+    Road *road = lane.GetRoad();
+    auto *geometry = road->GetInfo<RoadInfoGeometry>(lane.GetDistance());
+    DEBUG_ASSERT(geometry != nullptr);
     auto geometry_type = geometry->GetGeometry().GetType();
     if (geometry_type != element::GeometryType::LINE) {
       return false;
@@ -769,7 +770,7 @@ namespace road {
         return false;
       }
     }
-    auto elevations = road.GetInfos<element::RoadInfoElevation>();
+    auto elevations = road->GetInfos<element::RoadInfoElevation>();
     for (auto *elevation : elevations) {
       if (abs(elevation->GetPolynomial().GetC()) > 0 ||
       abs(elevation->GetPolynomial().GetD()) > 0) {
@@ -852,14 +853,12 @@ namespace road {
 
       auto current_waypoint = lane_start_waypoint;
 
-      const Road &road = _data.GetRoad(current_waypoint.road_id);
       const Lane &lane = GetLane(current_waypoint);
-      const auto *geometry = road.GetInfo<element::RoadInfoGeometry>(current_waypoint.s);
 
       geom::Transform current_transform = ComputeTransform(current_waypoint);
 
       // Save computation time in straight lines
-      if (IsLineStraight(road, lane, geometry)) {
+      if (IsLaneStraight(lane)) {
         double delta_s = min_delta_s;
         double remaining_length =
             GetRemainingLength(lane, current_waypoint.s);
