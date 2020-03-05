@@ -27,6 +27,7 @@
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
+  * Fixed local_planner.py: agent will now stop when it reaches the desired destination
   * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
   * Fixed agent failures due to API changes in is_within_distance_ahead()
