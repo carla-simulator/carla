@@ -712,7 +712,7 @@ namespace road {
     return result;
   }
 
-  std::vector<std::pair<Waypoint, Waypoint>> Map::GenerateTopology(Lane::LaneType /*lane_type*/) const {
+  std::vector<std::pair<Waypoint, Waypoint>> Map::GenerateTopology() const {
     std::vector<std::pair<Waypoint, Waypoint>> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
