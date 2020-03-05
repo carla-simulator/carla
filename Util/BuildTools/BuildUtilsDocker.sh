@@ -33,9 +33,18 @@ rm "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}"
 
 echo "Compiling FBX2OBJ..."
 mkdir -p "${FBX2OBJ_DIST}"
+mkdir -p "${FBX2OBJ_BUILD_FOLDER}"
 
-cmake -S "${FBX2OBJ_FOLDER}" -B "${FBX2OBJ_BUILD_FOLDER}"
+pushd "${FBX2OBJ_BUILD_FOLDER}" >/dev/null
 
-make -C "${FBX2OBJ_BUILD_FOLDER}" install
+cmake -G "Ninja" \
+    -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+    ..
+
+ninja
+
+ninja install
+
+popd >/dev/null
 
 log "Success!"
