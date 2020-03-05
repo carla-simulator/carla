@@ -128,7 +128,7 @@ namespace road {
 
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
-    std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology(Lane::LaneType lane_type = Lane::LaneType::Driving) const;
+    std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
 
     /// Generate waypoints of the junction
     std::vector<std::pair<Waypoint, Waypoint>> GetJunctionWaypoints(JuncId id, Lane::LaneType lane_type) const;
