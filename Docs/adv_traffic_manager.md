@@ -18,16 +18,16 @@
 The Traffic Manager, TM for short, is a module built on top of the CARLA API in C++ that is in charge of controlling vehicles inside the simulation. Its goal is to populate the simulation with realistic urban traffic conditions allowing users to customize some behaviours, for example to set specific learning circumstances. To do so, every TM controls vehicles registered to it by setting autopilot to true, and is accounting for the rest by considering them unregistered. 
 
 #### Structured design
-The TM is built on the client-side of the CARLA architecture, replacing the former server-side autopilot after version 0.9.7. The execution flow is divided in __stages__ with independent operations and goals, to facilitate the development of phase-related functionalities and data structures, while also improving computational efficiency. Each stage runs on a different thread and communication with the rest is managed through messages facilitating synchronous messaging between the different stages, so the information flows only in one direction.  
+The TM is built on the client-side of the CARLA architecture, replacing the former server-side autopilot after version 0.9.7. The execution flow is divided in __stages__ with independent operations and goals, to facilitate the development of phase-related functionalities and data structures, while also improving computational efficiency. Each stage runs on a different thread and communication with the rest is managed through synchronous messaging between the stages, so the information flows only in one direction.  
 
 #### User customization
-Users need to be granted some control by setting parameters that allow, force or encourage certain behaviours. Thus, users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality, specially to train driving systems under specific and atypical circumstances. 
+Users must have some control over the traffic flow by setting parameters that allow, force or encourage specific behaviours. Thus, users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality, specially to train driving systems under specific and atypical circumstances. 
 
 ---
 ## How does it work?
 
 #### Architecture
-The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies are the different stages, green ones are additional modules needed during the different stages and the arrows represent communication managed by messenger classes between the different elements.  
+The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies represent the different stages, green ones are additional modules that work with these and the arrows represent communication between elements managed by messenger classes.  
 The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) found inside `LibCarla/source/carla/trafficmanager`. 
 
 <div style="text-align:center">
@@ -36,33 +36,33 @@ The inner structure of the TM can be easily translated to code. Each relevant el
 
 #### Stages
 
-__1. Localization Stage:__ the TM stores a list of waypoints ahead for each vehicle to follow. The buffer list of waypoints is is updated each iteration and deleted when lane changes are applied, to create a new one with the corresponding trajectory. The amount of waypoints contained in said list varies depending on the vehicle's speed, being greater the faster it goes. The localization stage contains a __spacial hashing__ which summarizes the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+__1. Localization Stage:__ the TM stores a list of waypoints ahead for each vehicle to follow. The list of waypoints is updated each iteration, changing according to the decisions taken during the stage, such as lane changes, to modify the vehicle's trajectory. The amount of waypoints stored depends on the vehicle's speed, being greater the faster it goes. This stage contains a __spatial hashing__ which saves the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
 
 * __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
-__2. Collision Stage:__ checks possible collisions for every vehicle. For each pairs of overlapping actors in the list contained by the localization stage, it extends a __geodesic boundary__. These are extended bounding bodies that represent the vehicle along its trajectory. Collisions between two geodesic boundaries are communicated to the __Motion planner stage__ that will manage them.  
+__2. Collision Stage:__ checks possible collisions for every vehicle. For each pairs of overlapping actors in the list stored by the Localization stage, it extends a __geodesic boundary__. These are extended bounding boxes that represent the vehicle along its trajectory. This stage determines which vehicle has priority and communicates the result to the __Motion Planner stage__.  
 
 * __Related .cpp files:__ `CollisionStage.cpp`.  
 
-__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. Whenever there is a traffic light, if red, a __traffic hazard__ is set to true. Non signaled junctions are managed with a ticket system. When coming closer to these, a __geodesic boundary__ is extended through the intersection along the vehicle's trajectory. If there is another vehicle inside of it, the parent waits for the junction to be free.  
+__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. A _traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
 
 * __Related .cpp files:__ `TrafficLightStage.cpp`.  
 
-__4. Motion Planner Stage:__ aggregates all the information gathered through the previous stages. Their guidance is adjusted with actuation signals provided by a PID controller, this stage makes decisions on how to move the vehicles. It computes all the commands needed for every vehicle and then send these to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicate it to the apply control stage.  
+__4. Motion Planner Stage:__ aggregates all the information from the previous stages and makes decisions on how to move the vehicles. It is asisted by a PID controller to adjust the resulting behaviour. After computing all the commands needed for every vehicle, these are sent to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicates it to the Apply Control stage.  
 
 * __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
-__5. Apply Control Stage:__ receives actuation signals (such as throttle, brake, steer) from the Motion Planner stage and commands these to the simulator in batches to control every vehicles' movement. It mainly uses the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
+__5. Apply Control Stage:__ receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 
 #### Additional modules
 
-__Cached map:__ in order to ease computation costs during the localization stage, the map is divided into a grid of waypoints, so that these are not calculated every time. These waypoints are not the usual _carla.Waypoint_ accessible from the API but a specific data structure designed according to the needs of the TM. The grid of waypoints representing the road map is at the same time divided into different sections, each of them representing little portions of the road, for instance a junction. These sections are numbered and connected so that it is easier to locate a vehicle on the map and to identify which vehicle are close to it.  
+__Cached map:__ in order to increase computational efficiency during the Localization stage, the map is discretized and cached as a grid of waypoints. These are included in a specific data structure designed to hold more information, such as links between them. The grids allow to easily connect the map, each of them representing sections of a road or a whole junction, by also having an ID that is used to quickly identify vehicles in nearby areas.  
 
 * __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
 
-__PID controller:__ the TM module contains its own PID controller to regulate throttle, brake and steering according to an intended result. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+__PID controller:__ the TM module uses a PID controller to regulate throttle, brake and steering according to a target value. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
 
 * __Related .cpp files:__ `PIDController.cpp`.  
 
@@ -71,14 +71,13 @@ __PID controller:__ the TM module contains its own PID controller to regulate th
 
 #### General considerations
 
-First of all there are some general behaviour patterns the TM will generate that should be understood beforehand. These statements inherent to the way the TM is implemented:  
+First of all there are some general behaviour patterns the TM will generate that should be understood beforehand. These statements are inherent to the way the TM is implemented:  
 
-* __Vehicles are not goal-oriented__ they follow a road and whenever a junction appears, choose a path randomly. Their path is endless and thus, will never stop roaming around the city.
-* __Vehicles' intended speed is 70% their current speed limit:__ unless any other behaviour is set. 
-* __Lane change is currently disabled:__ it can be enabled through the API, though right now some issues may happen. Disabling lane changes will also ban overtakings between vehicles in the same lane. 
-* __Junction priority does not follow traffic regulations:__ the TM has a ticket system to be used while junction complexity is solved. This may cause some issues such as a vehicle inside a roundabout yielding to a vehicle trying to get in. 
+* __Vehicles are not goal-oriented__ they follow a trajectory and whenever approaching a junction, choose a path randomly. Their path is endless, and will never stop roaming around the city.  
+* __Vehicles' target speed is 70% their current speed limit:__ unless any other value is set. 
+* __Junction priority does not follow traffic regulations:__ the TM has a priority system to be used while junction complexity is solved. This may cause some issues such as a vehicle inside a roundabout yielding to a vehicle trying to get in. 
 
-The TM provides with a set of possibilities that decide how the traffic is conducted or set specific rules for a vehicle. Thus, the user can aim for different behaviours in both a general and specific sense. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
+The TM provides a set of possibilities so the user can establish specific behaviours. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
 <table style="width:100%">
   <col width="150">
@@ -113,18 +112,15 @@ The TM provides with a set of possibilities that decide how the traffic is condu
 </table>
 <br>
 
-By default, vehicles will not ignore any actor, drive at their current speed limit and leave 1 meter of safety distance between them.  
-All of these properties can be easily managed as any other _set()_ method would. 
-
 #### Creating a Traffic Manager
 
-A TM instance can be created in any [carla.Client](python_api.md#carla.Client). To get it, two elements are needed: the container client and the port that will be used to connect with it. Default port is `8000`.  
+A TM instance can be created by any [carla.Client](python_api.md#carla.Client) specifying the port that will be used. The default port is `8000`.  
 
 ```python
 tm = client.get_trafficmanager(port)
 ```
 
-Now the TM needs some vehicles to be in charge of. In order to do so, enable the autopilot mode for every vehicle it is in charge of. In case the client is not connected to any TM, an instance will be created with default presets.
+Now the TM needs some vehicles to be in charge of. In order to do so, enable the autopilot mode for the set of vehicles to be managed. In case the client is not connected to any TM, an instance will be created with default presets.
 
 ```python
  for v in vehicles_list:
