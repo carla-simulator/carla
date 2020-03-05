@@ -13,8 +13,8 @@ This page summarizes everything necessary to start handling sensors including so
 	* Detectors  
 	* Other  
 
----------------
-##Sensors step-by-step  
+---
+## Sensors step-by-step  
 
 The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of actor able to measure and stream data.  
 
@@ -24,7 +24,7 @@ The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of a
 
 Despite their differences, the way the user manages every sensor is quite similar. 
 
-####Setting
+#### Setting
 
 As with every other actor, the first step is to find the proper blueprint in the library and set specific attributes to get the desired results. This is essential when handling sensors, as their capabilities depend on the way these are set. Their attributes are detailed in the [sensors' reference](ref_sensors.md). 
 
@@ -40,7 +40,7 @@ blueprint.set_attribute('fov', '110')
 blueprint.set_attribute('sensor_tick', '1.0')
 ``` 
 
-####Spawning
+#### Spawning
 
 Sensors are also spawned like any other actor, only this time the two optional parameters, `attachment_to` and `attachment_type` are crucial. They should be attached to another actor, usually a vehicle, to follow it around and gather the information regarding its surroundings.  
 There are two types of attachment:  
@@ -55,7 +55,7 @@ sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 !!! Important
     When spawning an actor with attachment, remember that its location should be relative to its parent, not global. 
 
-####Listening
+#### Listening
 
 Every sensor has a [`listen()`](python_api.md#carla.Sensor.listen) method that is called every time the sensor retrieves data.  
 This method has one argument: `callback`, which is a [lambda expression](https://www.w3schools.com/python/python_lambda.asp) of a function, defining what should the sensor do when data is retrieved.  
@@ -90,10 +90,11 @@ Sensor data differs a lot between sensor types, but it is always tagged with:
 | `transform`           | carla.Transform | World reference of the sensor at the time of the measurement. |  
 
 <br>
----------------
-##Types of sensors  
+
+---
+## Types of sensors  
  
-####Cameras
+#### Cameras
 
 These sensors take a shot of the world from their point of view and then use the helper class to alter this image and provide different types of information.  
 __Retrieve data:__ every simulation step.  
@@ -105,7 +106,8 @@ __Retrieve data:__ every simulation step.
 | Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |  
 
 <br>
-####Detectors
+
+#### Detectors
 
 Sensors that retrieve data when a parent object they are attached to registers a specific event in the simulation.  
 __Retrieve data:__ when triggered.  
@@ -117,7 +119,8 @@ __Retrieve data:__ when triggered.
 | Obstacle | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleEvent) | Detects possible obstacles ahead of its parent. |  
 
 <br>
-####Other
+
+#### Other
 
 This group gathers sensors with different functionalities: navigation, measure physical properties of an object and provide 2D and 3D models of the scene.  
 __Retrieve data:__ every simulation step.  
@@ -130,7 +133,8 @@ __Retrieve data:__ every simulation step.
 | Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |  
 
 <br>
----------------
+
+---
 That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Some of the different paths to follow now are listed here: 
 
 * __Gain some practise__: if diving alone in CARLA is still frightening, it may be a good idea to try some of the code recipes provided in this documentation and combine them with the example scripts or some ideas of your own. 
@@ -138,7 +142,7 @@ That is a wrap on sensors and how do these retrieve simulation data and thus, th
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../python_cookbook" target="_blank" class="btn btn-neutral" title="Code recipes">
+<a href="ref_code_recipes.md" target="_blank" class="btn btn-neutral" title="Code recipes">
 Code recipes</a>
 </p>
 </div>
@@ -148,7 +152,7 @@ Code recipes</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../simulation_time_and_synchrony" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
+<a href="adv_synchrony_timestep.md" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
 Synchrony and time-step</a>
 </p>
 </div>
@@ -158,7 +162,7 @@ Synchrony and time-step</a>
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="../python_api" target="_blank" class="btn btn-neutral" title="Python API reference">
+<a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
 </p>
 </div>

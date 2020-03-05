@@ -260,7 +260,7 @@ class GlobalRoutePlanner(object):
 
         return last_node, last_intersection_edge
 
-    def _turn_decision(self, index, route, threshold=math.radians(5)):
+    def _turn_decision(self, index, route, threshold=math.radians(35)):
         """
         This method returns the turn decision (RoadOption) for pair of edges
         around current index of route list

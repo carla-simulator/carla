@@ -8,15 +8,15 @@ extra_css: [extra.css]
 nav:
 - Home: 'index.md'
 - Getting started:
-  - 'Introduction': 'getting_started/introduction.md'
-  - 'Quick start': 'getting_started/quickstart.md'
+  - 'Introduction': 'start_introduction.md'
+  - 'Quickstart installation': 'start_quickstart.md'
 - Building CARLA:
-  - 'Linux build': 'how_to_build_on_linux.md'
-  - 'Windows build': 'how_to_build_on_windows.md'
-  - 'Update CARLA': 'update_carla.md'
-  - 'Build system': 'dev/build_system.md'
-  - 'Running in a Docker': 'carla_docker.md'
-  - 'F.A.Q.': 'faq.md'
+  - 'Linux build': 'build_linux.md'
+  - 'Windows build': 'build_windows.md'
+  - 'Update CARLA': 'build_update.md'
+  - 'Build system': 'build_system.md'
+  - 'Running in a Docker': 'build_docker.md'
+  - 'F.A.Q.': 'build_faq.md'
 - First steps:
   - 'Core concepts': 'core_concepts.md'
   - '1st. World and client': 'core_world.md'
@@ -24,36 +24,37 @@ nav:
   - '3rd. Maps and navigation': 'core_map.md'
   - '4th. Sensors and data': 'core_sensors.md'
 - Advanced steps:
-  - 'Recorder': 'recorder_and_playback.md'
-  - 'Rendering options': 'rendering_options.md'
-  - 'Synchrony and time-step': 'simulation_time_and_synchrony.md'
+  - 'Recorder': 'adv_recorder.md'
+  - 'Rendering options': 'adv_rendering_options.md'
+  - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
 - References:
   - 'Python API reference': 'python_api.md'
-  - 'Code recipes': 'python_cookbook.md'
+  - 'Code recipes': 'ref_code_recipes.md'
   - 'Blueprint Library': 'bp_library.md'
-  - 'C++ reference' : 'cpp_reference.md'
-  - 'Recorder binary file format': 'recorder_binary_file_format.md'
+  - 'C++ reference' : 'ref_cpp.md'
+  - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
   - "Sensors reference": 'ref_sensors.md'  
-- How to... (general):
-  - 'Add a new sensor': 'dev/how_to_add_a_new_sensor.md'
-  - 'Add friction triggers': "how_to_add_friction_triggers.md"
-  - 'Control vehicle physics': "how_to_control_vehicle_physics.md"
-  - 'Control walker skeletons': "walker_bone_control.md"
-  - 'Creating standalone asset packages for distribution': 'asset_packages_for_dist.md'
-  - 'Generate pedestrian navigation': 'how_to_generate_pedestrians_navigation.md'
-  - "Link Epic's Automotive Materials": 'epic_automotive_materials.md'
-  - 'Map customization': 'dev/map_customization.md'
-- How to... (content):
-  - 'Add assets': 'how_to_add_assets.md'
-  - 'Create and import a new map': 'how_to_make_a_new_map.md'
-  - 'Model vehicles': 'how_to_model_vehicles.md'
+- Tutorials (general):
+  - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
+  - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
+  - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
+- Tutorials (assets):
+  - 'Import new assets': 'tuto_A_import_assets.md'
+  - 'Map creation': 'tuto_A_map_creation.md'
+  - 'Map customization': 'tuto_A_map_customization.md'
+  - 'Standalone asset packages': 'tuto_A_standalone_packages.md'
+  - "Use Epic's Automotive materials": 'tuto_A_epic_automotive_materials.md'
+  - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
+- Tutorials (developers):
+  - 'Contribute with assets': 'tuto_D_contribute_assets.md'
+  - 'Create a sensor': 'tuto_D_create_sensor.md'
+  - 'Make a release': 'tuto_D_make_release.md'
+  - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - Contributing:
-  - 'Contribution guidelines': 'CONTRIBUTING.md'
-  - 'Coding standard': 'coding_standard.md'
-  - 'Documentation standard': 'doc_standard.md'
-  - 'Make a release': 'dev/how_to_make_a_release.md'
-  - 'Upgrade the content': 'dev/how_to_upgrade_content.md'
-  - 'Code of conduct': 'CODE_OF_CONDUCT.md'
+  - 'Contribution guidelines': 'cont_contribution_guidelines.md'
+  - 'Code of conduct': 'cont_code_of_conduct.md'
+  - 'Coding standard': 'cont_coding_standard.md'
+  - 'Documentation standard': 'cont_doc_standard.md'
 
 markdown_extensions:
   - admonition
