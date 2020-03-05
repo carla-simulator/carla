@@ -140,8 +140,11 @@ def main(args):
 
                 sumo_transform = BridgeHelper.get_sumo_transform(carla_actor.get_transform(), carla_actor.bounding_box.extent)
                 if args.sync_vehicle_lights:
-                    carla_lights = carla_actor.get_light_state()
-                    sumo_lights = BridgeHelper.get_sumo_lights_state(sumo_actor.signals, carla_lights)
+                    carla_lights = carla.get_actor_light_state(carla_actor_id)
+                    if carla_lights is not None:
+                        sumo_lights = BridgeHelper.get_sumo_lights_state(sumo_actor.signals, carla_lights)
+                    else:
+                        sumo_lights = None
                 else:
                     sumo_lights = None
 
