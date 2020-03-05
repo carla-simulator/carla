@@ -45,22 +45,26 @@ class BridgeHelper(object):
         # (http://sumo.sourceforge.net/userdoc/Purgatory/Vehicle_Values.html#angle)
         yaw = -1 * in_rotation.yaw + 90
         length = 2.0 * extent.x
-        out_location = (in_location.x - math.cos(math.radians(yaw)) *
-                        (length / 2.0), in_location.y -
-                        math.sin(math.radians(yaw)) * (length / 2.0),
-                        in_location.z)
+        out_location = (
+            in_location.x - math.cos(math.radians(yaw)) * (length / 2.0),
+            in_location.y - math.sin(math.radians(yaw)) * (length / 2.0),
+            in_location.z
+        )
         out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
         # Applying offset sumo-carla net.
-        out_location = (out_location[0] - offset[0],
-                        out_location[1] - offset[1], out_location[2])
+        out_location = (
+            out_location[0] - offset[0],
+            out_location[1] - offset[1],
+            out_location[2]
+        )
         out_rotation = out_rotation
 
         # Transform to carla reference system (left-handed system).
         return carla.Transform(
             carla.Location(out_location[0], -out_location[1], out_location[2]),
-            carla.Rotation(out_rotation[0], out_rotation[1] - 90,
-                           out_rotation[2]))
+            carla.Rotation(out_rotation[0], out_rotation[1] - 90, out_rotation[2])
+        )
 
     @staticmethod
     def get_sumo_transform(in_carla_transform, extent):
@@ -73,22 +77,26 @@ class BridgeHelper(object):
         # From center to front-center-bumper (carla reference system).
         yaw = -1 * in_rotation.yaw
         length = 2.0 * extent.x
-        out_location = (in_location.x + math.cos(math.radians(yaw)) *
-                        (length / 2.0), in_location.y -
-                        math.sin(math.radians(yaw)) * (length / 2.0),
-                        in_location.z)
+        out_location = (
+            in_location.x + math.cos(math.radians(yaw)) * (length / 2.0),
+            in_location.y - math.sin(math.radians(yaw)) * (length / 2.0),
+            in_location.z
+        )
         out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
         # Applying offset carla-sumo net
-        out_location = (out_location[0] + offset[0],
-                        out_location[1] - offset[1], out_location[2])
+        out_location = (
+            out_location[0] + offset[0],
+            out_location[1] - offset[1],
+            out_location[2]
+        )
         out_rotation = out_rotation
 
         # Transform to sumo reference system.
         return carla.Transform(
             carla.Location(out_location[0], -out_location[1], out_location[2]),
-            carla.Rotation(out_rotation[0], out_rotation[1] + 90,
-                           out_rotation[2]))
+            carla.Rotation(out_rotation[0], out_rotation[1] + 90, out_rotation[2])
+        )
 
     @staticmethod
     def _get_recommended_carla_blueprint(sumo_actor):
