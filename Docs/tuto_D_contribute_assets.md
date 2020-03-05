@@ -21,5 +21,5 @@ update this link to the latest version.
 
 [contentrepolink]: https://bitbucket.org/carla-simulator/carla-content
 [carlarepolink]: https://github.com/carla-simulator/carla
-[jenkinslink]: http://158.109.9.218:8080/blue/organizations/jenkins/carla-content/activity
+[jenkinslink]: http://35.181.165.160:8080/blue/organizations/jenkins/carla-content/activity
 [cvlink]: https://github.com/carla-simulator/carla/edit/master/Util/ContentVersions.txt
