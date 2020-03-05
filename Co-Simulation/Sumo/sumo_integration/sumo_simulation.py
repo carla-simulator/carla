@@ -6,28 +6,32 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# ==============================================================================
-# -- imports -------------------------------------------------------------------
-# ==============================================================================
+""" This module is responsible for the management of the sumo simulation. """
+
+# ==================================================================================================
+# -- imports ---------------------------------------------------------------------------------------
+# ==================================================================================================
 
 import collections
 import enum
 import logging
 
-import carla
-import sumolib
-import traci
+import carla  # pylint: disable=import-error
+import sumolib  # pylint: disable=import-error
+import traci  # pylint: disable=import-error
 
-from .constants import *
+from .constants import INVALID_ACTOR_ID
 
-# ==============================================================================
-# -- sumo definitions ----------------------------------------------------------
-# ==============================================================================
+# ==================================================================================================
+# -- sumo definitions ------------------------------------------------------------------------------
+# ==================================================================================================
 
 
-# Sumo vehicle signals.
 # https://sumo.dlr.de/docs/TraCI/Vehicle_Signalling.html
 class SumoVehSignal(object):
+    """
+    SumoVehSignal contains the different sumo vehicle signals.
+    """
     BLINKER_RIGHT = 1 << 0
     BLINKER_LEFT = 1 << 1
     BLINKER_EMERGENCY = 1 << 2
@@ -46,6 +50,9 @@ class SumoVehSignal(object):
 
 # https://sumo.dlr.de/docs/Definition_of_Vehicles,_Vehicle_Types,_and_Routes.html#abstract_vehicle_class
 class SumoActorClass(enum.Enum):
+    """
+    SumoActorClass enumerates the different sumo actor classes.
+    """
     IGNORING = "ignoring"
     PRIVATE = "private"
     EMERGENCY = "emergency"
@@ -84,13 +91,16 @@ SumoActor = collections.namedtuple(
 
 
 class SumoSimulation(object):
+    """
+    SumoSimulation is responsible for the management of the sumo simulation.
+    """
+
     def __init__(self, args):
         self.args = args
-        self.host = args.sumo_host
-        self.port = args.sumo_port
+        host = args.sumo_host
+        port = args.sumo_port
 
-        self.sumo_gui = args.sumo_gui
-        if self.sumo_gui is True:
+        if args.sumo_gui is True:
             sumo_binary = sumolib.checkBinary('sumo-gui')
         else:
             sumo_binary = sumolib.checkBinary('sumo')
@@ -105,11 +115,11 @@ class SumoSimulation(object):
                 '--collision.check-junctions'
             ])
 
-            if self.sumo_gui:
+            if args.sumo_gui:
                 logging.info('Remember to press the play button to start the simulation')
         else:
-            logging.info('Connection to sumo server. Host: {} Port: {}'.format(self.host, self.port))
-            traci.init(host=self.host, port=self.port)
+            logging.info('Connection to sumo server. Host: %s Port: %s', host, port)
+            traci.init(host=host, port=port)
 
         # Structures to keep track of the spawned and destroyed vehicles at each time step.
         self.spawned_actors = set()
@@ -123,6 +133,19 @@ class SumoSimulation(object):
 
     @staticmethod
     def subscribe(actor_id):
+        """
+        Subscribe the given actor to the following variables:
+
+            * Type.
+            * Vehicle class.
+            * Color.
+            * Length, Width, Height.
+            * Position3D (i.e., x, y, z).
+            * Angle, Slope.
+            * Speed.
+            * Lateral speed.
+            * Signals.
+        """
         traci.vehicle.subscribe(actor_id, [
             traci.constants.VAR_TYPE, traci.constants.VAR_VEHICLECLASS,
             traci.constants.VAR_COLOR, traci.constants.VAR_LENGTH,
@@ -134,16 +157,28 @@ class SumoSimulation(object):
 
     @staticmethod
     def unsubscribe(actor_id):
+        """
+        Unsubscribe the given actor from receiving updated information each step.
+        """
         traci.vehicle.unsubscribe(actor_id)
 
     def get_net_offset(self):
+        """
+        Accessor for sumo net offset.
+        """
         offset = traci.simulation.convertGeo(0, 0)
         return (-offset[0], -offset[1])
 
     def get_step_length(self):
+        """
+        Accessor for sumo simulation step length.
+        """
         return traci.simulation.getDeltaT()
 
     def get_actor(self, actor_id):
+        """
+        Accessor for sumo actor.
+        """
         results = traci.vehicle.getSubscriptionResults(actor_id)
 
         type_id = results[traci.constants.VAR_TYPE]
@@ -169,39 +204,57 @@ class SumoSimulation(object):
 
         return SumoActor(type_id, vclass, transform, signals, extent, color)
 
-    def spawn_actor(self, type_id, attrs={}):
-        """Spawns a new actor based on given type.
+    def spawn_actor(self, type_id, attrs=None):
+        """
+        Spawns a new actor.
+
+            :param type_id: vtype to be spawned.
+            :param attrs: dictionary with additional attributes for this specific actor.
+            :return: actor id if the actor is successfully spawned. Otherwise, INVALID_ACTOR_ID.
         """
         actor_id = 'carla' + str(self._sequential_id)
         try:
             traci.vehicle.add(actor_id, 'carla_route', typeID=type_id)
-        except Exception as error:
-            logging.error('Spawn sumo actor failed: {}'.format(error))
+        except traci.exceptions.TraCIException as error:
+            logging.error('Spawn sumo actor failed: %s', error)
             return INVALID_ACTOR_ID
 
-        if 'color' in attrs:
-            color = attrs['color'].split(',')
-            traci.vehicle.setColor(actor_id, color)
+        if attrs is not None:
+            if 'color' in attrs:
+                color = attrs['color'].split(',')
+                traci.vehicle.setColor(actor_id, color)
 
         self._sequential_id += 1
 
         return actor_id
 
     def destroy_actor(self, actor_id):
+        """
+        Destroys the given actor.
+        """
         traci.vehicle.remove(actor_id)
 
     def synchronize_vehicle(self, vehicle_id, transform, signals=None):
-        x, y = transform.location.x, transform.location.y
+        """
+        Updates vehicle state.
+
+            :param vehicle_id: id of the actor to be updated.
+            :param transform: new vehicle transform (i.e., position and rotation).
+            :param signals: new vehicle signals.
+            :return: True if successfully updated. Otherwise, False.
+        """
+        loc_x, loc_y = transform.location.x, transform.location.y
         yaw = transform.rotation.yaw
 
-        traci.vehicle.moveToXY(vehicle_id, "", 0, x, y, angle=yaw, keepRoute=2)
+        traci.vehicle.moveToXY(vehicle_id, "", 0, loc_x, loc_y, angle=yaw, keepRoute=2)
         if signals is not None and self.args.sync_vehicle_lights:
             traci.vehicle.setSignals(vehicle_id, signals)
-
-    def synchronize_walker(self, walker_id, transform):
-        pass
+        return True
 
     def tick(self):
+        """
+        Tick to sumo simulation.
+        """
         traci.simulationStep()
 
         # Update data structures for the current frame.
@@ -209,4 +262,7 @@ class SumoSimulation(object):
         self.destroyed_actors = set(traci.simulation.getArrivedIDList())
 
     def close(self):
+        """
+        Closes traci client.
+        """
         traci.close()
