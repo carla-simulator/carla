@@ -210,17 +210,7 @@ tm04 = client04.get_trafficmanager(5000) # tm04(p=5000) --> tm02 (p=5000)
 !!! Important
     Note how the default creation of a TM uses always `port=8000`, and so, only the first time a __TM-Server__ is created. The rest will be __TM-Clients__ connecting to it.
 
-The omniscient CARLA server keeps register of all these instances internally and everytime a TM is created, it stores the port and also the client IP that links to it. For said reason, TM are also accessible using both the ip and the port, but this case will return an error in case any of the pair is wrong.  
-
-```py 
-tm05 = client05.get_trafficmanager(6000) # tm05(ip=tm02,p=6000) --> ERROR, wrong IP. 
-```
-```py
-tm06 = client06.get_trafficmanager(5000) # tm06(ip=tm02,p=5000) --> tm02 (p=5000)
-```
-
-!!! Note
-    Right now there is no way to check which TM have been created so far. A connection will be attempted when trying to create an instance.  
+The CARLA server keeps register of all the TM instances internally by storing the port and also the client IP (hidden to the user) that link to them. Right now there is no way to check the TM instances that have been created so far. A connection will always be attempted when trying to create an instance and it will either create a new __TM-Server__ or a __TM-Client__.  
 
 #### Multiclient VS MultiTM
 
@@ -228,7 +218,7 @@ Based on the different definitions for a TM, successfully creating a TM can lead
 
 * __TM-Server:__ when the port is free. This type of TM is in charge of its own logic, managed in `TrafficManagerLocal.cpp`.  
 
-* __TM-Client:__ when the port is occupied. This type of TM is not in charge of its own logic. It gets the information from a __TM-Server__, the one that is actually in the intended port. They retrieve the information from the original TM using `TrafficManagerRemote.cpp`.
+* __TM-Client:__ when the port is occupied. It is not in charge of its own logic. Instead, it asks for changes in the parameters of the __TM-Server__ it is connected to in  `TrafficManagerRemote.cpp`.
 
 That creates a clear distinction between having multiple clients and multiple Traffic Managers running: 
 
@@ -237,12 +227,12 @@ That creates a clear distinction between having multiple clients and multiple Tr
 * __MultiTM scenario:__ when there are different TM-Server, created with different port definitions.  
 
 !!! Note 
-    The script `TrafficManager.cpp` acts as a central hub managing all the different TM instances. 
+    The class `TrafficManager.cpp` acts as a central hub managing all the different TM instances. 
 
 ---
 ## Other considerations
 
-The TM is a module constantly envolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time CARLA 0.9.8 is released: 
+The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time CARLA 0.9.8 is released: 
 
 #### FPS limitations
 
@@ -253,8 +243,8 @@ The TM stops working properly in asynchronous mode when the simulation is under 
 
 #### Synchronous mode
 
-When different clients work in __synchronous mode__ with the server, the server waits for a tick that may come from any client. If more than one client ticks, the synchrony will fail, as the server will move forward on every tick.  
-For said reason, it is important to have one leading client while the rest remain silent. This is specially relevant when working in sync. with the __scenario runner__, which runs a TM. In this case, the TM will be subordinated to the scenario runner and wait for it. 
+TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
+If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
 
 ---
 ## Summary
