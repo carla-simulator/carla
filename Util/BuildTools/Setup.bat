@@ -185,7 +185,7 @@ rem ============================================================================
 FOR /F "tokens=2" %%i in (%VERSION_FILE%) do (
     set HASH=%%i
 )
-set URL=http://carla-assets-internal.s3.amazonaws.com/Content/%HASH%.tar.gz
+set URL=http://carla-assets.s3.amazonaws.com/%HASH%.tar.gz
 
 FOR /F "tokens=1 delims=:" %%i in (%VERSION_FILE%) do (
     set ASSETS_VERSION=%%i

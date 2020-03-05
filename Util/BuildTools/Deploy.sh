@@ -55,7 +55,7 @@ REPOSITORY_TAG=$(get_git_repository_version)
 LATEST_PACKAGE=CARLA_${REPOSITORY_TAG}.tar.gz
 LATEST_PACKAGE_PATH=${CARLA_DIST_FOLDER}/${LATEST_PACKAGE}
 
-S3_PREFIX=s3://carla-assets-internal/Releases/Linux
+S3_PREFIX=s3://carla-releases/Linux
 
 LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 
