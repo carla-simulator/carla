@@ -1,5 +1,5 @@
 ## latest
-
+  * Added timeout to World Tick
   * Traffic Manager:
     - Added benchmark
     - Added synchronous mode
