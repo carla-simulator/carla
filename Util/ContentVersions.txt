@@ -25,7 +25,7 @@
 #
 # You can download it directly from
 #
-#     http://carla-assets-internal.s3.amazonaws.com/Content/PUT_FILE_ID_HERE.tar.gz
+#     http://carla-assets.s3.amazonaws.com/PUT_FILE_ID_HERE.tar.gz
 
 0.9.5: 20190404_c7b464a
 0.9.6: 20190710_0097e66
