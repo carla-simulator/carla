@@ -54,6 +54,8 @@ namespace traffic_manager {
     AtomicMap<ActorId, float> perc_ignore_walkers;
     /// Map containing % of ignoring vehicles.
     AtomicMap<ActorId, float> perc_ignore_vehicles;
+    /// Map containing % of keep right rule.
+    AtomicMap<ActorId, float> perc_keep_right;
     /// Synchronous mode switch.
     std::atomic<bool> synchronous_mode;
     /// Distance Margin
@@ -97,6 +99,9 @@ namespace traffic_manager {
     /// Method to query lane change command for a vehicle.
     ChangeLaneInfo GetForceLaneChange(const ActorPtr &actor);
 
+    /// Method to query percentage probability of keep right rule for a vehicle.
+    float GetKeepRightPercentage(const ActorPtr &actor);
+
     /// Method to query auto lane change rule for a vehicle.
     bool GetAutoLaneChange(const ActorPtr &actor);
 
@@ -129,6 +134,9 @@ namespace traffic_manager {
 
     /// Method to set % to ignore any vehicle.
     void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
+
+    /// Method to set probabilistic preference to keep on the right lane.
+    void SetKeepRightPercentage(const ActorPtr &actor,const float percentage);
 
     /// Method to get synchronous mode.
     bool GetSynchronousMode();

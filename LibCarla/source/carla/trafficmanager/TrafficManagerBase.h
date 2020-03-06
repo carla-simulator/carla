@@ -100,6 +100,9 @@ public:
   /// Method to set Global Distance to Leading Vehicle.
   virtual void SetGlobalDistanceToLeadingVehicle(const float dist) = 0;
 
+  /// Method to set probabilistic preference to keep on the right lane.
+  virtual void SetKeepRightPercentage(const ActorPtr &actor,const float percentage) = 0;
+
 protected:
 
 };

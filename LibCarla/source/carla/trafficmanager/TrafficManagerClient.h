@@ -173,6 +173,11 @@ public:
     _client->call("set_global_distance_to_leading_vehicle",distance);
   }
 
+  /// Method to set probabilistic preference to keep on the right lane.
+  void SetKeepRightPercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_percentage_keep_right_rule", actor, percentage);
+  }
 
 private:
 
