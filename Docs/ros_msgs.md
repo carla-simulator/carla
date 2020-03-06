@@ -1,6 +1,6 @@
 # CARLA messages reference
 
-The following reference lists all the CARLA messages available in the ROS bridge. These will can be used to enable communication in both ways.  
+The following reference lists all the CARLA messages available in the ROS bridge. These can be used to enable communication in both ways.  
 Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum: 
 
 <div class="build-buttons">
@@ -61,23 +61,23 @@ These messages are used to control the simulation while in synchronous mode. The
 ---
 ## CarlaEgoVehicleControl.msg
 
-Messages sent to apply a control to a vehicle in both modes, normal and manual. These are published in a stack. 
+Messages sent to apply a control to a vehicle in both modes, autopilot and manual. These are published in a stack. 
 
 | Field               | Type    | Description |
 | ------------------- | ------- | ----------- |
 | `header`            | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `throttle`          | float32 | Scalar value to cotrol the vehicle throttle: __[0.0,1.0]__ |
-| `steer`             | float32 | Scalar value to control the vehicle steering direction: __[-1.0,1.0]__ to control the vehicle steering   |
-| `brake`             | float32 | Scalar value to control the vehicle brakes: __[0.0,1.0]__       |
-| `hand_brake`        | bool    | If true, the hand brake is enabled. |
-| `reverse`           | bool    | If true, the vehicle will move reverse. |
+| `throttle`          | float32 | Scalar value to cotrol the vehicle throttle: __[0.0, 1.0]__ |
+| `steer`             | float32 | Scalar value to control the vehicle steering direction: __[-1.0, 1.0]__ to control the vehicle steering   |
+| `brake`             | float32 | Scalar value to control the vehicle brakes: __[0.0, 1.0]__       |
+| `hand_brake`        | bool    | If __True__, the hand brake is enabled. |
+| `reverse`           | bool    | If __True__, the vehicle will move reverse. |
 | `gear`              | int32   | Changes between the available gears in a vehicle. |
-| `manual_gear_shift` | bool    | If ture, the gears will be shifted using `gear`. |
+| `manual_gear_shift` | bool    | If __True__, the gears will be shifted using `gear`. |
 
 ---
 ## CarlaEgoVehicleInfo.msg
 
-Contains some static information regarding a vehicle, mostly the attributes that used to define its physics.  
+Contains some static information regarding a vehicle, mostly the attributes used to define the vehicle's physics.  
 
 | Field                                         | Type                                                    | Description |
 | --------------------------------------------- | ------------------------------------------------------- | ----------- |
@@ -90,9 +90,9 @@ Contains some static information regarding a vehicle, mostly the attributes that
 | `damping_rate_full_throttle`                  | float32                                                 | Damping rate when the throttle is at maximum. |
 | `damping_rate_zero_throttle_clutch_engaged`   | float32                                                 | Damping rate when the throttle is zero with clutch engaged. |
 | `damping_rate_zero_throttle_clutch_disengaged`| float32                                                 | Damping rate when the throttle is zero with clutch disengaged. |
-| `use_gear_autobox`                            | bool                                                    | If true, the vehicle will have an automatic transmission. |
+| `use_gear_autobox`                            | bool                                                    | If __True__, the vehicle will have an automatic transmission. |
 | `gear_switch_time`                            | float32                                                 | Switching time between gears. |
-| `clutch_strength`                             | float32                                                 | The clutch strength of the vehicle. Measured in Kgm^2/s. |
+| `clutch_strength`                             | float32                                                 | The clutch strength of the vehicle. Measured in __Kgm^2/s__. |
 | `mass`                                        | float32                                                 | The mass of the vehicle measured in Kg. |
 | `drag_coefficient`                            | float32                                                 | Drag coefficient of the vehicle's chassis. |
 | `center_of_mass`                              | geometry_msgs/Vector3                                   | The center of mass of the vehicle. |
@@ -150,7 +150,7 @@ Details for a test scenario.
 ---
 ## CarlaScenarioList.msg
 
-Contains a list a series of test scenarios to run in ScenarioRunner. 
+Contains a list of test scenarios to run in ScenarioRunner. 
 
 | Field       | Type                                 | Description            |
 | ----------- | ------------------------------------ | ---------------------- |
@@ -174,8 +174,8 @@ Details the current world settings of the simulation.
 | -------------------------- | ------- | ------------------------------------------------------------- |
 | `frame`                    | uint64  | Current frame number.                                         |
 | `fixed_delta_seconds`      | float32 | Simulation time between last and current step.                |
-| `synchronous_mode`         | bool    | If true, synchronous mode is enabled.                         |
-| `synchronous_mode_running` | bool    | True when the simulation is running. False when it is paused. |
+| `synchronous_mode`         | bool    | If __True__, synchronous mode is enabled.                         |
+| `synchronous_mode_running` | bool    | __True__ when the simulation is running. __False__ when it is paused. |
 
 ---
 ## CarlaTrafficLightStatus.msg
@@ -205,12 +205,12 @@ Contains the information needed to apply a movement controller to a walker.
 | ----------- | ---------------------- | ----------------------------- |
 | `direction` | geometry_msgs/Vector3  | Vector that controls the direction of the walker. |
 | `speed`     | float32                | A scalar value to control the walker's speed. |
-| `jump`      | bool                   | If true, the walker will jump. |
+| `jump`      | bool                   | If __True__, the walker will jump. |
 
 ---
 ## CarlaWaypoint.msg
 
-Summarizes data regarding a waypoint. 
+Summarizes data contained in a waypoint. 
 
 | Field         | Type               | Description                   |
 | ------------- | ------------------ | ----------------------------- |
@@ -233,7 +233,7 @@ Information about the current CARLA map (name and OpenDRIVE).
 ---
 ## EgoVehicleControlCurrent.msg
 
-Represents the current time and the speed and acceleration values of the vehicle used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Represents the current time, speed and acceleration values of the vehicle used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
 | Field       | Type     | Description                   |
 | ----------- | -------- | ----------------------------- |
@@ -260,7 +260,7 @@ Contains all the current values used within an Ackermann controller. These messa
 ---
 ## EgoVehicleControlMaxima.msg
 
-Represents the maximum values that restrict the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Represents the restrictions of a controller (limit values). It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
 | Field                | Type     | Description                   |
 | -------------------- | -------- | ----------------------------- |
@@ -269,7 +269,7 @@ Represents the maximum values that restrict the controller. It is part of a `Car
 | `max_accel`          | float32  | Max. acceleration for a vehicle. |
 | `max_decel`          | float32  | Max. deceleration for a vehicle. Default: __8 m/s^2__ |
 | `min_accel`          | float32  | Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled. |
-| `max_pedal`          | float32  | ??? |<!---- what?>
+| `max_pedal`          | float32  | Min. pedal. |<!---- TBF>
 
 ---
 ## EgoVehicleControlStatus.msg
@@ -278,19 +278,19 @@ Represents the current status of the ego vehicle controller. It is part of a `Ca
 
 | Field                            | Type    | Description                   |
 | -------------------------------- | ------- | ----------------------------- |
-| `status`                         | string  | ??? Current control status.       |<!---- what?>
-| `speed_control_activation_count` | uint8   | ??? Speed controller. |<!---- what?>
-| `speed_control_accel_delta`      | float32 | ??? Speed controller. |<!---- what?>
-| `speed_control_accel_target`     | float32 | ??? Speed controller. |<!---- what?>
-| `accel_control_pedal_delta`      | float32 | ??? Acceleration controller. |<!---- what?>
-| `accel_control_pedal_delta`      | float32 | ??? Acceleration controller. |<!---- what?>
-| `brake_upper_border`             | float32 | ??? Borders for lay off pedal. |<!---- what?>
-| `throttle_lower_border`          | float32 | ??? Borders for lay off pedal. |<!---- what?>
+| `status`                         | string  | Current control status.       |<!---- TBF>
+| `speed_control_activation_count` | uint8   | Speed controller. |<!---- TBF>
+| `speed_control_accel_delta`      | float32 | Speed controller. |<!---- TBF>
+| `speed_control_accel_target`     | float32 | Speed controller. |<!---- TBF>
+| `accel_control_pedal_delta`      | float32 | Acceleration controller. |<!---- TBF>
+| `accel_control_pedal_delta`      | float32 | Acceleration controller. |<!---- TBF>
+| `brake_upper_border`             | float32 | Borders for lay off pedal. |<!---- TBF>
+| `throttle_lower_border`          | float32 | Borders for lay off pedal. |<!---- TBF>
 
 ---
 ## EgoVehicleControlTarget.msg
 
-Represents the target vallues for the variables of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Represents the target values for the variables of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
 | Field            | Type     | Description                   |
 | ---------------- | -------- | ----------------------------- |

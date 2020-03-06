@@ -27,8 +27,8 @@ If you have [pip](https://pip.pypa.io/en/stable/installing/) in your system, you
 ---
 ## Downloading CARLA
 
-There is an __apt repository__ for CARLA 0.9.7. This is the easiest way to get that release in Linux.  
-To get another release in Linux or install CARLA in Windows: __download the repository__.  
+The easiest way to get the latest release in Linux is using the __apt repository__.  
+To get either a specific release or get the Windows version of CARLA: __download the repository__.  
 Both methods will set CARLA ready to run. 
 
 <h4>a) apt-get CARLA 0.9.7</h4>

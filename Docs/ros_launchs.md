@@ -3,7 +3,7 @@
 ---
 ## carla_ackermann_control.launch
 
-Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages when these are not ideal to connect an AD stack. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. It can be installed using: 
+Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. It can be installed using: 
 ```sh
 pip install --user simple-pid
 ```
@@ -32,7 +32,7 @@ Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radi
 ---
 ## carla_ego_vehicle.launch
 
-Spawns an ego vehicle (`role-name="ego_vehicle"`) with the argument `sensor_definition_file` being this the location of a __.json__ file describing sensors attached to the vehicle. The format for this file is explained [here](https://github.com/carla-simulator/ros-bridge/tree/master/carla_ego_vehicle).  
+Spawns an ego vehicle (`role-name="ego_vehicle"`). To describe the sensors attached to the vehicle, the `sensor_definition_file argument` is used. This contains the location of a __.json__ file describing sensors attached to the vehicle. The format for this file is explained [here](https://github.com/carla-simulator/ros-bridge/tree/master/carla_ego_vehicle).  
 To spawn the vehicle at a specific location, publish in: `/carla/ego_vehicle/initialpose` or use __RVIZ__ and select a position with: __2D Pose estimate__. 
 
 <!---NODE-->
@@ -46,7 +46,7 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 
 ---
 ## carla_example_ego_vehicle.launch
-As [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`), only this uses a provided file to pass the sensors attached to the vehicle. Said file can be found in: `share/carla_ego_vehicle/config/sensors.json`. 
+Based on [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`) using a provided file describing the sensors. Said file can be found in: `share/carla_ego_vehicle/config/sensors.json`. 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
@@ -71,7 +71,7 @@ Spawns the infrastructure sensors passed as arguments.
 
 ---
 ## carla_ros_bridge.launch
-Creates a node with some basic communication between CARLA and ROS.  
+Creates a node with some basic communications between CARLA and ROS.  
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
@@ -134,12 +134,12 @@ Speed is in __m/s__, steering angle is driving angle (not wheel angle) in __radi
 ---
 ## carla_ros_bridge_with_example_ego_vehicle.launch
 
-Spawns an ego vehicle with sensors attached and starts communication between CARLA and ROS sharing current simulation state, sensor and ego vehicle data. 
+Spawns an ego vehicle with sensors attached and starts communications between CARLA and ROS sharing current simulation state, sensor and ego vehicle data. 
 The ego vehicle is set ready to be used in manual control. 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
-This node is in charge of most of the communication between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
+This node is in charge of most of the communications between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/debug_marker</b></font> — [visualization_msgs.MarkerArray](http://docs.ros.org/melodic/api/visualization_msgs/html/msg/MarkerArray.html)
@@ -172,7 +172,7 @@ This node is in charge of most of the communication between CARLA and ROS for bo
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
-Retrieves from CARLA information regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
+Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
 The information retrieved includes both static and current state, the sensor data registered on every step and the general settings of the simulation. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
@@ -204,10 +204,10 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 
 ---
 ## carla_ros_bridge_with_rviz.launch
-Starts some basic communication between CARLA and ROS and launches an instance of RVIZ ready to retrieve Lidar data. 
+Starts some basic communications between CARLA and ROS and launches an instance of RVIZ ready to retrieve Lidar data. 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
-Shares information between CARLA and ROS regarding the curent simulation state. 
+Shares information between CARLA and ROS regarding the current simulation state. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
@@ -237,14 +237,14 @@ Runs an instance of RVIZ waiting for Lidar data.
 
 A ROS version of the CARLA script `manual_control.py` that receives and manages the information using ROS topics. It has some prerequisites:  
 
-* To display an image: a camera with role-name 'view' and resolution 800x600
-* To display the position: a gnss sensor with role-name 'gnss1'
+* To display an image: a camera with role-name 'view' and resolution 800x600.
+* To display the position: a gnss sensor with role-name 'gnss1'.
 * To detect other sensor data: the corresponding sensor. 
 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
-Retrieves from CARLA information regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.  
+Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.  
 The information retrieved includes both static and current state, the sensor data registered on every step and the general settings of the simulation.  
 
 
@@ -288,7 +288,7 @@ export PYTHONPATH=<path-to-carla>/PythonAPI/carla/dist/carla-<version_and_arch>.
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
-This node is in charge of most of the communication between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
+This node is in charge of most of the communications between CARLA and ROS for both the current state of the simulation, traffic lights, vehicle controllers and sensor data. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
@@ -322,7 +322,7 @@ This node is in charge of most of the communication between CARLA and ROS for bo
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
-Retrieves from CARLA information regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
+Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input to publish messages containing the controller data to manage the ego vehicle.
 The information retrieved includes both static and current state, the sensor data registered on every step and the general settings of the simulation. 
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
@@ -384,7 +384,7 @@ export PYTHONPATH=$PYTHONPATH:<path-to-carla>/PythonAPI/carla-<carla_version_and
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_waypoint_publisher</u> <small><i>(Node)</i></small> </h4>
-Uses the current pose of the ego vehicle with role-name `ego_vehicle` as starting point. If the vehicle is respawned or moved, the route is newly calculated.
+Uses the current pose of the ego vehicle with role-name `ego_vehicle` as starting point. If the vehicle is respawned or moved, the route is calculated again.
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
