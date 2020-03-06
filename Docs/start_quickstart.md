@@ -53,7 +53,7 @@ sudo apt-get install carla
 </p>
 </div>
 
-The repository contains the different versions of the simulator available. The _development_ and _stable_ sections, contain the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable (developers are currently working with this build). By the time this documentation is written, __CARLA 0.9.7__ is the latest containing all new features (such as traffic manager), but __CARLA 0.8.2__ is the stable one, recommended for those who are looking for a neat run.  
+The repository contains the different versions of the simulator available. The _development_ and _stable_ sections, contain the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable (developers are currently working with this build). If you want a more robust version, you may search for the latest tagged version.
 
 !!! note
     Latest Windows release is __CARLA 0.9.5__, but this is to be updated soon. 

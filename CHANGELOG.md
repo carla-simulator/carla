@@ -1,4 +1,4 @@
-## latest
+## CARLA 0.9.8
 
   * Added beta version sumo-carla co-simulation.
   * Traffic Manager:
