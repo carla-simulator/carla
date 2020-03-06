@@ -158,7 +158,7 @@ float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
   } else {
     specific_distance_margin = distance_margin;
   }
-  //std::cout <<"distance_margin :- "<< distance_margin <<" " <<"Value of Specific Distance Margin - " << specific_distance_margin << std::endl;
+
   return specific_distance_margin;
 }
 
