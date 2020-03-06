@@ -5,30 +5,30 @@
 
 sudo apt-get install build-essential dh-make
 
-#Adding maintainer name 
+#Adding maintainer name
 DEBFULLNAME=Carla\ Simulator\ Team
 export DEBFULLNAME
 
-#replace carla-0.9.7 with your required carla-<version>
-CARLA_DIR=carla-0.9.7
-CARLA_VERSION=0.9.7
+#replace CARLA_VERSION with your required carla-<version>
+CARLA_VERSION=0.9.8
+CARLA_DIR=carla-${CARLA_VERSION}
 
 #replace the url with your carla release url
-CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.7.tar.gz
+CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_${CARLA_VERSION}.tar.gz
 
 #replace the url with your required additional maps url
-#if you do not have additional map then comment line 21, 22, 40, 41 
-ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_0.9.7.tar.gz
-ADDITIONALMAPS_TAR=AdditionalMaps_0.9.7.tar.gz
+#if you do not have additional map then comment line 21, 22, 40, 41
+ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
+ADDITIONALMAPS_TAR=AdditionalMaps_${CARLA_VERSION}.tar.gz
 
 mkdir -p carla-debian/${CARLA_DIR}
 cd carla-debian/${CARLA_DIR}
 
 #Check if Carla-<version> release is already downloaded
-FILE=$(pwd)/ImportAssets.sh 
+FILE=$(pwd)/ImportAssets.sh
 if [ -f "$FILE" ]; then
 	ImportAssetscheck=1
-else 
+else
 	ImportAssetscheck=0
 fi
 
@@ -36,13 +36,13 @@ fi
 if [ ${ImportAssetscheck} == 0 ]
 then
 	curl ${CARLA_RELEASE_REPO} | tar xz
-	
+
 	wget ${ADDITIONALMAPS}
 	mv ${ADDITIONALMAPS_TAR} Import/
-	
+
 fi
 
-./ImportAssets.sh #importing new maps 
+./ImportAssets.sh #importing new maps
 
 #removing unnecessary files
 rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.debug
@@ -104,9 +104,9 @@ Depends: python,
 	 libtiff5
 Description: Open-source simulator for autonomous driving research
  CARLA has been developed from the ground up to support development, training, and validation
- of autonomous driving systems. In addition to open-source code and protocols, CARLA provides 
- open digital assets (urban layouts, buildings, vehicles) that were created for this purpose 
- and can be used freely. The simulation platform supports flexible specification of sensor suites, 
+ of autonomous driving systems. In addition to open-source code and protocols, CARLA provides
+ open digital assets (urban layouts, buildings, vehicles) that were created for this purpose
+ and can be used freely. The simulation platform supports flexible specification of sensor suites,
  environmental conditions, full control of all static and dynamic actors, maps generation and much more.
 EOF
 
