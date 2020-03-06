@@ -5,19 +5,19 @@
 	* a) using apt repository  
 	* b) using source repository  
   * [__Run the ROS bridge__](#run-the-ros-bridge)  
-	* Import error: No module named CARLA  
+	* Solving ImportError: No module named CARLA  
   * [__Setting CARLA__](#setting-carla)  
  
 The ROS bridge enables two-way communication between ROS and CARLA.  
-In order to do so, the information from the CARLA server is translated to ROS topics. For example, the information retrieved by sensors is structured to fit ROS structure.  
-And also vice versa, the messages sent between nodes in ROS get translated to commands to be applied in CARLA. This is commonly used to update the state of a vehicle and apply controllers.  
+In order to do so, the information from the CARLA server is translated to ROS topics. For example, the information retrieved by sensors is structured to fit ROS messages.  
+In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA. This is commonly used to update the state of a vehicle and apply controllers.  
 
 ---
 ## Requirements
 #### ROS melodic
 
-  * __ROS Kinetic/Melodic:__ follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). Some ROS packages could be necessary, depending on the user needs, such as [rviz](https://wiki.ros.org/ainstein_radar_rviz_plugins) to visualize ROS data.  
-  * __CARLA 0.9.7:__ only this and later versions are supported. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
+  * __ROS Kinetic/Melodic:__ follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). Some ROS packages may be required, depending on the user needs, such as [rviz](https://wiki.ros.org/ainstein_radar_rviz_plugins) to visualize ROS data.  
+  * __CARLA 0.9.7:__ previous versions are not compatible with the ROS bridge. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
 
 !!! Important
     Make sure that both CARLA and ROS work properly before continuing with the installation. 
@@ -49,7 +49,7 @@ sudo apt install carla-ros-bridge-<melodic or kinetic>
 
 #### b) Using source repository
 
-In order to use the ROS bridge a catkin workspace is needed. The ROS bridge should be cloned and built in there to be available.  
+In order to use the ROS bridge, a catkin workspace is needed. It should be cloned and built in there.  
 The following fragment creates a new workspace and clones the repository in there.  
 ```sh
 #setup folder structure
@@ -91,7 +91,7 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 ```
 
 !!! Important
-    The source path can be added to environment to be set permanently, but it will cause conflict when working with another workspace.  
+    The source path can be added to the environment to be set permanently, but it will cause conflict when working with another workspace.  
 
 __3) start the ROS bridge:__ use any of the different launch files available that will serve to check if the bridge is running properly. Here are some suggestions:  
 
@@ -106,9 +106,9 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_rviz.launch
 roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch
 ```
 
-#### ImportError: no module named CARLA
+#### Solving ImportError: no module named CARLA
 
-The path to CARLA Python is missing. The apt installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the _.egg_ file (included). Use the one, that is supported by the Python version installed:
+The path to CARLA Python is missing. The apt installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the _.egg_ file (included). Use the one that, is supported by the Python version installed:
 
     export PYTHONPATH=$PYTHONPATH:<path/to/carla/>/PythonAPI/<your_egg_file>
 
@@ -123,25 +123,25 @@ python -c 'import carla;print("Success")'
 ---
 ## Setting CARLA
 
-There is some configuration for CARLA available from the ROS bridge. This can be setup by editing the file: [`share/carla_ros_bridge/config/settings.yaml`](https://github.com/carla-simulator/ros-bridge/blob/master/carla_ros_bridge/config/settings.yaml).
+Settings can be changed, in order to modify the way CARLA works along with the ROS bridge, by editing the file: [`share/carla_ros_bridge/config/settings.yaml`](https://github.com/carla-simulator/ros-bridge/blob/master/carla_ros_bridge/config/settings.yaml).
 
 The parameters available refer to:  
 
 * __Host/port:__ the network settings to connect to CARLA using a Python client.  
 * __Synchronous mode:__ 
 	* __If false (default):__ data is published on every `world.on_tick()` and every `sensor.listen()` callbacks.  
-	* __If true:__ the bridge waits for all sensor data that is expected before the next tick. This might slow down the overall simulation but ensures reproducible results.  
-* __Wait for vehicle command:__ in synchronous mode, pauses the tick until a vehicle control is completted. 
+	* __If true:__ the bridge waits for all the sensor messages expected before the next tick. This might slow down the overall simulation but ensures reproducible results.  
+* __Wait for vehicle command:__ in synchronous mode, pauses the tick until a vehicle control is completed. 
 * __Simulation time-step:__ simulation time (delta seconds) between simulation steps. __It must be lower than 0.1__. Take a look at the [documentation](../simulation_time_and_synchrony) to learn more about this.  
-* __Role names for the Ego vehicles:__ a role names to identify ego vehicles. These will be controllable from ROS and thus, relevant topics will be created.  
+* __Role names for the Ego vehicles:__ role names to identify ego vehicles. These will be controllable from ROS and thus, relevant topics will be created.  
 
 
 !!! Warning
-    In synchronous mode, only the ros-bridge is allowed to tick. Other CARLA clients must passively wait.
+    In synchronous mode only the ros-bridge is allowed to tick. Other CARLA clients must passively wait.
 
 #### Synchronous mode
 
-The following topic allows to control the stepping when in synchronous mode:  
+The following topic allows to control the step update when in synchronous mode:  
 
 | Topic            | Message type            |
 | ---------------- | ----------------------- |

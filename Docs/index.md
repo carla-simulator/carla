@@ -138,11 +138,11 @@ CARLA forum</a>
     <a href="../ros_msgs"><b>
     CARLA messages reference
     </b></a>
-        — Contains explanations and fields for every type of CARLA message available from ROS.  
+        — Contains explanations and fields for every type of CARLA message available in ROS.  
     <a href="../ros_launchs"><b>
     Launchfiles reference
     </b></a>
-        — Explains the launchfiles provided, its nodes and the topics these are publishing and subscribed to.  
+        — Explains the launchfiles provided, its nodes, and the topics that are being consumed and published.  
 
 ## Tutorials — General
   <p style="padding-left:30px;line-height:1.8">
