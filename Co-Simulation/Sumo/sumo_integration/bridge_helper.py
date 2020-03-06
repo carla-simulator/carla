@@ -59,9 +59,11 @@ class BridgeHelper(object):
         out_location = (out_location[0] - offset[0], out_location[1] - offset[1], out_location[2])
 
         # Transform to carla reference system (left-handed system).
-        return carla.Transform(
+        out_transform = carla.Transform(
             carla.Location(out_location[0], -out_location[1], out_location[2]),
             carla.Rotation(out_rotation[0], out_rotation[1] - 90, out_rotation[2]))
+
+        return out_transform
 
     @staticmethod
     def get_sumo_transform(in_carla_transform, extent):
@@ -83,9 +85,11 @@ class BridgeHelper(object):
         out_location = (out_location[0] + offset[0], out_location[1] - offset[1], out_location[2])
 
         # Transform to sumo reference system.
-        return carla.Transform(
+        out_transform = carla.Transform(
             carla.Location(out_location[0], -out_location[1], out_location[2]),
             carla.Rotation(out_rotation[0], out_rotation[1] + 90, out_rotation[2]))
+
+        return out_transform
 
     @staticmethod
     def _get_recommended_carla_blueprint(sumo_actor):
@@ -106,7 +110,7 @@ class BridgeHelper(object):
         return random.choice(blueprints)
 
     @staticmethod
-    def get_carla_blueprint(sumo_actor):
+    def get_carla_blueprint(sumo_actor, sync_color=False):
         """
         Returns an appropriate blueprint based on the received sumo actor.
         """
@@ -128,7 +132,11 @@ class BridgeHelper(object):
                 return None
 
         if blueprint.has_attribute('color'):
-            color = "{},{},{}".format(sumo_actor.color[0], sumo_actor.color[1], sumo_actor.color[2])
+            if sync_color:
+                color = "{},{},{}".format(sumo_actor.color[0], sumo_actor.color[1],
+                                          sumo_actor.color[2])
+            else:
+                color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
 
         if blueprint.has_attribute('driver_id'):
