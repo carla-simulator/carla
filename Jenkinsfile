@@ -236,7 +236,7 @@ pipeline
 
     post
     {
-        success
+        always
         {
             node('build')
             {

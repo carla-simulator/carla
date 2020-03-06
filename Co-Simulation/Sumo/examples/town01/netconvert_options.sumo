@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue Mar  3 12:43:12 2020 by Eclipse SUMO netconvert Version v1_5_0+0340-c5c5ce5a4d
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <opendrive-files value="Town01.xodr"/>
+    </input>
+
+    <output>
+        <output-file value="Town01.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.remove value="true"/>
+        <geometry.min-radius.fix value="true"/>
+    </processing>
+
+</configuration>
