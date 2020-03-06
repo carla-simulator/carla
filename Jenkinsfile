@@ -121,12 +121,15 @@ pipeline
                             when { anyOf { branch "master"; buildingTag() } }
                             steps
                             {
-                                sh 'make docs'
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
+                                sh '''
+                                    cd ~/carla-simulator.github.io
+                                    git checkout -B master origin/master
+                                '''
+                                sh 'make docs'
                                 sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
                                 sh '''
                                     cd ~/carla-simulator.github.io
-                                    git pull
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
                                     git push
@@ -137,6 +140,7 @@ pipeline
                 }
                 // stage('windows')
                 // {
+                //     agent { label 'windows && build' }
                 //     environment
                 //     {
                 //         UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.22'
@@ -145,7 +149,6 @@ pipeline
                 //     {
                 //         stage('windows setup')
                 //         {
-                //             agent { label 'windows && build' }
                 //             steps
                 //             {
                 //                 bat """
@@ -156,7 +159,6 @@ pipeline
                 //         }
                 //         stage('windows build')
                 //         {
-                //             agent { label 'windows && build' }
                 //             steps
                 //             {
                 //                 bat """
@@ -178,12 +180,10 @@ pipeline
                 //         }
                 //         // stage('windows unit tests')
                 //         // {
-                //         //     agent { label 'windows && build' }
                 //         //     steps { bat 'rem Not Implemented'}
                 //         // }
                 //         stage('windows retrieve content')
                 //         {
-                //             agent { label 'windows && build' }
                 //             steps
                 //             {
                 //                 bat """
@@ -194,7 +194,6 @@ pipeline
                 //         }
                 //         stage('windows package')
                 //         {
-                //             agent { label 'windows && build' }
                 //             steps
                 //             {
                 //                 bat """
@@ -214,12 +213,10 @@ pipeline
                 //         }
                 //         // stage('windows smoke test')
                 //         // {
-                //         //     agent { label 'windows && build' }
                 //         //     steps { bat 'rem Not Implemented'}
                 //         // }
                 //         stage('windows deploy')
                 //         {
-                //             agent { label 'windows && build' }
                 //             when { anyOf { branch "master"; buildingTag() } }
                 //             steps {
                 //                 bat """
