@@ -56,9 +56,9 @@ class CarlaSimulation(object):
         """
         return self.world.get_actor(actor_id)
 
-    # This is a workaround to fix synchronization issues when other carla
-    # clients remove an actor in carla without waiting for tick (e.g.,
-    # running sumo co-simulation and manual control at the same time)
+    # This is a workaround to fix synchronization issues when other carla clients remove an actor in
+    # carla without waiting for tick (e.g., running sumo co-simulation and manual control at the
+    # same time)
     def get_actor_light_state(self, actor_id):
         """
         Accessor for carla actor light state.

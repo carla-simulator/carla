@@ -121,7 +121,6 @@ def main(args):
     try:
         world = client.get_world()
         vehicle_blueprints = world.get_blueprint_library().filter('vehicle.*')
-        #walker_blueprints = world.get_blueprint_library().filter('walker.pedestrian.*')
 
         transform = world.get_map().get_spawn_points()[0]
 

@@ -162,20 +162,23 @@ class SumoSimulation(object):
         """
         traci.vehicle.unsubscribe(actor_id)
 
-    def get_net_offset(self):
+    @staticmethod
+    def get_net_offset():
         """
         Accessor for sumo net offset.
         """
         offset = traci.simulation.convertGeo(0, 0)
         return (-offset[0], -offset[1])
 
-    def get_step_length(self):
+    @staticmethod
+    def get_step_length():
         """
         Accessor for sumo simulation step length.
         """
         return traci.simulation.getDeltaT()
 
-    def get_actor(self, actor_id):
+    @staticmethod
+    def get_actor(actor_id):
         """
         Accessor for sumo actor.
         """
@@ -220,7 +223,7 @@ class SumoSimulation(object):
             return INVALID_ACTOR_ID
 
         if attrs is not None:
-            if 'color' in attrs:
+            if self.args.sync_vehicle_color and 'color' in attrs:
                 color = attrs['color'].split(',')
                 traci.vehicle.setColor(actor_id, color)
 
@@ -228,7 +231,8 @@ class SumoSimulation(object):
 
         return actor_id
 
-    def destroy_actor(self, actor_id):
+    @staticmethod
+    def destroy_actor(actor_id):
         """
         Destroys the given actor.
         """
@@ -261,7 +265,8 @@ class SumoSimulation(object):
         self.spawned_actors = set(traci.simulation.getDepartedIDList())
         self.destroyed_actors = set(traci.simulation.getArrivedIDList())
 
-    def close(self):
+    @staticmethod
+    def close():
         """
         Closes traci client.
         """
