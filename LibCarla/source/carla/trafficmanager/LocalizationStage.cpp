@@ -582,13 +582,11 @@ namespace LocalizationConstants {
         bool distant_right_lane_free = false;
 
         // Check if the neighbouring lanes near the obstructing vehicle are free of other vehicles.
-        bool distant_lane_availability = false;
         bool left_right = true;
         for (auto& candidate_lane_wp: other_neighbouring_lanes) {
           if (candidate_lane_wp != nullptr &&
               track_traffic.GetPassingVehicles(candidate_lane_wp->GetId()).size() == 0) {
 
-            distant_lane_availability = true;
             if (left_right) distant_left_lane_free = true;
             else distant_right_lane_free = true;
 
