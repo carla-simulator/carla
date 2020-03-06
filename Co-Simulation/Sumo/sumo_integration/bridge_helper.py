@@ -50,9 +50,11 @@ class BridgeHelper(object):
         # From front-center-bumper to center (sumo reference system).
         # (http://sumo.sourceforge.net/userdoc/Purgatory/Vehicle_Values.html#angle)
         yaw = -1 * in_rotation.yaw + 90
+        pitch = in_rotation.pitch
         length = 2.0 * extent.x
         out_location = (in_location.x - math.cos(math.radians(yaw)) * (length / 2.0),
-                        in_location.y - math.sin(math.radians(yaw)) * (length / 2.0), in_location.z)
+                        in_location.y - math.sin(math.radians(yaw)) * (length / 2.0),
+                        in_location.z - math.sin(math.radians(pitch)) * (length / 2.0))
         out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
         # Applying offset sumo-carla net.
@@ -76,9 +78,11 @@ class BridgeHelper(object):
 
         # From center to front-center-bumper (carla reference system).
         yaw = -1 * in_rotation.yaw
+        pitch = in_rotation.pitch
         length = 2.0 * extent.x
         out_location = (in_location.x + math.cos(math.radians(yaw)) * (length / 2.0),
-                        in_location.y - math.sin(math.radians(yaw)) * (length / 2.0), in_location.z)
+                        in_location.y - math.sin(math.radians(yaw)) * (length / 2.0),
+                        in_location.z - math.sin(math.radians(pitch)) * (length / 2.0))
         out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
         # Applying offset carla-sumo net
