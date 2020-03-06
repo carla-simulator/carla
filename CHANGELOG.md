@@ -11,6 +11,7 @@
     - Implemented intersection anticipation
     - Implemented vehicle destruction when stuck
     - Implemented tunable parameters
+    - Revamped lane changes
   * Added landmark class for signal-related queries.
   * Added support to parse OpenDRIVE signals.
   * Added junction class as queryable object from waypoint

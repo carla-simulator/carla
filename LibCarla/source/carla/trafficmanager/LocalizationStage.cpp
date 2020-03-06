@@ -211,23 +211,6 @@ namespace LocalizationConstants {
         dot_product *= -1.0f;
       }
 
-      ///////////////////////////////// DEBUG //////////////////////////////////
-      // debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 1),
-      //                        target_location + cg::Location(0, 0, 1),
-      //                        0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
-
-      // uint b_size = static_cast<uint32_t>(waypoint_buffer.size());
-      // uint b_step = 5;
-      // uint b_step_size = b_size/b_step;
-      // for (uint j = 0u; j < b_step; ++j) {
-      //   auto first = waypoint_buffer.at(j * b_step_size);
-      //   auto second = waypoint_buffer.at(std::min((j+1) * b_step_size, b_size-1));
-      //   debug_helper.DrawLine(first->GetLocation() + cg::Location(0, 0, 1),
-      //                         second->GetLocation() + cg::Location(0, 0, 1),
-      //                         0.2f, {255u, 255u, 0u}, 0.05f);
-      // }
-      //////////////////////////////////////////////////////////////////////////
-
       float distance = 0.0f; // TODO: use in PID
 
       // Filtering out false junctions on highways:
