@@ -197,6 +197,10 @@ void TrafficManagerLocal::SetPercentageRunningSign(const ActorPtr &actor, const 
   parameters.SetPercentageRunningSign(actor, perc);
 }
 
+void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetKeepRightPercentage(actor, percentage);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto& elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {

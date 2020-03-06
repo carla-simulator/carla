@@ -170,6 +170,12 @@ void TrafficManagerRemote::SetPercentageRunningSign(const ActorPtr &_actor, cons
   client.SetPercentageRunningSign(actor, percentage);
 }
 
+void TrafficManagerRemote::SetKeepRightPercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetKeepRightPercentage(actor, percentage);
+}
+
 void TrafficManagerRemote::ResetAllTrafficLights() {
   client.ResetAllTrafficLights();
 }

@@ -66,6 +66,12 @@ void Parameters::SetForceLaneChange(const ActorPtr &actor, const bool direction)
   force_lane_change.AddEntry(entry);
 }
 
+void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_keep_right.AddEntry(entry);
+}
+
 void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
   const auto entry = std::make_pair(actor->GetId(), enable);
@@ -135,6 +141,20 @@ ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
   force_lane_change.RemoveEntry(actor_id);
 
   return change_lane_info;
+}
+
+float Parameters::GetKeepRightPercentage(const ActorPtr &actor) {
+
+  const ActorId actor_id = actor->GetId();
+  float percentage = -1.0f;
+
+  if (perc_keep_right.Contains(actor_id)) {
+    percentage = perc_keep_right.GetValue(actor_id);
+  }
+
+  perc_keep_right.RemoveEntry(actor_id);
+
+  return percentage;
 }
 
 bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
