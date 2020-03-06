@@ -204,11 +204,19 @@ public:
     return false;
   }
 
-  /// Method to Set Global distance to Leading vehicle 
+  /// Method to Set Global distance to Leading vehicle
   void SetGlobalDistanceToLeadingVehicle(const float distance) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
       tm_ptr->SetGlobalDistanceToLeadingVehicle(distance);
+    }
+  }
+
+  /// Method to set probabilistic preference to keep on the right lane.
+  void SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetKeepRightPercentage(actor, percentage);
     }
   }
 
