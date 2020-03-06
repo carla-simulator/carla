@@ -204,6 +204,14 @@ public:
     return false;
   }
 
+  /// Method to Set Global distance to Leading vehicle 
+  void SetGlobalDistanceToLeadingVehicle(const float distance) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalDistanceToLeadingVehicle(distance);
+    }
+  }
+
 private:
 
   void CreateTrafficManagerServer(

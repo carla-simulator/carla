@@ -202,7 +202,9 @@ namespace CollisionStageConstants {
 
         !(!reference_front_wp->CheckJunction() &&
         cg::Math::Dot(reference_heading, reference_to_other) > 0 &&
-        inter_vehicle_distance > minimum_inter_vehicle_distance)) {
+        inter_vehicle_distance > std::max(minimum_inter_vehicle_distance,
+                                          std::pow(parameters.GetDistanceToLeadingVehicle(reference_vehicle)
+                                                   + inter_vehicle_length, 2.0f)))) {
 
       const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
       const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
