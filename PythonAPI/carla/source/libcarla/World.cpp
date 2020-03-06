@@ -56,6 +56,11 @@ static size_t OnTick(carla::client::World &self, boost::python::object callback)
   return self.OnTick(MakeCallback(std::move(callback)));
 }
 
+static auto Tick(carla::client::World &world, double seconds) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return world.Tick(TimeDurationFromSeconds(seconds));
+}
+
 static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
   std::vector<carla::ActorId> ids{
       boost::python::stl_input_iterator<carla::ActorId>(actor_ids),
@@ -155,7 +160,7 @@ void export_world() {
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
     .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
-    .def("tick", CALL_WITHOUT_GIL(cc::World, Tick))
+    .def("tick", &Tick, (arg("seconds")=10.0))
     .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
     .def(self_ns::str(self_ns::self))
   ;
