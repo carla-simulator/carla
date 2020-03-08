@@ -6,7 +6,7 @@ cc_library(
         "boost/**/*.ipp",
     ]),
     includes = ["."],
-    copts = ["-DBOOST_ERROR_CODE_HEADER_ONLY"],
+    defines = ["BOOST_ERROR_CODE_HEADER_ONLY"],
     visibility = ["//visibility:public"],
 )
 
@@ -36,7 +36,10 @@ cc_library(
     srcs = glob(["libs/python/src/**/*.cpp"], exclude=["libs/python/src/numpy/**/*"]),
     hdrs = glob(["boost/python/**/**"]),
     includes = ["."],
-    copts = ["-Wno-return-std-move"],
+    copts = [
+        "-Wno-return-std-move",
+        "-Wno-tautological-constant-out-of-range-compare",
+    ],
     deps = [
         ":headers",
         "@python//:dev",

@@ -121,7 +121,7 @@ cc_library(
         "carla/client/**/*.cpp",
         # because circular dependencies...
         "carla/image/**/*.cpp",
-        "carla/nave/**/*.cpp",
+        "carla/nav/**/*.cpp",
         "carla/sensor/**/*.cpp",
         "carla/trafficmanager/**/*.cpp",
     ]),
