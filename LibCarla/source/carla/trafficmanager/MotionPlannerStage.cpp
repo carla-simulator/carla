@@ -12,6 +12,10 @@ namespace traffic_manager {
 namespace PlannerConstants {
 
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
+  static const float STATIONARY_LEAD_APPROACH_SPEED_1 = 10.0f / 3.6f;
+  static const float STATIONARY_LEAD_APPROACH_SPEED_2 = 5.0f / 3.6f;
+  static const float CRITICAL_BRAKING_MARGIN_1 = 5.0f;
+  static const float CRITICAL_BRAKING_MARGIN_2 = 0.1f;
 
 } // namespace PlannerConstants
 
@@ -64,6 +68,8 @@ namespace PlannerConstants {
          ++i) {
 
       const LocalizationToPlannerData &localization_data = localization_frame->at(i);
+      const CollisionToPlannerData& collision_data = collision_frame->at(i);
+
       if (!localization_data.actor->IsAlive()) {
         continue;
       }
@@ -75,10 +81,12 @@ namespace PlannerConstants {
       const ActorId actor_id = actor->GetId();
 
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-      const float current_velocity = vehicle->GetVelocity().Length();
+      const cg::Vector3D current_velocity_vector = vehicle->GetVelocity();
+      const float current_velocity = current_velocity_vector.Length();
 
       const auto current_time = chr::system_clock::now();
 
+      // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
         const auto initial_state = StateEntry{0.0f, 0.0f, 0.0f, chr::system_clock::now(), 0.0f, 0.0f, 0.0f};
         pid_state_map.insert({actor_id, initial_state});
@@ -89,9 +97,6 @@ namespace PlannerConstants {
       previous_state = pid_state_map.at(actor_id);
 
       // Change PID parameters if on highway.
-
-      const float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
-
       if (current_velocity > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
         lateral_parameters = highway_lateral_parameters;
@@ -100,25 +105,43 @@ namespace PlannerConstants {
         lateral_parameters = urban_lateral_parameters;
       }
 
+      // Target velocity for vehicle.
+      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
+
+      //////////////////////// Collision related data handling ///////////////////////////
+      if (collision_data.hazard)
+      {
+        cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
+        float ego_relative_velocity =  (current_velocity_vector - other_vehicle_velocity).Length();
+
+        cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
+        float other_velocity_along_heading = cg::Math::Dot(other_vehicle_velocity, ego_heading);
+
+        if (ego_relative_velocity > 0.0f
+            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_1)
+        {
+          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_1);
+        } else if (ego_relative_velocity > 0.0f
+            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_2)
+        {
+          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_2);
+        }
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+
       // State update for vehicle.
-      StateEntry current_state = controller.StateUpdate(
-          previous_state,
-          current_velocity,
-          dynamic_target_velocity,
-          current_deviation,
-          current_distance,
-          current_time);
+      StateEntry current_state = controller.StateUpdate(previous_state, current_velocity,
+                                                        dynamic_target_velocity, current_deviation,
+                                                        current_distance, current_time);
 
       // Controller actuation.
-      ActuationSignal actuation_signal = controller.RunStep(
-          current_state,
-          previous_state,
-          longitudinal_parameters,
-          lateral_parameters);
+      ActuationSignal actuation_signal = controller.RunStep(current_state, previous_state,
+                                                            longitudinal_parameters, lateral_parameters);
 
-      // In case of collision or traffic light
-      if ((collision_frame != nullptr && collision_frame->at(i).hazard) ||
-          (traffic_light_frame != nullptr && traffic_light_frame->at(i).traffic_light_hazard)) {
+      // In case of traffic light hazard.
+      if (traffic_light_frame->at(i).traffic_light_hazard
+          || (collision_data.hazard
+              && collision_data.distance_to_other_vehicle < CRITICAL_BRAKING_MARGIN_2)) {
 
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;

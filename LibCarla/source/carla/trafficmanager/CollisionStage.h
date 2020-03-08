@@ -93,10 +93,11 @@ namespace traffic_manager {
 
     /// The method returns true if ego_vehicle should stop and wait for
     /// other_vehicle to pass.
-    bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
-                            const cg::Location &reference_location, const cg::Location &other_location,
-                            const SimpleWaypointPtr& closest_point,
-                            const SimpleWaypointPtr& junction_look_ahead);
+    std::pair<bool, float> NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
+                                              const cg::Location &reference_location,
+                                              const cg::Location &other_location,
+                                              const SimpleWaypointPtr& closest_point,
+                                              const SimpleWaypointPtr& junction_look_ahead);
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
     float GetBoundingBoxExtention(const Actor &ego_vehicle);
