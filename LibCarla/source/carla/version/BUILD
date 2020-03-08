@@ -10,7 +10,11 @@ cat >$@ <<EOL
 namespace carla {
 
   const char *version() {
-    return "`cat bazel-out/stable-status.txt | grep STABLE_GIT_TAG | awk '{print $$2}'`";
+    return "`cat bazel-out/stable-status.txt | grep STABLE_GIT_TAG | awk '{print $$2}'`"
+#ifndef NDEBUG
+           "-dbg"
+#endif // NDEBUG
+    ;
   }
 
 } // namespace carla
