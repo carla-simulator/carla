@@ -203,10 +203,16 @@ static auto MakeCallback(boost::python::object callback) {
 #include "AdRss.cpp"
 #endif
 
-BOOST_PYTHON_MODULE(libcarla) {
+#define STRINGIFY(macro) #macro
+
+#ifndef LIBCARLA_PYTHON_MODULE_NAME
+#define LIBCARLA_PYTHON_MODULE_NAME libcarla
+#endif // LIBCARLA_PYTHON_MODULE_NAME
+
+BOOST_PYTHON_MODULE(LIBCARLA_PYTHON_MODULE_NAME) {
   using namespace boost::python;
   PyEval_InitThreads();
-  scope().attr("__path__") = "libcarla";
+  scope().attr("__path__") = STRINGIFY(LIBCARLA_PYTHON_MODULE_NAME);
   export_geom();
   export_control();
   export_blueprint();
