@@ -264,23 +264,20 @@ cc_library(
 # -- Test ----------------------------------------------------------------------
 # ==============================================================================
 
-cc_library(
+load("@//Util/Bazel:macros.bzl", "cc_gtest_library", "cc_gtest_test")
+
+cc_gtest_library(
     name = "test_common",
     hdrs = glob(["test/*.h"]),
     srcs = glob(["test/*.cpp"]),
     includes = ["test"],
-    testonly = True,
-    copts = ["-DLIBCARLA_WITH_GTEST"],
     deps = [
         ":geom",
         ":profiler",
-        "@gtest//:gtest",
     ],
 )
 
-COMMON_DEPS = [":test_common", "@gtest//:gtest_main"]
-
-cc_test(
+cc_gtest_test(
     name = "test_misc",
     srcs = [
         "test/client/test_image.cpp",
@@ -291,12 +288,13 @@ cc_test(
         "test/common/test_msgpack.cpp",
         "test/common/test_vector3D.cpp",
     ],
-    copts = ["-DLIBCARLA_WITH_GTEST"],
-    size = "small",
-    deps = COMMON_DEPS + [":client"],
+    deps = [
+        ":test_common",
+        ":client"
+    ],
 )
 
-cc_test(
+cc_gtest_test(
     name = "test_opendrive",
     srcs = [
         "test/client/OpenDrive.cpp",
@@ -304,40 +302,41 @@ cc_test(
         "test/client/test_opendrive.cpp",
     ],
     copts = [
-        "-DLIBCARLA_TEST_CONTENT_FOLDER=\\\"external/xodr_files\\\"",
-        "-DLIBCARLA_WITH_GTEST"],
+        "-DLIBCARLA_TEST_CONTENT_FOLDER=\\\"external/xodr_files\\\""
+    ],
     data = ["@xodr_files"],
-    size = "small",
-    deps = COMMON_DEPS + [
+    deps = [
+        ":test_common",
         ":filesystem",
         ":opendrive",
         ":thread",
     ],
 )
 
-cc_test(
+cc_gtest_test(
     name = "test_rpc",
     srcs = ["test/client/test_rpc.cpp"],
-    copts = ["-DLIBCARLA_WITH_GTEST"],
-    size = "small",
-    deps = COMMON_DEPS + [
+    deps = [
+        ":test_common",
         ":rpc",
         ":thread",
     ],
 )
 
-cc_test(
+cc_gtest_test(
     name = "test_streaming",
     srcs = ["test/common/test_streaming.cpp"],
-    copts = ["-DLIBCARLA_WITH_GTEST"],
-    size = "small",
-    deps = COMMON_DEPS + [":streaming"],
+    deps = [
+        ":test_common",
+        ":streaming"
+    ],
 )
 
-cc_test(
+cc_gtest_test(
     name = "test_benchmark_streaming",
     srcs = ["test/server/test_benchmark_streaming.cpp"],
-    copts = ["-DLIBCARLA_WITH_GTEST"],
-    size = "small",
-    deps = COMMON_DEPS + [":streaming"],
+    deps = [
+        ":test_common",
+        ":streaming"
+    ],
 )
