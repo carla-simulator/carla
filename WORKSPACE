@@ -1,6 +1,7 @@
 workspace(name = "CARLA")
 
 load("@//toolchain/ue4:config.bzl", "unreal_engine_repository")
+load("@//toolchain/python:config.bzl", "find_local_python_repository")
 
 # Determines the location based on UE4_ROOT environment variable.
 unreal_engine_repository(
@@ -8,11 +9,13 @@ unreal_engine_repository(
     branch = "4.22",
 )
 
-new_local_repository(
+# Determines the location based on CARLA_PYTHON_VERSION environment variable. If
+# not set, uses python3.
+find_local_python_repository(
     name = "python",
-    path = "/usr",
-    build_file = "@//:third_party/python.BUILD",
 )
+
+register_toolchains("@python//:toolchain")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -29,14 +32,6 @@ http_archive(
     strip_prefix = "googletest-release-1.10.0",
     sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
     url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz",
-)
-
-http_archive(
-    name = "pybind11",
-    build_file = "@//:third_party/pybind11.BUILD",
-    strip_prefix = "pybind11-2.4.3",
-    sha256 = "1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d",
-    urls = ["https://github.com/pybind/pybind11/archive/v2.4.3.tar.gz"],
 )
 
 http_archive(
