@@ -186,7 +186,6 @@ cc_library(
     includes = ["."],
     deps = [
         ":utility",
-        "@//:version",
     ],
     visibility = ["//visibility:public"],
 )

@@ -9,7 +9,6 @@
 #endif // LIBCARLA_ENABLE_PROFILER
 
 #include "carla/Logging.h"
-#include "carla/Version.h"
 #include "carla/profiler/Profiler.h"
 
 #include <fstream>
@@ -39,7 +38,6 @@ namespace detail {
       : _filename(std::move(filename)) {
       logging::log("PROFILER: writing profiling data to", _filename);
       std::string header = "# LibCarla Profiler ";
-      header += carla::version();
 #ifdef NDEBUG
       header += " (release)";
 #else
