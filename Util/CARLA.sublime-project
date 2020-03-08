@@ -45,7 +45,8 @@
 				"Unreal/CarlaUE4/Content/Carla/*",
 				"Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies",
 				"__pycache__",
-				"_site"
+				"_site",
+				"bazel-*"
 			],
 		}
 	],

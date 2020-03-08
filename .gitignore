@@ -6,6 +6,9 @@ TrafficManager/build
 Util/Build
 Install
 
+/bazel-*
+/.user.bazelrc
+
 /ExportedMaps
 /Import/*
 !/Import/README.md

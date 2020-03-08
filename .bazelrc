@@ -1,0 +1,22 @@
+try-import ./.user.bazelrc
+
+build --config=libcxx -c opt
+
+build --stamp --workspace_status_command=./Util/RepoStatus.sh
+
+test --test_output=errors
+test --test_verbose_timeout_warnings
+
+# build --verbose_explanations --explain=./bazel.log
+
+build --action_env=RUNNING_IN_BAZEL=true
+build --action_env=PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+test --action_env=PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# build --force_pic
+build --dynamic_mode=off
+build --verbose_failures
+
+build:libcxx --crosstool_top=//toolchain:toolchain
+build:libcxx --cpu=k8
+build:libcxx --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
