@@ -1,12 +1,20 @@
 workspace(name = "CARLA")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@//toolchain/ue4:config.bzl", "unreal_engine_repository")
+
+# Determines the location based on UE4_ROOT environment variable.
+unreal_engine_repository(
+    name = "local_unreal_engine",
+    branch = "4.22",
+)
 
 new_local_repository(
     name = "python",
     path = "/usr",
     build_file = "@//:third_party/python.BUILD",
 )
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "boost",

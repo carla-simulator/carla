@@ -3,8 +3,8 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_cc//cc:defs.bzl", "cc_toolchain_suite")
 
 filegroup(
-    name = "empty",
-    srcs = [],
+    name = "all",
+    srcs = glob(["%{llvm_path_prefix}/**/*"]),
 )
 
 cc_toolchain_suite(
@@ -40,10 +40,11 @@ cc_toolchain(
     name = "cc-clang-linux",
     toolchain_identifier = "cc-clang-linux-toolchain",
     toolchain_config = ":local_linux",
-    all_files = ":empty",
-    compiler_files = ":empty",
-    dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    strip_files = ":empty",
+    all_files = ":all",
+    compiler_files = ":all",
+    dwp_files = ":all",
+    linker_files = ":all",
+    ar_files = ":all",
+    objcopy_files = ":all",
+    strip_files = ":all",
 )
