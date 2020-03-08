@@ -1,3 +1,6 @@
+load("@//Util/Bazel:new_file.bzl", "new_file")
+
+
 def cc_gtest_library(**kwargs):
     kwargs["defines"] = [
         "LIBCARLA_WITH_GTEST",
@@ -6,6 +9,7 @@ def cc_gtest_library(**kwargs):
     kwargs["deps"] = kwargs.get("deps", []) + ["@gtest//:gtest"]
     kwargs["testonly"] = True
     native.cc_library(**kwargs)
+
 
 def cc_gtest_test(**kwargs):
     kwargs["defines"] = [
@@ -20,3 +24,20 @@ def cc_gtest_test(**kwargs):
     ] + kwargs.get("args", [])
     kwargs["size"] = kwargs.get("size", "small")
     native.cc_test(**kwargs)
+
+
+def py_nose2_test(**kwargs):
+    if "main" in kwargs:
+        fail("py_nose2_test does not accept 'main' attribute.")
+    main = "{}_main".format(kwargs["name"])
+    new_file(
+        name = main,
+        out = "__nose2_main__.py",
+        content = "import nose2; nose2.main(module=__package__)",
+    )
+    kwargs["main"] = "__nose2_main__.py"
+    kwargs["tags"] = kwargs.get("tags", []) + ["python", "nose2"]
+    kwargs["srcs"] = kwargs.get("srcs", []) + ["__nose2_main__.py"]
+    kwargs["data"] = kwargs.get("data", []) + [(":" + main)]
+    kwargs["size"] = kwargs.get("size", "small")
+    native.py_test(**kwargs)
