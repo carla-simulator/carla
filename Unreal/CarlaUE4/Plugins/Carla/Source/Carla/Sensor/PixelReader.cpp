@@ -54,7 +54,7 @@ static void WritePixelsToBuffer_Vulkan(
   check(IsInRenderingThread());
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTextureRHIParamRef Texture = RenderResource->GetRenderTargetTexture();
+  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
     UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
