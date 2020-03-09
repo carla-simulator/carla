@@ -97,9 +97,9 @@ CARLA forum</a>
     Synchrony and time-step
     </b></a>
         — Client-server communication and simulation time.  
-    <b>
-    (soon) Traffic manager
-    </b>
+    <a href="../adv_traffic_manager"><b>
+    Traffic Manager
+    </b></a>
         — Feature to handle autopilot vehicles and emulate traffic.  
 
 ## References
@@ -128,6 +128,21 @@ CARLA forum</a>
     Sensors reference
     </b></a>
         — Everything about sensors and the data they retrieve.  
+
+## ROS bridge
+  <p style="padding-left:30px;line-height:1.8">
+    <a href="../ros_installation"><b>
+    ROS bridge installation
+    </b></a>
+        — How to install the ROS bridge's package or repository.  
+    <a href="../ros_msgs"><b>
+    CARLA messages reference
+    </b></a>
+        — Contains explanations and fields for every type of CARLA message available in ROS.  
+    <a href="../ros_launchs"><b>
+    Launchfiles reference
+    </b></a>
+        — Explains the launchfiles provided, its nodes, and the topics that are being consumed and published.  
 
 ## Tutorials — General
   <p style="padding-left:30px;line-height:1.8">

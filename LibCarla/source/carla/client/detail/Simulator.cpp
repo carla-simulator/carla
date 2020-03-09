@@ -44,11 +44,23 @@ namespace detail {
     }
   }
 
-  static void SynchronizeFrame(uint64_t frame, const Episode &episode) {
+  static bool SynchronizeFrame(uint64_t frame, const Episode &episode, time_duration timeout) {
+    bool result = true;
+    auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
       std::this_thread::yield();
+      auto end = std::chrono::system_clock::now();
+      auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
+      if(timeout.to_chrono() < diff) {
+        result = false;
+        break;
+      }
     }
-    carla::traffic_manager::TrafficManager::Tick();
+    if(result) {
+      carla::traffic_manager::TrafficManager::Tick();
+    }
+
+    return result;
   }
 
   // ===========================================================================
@@ -126,10 +138,13 @@ namespace detail {
     return *result;
   }
 
-  uint64_t Simulator::Tick() {
+  uint64_t Simulator::Tick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
     const auto frame = _client.SendTickCue();
-    SynchronizeFrame(frame, *_episode);
+    bool result = SynchronizeFrame(frame, *_episode, timeout);
+    if (!result) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
     return frame;
   }
 
@@ -153,7 +168,8 @@ namespace detail {
           "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
     }
     const auto frame = _client.SetEpisodeSettings(settings);
-    SynchronizeFrame(frame, *_episode);
+    using namespace std::literals::chrono_literals;
+    SynchronizeFrame(frame, *_episode, 10s);
     return frame;
   }
 

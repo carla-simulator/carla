@@ -2,6 +2,8 @@
 
   * [Requirements](#requirements)
   * [Downloading CARLA](#downloading-carla)
+	* a) apt-get installation  
+	* b) Repository download  
   * [Running CARLA](#running-carla)
 	* Command-line options  
   * [Updating CARLA](#updating-carla)
@@ -25,6 +27,25 @@ If you have [pip](https://pip.pypa.io/en/stable/installing/) in your system, you
 ---
 ## Downloading CARLA
 
+The easiest way to get the latest release in Linux is using the __apt repository__.  
+To get either a specific release or get the Windows version of CARLA: __download the repository__.  
+Both methods will set CARLA ready to run. 
+
+<h4>a) apt-get CARLA 0.9.7</h4>
+
+First, add the repository to the system: 
+```sh
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
+```
+Then, simply install it. CARLA will be in the `/opt/` folder, where other software such as ROS install themselves: 
+```sh
+sudo apt-get update
+sudo apt-get install carla
+```
+
+<h4>b) Downloading the repository</h4>
+
 <div class="build-buttons">
 <p>
 <a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
@@ -32,7 +53,7 @@ If you have [pip](https://pip.pypa.io/en/stable/installing/) in your system, you
 </p>
 </div>
 
-The repository contains the different versions of the simulator available. The _development_ and _stable_ sections, contain the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable (developers are currently working with this build). By the time this documentation is written, __CARLA 0.9.7__ is the latest containing all new features (such as traffic manager), but __CARLA 0.8.2__ is the stable one, recommended for those who are looking for a neat run.  
+The repository contains the different versions of the simulator available. The _development_ and _stable_ sections, contain the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable (developers are currently working with this build). If you want a more robust version, you may search for the latest tagged version.
 
 !!! note
     Latest Windows release is __CARLA 0.9.5__, but this is to be updated soon. 
@@ -58,6 +79,8 @@ Linux:
 Windows:
 CarlaUE4.exe
 ```
+!!! Important
+    In the __apt-get__ installation, `CarlaUE4.sh` can be found in `/opt/carla/bin/`, instead of the main `/carla/` folder where it normally is. 
 
 A window will open, containing a view over the city. This is the "spectator" view. To fly around the city use the mouse and WASD keys (while clicking). The simulator is now running as a server, waiting for a client app to connect and interact with the world.
 

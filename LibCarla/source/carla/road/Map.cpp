@@ -970,7 +970,7 @@ namespace road {
   }
 
   /// Computes the location of the edges of the current lane at the current waypoint
-  static std::pair<geom::Vector3D, geom::Vector3D> GetWaypointCornerPosition(
+  static std::pair<geom::Vector3D, geom::Vector3D> GetWaypointCornerPositions(
       const Map &map, const Waypoint &waypoint, const Lane &lane) {
     float lane_width = static_cast<float>(map.GetLaneWidth(waypoint)) / 2.0f;
     lane_width = waypoint.lane_id > 0 ? -lane_width : lane_width;
@@ -998,55 +998,54 @@ namespace road {
   geom::Mesh Map::GenerateGeometry(double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
+    // Iterate each lane in each lane_section in each road
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
       for (const auto &lane_section : road.GetLaneSections()) {
         for (const auto &lane_pair : lane_section.GetLanes()) {
+          // Get the lane reference
           const auto &lane = lane_pair.second;
           // The lane with lane_id 0 have no physical representation in OpenDRIVE
           if (lane.GetId() == 0) {
             continue;
           }
           const auto end_distance = lane.GetDistance() + lane.GetLength() - EPSILON;
-          const Waypoint initial_waypoint {
+          Waypoint current_wp {
               road.GetId(),
               lane_section.GetId(),
               lane.GetId(),
               lane_section.GetDistance() + EPSILON };
-          Waypoint current_wp = initial_waypoint;
-          bool first_waypoint = true;
 
           if (lane.GetType() == Lane::LaneType::Sidewalk) {
             out_mesh.AddMaterial("sidewalk");
           } else {
             out_mesh.AddMaterial("road");
           }
+          // Add 2 first vertices only
+          std::pair<geom::Vector3D, geom::Vector3D> edges =
+              GetWaypointCornerPositions(*this, current_wp, lane);
+          out_mesh.AddVertex(edges.first);
+          out_mesh.AddVertex(edges.second);
 
-          do {
-            // Get the location of the edges of the current lane at the current waypoint
-            const auto edges = GetWaypointCornerPosition(*this, current_wp, lane);
-            // This condition avoids adding indexes in the initial first waypoint
-            if(first_waypoint) {
-              // Add vertices only
-              out_mesh.AddVertex(edges.first);
-              out_mesh.AddVertex(edges.second);
-              first_waypoint = false;
-            } else {
+          if (!IsLaneStraight(lane)) {
+            do {
+              // Get the location of the edges of the current lane at the current waypoint
+              edges = GetWaypointCornerPositions(*this, current_wp, lane);
               // Extrude adding vertices and joining the using indices
               const size_t last_index = out_mesh.GetLastVertexIndex();
               ExtrudeMeshEdge(
                   out_mesh, edges.first, edges.second, last_index - 1, last_index);
-            }
 
-            // Update the current waypoint's "s"
-            current_wp.s += distance;
+              // Update the current waypoint's "s"
+              current_wp.s += distance;
 
-          } while(current_wp.s < end_distance);
+            } while(current_wp.s < end_distance);
+          }
           // This ensures the mesh is constant and have no gaps between
           // segments and roads
-          if (current_wp.s - end_distance > EPSILON) {
-            current_wp.s = end_distance - EPSILON;
-            const auto edges = GetWaypointCornerPosition(*this, current_wp, lane);
+          if (end_distance - (current_wp.s - distance) > EPSILON) {
+            current_wp.s = end_distance;
+            edges = GetWaypointCornerPositions(*this, current_wp, lane);
             const size_t last_index = out_mesh.GetLastVertexIndex();
             ExtrudeMeshEdge(
                 out_mesh, edges.first, edges.second, last_index - 1, last_index);

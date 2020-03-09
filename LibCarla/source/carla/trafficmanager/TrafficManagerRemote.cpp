@@ -141,6 +141,11 @@ void TrafficManagerRemote::SetDistanceToLeadingVehicle(const ActorPtr &_actor, c
   client.SetDistanceToLeadingVehicle(actor, distance);
 }
 
+void TrafficManagerRemote::SetGlobalDistanceToLeadingVehicle(const float distance) {
+  client.SetGlobalDistanceToLeadingVehicle(distance);
+}
+
+
 void TrafficManagerRemote::SetPercentageIgnoreWalkers(const ActorPtr &_actor, const float percentage) {
   carla::rpc::Actor actor(_actor->Serialize());
 
@@ -163,6 +168,12 @@ void TrafficManagerRemote::SetPercentageRunningSign(const ActorPtr &_actor, cons
   carla::rpc::Actor actor(_actor->Serialize());
 
   client.SetPercentageRunningSign(actor, percentage);
+}
+
+void TrafficManagerRemote::SetKeepRightPercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetKeepRightPercentage(actor, percentage);
 }
 
 void TrafficManagerRemote::ResetAllTrafficLights() {
