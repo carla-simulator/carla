@@ -29,5 +29,6 @@ void export_trafficmanager() {
       .def("ignore_lights_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningLight)
       .def("ignore_signs_percentage", &carla::traffic_manager::TrafficManager::SetPercentageRunningSign)
       .def("set_global_distance_to_leading_vehicle", &carla::traffic_manager::TrafficManager::SetGlobalDistanceToLeadingVehicle)
-      .def("set_percentage_keep_right_rule", &carla::traffic_manager::TrafficManager::SetKeepRightPercentage);
+      .def("set_percentage_keep_right_rule", &carla::traffic_manager::TrafficManager::SetKeepRightPercentage)
+      .def("set_synchronous_mode", &carla::traffic_manager::TrafficManager::SetSynchronousMode);
 }
