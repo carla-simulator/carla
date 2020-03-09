@@ -1514,6 +1514,13 @@ Returns the axis values for the vector parsed as string.
 The vehicle's collider volume.  
 
 <h3>Methods</h3>
+- <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a flag representing the vehicle light state, this represents which lights are active or not.  
+    - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
+- <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
+Sets the light state of a vehicle using a VehicleLightState flag, this represents which lights are active or not.  
+    - **Parameters:**
+        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
 - <a name="carla.Vehicle.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
 Applies a control object on the next tick, containing driving parameters such as throttle, steering or gear shifting.  
     - **Parameters:**
@@ -1608,7 +1615,7 @@ All lights off.
 This is reserved for certain vehicles that can have special lights, like a siren.  
 - <a name="carla.VehicleLightState.Special2"></a>**<font color="#f8805a">Special2</font>**  
 This is reserved for certain vehicles that can have special lights, like a siren.  
-- <a name="carla.VehicleLightState.Any"></a>**<font color="#f8805a">Any</font>**  
+- <a name="carla.VehicleLightState.All"></a>**<font color="#f8805a">All</font>**  
 All lights on.  
 
 ---
