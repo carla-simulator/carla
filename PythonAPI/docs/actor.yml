@@ -145,7 +145,7 @@
     - var_name: Special2
       doc: >
         This is reserved for certain vehicles that can have special lights, like a siren.
-    - var_name: Any
+    - var_name: All
       doc: >
         All lights on
   - class_name: Vehicle
@@ -167,7 +167,6 @@
         Returns a flag representing the vehicle light state,
         this represents which lights are active or not
     # --------------------------------------
-    methods:
     - def_name: set_light_state
       params:
       - param_name: light_state
@@ -176,7 +175,6 @@
         Sets the light state of a vehicle using a VehicleLightState flag,
         this represents which lights are active or not
     # --------------------------------------
-    methods:
     - def_name: apply_control
       params:
       - param_name: control
