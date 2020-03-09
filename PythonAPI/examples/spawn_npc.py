@@ -236,9 +236,17 @@ def main():
         # example of how to use parameters
         traffic_manager.global_percentage_speed_difference(30.0)
 
+        throughput_counter = 0
+        begining = time.time()
         while True:
             if args.sync and synchronous_master:
                 world.tick()
+                throughput_counter += 1
+                current = time.time()
+                if ((current - begining) > 1.0):
+                    begining = current
+                    print ('||||||||||| CARLA THROUGHPUT ||||||||||| >>> ' + str(throughput_counter))
+                    throughput_counter = 0
             else:
                 world.wait_for_tick()
 
