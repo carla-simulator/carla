@@ -47,11 +47,12 @@ private:
   /// Parameter object for changing synchronous behaviour.
   Parameters &parameters;
   /// Step runner flag.
-  std::atomic<bool> run_step;
+  std::atomic<bool> run_step {false};
   /// Mutex for progressing synchronous execution.
   std::mutex step_execution_mutex;
   /// Condition variables for progressing synchronous execution.
   std::condition_variable step_execution_notifier;
+  std::condition_variable step_complete_notifier;
 
 public:
 

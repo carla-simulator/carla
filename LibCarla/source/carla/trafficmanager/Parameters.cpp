@@ -13,9 +13,6 @@ namespace traffic_manager {
 
 Parameters::Parameters() {
 
-  /// Set default synchronous mode to false.
-  synchronous_mode.store(false);
-
   /// Set default synchronous mode time out.
   synchronous_time_out = std::chrono::duration<int, std::milli>(10);
 }
