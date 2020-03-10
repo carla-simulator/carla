@@ -119,8 +119,6 @@ namespace detail {
 
     geom::Vector3D acceleration;
 
-    uint32_t num_components;
-
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
       detail::VehicleData vehicle_data;
@@ -131,7 +129,7 @@ namespace detail {
 #pragma pack(pop)
 
 static_assert(
-    sizeof(ActorDynamicState) == 97u,
+    sizeof(ActorDynamicState) == 93u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "

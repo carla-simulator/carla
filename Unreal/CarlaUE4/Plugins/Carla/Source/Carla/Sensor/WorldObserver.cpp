@@ -55,6 +55,7 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
 
   else if (AType::Walker == View.GetActorType())
   {
+    UE_LOG(LogCarla, Warning, TEXT("     FWorldObserver_GetActorState Walker"));
     auto Walker = Cast<APawn>(View.GetActor());
     auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
     if (Controller != nullptr)
@@ -68,17 +69,31 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
     if (TrafficLight != nullptr)
     {
 
-      UActorComponent* TrafficLightComponent = TrafficLight->FindComponentByClass<UTrafficLightComponent>();
+      UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(TrafficLight->FindComponentByClass<UTrafficLightComponent>());
+
+      using TLS = carla::rpc::TrafficLightState;
 
       if(TrafficLightComponent == nullptr) {
         // Old way: traffic lights are actors
-        using TLS = carla::rpc::TrafficLightState;
         state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
         state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
         state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
         state.traffic_light_data.red_time = TrafficLight->GetRedTime();
         state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
         state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
+        state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+      } else {
+        UTrafficLightController* Controller =  TrafficLightComponent->GetController();
+        ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
+
+        state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
+        state.traffic_light_data.green_time = Controller->GetGreenTime();
+        state.traffic_light_data.yellow_time = Controller->GetYellowTime();
+        state.traffic_light_data.red_time = Controller->GetRedTime();
+        state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+        state.traffic_light_data.time_is_frozen = Group->IsFrozen();
+        // Nobody is using this right now, perhaps we should remove it?
         state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
       }
     }
@@ -192,25 +207,9 @@ static carla::Buffer FWorldObserver_Serialize(
       carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
       FWorldObserver_GetAngularVelocity(*View.GetActor()),
       FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
-      0,
       FWorldObserver_GetActorState(View, Registry),
     };
-
-    TArray<ComponentDynamicState> ComponentsState;
-    FWorldObserver_GetActorComponentsState(View, Registry, ComponentsState);
-    info.num_components = ComponentsState.Num();
-
     write_data(info);
-
-    if(info.num_components > 0) {
-      total_size += info.num_components * sizeof(ComponentDynamicState);
-      buffer.resize(total_size);
-
-      for(auto& CompState : ComponentsState)
-      {
-        write_data(CompState);
-      }
-    }
   }
 
   // Shrink buffer
