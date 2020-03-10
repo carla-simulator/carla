@@ -131,7 +131,6 @@ cc_library(
         ":geom",
         ":opendrive",
         ":pointcloud",
-        ":python",
         ":road",
         ":rpc",
         ":sensor_s11n_headers",
