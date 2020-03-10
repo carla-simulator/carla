@@ -1,4 +1,4 @@
-package(features = ["paranoid"])
+package(features = ["extra-warnings"])
 
 cc_library(
     name = "utility",
