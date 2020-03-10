@@ -149,6 +149,27 @@ The script `PythonAPI/util/config.py` provides for more configuration options.
 > ./config.py --help # Check all the available configuration options. 
 ```
 
+<table style="border: 1px solid #000000; text-align: left;">
+<thead style="background: #D0E4F5; border-bottom: 2px solid #EEEE00;">
+<th style="padding: 7px 7px;">head1</th>
+<th style="padding: 7px 7px;">head2</th>
+</thead>
+<tbody>
+<td style="padding: 7px 7px;">cell1_1</td><td style="padding: 7px 7px;">cell2_1</td>
+</tr>
+<tr>
+<td style="padding: 7px 7px;">cell1_2</td><td style="padding: 7px 7px;">cell2_2</td>
+</tbody>
+</table>
+
+<br>
+
+&nbsp;&nbsp;&nbsp;First Header&nbsp;&nbsp;&nbsp; | Second Header | Third Header
+:----------- |:-------------:| -----------:
+Left         | Center        | Right
+Left         | Center        | Right
+
+
 ---
 ## Updating CARLA
 
