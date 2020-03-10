@@ -76,6 +76,15 @@ public:
   void ResetState();
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void SetYellowTime(float NewTime);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void SetRedTime(float NewTime);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void SetGreenTime(float NewTime);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   float GetGreenTime() const;
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
@@ -84,7 +93,10 @@ public:
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   float GetRedTime() const;
 
+
 private:
+
+  void SetStateTime(const ETrafficLightState State, float NewTime);
 
   float GetStateTime(const ETrafficLightState State) const;
 
