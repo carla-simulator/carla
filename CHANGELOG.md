@@ -2,12 +2,13 @@
 
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
+  * Added walkable pedestrian crossings to OpenDRIVE standalone mode
+  * Improved manual_control by adding realistic throttle and brake
+  * Added new Behavior agent
 
 ## CARLA 0.9.8
 
-  * Improved manual_control by adding realistic throttle and brake
-  * Added new Behavior agent
-  * Added beta version sumo-carla co-simulation.
+  * Added beta version sumo-carla co-simulation
   * Traffic Manager:
     - Added benchmark
     - Added synchronous mode
@@ -19,8 +20,8 @@
     - Implemented vehicle destruction when stuck
     - Implemented tunable parameters
     - Revamped lane changes
-  * Added landmark class for signal-related queries.
-  * Added support to parse OpenDRIVE signals.
+  * Added landmark class for signal-related queries
+  * Added support to parse OpenDRIVE signals
   * Added junction class as queryable object from waypoint
   * Added timeout to World Tick
   * Added simple physical map generation from standalone OpenDRIVE data
@@ -37,17 +38,17 @@
     - Added `carla.client.generate_opendrive_world(opendrive)` that loads a map with custom OpenDRIVE basic physical topology
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
-  * Fixed docker build of .BIN for pedestrian navigation
-  * Fixed local_planner.py: agent will now stop when it reaches the desired destination
+  * Fixed docker build of `.BIN` for pedestrian navigation
+  * Fixed `local_planner.py`: agent will now stop when it reaches the desired destination
   * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
-  * Fixed agent failures due to API changes in is_within_distance_ahead()
+  * Fixed agent failures due to API changes in `is_within_distance_ahead()`
   * Fixed assertion bug when using LibCarla
   * Fixed incorrect doppler velocity for RADAR sensor
   * Fixed documentation links
   * Upgraded Boost to 1.72.0
   * Recorder feature:
-    - Added an option (-i) when replaying a session to ignore the hero vehicles
+    - Added an option `-i` to `start_replaying.py` to replay a session ignoreing the hero vehicles
   * Fixed import pipeline bugs:
     - Crash when no pedestrian navmesh is present
     - Automatically imported static meshes not properly tagged
