@@ -105,23 +105,30 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
 
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 {
-  ElapsedTime = 0.0f;
-  State = InState;
-  SetTrafficSignState(ToTrafficSignState(State));
-  for (auto Controller : Vehicles)
-  {
-    if (Controller != nullptr)
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    TrafficLightComponent->SetLightState(InState);
+  } else {
+    ElapsedTime = 0.0f;
+    State = InState;
+    SetTrafficSignState(ToTrafficSignState(State));
+    for (auto Controller : Vehicles)
     {
-      Controller->SetTrafficLightState(State);
-      if (State == ETrafficLightState::Green)
+      if (Controller != nullptr)
       {
-        Controller->SetTrafficLight(nullptr);
+        Controller->SetTrafficLightState(State);
+        if (State == ETrafficLightState::Green)
+        {
+          Controller->SetTrafficLight(nullptr);
+        }
       }
     }
-  }
-  if (State == ETrafficLightState::Green)
-  {
-    Vehicles.Empty();
+    if (State == ETrafficLightState::Green)
+    {
+      Vehicles.Empty();
+    }
   }
   OnTrafficLightStateChanged(State);
 }
@@ -178,7 +185,18 @@ void ATrafficLightBase::UnNotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
 
 void ATrafficLightBase::SetGreenTime(float InGreenTime)
 {
-  GreenTime = InGreenTime;
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    UTrafficLightController* TrafficLightController =
+      TrafficLightComponent->GetController();
+    check(TrafficLightController)
+    TrafficLightController->SetGreenTime(InGreenTime);
+
+  } else {
+    GreenTime = InGreenTime;
+  }
 }
 
 float ATrafficLightBase::GetGreenTime() const
@@ -188,7 +206,17 @@ float ATrafficLightBase::GetGreenTime() const
 
 void ATrafficLightBase::SetYellowTime(float InYellowTime)
 {
-  YellowTime = InYellowTime;
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    UTrafficLightController* TrafficLightController =
+      TrafficLightComponent->GetController();
+    check(TrafficLightController)
+    TrafficLightController->SetYellowTime(InYellowTime);
+  } else {
+    YellowTime = InYellowTime;
+  }
 }
 
 float ATrafficLightBase::GetYellowTime() const
@@ -198,7 +226,17 @@ float ATrafficLightBase::GetYellowTime() const
 
 void ATrafficLightBase::SetRedTime(float InRedTime)
 {
-  RedTime = InRedTime;
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    UTrafficLightController* TrafficLightController =
+      TrafficLightComponent->GetController();
+    check(TrafficLightController)
+    TrafficLightController->SetRedTime(InRedTime);
+  } else {
+    RedTime = InRedTime;
+  }
 }
 
 float ATrafficLightBase::GetRedTime() const
@@ -218,10 +256,17 @@ void ATrafficLightBase::SetElapsedTime(float InElapsedTime)
 
 void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 {
-  TimeIsFrozen = InTimeIsFrozen;
-  if (!TimeIsFrozen)
-  {
-    ElapsedTime = 0.0f;
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    TrafficLightComponent->SetFrozenGroup(InTimeIsFrozen);
+  } else {
+    TimeIsFrozen = InTimeIsFrozen;
+    if (!TimeIsFrozen)
+    {
+      ElapsedTime = 0.0f;
+    }
   }
 }
 
@@ -242,6 +287,22 @@ int ATrafficLightBase::GetPoleIndex() const
 
 TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
 {
+  UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+
+  if(TrafficLightComponent) {
+    TArray<ATrafficLightBase *> result;
+    UTrafficLightController* TrafficLightController =
+      TrafficLightComponent->GetController();
+    check(TrafficLightController)
+
+    for(auto& TLComp : TrafficLightController->GetTrafficLights())
+    {
+      result.Add(Cast<ATrafficLightBase>(GetOwner()));
+    }
+
+    return result;
+  }
   return GroupTrafficLights;
 }
 
