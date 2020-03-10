@@ -30,15 +30,14 @@ def cc_gtest_test(**kwargs):
 def py_nose2_test(**kwargs):
     if "main" in kwargs:
         fail("py_nose2_test does not accept 'main' attribute.")
-    main = "{}_main".format(kwargs["name"])
+    main = "__{}_nose2_main__.py".format(kwargs["name"])
     new_file(
         name = main,
-        out = "__nose2_main__.py",
         content = "import nose2; nose2.main(module=__package__)",
     )
-    kwargs["main"] = "__nose2_main__.py"
+    kwargs["main"] = main
     kwargs["tags"] = kwargs.get("tags", []) + ["python", "nose2"]
-    kwargs["srcs"] = kwargs.get("srcs", []) + ["__nose2_main__.py"]
+    kwargs["srcs"] = kwargs.get("srcs", []) + [main]
     kwargs["data"] = kwargs.get("data", []) + [(":" + main)]
     kwargs["size"] = kwargs.get("size", "small")
     kwargs["python_version"] = kwargs.get("python_version", PYTHON_VERSION_FLAG)

@@ -1,12 +1,14 @@
 def _impl(ctx):
-    template = ctx.actions.declare_file(ctx.outputs.out.basename + ".tpl")
-    ctx.actions.write(output = template, content = ctx.attr.content)
-    ctx.actions.expand_template(
-        template=template,
-        output=ctx.outputs.out,
-        substitutions=ctx.attr.substitutions,
+    content = ctx.attr.content
+    for key, value in ctx.attr.substitutions.items():
+        content = content.replace(key, value)
+    out = ctx.actions.declare_file(ctx.attr.name)
+    ctx.actions.write(
+        output=out,
+        content=content,
         is_executable=ctx.attr.is_executable,
     )
+    return [DefaultInfo(files = depset([out]))]
 
 
 new_file = rule(
@@ -14,11 +16,9 @@ new_file = rule(
 Creates a new file with the content provided after applying substitutions.
 """,
     attrs = {
-        "out": attr.string(mandatory=True),
         "content": attr.string(mandatory=True),
         "substitutions": attr.string_dict(mandatory=False, default={}),
         "is_executable": attr.bool(mandatory=False, default=False),
     },
-    outputs = {"out": "%{out}"},
     implementation = _impl,
 )
