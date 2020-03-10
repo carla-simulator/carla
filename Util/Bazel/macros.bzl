@@ -1,5 +1,4 @@
 load("@//Util/Bazel:new_file.bzl", "new_file")
-load("@python//:defs.bzl", "PYTHON_VERSION_FLAG")
 
 
 def cc_gtest_library(**kwargs):
@@ -40,5 +39,4 @@ def py_nose2_test(**kwargs):
     kwargs["srcs"] = kwargs.get("srcs", []) + [main]
     kwargs["data"] = kwargs.get("data", []) + [(":" + main)]
     kwargs["size"] = kwargs.get("size", "small")
-    kwargs["python_version"] = kwargs.get("python_version", PYTHON_VERSION_FLAG)
     native.py_test(**kwargs)

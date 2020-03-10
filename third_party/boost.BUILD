@@ -1,3 +1,5 @@
+load("@python//:rules.bzl", "for_each_py_version")
+
 cc_library(
     name = "headers",
     hdrs = glob([
@@ -31,8 +33,9 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-cc_library(
-    name = "python",
+for_each_py_version(
+    rule = cc_library,
+    name = "python%{py_version}",
     srcs = glob(["libs/python/src/**/*.cpp"], exclude=["libs/python/src/numpy/**/*"]),
     hdrs = glob(["boost/python/**/**"]),
     includes = ["."],
@@ -42,7 +45,7 @@ cc_library(
     ],
     deps = [
         ":headers",
-        "@python//:dev",
+        "@python//python%{py_version}:dev",
     ],
     visibility = ["//visibility:public"],
 )

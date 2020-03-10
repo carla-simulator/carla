@@ -1,5 +1,7 @@
 package(features = ["extra-warnings"])
 
+load("@python//:rules.bzl", "for_each_py_version")
+
 cc_library(
     name = "utility",
     hdrs = [
@@ -64,14 +66,15 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-cc_library(
-    name = "python",
+for_each_py_version(
+    rule = cc_library,
+    name = "python%{py_version}",
     hdrs = [
         "carla/PythonUtil.h",
     ],
     includes = ["."],
     deps = [
-        "@boost//:headers",
+        "@boost//:python%{py_version}",
     ],
     visibility = ["//visibility:public"],
 )

@@ -1,7 +1,7 @@
 workspace(name = "CARLA")
 
 load("@//toolchain/ue4:config.bzl", "unreal_engine_repository")
-load("@//toolchain/python:config.bzl", "find_local_python_repository")
+load("@//toolchain/python:config.bzl", "find_local_python_repositories")
 
 # Determines the location based on UE4_ROOT environment variable.
 unreal_engine_repository(
@@ -9,13 +9,11 @@ unreal_engine_repository(
     branch = "4.22",
 )
 
-# Determines the location based on CARLA_PYTHON_VERSION environment variable. If
-# not set, uses python3.
-find_local_python_repository(
+# Adds a new local repository for each python-dev version installed.
+find_local_python_repositories(
     name = "python",
+    exclude_versions = [],
 )
-
-register_toolchains("@python//:toolchain")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
