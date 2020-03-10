@@ -1,5 +1,6 @@
 # Quick start
 
+  * __[Installation summary](#installation-summary)__
   * __[Requirements](#requirements)__
   * __[Downloading CARLA](#downloading-carla)__
 	* a) deb CARLA installation  
@@ -8,6 +9,43 @@
 	* Command-line options  
   * __[Updating CARLA](#updating-carla)__
   * __[Follow-up](#follow-up)__
+
+---
+## Installation summary
+
+<details>
+   <summary>
+    Show command line summary for the quick start installation
+   </summary>
+
+```sh
+# Install required modules Pygame and Numpy. 
+ pip install --user pygame numpy
+
+# Option A) deb package installation (only Linux)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
+sudo apt-get update
+sudo apt-get install carla
+cd /opt/carla/bin
+./CarlaUE4.sh
+
+# Option B) GitHub repository installation
+#   Go to: https://github.com/carla-simulator/carla/blob/master/Docs/download.md
+#   Download the desired package and additional assets. 
+#   Extract the package. 
+#   Extract the additional assets in `/Import`
+#   Run CARLA (Linux)
+./CarlaUE.sh
+#   Run CARLA (Windows)
+> CarlaUE4.exe
+
+# Run a script to test CARLA
+cd PythonAPI/examples
+python3 spawn_npc.py
+
+```
+</details>
 
 ---
 ## Requirements
