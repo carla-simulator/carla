@@ -268,8 +268,7 @@ Keep reading this section to learn how to update the build or take some first st
 <a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">
 Go to __First steps__</a>
 </p>
-</div>
-<div class="build-buttons">
+
 <p>
 <a href="../build_update" target="_blank" class="btn btn-neutral" title="Learn how to update the build">
 Update CARLA</a>
