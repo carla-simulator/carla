@@ -1,16 +1,16 @@
 # Linux build
 
-  * [__Requirements__](#requirements):  
+  * [__Requirements__](#requirements)  
 	* System specifics
 	* Dependencies 
-  * [__GitHub__](#github):  
+  * [__GitHub__](#github)  
 	* Create a GitHub account  
 	* Install git  
 	* Link GitHub and Unreal Engine 
-  * [__Unreal Engine__](#unreal-engine):
+  * [__Unreal Engine__](#unreal-engine)
 	* Download UE4.22  
 	* Build UE4.22  
-  * [__CARLA build__](#carla-build): 
+  * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
 	* Set the environment variable 
