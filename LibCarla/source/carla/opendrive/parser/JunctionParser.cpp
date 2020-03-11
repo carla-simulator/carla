@@ -34,6 +34,7 @@ namespace parser {
       road::JuncId id;
       std::string name;
       std::vector<Connection> connections;
+      std::set<road::ContId> controllers;
     };
 
     pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
@@ -66,6 +67,14 @@ namespace parser {
         junction.connections.push_back(connection);
       }
 
+      // Controller
+      for (pugi::xml_node controller_node : junction_node.children("controller")) {
+        const road::ContId controller_id = controller_node.attribute("id").value();
+        // const std::string controller_name = controller_node.attribute("name").value();
+        // const uint32_t controller_sequence = controller_node.attribute("sequence").as_uint();
+        junction.controllers.insert(controller_id);
+      }
+
       junctions.push_back(junction);
     }
 
@@ -85,6 +94,7 @@ namespace parser {
               lane_link.to);
         }
       }
+      map_builder.AddJunctionController(junction.id, std::move(junction.controllers));
     }
   }
 } // namespace parser
