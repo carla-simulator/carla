@@ -50,6 +50,8 @@ namespace road {
     // compute transform requires the roads to have the RoadInfo
     SolveSignalReferencesAndTransforms();
 
+    SolveControllerAndJuntionReferences();
+
     // remove temporal already used information
     _temp_road_info_container.clear();
     _temp_lane_info_container.clear();
@@ -59,6 +61,7 @@ namespace road {
     // or move it (will return move -> Map(Map &&))
     Map map(std::move(_map_data));
     CreateJunctionBoundingBoxes(map);
+
 
     return map;
   }
@@ -539,6 +542,13 @@ namespace road {
     _map_data.GetJunction(junction_id)->GetConnection(connection_id)->AddLaneLink(from, to);
   }
 
+  void MapBuilder::AddJunctionController(
+      const JuncId junction_id,
+      std::set<road::ContId>&& controllers) {
+    DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
+    _map_data.GetJunction(junction_id)->_controllers = std::move(controllers);
+  }
+
   Lane *MapBuilder::GetLane(
       const RoadId road_id,
       const LaneId lane_id,
@@ -744,13 +754,27 @@ namespace road {
       point.location.y *= -1; // Unreal Y axis hack
       point.location.z += static_cast<float>(signal->_zOffset);
       geom::Transform transform(point.location, geom::Rotation(
-          static_cast<float>(signal->_pitch),
-          static_cast<float>(-(point.tangent + signal->_hOffset)),
-          static_cast<float>(signal->_roll)));
+          geom::Math::ToDegrees(static_cast<float>(signal->_pitch)),
+          geom::Math::ToDegrees(static_cast<float>(-(point.tangent + signal->_hOffset))),
+          geom::Math::ToDegrees(static_cast<float>(signal->_roll))));
       signal->_transform = transform;
     }
 
     _map_data._signals = std::move(_temp_signal_container);
+  }
+
+  void MapBuilder::SolveControllerAndJuntionReferences() {
+    for(const auto& junction : _map_data._junctions) {
+      for(const auto& controller : junction.second._controllers) {
+        auto it = _map_data._controllers.find(controller);
+        DEBUG_ASSERT(it != _map_data._controllers.end());
+        it->second->_junctions.insert(junction.first);
+        for(const auto & signal : it->second->_signals) {
+          auto signal_it = _map_data._signals.find(signal);
+          signal_it->second->_controllers.insert(controller);
+        }
+      }
+    }
   }
 
   void MapBuilder::CreateJunctionBoundingBoxes(Map &map) {
@@ -817,6 +841,35 @@ namespace road {
       junction->_bounding_box = carla::geom::BoundingBox(location, extent);
     }
   }
+
+void MapBuilder::CreateController(
+  const ContId controller_id,
+  const std::string controller_name,
+  const uint32_t controller_sequence,
+  const std::set<road::SignId>&& signals) {
+
+    // Add the Controller to MapData
+    auto controller_pair = _map_data._controllers.emplace(
+      std::make_pair(
+          controller_id,
+          std::make_unique<Controller>(controller_id, controller_name, controller_sequence)));
+
+    DEBUG_ASSERT(controller_pair.first != _map_data._controllers.end());
+    DEBUG_ASSERT(controller_pair.first->second);
+
+    // Add the signals owned by the controller
+    controller_pair.first->second->_signals = std::move(signals);
+
+    // Add ContId to the signal owned by this Controller
+    auto& signals_map = _map_data._signals;
+    for(auto signal: signals) {
+      auto it = signals_map.find(signal);
+      if(it != signals_map.end()) {
+        it->second->_controllers.insert(signal);
+      }
+    }
+}
+
 
 } // namespace road
 } // namespace carla

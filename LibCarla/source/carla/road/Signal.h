@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -173,6 +173,10 @@ namespace road {
       return _transform;
     }
 
+    const std::set<ContId>& GetControllers() const {
+      return _controllers;
+    }
+
   private:
     friend MapBuilder;
 
@@ -217,6 +221,8 @@ namespace road {
     std::vector<SignalDependency> _dependencies;
 
     geom::Transform _transform;
+
+    std::set<ContId> _controllers;
   };
 
 } // road
