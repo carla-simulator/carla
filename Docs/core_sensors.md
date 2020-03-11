@@ -24,7 +24,7 @@ The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of a
 
 Despite their differences, the way the user manages every sensor is quite similar. 
 
-#### Setting
+### Setting
 
 As with every other actor, the first step is to find the proper blueprint in the library and set specific attributes to get the desired results. This is essential when handling sensors, as their capabilities depend on the way these are set. Their attributes are detailed in the [sensors' reference](ref_sensors.md). 
 
@@ -40,7 +40,7 @@ blueprint.set_attribute('fov', '110')
 blueprint.set_attribute('sensor_tick', '1.0')
 ``` 
 
-#### Spawning
+### Spawning
 
 Sensors are also spawned like any other actor, only this time the two optional parameters, `attachment_to` and `attachment_type` are crucial. They should be attached to another actor, usually a vehicle, to follow it around and gather the information regarding its surroundings.  
 There are two types of attachment:  
@@ -55,7 +55,7 @@ sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 !!! Important
     When spawning an actor with attachment, remember that its location should be relative to its parent, not global. 
 
-#### Listening
+### Listening
 
 Every sensor has a [`listen()`](python_api.md#carla.Sensor.listen) method that is called every time the sensor retrieves data.  
 This method has one argument: `callback`, which is a [lambda expression](https://www.w3schools.com/python/python_lambda.asp) of a function, defining what should the sensor do when data is retrieved.  
@@ -94,7 +94,7 @@ Sensor data differs a lot between sensor types, but it is always tagged with:
 ---
 ## Types of sensors  
  
-#### Cameras
+### Cameras
 
 These sensors take a shot of the world from their point of view and then use the helper class to alter this image and provide different types of information.  
 __Retrieve data:__ every simulation step.  
@@ -107,7 +107,7 @@ __Retrieve data:__ every simulation step.
 
 <br>
 
-#### Detectors
+### Detectors
 
 Sensors that retrieve data when a parent object they are attached to registers a specific event in the simulation.  
 __Retrieve data:__ when triggered.  
@@ -120,7 +120,7 @@ __Retrieve data:__ when triggered.
 
 <br>
 
-#### Other
+### Other
 
 This group gathers sensors with different functionalities: navigation, measure physical properties of an object and provide 2D and 3D models of the scene.  
 __Retrieve data:__ every simulation step.  
@@ -150,7 +150,6 @@ Code recipes</a>
 * __Continue learning__: there are other more advanced features in CARLA such as rendering options, traffic manager, the recorder, and some more. Now that some fundaments on CARLA have been provided, it is a good moment to learn about these. 
  
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="adv_synchrony_timestep.md" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
 Synchrony and time-step</a>
@@ -160,7 +159,6 @@ Synchrony and time-step</a>
 * __Experiment freely__: but don't forget to take a look at the __References__ section of this documentation. They contain detailed information on the classes in the Python API, sensors and their outputs, and much more. 
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
@@ -171,7 +169,6 @@ Python API reference</a>
 * __Give your two cents__: share your thoughts. Any doubts, suggestions and ideas about CARLA are welcome in the forum.
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
