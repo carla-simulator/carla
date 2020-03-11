@@ -167,7 +167,8 @@ namespace client {
         _signal(signal),
         _distance_from_search(distance_from_search) {}
 
-    SharedPtr<Waypoint> _waypoint; /// waypoint where the signal is affecting
+    /// waypoint where the signal is affecting
+    SharedPtr<Waypoint> _waypoint;
 
     const road::element::RoadInfoSignal* _signal;
 

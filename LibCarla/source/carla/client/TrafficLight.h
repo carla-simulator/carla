@@ -12,10 +12,11 @@
 namespace carla {
 namespace client {
 
-  class TrafficLight : public TrafficSign {
+  class TrafficLight : public Actor {
+
   public:
 
-    explicit TrafficLight(ActorInitializer init) : TrafficSign(std::move(init)) {}
+    explicit TrafficLight(ActorInitializer init) : Actor(std::move(init)) {}
 
     void SetState(rpc::TrafficLightState state);
 
@@ -53,12 +54,14 @@ namespace client {
     /// received in the last tick.
     bool IsFrozen() const;
 
+    /// Returns the index of the pole in the traffic light group
     uint32_t GetPoleIndex();
 
     /// Return all traffic lights in the group this one belongs to.
     ///
     /// @note This function calls the simulator
     std::vector<SharedPtr<TrafficLight>> GetGroupTrafficLights();
+
   };
 
 } // namespace client

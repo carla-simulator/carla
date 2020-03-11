@@ -57,7 +57,7 @@ namespace traffic_manager {
     /// Map containing % of keep right rule.
     AtomicMap<ActorId, float> perc_keep_right;
     /// Synchronous mode switch.
-    std::atomic<bool> synchronous_mode;
+    std::atomic<bool> synchronous_mode {false};
     /// Distance Margin
     std::atomic<float> distance_margin {2.0};
 

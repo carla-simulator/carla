@@ -98,6 +98,7 @@ def main():
 
         if args.sync:
             settings = world.get_settings()
+            traffic_manager.set_synchronous_mode(True)
             if not settings.synchronous_mode:
                 synchronous_master = True
                 settings.synchronous_mode = True
