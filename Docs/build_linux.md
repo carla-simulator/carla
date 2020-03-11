@@ -1,17 +1,17 @@
 # Linux build
 
-  * [__Linux build command summary__](#linux-build-command-summary)  
-  * [__Requirements__](#requirements)  
+* [__Linux build command summary__](#linux-build-command-summary)  
+* [__Requirements__](#requirements)  
 	* System specifics
 	* Dependencies 
-  * [__GitHub__](#github)  
+* [__GitHub__](#github)  
 	* Create a GitHub account  
 	* Install git  
 	* Link GitHub and Unreal Engine 
-  * [__Unreal Engine__](#unreal-engine)
+* [__Unreal Engine__](#unreal-engine)
 	* Download UE4.22  
 	* Build UE4.22  
-  * [__CARLA build__](#carla-build)  
+* [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
 	* Set the environment variable 
@@ -91,15 +91,15 @@ python3 spawn_npc.py
 ---
 ## Requirements
 
-#### System specifics
+### System specifics
 
-  * __Ubuntu 16.04 or later.__ Currently migrating to Ubuntu 18.
-  * __30GB disk space.__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.
-  * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning. 
-  * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Be sure neither the firewall nor any other application block these. 
+* __Ubuntu 16.04 or later.__ Currently migrating to Ubuntu 18.  
+* __30GB disk space.__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.  
+* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning.  
+* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Be sure neither the firewall nor any other application block these.  
 
 
-#### Dependencies
+### Dependencies
 
 CARLA needs many dependencies to run. Some of them are built automatically during this process, such as *Boost.Python*. Others are binaries that should be installed before starting the build (*cmake*, *clang*, different versions of *Python* and much more). In order to do so, run the commands below in a terminal window. 
 
@@ -174,15 +174,15 @@ In case something went wrong, it is related with Unreal Engine There is not much
 ## CARLA build
 The system should be ready to start building CARLA. Just for clarity, a brief summary so far.  
 
-  * Minimum technical requirements to run CARLA are suitable.
-  * Dependencies have been properly installed.
-  * GitHub account is ready. 
-  * Unreal Engine 4.22 runs smooth.
+* Minimum technical requirements to run CARLA are suitable.  
+* Dependencies have been properly installed.  
+* GitHub account is ready.  
+* Unreal Engine 4.22 runs smooth.  
 
 !!! Note
     Downloading aria2 with `sudo apt-get install aria2` will speed up the following commands.  
 
-#### Clone repository
+### Clone repository
 
 <div class="build-buttons">
 <p>
@@ -201,7 +201,7 @@ Now the latest content for the project, known as `master` branch in the reposito
 !!! Note
     The `master` branch contains the latest fixes and features. Stable code is inside the `stable` and previous CARLA versions have their own branch. Always remember to check the current branch in git with the command `git branch`. 
 
-#### Get assets
+### Get assets
 
 Only the assets package is yet to be donwloaded. These are stored separately to make the repository a bit lighter. CARLA cannot be built without the assets. There is a script that downloads and extracts the latest content version. The package is >3GB, so downloading it may take some time.  
 
@@ -217,7 +217,7 @@ Run the script to get the assets.
     To get the assets currently in development, visit [Update CARLA](build_update.md#get-development-assets) and read __Get development assets__. 
 
 
-#### Set the environment variable
+### Set the environment variable
 
 This is necessary for CARLA to find the Unreal Engine 4.22 installation folder.
 
@@ -227,7 +227,7 @@ export UE4_ROOT=~/UnrealEngine_4.22
 
 The variable should be added to `~/.bashrc` or `~/.profile` to be set persistently session-wide. Otherwise, it will only be accessible from the current shell.
 
-#### make CARLA
+### make CARLA
 
 The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder.  
 
@@ -235,13 +235,13 @@ The last step is to finally build CARLA. There are different `make` commands to 
     Make sure to run __make launch__ to prepare the server and __make PythonAPI__ for the client.  
     Alternatively __make libcarla__ will prepare the CARLA library to be imported anywhere. 
 
-  * __make launch__ compiles the server simulator and launches Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
+* __make launch__ compiles the server simulator and launches Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
 ```sh
 make launch
 ```  
 The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.  
 
-  * __make PythonAPI__ compiles the API client, necessary to grant control over the simulation. It is only needed the first time. Remember to run it again when updating CARLA. Scripts will be able to run after this command is executed. The following example will spawn some life into the town. 
+* __make PythonAPI__ compiles the API client, necessary to grant control over the simulation. It is only needed the first time. Remember to run it again when updating CARLA. Scripts will be able to run after this command is executed. The following example will spawn some life into the town. 
 
 ```sh
 make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
@@ -251,14 +251,37 @@ make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
 
 Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.  
 
-| Command | Description |
-| --- | --- |
-| `make help` | Prints all available commands. |
-| `make launch` | Launches CARLA server in Editor window. |
-| `make PythonAPI` | Builds the CARLA client. |
-| `make package` | Builds CARLA and creates a packaged version for distribution. |
-| `make clean` | Deletes all the binaries and temporals generated by the build system. |
-| `make rebuild` | make clean and make launch both in one command. |  
+<table class ="defTable">
+<thead>
+<th>Command</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>make help</code> </td>
+<td>Prints all available commands.</td>
+</tr>
+<tr>
+<td><code>make launch</code></td>
+<td>Launches CARLA server in Editor window.</td>
+</tr>
+<tr>
+<td><code>make PythonAPI</code></td>
+<td>Builds the CARLA client.</td>
+</tr>
+<tr>
+<td><code>make package</code></td>
+<td>Builds CARLA and creates a packaged version for distribution.</td>
+</tr>
+<tr>
+<td><code>make clean</code></td>
+<td>Deletes all the binaries and temporals generated by the build system.</td>
+</tr>
+<tr>
+<td><code>make rebuild</code></td>
+<td>make clean and make launch both in one command.</td>
+</tbody>
+</table>
 
 ---
 <br>
