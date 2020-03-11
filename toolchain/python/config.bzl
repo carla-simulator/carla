@@ -27,25 +27,32 @@ def _find_pythons_linux(rctx):
         } for version in result.stdout.strip().split(" ")]
 
 
+def _get_wheel_suffix(rctx, python_interpreter):
+    script = rctx.path(Label("//toolchain/python:scripts/print_wheel_suffix.py"))
+    result = rctx.execute([python_interpreter, script])
+    if result.return_code != 0:
+        fail("failed to run {}".format(script))
+    return result.stdout.strip()
+
+
 def _impl(rctx):
     pythons = _find_pythons_linux(rctx) # @todo Linux only.
     pythons = [p for p in pythons if p["version"] not in rctx.attr.exclude_versions]
     if not pythons:
         fail("Failed to find Python installation (excluding = {}).".format(rctx.attr.exclude_versions))
 
-    rctx.file("BUILD")
-    rctx.template(
-        "rules.bzl",
-        Label("//toolchain/python:rules.bzl.tpl"),
-        {"%{python_all_versions}": str([p["version"] for p in pythons])},
-        executable=False,
-    )
+    all_versions_info = {}
 
     for python in pythons:
-
         version = python["version"]
         version_flag = "PY{}".format(version.split(".")[0])
+        interpreter = python["interpreter"]
         root = "python{}".format(version)
+
+        all_versions_info[version] = {
+            "wheel_suffix": _get_wheel_suffix(rctx, interpreter),
+            "egg_suffix": "py{}-linux-x86_64.egg".format(version) # @todo Linux only.
+        }
 
         rctx.symlink(
             python["include"],
@@ -58,7 +65,7 @@ def _impl(rctx):
             "%{python_version}": version,
             "%{python_version_flag}": version_flag,
             "%{python_version_flag_lowercase}": version_flag.lower(),
-            "%{python_interpreter_path}": python["interpreter"],
+            "%{python_interpreter_path}": interpreter,
         }
 
         rctx.template(
@@ -67,6 +74,14 @@ def _impl(rctx):
             substitutions,
             executable=False,
         )
+
+    rctx.file("BUILD")
+    rctx.template(
+        "rules.bzl",
+        Label("//toolchain/python:rules.bzl.tpl"),
+        {"%{python_all_versions_info}": str(all_versions_info)},
+        executable=False,
+    )
 
 
 find_local_python_repositories = repository_rule(

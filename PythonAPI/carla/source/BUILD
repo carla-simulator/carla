@@ -28,6 +28,7 @@ for_each_py_version(
     deps = [
         ":libcarla-py%{py_version}.so.includes",
     ],
+    visibility = ["//visibility:public"],
 )
 
 for_each_py_version(
