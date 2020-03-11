@@ -4,9 +4,9 @@ Welcome to the CARLA documentation.
 
 This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.  
 
-* __Install CARLA.__ Either follow the [Quick start installation](start_quickstart.md) to get a CARLA release or [make the build](build_linux.md) for a desired platform. 
-* __Start using CARLA.__ The section titled [First steps](core_concepts.md) is an introduction to the most important concepts.
-* __Check the API.__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
+* __Install CARLA.__ Either follow the [Quick start installation](start_quickstart.md) to get a CARLA release or [make the build](build_linux.md) for a desired platform.  
+* __Start using CARLA.__ The section titled [First steps](core_concepts.md) is an introduction to the most important concepts.  
+* __Check the API.__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.  
 
 The CARLA forum is available to post any doubts or suggestions that may arise during the reading.  
 <div class="build-buttons">

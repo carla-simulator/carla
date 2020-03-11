@@ -1,14 +1,14 @@
 # Quick start
 
-  * __[Installation summary](#installation-summary)__
-  * __[Requirements](#requirements)__
-  * __[Downloading CARLA](#downloading-carla)__
+* __[Installation summary](#installation-summary)__  
+* __[Requirements](#requirements)__  
+* __[Downloading CARLA](#downloading-carla)__  
 	* a) deb CARLA installation  
 	* b) GitHub repository installation  
-  * __[Running CARLA](#running-carla)__
+* __[Running CARLA](#running-carla)__  
 	* Command-line options  
-  * __[Updating CARLA](#updating-carla)__
-  * __[Follow-up](#follow-up)__
+* __[Updating CARLA](#updating-carla)__  
+* __[Follow-up](#follow-up)__  
 
 ---
 ## Installation summary
@@ -53,12 +53,12 @@ python3 spawn_npc.py
 The quick start installation uses a pre-packaged version of CARLA. The content is comprised in a boundle that can run automatically with no build installation needed. The API can be accesseded fully but advanced customization and development options are unavailable.  
 The requirements are simpler than those for the build installation.  
 
-  * __Server side.__ A 4GB minimum GPU will be needed to run a highly realistic environment. A dedicated GPU is highly advised for machine learning. 
-  * __Client side.__ [Python](https://www.python.org/downloads/) is necessary to access the API via command line. Also, a good internet connection and two TCP ports (2000 and 2001 by default). 
-  * __System requirements.__ Any 64-bits OS should run CARLA.
-  * __Other requirements.__  Two Python modules: [Pygame](https://www.pygame.org/download.shtml) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
+* __Server side.__ A 4GB minimum GPU will be needed to run a highly realistic environment. A dedicated GPU is highly advised for machine learning.  
+* __Client side.__ [Python](https://www.python.org/downloads/) is necessary to access the API via command line. Also, a good internet connection and two TCP ports (2000 and 2001 by default).  
+* __System requirements.__ Any 64-bits OS should run CARLA.  
+* __Other requirements.__  Two Python modules: [Pygame](https://www.pygame.org/download.shtml) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
 
-To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), run the following commands: 
+To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), run the following commands. 
 ```sh
  pip install --user pygame numpy
 ```    
@@ -68,7 +68,7 @@ To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), 
 The __deb installation__ is the easiest way to get the latest release in Linux.  
 __Download the GitHub repository__ to get either a specific release or the Windows version of CARLA.  
 
-#### a) deb CARLA installation
+### a) deb CARLA installation
 
 Add the repository to the system. 
 ```sh
@@ -82,7 +82,7 @@ sudo apt-get install carla
 cd /opt/carla
 ```
 
-#### b) GitHub repository installation
+### b) GitHub repository installation
 
 <div class="build-buttons">
 <p>
@@ -130,10 +130,10 @@ Now it is time to start running scripts. The following example will spawn some l
 
 There are some configuration options available when launching CARLA.  
 
-  * `-carla-rpc-port=N` Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  
-  * `-carla-streaming-port=N` Specify the port for sensor data streaming. Use 0 to get a random unused port. The second port will be automatically set to `N+1`.  
-  * `-quality-level={Low,Epic}` Change graphics quality level. Find out more in [rendering options](adv_rendering_options.md).  
-  * __[Full list of UE4 command-line arguments][ue4clilink].__ There is a lot of options provided by UE. However, not all of these will be available in CARLA.  
+* `-carla-rpc-port=N` Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  
+* `-carla-streaming-port=N` Specify the port for sensor data streaming. Use 0 to get a random unused port. The second port will be automatically set to `N+1`.  
+* `-quality-level={Low,Epic}` Change graphics quality level. Find out more in [rendering options](adv_rendering_options.md).  
+* __[Full list of UE4 command-line arguments][ue4clilink].__ There is a lot of options provided by UE. However, not all of these will be available in CARLA.  
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
 ```sh
@@ -148,27 +148,6 @@ The script `PythonAPI/util/config.py` provides for more configuration options.
 
 > ./config.py --help # Check all the available configuration options. 
 ```
-
-<table style="border: 1px solid #000000; text-align: left;">
-<thead style="background: #D0E4F5; border-bottom: 2px solid #EEEE00;">
-<th style="padding: 7px 7px;">head1</th>
-<th style="padding: 7px 7px;">head2</th>
-</thead>
-<tbody>
-<td style="padding: 7px 7px;">cell1_1</td><td style="padding: 7px 7px;">cell2_1</td>
-</tr>
-<tr>
-<td style="padding: 7px 7px;">cell1_2</td><td style="padding: 7px 7px;">cell2_2</td>
-</tbody>
-</table>
-
-<br>
-
-&nbsp;&nbsp;&nbsp;First Header&nbsp;&nbsp;&nbsp; | Second Header | Third Header
-:----------- |:-------------:| -----------:
-Left         | Center        | Right
-Left         | Center        | Right
-
 
 ---
 ## Updating CARLA
