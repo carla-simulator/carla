@@ -21,12 +21,12 @@ The client side consists of a sum of client modules controlling the logic of act
 
 That summarizes the basic structure of the simulator. Understanding CARLA though is much more than that, as many different features and elements coexist within it. Some of these are listed hereunder, as to gain perspective on the capabilities of what CARLA can achieve. 
 
-* __Traffic manager:__ A built-in system that takes control of the vehicles besides the one used for learning. It acts as a conductor provided by CARLA to recreate urban-like environments with realistic behaviours.
-* __Sensors:__ Vehicles rely on them to dispense information of their surroundings. In CARLA they are a specific kind of actor attached the vehicle and the data they receive can be retrieved and stored to ease the process. Currently the project supports different types of these, from cameras to radars, lidar and many more. 
-* __Recorder:__ This feature is used to reenact a simulation step by step for every actor in the world. It grants access to any moment in the timeline anywhere in the world, making for a great tracing tool.   
-* __ROS bridge and Autoware implementation:__ As a matter of universalization, the CARLA project ties knots and works for the integration of the simulator within other learning environments. 
-* __Open assets:__ CARLA facilitates different maps for urban settings with control over weather conditions and a blueprint library with a wide set of actors to be used. However, these elements can be customized and new can be generated following simple guidelines.  
-* __Scenario runner:__ In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on. These also set the basis for the [CARLA challenge](https://carlachallenge.org/), open for everybody to test their solutions and make it to the leaderboard.  
+* __Traffic manager.__ A built-in system that takes control of the vehicles besides the one used for learning. It acts as a conductor provided by CARLA to recreate urban-like environments with realistic behaviours.  
+* __Sensors.__ Vehicles rely on them to dispense information of their surroundings. In CARLA they are a specific kind of actor attached the vehicle and the data they receive can be retrieved and stored to ease the process. Currently the project supports different types of these, from cameras to radars, lidar and many more.  
+* __Recorder.__ This feature is used to reenact a simulation step by step for every actor in the world. It grants access to any moment in the timeline anywhere in the world, making for a great tracing tool.  
+* __ROS bridge and Autoware implementation.__ As a matter of universalization, the CARLA project ties knots and works for the integration of the simulator within other learning environments.  
+* __Open assets.__ CARLA facilitates different maps for urban settings with control over weather conditions and a blueprint library with a wide set of actors to be used. However, these elements can be customized and new can be generated following simple guidelines.  
+* __Scenario runner.__ In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on. These also set the basis for the [CARLA challenge](https://carlachallenge.org/), open for everybody to test their solutions and make it to the leaderboard.  
 
 ---
 ## The project
@@ -34,9 +34,9 @@ That summarizes the basic structure of the simulator. Understanding CARLA though
 CARLA grows fast and steady, widening the range of solutions provided and opening the way for the different approaches to autonomous driving. It does so while never forgetting its open-source nature. The project is transparent, acting as a white box where anybody is granted access to the tools and the development community. In that democratization is where CARLA finds its value.  
 Talking about how CARLA grows means talking about a community of developers who dive together into the thorough question of autonomous driving. Everybody is free to explore with CARLA, find their own solutions and then share their achievements with the rest of the community.  
   
-This documentation will be a companion along the way. The next page contains the __quickstart__ instructions for those eager to start. However, a build guide (Linux and Windows) is available for those who want to dive full-length into CARLA with all its features. 
+This documentation will be a companion along the way. The next page contains __[Quick start](start_quickstart.md)__ instructions for those eager to install a CARLA release. There is also a build guide for Linux and Windows. This will make CARLA from repository and allow to dive full-length into its features.  
 
-Welcome to CARLA.
+Welcome to CARLA.  
 
 <div class="build-buttons">
 <p>

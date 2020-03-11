@@ -9,7 +9,7 @@ nav:
 - Home: 'index.md'
 - Getting started:
   - 'Introduction': 'start_introduction.md'
-  - 'Quickstart installation': 'start_quickstart.md'
+  - 'Quick start installation': 'start_quickstart.md'
 - Building CARLA:
   - 'Linux build': 'build_linux.md'
   - 'Windows build': 'build_windows.md'

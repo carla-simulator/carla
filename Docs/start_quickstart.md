@@ -1,50 +1,88 @@
 # Quick start
 
-  * [Requirements](#requirements)
-  * [Downloading CARLA](#downloading-carla)
-	* a) apt-get installation  
-	* b) Repository download  
-  * [Running CARLA](#running-carla)
+* __[Installation summary](#installation-summary)__  
+* __[Requirements](#requirements)__  
+* __[Downloading CARLA](#downloading-carla)__  
+	* a) deb CARLA installation  
+	* b) GitHub repository installation  
+* __[Running CARLA](#running-carla)__  
 	* Command-line options  
-  * [Updating CARLA](#updating-carla)
-  * [Summary](#summary)
+* __[Updating CARLA](#updating-carla)__  
+* __[Follow-up](#follow-up)__  
+
+---
+## Installation summary
+
+<details>
+   <summary>
+    Show command line summary for the quick start installation
+   </summary>
+
+```sh
+# Install required modules Pygame and Numpy. 
+ pip install --user pygame numpy
+
+# Option A) deb package installation (only Linux)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
+sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
+sudo apt-get update
+sudo apt-get install carla
+cd /opt/carla/bin
+./CarlaUE4.sh
+
+# Option B) GitHub repository installation
+#   Go to: https://github.com/carla-simulator/carla/blob/master/Docs/download.md
+#   Download the desired package and additional assets. 
+#   Extract the package. 
+#   Extract the additional assets in `/Import`
+#   Run CARLA (Linux)
+./CarlaUE.sh
+#   Run CARLA (Windows)
+> CarlaUE4.exe
+
+# Run a script to test CARLA
+cd PythonAPI/examples
+python3 spawn_npc.py
+
+```
+</details>
 
 ---
 ## Requirements
 
-The quickstart installation uses a pre-packaged version of CARLA. This comprises the content in a boundle that can run automatically with no build installation needed. The API can be accesseded fully but in exchange, advanced customization and developing options are unavailable.  
-However, some requirements are still a must.  
+The quick start installation uses a pre-packaged version of CARLA. The content is comprised in a boundle that can run automatically with no build installation needed. The API can be accesseded fully but advanced customization and development options are unavailable.  
+The requirements are simpler than those for the build installation.  
 
-  * __Server side:__ A good GPU will be needed to run a highly realistic environment (4GB minimum). A dedicated GPU is highly advised for machine learning. 
-  * __Client side:__ The API is accessed via command line. To do so, [Python](https://www.python.org/downloads/) is necessary, and also a good internet connection and two TCP ports (2000 and 2001 by default). 
-  * __System requirements:__ Any 64-bits OS should run the corresponding version of CARLA.
-  * __Other requirements:__  Only two specific Python modules: [Pygame](https://www.pygame.org/download.shtml), to create graphics directly with Python and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
+* __Server side.__ A 4GB minimum GPU will be needed to run a highly realistic environment. A dedicated GPU is highly advised for machine learning.  
+* __Client side.__ [Python](https://www.python.org/downloads/) is necessary to access the API via command line. Also, a good internet connection and two TCP ports (2000 and 2001 by default).  
+* __System requirements.__ Any 64-bits OS should run CARLA.  
+* __Other requirements.__  Two Python modules: [Pygame](https://www.pygame.org/download.shtml) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
 
-If you have [pip](https://pip.pypa.io/en/stable/installing/) in your system, you can geth both modules simply by running the following commands: 
+To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), run the following commands. 
 ```sh
  pip install --user pygame numpy
 ```    
 ---
 ## Downloading CARLA
 
-The easiest way to get the latest release in Linux is using the __apt repository__.  
-To get either a specific release or get the Windows version of CARLA: __download the repository__.  
-Both methods will set CARLA ready to run. 
+The __deb installation__ is the easiest way to get the latest release in Linux.  
+__Download the GitHub repository__ to get either a specific release or the Windows version of CARLA.  
 
-<h4>a) apt-get CARLA 0.9.7</h4>
+### a) deb CARLA installation
 
-First, add the repository to the system: 
+Add the repository to the system. 
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
 sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
 ```
-Then, simply install it. CARLA will be in the `/opt/` folder, where other software such as ROS install themselves: 
+Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
 sudo apt-get update
 sudo apt-get install carla
+cd /opt/carla
 ```
 
-<h4>b) Downloading the repository</h4>
+### b) GitHub repository installation
 
 <div class="build-buttons">
 <p>
@@ -53,77 +91,75 @@ sudo apt-get install carla
 </p>
 </div>
 
-The repository contains the different versions of the simulator available. The _development_ and _stable_ sections, contain the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable (developers are currently working with this build). If you want a more robust version, you may search for the latest tagged version.
+The repository contains the different versions of the simulator available. _Development_ and _stable_ sections list the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable.  
 
-!!! note
-    Latest Windows release is __CARLA 0.9.5__, but this is to be updated soon. 
+There may be many files per release. The package is a compressed file named as __CARLA_version.number__. Other elements such as __Town06_0.9.5.tar.gz__ are additional assets.
 
-There may be many files per release. The package is named as __CARLA_version.number__ (compressed file format _.tar.gz_ for Linux and _.zip_ for Windows). Other elements such as __Town06_0.9.5.tar.gz__ are additional assets for Linux releases.
-
-Download and extract the release in a folder of your choice. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples.  
-If you downloaded any additional assets in Linux, move them to the _Import_ folder that has appeared (there is no need to extract them). Open a terminal in the folder where you extracted CARLA and run the script _ImportAssets_ to get the additional content automatically: 
+Download and extract the release file. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples.  
+Move any additional assets to the _Import_ folder in the release and extract them. The script _ImportAssets_ in the main CARLA folder should extract these automatically.  
 
 ```sh
-./ImportAssets.sh
+> cd ~/carla
+> ./ImportAssets.sh
 ```
 
 ---
 ## Running CARLA
 
-Open a terminal in the folder where CARLA was extracted. The following command will execute the package file and start the simulation:
+Open a terminal in the main CARLA folder. Run the following command to execute the package file and start the simulation:
 
 ```sh
-Linux:
-./CarlaUE4.sh
-
-Windows:
-CarlaUE4.exe
+# Linux:
+> ./CarlaUE4.sh
+# Windows:
+> CarlaUE4.exe
 ```
 !!! Important
-    In the __apt-get__ installation, `CarlaUE4.sh` can be found in `/opt/carla/bin/`, instead of the main `/carla/` folder where it normally is. 
+    In the __deb installation__, `CarlaUE4.sh` will be in `/opt/carla/bin/`, instead of the main `/carla/` folder where it normally is. 
 
-A window will open, containing a view over the city. This is the "spectator" view. To fly around the city use the mouse and WASD keys (while clicking). The simulator is now running as a server, waiting for a client app to connect and interact with the world.
+A window containing a view over the city will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys (while clicking). The server simulator is now running and waiting for a client to connect and interact with the world.  
+Now it is time to start running scripts. The following example will spawn some life into the city: 
 
-!!! note
-    If the firewall or any other application are blocking the TCP ports needed, these can be manually changed by adding to the previous command the argument: `-carla-port=N`, being `N` the desired port. The second will be automatically set to `N+1`.
+```sh
+# Go to the folder containing example scripts
+> cd PythonAPI/examples
 
+> python3 spawn_npc.py
+```
 #### Command-line options
 
-There are some configuration options available when launching CARLA:  
+There are some configuration options available when launching CARLA.  
 
-  * `-carla-rpc-port=N` Listen for client connections at port N, streaming port is set to N+1 by default.
-  * `-carla-streaming-port=N` Specify the port for sensor data streaming, use 0 to get a random unused port.
-  * `-quality-level={Low,Epic}` Change graphics quality level.
-  * [Full list of UE4 command-line arguments][ue4clilink] (note that many of these won't work in the release version).
+* `-carla-rpc-port=N` Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  
+* `-carla-streaming-port=N` Specify the port for sensor data streaming. Use 0 to get a random unused port. The second port will be automatically set to `N+1`.  
+* `-quality-level={Low,Epic}` Change graphics quality level. Find out more in [rendering options](adv_rendering_options.md).  
+* __[Full list of UE4 command-line arguments][ue4clilink].__ There is a lot of options provided by UE. However, not all of these will be available in CARLA.  
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
 ```sh
 > ./CarlaUE4.sh -carla-rpc-port=3000
 ```
-However, some may not be available (especially those provided by UE). For said reason, the script in `PythonAPI/util/config.py` provides for some more configuration options: 
+The script `PythonAPI/util/config.py` provides for more configuration options. 
+
 ```sh
 > ./config.py --no-rendering      # Disable rendering
 > ./config.py --map Town05        # Change map
 > ./config.py --weather ClearNoon # Change weather
-```
 
-To check all the available configurations, run the following command:
-
-```sh
-> ./config.py --help
+> ./config.py --help # Check all the available configuration options. 
 ```
 
 ---
 ## Updating CARLA
 
-The packaged version requires no updates. The content is bundled and thus, tied to a specific version of CARLA. Everytime there is a release, the repository will be updated. To run this latest or any other version, delete the previous one and repeat the installation steps with the desired. 
+The packaged version requires no updates. The content is bundled and thus, tied to a specific version of CARLA. Everytime there is a release, the repository will be updated. To run this latest or any other version, delete the previous and install the one desired.  
 
 ---
-## Summary
+## Follow-up
 
-That concludes the quickstart installation process. In case any unexpected error or issue occurs, the [CARLA forum](https://forum.carla.org/) is open to everybody. There is an _Installation issues_ category to post this kind of problems and doubts. 
+Thus concludes the quick start installation process. In case any unexpected error or issue occurs, the [CARLA forum](https://forum.carla.org/) is open to everybody. There is an _Installation issues_ category to post this kind of problems and doubts. 
 
-So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script and retrieve data. Thus will access all of the capabilities that CARLA provides. Next step should be  visiting the __First steps__ section to learn more about this. However, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](python_api.md).
+So far, CARLA should be operative in the desired system. Terminals will be used to contact the server via script, interact with the simulation and retrieve data. To do so, it is essential to understand the core concepts in CARLA. Read the __First steps__ section to learn on those. Additionally, all the information about the Python API regarding classes and its methods can be accessed in the [Python API reference](python_api.md).
 
 <div class="build-buttons">
 <p>
