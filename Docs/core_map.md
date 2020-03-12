@@ -1,13 +1,13 @@
 # 3rd. Maps and navigation
 
-After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it. 
+After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.  
 
-  * [__The map__](#the-map)  
+* [__The map__](#the-map)  
 	* Map changing  
 	* Lanes  
 	* Junctions  
 	* Waypoints  
-  * [__Map navigation__](#map-navigation)
+* [__Map navigation__](#map-navigation)  
 
 ---
 ## The map
@@ -18,16 +18,16 @@ The Python API provides a higher level querying system to navigate these roads. 
 ### Changing the map
 
 This was briefly mentioned in [1st. World and client](core_world.md), so let's expand a bit on it: __To change the map, the world has to change too__. Everything will be rebooted and created from scratch, besides the Unreal Editor itself.  
-Using `reload_world()` creates a new instance of the world with the same map while `load_world()` is used to change the current one:  
+Using `reload_world()` creates a new instance of the world with the same map while `load_world()` is used to change the current one.  
 
 ```py
 world = client.load_world('Town01')
 ```
-The client can also get a list of available maps. Each map has a `name` attribute that matches the name of the currently loaded city, e.g. _Town01._:
+The client can also get a list of available maps. Each map has a `name` attribute that matches the name of the currently loaded city, e.g. _Town01._.
 ```py
 print(client.get_available_maps())
 ```
-So far there are seven different maps available. Each of these has a specific structure or unique features that are useful for different purposes, so a brief sum up on these: 
+So far there are seven different maps available. Each of these has a specific structure or unique features that are useful for different purposes, so a brief sum up on these. 
 
 |Town | Summary |
 | -- | -- |
@@ -47,7 +47,7 @@ Users can also [customize a map](tuto_A_map_customization.md) or even [create a 
 ### Lanes
 
 The different types of lane as defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API in [carla.LaneType](python_api.md#carla.LaneType). The surrounding lane markings for each lane can also be accessed using [carla.LaneMarking](python_api.md#carla.LaneMarkingType).  
-A lane marking is defined by: a [carla.LaneMarkingType](python_api.md#carla.LaneMarkingType) and a [carla.LaneMarkingColor](python_api.md#carla.LaneMarkingColor), a __width__ to state thickness and a variable stating lane changing permissions with [carla.LaneChange](python_api.md#carla.LaneChange).  
+A lane marking is defined by a [carla.LaneMarkingType](python_api.md#carla.LaneMarkingType) and a [carla.LaneMarkingColor](python_api.md#carla.LaneMarkingColor), a __width__ to state thickness and a variable stating lane changing permissions with [carla.LaneChange](python_api.md#carla.LaneChange).  
 
 Both lanes and lane markings are accessed by waypoints to locate a vehicle within the road and aknowledge traffic permissions.  
 
@@ -63,7 +63,7 @@ lane_change = waypoint.lane_change
 ### Junctions
 
 To ease managing junctions with OpenDRIVE, the [carla.Junction](python_api.md#carla.Junction) class provides for a bounding box to state whereas lanes or vehicles are inside of it.  
-There is also a method to get a pair of waypoints per lane determining the starting and ending point inside the junction boundaries for each lane:  
+There is also a method to get a pair of waypoints per lane determining the starting and ending point inside the junction boundaries for each lane.  
 ```py
 waypoints_junc = my_junction.get_waypoints()
 ```
@@ -76,7 +76,7 @@ Each waypoint contains a [carla.Transform](python_api.md#carla.Transform) summar
 !!! Note
     Due to granularity, waypoints closer than __2cm within the same road__ will share the same `id`. 
 
-Besides that, each waypoint also contains some information regarding the __lane__ it is contained in and its left and right __lane markings__ and a boolean to determine when it is inside a junction: 
+Besides that, each waypoint also contains some information regarding the __lane__ it is contained in and its left and right __lane markings__ and a boolean to determine when it is inside a junction.  
 
 ```py
 inside_junction = waypoint.is_junction()
@@ -85,9 +85,9 @@ width = waypoint.lane_width
 right_lm_color = waypoint.right_lane_marking.color
 ```
 
-Finally regarding navigation, waypoints have a set of methods to ease the flow inside the road:  
+Finally regarding navigation, waypoints have a set of methods to ease the flow inside the road.  
 The `next(d)` creates new waypoint at an approximate distance `d` following the direction of the current lane, while `previous(d)` will do so on the opposite direction.  
-`next_until_lane_end(d)` and `previous_until_lane_start(d)` will use said distance to find a list of equally distant waypoints contained in the lane. All of these methods follow traffic rules to determine only places where the vehicle can go:
+`next_until_lane_end(d)` and `previous_until_lane_start(d)` will use said distance to find a list of equally distant waypoints contained in the lane. All of these methods follow traffic rules to determine only places where the vehicle can go.
 ```py
 # Disable physics, in this example the vehicle is teleported.
 vehicle.set_simulate_physics(False)
@@ -101,23 +101,23 @@ while True:
 !!! Note
     These methods return a list. If there is more than one possible location (for example at junctions where the lane diverges), the returned list will contain as many waypoints. 
 
-Waypoints can also find their equivalent at the center of an adjacent lane (if said lane exists) using `get_right_lane()` and `get_left_lane()`. This is useful to find the next waypoint on a neighbour lane to then perform a lane change: 
+Waypoints can also find their equivalent at the center of an adjacent lane (if said lane exists) using `get_right_lane()` and `get_left_lane()`. This is useful to find the next waypoint on a neighbour lane to then perform a lane change. 
 
 
 ---
 ## Map Navigation
 
-The instance of the map is provided by the world. Once it is retrieved, it provides acces to different methods that will be useful to create routes and make vehicles roam around the city and reach goal destinations:  
+The instance of the map is provided by the world. Once it is retrieved, it provides acces to different methods that will be useful to create routes and make vehicles roam around the city and reach goal destinations.  
 ```py
 map = world.get_map()
 ```
 
-* __Get recommended spawn points for vehicles__: assigned by developers with no ensurance of the spot being free: 
+* __Get recommended spawn points for vehicles.__ assigned by developers with no ensurance of the spot being free: 
 ```py
 spawn_points = world.get_map().get_spawn_points()
 ```
 
-* __Get a waypoint__: returns the closest waypoint for a specific location in the simulation or the one belonging to a certain `road_id`, `lane_id` and `s` in OpenDRIVE:
+* __Get a waypoint.__ returns the closest waypoint for a specific location in the simulation or the one belonging to a certain `road_id`, `lane_id` and `s` in OpenDRIVE:
 ```py
 # Nearest waypoint on the center of a Driving or Sidewalk lane.
 waypoint01 = map.get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
@@ -125,29 +125,29 @@ waypoint01 = map.get_waypoint(vehicle.get_location(),project_to_road=True, lane_
 waypoint02 = map.get_waypoint_xodr(road_id,lane_id,s)
 ```
 
-* __Generate a collection of waypoitns__: to visualize the city lanes. Creates waypoints all over the map for every road and lane at an approximated distance between them:
+* __Generate a collection of waypoitns.__ to visualize the city lanes. Creates waypoints all over the map for every road and lane at an approximated distance between them:
 ```py
 waypoint_list = map.generate_waypoints(2.0)
 ```
 
-* __Generate road topology__: useful for routing. Returns a list of pairs (tuples) of waypoints. For each pair, the first element connects with the second one and both define the starting and ending point of each lane in the map:
+* __Generate road topology.__ useful for routing. Returns a list of pairs (tuples) of waypoints. For each pair, the first element connects with the second one and both define the starting and ending point of each lane in the map.
 ```py
 waypoint_tuple_list = map.get_topology()
 ```
 
-* __Simulation point to world coordinates__: transforms a certain location to world coordinates with latitude and longitude defined with the [carla.Geolocation](python_api.md#carla.Geolocation): 
+* __Simulation point to world coordinates.__ transforms a certain location to world coordinates with latitude and longitude defined with the [carla.Geolocation](python_api.md#carla.Geolocation). 
 ```py
 my_geolocation = map.transform_to_geolocation(vehicle.transform)
 ```
 
-* __Road information__: converts road information to OpenDRIVE format, and saved to disk:
+* __Road information.__ converts road information to OpenDRIVE format, and saved to disk:
 ```py
 info_map = map.to_opendrive()
 ```
 
 ---
 That is a wrap as regarding maps and navigation around the cities in CARLA.  
-The next step should be learning more about sensors, the different types and the data they retrieve. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading: 
+The next step should be learning more about sensors, the different types and the data they retrieve. Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading.  
 <div text-align: center>
 <div class="build-buttons">
 <p>

@@ -51,7 +51,7 @@ A client can connect and retrieve the current world fairly easily.
 
 ```py
 world = client.get_world()
-```
+
 
 The client can also get a list of available maps to change the current one. This will destroy the current world and create a new one.
 ```py
@@ -75,7 +75,7 @@ As for command batches, the latest sections in the Python API describe the [avai
 client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
 ```
 
-`apply_batch_sync()` is only available in [synchronous mode](synchrony_timestep.md). It returns a [command.Response](python_api.md#command.Response) per command applied.
+`apply_batch_sync()` is only available in [synchronous mode](adv_synchrony_timestep.md). It returns a [command.Response](python_api.md#command.Response) per command applied.
 
 ---
 ## The world
