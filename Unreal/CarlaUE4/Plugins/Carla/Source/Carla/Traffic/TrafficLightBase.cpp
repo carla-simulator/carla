@@ -292,14 +292,19 @@ TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
 
   if(TrafficLightComponent) {
     TArray<ATrafficLightBase *> result;
-    UTrafficLightController* TrafficLightController =
-      TrafficLightComponent->GetController();
-    check(TrafficLightController)
 
-    for(auto& TLComp : TrafficLightController->GetTrafficLights())
+    ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
+    check(Group)
+
+    for(auto& Controller : Group->GetControllers())
     {
-      result.Add(Cast<ATrafficLightBase>(GetOwner()));
+      for(auto& TLComp : Controller->GetTrafficLights())
+      {
+        result.Add(Cast<ATrafficLightBase>(TLComp->GetOwner()));
+      }
     }
+
+
 
     return result;
   }
