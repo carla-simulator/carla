@@ -27,6 +27,7 @@ namespace LocalizationConstants {
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
+  static const float PHYSICS_RADIUS = 50.0f;
 
 } // namespace LocalizationConstants
 
@@ -66,7 +67,8 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, 0.0);
     // Initializing srand.
     srand(static_cast<unsigned>(time(NULL)));
-
+    // Initializing kinematic update clock.
+    previous_update_instance = chr::system_clock::now();
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -74,6 +76,8 @@ namespace LocalizationConstants {
   void LocalizationStage::Action() {
 
     ScanUnregisteredVehicles();
+
+    UpdateSwarmState();
 
     // Selecting output frames based on selector keys.
     const auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
@@ -90,7 +94,7 @@ namespace LocalizationConstants {
       const Actor vehicle = actor_list.at(i);
       const ActorId actor_id = vehicle->GetId();
       const cg::Location vehicle_location = vehicle->GetLocation();
-      const float vehicle_velocity = vehicle->GetVelocity().Length();
+      const float vehicle_velocity = GetVelocity(actor_id).Length();
 
       // Initializing idle times.
       if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0) {
@@ -354,6 +358,9 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DataReceiver() {
+
+    hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+
     bool is_deleted_actors_present = false;
     std::set<uint32_t> world_actor_id;
     std::vector<ActorPtr> actor_list_to_be_deleted;
@@ -369,6 +376,7 @@ namespace LocalizationConstants {
       return filtered;
     };
 
+    // TODO: Combine this actor scanning logic with ScanUnregisteredActors()
     // Get all the actors.
     auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
 
@@ -378,14 +386,34 @@ namespace LocalizationConstants {
     // Building a set of vehicle ids in the world.
     for (const auto &actor : vehicles) {
       world_actor_id.insert(actor.GetId());
+
+      // Identify hero vehicle if currently not present
+      // and system is in hybrid physics mode.
+      if (hybrid_physics_mode && hero_actor == nullptr) {
+        Actor actor_ptr = actor.Get(episode_proxy_ls);
+        for (auto&& attribute: actor_ptr->GetAttributes()) {
+          if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+            hero_actor = actor_ptr;
+            break;
+          }
+        }
+      }
+    }
+
+    // Invalidate hero actor pointer if it is not alive anymore.
+    if (hybrid_physics_mode && hero_actor != nullptr
+        && world_actor_id.find(hero_actor->GetId()) == world_actor_id.end()) {
+      hero_actor = nullptr;
     }
 
     // Search for invalid/destroyed vehicles.
     for (auto &actor : actor_list) {
-      if (world_actor_id.find(actor->GetId()) == world_actor_id.end()) {
+      ActorId deletion_id = actor->GetId();
+      if (world_actor_id.find(deletion_id) == world_actor_id.end()) {
         actor_list_to_be_deleted.emplace_back(actor);
-        track_traffic.DeleteActor(actor->GetId());
-        last_lane_change_location.erase(actor->GetId());
+        track_traffic.DeleteActor(deletion_id);
+        last_lane_change_location.erase(deletion_id);
+        kinematic_state_map.erase(deletion_id);
       }
     }
 
@@ -543,7 +571,7 @@ namespace LocalizationConstants {
   {
 
     const ActorId actor_id = vehicle->GetId();
-    const float vehicle_velocity = vehicle->GetVelocity().Length();
+    const float vehicle_velocity = GetVelocity(actor_id).Length();
 
     // Waypoint representing the new starting point for the waypoint buffer
     // due to lane change. Remains nullptr if lane change not viable.
@@ -772,7 +800,7 @@ namespace LocalizationConstants {
     }
 
     const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-    if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
+    if (GetVelocity(actor->GetId()).Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
       idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
     }
 
@@ -825,6 +853,82 @@ namespace LocalizationConstants {
       return true;
     }
     return false;
+  }
+
+  void LocalizationStage::UpdateSwarmState() {
+
+    cg::Location hero_location;
+    if (hybrid_physics_mode && hero_actor != nullptr) {
+      hero_location = hero_actor->GetLocation();
+    }
+
+    float dt = std::numeric_limits<float>::infinity();
+    if (parameters.GetSynchronousMode()) {
+      dt = 0.05f;
+    } else {
+      TimePoint current_instance = chr::system_clock::now();
+      dt = (current_instance - previous_update_instance).count();
+    }
+
+    for (const Actor &actor: actor_list) {
+
+      ActorId actor_id = actor->GetId();
+      cg::Location vehicle_location = actor->GetLocation();
+
+      if (kinematic_state_map.find(actor_id) == kinematic_state_map.end()) {
+        kinematic_state_map.insert({actor_id, KinematicState{true, vehicle_location, cg::Vector3D()}});
+      }
+
+
+      // Check if current actor is in range of hero actor.
+      bool in_range_of_hero_actor = false;
+      if (hybrid_physics_mode
+          && hero_actor != nullptr
+          && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(PHYSICS_RADIUS, 2))) {
+        in_range_of_hero_actor = true;
+      }
+
+      bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
+
+      kinematic_state_map.at(actor_id).physics_enabled = enable_physics;
+      kinematic_state_map.at(actor_id).location = vehicle_location;
+
+      // TODO : Apply command to enable or disable physics based on previous steps.
+      // Analyse how this might affects stages down stream which are still holding
+      // older data which would suggest physics is disabled or enabled according to
+      // the data that they hold.
+
+      if (enable_physics) {
+        kinematic_state_map.at(actor_id).velocity = actor->GetVelocity();
+        ////////////////////////////// DEBUG /////////////////////////////
+        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+                                "Velocity from simulator", false, {255u, 255u, 0u}, 0.05f);
+        //////////////////////////////////////////////////////////////////
+      } else {
+        cg::Vector3D vehicle_velocity = (vehicle_location - kinematic_state_map.at(actor_id).location)/dt;
+        kinematic_state_map.at(actor_id).velocity = vehicle_velocity;
+        ////////////////////////////// DEBUG /////////////////////////////
+        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+                                "Velocity interanally computed", false, {255u, 0u, 255u}, 0.05f);
+        //////////////////////////////////////////////////////////////////
+      }
+
+      ////////////////////////////// DEBUG /////////////////////////////
+      if (hybrid_physics_mode && in_range_of_hero_actor) {
+        debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 2),
+                               hero_location + cg::Location(0, 0, 2),
+                               0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
+      }
+      //////////////////////////////////////////////////////////////////
+    }
+  }
+
+  cg::Vector3D LocalizationStage::GetVelocity(ActorId actor_id) {
+    cg::Vector3D vel;
+    if (kinematic_state_map.find(actor_id) != kinematic_state_map.end()) {
+      vel = kinematic_state_map.at(actor_id).velocity;
+    }
+    return vel;
   }
 
 } // namespace traffic_manager
