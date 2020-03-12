@@ -995,7 +995,7 @@ namespace road {
     return std::make_pair(loc_r, loc_l);
   }
 
-  geom::Mesh Map::GenerateGeometry(double distance) const {
+  geom::Mesh Map::GenerateMesh(double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
     // Iterate each lane in each lane_section in each road
@@ -1058,6 +1058,69 @@ namespace road {
     return out_mesh;
   }
 
+  geom::Mesh Map::GetAllCrosswalkMesh() const {
+    geom::Mesh out_mesh;
+
+    // const std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
+
+    //
+    std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
+    std::transform(
+        crosswalk_vertex.begin(), crosswalk_vertex.end(), crosswalk_vertex.begin(),
+        [=](auto trans) {return trans + geom::Location(0, 0, 1);});
+    //
+
+    if (crosswalk_vertex.empty()) {
+      return out_mesh;
+    }
+
+    // Create a a list of triangle Fans with material "sidewalk"
+    out_mesh.AddMaterial("sidewalk");
+    size_t start_vertex_index = 0;
+    size_t fan_index = 1;
+    out_mesh.AddVertex(crosswalk_vertex[0]);
+    std::cout << "v " << 0 << std::endl;
+
+    for (size_t i = 1; i < crosswalk_vertex.size(); ++i) {
+      if (crosswalk_vertex[start_vertex_index] == crosswalk_vertex[i]) {
+        // Close triangle fan
+        out_mesh.AddIndex(start_vertex_index);
+        out_mesh.AddIndex(i - 2);
+        out_mesh.AddIndex(i - 1);
+        std::cout << "* " << start_vertex_index << " " << i - 2 << " " << i - 1 << std::endl;
+        // If is the last vertex of the list, is done
+        if (i >= crosswalk_vertex.size() - 1 ) {
+          break;
+        }
+        start_vertex_index = ++i;
+        fan_index = 0;
+      }
+
+      out_mesh.AddVertex(crosswalk_vertex[i]);
+      std::cout << "v " << fan_index << std::endl;
+      if (fan_index >= 2) {
+        // Vertex order is counter clockwise
+
+        // @todo Fix wrong index! It is using the raw index and it should
+        //  depend on start_vertex_index, something like:
+
+        // out_mesh.AddIndex(start_vertex_index);
+        // out_mesh.AddIndex(start_vertex_index + fan_index);
+        // out_mesh.AddIndex(start_vertex_index + fan_index + 1);
+
+        // instead of
+        out_mesh.AddIndex(start_vertex_index);
+        out_mesh.AddIndex(i - 1);
+        out_mesh.AddIndex(i);
+
+        std::cout << "  " << start_vertex_index << " " << i - 1 << " " << i << std::endl;
+      }
+      ++fan_index;
+    }
+
+    out_mesh.EndMaterial();
+    return out_mesh;
+  }
 
 } // namespace road
 } // namespace carla
