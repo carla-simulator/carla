@@ -17,42 +17,94 @@ CARLA forum</a>
 Comprises the information regarding an actor to be shared between ROS and CARLA.  
 The [CarlaActorList.msg](#carlaactorlist) message is a list of these items. 
 
-| Field   | Type   | Description |
-| ----------- | ------ | ----------- |
-| `id`        | uint32 | The ID of the actor. |
-| `parent_id` | uint32 | The ID of the parent actor. `0` if no parent available. |
-| `type`      | string | The identifier of the blueprint this actor was based on. |
-| `rolename`  | string | Role assigned to the actor when spawned. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>id</code> </td>
+<td>uint32</td>
+<td>The ID of the actor.</td>
+<tr>
+<td><code>parent_id</code> </td>
+<td>uint32</td>
+<td>The ID of the parent actor. `0` if no parent available.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this actor was based on.</td>
+<tr>
+<td><code>rolename</code> </td>
+<td>string</td>
+<td>Role assigned to the actor when spawned.</td>
+</tbody>
+</table>
+
 
 ---
 ## CarlaActorList.msg
 
 Contains a list of messages with some basic information for CARLA actors.
 
-| Field       | Type             | Description |
-| ----------- | ---------------- | ----------- |
-| `actors`    | [CarlaActorInfo](#carlaactorinfomsg)[] | List of messages with actors' information. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>actors</code> </td>
+<td><a href="#carlaactorinfomsg">CarlaActorInfo</a></td>
+<td>List of messages with actors' information.</td>
+</tobody>
+</table>
 
 ---
 ## CarlaCollisionEvent.msg
 
 Registers information regarding a collision event detected by the collision sensor of an actor.
 
-| Field            | Type                  | Description |
-| ---------------- | --------------------- | ----------- |
-| `header`       | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `other_actor_id` | uint32                | ID of the actor against whom the collision was detected.  |
-| `normal_impulse` | geometry_msgs/Vector3 | Vector representing resulting impulse from the collision. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">Header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>other_actor_id</code> </td>
+<td>uint32</td>
+<td>ID of the actor against whom the collision was detected.</td>
+<tr>
+<td><code>normal_impulse</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>Vector representing resulting impulse from the collision.</td>
+</tbody>
+</table>
+
 
 ---
 ## CarlaControl.msg
 
 These messages are used to control the simulation while in synchronous mode. The constant defined is translated as stepping commands.  
 
-| Field       | Type | Description |
-| ----------- | ---- | ----------- |
-| `command`   | int8 | __PLAY__=0 <br> __PAUSE__=1 <br> __STEP_ONCE__=2 |
-
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>command</code> </td>
+<td>int8</td>
+<td><b>PLAY</b>=0 <br> <b>PAUSE</b>=1 <br> <b>STEP_ONCE</b>=2</td>
+</tbody>
+</table>
 <br>
 
 !!! Important
@@ -63,39 +115,127 @@ These messages are used to control the simulation while in synchronous mode. The
 
 Messages sent to apply a control to a vehicle in both modes, autopilot and manual. These are published in a stack. 
 
-| Field               | Type    | Description |
-| ------------------- | ------- | ----------- |
-| `header`            | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `throttle`          | float32 | Scalar value to cotrol the vehicle throttle: __[0.0, 1.0]__ |
-| `steer`             | float32 | Scalar value to control the vehicle steering direction: __[-1.0, 1.0]__ to control the vehicle steering   |
-| `brake`             | float32 | Scalar value to control the vehicle brakes: __[0.0, 1.0]__       |
-| `hand_brake`        | bool    | If __True__, the hand brake is enabled. |
-| `reverse`           | bool    | If __True__, the vehicle will move reverse. |
-| `gear`              | int32   | Changes between the available gears in a vehicle. |
-| `manual_gear_shift` | bool    | If __True__, the gears will be shifted using `gear`. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">Header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>throttle</code> </td>
+<td>float32</td>
+<td>Scalar value to cotrol the vehicle throttle: <b>[0.0, 1.0]</b></td>
+<tr>
+<td><code>steer</code> </td>
+<td>float32</td>
+<td>Scalar value to control the vehicle steering direction: <b>[-1.0, 1.0]</b> to control the vehicle steering</td>
+<tr>
+<td><code>brake</code> </td>
+<td>float32</td>
+<td>Scalar value to control the vehicle brakes: <b>[0.0, 1.0]</b></td>
+<tr>
+<td><code>hand_brake</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the hand brake is enabled.</td>
+<tr>
+<td><code>reverse</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the vehicle will move reverse.</td>
+<tr>
+<td><code>gear</code> </td>
+<td>int32</td>
+<td>Changes between the available gears in a vehicle.</td>
+<tr>
+<td><code>manual_gear_shift</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the gears will be shifted using <code>gear</code>.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaEgoVehicleInfo.msg
 
 Contains some static information regarding a vehicle, mostly the attributes used to define the vehicle's physics.  
 
-| Field                                         | Type                                                    | Description |
-| --------------------------------------------- | ------------------------------------------------------- | ----------- |
-| `id`                                          | uint32                                                  | ID of the vehicle actor. |
-| `type`                                        | string                                                  | The identifier of the blueprint this vehicle was based on. |
-| `rolename`                                    | string                                                  | Role assigned to the vehicle. |
-| `wheels`                                      | [CarlaEgoVehicleInfoWheel](#carlaegovehicleinfowheel)[] | List of messages with information regarding wheels. |
-| `max_rpm`                                     | float32                                                 | Maximum RPM of the vehicle's engine. |
-| `moi`                                         | float32                                                 | Moment of inertia of the vehicle's engine. |
-| `damping_rate_full_throttle`                  | float32                                                 | Damping rate when the throttle is at maximum. |
-| `damping_rate_zero_throttle_clutch_engaged`   | float32                                                 | Damping rate when the throttle is zero with clutch engaged. |
-| `damping_rate_zero_throttle_clutch_disengaged`| float32                                                 | Damping rate when the throttle is zero with clutch disengaged. |
-| `use_gear_autobox`                            | bool                                                    | If __True__, the vehicle will have an automatic transmission. |
-| `gear_switch_time`                            | float32                                                 | Switching time between gears. |
-| `clutch_strength`                             | float32                                                 | The clutch strength of the vehicle. Measured in __Kgm^2/s__. |
-| `mass`                                        | float32                                                 | The mass of the vehicle measured in Kg. |
-| `drag_coefficient`                            | float32                                                 | Drag coefficient of the vehicle's chassis. |
-| `center_of_mass`                              | geometry_msgs/Vector3                                   | The center of mass of the vehicle. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>id</code> </td>
+<td>uint32</td>
+<td>ID of the vehicle actor.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this vehicle was based on.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this vehicle was based on.</td>
+<tr>
+<td><code>rolename</code> </td>
+<td>string</td>
+<td>Role assigned to the vehicle.</td>
+<tr>
+<td><code>wheels</code> </td>
+<td><a href="#carlaegovehicleinfowheel">CarlaEgoVehicleInfoWheel</a></td>
+<td>List of messages with information regarding wheels.</td>
+<tr>
+<td><code>max_rpm</code> </td>
+<td>float32</td>
+<td>Maximum RPM of the vehicle's engine.</td>
+<tr>
+<td><code>moi</code> </td>
+<td>float32</td>
+<td>Moment of inertia of the vehicle's engine.</td>
+<tr>
+<td><code>damping_rate_full_throttle</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is at maximum.</td>
+<tr>
+<td><code>damping_rate_zero_throttle</code><br><code>_clutch_engaged</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is zero with clutch engaged.</td>
+<tr>
+<td><code>damping_rate_zero_throttle</code><br><code>_clutch_disengaged</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is zero with clutch disengaged.</td>
+<tr>
+<td><code>use_gear_autobox</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the vehicle will have an automatic transmission.</td>
+<tr>
+<td><code>gear_switch_time</code> </td>
+<td>float32</td>
+<td>Switching time between gears.</td>
+<tr>
+<td><code>clutch_strength</code> </td>
+<td>float32</td>
+<td>The clutch strength of the vehicle. Measured in <b>Kgm^2/s</b>.</td>
+<tr>
+<td><code>mass</code> </td>
+<td>float32</td>
+<td>The mass of the vehicle measured in Kg.</td>
+<tr>
+<td><code>drag_coefficient</code> </td>
+<td>float32</td>
+<td>Drag coefficient of the vehicle's chassis.</td>
+<tr>
+<td><code>center_of_mass</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>The center of mass of the vehicle.</td>
+</tbody>
+</table>
+<br>
+
 
 ---
 ## CarlaEgoVehicleInfoWheel.msg
