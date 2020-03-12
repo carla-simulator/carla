@@ -68,6 +68,8 @@ namespace geom {
     // -- Mesh build methods ---------------------------------------------------
     // =========================================================================
 
+    static Mesh TriangleFan(const std::vector<vertex_type> &vertices);
+
     /// Appends a vertex to the vertices list.
     void AddVertex(vertex_type vertex);
 
@@ -110,6 +112,8 @@ namespace geom {
 
     const std::vector<vertex_type> &GetVertices() const;
 
+    size_t GetVerticesNum() const;
+
     const std::vector<normal_type> &GetNormals() const;
 
     const std::vector<index_type> &GetIndexes() const;
@@ -120,6 +124,12 @@ namespace geom {
 
     /// Returns the index of the last added vertex (number of vertices).
     size_t GetLastVertexIndex() const;
+
+    /// Merges two meshes into a single mesh
+    Mesh &operator+=(const Mesh &rhs);
+    Mesh &operator+(const Mesh &rhs);
+
+    friend Mesh operator+(const Mesh &lhs, const Mesh &rhs);
 
   private:
 

@@ -8,8 +8,10 @@
 
 #include <string>
 #include <sstream>
-#include <carla/geom/Math.h>
 #include <ios>
+
+#include <carla/geom/Math.h>
+#include <carla/geom/Location.h>
 
 namespace carla {
 namespace geom {
@@ -34,6 +36,24 @@ namespace geom {
 
     return true;
   }
+
+  /// 3     2
+  ///  #---#
+  ///  | / |
+  ///  #---#
+  /// 0     1
+  // static Mesh TriangleFan(const std::vector<geom::Location> &vertices) {
+  //   Mesh result;
+  //   for (const auto v : vertices) {
+  //     result.AddVertex(v);
+  //   }
+  //   for (size_t i = 2; i < vertices.size(); ++i) {
+  //     result.AddIndex(0);
+  //     result.AddIndex(i-1);
+  //     result.AddIndex(i);
+  //   }
+  //   return result;
+  // }
 
   void Mesh::AddVertex(vertex_type vertex) {
     _vertices.push_back(vertex);
@@ -190,12 +210,12 @@ namespace geom {
     return out.str();
   }
 
-  size_t Mesh::GetLastVertexIndex() const {
-    return _vertices.size();
-  }
-
   const std::vector<Mesh::vertex_type> &Mesh::GetVertices() const {
     return _vertices;
+  }
+
+  size_t Mesh::GetVerticesNum() const {
+    return _vertices.size();
   }
 
   const std::vector<Mesh::normal_type> &Mesh::GetNormals() const {
@@ -212,6 +232,67 @@ namespace geom {
 
   const std::vector<Mesh::material_type> &Mesh::GetMaterials() const {
     return _materials;
+  }
+
+  size_t Mesh::GetLastVertexIndex() const {
+    return _vertices.size();
+  }
+
+  Mesh &Mesh::operator+=(const Mesh &rhs) {
+    const size_t v_num = GetVerticesNum();
+    std::cout << "called operator+=(const Mesh &rhs)" << std::endl;
+
+    std::cout << "  initial Mesh vertex num: " << GetVerticesNum() << std::endl;
+    _vertices.insert(
+        _vertices.end(),
+        rhs.GetVertices().begin(),
+        rhs.GetVertices().end());
+    std::cout << "  final   Mesh vertex num: " << GetVerticesNum() << std::endl;
+
+    _normals.insert(
+        _normals.end(),
+        rhs.GetNormals().begin(),
+        rhs.GetNormals().end());
+
+    // std::transform(
+    //     rhs.GetIndexes().begin(),
+    //     rhs.GetIndexes().end(),
+    //     std::back_inserter(_indexes),
+    //     [=](size_t index) {return index + v_num;});
+
+    std::cout << "  initial Mesh index num: " << GetIndexes().size() << std::endl;
+    for (auto in : rhs.GetIndexes()) {
+      std::cout << "    added index: " << in + v_num << std::endl;
+      _indexes.emplace_back(in + v_num);
+    }
+    std::cout << "  final   Mesh index num: " << GetIndexes().size() << std::endl;
+
+    _uvs.insert(
+        _uvs.end(),
+        rhs.GetUVs().begin(),
+        rhs.GetUVs().end());
+
+    std::transform(
+        rhs.GetMaterials().begin(),
+        rhs.GetMaterials().end(),
+        std::back_inserter(_materials),
+        [=](MeshMaterial mat) {
+          mat.index_start += v_num;
+          mat.index_end += v_num;
+          return mat;
+        });
+
+    return *this;
+  }
+
+  // Mesh operator+(Mesh &lhs, const Mesh &rhs) {
+  //   return lhs += rhs;
+  // }
+
+  Mesh operator+(const Mesh &lhs, const Mesh &rhs) {
+    std::cout << "called operator+(const Mesh &lhs, const Mesh &rhs)" << std::endl;
+    Mesh m = lhs;
+    return m += rhs;
   }
 
 } // namespace geom
