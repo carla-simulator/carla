@@ -18,6 +18,7 @@
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
+#include <carla/sensor/data/DVSEventArray.h>
 
 #include <carla/sensor/s11n/RadarData.h>
 
@@ -93,6 +94,23 @@ namespace data {
     out << "RadarMeasurement(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", point_count=" << std::to_string(meas.GetDetectionAmount())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const DVSEvent &event) {
+    out << "Event(" << event.x
+        << ',' << event.y
+        << ',' << event.t
+        << ',' << event.pol << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const DVSEventArray &events) {
+    out << "EventArray(frame=" << events.GetFrame()
+        << ", timestamp=" << events.GetTimestamp()
+        << ", dimensions=" << events.GetWidth() << 'x' << events.GetHeight()
+        << ", number_of_events=" << events.size()
         << ')';
     return out;
   }
@@ -298,6 +316,126 @@ void export_sensor_data() {
     .def_readwrite("azimuth", &css::RadarDetection::azimuth)
     .def_readwrite("altitude", &css::RadarDetection::altitude)
     .def_readwrite("depth", &css::RadarDetection::depth)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+    class_<std::vector<csd::Color> >("ColorVector")
+    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<csd::Color> >)
+    .def("__len__", &std::vector<csd::Color>::size)
+    .def(vector_indexing_suite< std::vector<csd::Color> >())
+  ;
+
+  class_<std::vector<std::int64_t>>("IntVector")
+    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<std::int64_t> >)
+    .def("__len__", &std::vector<std::int64_t>::size)
+    .def(vector_indexing_suite< std::vector<std::int64_t> >())
+  ;
+
+  class_<std::vector<short>>("ShortVector")
+    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<short> >)
+    .def("__len__", &std::vector<short>::size)
+    .def(vector_indexing_suite< std::vector<short> >())
+  ;
+
+  class_<std::vector<std::vector<std::int64_t>> >("IntMatrix")
+    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<std::vector<std::int64_t>> >)
+    .def("__len__", &std::vector<std::vector<std::int64_t>>::size)
+    .def(vector_indexing_suite< std::vector<std::vector<std::int64_t>> >())
+  ;
+
+  class_<csd::DVSEvent>("DVSEvent")
+    .add_property("x", &csd::DVSEvent::x)
+    .add_property("y", &csd::DVSEvent::y)
+    .add_property("t", &csd::DVSEvent::t)
+    .add_property("pol", &csd::DVSEvent::pol)
+    .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
+    .add_property("width", &csd::DVSEventArray::GetWidth)
+    .add_property("height", &csd::DVSEventArray::GetHeight)
+    .add_property("fov", &csd::DVSEventArray::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::DVSEventArray>)
+    .def("__len__", &csd::DVSEventArray::size)
+    .def("__iter__", iterator<csd::DVSEventArray>())
+    .def("__getitem__", +[](const csd::DVSEventArray &self, size_t pos) -> csd::DVSEvent {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::DVSEventArray &self, size_t pos, csd::DVSEvent event) {
+      self.at(pos) = event;
+    })
+    .def("to_image", +[](const csd::DVSEventArray &self) -> std::vector<csd::Color> {
+      std::vector<csd::Color> img (self.GetHeight() * self.GetWidth());
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        size_t index = (self.GetWidth() * event.y) + event.x;
+        if (event.pol == true)
+        {
+          /** Blue is positive **/
+          img[index].b = 255u;
+        }
+        else
+        {
+          /** Red is negative **/
+          img[index].r = 255u;
+        }
+     }
+      return img;
+    })
+    .def("to_array", +[](const csd::DVSEventArray &self) -> std::vector<std::vector<std::int64_t>> {
+      std::vector<std::vector<std::int64_t>> array (self.size());
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        std::vector<std::int64_t> element = {static_cast<std::int64_t>(event.x), static_cast<std::int64_t>(event.y), static_cast<std::int64_t>(event.t), static_cast<std::int64_t>(event.pol)};
+        array[i] = element;
+      }
+      return array;
+    })
+
+    .def("to_array_x", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
+      std::vector<std::int64_t> array;
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        array.push_back(event.x);
+      }
+      return array;
+    })
+
+     .def("to_array_y", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
+      std::vector<std::int64_t> array;
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        array.push_back(event.y);
+      }
+      return array;
+    })
+      .def("to_array_t", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
+      std::vector<std::int64_t> array;
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        array.push_back(event.t);
+      }
+      return array;
+    })
+
+      .def("to_array_pol", +[](const csd::DVSEventArray &self) -> std::vector<short> {
+      std::vector<short> array;
+      for (size_t i=0; i<self.size(); ++i)
+      {
+        const csd::DVSEvent &event = self[i];
+        if (event.pol == true)
+          array.push_back(1);
+        else
+          array.push_back(-1);
+
+      }
+      return array;
+    })
     .def(self_ns::str(self_ns::self))
   ;
 }
