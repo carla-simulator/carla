@@ -104,6 +104,7 @@ pipeline
                                 {
                                     archiveArtifacts 'CarlaUE4.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
+                                    deleteDir()
                                 }
                             }
                         }
@@ -124,6 +125,7 @@ pipeline
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
                                 sh '''
                                     cd ~/carla-simulator.github.io
+                                    git fetch
                                     git checkout -B master origin/master
                                 '''
                                 sh 'make docs'
@@ -134,6 +136,13 @@ pipeline
                                     git commit -m "Updated c++ docs" || true
                                     git push
                                 '''
+                            }
+                        }
+                        stage('Cleanning')
+                        {
+                            steps
+                            {
+                                deleteDir()
                             }
                         }
                     }
@@ -227,21 +236,6 @@ pipeline
                 //         }
                 //     }
                 // }
-            }
-        }
-    }
-
-    post
-    {
-        always
-        {
-            node('build')
-            {
-                deleteDir()
-            }
-            node('gpu')
-            {
-                deleteDir()
             }
         }
     }
