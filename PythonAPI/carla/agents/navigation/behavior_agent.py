@@ -1,23 +1,21 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2018 Intel Labs.
-# authors: German Ros (german.ros@intel.com)
+# Copyright (c) # Copyright (c) 2018-2020 CVC.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+
 """ This module implements an agent that roams around a track following random
-waypoints and avoiding other vehicles.
-The agent also responds to traffic lights. """
+waypoints and avoiding other vehicles. The agent also responds to traffic lights,
+traffic signs, and has different possible configurations. """
 
 import random
 import numpy as np
 import carla
-from agents.navigation.behavior.base_behavior_agent import Agent
-from agents.navigation.behavior.local_planner_behavior import LocalPlanner, RoadOption
-from agents.navigation.behavior.global_route_planner_behavior import GlobalRoutePlanner
-from agents.navigation.behavior.global_route_planner_dao_behavior import GlobalRoutePlannerDAO
-from agents.navigation.behavior.types_behavior import Cautious, Aggressive, Normal
+from agents.navigation.agent import Agent
+from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.navigation.types_behavior import Cautious, Aggressive, Normal
 
 from agents.tools.misc import get_speed, positive
 
@@ -45,6 +43,7 @@ class BehaviorAgent(Agent):
         """
 
         super(BehaviorAgent, self).__init__(vehicle)
+        self.vehicle = vehicle
         self.ignore_traffic_light = ignore_traffic_light
         self._local_planner = LocalPlanner(self)
         self._grp = None
@@ -202,7 +201,7 @@ class BehaviorAgent(Agent):
 
         if (left_turn == carla.LaneChange.Left or left_turn ==
                 carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
+            new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=-1)
             if not new_vehicle_state:
                 print("Overtaking to the left!")
@@ -210,7 +209,7 @@ class BehaviorAgent(Agent):
                 self.set_destination(left_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
         elif right_turn == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
+            new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
                 print("Overtaking to the right!")
@@ -233,12 +232,12 @@ class BehaviorAgent(Agent):
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
 
-        behind_vehicle_state, behind_vehicle, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
+        behind_vehicle_state, behind_vehicle, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
             self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self.speed < get_speed(behind_vehicle):
             if (right_turn == carla.LaneChange.Right or right_turn ==
                     carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
+                new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
@@ -246,7 +245,7 @@ class BehaviorAgent(Agent):
                     self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
             elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._is_vehicle_hazard(waypoint, location, vehicle_list, max(
+                new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
@@ -271,15 +270,15 @@ class BehaviorAgent(Agent):
         vehicle_list = [v for v in vehicle_list if dist(v) < 45 and v.id != self.vehicle.id]
 
         if self.direction == RoadOption.CHANGELANELEFT:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
                 waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
         elif self.direction == RoadOption.CHANGELANERIGHT:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
                 waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
         else:
-            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
                 waypoint, location, vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=30)
 
@@ -316,13 +315,13 @@ class BehaviorAgent(Agent):
         walker_list = [w for w in walker_list if dist(w) < 10]
 
         if self.direction == RoadOption.CHANGELANELEFT:
-            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=-1)
         elif self.direction == RoadOption.CHANGELANERIGHT:
-            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=1)
         else:
-            walker_state, walker, distance = self._is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=60)
 
         return walker_state, walker, distance
