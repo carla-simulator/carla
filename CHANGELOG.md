@@ -1,3 +1,7 @@
+## CARLA 0.9.9
+
+  * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
+
 ## CARLA 0.9.8
 
   * Improved manual_control by adding realistic throttle and brake
