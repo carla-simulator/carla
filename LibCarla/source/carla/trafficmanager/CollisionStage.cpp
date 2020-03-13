@@ -49,12 +49,15 @@ namespace CollisionStageConstants {
     number_of_vehicles = 0u;
     // Initializing srand.
     srand(static_cast<unsigned>(time(NULL)));
+    // Clearing the Map
+    //vehicle_cache.clear();
   }
 
   CollisionStage::~CollisionStage() {}
 
   void CollisionStage::Action() {
 
+   //vehicle_cache.clear();
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over registered actors.
@@ -152,6 +155,9 @@ namespace CollisionStageConstants {
 
     // Cleaning geodesic boundaries from the last iteration.
     geodesic_boundaries.clear();
+
+    // Clearing the old chache.
+    //vehicle_cache.clear();
   }
 
   void CollisionStage::DataSender() {
@@ -168,7 +174,7 @@ namespace CollisionStageConstants {
                                           const SimpleWaypointPtr& junction_look_ahead) {
 
     bool hazard = false;
-
+    
     const cg::Vector3D reference_heading = reference_vehicle->GetTransform().GetForwardVector();
     cg::Vector3D reference_to_other = other_location - reference_location;
     reference_to_other = reference_to_other.MakeUnitVector();
@@ -206,24 +212,17 @@ namespace CollisionStageConstants {
                                           std::pow(parameters.GetDistanceToLeadingVehicle(reference_vehicle)
                                                    + inter_vehicle_length, 2.0f)))) {
 
-      const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
-      const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
-      const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
-      const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
-
-      const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-      const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
-
-      const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-      const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+    
+      GeometryComparisonCache cache = GetGeometryBetweenActors(reference_vehicle, other_vehicle,
+                                     reference_location, other_location);
 
       // Whichever vehicle's path is farthest away from the other vehicle gets
       // priority to move.
-      if (inter_geodesic_distance < 0.1 &&
-          ((inter_bbox_distance > 0.1 &&
-            reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
+      if (cache.inter_geodesic_distance < 0.1 &&
+          ((cache.inter_bbox_distance > 0.1 &&
+            cache.reference_vehicle_to_other_geodesic > cache.other_vehicle_to_reference_geodesic
             ) || (
-            inter_bbox_distance < 0.1 &&
+            cache.inter_bbox_distance < 0.1 &&
             (cg::Math::Dot(reference_heading, reference_to_other) >
             cg::Math::Dot(other_heading, other_to_reference))
           ))
@@ -439,6 +438,87 @@ namespace CollisionStageConstants {
           boundary[(i + 1) % boundary.size()] + cg::Location(0.0f, 0.0f, 1.0f),
           0.1f, {255u, 255u, 0u}, 0.05f);
     }
+  }
+
+GeometryComparisonCache CollisionStage:: GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
+                                     const cg::Location &reference_location, const cg::Location &other_location)
+{
+   std::size_t actor_id_key = std::hash<IdPair>{}(std::make_pair(reference_vehicle->GetId(),other_vehicle->GetId()));
+   GeometryComparisonCache mRetC{-1,-1,-1,-1};
+   bool mReceived = false;
+    
+  if (vehicle_cache.find(actor_id_key) != vehicle_cache.end()) {
+    mRetC = vehicle_cache.at(actor_id_key);
+    mReceived = true;
+  }
+
+  const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
+  const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
+  const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
+  const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
+
+  const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+  const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+
+  const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+  const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+
+  GeometryComparisonCache mRetCache = {reference_vehicle_to_other_geodesic,
+                                        other_vehicle_to_reference_geodesic, 
+                                        inter_geodesic_distance,
+                                        inter_bbox_distance};
+  
+  vehicle_cache.insert({actor_id_key, mRetCache});
+
+  ///Added for  Debugging purpose //////
+
+  // Storing refference location and other location  in vehicle_loc_cache  by hasing the  refference vehicle ID( say A ) and other vehicle ID ( say B) as key_A_B"
+  LocationTuple mLocTuple = {reference_location,other_location};
+  vehicle_loc_cache.insert({actor_id_key, mLocTuple});  
+  
+  debug_helper.DrawLine(reference_vehicle->GetLocation()+ cg::Location(0.0f,0.0f,2.0f),other_vehicle->GetLocation()+cg::Location(0.0f,0.0f,2.0f),0.2f,{255u,0u,0u},0.1f); 
+  if(mReceived) 
+  {
+    std::string tempString = "**CACHE***" +  std::to_string(mRetC.inter_bbox_distance) + " " + std::to_string(mRetC.inter_geodesic_distance) + " "
+    + std::to_string(mRetC.other_vehicle_to_reference_geodesic)+ " " + std::to_string(mRetC.reference_vehicle_to_other_geodesic);
+
+    std::string tempStringComputed = "###COMPUTED###" +  std::to_string(mRetCache.inter_bbox_distance) + " " + std::to_string(mRetCache.inter_geodesic_distance) + " "
+    + std::to_string(mRetCache.other_vehicle_to_reference_geodesic)+ " " + std::to_string(mRetCache.reference_vehicle_to_other_geodesic); 
+    
+   debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,4.0f),tempString ,false, {0u, 255u, 0u}, 0.1f); 
+  
+   debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,2.0f),tempStringComputed, false, {255u, 0u, 0u}, 0.1f); 
+  
+  /// If the refference vehicle ( say B) and other vehicle ( say A), we expect reffernce_location is other_loc from the cache [ say E] by the same hash key_B_A 
+  /// other location is refference location ( say D)
+  if (vehicle_loc_cache.find(actor_id_key) != vehicle_loc_cache.end()){
+    cg::Location ref_loc = vehicle_loc_cache.at(actor_id_key).ref_loc;  // - say D
+    cg::Location other_loc = vehicle_loc_cache.at(actor_id_key).other_loc; // Say E
+
+    std::string ref_loc_str = std::to_string(ref_loc.x) + " | " +std::to_string(ref_loc.y) + " | " + std::to_string(ref_loc.z);
+    std::string other_loc_str = std::to_string(other_loc.x) + " | " +std::to_string(other_loc.y) + " | " + std::to_string(other_loc.z);
+
+    std::string reference_location_str = std::to_string(reference_location.x) + " | " +std::to_string(reference_location.y) + " | " + std::to_string(reference_location.z);
+    std::string other_location_str = std::to_string(other_location.x) + " | " +std::to_string(other_location.y) + " | " + std::to_string(other_location.z);
+
+/// It seems that reference_location_str is not same as other_loc_str 
+/// And other_loc_str is not same as reference_location_str. Hence the issue is .
+
+    
+    std::cout<< "----------------------------------------------\n" << std::endl;
+    std::cout<< "ref_loc  " << ref_loc_str << " other_loc  " << other_loc_str << std::endl;
+    std::cout<< "reference_location_str  " << reference_location_str << " " << "other_location_str  " << other_location_str << std::endl;
+    std::cout<< "----------------------------------------------\n" << std::endl;
+    debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,4.0f),"ref_loc_str"+ref_loc_str ,false, {0u, 255u, 0u}, 0.1f); 
+    debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,8.0f),"other_loc_str"+other_loc_str ,false, {0u, 255u, 0u}, 0.1f); 
+    debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,12.0f),"reference_location_str" + reference_location_str ,false, {0u, 255u, 0u}, 0.1f); 
+    debug_helper.DrawString(reference_vehicle->GetLocation() + cg::Location(0.0f,0.0f,16.0f),"other_location_str"+other_location_str ,false, {0u, 255u, 0u}, 0.1f); 
+  }
+  
+  }
+  ///Added for  Debugging purpose //////
+    
+  return mRetCache;
   }
 
 } // namespace traffic_manager
