@@ -14,7 +14,7 @@ from enum import Enum
 
 import math
 import carla
-from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
+from agents.tools.misc import is_within_distance_ahead
 
 
 class AgentState(Enum):
