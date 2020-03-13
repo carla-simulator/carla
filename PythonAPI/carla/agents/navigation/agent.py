@@ -8,11 +8,12 @@ waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
 import sys
+import math
+
 from enum import Enum
 
-import math
 import carla
-from agents.tools.misc import compute_magnitude_angle, is_within_distance_ahead, is_within_distance, compute_distance
+from agents.tools.misc import is_within_distance_ahead, is_within_distance, compute_distance
 
 class AgentState(Enum):
     """
