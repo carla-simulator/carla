@@ -88,7 +88,7 @@ F.A.Q.
 ------
 
 If you run into problems, check our
-[FAQ](http://carla.readthedocs.io/en/latest/faq/).
+[FAQ](https://carla.readthedocs.io/en/latest/build_faq/).
 
 License
 -------
