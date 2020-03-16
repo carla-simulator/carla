@@ -33,23 +33,6 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PipelineStage.h"
 
-using IdPair = std::pair<uint32_t,uint32_t>;
-
-//custom specialization of std::hash can be injected in namespace std
- namespace std 
- {
-  template <>
-  struct hash<IdPair>
-  {
-    std::size_t operator()(const IdPair& s) const noexcept
-    {
-      return std::hash<uint32_t>{}(s.first) ^ std::hash<uint32_t>{}(s.second);
-    }
-
-  };
-} 
-
-
 namespace carla {
 namespace traffic_manager {
 
@@ -75,11 +58,6 @@ namespace traffic_manager {
      double inter_bbox_distance;
 };
 
-struct LocationTuple {  // WIP - This is added only for debugging 
-
-    cg::Location ref_loc,other_loc;
-};
-
 /// This class is the thread executable for the collision detection stage
 /// and is responsible for checking possible collisions with other
 /// cars along the vehicle's trajectory.
@@ -88,8 +66,7 @@ class CollisionStage : public PipelineStage
 
 private:
   /// Geometry data for the vehicle
-  std::unordered_map<std::size_t, GeometryComparisonCache> vehicle_cache;
-  std::unordered_map<std::size_t, LocationTuple> vehicle_loc_cache; // WIP - This is added only for debugging 
+  std::unordered_map<std::string, GeometryComparisonCache> vehicle_cache;
   /// Selection key for switching between output frames.
   bool frame_selector;
   /// Pointer to data received from localization stage.
