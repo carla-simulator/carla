@@ -49,12 +49,15 @@ namespace CollisionStageConstants {
     number_of_vehicles = 0u;
     // Initializing srand.
     srand(static_cast<unsigned>(time(NULL)));
+
   }
 
   CollisionStage::~CollisionStage() {}
 
   void CollisionStage::Action() {
 
+    // Clearing the old chache.
+    vehicle_cache.clear();
     const auto current_planner_frame = frame_selector ? planner_frame_a : planner_frame_b;
 
     // Looping over registered actors.
@@ -152,6 +155,7 @@ namespace CollisionStageConstants {
 
     // Cleaning geodesic boundaries from the last iteration.
     geodesic_boundaries.clear();
+
   }
 
   void CollisionStage::DataSender() {
@@ -206,24 +210,17 @@ namespace CollisionStageConstants {
                                           std::pow(parameters.GetDistanceToLeadingVehicle(reference_vehicle)
                                                    + inter_vehicle_length, 2.0f)))) {
 
-      const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
-      const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
-      const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
-      const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
 
-      const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
-      const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
-
-      const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
-      const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+      GeometryComparisonCache cache = GetGeometryBetweenActors(reference_vehicle, other_vehicle,
+                                     reference_location, other_location);
 
       // Whichever vehicle's path is farthest away from the other vehicle gets
       // priority to move.
-      if (inter_geodesic_distance < 0.1 &&
-          ((inter_bbox_distance > 0.1 &&
-            reference_vehicle_to_other_geodesic > other_vehicle_to_reference_geodesic
+      if (cache.inter_geodesic_distance < 0.1 &&
+          ((cache.inter_bbox_distance > 0.1 &&
+            cache.reference_vehicle_to_other_geodesic > cache.other_vehicle_to_reference_geodesic
             ) || (
-            inter_bbox_distance < 0.1 &&
+            cache.inter_bbox_distance < 0.1 &&
             (cg::Math::Dot(reference_heading, reference_to_other) >
             cg::Math::Dot(other_heading, other_to_reference))
           ))
@@ -439,6 +436,42 @@ namespace CollisionStageConstants {
           boundary[(i + 1) % boundary.size()] + cg::Location(0.0f, 0.0f, 1.0f),
           0.1f, {255u, 255u, 0u}, 0.05f);
     }
+  }
+
+GeometryComparisonCache CollisionStage:: GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
+                                     const cg::Location &reference_location, const cg::Location &other_location) {
+   std::string actor_id_key = (reference_vehicle->GetId() < other_vehicle->GetId()) ?
+                              std::to_string(reference_vehicle->GetId()) + "|" + std::to_string(other_vehicle->GetId())
+                              : std::to_string(other_vehicle->GetId()) +"|"+ std::to_string(reference_vehicle->GetId());
+   GeometryComparisonCache mCache{-1,-1,-1,-1};
+
+  if (vehicle_cache.find(actor_id_key) != vehicle_cache.end()) {
+    mCache = vehicle_cache.at(actor_id_key);
+    double mref_veh_other = mCache.reference_vehicle_to_other_geodesic;
+    mCache.reference_vehicle_to_other_geodesic = mCache.other_vehicle_to_reference_geodesic;
+    mCache.other_vehicle_to_reference_geodesic = mref_veh_other;
+    return mCache;
+   }
+
+  const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
+  const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
+  const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
+  const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
+
+  const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
+  const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
+
+  const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
+  const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+
+  GeometryComparisonCache mRetCache = {reference_vehicle_to_other_geodesic,
+                                        other_vehicle_to_reference_geodesic,
+                                        inter_geodesic_distance,
+                                        inter_bbox_distance};
+
+  vehicle_cache.insert({actor_id_key, mRetCache});
+
+  return mRetCache;
   }
 
 } // namespace traffic_manager
