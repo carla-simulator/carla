@@ -47,9 +47,9 @@ namespace traffic_manager {
   using LocationList = std::vector<cg::Location>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using TLS = carla::rpc::TrafficLightState;
-  
 
-  /// Structure to hold the Geometry of refference vehicle to Other Vehicle 
+
+/// Structure to hold the Geometry of reference vehicle to other vehicle.
   struct GeometryComparisonCache {
 
      double reference_vehicle_to_other_geodesic;
@@ -61,8 +61,7 @@ namespace traffic_manager {
 /// This class is the thread executable for the collision detection stage
 /// and is responsible for checking possible collisions with other
 /// cars along the vehicle's trajectory.
-class CollisionStage : public PipelineStage
-{
+class CollisionStage : public PipelineStage {
 
 private:
   /// Geometry data for the vehicle
@@ -120,7 +119,7 @@ private:
   /// A simple method used to draw bounding boxes around vehicles
   void DrawBoundary(const LocationList &boundary);
 
-  /// A method used compute Geometry result between two vehicle
+  /// Method to compute Geometry result between two vehicles
   GeometryComparisonCache GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
                                                    const cg::Location &reference_location, const cg::Location &other_location);
 
