@@ -1,5 +1,10 @@
-## latest
+## CARLA 0.9.9
 
+  * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
+
+## CARLA 0.9.8
+
+  * Added beta version sumo-carla co-simulation.
   * Traffic Manager:
     - Added benchmark
     - Added synchronous mode
@@ -10,10 +15,13 @@
     - Implemented intersection anticipation
     - Implemented vehicle destruction when stuck
     - Implemented tunable parameters
+    - Revamped lane changes
   * Added landmark class for signal-related queries.
   * Added support to parse OpenDRIVE signals.
   * Added junction class as queryable object from waypoint
+  * Added timeout to World Tick
   * Added simple physical map generation from standalone OpenDRIVE data
+  * Added support for generating walker navigation on server-side
   * Added support for new geometry: `spiral`, `poly3`, and `paramPoly3`
   * Improved `get_waypoint(location)` performance
   * New weather system: night time, fog, rain ripples, and now wind affects vegetation and rain (not car physics)
@@ -27,6 +35,7 @@
   * New python clients:
     - `weather.py`: allows weather changes using the new weather parameters
   * Fixed docker build of .BIN for pedestrian navigation
+  * Fixed local_planner.py: agent will now stop when it reaches the desired destination
   * Fixed crash when missing elevation profile and lane offset in OpenDRIVE
   * Fixed typos
   * Fixed agent failures due to API changes in is_within_distance_ahead()

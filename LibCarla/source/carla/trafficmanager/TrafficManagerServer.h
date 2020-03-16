@@ -119,6 +119,12 @@ public:
         tm->SetDistanceToLeadingVehicle(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), distance);
       });
 
+      /// Method to the Global Distance to Leading vehicle
+
+      server->bind("set_global_distance_to_leading_vehicle", [=]( const float distance) {
+        tm->SetGlobalDistanceToLeadingVehicle(distance);
+      });
+
       /// Method to specify the % chance of running any traffic light.
       server->bind("set_percentage_running_light", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageRunningLight(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
@@ -137,6 +143,11 @@ public:
         /// Method to specify the % chance of ignoring collisions with any vehicle.
       server->bind("set_percentage_ignore_vehicles", [=](carla::rpc::Actor actor, const float percentage) {
         tm->SetPercentageIgnoreVehicles(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+      });
+
+      /// Method to specify the % chance of ignoring collisions with any vehicle.
+      server->bind("set_percentage_keep_right_rule", [=](carla::rpc::Actor actor, const float percentage) {
+        tm->SetKeepRightPercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
       /// Method to set synchronous mode.

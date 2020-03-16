@@ -11,9 +11,11 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
 #include "carla/opendrive/OpenDriveParser.h"
+#include "carla/road/element/RoadInfoSignal.h"
 #include <compiler/enable-ue4-macros.h>
 
-#include "Carla/OpenDrive/OpenDrive.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -94,15 +96,7 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
-
-  boost::optional<carla::road::Map> map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-  if (!map.has_value()) {
-    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-  } else {
-    Episode->MapGeoReference = map->GetGeoReference();
-  }
-
+  ParseOpenDrive(MapName);
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -186,4 +180,127 @@ void ACarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
+}
+
+void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
+{
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  if (!Map.has_value()) {
+    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
+  } else {
+    Episode->MapGeoReference = Map->GetGeoReference();
+  }
+}
+
+void ACarlaGameModeBase::DebugShowSignals(bool enable)
+{
+  auto World = GetWorld();
+  check(World != nullptr);
+
+  if(!Map)
+  {
+    return;
+  }
+
+  if(!enable)
+  {
+    UKismetSystemLibrary::FlushDebugStrings(World);
+    UKismetSystemLibrary::FlushPersistentDebugLines(World);
+    return;
+  }
+
+  //const std::unordered_map<carla::road::SignId, std::unique_ptr<carla::road::Signal>>
+  const auto& Signals = Map->GetSignals();
+  const auto& Controllers = Map->GetControllers();
+
+  for(const auto& Signal : Signals) {
+    const auto& ODSignal = Signal.second;
+    const FTransform Transform = ODSignal->GetTransform();
+    const FVector Location = Transform.GetLocation();
+    const FQuat Rotation = Transform.GetRotation();
+    const FVector Up = Rotation.GetUpVector();
+    DrawDebugSphere(
+      World,
+      Location,
+      50.0f,
+      10,
+      FColor(0, 255, 0),
+      true
+    );
+
+    FString Text = FString(ODSignal->GetSignalId().c_str());
+    Text += FString(" - ");
+    Text += FString(ODSignal->GetName().c_str());
+
+    UKismetSystemLibrary::DrawDebugString (
+      World,
+      Location + Up * 250.0f,
+      Text,
+      nullptr,
+      FLinearColor(0, 255, 0, 255)
+    );
+
+    FString Text2 = FString(ODSignal->GetType().c_str());
+    Text2 += FString(" - ");
+    Text2 += FString(ODSignal->GetSubtype().c_str());
+
+    UKismetSystemLibrary::DrawDebugString (
+      World,
+      Location + Up * 175.0f,
+      Text,
+      nullptr,
+      FLinearColor(0, 255, 0, 255),
+      10000.0f
+    );
+  }
+
+  auto waypoints = Map->GenerateWaypointsOnRoadEntries();
+  for (auto & waypoint : waypoints)
+  {
+    auto SignalReferences = Map->GetLane(waypoint).GetRoad()->GetInfos<carla::road::element::RoadInfoSignal>();
+    for (auto *SignalReference : SignalReferences)
+    {
+      double current_s = waypoint.s;
+      double signal_s = SignalReference->GetS();
+
+      double delta_s = signal_s - current_s;
+      FTransform ReferenceTransform;
+      if (delta_s == 0)
+      {
+        ReferenceTransform = Map->ComputeTransform(waypoint);
+      }
+      else if (waypoint.lane_id < 0)
+      {
+        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
+        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
+      }
+      else if(waypoint.lane_id > 0)
+      {
+        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
+        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
+      }
+      else
+      {
+        continue;
+      }
+      DrawDebugSphere(
+          World,
+          ReferenceTransform.GetLocation(),
+          50.0f,
+          10,
+          FColor(0, 255, 0),
+          true
+      );
+
+      DrawDebugLine(
+          World,
+          ReferenceTransform.GetLocation(),
+          FTransform(SignalReference->GetSignal()->GetTransform()).GetLocation(),
+          FColor(0, 255, 0),
+          true
+      );
+    }
+  }
+
 }

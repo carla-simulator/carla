@@ -13,9 +13,6 @@ namespace traffic_manager {
 
 Parameters::Parameters() {
 
-  /// Set default synchronous mode to false.
-  synchronous_mode.store(false);
-
   /// Set default synchronous mode time out.
   synchronous_time_out = std::chrono::duration<int, std::milli>(10);
 }
@@ -64,6 +61,12 @@ void Parameters::SetForceLaneChange(const ActorPtr &actor, const bool direction)
   const ChangeLaneInfo lane_change_info = {true, direction};
   const auto entry = std::make_pair(actor->GetId(), lane_change_info);
   force_lane_change.AddEntry(entry);
+}
+
+void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_keep_right.AddEntry(entry);
 }
 
 void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
@@ -137,6 +140,20 @@ ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
   return change_lane_info;
 }
 
+float Parameters::GetKeepRightPercentage(const ActorPtr &actor) {
+
+  const ActorId actor_id = actor->GetId();
+  float percentage = -1.0f;
+
+  if (perc_keep_right.Contains(actor_id)) {
+    percentage = perc_keep_right.GetValue(actor_id);
+  }
+
+  perc_keep_right.RemoveEntry(actor_id);
+
+  return percentage;
+}
+
 bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
 
   const ActorId actor_id = actor->GetId();
@@ -152,13 +169,19 @@ bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
 float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
 
   const ActorId actor_id = actor->GetId();
-  float distance_margin = -1.0f;
-
+  float specific_distance_margin = 0.0f;
   if (distance_to_leading_vehicle.Contains(actor_id)) {
-    distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+    specific_distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+  } else {
+    specific_distance_margin = distance_margin;
   }
 
-  return distance_margin;
+  return specific_distance_margin;
+}
+
+void Parameters::SetGlobalDistanceToLeadingVehicle(const float dist) {
+
+  distance_margin.store(dist);
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {

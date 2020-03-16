@@ -177,6 +177,10 @@ void TrafficManagerLocal::SetDistanceToLeadingVehicle(const ActorPtr &actor, con
   parameters.SetDistanceToLeadingVehicle(actor, distance);
 }
 
+void TrafficManagerLocal::SetGlobalDistanceToLeadingVehicle(const float distance) {
+  parameters.SetGlobalDistanceToLeadingVehicle(distance);
+}
+
 void TrafficManagerLocal::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc) {
   parameters.SetPercentageIgnoreWalkers(actor, perc);
 }
@@ -191,6 +195,10 @@ void TrafficManagerLocal::SetPercentageRunningLight(const ActorPtr &actor, const
 
 void TrafficManagerLocal::SetPercentageRunningSign(const ActorPtr &actor, const float perc) {
   parameters.SetPercentageRunningSign(actor, perc);
+}
+
+void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetKeepRightPercentage(actor, percentage);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

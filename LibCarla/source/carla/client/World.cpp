@@ -105,8 +105,8 @@ namespace client {
     _episode.Lock()->RemoveOnTickEvent(callback_id);
   }
 
-  uint64_t World::Tick() {
-    return _episode.Lock()->Tick();
+  uint64_t World::Tick(time_duration timeout) {
+    return _episode.Lock()->Tick(timeout);
   }
 
   void World::SetPedestriansCrossFactor(float percentage) {

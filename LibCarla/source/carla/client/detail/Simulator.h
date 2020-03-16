@@ -156,7 +156,7 @@ namespace detail {
       _episode->RemoveOnTickEvent(id);
     }
 
-    uint64_t Tick();
+    uint64_t Tick(time_duration timeout);
 
     /// @}
     // =========================================================================

@@ -14,7 +14,7 @@ import random
 
 import carla
 from agents.navigation.controller import VehiclePIDController
-from agents.tools.misc import distance_vehicle, draw_waypoints
+from agents.tools.misc import draw_waypoints
 
 
 class RoadOption(Enum):
@@ -199,7 +199,7 @@ class LocalPlanner(object):
         if not self._global_plan and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
-        if len(self._waypoints_queue) == 0:
+        if len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0:
             control = carla.VehicleControl()
             control.steer = 0.0
             control.throttle = 0.0
@@ -242,8 +242,7 @@ class LocalPlanner(object):
         return control
 
     def done(self):
-        vehicle_transform = self._vehicle.get_transform()
-        return len(self._waypoints_queue) == 0 and all([distance_vehicle(wp, vehicle_transform) < self._min_distance for wp in self._waypoints_queue])
+        return len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0
 
 def _retrieve_options(list_waypoints, current_waypoint):
     """
@@ -267,7 +266,7 @@ def _retrieve_options(list_waypoints, current_waypoint):
     return options
 
 
-def _compute_connection(current_waypoint, next_waypoint):
+def _compute_connection(current_waypoint, next_waypoint, threshold=35):
     """
     Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
     (next_waypoint).
@@ -286,7 +285,7 @@ def _compute_connection(current_waypoint, next_waypoint):
     c = c % 360.0
 
     diff_angle = (n - c) % 180.0
-    if diff_angle < 1.0:
+    if diff_angle < threshold or diff_angle > (180 - threshold):
         return RoadOption.STRAIGHT
     elif diff_angle > 90.0:
         return RoadOption.LEFT
