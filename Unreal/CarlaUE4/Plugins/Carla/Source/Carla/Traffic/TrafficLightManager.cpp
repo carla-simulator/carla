@@ -23,19 +23,21 @@ ATrafficLightManager::ATrafficLightManager()
   }
 }
 
-void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLight)
+void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLightComponent)
 {
   // Cast to std::string
-  carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLight->GetSignId())));
+  carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLightComponent->GetSignId())));
 
   // Get OpenDRIVE signal
   if (GetMap()->GetSignals().count(SignId) == 0)
   {
+    UE_LOG(LogCarla, Error, TEXT("Missing signal with id: %s"), *(SignId.c_str()) );
     return;
   }
   const auto &Signal = GetMap()->GetSignals().at(SignId);
   if(Signal->GetControllers().empty())
   {
+    UE_LOG(LogCarla, Error, TEXT("No controllers in signal %s"), *(SignId.c_str()) );
     return;
   }
   // Only one controller per signal
@@ -45,6 +47,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   const auto &Controller = GetMap()->GetControllers().at(ControllerId);
   if(Controller->GetJunctions().empty())
   {
+    UE_LOG(LogCarla, Error, TEXT("No junctions in controller %d"), *(ControllerId.c_str()) );
     return;
   }
   // Get junction of the controller
@@ -70,11 +73,13 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   }
   auto *TrafficLightController = TrafficControllers[ControllerId.c_str()];
 
-  TrafficLight->TrafficLightGroup = TrafficLightGroup;
-  TrafficLight->TrafficLightController = TrafficLightController;
+  TrafficLightComponent->TrafficLightGroup = TrafficLightGroup;
+  TrafficLightComponent->TrafficLightController = TrafficLightController;
+
+  std::cout << "ATrafficLightManager::RegisterLightComponent TrafficLightController" << TrafficLightController << std::endl;
 
   // Add signal to controller
-  TrafficLightController->AddTrafficLight(TrafficLight);
+  TrafficLightController->AddTrafficLight(TrafficLightComponent);
   TrafficLightController->ResetState();
 
   // Add signal to map
@@ -90,7 +95,8 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
     FString MapName = GetWorld()->GetName();
     std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
     Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-    if (!Map.has_value()) {
+    if (!Map.has_value())
+    {
       UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
     }
   }
@@ -137,12 +143,64 @@ void ATrafficLightManager::GenerateTrafficLights()
           FAttachmentTransformRules::KeepRelativeTransform);
     }
   }
+
+  TrafficLightsGenerated = true;
+}
+
+void ATrafficLightManager::RemoveGeneratedTrafficLights()
+{
+  for(auto& Sign : TrafficSigns)
+  {
+    Sign->Destroy();
+  }
+  TrafficSigns.Empty();
+
+  for(auto& TrafficGroup : TrafficGroups)
+  {
+    TrafficGroup.Value->Destroy();
+  }
+  TrafficGroups.Empty();
+
+  TrafficControllers.Empty();
+
+  TrafficLightsGenerated = false;
 }
 
 // Called when the game starts
 void ATrafficLightManager::BeginPlay()
 {
   Super::BeginPlay();
+
+  if (TrafficLightsGenerated)
+  {
+    for(auto& It : TrafficControllers)
+    {
+      UTrafficLightController* Controller = It.Value;
+      Controller->EmptyTrafficLights();
+    }
+
+    for(auto& It : TrafficGroups)
+    {
+      ATrafficLightGroup* Group = It.Value;
+      Group->GetControllers().Empty();
+    }
+
+    for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
+    {
+      ATrafficSignBase* trafficSignBase = (*It);
+      UTrafficLightComponent* TrafficLightComponent =
+        trafficSignBase->FindComponentByClass<UTrafficLightComponent>();
+
+      if(TrafficLightComponent)
+      {
+        RegisterLightComponent(TrafficLightComponent);
+      }
+    }
+  }
+  else
+  {
+    GenerateTrafficLights();
+  }
 
 }
 
@@ -167,9 +225,9 @@ UTrafficLightController* ATrafficLightManager::GetController(FString ControllerI
 
 UTrafficLightComponent* ATrafficLightManager::GetTrafficLight(FString SignId)
 {
-  if (!TrafficLights.Contains(SignId))
+  if (!TrafficLightComponents.Contains(SignId))
   {
     return nullptr;
   }
-  return TrafficLights[SignId];
+  return TrafficLightComponents[SignId];
 }

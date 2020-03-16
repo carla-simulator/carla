@@ -51,6 +51,9 @@ public:
   UFUNCTION(Category = "Traffic Controller", BlueprintPure)
   const TArray<UTrafficLightComponent *> &GetTrafficLights();
 
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void EmptyTrafficLights();
+
   UFUNCTION(Category = "Traffic Controller", BlueprintPure)
   const FString &GetControllerId() const;
 

@@ -41,6 +41,9 @@ public:
   UFUNCTION(CallInEditor)
   void GenerateTrafficLights();
 
+  UFUNCTION(CallInEditor)
+  void RemoveGeneratedTrafficLights();
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
@@ -61,7 +64,10 @@ private:
 
   // Mapped references to individual TrafficLightComponents
   UPROPERTY()
-  TMap<FString, UTrafficLightComponent *> TrafficLights;
+  TMap<FString, UTrafficLightComponent *> TrafficLightComponents;
+
+  // Mapped references to TrafficSigns
+  TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TSubclassOf<ATrafficSignBase> TrafficLightModel;
@@ -70,4 +76,8 @@ private:
   USceneComponent *SceneComponent;
 
   boost::optional<carla::road::Map> Map;
+
+  UPROPERTY()
+  bool TrafficLightsGenerated = false;
+
 };
