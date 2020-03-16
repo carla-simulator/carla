@@ -55,7 +55,6 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
 
   else if (AType::Walker == View.GetActorType())
   {
-    UE_LOG(LogCarla, Warning, TEXT("     FWorldObserver_GetActorState Walker"));
     auto Walker = Cast<APawn>(View.GetActor());
     auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
     if (Controller != nullptr)
@@ -87,14 +86,24 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
         UTrafficLightController* Controller =  TrafficLightComponent->GetController();
         ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
 
-        state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
-        state.traffic_light_data.green_time = Controller->GetGreenTime();
-        state.traffic_light_data.yellow_time = Controller->GetYellowTime();
-        state.traffic_light_data.red_time = Controller->GetRedTime();
-        state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
-        state.traffic_light_data.time_is_frozen = Group->IsFrozen();
-        // Nobody is using this right now, perhaps we should remove it?
-        state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+        if (!Controller)
+        {
+          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Controller assigned"));
+        }
+        else if (!Group)
+        {
+          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Group assigned"));
+        }
+        else
+        {
+          state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
+          state.traffic_light_data.green_time = Controller->GetGreenTime();
+          state.traffic_light_data.yellow_time = Controller->GetYellowTime();
+          state.traffic_light_data.red_time = Controller->GetRedTime();
+          state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+          state.traffic_light_data.time_is_frozen = Group->IsFrozen();
+          state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+        }
       }
     }
   }
