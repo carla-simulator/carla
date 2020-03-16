@@ -146,7 +146,6 @@ class PIDLongitudinalController():
 
         return np.clip((self._k_p * error) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
 
-
 class PIDLateralController():
     """
     PIDLateralController implements lateral control using a PID.
