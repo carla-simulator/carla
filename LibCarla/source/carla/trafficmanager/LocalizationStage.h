@@ -164,7 +164,7 @@ namespace traffic_manager {
     bool TryDestroyVehicle(const Actor& actor);
 
     /// Methods for actor state management.
-    void UpdateSwarmState();
+    void UpdateSwarmVelocities();
     cg::Vector3D GetVelocity(ActorId actor_id);
 
   public:

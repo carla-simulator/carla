@@ -81,7 +81,7 @@ namespace PlannerConstants {
       const ActorId actor_id = actor->GetId();
 
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-      const cg::Vector3D current_velocity_vector = vehicle->GetVelocity();
+      const cg::Vector3D current_velocity_vector = localization_data.velocity;
       const float current_velocity = current_velocity_vector.Length();
 
       const auto current_time = chr::system_clock::now();

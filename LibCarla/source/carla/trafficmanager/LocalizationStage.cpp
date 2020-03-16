@@ -28,7 +28,6 @@ namespace LocalizationConstants {
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float PHYSICS_RADIUS = 50.0f;
-
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -77,7 +76,7 @@ namespace LocalizationConstants {
 
     ScanUnregisteredVehicles();
 
-    UpdateSwarmState();
+    UpdateSwarmVelocities();
 
     // Selecting output frames based on selector keys.
     const auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
@@ -331,6 +330,7 @@ namespace LocalizationConstants {
       planner_message.deviation = dot_product;
       planner_message.distance = distance;
       planner_message.approaching_true_junction = approaching_junction;
+      planner_message.velocity = GetVelocity(actor_id);
 
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
@@ -855,71 +855,67 @@ namespace LocalizationConstants {
     return false;
   }
 
-  void LocalizationStage::UpdateSwarmState() {
+  void LocalizationStage::UpdateSwarmVelocities() {
 
+    // Location of hero vehicle if present.
     cg::Location hero_location;
     if (hybrid_physics_mode && hero_actor != nullptr) {
       hero_location = hero_actor->GetLocation();
     }
 
-    float dt = std::numeric_limits<float>::infinity();
-    if (parameters.GetSynchronousMode()) {
-      dt = 0.05f;
-    } else {
+    // Using (1/20)s time delta for computing velocity.
+    float dt = 0.05f;
+    // Skipping velocity update if elapsed time is less than 0.05s in asynchronous mode.
+    if (!parameters.GetSynchronousMode()) {
       TimePoint current_instance = chr::system_clock::now();
-      dt = (current_instance - previous_update_instance).count();
+      chr::duration<float> elapsed_time = current_instance - previous_update_instance;
+      if (elapsed_time.count() > dt) {
+        previous_update_instance = current_instance;
+      } else {
+        return;
+      }
     }
 
+    // Update velocity for all registered vehicles.
     for (const Actor &actor: actor_list) {
 
       ActorId actor_id = actor->GetId();
       cg::Location vehicle_location = actor->GetLocation();
 
+      // Adding entry if not present.
       if (kinematic_state_map.find(actor_id) == kinematic_state_map.end()) {
         kinematic_state_map.insert({actor_id, KinematicState{true, vehicle_location, cg::Vector3D()}});
       }
 
-
-      // Check if current actor is in range of hero actor.
+      // Check if current actor is in range of hero actor and enable physics in hybrid mode.
       bool in_range_of_hero_actor = false;
       if (hybrid_physics_mode
           && hero_actor != nullptr
           && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(PHYSICS_RADIUS, 2))) {
         in_range_of_hero_actor = true;
       }
-
       bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
-
       kinematic_state_map.at(actor_id).physics_enabled = enable_physics;
-      kinematic_state_map.at(actor_id).location = vehicle_location;
 
       // TODO : Apply command to enable or disable physics based on previous steps.
       // Analyse how this might affects stages down stream which are still holding
       // older data which would suggest physics is disabled or enabled according to
       // the data that they hold.
 
+      // When we say velocity, we usually mean velocity for a vehicle along it's heading.
+      // Velocity component due to rotation can be removed by taking dot product with heading vector.
+      cg::Vector3D heading = actor->GetTransform().GetForwardVector();
       if (enable_physics) {
-        kinematic_state_map.at(actor_id).velocity = actor->GetVelocity();
-        ////////////////////////////// DEBUG /////////////////////////////
-        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-                                "Velocity from simulator", false, {255u, 255u, 0u}, 0.05f);
-        //////////////////////////////////////////////////////////////////
+        kinematic_state_map.at(actor_id).velocity = cg::Math::Dot(actor->GetVelocity(), heading) * heading;
       } else {
-        cg::Vector3D vehicle_velocity = (vehicle_location - kinematic_state_map.at(actor_id).location)/dt;
-        kinematic_state_map.at(actor_id).velocity = vehicle_velocity;
-        ////////////////////////////// DEBUG /////////////////////////////
-        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-                                "Velocity interanally computed", false, {255u, 0u, 255u}, 0.05f);
-        //////////////////////////////////////////////////////////////////
+        cg::Vector3D displacement = (vehicle_location - kinematic_state_map.at(actor_id).location);
+        cg::Vector3D displacement_along_heading = cg::Math::Dot(displacement, heading) * heading;
+        cg::Vector3D velocity = displacement_along_heading/dt;
+        kinematic_state_map.at(actor_id).velocity = velocity;
       }
 
-      ////////////////////////////// DEBUG /////////////////////////////
-      if (hybrid_physics_mode && in_range_of_hero_actor) {
-        debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 2),
-                               hero_location + cg::Location(0, 0, 2),
-                               0.2f, 0.2f, {0u, 255u, 255u}, 0.05f);
-      }
-      //////////////////////////////////////////////////////////////////
+      // Updating location after velocity is computed.
+      kinematic_state_map.at(actor_id).location = vehicle_location;
     }
   }
 

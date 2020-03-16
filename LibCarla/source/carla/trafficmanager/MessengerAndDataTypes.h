@@ -22,6 +22,7 @@ namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
+  namespace cg = carla::geom;
 
   /// Convenience typing.
 
@@ -41,6 +42,7 @@ namespace traffic_manager {
     float deviation;
     float distance;
     bool approaching_true_junction;
+    cg::Vector3D velocity;
   };
 
   /// Type of data sent by the motion planner stage to the batch control stage.
