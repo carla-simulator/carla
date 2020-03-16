@@ -44,6 +44,7 @@ namespace traffic_manager {
     float distance;
     bool approaching_true_junction;
     cg::Vector3D velocity;
+    std::vector<std::shared_ptr<SimpleWaypoint>> position_window;
   };
 
   /// Type of data sent by the motion planner stage to the batch control stage.

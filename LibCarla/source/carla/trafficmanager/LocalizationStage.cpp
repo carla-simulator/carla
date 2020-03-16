@@ -28,6 +28,7 @@ namespace LocalizationConstants {
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float PHYSICS_RADIUS = 50.0f;
+  static const float POSITION_WINDOW_SIZE = 2.1f;
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -327,6 +328,26 @@ namespace LocalizationConstants {
                                                       this->GetVelocity(a_id)});
                     });
 
+      // Sampling waypoint window for teleportation in hybrid physics mode.
+      std::vector<SimpleWaypointPtr> position_window;
+      if (hybrid_physics_mode) {
+        cg::Vector3D heading = vehicle->GetTransform().GetForwardVector();
+        bool window_complete = false;
+        for (uint32_t j = 0u; j < waypoint_buffer.size() && !window_complete; ++j) {
+          SimpleWaypointPtr &swp = waypoint_buffer.at(i);
+          cg::Vector3D relative_position = swp->GetLocation() - vehicle_location;
+          // Sample waypoints in front of the vehicle;
+          if (cg::Math::Dot(relative_position, heading) > 0.0f) {
+            if (swp->DistanceSquared(vehicle_location) > std::pow(POSITION_WINDOW_SIZE, 2)) {
+              // Stop when maximum size is reached.
+              window_complete = true;
+            } else {
+              position_window.push_back(swp);
+            }
+          }
+        }
+      }
+
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
@@ -334,6 +355,7 @@ namespace LocalizationConstants {
       planner_message.distance = distance;
       planner_message.approaching_true_junction = approaching_junction;
       planner_message.velocity = vehicle_velocity_vector;
+      planner_message.position_window = std::move(position_window);
 
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
@@ -869,13 +891,13 @@ namespace LocalizationConstants {
 
     // Using (1/20)s time delta for computing velocity.
     float dt = 0.05f;
-    // Skipping velocity update if elapsed time is less than 0.05s in asynchronous mode.
+    // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
     if (!parameters.GetSynchronousMode()) {
       TimePoint current_instance = chr::system_clock::now();
       chr::duration<float> elapsed_time = current_instance - previous_update_instance;
       if (elapsed_time.count() > dt) {
         previous_update_instance = current_instance;
-      } else {
+      } else if (hybrid_physics_mode) {
         return;
       }
     }
