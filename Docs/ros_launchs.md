@@ -241,9 +241,9 @@ Runs an instance of RVIZ, and waits for Lidar data.
 
 A ROS version of the CARLA script `manual_control.py`. It has some prequisites.  
 
-* __To display an image__, a camera with role-name `view` and resolution 800x600.
-* __To display the position__, a gnss sensor with role-name `gnss1`.
-* __To detect other sensor data__, the corresponding sensor. 
+*  __To display an image__, a camera with role-name `view` and resolution 800x600.
+*  __To display the position__, a gnss sensor with role-name `gnss1`.
+*  __To detect other sensor data__, the corresponding sensor. 
 
 
 <!---NODE-->
