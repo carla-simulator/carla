@@ -34,6 +34,11 @@ const TArray<UTrafficLightComponent *> &UTrafficLightController::GetTrafficLight
   return TrafficLights;
 }
 
+void UTrafficLightController::EmptyTrafficLights()
+{
+  TrafficLights.Empty();
+}
+
 void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLight)
 {
   TrafficLights.Add(TrafficLight);
