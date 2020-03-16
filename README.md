@@ -73,8 +73,8 @@ Then follow the instruction at [How to build on Linux][buildlinuxlink] or
 Unfortunately we don't have official instructions to build on Mac yet, please
 check the progress at [issue #150][issue150].
 
-[buildlinuxlink]: http://carla.readthedocs.io/en/latest/how_to_build_on_linux
-[buildwindowslink]: http://carla.readthedocs.io/en/latest/how_to_build_on_windows
+[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
+[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
 [issue150]: https://github.com/carla-simulator/carla/issues/150
 
 Contributing
@@ -82,13 +82,13 @@ Contributing
 
 Please take a look at our [Contribution guidelines][contriblink].
 
-[contriblink]: http://carla.readthedocs.io/en/latest/CONTRIBUTING
+[contriblink]: https://carla.readthedocs.io/en/latest/cont_contribution_guidelines/
 
 F.A.Q.
 ------
 
 If you run into problems, check our
-[FAQ](http://carla.readthedocs.io/en/latest/faq/).
+[FAQ](https://carla.readthedocs.io/en/latest/build_faq/).
 
 License
 -------
