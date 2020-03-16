@@ -157,9 +157,9 @@
       - param_name: opendrive
         type: str
         doc: >
-          OpenDRIVE data as `string`.
+          Content of an OpenDRIVE file as `string`.
       doc: >
-        Loads a new world with a basic physical topology generated from an OpenDRIVE file passed as `string`.
+        Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
         Cars can drive around the map, but there are no graphics besides the road and sidewalks.
     # --------------------------------------
