@@ -117,7 +117,6 @@ class BehaviorAgent(Agent):
         self.end_waypoint = self._map.get_waypoint(end_location)
 
         route_trace = self._trace_route(self.start_waypoint, self.end_waypoint)
-        assert route_trace
 
         self._local_planner.set_global_plan(route_trace)
 

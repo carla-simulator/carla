@@ -24,7 +24,7 @@ class AgentState(Enum):
     BLOCKED_RED_LIGHT = 3
 
 
-class Agent():
+class Agent(object):
     """Base class to define agents in CARLA"""
 
     def __init__(self, vehicle):

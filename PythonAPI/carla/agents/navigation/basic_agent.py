@@ -55,7 +55,6 @@ class BasicAgent(Agent):
             carla.Location(location[0], location[1], location[2]))
 
         route_trace = self._trace_route(start_waypoint, end_waypoint)
-        assert route_trace
 
         self._local_planner.set_global_plan(route_trace)
 
