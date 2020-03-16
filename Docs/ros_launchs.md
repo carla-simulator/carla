@@ -7,7 +7,12 @@ Creates a node to manage a vehicle using Ackermann controls instead of the CARLA
 ```sh
 pip install --user simple-pid
 ```
-Initial parameters can be set in `share/carla_ackermann_control/config/settings.yaml`. It is possible to modify the parameters in runtime via ROS dynamic reconfigure.  
+It is possible to modify the parameters in runtime via ROS dynamic reconfigure. Initial parameters can be set using a `settings.yaml`. The path to it depends on the bridge installation.  
+
+* __Deb repository installation__,  
+`/opt/carla-ros-bridge/melodic/share/carla_ackermann_control/config/settings.yaml`.  
+* __Source repository installation__,  
+`/catkin_ws/src/ros-bridge/carla_ackermann_control/config/settings.yaml`.  
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
@@ -45,7 +50,12 @@ Spawns an ego vehicle with sensors attached, and waits for world information.
 
 ---
 ## carla_example_ego_vehicle.launch
-Based on [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`) using a provided file describing the sensors. Said file can be found in `/share/carla_ego_vehicle/config/sensors.json`. 
+Based on [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`). The file `sensors.json` describes the sensors attached. The path to it depends on the bridge installation.  
+
+* __Deb repository installation__,  
+`/opt/carla-ros-bridge/melodic/share/carla_ego_vehicle/config/sensors.json`.  
+* __Source repository installation__,  
+`/catkin_ws/src/ros-bridge/carla_ego_vehicle/config/sensors.json`.  
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ego_vehicle_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
