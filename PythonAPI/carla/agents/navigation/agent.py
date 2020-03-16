@@ -12,8 +12,9 @@ The agent also responds to traffic lights. """
 
 from enum import Enum
 
+import math
 import carla
-from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
+from agents.tools.misc import is_within_distance_ahead
 
 
 class AgentState(Enum):
@@ -36,7 +37,8 @@ class Agent(object):
         :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
-        self._proximity_threshold = 10.0  # meters
+        self._proximity_tlight_threshold = 5.0  # meters
+        self._proximity_vehicle_threshold = 10.0  # meters
         self._local_planner = None
         self._world = self._vehicle.get_world()
         self._map = self._vehicle.get_world().get_map()
@@ -70,86 +72,53 @@ class Agent(object):
                  - traffic_light is the object itself or None if there is no
                    red traffic light affecting us
         """
-        if self._map.name == 'Town01' or self._map.name == 'Town02':
-            return self._is_light_red_europe_style(lights_list)
-        else:
-            return self._is_light_red_us_style(lights_list)
-
-    def _is_light_red_europe_style(self, lights_list):
-        """
-        This method is specialized to check European style traffic lights.
-
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                  affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
-        """
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
 
         for traffic_light in lights_list:
-            object_waypoint = self._map.get_waypoint(traffic_light.get_location())
-            if object_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+            object_location = self._get_trafficlight_trigger_location(traffic_light)
+            object_waypoint = self._map.get_waypoint(object_location)
+
+            if object_waypoint.road_id != ego_vehicle_waypoint.road_id:
                 continue
 
-            if is_within_distance_ahead(traffic_light.get_transform(),
+            ve_dir = ego_vehicle_waypoint.transform.get_forward_vector()
+            wp_dir = object_waypoint.transform.get_forward_vector()
+            dot_ve_wp = ve_dir.x * wp_dir.x + ve_dir.y * wp_dir.y + ve_dir.z * wp_dir.z
+
+            if dot_ve_wp < 0:
+                continue
+
+            if is_within_distance_ahead(object_waypoint.transform,
                                         self._vehicle.get_transform(),
-                                        self._proximity_threshold):
+                                        self._proximity_tlight_threshold):
                 if traffic_light.state == carla.TrafficLightState.Red:
                     return (True, traffic_light)
 
         return (False, None)
 
-    def _is_light_red_us_style(self, lights_list, debug=False):
+    def _get_trafficlight_trigger_location(self, traffic_light):  # pylint: disable=no-self-use
         """
-        This method is specialized to check US style traffic lights.
-
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                   affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
+        Calculates the yaw of the waypoint that represents the trigger volume of the traffic light
         """
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+        def rotate_point(point, radians):
+            """
+            rotate a given point by a given angle
+            """
+            rotated_x = math.cos(radians) * point.x - math.sin(radians) * point.y
+            rotated_y = math.sin(radians) * point.x - math.cos(radians) * point.y
 
-        if ego_vehicle_waypoint.is_junction:
-            # It is too late. Do not block the intersection! Keep going!
-            return (False, None)
+            return carla.Vector3D(rotated_x, rotated_y, point.z)
 
-        if self._local_planner.target_waypoint is not None:
-            if self._local_planner.target_waypoint.is_junction:
-                min_angle = 180.0
-                sel_magnitude = 0.0
-                sel_traffic_light = None
-                for traffic_light in lights_list:
-                    loc = traffic_light.get_location()
-                    magnitude, angle = compute_magnitude_angle(loc,
-                                                               ego_vehicle_location,
-                                                               self._vehicle.get_transform().rotation.yaw)
-                    if magnitude < 60.0 and angle < min(25.0, min_angle):
-                        sel_magnitude = magnitude
-                        sel_traffic_light = traffic_light
-                        min_angle = angle
+        base_transform = traffic_light.get_transform()
+        base_rot = base_transform.rotation.yaw
+        area_loc = base_transform.transform(traffic_light.trigger_volume.location)
+        area_ext = traffic_light.trigger_volume.extent
 
-                if sel_traffic_light is not None:
-                    if debug:
-                        print('=== Magnitude = {} | Angle = {} | ID = {}'.format(
-                            sel_magnitude, min_angle, sel_traffic_light.id))
+        point = rotate_point(carla.Vector3D(0, 0, area_ext.z), math.radians(base_rot))
+        point_location = area_loc + carla.Location(x=point.x, y=point.y)
 
-                    if self._last_traffic_light is None:
-                        self._last_traffic_light = sel_traffic_light
-
-                    if self._last_traffic_light.state == carla.TrafficLightState.Red:
-                        return (True, self._last_traffic_light)
-                else:
-                    self._last_traffic_light = None
-
-        return (False, None)
+        return carla.Location(point_location.x, point_location.y, point_location.z)
 
     def _is_vehicle_hazard(self, vehicle_list):
         """
@@ -185,7 +154,7 @@ class Agent(object):
 
             if is_within_distance_ahead(target_vehicle.get_transform(),
                                         self._vehicle.get_transform(),
-                                        self._proximity_threshold):
+                                        self._proximity_vehicle_threshold):
                 return (True, target_vehicle)
 
         return (False, None)
