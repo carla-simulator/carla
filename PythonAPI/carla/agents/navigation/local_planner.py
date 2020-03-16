@@ -104,13 +104,13 @@ class LocalPlanner(object):
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         args_lateral_dict = {
             'K_P': 1.95,
-            'K_D': 0.01,
-            'K_I': 1.4,
+            'K_D': 0.2,
+            'K_I': 0.07,
             'dt': self._dt}
         args_longitudinal_dict = {
             'K_P': 1.0,
             'K_D': 0,
-            'K_I': 1,
+            'K_I': 0.05,
             'dt': self._dt}
 
         # parameters overload

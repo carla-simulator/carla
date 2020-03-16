@@ -48,6 +48,7 @@
   * Fixed import pipeline bugs:
     - Crash when no pedestrian navmesh is present
     - Automatically imported static meshes not properly tagged
+  * Fixed PID controller's sensitivity to time discretization
 
 ## CARLA 0.9.7
 
