@@ -34,14 +34,14 @@ print(client.get_available_maps())
 
 ### Lanes
 
-The lane types defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API as [__carla.LaneType__](python_api.md#carla.LaneType)as a series of enum values.  
+The lane types defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API in [__carla.LaneType__](python_api.md#carla.LaneType) as a series of enum values.  
 
 The lane markings surrounding a lane can be accessed through [__carla.LaneMarking__](python_api.md#carla.LaneMarkingType). These are defined with a series of variables.  
 
-* [__carla.LaneMarkingType__](python_api.md#carla.LaneMarkingType) as enum values according to OpenDRIVE standards. 
-* [__carla.LaneMarkingColor__](python_api.md#carla.LaneMarkingColor) enum values to determine the color of the marking. 
+* [__carla.LaneMarkingType__](python_api.md#carla.LaneMarkingType) are enum values according to OpenDRIVE standards. 
+* [__carla.LaneMarkingColor__](python_api.md#carla.LaneMarkingColor) are enum values to determine the color of the marking. 
 * __width__ to state thickness of the marking. 
-* [__carla.LaneChange__](python_api.md#carla.LaneChange) to state permissions to perform lane changes .  
+* [__carla.LaneChange__](python_api.md#carla.LaneChange) to state permissions to perform lane changes.  
 
 Waypoints use these to aknowledge traffic permissions.  
 
@@ -91,13 +91,10 @@ right_lm_color = waypoint.right_lane_marking.color
 
 Waypoints have a set of methods to connect with others and create a road flow. All of these methods follow traffic rules to determine only places where the vehicle can go.  
 
-* `next(d)` creates new waypoint at an approximate distance `d` __in the direction of the lane__.
-* `previous(d)` creates a new waypoint at an approximate distance `d` __on the opposite direction of the lane__.  
-* `next_until_lane_end(d)` and `previous_until_lane_start(d)` use a distance `d` to find a list of equally distant waypoints in the lane.  
-* `get_right_lane()` and `get_left_lane()` return the equivalent waypoint in an adjacent lane if existing. Find the waypoint next to this to perform a __lane change__.
-
-Waypoints can also find their equivalent at the center of an adjacent lane (if said lane exists) using `get_right_lane()` and `get_left_lane()`. This is useful to find the next waypoint on a neighbour lane to then perform a lane change. 
-
+* `next(d)` creates a list of waypoints at an approximate distance `d` __in the direction of the lane__. The list contains one waypoint for each deviation possible. 
+* `previous(d)` creates a list of waypoints waypoint at an approximate distance `d` __on the opposite direction of the lane__. The list contains one waypoint for each deviation possible.  
+* `next_until_lane_end(d)` and `previous_until_lane_start(d)` returns a list of waypoints a distance `d` apart. The list goes from the current waypoint to the end and start of its lane, respectively.  
+* `get_right_lane()` and `get_left_lane()` return the equivalent waypoint in an adjacent lane, if any. A lane change maneuver can be made by finding the next waypoint to the one on its right/left lane, and moving to it. 
 ```py
 # Disable physics, in this example the vehicle is teleported.
 vehicle.set_simulate_physics(False)
@@ -107,9 +104,6 @@ while True:
     # Teleport the vehicle.
     vehicle.set_transform(waypoint.transform)
 ```  
-
-!!! Note
-    These methods return a list. If there is more than one possible location (for example at junctions where the lane diverges), the returned list will contain as many waypoints. 
 
 ### Generating a map navigation
 

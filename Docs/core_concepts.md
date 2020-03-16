@@ -1,6 +1,6 @@
 # Core concepts
 
-This page introduces the main features and modules in CARLA. Detailed explanations on different subjects can be found in their corresponding page.  
+This page introduces the main features and modules in CARLA. Detailed explanations of the different subjects can be found in their corresponding page.  
 
 In order to learn about the different classes and methods in the API, take a look at the [Python API reference](python_api.md). Besides, the [Code recipes](ref_code_recipes.md) reference contains some common code chunks, specially useful during these first steps. 
 
@@ -33,7 +33,7 @@ An actor is anything that plays a role in the simulation.
 * The spectator.
 * Traffic signs and traffic lights.
 
-__Blueprints__ are already-made actor layouts necessary to spawn an actor. Basically, models with animations and a set of attributes. Some of these attributes can be customized by the user, others don't. There is a [__Blueprint library__](bp_library.md) containing all the blueprints available and information on them.  
+__Blueprints__ are already-made actor layouts necessary to spawn an actor. Basically, models with animations and a set of attributes. Some of these attributes can be customized by the user, others don't. There is a [__Blueprint library__](bp_library.md) containing all the blueprints available as well ass information on them.  
 
 ### 3rd. Maps and navigation
 

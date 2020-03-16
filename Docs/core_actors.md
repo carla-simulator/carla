@@ -20,7 +20,7 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 ---
 ## Blueprints
 
-These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations, and a series of attributes listed. Some of these are modifiable and others are not. They include vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.  
+These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations and a series of attributes. Some of these are modifiable and others are not. These attributes include, among others, vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.  
 
 Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes.  
 
@@ -30,7 +30,7 @@ The [carla.BlueprintLibrary](python_api.md#carla.BlueprintLibrary) class contain
 ```py
 blueprint_library = world.get_blueprint_library()
 ```
-Blueprints have an ID to identify them and the actors spawned with it. The library can be read to find a certain ID, choose randomly, or filter results using a [wildcard pattern](https://tldp.org/LDP/GNU-Linux-Tools-Summary/html/x11655.htm).
+Blueprints have an ID to identify them and the actors spawned with it. The library can be read to find a certain ID, choose a blueprint at random, or filter results using a [wildcard pattern](https://tldp.org/LDP/GNU-Linux-Tools-Summary/html/x11655.htm).
 
 ```py
 # Find a specific blueprint.
@@ -78,7 +78,7 @@ transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
 actor = world.spawn_actor(blueprint, transform)
 ```
 
-The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. The world can try avoiding this. 
+The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. It is possible to try avoiding these undesired spawning collisions.  
 
 * `map.get_spawn_points()` __for vehicles__. Returns a list of recommended spawning points. 
 
@@ -103,7 +103,7 @@ camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle, 
 !!! Important
     When spawning attached actors, the transform provided must be relative to the parent actor. 
 
-Once spawned, the world object adds the actors to a list. This can be searched or iterated on easily. 
+Once spawned, the world object adds the actors to a list. This can be easily searched or iterated on. 
 ```py
 actor_list = world.get_actors()
 # Find an actor by id.
@@ -139,7 +139,7 @@ Besides that, actors also have tags provided by their blueprints. These are most
 
 ### Destruction
 
-Actors are not destroyed when a Python script finishes. They have to get rid of themselves.  
+Actors are not destroyed when a Python script finishes. They have to explicitly destroy themselves.  
 
 ```py
 destroyed_sucessfully = actor.destroy() # Returns True if successful
@@ -154,14 +154,14 @@ destroyed_sucessfully = actor.destroy() # Returns True if successful
 
 Sensors are actors that produce a stream of data. They have their own section, [4th. Sensors and data](core_sensors.md). For now, let's just take a look at a common sensor spawning cycle.  
 
-This example spawns a camera sensor, attaches it to a vehicle, and tells the camera to save to disk the images generated.  
+This example spawns a camera sensor, attaches it to a vehicle, and tells the camera to save the images generated to disk.  
 
 ```py
 camera_bp = blueprint_library.find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle)
 camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 ```
-* Snesors have blueprints too. Setting attributes is crucial.  
+* Sensors have blueprints too. Setting attributes is crucial.  
 * Most of the sensors will be attached to a vehicle to gather information on its surroundings. 
 * Sensors __listen__ to data. When data is received, they call a function described with a __[Lambda expression](https://docs.python.org/3/reference/expressions.html)__ <small>(6.13 in the link provided)</small>. 
 
@@ -171,7 +171,7 @@ Placed by Unreal Engine to provide an in-game point of view. It can be used to m
 
 ### Traffic signs and traffic lights
 
-So far, CARLA only is aware of some signs: stop, yield and speed limit. Traffic lights are considered an inherited class from the more general traffic sign. __None of these can found on the blueprint library__ and thus, cannot be spawned. They set traffic conditions, so they are mindfully placed by developers. 
+So far, CARLA only is aware of some signs: stop, yield and speed limit. Traffic lights are considered an inherited class from the more general traffic sign. __None of these can be found in the blueprint library__ and thus, cannot be spawned. They set traffic conditions, so they are mindfully placed by developers. 
 
 [__Traffic signs__](python_api.md#carla.TrafficSign) are not defined in the road map itself, as explained in the following page. Instead, they have a [carla.BoundingBox](python_api.md#carla.BoundingBox) to affect vehicles inside of it.  
 ```py
@@ -182,15 +182,16 @@ if vehicle_actor.is_at_traffic_light():
 !!! Note
     Vehicles will only notice a traffic light if the light is red.  
 
-[__Traffic lights__](python_api.md#carla.TrafficLight) are found in junctions. They belong to a `group`. A `pole` number identifies each within the group.  
+[__Traffic lights__](python_api.md#carla.TrafficLight) are found in junctions. They have their unique ID, as any actor, but also a `group` ID for the junction. To identify the traffic lights in the same group, a `pole` ID is used.  
 
-A group of traffic lights follows a cycle. The first one is set to green while the rest remain frozen in red. The active one spends a few seconds in green, yellow and red, so there is a period of time where all the lights are red. Then, the next traffic light starts its cycle, and the previous one is frozen with the rest.  
+The traffic lights in the same group follow a cycle. The first one is set to green while the rest remain frozen in red. The active one spends a few seconds in green, yellow and red, so there is a period of time where all the lights are red. Then, the next traffic light starts its cycle, and the previous one is frozen with the rest.  
 
 The state of a traffic light can be set using the API. So does the seconds spent on each state. Possible states are described with [carla.TrafficLightState](python_api.md#carla.TrafficLightState) as a series of enum values. 
 ```py
 #Change a red traffic light to green
 if traffic_light.get_state() == carla.TrafficLightState.Red:
     traffic_light.set_state(carla.TrafficLightState.Green)
+    traffic_light.set_set_green_time(4.0)
 ``` 
 
 ### Vehicles
@@ -207,21 +208,32 @@ vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-Vehicles can be set to __autopilot mode__. This will subscribe them to the [Traffic manager](adv_traffic_manager.md), to simulate real urban conditions.  
-
-```py
-vehicle.set_autopilot(True)
-```
-!!! Note
-    The traffic manager module is hard-coded, not based on machine learning.  
-
-Vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) that encapsulates them and is used for collision detection.  
+In order to apply physics and detect collisions, vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) encapsulating them.  
 
 ```py
 box = vehicle.bounding_box
 print(box.location)         # Location relative to the vehicle.
 print(box.extent)           # XYZ half-box extents in meters.
 ```
+
+Vehicles include other functionalities unique to them.
+
+* The __autopilot mode__ will subscribe them to the [Traffic manager](adv_traffic_manager.md), and simulate real urban conditions. This module is hard-coded, not based on machine learning.  
+
+```py
+vehicle.set_autopilot(True)
+```
+* __Vehicle lights__ created specifically for each vehicle model. They can be accessed from the API. In order to turn them on/off, the vehicle uses flag values. These are defined in [carla.VehicleLightState](python_api.md#carla.VehicleLightState) and binary operations are used to combine them.
+
+```py
+# Turn on position lights 
+current_lights = carla.VehicleLightState.NONE
+current_lights |= carla.VehicleLightState.Position
+vehicle.set_light_state(current_lights)
+```
+
+!!! Note
+    So far, vehicle lights have been implemented only for a specific set of vehicles, listed in the [release post](http://carla.org/2020/03/09/release-0.9.8/#vehicle-lights).  
 
 ### Walkers
 
@@ -240,7 +252,7 @@ world.SpawnActor(walker_controller_bp, carla.Transform(), parent_walker)
     The AI controller is bodiless and has no physics. It will not appear on scene. Also, location `(0,0,0)` relative to its parent will not cause a collision.  
 
 
-__Each AI controller has to be initialized, set a goal and optionally a speed__. Stopping the controller works in the same manner. 
+__Each AI controller needs initialization, a goal and, optionally, a speed__. Stopping the controller works in the same manner. 
 
 ```py
 ai_controller.start()
