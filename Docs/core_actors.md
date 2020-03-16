@@ -167,7 +167,15 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 
 ### Spectator
 
-Placed by Unreal Engine to provide an in-game point of view. It can be used to move the view of the simulator window.
+Placed by Unreal Engine to provide an in-game point of view. It can be used to move the view of the simulator window. The following example would move the spectator actor, to point the view towards a desired vehicle. 
+
+```py
+spectator = world.get_spectator()
+transform = vehicle.get_transform()
+spectator.set_transform(carla.Transform(transform.location + carla.Location(z=50),
+carla.Rotation(pitch=-90)))
+
+```
 
 ### Traffic signs and traffic lights
 
