@@ -93,7 +93,8 @@ namespace LocalizationConstants {
       const Actor vehicle = actor_list.at(i);
       const ActorId actor_id = vehicle->GetId();
       const cg::Location vehicle_location = vehicle->GetLocation();
-      const float vehicle_velocity = GetVelocity(actor_id).Length();
+      const cg::Vector3D vehicle_velocity_vector = GetVelocity(actor_id);
+      const float vehicle_velocity = vehicle_velocity_vector.Length();
 
       // Initializing idle times.
       if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0) {
@@ -318,10 +319,12 @@ namespace LocalizationConstants {
                 });
 
       // Constructing output vector.
-      std::vector<std::pair<ActorId, Actor>> collision_candidates;
+      std::vector<std::tuple<ActorId, Actor, cg::Vector3D>> collision_candidates;
       std::for_each(collision_candidate_ids.begin(), collision_candidate_ids.end(),
-                    [&overlapping_actor_info, &collision_candidates] (const ActorId& a_id) {
-                      collision_candidates.push_back({a_id, overlapping_actor_info.at(a_id).first});
+                    [&overlapping_actor_info, &collision_candidates, this] (const ActorId& a_id) {
+                      collision_candidates.push_back({a_id,
+                                                      overlapping_actor_info.at(a_id).first,
+                                                      this->GetVelocity(a_id)});
                     });
 
       // Editing output frames.
@@ -330,7 +333,7 @@ namespace LocalizationConstants {
       planner_message.deviation = dot_product;
       planner_message.distance = distance;
       planner_message.approaching_true_junction = approaching_junction;
-      planner_message.velocity = GetVelocity(actor_id);
+      planner_message.velocity = vehicle_velocity_vector;
 
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
@@ -339,6 +342,7 @@ namespace LocalizationConstants {
       collision_message.closest_waypoint = updated_front_waypoint;
       collision_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
       collision_message.safe_point_after_junction = final_safe_points[actor_id];
+      collision_message.velocity = vehicle_velocity_vector;
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
@@ -923,6 +927,8 @@ namespace LocalizationConstants {
     cg::Vector3D vel;
     if (kinematic_state_map.find(actor_id) != kinematic_state_map.end()) {
       vel = kinematic_state_map.at(actor_id).velocity;
+    } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
+      vel = unregistered_actors.at(actor_id)->GetVelocity();
     }
     return vel;
   }

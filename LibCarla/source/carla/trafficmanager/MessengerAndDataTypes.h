@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -57,10 +58,11 @@ namespace traffic_manager {
   struct LocalizationToCollisionData {
     Actor actor;
     Buffer buffer;
-    std::vector<std::pair<ActorId, Actor>> overlapping_actors;
+    std::vector<std::tuple<ActorId, Actor, cg::Vector3D>> overlapping_actors;
     std::shared_ptr<SimpleWaypoint> safe_point_after_junction;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
+    cg::Vector3D velocity;
   };
 
   /// Type of data sent by the collision stage to the motion planner stage.

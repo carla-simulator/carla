@@ -13,6 +13,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <tuple>
 #include <unordered_map>
 
 #include "carla/StringUtil.h"

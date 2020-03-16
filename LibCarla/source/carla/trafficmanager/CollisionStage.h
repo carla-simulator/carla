@@ -11,6 +11,7 @@
 #include <deque>
 #include <stdlib.h>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -82,11 +83,11 @@ namespace traffic_manager {
     SnippetProfiler snippet_profiler;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor &actor, const cg::Location &location);
+    LocationList GetBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
 
     /// Returns the extrapolated bounding box of the vehicle along its
     /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location);
+    LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
 
     /// Method to construct a boost polygon object.
     Polygon GetPolygon(const LocationList &boundary);
@@ -97,14 +98,17 @@ namespace traffic_manager {
                                               const cg::Location &reference_location,
                                               const cg::Location &other_location,
                                               const SimpleWaypointPtr& closest_point,
-                                              const SimpleWaypointPtr& junction_look_ahead);
+                                              const SimpleWaypointPtr& junction_look_ahead,
+                                              const cg::Vector3D reference_velocity,
+                                              const cg::Vector3D other_velocity);
 
     /// Method to calculate the speed dependent bounding box extention for a vehicle.
-    float GetBoundingBoxExtention(const Actor &ego_vehicle);
+    float GetBoundingBoxExtention(const cg::Vector3D velocity);
 
     /// At intersections, used to see if there is space after the junction
     bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor,
-                                    const SimpleWaypointPtr safe_point, const cg::Location &other_location);
+                                     const SimpleWaypointPtr safe_point, const cg::Location &other_location,
+                                     const cg::Vector3D other_velocity);
 
     /// A simple method used to draw bounding boxes around vehicles
     void DrawBoundary(const LocationList &boundary);
