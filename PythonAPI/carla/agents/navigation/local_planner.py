@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2018 Intel Labs.
-# authors: German Ros (german.ros@intel.com)
+# Copyright (c) # Copyright (c) 2018-2020 CVC.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -186,7 +183,7 @@ class LocalPlanner(object):
         self._target_road_option = RoadOption.LANEFOLLOW
         self._global_plan = True
 
-    def run_step(self, debug=True):
+    def run_step(self, debug=False):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
         follow the waypoints trajectory.

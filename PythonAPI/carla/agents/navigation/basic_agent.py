@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2018 Intel Labs.
-# authors: German Ros (german.ros@intel.com)
+# Copyright (c) # Copyright (c) 2018-2020 CVC.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
@@ -58,7 +55,6 @@ class BasicAgent(Agent):
             carla.Location(location[0], location[1], location[2]))
 
         route_trace = self._trace_route(start_waypoint, end_waypoint)
-        assert route_trace
 
         self._local_planner.set_global_plan(route_trace)
 

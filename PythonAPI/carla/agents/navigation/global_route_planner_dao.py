@@ -1,3 +1,5 @@
+# Copyright (c) # Copyright (c) 2018-2020 CVC.
+#
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -14,11 +16,12 @@ class GlobalRoutePlannerDAO(object):
     from the carla server instance for GlobalRoutePlanner
     """
 
-    def __init__(self, wmap, sampling_resolution=1):
-        """get_topology
-        Constructor
+    def __init__(self, wmap, sampling_resolution):
+        """
+        Constructor method.
 
-        wmap    :   carl world map object
+            :param wmap: carla.world object
+            :param sampling_resolution: sampling distance between waypoints
         """
         self._sampling_resolution = sampling_resolution
         self._wmap = wmap
@@ -30,7 +33,7 @@ class GlobalRoutePlannerDAO(object):
         road segments as pairs of waypoint objects, and processes the
         topology into a list of dictionary objects.
 
-        return: list of dictionary objects with the following attributes
+            :return topology: list of dictionary objects with the following attributes
                 entry   -   waypoint of entry point of road segment
                 entryxyz-   (x,y,z) of entry point of road segment
                 exit    -   waypoint of exit point of road segment
@@ -57,13 +60,16 @@ class GlobalRoutePlannerDAO(object):
                     seg_dict['path'].append(w)
                     w = w.next(self._sampling_resolution)[0]
             else:
-                seg_dict['path'].append(wp1.next(self._sampling_resolution/2.0)[0])
+                seg_dict['path'].append(wp1.next(self._sampling_resolution)[0])
             topology.append(seg_dict)
         return topology
 
     def get_waypoint(self, location):
         """
         The method returns waypoint at given location
+
+            :param location: vehicle location
+            :return waypoint: generated waypoint close to location
         """
         waypoint = self._wmap.get_waypoint(location)
         return waypoint

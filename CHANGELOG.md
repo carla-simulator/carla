@@ -4,6 +4,8 @@
 
 ## CARLA 0.9.8
 
+  * Improved manual_control by adding realistic throttle and brake
+  * Added new Behavior agent
   * Added beta version sumo-carla co-simulation.
   * Traffic Manager:
     - Added benchmark
