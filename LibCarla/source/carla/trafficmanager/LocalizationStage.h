@@ -167,6 +167,7 @@ namespace traffic_manager {
     /// Methods for actor state management.
     void UpdateSwarmVelocities();
     cg::Vector3D GetVelocity(ActorId actor_id);
+    bool IsPhysicsEnabled(ActorId actor_id);
 
   public:
 

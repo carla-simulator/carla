@@ -13,6 +13,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/rpc/ActorId.h"
 
@@ -44,6 +45,7 @@ namespace traffic_manager {
     float distance;
     bool approaching_true_junction;
     cg::Vector3D velocity;
+    bool physics_enabled;
     std::vector<std::shared_ptr<SimpleWaypoint>> position_window;
   };
 
@@ -53,6 +55,8 @@ namespace traffic_manager {
     float throttle;
     float brake;
     float steer;
+    bool physics_enabled;
+    cg::Transform transform;
   };
 
   /// Type of data sent by the localization stage to the collision stage.

@@ -16,6 +16,7 @@ namespace PlannerConstants {
   static const float STATIONARY_LEAD_APPROACH_SPEED_2 = 5.0f / 3.6f;
   static const float CRITICAL_BRAKING_MARGIN_1 = 5.0f;
   static const float CRITICAL_BRAKING_MARGIN_2 = 0.1f;
+  static const float HYBRID_MODE_DT = 0.05f;
 
 } // namespace PlannerConstants
 
@@ -129,24 +130,130 @@ namespace PlannerConstants {
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
-      // State update for vehicle.
-      StateEntry current_state = controller.StateUpdate(previous_state, current_velocity,
-                                                        dynamic_target_velocity, current_deviation,
-                                                        current_distance, current_time);
-
-      // Controller actuation.
-      ActuationSignal actuation_signal = controller.RunStep(current_state, previous_state,
-                                                            longitudinal_parameters, lateral_parameters);
-
-      // In case of traffic light hazard.
+      bool emergency_stop = false;
+      // In case of collision or traffic light hazard.
       if (traffic_light_frame->at(i).traffic_light_hazard
           || (collision_data.hazard
               && collision_data.distance_to_other_vehicle < CRITICAL_BRAKING_MARGIN_2)) {
+      emergency_stop = true;
+      }
 
-        current_state.deviation_integral = 0.0f;
-        current_state.velocity_integral = 0.0f;
-        actuation_signal.throttle = 0.0f;
-        actuation_signal.brake = 1.0f;
+      // Message items to be sent to batch control stage.
+      ActuationSignal actuation_signal;
+      bool physics_enabled = true;
+      cg::Transform teleportation_transform;
+
+      // If physics is enabled for the vehicle, use PID controller.
+      StateEntry current_state;
+      if (localization_data.physics_enabled) {
+
+        // State update for vehicle.
+        current_state = controller.StateUpdate(previous_state, current_velocity,
+                                               dynamic_target_velocity, current_deviation,
+                                               current_distance, current_time);
+
+        // Controller actuation.
+        actuation_signal = controller.RunStep(current_state, previous_state,
+                                              longitudinal_parameters, lateral_parameters);
+
+        if (emergency_stop) {
+
+          current_state.deviation_integral = 0.0f;
+          current_state.velocity_integral = 0.0f;
+          actuation_signal.throttle = 0.0f;
+          actuation_signal.brake = 1.0f;
+        }
+
+      }
+      // For physics-less vehicles, determine position and orientation for teleportation.
+      else if (hybrid_physics_mode) {
+
+        physics_enabled = false;
+
+        // Flushing controller state for vehicle.
+        current_state = {0.0f, 0.0f, 0.0f,
+                         chr::system_clock::now(),
+                         0.0f, 0.0f, 0.0f};
+
+        // Add entry to teleportation duration clock table if not present.
+        if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
+          teleportation_instance.insert({actor_id, chr::system_clock::now()});
+        }
+
+        // Measuring time elapsed since last teleportation for the vehicle.
+        chr::duration<float> elapsed_time = current_time - teleportation_instance.at(actor_id);
+
+        // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
+        if (!emergency_stop && !(!parameters.GetSynchronousMode() && elapsed_time.count() < HYBRID_MODE_DT)) {
+
+          // Target displacement magnitude to achieve target velocity.
+          float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+
+          SimpleWaypointPtr target_interval_begin = nullptr;
+          SimpleWaypointPtr target_interval_end = nullptr;
+          bool teleportation_interval_found = false;
+          cg::Location vehicle_location = actor->GetLocation();
+
+          // Find the interval containing position to achieve target displacement.
+          for (uint32_t j = 0u;
+                j+1 < localization_data.position_window.size() && !teleportation_interval_found;
+                ++j) {
+
+            target_interval_begin = localization_data.position_window.at(j);
+            target_interval_end = localization_data.position_window.at(j+1);
+
+            if (target_interval_begin->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2)
+                || (target_interval_begin->DistanceSquared(vehicle_location) < std::pow(target_displacement, 2)
+                    && target_interval_end->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2))
+            ) {
+              teleportation_interval_found = true;
+            }
+          }
+
+          if (target_interval_begin != nullptr && target_interval_end != nullptr) {
+
+            // Construct target transform to accurately achieve desired velocity.
+            float missing_displacement = target_displacement - (target_interval_begin->Distance(vehicle_location));
+            cg::Transform target_base_transform = target_interval_begin->GetTransform();
+            cg::Location target_base_location = target_base_transform.location;
+            cg::Vector3D target_heading = target_base_transform.GetForwardVector();
+            cg::Location teleportation_location = target_base_location
+                                                  + cg::Location(target_heading * missing_displacement)
+                                                  + cg::Location(0, 0, vehicle->GetBoundingBox().extent.z);
+            teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+
+            ////////////////////////////////////// DEBUG /////////////////////////////////////////
+            debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
+                                    "Found target waypoints", false, {0u, 255u, 0u}, 0.05f);
+            //////////////////////////////////////////////////////////////////////////////////////
+
+          } else {
+
+            teleportation_transform = actor->GetTransform();
+
+            ////////////////////////////////////// DEBUG /////////////////////////////////////////
+            debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
+                                    "Couldn't find waypoints, window size : "
+                                    + std::to_string(localization_data.position_window.size()),
+                                    false, {0u, 0u, 255u}, 0.05f);
+            //////////////////////////////////////////////////////////////////////////////////////
+
+          }
+
+        }
+        // In case of an emergency stop, stay in the same location.
+        // Also, teleport only once every dt in asynchronous mode.
+        else {
+
+          teleportation_transform = actor->GetTransform();
+
+          ////////////////////////////////////// DEBUG /////////////////////////////////////////
+          debug_helper.DrawString(actor->GetLocation() + cg::Location(0, 0, 4),
+                                  "Emergency stop", false, {255u, 0u, 0u}, 0.05f);
+          //////////////////////////////////////////////////////////////////////////////////////
+
+        }
+
       }
 
       // Updating PID state.
@@ -159,6 +266,8 @@ namespace PlannerConstants {
       message.throttle = actuation_signal.throttle;
       message.brake = actuation_signal.brake;
       message.steer = actuation_signal.steer;
+      message.physics_enabled = physics_enabled;
+      message.transform = teleportation_transform;
     }
   }
 
@@ -177,6 +286,8 @@ namespace PlannerConstants {
       control_frame_a = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
       control_frame_b = std::make_shared<PlannerToControlFrame>(number_of_vehicles);
     }
+
+    hybrid_physics_mode = parameters.GetHybridPhysicsMode();
   }
 
   void MotionPlannerStage::DataSender() {

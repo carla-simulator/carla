@@ -132,5 +132,9 @@ namespace traffic_manager {
     return waypoint->GetJunctionId();
   }
 
+  cg::Transform SimpleWaypoint::GetTransform() const {
+    return waypoint->GetTransform();
+  }
+
 } // namespace traffic_manager
 } // namespace carla

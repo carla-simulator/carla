@@ -29,6 +29,7 @@ namespace LocalizationConstants {
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float PHYSICS_RADIUS = 50.0f;
   static const float POSITION_WINDOW_SIZE = 2.1f;
+  static const float HYBRID_MODE_DT = 0.05f;
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -331,22 +332,32 @@ namespace LocalizationConstants {
       // Sampling waypoint window for teleportation in hybrid physics mode.
       std::vector<SimpleWaypointPtr> position_window;
       if (hybrid_physics_mode) {
+
         cg::Vector3D heading = vehicle->GetTransform().GetForwardVector();
+        bool window_begin = false;
+        SimpleWaypointPtr begining_wp;
         bool window_complete = false;
+
         for (uint32_t j = 0u; j < waypoint_buffer.size() && !window_complete; ++j) {
+
           SimpleWaypointPtr &swp = waypoint_buffer.at(i);
           cg::Vector3D relative_position = swp->GetLocation() - vehicle_location;
+
           // Sample waypoints in front of the vehicle;
-          if (cg::Math::Dot(relative_position, heading) > 0.0f) {
-            if (swp->DistanceSquared(vehicle_location) > std::pow(POSITION_WINDOW_SIZE, 2)) {
-              // Stop when maximum size is reached.
-              window_complete = true;
-            } else {
-              position_window.push_back(swp);
-            }
+          if (!window_begin && cg::Math::Dot(relative_position, heading) > 0.0f) {
+            window_begin = true;
+            begining_wp = swp;
+          }
+
+          if (swp->DistanceSquared(begining_wp) > std::pow(POSITION_WINDOW_SIZE, 2)) {
+            // Stop when maximum size is reached.
+            window_complete = true;
+          } else {
+            position_window.push_back(swp);
           }
         }
       }
+      std::cout << "SIZE : " << position_window.size() << std::endl;
 
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
@@ -356,6 +367,7 @@ namespace LocalizationConstants {
       planner_message.approaching_true_junction = approaching_junction;
       planner_message.velocity = vehicle_velocity_vector;
       planner_message.position_window = std::move(position_window);
+      planner_message.physics_enabled = IsPhysicsEnabled(actor_id);
 
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
@@ -890,7 +902,7 @@ namespace LocalizationConstants {
     }
 
     // Using (1/20)s time delta for computing velocity.
-    float dt = 0.05f;
+    float dt = HYBRID_MODE_DT;
     // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
     if (!parameters.GetSynchronousMode()) {
       TimePoint current_instance = chr::system_clock::now();
@@ -922,11 +934,7 @@ namespace LocalizationConstants {
       }
       bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
       kinematic_state_map.at(actor_id).physics_enabled = enable_physics;
-
-      // TODO : Apply command to enable or disable physics based on previous steps.
-      // Analyse how this might affects stages down stream which are still holding
-      // older data which would suggest physics is disabled or enabled according to
-      // the data that they hold.
+      actor->SetSimulatePhysics(enable_physics);
 
       // When we say velocity, we usually mean velocity for a vehicle along it's heading.
       // Velocity component due to rotation can be removed by taking dot product with heading vector.
@@ -953,6 +961,14 @@ namespace LocalizationConstants {
       vel = unregistered_actors.at(actor_id)->GetVelocity();
     }
     return vel;
+  }
+
+  bool LocalizationStage::IsPhysicsEnabled(ActorId actor_id) {
+    bool enabled = true;
+    if (kinematic_state_map.find(actor_id) != kinematic_state_map.end()) {
+      enabled = kinematic_state_map.at(actor_id).physics_enabled;
+    }
+    return enabled;
   }
 
 } // namespace traffic_manager
