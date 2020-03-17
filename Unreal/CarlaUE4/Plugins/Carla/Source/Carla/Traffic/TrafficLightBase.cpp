@@ -304,8 +304,6 @@ TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
       }
     }
 
-
-
     return result;
   }
   return GroupTrafficLights;
