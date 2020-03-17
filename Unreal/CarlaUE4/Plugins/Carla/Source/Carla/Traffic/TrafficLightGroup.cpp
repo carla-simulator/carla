@@ -34,20 +34,17 @@ void ATrafficLightGroup::ResetGroup()
     Controller->ResetState();
   }
   CurrentController = 0;
-  Timer = Controllers[CurrentController]->NextState();
+  if(Controllers.Num() > 0) {
+    Timer = Controllers[CurrentController]->NextState();
+  } else {
+    Timer = 0.0f;
+  }
   CurrentStateTimer = Timer;
 }
 
 float ATrafficLightGroup::GetElapsedTime() const
 {
   return (CurrentStateTimer - Timer);
-}
-
-// Called when the game starts or when spawned
-void ATrafficLightGroup::BeginPlay()
-{
-  Super::BeginPlay();
-
 }
 
 // Called every frame
