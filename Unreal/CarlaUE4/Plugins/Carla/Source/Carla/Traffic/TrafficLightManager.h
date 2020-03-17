@@ -50,6 +50,8 @@ protected:
 
 private:
 
+  void ResetTrafficLightObjects();
+
   // Cached Carla Game Mode
   UPROPERTY()
   ACarlaGameModeBase *GameMode = 0;

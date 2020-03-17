@@ -17,38 +17,6 @@ UTrafficLightComponent::UTrafficLightComponent()
 {
 }
 
-// Called when the game starts
-void UTrafficLightComponent::BeginPlay()
-{
-  Super::BeginPlay();
-
-  // Search the Traffic Light Manager
-  TArray<AActor*> TrafficLightManagerArray;
-  UGameplayStatics::GetAllActorsOfClass(
-      GetWorld(),
-      ATrafficLightManager::StaticClass(),
-      TrafficLightManagerArray);
-
-  // Create it if missing
-  if (!TrafficLightManagerArray.Num())
-  {
-    TrafficLightManagerArray.Add(
-        GetWorld()->SpawnActor<ATrafficLightManager>());
-  }
-
-  // Register this component
-  ATrafficLightManager *TrafficLightManager =
-      Cast<ATrafficLightManager>(TrafficLightManagerArray.Top());
-
-  TrafficLightManager->RegisterLightComponent(this);
-}
-
-// Called every frame
-void UTrafficLightComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-  Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
 void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
 {
   LightState = NewState;
