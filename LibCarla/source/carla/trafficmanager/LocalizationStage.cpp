@@ -349,11 +349,13 @@ namespace LocalizationConstants {
             begining_wp = swp;
           }
 
-          if (swp->DistanceSquared(begining_wp) > std::pow(POSITION_WINDOW_SIZE, 2)) {
-            // Stop when maximum size is reached.
-            window_complete = true;
-          } else {
-            position_window.push_back(swp);
+          if (window_begin && !window_complete) {
+            if (swp->DistanceSquared(begining_wp) > std::pow(POSITION_WINDOW_SIZE, 2)) {
+              // Stop when maximum size is reached.
+              window_complete = true;
+            } else {
+              position_window.push_back(swp);
+            }
           }
         }
       }
