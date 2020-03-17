@@ -384,9 +384,9 @@ Load a new world with default settings using `map_name` map. All actors present 
         - `duration` (_float_) – Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) – ID of the actor to follow. If this is 0 then camera is disabled.  
 - <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>)  
-Loads a new world with a basic physical topology generated from an OpenDRIVE file passed as `string`. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
+Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
     - **Parameters:**
-        - `opendrive` (_str_) – OpenDRIVE data as `string`.  
+        - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
 - <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
 When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
     - **Parameters:**
