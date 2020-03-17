@@ -340,7 +340,7 @@ namespace LocalizationConstants {
 
         for (uint32_t j = 0u; j < waypoint_buffer.size() && !window_complete; ++j) {
 
-          SimpleWaypointPtr &swp = waypoint_buffer.at(i);
+          SimpleWaypointPtr &swp = waypoint_buffer.at(j);
           cg::Vector3D relative_position = swp->GetLocation() - vehicle_location;
 
           // Sample waypoints in front of the vehicle;
@@ -942,8 +942,20 @@ namespace LocalizationConstants {
       // Velocity component due to rotation can be removed by taking dot product with heading vector.
       cg::Vector3D heading = actor->GetTransform().GetForwardVector();
       if (enable_physics) {
+
+        ////////////////////////////// DEBUG /////////////////////////////
+        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+                                "Vehicle with physics on", false, {255u, 255u, 0u}, 0.05f);
+        //////////////////////////////////////////////////////////////////
         kinematic_state_map.at(actor_id).velocity = cg::Math::Dot(actor->GetVelocity(), heading) * heading;
       } else {
+
+
+        ////////////////////////////// DEBUG /////////////////////////////
+        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+                                "Vehicle without physics", false, {255u, 0u, 255u}, 0.05f);
+        //////////////////////////////////////////////////////////////////
+
         cg::Vector3D displacement = (vehicle_location - kinematic_state_map.at(actor_id).location);
         cg::Vector3D displacement_along_heading = cg::Math::Dot(displacement, heading) * heading;
         cg::Vector3D velocity = displacement_along_heading/dt;

@@ -218,13 +218,12 @@ namespace PlannerConstants {
             cg::Location target_base_location = target_base_transform.location;
             cg::Vector3D target_heading = target_base_transform.GetForwardVector();
             cg::Location teleportation_location = target_base_location
-                                                  + cg::Location(target_heading * missing_displacement)
-                                                  + cg::Location(0, 0, vehicle->GetBoundingBox().extent.z);
+                                                  + cg::Location(target_heading * missing_displacement);
             teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
 
             ////////////////////////////////////// DEBUG /////////////////////////////////////////
-            debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
-                                    "Found target waypoints", false, {0u, 255u, 0u}, 0.05f);
+            //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
+            //                        "Found target waypoints", false, {0u, 255u, 0u}, 0.05f);
             //////////////////////////////////////////////////////////////////////////////////////
 
           } else {
@@ -232,10 +231,10 @@ namespace PlannerConstants {
             teleportation_transform = actor->GetTransform();
 
             ////////////////////////////////////// DEBUG /////////////////////////////////////////
-            debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
-                                    "Couldn't find waypoints, window size : "
-                                    + std::to_string(localization_data.position_window.size()),
-                                    false, {0u, 0u, 255u}, 0.05f);
+            //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
+            //                        "Couldn't find waypoints, window size : "
+            //                        + std::to_string(localization_data.position_window.size()),
+            //                        false, {0u, 0u, 255u}, 0.05f);
             //////////////////////////////////////////////////////////////////////////////////////
 
           }
@@ -248,8 +247,8 @@ namespace PlannerConstants {
           teleportation_transform = actor->GetTransform();
 
           ////////////////////////////////////// DEBUG /////////////////////////////////////////
-          debug_helper.DrawString(actor->GetLocation() + cg::Location(0, 0, 4),
-                                  "Emergency stop", false, {255u, 0u, 0u}, 0.05f);
+          //debug_helper.DrawString(actor->GetLocation() + cg::Location(0, 0, 4),
+          //                        "Emergency stop", false, {255u, 0u, 0u}, 0.05f);
           //////////////////////////////////////////////////////////////////////////////////////
 
         }
