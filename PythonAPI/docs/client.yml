@@ -196,6 +196,7 @@
         type: float
         doc: >
           Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.
+      return: string
       doc: >
         The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
      # --------------------------------------
@@ -213,6 +214,7 @@
         type: single char
         doc: >
           Character variable specifying the second type of actor involved in the collision.
+      return: string
       doc: >
         The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved.
         The categories will be specified in `category1` and `category2` as follows:
@@ -236,6 +238,7 @@
         default: false
         doc: >
           When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.
+      return: string
       doc: >
         The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.
     # --------------------------------------
