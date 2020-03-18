@@ -401,6 +401,7 @@ The terminal will show the information registered for actors considered blocked.
         - `filename` (_str_) – Name of the recorded file to load.  
         - `min_time` (_float_) – Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.  
         - `min_distance` (_float_) – Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.  
+    - **Return:** _string_  
 - <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  
 The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows:
   'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
@@ -414,11 +415,13 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
+    - **Return:** _string_  
 - <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**=False</font>)  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) – When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.  
+    - **Return:** _string_  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
     - **Parameters:**
