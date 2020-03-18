@@ -257,8 +257,7 @@ Now CARLA is ready to go. Here is a brief summary of the most useful `make` comm
 <th>Description</th>
 </thead>
 <tbody>
-<td>
-<code>make help</code> </td>
+<td><code>make help</code> </td>
 <td>Prints all available commands.</td>
 </tr>
 <tr>

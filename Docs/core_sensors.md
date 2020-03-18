@@ -1,14 +1,15 @@
 # 4th. Sensors and data
 
-The last step in this introduction to CARLA are sensors. They allow to retrieve data from the surroundings and so, are crucial to use CARLA as a learning environment for driving agents.  
-This page summarizes everything necessary to start handling sensors including some basic information about the different types available and a step-by-step of their life cycle. The specifics for every sensor can be found in their [reference](ref_sensors.md)
+Sensors are actors that retrieve data from their surroundings. They are crucial to create learning environment for driving agents.  
 
-  * [__Sensors step-by-step__](#sensors-step-by-step):  
+This page summarizes everything necessary to start handling sensors. It introduces the types available and a step-by-step guide of their life cycle. The specifics for every sensor can be found in the [sensors reference](ref_sensors.md).
+
+* [__Sensors step-by-step__](#sensors-step-by-step)  
 	* Setting  
 	* Spawning  
 	* Listening  
-	* Destroying  
-  * [__Types of sensors__](#types-of-sensors)  
+	* Data  
+* [__Types of sensors__](#types-of-sensors)  
 	* Cameras  
 	* Detectors  
 	* Other  
@@ -18,17 +19,18 @@ This page summarizes everything necessary to start handling sensors including so
 
 The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of actor able to measure and stream data.  
 
-* __What is this data?__ It varies a lot depending on the type of sensor, but the data is always defined as an inherited class of the general [carla.SensorData](python_api.md#carla.SensorData). 
+* __What is this data?__ It varies a lot depending on the type of sensor. All the types of data are inherited from the general [carla.SensorData](python_api.md#carla.SensorData). 
 * __When do they retrieve the data?__ Either on every simulation step or when a certain event is registered. Depends on the type of sensor. 
-* __How do they retrieve the data?__ Every sensor has a `listen()` method that receives and manages the data.  
+* __How do they retrieve the data?__ Every sensor has a `listen()` method to receive and manage the data.  
 
-Despite their differences, the way the user manages every sensor is quite similar. 
+Despite their differences, all the sensors are used in a similar way. 
 
-#### Setting
+### Setting
 
-As with every other actor, the first step is to find the proper blueprint in the library and set specific attributes to get the desired results. This is essential when handling sensors, as their capabilities depend on the way these are set. Their attributes are detailed in the [sensors' reference](ref_sensors.md). 
+As with every other actor, find the blueprint and set specific attributes. This is essential when handling sensors. Their attributes will determine the results obtained. These are detailed in the [sensors reference](ref_sensors.md). 
 
-The following example sets ready a dashboard HD camera that will later be attached to a vehicle.
+The following example sets a dashboard HD camera.
+
 ```py
 # Find the blueprint of the sensor.
 blueprint = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -40,26 +42,25 @@ blueprint.set_attribute('fov', '110')
 blueprint.set_attribute('sensor_tick', '1.0')
 ``` 
 
-#### Spawning
+### Spawning
 
-Sensors are also spawned like any other actor, only this time the two optional parameters, `attachment_to` and `attachment_type` are crucial. They should be attached to another actor, usually a vehicle, to follow it around and gather the information regarding its surroundings.  
-There are two types of attachment:  
+`attachment_to` and `attachment_type`, are crucial. Sensors should be attached to a parent actor, usually a vehicle, to follow it around and gather the information. The attachment type will determine how its position is updated regarding said vehicle. 
 
-* __Rigid__: the sensor's location will be updated strictly regarding its parent. Cameras may show "little hops" as the moves are not eased.  
-* __SpringArm__: movement will be eased with little accelerations and decelerations. 
+* __Rigid attachment.__ Movement is strict regarding its parent location. Cameras may show "little hops" as the position updated is not eased.  
+* __SpringArm attachment.__ Movement is eased with little accelerations and decelerations. 
 
 ```py
 transform = carla.Transform(carla.Location(x=0.8, z=1.7))
 sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 ```
 !!! Important
-    When spawning an actor with attachment, remember that its location should be relative to its parent, not global. 
+    When spawning with attachment, location must be relative to the parent actor. 
 
-#### Listening
+### Listening
 
-Every sensor has a [`listen()`](python_api.md#carla.Sensor.listen) method that is called every time the sensor retrieves data.  
-This method has one argument: `callback`, which is a [lambda expression](https://www.w3schools.com/python/python_lambda.asp) of a function, defining what should the sensor do when data is retrieved.  
-The lambda function must have at least one argument, which will be the retrieved data: 
+Every sensor has a [`listen()`](python_api.md#carla.Sensor.listen) method. This is called every time the sensor retrieves data.  
+
+The argument `callback` is a [lambda function](https://www.w3schools.com/python/python_lambda.asp). It describes what should the sensor do when data is retrieved. This must have the data retrieved as an argument.  
 
 ```py
 # do_something() will be called each time a new image is generated by the camera.
@@ -76,91 +77,155 @@ def callback(event):
 sensor02.listen(callback)
 ```
 
-!!! note
+### Data
+
+Most sensor data objects have a function to save the information to disk. This will allow it to be used in other environments.  
+
+Sensor data differs a lot between sensor types. Take a look at the [sensors reference](ref_sensors.md) to get a detailed explanation. However, all of them are always tagged with some basic information.  
+
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code> </td>
+<td>double</td>
+<td>Timestamp of the measurement in simulation seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code> </td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>World reference of the sensor at the time of the measurement.</td>
+</tbody>
+</table>
+<br>
+
+!!! Important
     `is_listening` is a __sensor attribute__ that enables/disables data listening at will.  
-    Similarly, `sensor_tick` is a __blueprint attribute__ that allows to set the simulation time between data received so that this is not retrieved every step.
-
-Most sensor data objects have a function for saving the measurements to disk so it can be later used in other environments.  
-Sensor data differs a lot between sensor types, but it is always tagged with:
-
-| Sensor data attribute | Type   | Description |
-| --------------------- | ------ | ----------- |
-| `frame`               | int    | Frame number when the measurement took place. |
-| `timestamp`           | double | Timestamp of the measurement in simulation seconds since the beginning of the episode. |
-| `transform`           | carla.Transform | World reference of the sensor at the time of the measurement. |  
-
-<br>
+    `sensor_tick` is a __blueprint attribute__ that sets the simulation time between data received.  
 
 ---
-## Types of sensors  
+## Types of sensors
  
-#### Cameras
+### Cameras
 
-These sensors take a shot of the world from their point of view and then use the helper class to alter this image and provide different types of information.  
-__Retrieve data:__ every simulation step.  
+Take a shot of the world from their point of view. The helper class [carla.ColorConverter](python_api.md#carla.ColorConverter) will modify said image to represent different information.
 
-| Sensor | Output | Overview |
-| ---------- | ---------- | ---------- |
-| Depth | [carla.Image](python_api.md#carla.Image) | Renders the depth of the elements in the field of view in a gray-scale depth map. |
-| RGB | [carla.Image](python_api.md#carla.Image) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
-| Semantic segmentation | [carla.Image](python_api.md#carla.Image) | Renders elements in the field of view with a specific color according to their tags. |  
+* __Retrieve data__ every simulation step.  
 
+<table class ="defTable">
+<thead>
+<th>Sensor</th>
+<th>Output</th>
+<th>Overview</th>
+</thead>
+<tbody>
+<td>Depth</td>
+<td><a href="../python_api#carlaimage">carla.Image</a></td>
+<td>Renders the depth of the elements in the field of view in a gray-scale map.</td>
+<tr>
+<td>RGB</td>
+<td><a href="../python_api#carlaimage">carla.Image</a></td>
+<td>Provides clear vision of the surroundings. Looks like a normal photo of the scene.</td>
+<tr>
+<td>Semantic segmentation</td>
+<td><a href="../python_api#carlaimage">carla.Image</a></td>
+<td>Renders elements in the field of view with a specific color according to their tags.</td>
+</tbody>
+</table>
 <br>
 
-#### Detectors
+### Detectors
 
-Sensors that retrieve data when a parent object they are attached to registers a specific event in the simulation.  
-__Retrieve data:__ when triggered.  
+Retrieve data when the object they are attached to registers a specific event.  
 
-| Sensor | Output | Overview |
-| ---------- | ---------- | ---------- |
-| Collision | [carla.CollisionEvent](python_api.md#carla.CollisionEvent) | Retrieves collisions between its parent and other actors. |
-| Lane invasion | [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) | Registers when its parent crosses a lane marking. |
-| Obstacle | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleEvent) | Detects possible obstacles ahead of its parent. |  
+* __Retrieve data__ when triggered.  
 
+<table class ="defTable">
+<thead>
+<th>Sensor</th>
+<th>Output</th>
+<th>Overview</th>
+</thead>
+<tbody>
+<td>Collision</td>
+<td><a href="../python_api#carlacollisionevent">carla.CollisionEvent</a></td>
+<td>Retrieves collisions between its parent and other actors.</td>
+<tr>
+<td>Lane invasion</td>
+<td><a href="../python_api#carlalaneinvasionevent">carla.LaneInvasionEvent</a></td>
+<td>Registers when its parent crosses a lane marking.</td>
+<tr>
+<td>Obstacle</td>
+<td><a href="../python_api#carlaobstacledetectionevent">carla.ObstacleDetectionEvent</a></td>
+<td>Detects possible obstacles ahead of its parent.</td>
+</tbody>
+</table>
 <br>
 
-#### Other
+### Other
 
-This group gathers sensors with different functionalities: navigation, measure physical properties of an object and provide 2D and 3D models of the scene.  
-__Retrieve data:__ every simulation step.  
+Different functionalities such as navigation, measurement of physical properties and 2D/3D point maps of the scene.  
 
-| Sensor | Output | Overview |
-| ---------- | ---------- | ---------- |
-| GNSS | [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) | Retrieves the geolocation location of the sensor. |
-| IMU | [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) | Comprises an accelerometer, a gyroscope and a compass. |
-| Lidar raycast | [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) | A rotating lidar retrieving a cloud of points to generate a 3D model the surroundings. |
-| Radar | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | 2D point map that models elements in sight and their movement regarding the sensor. |  
+* __Retrieve data__ every simulation step.  
 
+<table class ="defTable">
+<thead>
+<th>Sensor</th>
+<th>Output</th>
+<th>Overview</th>
+</thead>
+<tbody>
+<td>GNSS</td>
+<td><a href="../python_api#carlagnssmeasurement">carla.GNSSMeasurement</a></td>
+<td>Retrieves the geolocation of the sensor.</td>
+<tr>
+<td>IMU</td>
+<td><a href="../python_api#carlaimumeasurement">carla.IMUMeasurement</a></td>
+<td>Comprises an accelerometer, a gyroscope, and a compass.</td>
+<tr>
+<td>LIDAR raycast</td>
+<td><a href="../python_api#carlalidarmeasurement">carla.LidarMeasurement</a></td>
+<td>A rotating LIDAR. Generates a 3D point cloud modelling the surroundings.</td>
+<tr>
+<td>Radar</td>
+<td><a href="../python_api#carlaradarmeasurement">carla.RadarMeasurement</a></td>
+<td>2D point map modelling elements in sight and their movement regarding the sensor. </td>
+</tbody>
+</table>
 <br>
 
 ---
-That is a wrap on sensors and how do these retrieve simulation data and thus, the introduction to CARLA is finished. However there is yet a lot to learn. Some of the different paths to follow now are listed here: 
+That is a wrap on sensors and how do these retrieve simulation data.  
 
-* __Gain some practise__: if diving alone in CARLA is still frightening, it may be a good idea to try some of the code recipes provided in this documentation and combine them with the example scripts or some ideas of your own. 
+Thus concludes the introduction to CARLA. However there is yet a lot to learn.
+
+* __Gain some practise.__ It may be a good idea to try some of the code recipes provided in this documentation. Combine them with the example scripts, test new ideas. 
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="ref_code_recipes.md" target="_blank" class="btn btn-neutral" title="Code recipes">
 Code recipes</a>
 </p>
 </div>
 
-* __Continue learning__: there are other more advanced features in CARLA such as rendering options, traffic manager, the recorder, and some more. Now that some fundaments on CARLA have been provided, it is a good moment to learn about these. 
+* __Continue learning.__ There are some advanced features in CARLA: rendering options, traffic manager, the recorder, and some more. This is a great moment to learn on them. 
  
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="adv_synchrony_timestep.md" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
 Synchrony and time-step</a>
 </p>
 </div>
 
-* __Experiment freely__: but don't forget to take a look at the __References__ section of this documentation. They contain detailed information on the classes in the Python API, sensors and their outputs, and much more. 
+* __Experiment freely.__ Take a look at the __References__ section of this documentation. It contains detailed information on the classes in the Python API, sensors, and much more. 
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
@@ -168,10 +233,9 @@ Python API reference</a>
 </div>
 
 
-* __Give your two cents__: share your thoughts. Any doubts, suggestions and ideas about CARLA are welcome in the forum.
+* __Give your two cents.__ Any doubts, suggestions and ideas are welcome in the forum.
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>

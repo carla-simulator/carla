@@ -433,7 +433,16 @@ class KeyboardControl(object):
             world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
-        self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
+        if keys[K_UP] or keys[K_w]:
+            self._control.throttle = min(self._control.throttle + 0.01, 1)
+        else:
+            self._control.throttle = 0.0
+
+        if keys[K_DOWN] or keys[K_s]:
+            self._control.brake = min(self._control.brake + 0.2, 1)
+        else:
+            self._control.brake = 0
+
         steer_increment = 5e-4 * milliseconds
         if keys[K_LEFT] or keys[K_a]:
             if self._steer_cache > 0:
@@ -449,7 +458,6 @@ class KeyboardControl(object):
             self._steer_cache = 0.0
         self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
         self._control.steer = round(self._steer_cache, 1)
-        self._control.brake = 1.0 if keys[K_DOWN] or keys[K_s] else 0.0
         self._control.hand_brake = keys[K_SPACE]
 
     def _parse_walker_keys(self, keys, milliseconds, world):
