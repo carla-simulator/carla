@@ -49,38 +49,49 @@ namespace traffic_manager {
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using TLS = carla::rpc::TrafficLightState;
 
-  /// This class is the thread executable for the collision detection stage
-  /// and is responsible for checking possible collisions with other
-  /// cars along the vehicle's trajectory.
-  class CollisionStage : public PipelineStage {
 
-  private:
+/// Structure to hold the Geometry of reference vehicle to other vehicle.
+  struct GeometryComparisonCache {
 
-    /// Selection key for switching between output frames.
-    bool frame_selector;
-    /// Pointer to data received from localization stage.
-    std::shared_ptr<LocalizationToCollisionFrame> localization_frame;
-    /// Pointers to output frames to be shared with motion planner stage.
-    std::shared_ptr<CollisionToPlannerFrame> planner_frame_a;
-    std::shared_ptr<CollisionToPlannerFrame> planner_frame_b;
-    /// Pointers to messenger objects.
-    std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
-    std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
-    /// Runtime parameterization object.
-    Parameters &parameters;
-    /// Reference to Carla's debug helper object.
-    cc::DebugHelper &debug_helper;
-    /// The map used to connect actor ids to the array index of data frames.
-    std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
-    /// An object used to keep track of time between checking for all world
-    /// actors.
-    chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
-    /// Number of vehicles registered with the traffic manager.
-    uint64_t number_of_vehicles;
-    /// Structure to hold the geodesic boundaries during one iteration.
-    std::unordered_map<ActorId, LocationList> geodesic_boundaries;
-    /// Snippet profiler for measuring execution time.
-    SnippetProfiler snippet_profiler;
+     double reference_vehicle_to_other_geodesic;
+     double other_vehicle_to_reference_geodesic;
+     double inter_geodesic_distance;
+     double inter_bbox_distance;
+};
+
+/// This class is the thread executable for the collision detection stage
+/// and is responsible for checking possible collisions with other
+/// cars along the vehicle's trajectory.
+class CollisionStage : public PipelineStage {
+
+private:
+  /// Geometry data for the vehicle
+  std::unordered_map<std::string, GeometryComparisonCache> vehicle_cache;
+  /// Selection key for switching between output frames.
+  bool frame_selector;
+  /// Pointer to data received from localization stage.
+  std::shared_ptr<LocalizationToCollisionFrame> localization_frame;
+  /// Pointers to output frames to be shared with motion planner stage.
+  std::shared_ptr<CollisionToPlannerFrame> planner_frame_a;
+  std::shared_ptr<CollisionToPlannerFrame> planner_frame_b;
+  /// Pointers to messenger objects.
+  std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
+  std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
+  /// Runtime parameterization object.
+  Parameters &parameters;
+  /// Reference to Carla's debug helper object.
+  cc::DebugHelper &debug_helper;
+  /// The map used to connect actor ids to the array index of data frames.
+  std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
+  /// An object used to keep track of time between checking for all world
+  /// actors.
+  chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
+  /// Number of vehicles registered with the traffic manager.
+  uint64_t number_of_vehicles;
+  /// Structure to hold the geodesic boundaries during one iteration.
+  std::unordered_map<ActorId, LocationList> geodesic_boundaries;
+  /// Snippet profiler for measuring execution time.
+  SnippetProfiler snippet_profiler;
 
     /// Returns the bounding box corners of the vehicle passed to the method.
     LocationList GetBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
@@ -110,25 +121,30 @@ namespace traffic_manager {
                                      const SimpleWaypointPtr safe_point, const cg::Location &other_location,
                                      const cg::Vector3D other_velocity);
 
-    /// A simple method used to draw bounding boxes around vehicles
-    void DrawBoundary(const LocationList &boundary);
+  /// A simple method used to draw bounding boxes around vehicles
+  void DrawBoundary(const LocationList &boundary);
 
-  public:
+  /// Method to compute Geometry result between two vehicles
+  GeometryComparisonCache GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
+                                                   const cg::Location &reference_location, const cg::Location &other_location,
+                                                   const cg::Vector3D reference_velocity,const cg::Vector3D other_velocity);
 
-    CollisionStage(
+public:
+
+CollisionStage(
         std::string stage_name,
         std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
         std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
         Parameters &parameters,
         cc::DebugHelper &debug_helper);
 
-    ~CollisionStage();
+  ~CollisionStage();
 
-    void DataReceiver() override;
+  void DataReceiver() override;
 
-    void Action() override;
+  void Action() override;
 
-    void DataSender() override;
+  void DataSender() override;
 
   };
 

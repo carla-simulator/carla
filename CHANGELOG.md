@@ -4,6 +4,8 @@
 
 ## CARLA 0.9.8
 
+  * Improved manual_control by adding realistic throttle and brake
+  * Added new Behavior agent
   * Added beta version sumo-carla co-simulation.
   * Traffic Manager:
     - Added benchmark
@@ -48,6 +50,7 @@
   * Fixed import pipeline bugs:
     - Crash when no pedestrian navmesh is present
     - Automatically imported static meshes not properly tagged
+  * Fixed PID controller's sensitivity to time discretization
 
 ## CARLA 0.9.7
 
