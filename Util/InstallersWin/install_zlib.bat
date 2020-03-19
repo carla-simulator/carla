@@ -66,7 +66,7 @@ if exist "%ZLIB_INSTALL_DIR%" (
 if not exist "%ZLIB_SRC_DIR%" (
     if not exist "%ZLIB_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving %ZLIB_BASENAME%.
-        powershell -Command "Start-BitsTransfer -Source '%ZLIB_REPO%' -Destination '%ZLIB_TEMP_FILE_DIR%'"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
         if %errorlevel% neq 0 goto error_download
     )
     rem Extract the downloaded library
