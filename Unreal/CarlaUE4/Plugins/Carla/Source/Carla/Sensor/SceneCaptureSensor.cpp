@@ -456,6 +456,11 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   SCENE_CAPTURE_COUNTER = 0u;
 }
 
+void ASceneCaptureSensor::CaptureScene()
+{
+  CaptureComponent2D->CaptureScene();
+}
+
 // =============================================================================
 // -- Local static functions implementations -----------------------------------
 // =============================================================================

@@ -13,6 +13,14 @@
 
 #include "SceneCaptureCamera.generated.h"
 
+// Define how to capture the scene.
+UENUM()
+enum class CaptureMode : uint8 {
+  Always  UMETA(DisplayName = "Always"),
+  Never   UMETA(DisplayName = "Never"),
+  Step    UMETA(DisplayName = "Step")
+};
+
 /// A sensor that captures images from the scene.
 UCLASS()
 class CARLA_API ASceneCaptureCamera : public ASceneCaptureSensor
@@ -25,5 +33,16 @@ public:
 
 protected:
 
+  // Called in BeginPlay() of parent class.
+  void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
+
   void Tick(float DeltaTime) override;
+
+private:
+
+  // Whether capture in this frame.
+  bool bCapture = true;
+
+  UPROPERTY(EditAnywhere)
+  CaptureMode captureMode = CaptureMode::Always;
 };

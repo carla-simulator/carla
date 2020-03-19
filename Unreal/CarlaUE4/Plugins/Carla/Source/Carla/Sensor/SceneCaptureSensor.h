@@ -255,6 +255,9 @@ protected:
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
+  // Manually capture scene.
+  void CaptureScene();
+
 private:
 
   /// Image width in pixels.
