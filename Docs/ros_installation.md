@@ -13,7 +13,7 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ## Requirements
 ### ROS Kinetic/Melodic
 
-*  __ROS Kinetic/Melodic.__ Follow the official documentation to [install ROS](http://wiki.ros.org/melodic/Installation/Ubuntu). ROS packages may be required, depending on the user needs. [rviz](https://wiki.ros.org/ainstein_radar_rviz_plugins) to visualize ROS data.  
+*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
 *  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
 
 !!! Important

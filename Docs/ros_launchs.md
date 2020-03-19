@@ -3,7 +3,7 @@
 ---
 ## carla_ackermann_control.launch
 
-Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. 
+Creates a node to manage a vehicle using Ackermann controls instead of the CARLA control messages. The node reads the vehicle info from CARLA and uses it to define the controller. A simple Python PID is used to adjust acceleration/velocity. This is a Python dependency taht can be easily installed with _pip_. 
 ```sh
 pip install --user simple-pid
 ```
