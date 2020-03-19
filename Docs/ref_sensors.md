@@ -25,14 +25,39 @@ Collision detectors do not have any configurable attribute.
 
 #### Output attributes
 
-| Sensor data attribute  | Type                                             | Description |
-| ---------------------- | -----------                                      | ----------- |
-| `frame`                | int                                              | Frame number when the measurement took place. |
-| `timestamp`            | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`            | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`                | [carla.Actor](python_api.md#carla.Actor)         | Actor that measured the collision (sensor's parent). |
-| `other_actor`          | [carla.Actor](python_api.md#carla.Actor)         | Actor against whom the parent collided. |
-| `normal_impulse`       | [carla.Vector3D](python_api.md#carla.Vector3D)   | Normal impulse result of the collision. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>actor</code></td>
+<td><a href="../python_api#carlaactor">carla.Actor</a></td>
+<td>Actor that measured the collision (sensor's parent).</td>
+<tr>
+<td><code>other_actor</code></td>
+<td><a href="../python_api#carlaactor">carla.Actor</a></td>
+<td>Actor against whom the parent collided.</td>
+<tr>
+<td><code>normal_impulse</code></td>
+<td><a href="../python_api#carlavector3d">carla.Vector3D</a></td>
+<td>Normal impulse result of the collision.</td>
+</tbody>
+</table>
 
 ---
 ## Depth camera
@@ -58,39 +83,121 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 
 #### Basic camera attributes
 
-| Blueprint attribute | Type  | Default | Description |
-| ------------------- | ----  | ------- | ----------- |
-| `image_size_x`      | int   | 800     | Image width in pixels. |
-| `image_size_y`      | int   | 600     | Image height in pixels.  |
-| `fov`               | float | 90.0    | Horizontal field of view in degrees. |
-| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>image_size_x</code> </td>
+<td>int</td>
+<td>800</td>
+<td>Image width in pixels.</td>
+<tr>
+<td><code>image_size_y</code></td>
+<td>int</td>
+<td>600</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>fov</code></td>
+<td>float</td>
+<td>90.0</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Camera lens distortion attributes
 
-| Blueprint attribute      | Type  | Default | Description |
-|--------------------------|-------|---------|-------------|
-| `lens_circle_falloff`    | float | 5.0     | Range: [0.0, 10.0] |
-| `lens_circle_multiplier` | float | 0.0     | Range: [0.0, 10.0] |
-| `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
-| `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
-| `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>lens_circle_falloff</code> </td>
+<td>int</td>
+<td>5.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_circle_multiplier</code></td>
+<td>int</td>
+<td>0.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_k</code></td>
+<td>float</td>
+<td>-1.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_kcube</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_x_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+<tr>
+<td><code>lens_y_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute | Type                                             | Description |
-| --------------------- | ------------------------------------------------ | ----------- |
-| `frame`               | int                                              | Frame number when the measurement took place. |
-| `timestamp`           | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`           | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `width`               | int                                              | Image width in pixels. |
-| `height`              | int                                              | Image height in pixels. |
-| `fov`                 | float                                            | Horizontal field of view in degrees. |
-| `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>width</code></td>
+<td>int</td>
+<td>Image width in pixels.</td>
+<tr>
+<td><code>height</code></td>
+<td>int</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>fov</code></td>
+<td>float</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>raw_data</code></td>
+<td>bytes</td>
+<td>Array of BGRA 32-bit pixels.</td>
+</tbody>
+</table>
 
 ---
 ## GNSS sensor
@@ -102,29 +209,93 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 
 #### GNSS attributes
 
-| Blueprint attribute  | Type  | Default | Description |
-| -------------------- | ----  | ------- | ----------- |
-| `noise_alt_bias`     | float | 0.0     | Mean parameter in the noise model for altitude. |
-| `noise_alt_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for altitude. |
-| `noise_lat_bias`     | float | 0.0     | Mean parameter in the noise model for latitude. |
-| `noise_lat_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for latitude. |
-| `noise_lon_bias`     | float | 0.0     | Mean parameter in the noise model for longitude. |
-| `noise_lon_stddev`   | float | 0.0     | Standard deviation parameter in the noise model for longitude. |
-| `noise_seed`         | int   | 0       | Initializer for a pseudorandom number generator. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>noise_alt_bias</code> </td>
+<td>int</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for altitude.</td>
+<tr>
+<td><code>noise_alt_stddev</code></td>
+<td>int</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for altitude.</td>
+<tr>
+<td><code>noise_lat_bias</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for latitude.</td>
+<tr>
+<td><code>noise_lat_stddev</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for latitude.</td>
+<tr>
+<td><code>noise_lon_bias</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for longitude.</td>
+<tr>
+<td><code>noise_lon_stddev</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for longitude.</td>
+<tr>
+<td><code>noise_seed</code></td>
+<td>int</td>
+<td>0</td>
+<td>Initializer for a pseudorandom number generator.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute  | Type                                             | Description |
-| ---------------------- | ------------------------------------------------ | ----------- |
-| `frame`                | int                                              | Frame number when the measurement took place. |
-| `timestamp`            | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`            | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `latitude`             | double                                           | Latitude of the actor. |
-| `longitude`            | double                                           | Longitude of the actor. |
-| `altitude`             | double                                           | Altitude of the actor. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>latitude</code></td>
+<td>double</td>
+<td>Latitude of the actor.</td>
+<tr>
+<td><code>longitude</code></td>
+<td>double</td>
+<td>Longitude of the actor.</td>
+<tr>
+<td><code>altitude</code></td>
+<td>double</td>
+<td>Altitude of the actor.</td>
+</tbody>
+</table>
 
 ---
 ## IMU sensor
@@ -136,32 +307,108 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 
 #### IMU attributes
 
-| Blueprint attribute   | Type  | Default | Description |
-| --------------------- | ----  | ------- | ----------- |
-| `noise_accel_stddev_x`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (X axis). |
-| `noise_accel_stddev_y`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (Y axis). |
-| `noise_accel_stddev_z`| float | 0.0     | Standard deviation parameter in the noise model for acceleration (Z axis). |
-| `noise_gyro_bias_x`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (X axis). |
-| `noise_gyro_bias_y`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (Y axis). |
-| `noise_gyro_bias_z`   | float | 0.0     | Mean parameter in the noise model for the gyroscope (Z axis). |
-| `noise_gyro_stddev_x` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (X axis). |
-| `noise_gyro_stddev_y` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Y axis). |
-| `noise_gyro_stddev_z` | float | 0.0     | Standard deviation parameter in the noise model for the gyroscope (Z axis). |
-| `noise_seed`          | int   | 0       | Initializer for a pseudorandom number generator. |
-| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>noise_accel_stddev_x</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for acceleration (X axis).</td>
+<tr>
+<td><code>noise_accel_stddev_y</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for acceleration (Y axis).</td>
+<tr>
+<td><code>noise_accel_stddev_z</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for acceleration (Z axis).</td>
+<tr>
+<td><code>noise_gyro_bias_x</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for the gyroscope (X axis).</td>
+<tr>
+<td><code>noise_gyro_bias_y</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for the gyroscope (Y axis).</td>
+<tr>
+<td><code>noise_gyro_bias_z</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Mean parameter in the noise model for the gyroscope (Z axis).</td>
+<tr>
+<td><code>noise_gyro_stddev_x</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for the gyroscope (X axis).</td>
+<tr>
+<td><code>noise_gyro_stddev_y</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for the gyroscope (Y axis).</td>
+<tr>
+<td><code>noise_gyro_stddev_z</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation parameter in the noise model for the gyroscope (Z axis).</td>
+<tr>
+<td><code>noise_seed</code></td>
+<td>int</td>
+<td>0</td>
+<td>Initializer for a pseudorandom number generator.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute | Type                                             | Description |
-| --------------------- | ------------------------------------------------ | ----------- |
-| `frame`               | int                                              | Frame number when the measurement took place. |
-| `timestamp`           | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`           | [carla.Transform](python_api.md#carla.Transform) | Transform in world. |
-| `accelerometer`       | [carla.Vector3D](python_api.md#carla.Vector3D)   | Measures linear acceleration in `m/s^2`. |
-| `gyroscope`           | [carla.Vector3D](python_api.md#carla.Vector3D)   | Measures angular velocity in `rad/sec`. |
-| `compass`             | float                                            | Orientation in radians. North  is `(0.0, -1.0, 0.0)` in UE. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>accelerometer</code></td>
+<td><a href="../python_api#carlavector3d">carla.Transform</a></td>
+<td>Measures linear acceleration in <code>m/s^2</code>.</td>
+<tr>
+<td><code>gyroscope</code></td>
+<td><a href="../python_api#carlavector3d">carla.Transform</a></td>
+<td>Measures angular velocity in <code>rad/sec</code>.</td>
+<tr>
+<td><code>compass</code></td>
+<td>float</td>
+<td>Orientation in radians. North is <code>(0.0, -1.0, 0.0)</code> in UE.</td>
+</tbody>
+</table>
 
 ---
 ## Lane invasion detector
@@ -183,14 +430,35 @@ This sensor does not have any configurable attribute.
 
 #### Output attributes
 
-| Sensor data attribute   | Type                                                       | Description |
-| ----------------------- | ---------------------------------------------------------- | ----------- |
-| `frame`                 | int                                                        | Frame number when the measurement took place. |
-| `timestamp`             | double                                                     | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`             | [carla.Transform](python_api.md#carla.Transform)           | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`                 | [carla.Actor](python_api.md#carla.Actor)                   | Vehicle that invaded another lane (parent actor). |
-| `crossed_lane_markings` | list([carla.LaneMarking](python_api.md#carla.LaneMarking)) | List of lane markings that have been crossed. |
-
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>actor</code></td>
+<td><a href="../python_api#carlaactor">carla.Actor</a></td>
+<td>Vehicle that invaded another lane (parent actor).</td>
+<tr>
+<td><code>crossed_lane_markings</code></td>
+<td><a href="../python_api#carlalanemarking">carla.LaneMarking</a></td>
+<td>List of lane markings that have been crossed.</td>
+</tbody>
+</table>
 
 ---
 ## Lidar raycast sensor
@@ -218,29 +486,92 @@ for location in lidar_measurement:
 
 #### Lidar attributes
 
-| Blueprint attribute  | Type  | Default | Description |
-| -------------------- | ----  | ------- | ----------- |
-| `channels`           | int   | 32      | Number of lasers. |
-| `range`              | float | 10.0    | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous). |
-| `points_per_second`  | int   | 56000   | Points generated by all lasers per second. |
-| `rotation_frequency` | float | 10.0    | Lidar rotation frequency. |
-| `upper_fov`          | float | 10.0    | Angle in degrees of the highest laser. |
-| `lower_fov`          | float | -30.0   | Angle in degrees of the lowest laser. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>channels</code> </td>
+<td>int</td>
+<td>32</td>
+<td>Number of lasers.</td>
+<tr>
+<td><code>range</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous).</td>
+<tr>
+<td><code>points_per_second</code></td>
+<td>int</td>
+<td>56000</td>
+<td>Points generated by all lasers per second.</td>
+<tr>
+<td><code>rotation_frequency</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>Lidar rotation frequency.</td>
+<tr>
+<td><code>upper_fov</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>Angle in degrees of the highest laser.</td>
+<tr>
+<td><code>lower_fov</code></td>
+<td>float</td>
+<td>-30.0</td>
+<td>Angle in degrees of the lowest laser.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute      | Type                                             | Description |
-| -------------------------- | ------------------------------------------------ | ----------- |
-| `frame`                    | int                                              | Frame number when the measurement took place. |
-| `timestamp`                | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`                | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `horizontal_angle`         | float                                            | Angle (radians) in the XY plane of the lidar this frame. |
-| `channels`                 | int                                              | Number of channels (lasers) of the lidar. |
-| `get_point_count(channel)` | int                                              | Number of points per channel captured this frame. |
-| `raw_data`                 | bytes                                            | Array of 32-bits floats (XYZ of each point). |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>horizontal_angle</code></td>
+<td>float</td>
+<td>Angle (radians) in the XY plane of the lidar this frame.</td>
+<tr>
+<td><code>channels</code></td>
+<td>int</td>
+<td>Number of channels (lasers) of the lidar.</td>
+<tr>
+<td><code>get_point_count(channel)</code></td>
+<td>int</td>
+<td>Number of points per channel captured this frame.</td>
+<tr>
+<td><code>raw_data</code></td>
+<td>bytes</td>
+<td>Array of 32-bits floats (XYZ of each point).</td>
+</tbody>
+</table>
 
 ---
 ## Obstacle detector
@@ -252,26 +583,78 @@ Registers an event every time the parent actor has an obstacle ahead.
 In order to anticipate obstacles, the sensor creates a capsular shape ahead of the parent vehicle and uses it to check for collisions.  
 To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
-| Blueprint attribute  | Type  | Default | Description |
-| -------------------- | ----  | ------- | ----------- |
-| `distance`           | float | 5       | Distance to trace. |
-| `hit_radius`         | float | 0.5     | Radius of the trace. |
-| `only_dynamics`      | bool  | false   | If true, the trace will only consider dynamic objects. |
-| `debug_linetrace`    | bool  | false   | If true, the trace will be visible. |
-| `sensor_tick`        | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>distance</code> </td>
+<td>int</td>
+<td>32</td>
+<td>Distance to trace.</td>
+<tr>
+<td><code>hit_radius</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>Radius of the trace.</td>
+<tr>
+<td><code>only_dynamics</code></td>
+<td>int</td>
+<td>56000</td>
+<td>If true, the trace will only consider dynamic objects.</td>
+<tr>
+<td><code>debug_linetrace</code></td>
+<td>float</td>
+<td>10.0</td>
+<td>If true, the trace will be visible.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute  | Type                                             | Description |
-| ---------------------- | ------------------------------------------------ | ----------- |
-| `frame`                | int                                              | Frame number when the measurement took place. |
-| `timestamp`            | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`            | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`                | [carla.Actor](python_api.md#carla.Actor)         | Actor that detected the obstacle (parent actor). |
-| `other_actor`          | [carla.Actor](python_api.md#carla.Actor)         | Actor detected as an obstacle. |
-| `distance`             | float                                            | Distance from `actor` to `other_actor`. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>actor</code></td>
+<td><a href="../python_api#carlaactor">carla.Actor</a></td>
+<td>Actor that detected the obstacle (parent actor).</td>
+<tr>
+<td><code>other_actor</code></td>
+<td><a href="../python_api#carlaactor">carla.Actor</a></td>
+<td>Actor detected as an obstacle.</td>
+<tr>
+<td><code>distance</code></td>
+<td>float</td>
+<td>Distance from <code>actor</code> to <code>other_actor</code>.</td>
+</tbody>
+</table>
 
 ---
 ## Radar sensor
@@ -293,28 +676,85 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 
 ![ImageRadar](img/sensor_radar.png)
 
-| Blueprint attribute   | Type  | Default | Description |
-| --------------------- | ----  | ------- | ----------- |
-| `horizontal_fov`      | float | 30      | Horizontal field of view in degrees. |
-| `points_per_second`   | int   | 1500    | Points generated by all lasers per second. |
-| `range`               | float | 100     | Maximum distance to measure/raycast in meters. |
-| `sensor_tick`         | float | 0.0     | Simulation seconds between sensor captures (ticks). |
-| `vertical_fov`        | float | 30      | Vertical field of view in degrees. |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>horizontal_fov</code> </td>
+<td>float</td>
+<td>30.0</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>points_per_second</code></td>
+<td>int</td>
+<td>1500</td>
+<td>Points generated by all lasers per second.</td>
+<tr>
+<td><code>range</code></td>
+<td>float</td>
+<td>100</td>
+<td>Maximum distance to measure/raycast in meters.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+<tr>
+<td><code>vertical_fov</code></td>
+<td>float</td>
+<td>30.0</td>
+<td>Vertical field of view in degrees.</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute  | Type                                                             | Description |
-| ---------------------- | ---------------------------------------------------------------- | ----------- |
-| raw_data               | list([carla.RadarDetection](python_api.md#carla.RadarDetection)) | The list of points detected |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>raw_data</code> </td>
+<td><a href="../python_api#carlaradardetection">carla.RadarDetection</a></td>
+<td>The list of points detected.</td>
+</tbody>
+</table>
+<br>
 
-| RadarDetection attributes | Type  |  Description |
-| ------------------------- | ----  | ------------ |
-| `altitude`                | float | Altitude angle in radians. |
-| `azimuth`                 | float | Azimuth angle in radians. |
-| `depth`                   | float | Distance in meters. |
-| `velocity`                | float | Velocity towards the sensor. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>altitude</code> </td>
+<td>float</td>
+<td>Altitude angle in radians.</td>
+<tr>
+<td><code>azimuth</code></td>
+<td>float</td>
+<td>Azimuth angle in radians.</td>
+<tr>
+<td><code>depth</code></td>
+<td>float</td>
+<td>Distance in meters.</td>
+<tr>
+<td><code>velocity</code></td>
+<td>float</td>
+<td>Velocity towards the sensor.</td>
+</tbody>
+</table>
 
 ---
 ## RGB camera
@@ -342,31 +782,100 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 
 #### Basic camera attributes
 
-| Blueprint attribute | Type  | Default | Description |
-|---------------------|-------|---------|-------------|
-| `fov`               | float | 90.0    | Horizontal field of view in degrees. |
-| `fstop`             | float | 1.4     | Opening of the camera lens. Aperture is `1 / fstop` with typical lens going down to f / 1.2 (larger opening). Larger numbers will reduce the Depth of Field effect. |
-| `image_size_x`      | int   | 800     | Image width in pixels. |
-| `image_size_y`      | int   | 600     | Image height in pixels. |
-| `iso`               | float | 1200.0  | The camera sensor sensitivity. |
-| `gamma`             | float | 2.2     | Target gamma value of the camera. |
-| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |
-| `shutter_speed`     | float | 60.0    | The camera shutter speed in seconds (1.0 / s). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>fov</code> </td>
+<td>float</td>
+<td>90.0</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>fstop</code></td>
+<td>float</td>
+<td>1.4</td>
+<td>Opening of the camera lens. Aperture is <code>1/fstop</code> with typical lens going down to f/1.2 (larger opening). Larger numbers will reduce the Depth of Field effect.</td>
+<tr>
+<td><code>image_size_x</code></td>
+<td>int</td>
+<td>800</td>
+<td>Image width in pixels.</td>
+<tr>
+<td><code>image_size_y</code></td>
+<td>int</td>
+<td>600</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>iso</code></td>
+<td>float</td>
+<td>1200.0</td>
+<td>The camera sensor sensitivity.</td>
+<tr>
+<td><code>gamma</code></td>
+<td>float</td>
+<td>2.2</td>
+<td>Target gamma value of the camera.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+<tr>
+<td><code>shutter_speed</code></td>
+<td>float</td>
+<td>60.0</td>
+<td>The camera shutter speed in seconds (1.0/s).</td>
+</tbody>
+</table>
 <br>
 
 #### Camera lens distortion attributes
 
-| Blueprint attribute      | Type  | Default | Description |
-|--------------------------|-------|---------|-------------|
-| `lens_circle_falloff`    | float | 5.0     | Range: [0.0, 10.0] |
-| `lens_circle_multiplier` | float | 0.0     | Range: [0.0, 10.0] |
-| `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
-| `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
-| `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
-
-<br>
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>lens_circle_falloff</code> </td>
+<td>float</td>
+<td>5.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_circle_multiplier</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_k</code></td>
+<td>float</td>
+<td>-1.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_kcube</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_x_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+<tr>
+<td><code>lens_y_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+</tbody>
+</table>
 
 #### Advanced camera attributes
 
@@ -380,49 +889,183 @@ Since these effects are provided by UE, please make sure to check their document
 [CinematicDOFMethod.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
 [ColorGrading.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
 
-| Blueprint attribute                  | Type | Default     | Description |
-|--------------------------------------|------|-------------|-------------|
-| `min_fstop`                          | float | 1.2        | Maximum aperture. |
-| `blade_count`                        | int   | 5          | Number of blades that make up the diaphragm mechanism. |
-| `exposure_mode`                      | str   | `"manual"` | Can be `"manual"` or `"histogram"`. More in [UE4 docs][AutomaticExposure.gamesetting]. |
-| `exposure_compensation`              | float | 3.0        | Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter. |
-| `exposure_min_bright`                | float | 0.1        | In `exposure_mode: "histogram"`. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to `exposure_max_bright`. |
-| `exposure_max_bright`                | float | 2.0        | In `exposure_mode: "histogram"`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to `exposure_min_bright`. |
-| `exposure_speed_up`                  | float | 3.0        | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from dark to bright environment. |
-| `exposure_speed_down`                | float | 1.0        | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from bright to dark environment. |
-| `calibration_constant`               | float | 16.0       | Calibration constant for 18% albedo. |
-| `focal_distance`                     | float | 1000.0     | Distance at which the depth of field effect should be sharp. Measured in cm (UE units). |
-| `blur_amount`                        | float | 1.0        | Strength/intensity of motion blur. |
-| `blur_radius`                        | float | 0.0        | Radius in pixels at 1080p resolution to emulate atmospheric scattering according to distance from camera. |
-| `motion_blur_intensity`              | float | 0.45       | Strength of motion blur [0,1]. |
-| `motion_blur_max_distortion`         | float | 0.35       | Max distortion caused by motion blur. Percentage of screen width. |
-| `motion_blur_min_object_screen_size` | float | 0.1        | Percentage of screen width objects must have for motion blur, lower value means less draw calls. |  
-| `slope`                              | float | 0.88       | Steepness of the S-curve for the tonemapper. Larger values make the slope steeper (darker) [0.0, 1.0]. |
-| `toe`                                | float | 0.55       | Adjusts dark color in the tonemapper [0.0, 1.0] |
-| `shoulder`                           | float | 0.26       | Adjusts bright color in the tonemapper [0.0, 1.0] |
-| `black_clip`                         | float | 0.0        | This should NOT be adjusted. Sets where the crossover happens and black tones start to cut off their value [0.0, 1.0]. |
-| `white_clip`                         | float | 0.04       | Set where the crossover happens and white tones start to cut off their value. Subtle change in most cases [0.0, 1.0]. |
-| `temp`                               | float | 6500.0     | White balance in relation to the temperature of the light in the scene. __White light:__ when this matches light temperature. __Warm light:__ When higher than the light in the scene, it is a yellowish color. __Cool light:__ When lower than the light. Blueish color. |
-| `tint`                               | float | 0.0        | White balance temperature tint. Adjusts cyan and magenta color ranges. This should be used along with the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural. |
-| `chromatic_aberration_intensity`     | float | 0.0        | Scaling factor to control color shifting, more noticeable on the screen borders. |
-| `chromatic_aberration_offset`        | float | 0.0        | Normalized distance to the center of the image where the effect takes place. |
-| `enable_postprocess_effects`         | bool  | True       | Post-process effects activation. |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>min_fstop</code> </td>
+<td>float</td>
+<td>1.2</td>
+<td>Maximum aperture.</td>
+<tr>
+<td><code>blade_count</code> </td>
+<td>int</td>
+<td>5</td>
+<td>Number of blades that make up the diaphragm mechanism.</td>
+<tr>
+<td><code>exposure_mode</code> </td>
+<td>str</td>
+<td><code>manual</code></td>
+<td>Can be <code>manual</code> or <code>histogram</code>. More in <a href="AutomaticExposure.gamesetting">UE4 docs</a>.</td>
+<tr>
+<td><code>exposure_compensation</code> </td>
+<td>float</td>
+<td>3.0</td>
+<td>Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.</td>
+<tr>
+<td><code>exposure_min_bright</code> </td>
+<td>float</td>
+<td>0.1</td>
+<td>In <code>exposure_mode: "histogram"</code>. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to <code>exposure_max_bright</code>.</td>
+<tr>
+<td><code>exposure_max_bright</code> </td>
+<td>float</td>
+<td>2.0</td>
+<td>In `exposure_mode: "histogram"`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to `exposure_min_bright`.</td>
+<tr>
+<td><code>exposure_speed_up</code> </td>
+<td>float</td>
+<td>3.0</td>
+<td>In <code>exposure_mode: "histogram"</code>. Speed at which the adaptation occurs from dark to bright environment.</td>
+<tr>
+<td><code>exposure_speed_down</code> </td>
+<td>float</td>
+<td>1.0</td>
+<td>In <code>exposure_mode: "histogram"</code>. Speed at which the adaptation occurs from bright to dark environment.</td>
+<tr>
+<td><code>calibration_constant</code> </td>
+<td>float</td>
+<td>16.0</td>
+<td>Calibration constant for 18% albedo.</td>
+<tr>
+<td><code>focal_distance</code> </td>
+<td>float</td>
+<td>1000.0</td>
+<td>Distance at which the depth of field effect should be sharp. Measured in cm (UE units).</td>
+<tr>
+<td><code>blur_amount</code> </td>
+<td>float</td>
+<td>1.0</td>
+<td>Strength/intensity of motion blur.</td>
+<tr>
+<td><code>blur_radius</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>Radius in pixels at 1080p resolution to emulate atmospheric scattering according to distance from camera.</td>
+<tr>
+<td><code>motion_blur_intensity</code> </td>
+<td>float</td>
+<td>0.45</td>
+<td>Strength of motion blur [0,1].</td>
+<tr>
+<td><code>motion_blur_max_distortion</code> </td>
+<td>float</td>
+<td>0.35</td>
+<td>Max distortion caused by motion blur. Percentage of screen width.</td>
+<tr>
+<td><code>motion_blur_min_object_screen_size</code> </td>
+<td>float</td>
+<td>0.1</td>
+<td>Percentage of screen width objects must have for motion blur, lower value means less draw calls.</td>
+<tr>
+<td><code>slope</code> </td>
+<td>float</td>
+<td>0.88</td>
+<td>Steepness of the S-curve for the tonemapper. Larger values make the slope steeper (darker) [0.0, 1.0].</td>
+<tr>
+<td><code>toe</code> </td>
+<td>float</td>
+<td>0.55</td>
+<td>Adjusts dark color in the tonemapper [0.0, 1.0].</td>
+<tr>
+<td><code>shoulder</code> </td>
+<td>float</td>
+<td>0.26</td>
+<td>Adjusts bright color in the tonemapper [0.0, 1.0].</td>
+<tr>
+<td><code>black_clip</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>This should NOT be adjusted. Sets where the crossover happens and black tones start to cut off their value [0.0, 1.0].</td>
+<tr>
+<td><code>white_clip</code> </td>
+<td>float</td>
+<td>0.04</td>
+<td>Set where the crossover happens and white tones start to cut off their value. Subtle change in most cases [0.0, 1.0].</td>
+<tr>
+<td><code>temp</code></td>
+<td>float</td>
+<td>6500.0</td>
+<td>White balance in relation to the temperature of the light in the scene. <b>White light:</b> when this matches light temperature. <b>Warm light:</b> When higher than the light in the scene, it is a yellowish color. <b>Cool light:</b> When lower than the light. Blueish color.</td>
+<tr>
+<td><code>tint</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>White balance temperature tint. Adjusts cyan and magenta color ranges. This should be used along with the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural.</td>
+<tr>
+<td><code>chromatic_aberration_intensity</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>Scaling factor to control color shifting, more noticeable on the screen borders.</td>
+<tr>
+<td><code>chromatic_aberration_offset</code> </td>
+<td>float</td>
+<td>0.0</td>
+<td>Normalized distance to the center of the image where the effect takes place.</td>
+<tr>
+<td><code>enable_postprocess_effects</code> </td>
+<td>bool</td>
+<td>True</td>
+<td>Post-process effects activation.</td>
+</tbody>
+</table>
 <br>
 
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
 #### Output attributes
 
-| Sensor data attribute | Type                                             | Description |
-| --------------------- | ------------------------------------------------ | ----------- |
-| `frame`               | int                                              | Frame number when the measurement took place. |
-| `timestamp`           | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`           | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `width`               | int                                              | Image width in pixels. |
-| `height`              | int                                              | Image height in pixels. |
-| `fov`                 | float                                            | Horizontal field of view in degrees. |
-| `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>width</code></td>
+<td>int</td>
+<td>Image width in pixels.</td>
+<tr>
+<td><code>height</code></td>
+<td>int</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>fov</code></td>
+<td>float</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>raw_data</code></td>
+<td>bytes</td>
+<td>Array of BGRA 32-bit pixels.</td>
+</tbody>
+</table>
 
 ---
 ## Semantic segmentation camera
@@ -437,22 +1080,66 @@ The server provides an image with the tag information __encoded in the red chann
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.  
 The following tags are currently available:
 
-| Value | Tag          | Converted color |
-| -----:|:------------ | --------------- |
-|    0  | Unlabeled    | (  0,   0,   0) |
-|    1  | Building     | ( 70,  70,  70) |
-|    2  | Fence        | (190, 153, 153) |
-|    3  | Other        | (250, 170, 160) |
-|    4  | Pedestrian   | (220,  20,  60) |
-|    5  | Pole         | (153, 153, 153) |
-|    6  | Road line    | (157, 234,  50) |
-|    7  | Road         | (128,  64, 128) |
-|    8  | Sidewalk     | (244,  35, 232) |
-|    9  | Vegetation   | (107, 142,  35) |
-|   10  | Car          | (  0,   0, 142) |
-|   11  | Wall         | (102, 102, 156) |
-|   12  | Traffic sign | (220, 220,   0) |  
-
+<table class ="defTable">
+<thead>
+<th>Value</th>
+<th>Tag</th>
+<th>Converted color</th>
+</thead>
+<tbody>
+<td><code>0</code> </td>
+<td>Unlabeled</td>
+<td>(  0,   0,   0)</td>
+<tr>
+<td><code>1</code> </td>
+<td>Building</td>
+<td>( 70,  70,  70)</td>
+<tr>
+<td><code>2</code> </td>
+<td>Fence</td>
+<td>(190, 153, 153)</td>
+<tr>
+<td><code>3</code> </td>
+<td>Other</td>
+<td>(250, 170, 160)</td>
+<tr>
+<td><code>4</code> </td>
+<td>Pedestrian</td>
+<td>(220,  20,  60)</td>
+<tr>
+<td><code>5</code> </td>
+<td>Pole</td>
+<td>(153, 153, 153)</td>
+<tr>
+<td><code>6</code> </td>
+<td>Road line</td>
+<td>(157, 234,  50)</td>
+<tr>
+<td><code>7</code> </td>
+<td>Road</td>
+<td>(128,  64, 128)</td>
+<tr>
+<td><code>8</code> </td>
+<td>Sidewalk</td>
+<td>(244,  35, 232)</td>
+<tr>
+<td><code>9</code> </td>
+<td>Vegetation</td>
+<td>(107, 142,  35)</td>
+<tr>
+<td><code>10</code> </td>
+<td>Car</td>
+<td>(  0,   0, 142)</td>
+<tr>
+<td><code>11</code> </td>
+<td>Wall</td>
+<td>(102, 102, 156)</td>
+<tr>
+<td><code>12</code> </td>
+<td>Traffic sign</td>
+<td>(220, 220,   0)</td>
+</tbody>
+</table>
 <br>
 
 !!! Note
@@ -463,38 +1150,109 @@ The following tags are currently available:
 
 #### Basic camera attributes
 
-| Blueprint attribute | Type  | Default | Description |
-| ------------------- | ----  | ------- | ----------- |
-| `fov`               | float | 90.0    | Horizontal field of view in degrees. |
-| `image_size_x`      | int   | 800     | Image width in pixels. |
-| `image_size_y`      | int   | 600     | Image height in pixels. |
-| `sensor_tick`       | float | 0.0     | Simulation seconds between sensor captures (ticks). |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>fov</code> </td>
+<td>float</td>
+<td>90.0</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>image_size_x</code></td>
+<td>int</td>
+<td>800</td>
+<td>Image width in pixels.</td>
+<tr>
+<td><code>image_size_y</code></td>
+<td>float</td>
+<td>600</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>sensor_tick</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Simulation seconds between sensor captures (ticks).</td>
+</tbody>
+</table>
 <br>
 
 #### Camera lens distortion attributes
 
-| Blueprint attribute      | Type  | Default | Description |
-|------------------------- |------ |---------|-------------|
-| `lens_circle_falloff`    | float | 5.0     | Range: [0.0, 10.0] |
-| `lens_circle_multiplier` | float | 0.0     | Range: [0.0, 10.0] |
-| `lens_k`                 | float | -1.0    | Range: [-inf, inf] |
-| `lens_kcube`             | float | 0.0     | Range: [-inf, inf] |
-| `lens_x_size`            | float | 0.08    | Range: [0.0, 1.0] |
-| `lens_y_size`            | float | 0.08    | Range: [0.0, 1.0] |  
-
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>lens_circle_falloff</code> </td>
+<td>float</td>
+<td>5.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_circle_multiplier</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Range: [0.0, 10.0]</td>
+<tr>
+<td><code>lens_k</code></td>
+<td>float</td>
+<td>-1.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_kcube</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Range: [-inf, inf]</td>
+<tr>
+<td><code>lens_x_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+<tr>
+<td><code>lens_y_size</code></td>
+<td>float</td>
+<td>0.08</td>
+<td>Range: [0.0, 1.0]</td>
+</tbody>
+</table>
 <br>
 
 #### Output attributes
 
-| Sensor data attribute | Type                                             | Description |
-| --------------------- | ------------------------------------------------ | ----------- |
-| `fov`                 | float                                            | Horizontal field of view in degrees. |
-| `frame`               | int                                              | Frame number when the measurement took place. |
-| `height`              | int                                              | Image height in pixels. |
-| `raw_data`            | bytes                                            | Array of BGRA 32-bit pixels. |
-| `timestamp`           | double                                           | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform`           | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `width`               | int                                              | Image width in pixels. |  
+<table class ="defTable">
+<thead>
+<th>Sensor data attribute</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>frame</code> </td>
+<td>int</td>
+<td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>timestamp</code></td>
+<td>double</td>
+<td>Simulation time of the measurement in seconds since the beginning of the episode.</td>
+<tr>
+<td><code>transform</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
+<tr>
+<td><code>width</code></td>
+<td>int</td>
+<td>Image width in pixels.</td>
+</tbody>
+</table>
 
-<br> 
+<br>
+
