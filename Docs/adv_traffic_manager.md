@@ -80,36 +80,33 @@ First of all there are some general behaviour patterns the TM will generate that
 
 The TM provides a set of possibilities so the user can establish specific behaviours. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
-<table style="width:100%">
-  <col width="150">
-  <tr>
-    <td><b> TM creation: </b></td>
-    <td> <li><br>1. Get a TM instance for a client.</li> </td>
-  </tr>
-  <tr>
-    <td><b>Safety conditions: </b></td>
-    <td><br> 
-    1. Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
-    2. Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
-    3. Reset traffic lights. 
+<table class ="defTable">
+<tbody>
+<td><b>TM creation:</b> </td>
+<td><br>
+    <b>1.</b> Get a TM instance for a client.</td>
+<tr>
+<td><b>Safety conditions:</b> </td>
+<td><br>
+    <b>1.</b> Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
+    <b>2.</b> Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
+    <b>3.</b> Reset traffic lights. 
+</td>
+<tr>
+<td><b>Collision managing:</b> </td>
+<td><br>
+    <b>1.</b> Enable/Disable collisions between a vehicle and a specific actor.  <br>
+    <b>2.</b> Make a vehicle ignore all the other vehicles. <br>
+    <b>3.</b> Make a vehicle ignore all the walkers.  <br>
+    <b>4.</b> Make a vehicle ignore all the traffic lights. 
+</td>
+<tr>
+<td><b>Lane changes:</b> </td>
+<td><br>
+    <b>1.</b> Force a lane change disregarding possible collisions. <br>
+    <b>2.</b> Enable/Disable lane changes for a vehicle.
     </td>
-  </tr>
-  <tr>
-    <td><b>Collision managing: </b></td>
-    <td><br>
-    1. Enable/Disable collisions between a vehicle and a specific actor.  <br>
-    2. Make a vehicle ignore all the other vehicles. <br>
-    3. Make a vehicle ignore all the walkers.  <br>
-    4. Make a vehicle ignore all the traffic lights. 
-    </td>
-  </tr>
-  <tr>
-    <td><b>Lane changes: </b></td>
-    <td><br>
-    1. Force a lane change disregarding possible collisions. <br>
-    2. Enable/Disable lane changes for a vehicle.  
-    </td>
-  </tr>
+</tbody>
 </table>
 <br>
 

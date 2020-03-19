@@ -45,12 +45,7 @@ client.stop_recorder()
 ---
 ## Simulation playback
 
-A playback can be started at any point during a simulation only specifying the file name.  
-
-```py
-client.replay_file("recording01.log")
-```
-This method allows for some parameters to specify which segment of the recording is reenacted.
+A playback can be started at any point during a simulation. Besides the path to the log file, this method needs some parameters.
 
 ```py
 client.replay_file("recording01.log", start, duration, camera)
@@ -73,7 +68,7 @@ client.replay_file("recording01.log", start, duration, camera)
 <tr>
 <td><code>camera</code></td>
 <td>ID of the actor that the camera will focus on. </td>
-<td>By default the spectator will move freely.</td>
+<td>Set it to <code>0</code> to let the spectator move freely.</td>
 </tbody>
 </table>
 <br>
@@ -116,7 +111,7 @@ The details of a recording can be retrieved using a simple API call. By default,
 
 ```py
 # Show info for relevant frames
-client.show_recorder_file_info("recording01.log")
+print(client.show_recorder_file_info("recording01.log"))
 ``` 
 
 * __Opening information.__ Map, date and time when the simulation was recorded.  
@@ -176,7 +171,7 @@ Vehicles must have a [collision detector](ref_sensors.md#collision-detector) att
 The collision query requires two flags to filter the collisions. The following example would show collisions between vehicles, and any other object.  
 
 ```py
-client.show_recorder_collisions("recording01.log", "v", "a")
+print(client.show_recorder_collisions("recording01.log", "v", "a"))
 ```
 
 The output summarizes time of the collision, and type, ID and description of the actors involved.  
@@ -212,7 +207,7 @@ In this case, the playback showed this.
 Detects vehicles that where stucked during the recording. An actor is considered blocked if it does not move a minimum distance in a certain time. This definition is made by the user during the query.
 
 ```py
-client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
+print(client.show_recorder_actors_blocked("recording01.log", min_time, min_distance))
 ```
 
 <table class ="defTable">
