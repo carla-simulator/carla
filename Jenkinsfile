@@ -288,6 +288,7 @@ pipeline
                             steps {
                                 bat """
                                     call ../setEnv64.bat
+                                    git checkout .
                                     make deploy ARGS="--replace-latest"
                                 """
                             }
