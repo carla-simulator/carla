@@ -23,7 +23,7 @@ set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
 
-set UE_VERSION=4.22
+set UE_VERSION=4.24
 set PACKAGES=Carla
 
 
