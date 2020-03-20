@@ -73,7 +73,6 @@ void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *Overlapped
     bool bFromSweep,
     const FHitResult &SweepResult)
 {
-  carla::log_warning("Fucking woooork");
   ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   if (Vehicle)
   {

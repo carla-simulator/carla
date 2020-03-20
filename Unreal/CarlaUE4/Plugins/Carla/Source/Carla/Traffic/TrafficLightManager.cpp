@@ -7,6 +7,11 @@
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
 #include "Components/BoxComponent.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/road/SignalType.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include <string>
 
 ATrafficLightManager::ATrafficLightManager()
@@ -20,7 +25,26 @@ ATrafficLightManager::ATrafficLightManager()
       TEXT( "Blueprint'/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive'" ) );
   if (TrafficLightFinder.Succeeded())
   {
-    TrafficLightModel = TrafficLightFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> Model;
+    Model = TrafficLightFinder.Object->GeneratedClass;
+    TrafficLightModel = Model;
+  }
+  // Default traffic signs models
+  static ConstructorHelpers::FObjectFinder<UBlueprint> StopFinder(
+      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Stop.BP_Stop'" ) );
+  if (StopFinder.Succeeded())
+  {
+    TSubclassOf<ATrafficSignBase> StopSignModel;
+    StopSignModel = StopFinder.Object->GeneratedClass;
+    TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopSignModel);
+  }
+  static ConstructorHelpers::FObjectFinder<UBlueprint> YieldFinder(
+      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Yield.BP_Yield'" ) );
+  if (YieldFinder.Succeeded())
+  {
+    TSubclassOf<ATrafficSignBase> YieldSignModel;
+    YieldSignModel = YieldFinder.Object->GeneratedClass;
+    TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
   }
 }
 
@@ -82,7 +106,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   TrafficLightController->ResetState();
 
   // Add signal to map
-  TrafficLightComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
+  TrafficSignComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
 
   TrafficLightGroup->ResetGroup();
 }
@@ -101,7 +125,7 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
   return Map;
 }
 
-void ATrafficLightManager::GenerateTrafficLights()
+void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
   if(!TrafficLightsGenerated)
   {
@@ -110,52 +134,17 @@ void ATrafficLightManager::GenerateTrafficLights()
       UE_LOG(LogCarla, Error, TEXT("Missing TrafficLightModel"));
       return;
     }
-    const auto& Signals = GetMap()->GetSignals();
-    for(const auto& ControllerPair : GetMap()->GetControllers())
-    {
-      const auto& Controller = ControllerPair.second;
-      for(const auto& SignalId : Controller->GetSignals())
-      {
-        const auto& Signal = Signals.at(SignalId);
-        auto CarlaTransform = Signal->GetTransform();
-        FTransform SpawnTransform(CarlaTransform);
 
-        FVector SpawnLocation = SpawnTransform.GetLocation();
-        FRotator SpawnRotation(SpawnTransform.GetRotation());
-        SpawnRotation.Yaw += 90;
-
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.Owner = this;
-        SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
-            TrafficLightModel,
-            SpawnLocation,
-            SpawnRotation,
-            SpawnParams);
-
-        // Hack to prevent mixing ATrafficLightBase and UTrafficLightComponent logic
-        TrafficLight->SetTimeIsFrozen(true);
-
-        TrafficSigns.Add(TrafficLight);
-
-        UTrafficLightComponent *TrafficLightComponent =
-            NewObject<UTrafficLightComponent>(TrafficLight);
-        TrafficLightComponent->SetSignId(SignalId.c_str());
-        TrafficLightComponent->RegisterComponent();
-        TrafficLightComponent->AttachToComponent(
-            TrafficLight->GetRootComponent(),
-            FAttachmentTransformRules::KeepRelativeTransform);
-
-        RegisterLightComponent(TrafficLightComponent);
-      }
-    }
+    SpawnTrafficLights();
     GenerateTriggerBoxesForTrafficLights();
+
+    SpawnSignals();
+
     TrafficLightsGenerated = true;
   }
 }
 
-void ATrafficLightManager::RemoveGeneratedTrafficLights()
+void ATrafficLightManager::RemoveGeneratedSignalsAndTrafficLights()
 {
   for(auto& Sign : TrafficSigns)
   {
@@ -185,7 +174,7 @@ void ATrafficLightManager::BeginPlay()
   }
   else
   {
-    GenerateTrafficLights();
+    GenerateSignalsAndTrafficLights();
   }
 
 }
@@ -226,6 +215,91 @@ void ATrafficLightManager::ResetTrafficLightObjects()
     if(TrafficLightComponent)
     {
       RegisterLightComponent(TrafficLightComponent);
+    }
+  }
+}
+
+void ATrafficLightManager::SpawnTrafficLights()
+{
+  const auto& Signals = GetMap()->GetSignals();
+  for(const auto& ControllerPair : GetMap()->GetControllers())
+  {
+    const auto& Controller = ControllerPair.second;
+    for(const auto& SignalId : Controller->GetSignals())
+    {
+      const auto& Signal = Signals.at(SignalId);
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+
+      FVector SpawnLocation = SpawnTransform.GetLocation();
+      FRotator SpawnRotation(SpawnTransform.GetRotation());
+      SpawnRotation.Yaw += 90;
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride =
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
+          TrafficLightModel,
+          SpawnLocation,
+          SpawnRotation,
+          SpawnParams);
+
+      // Hack to prevent mixing ATrafficLightBase and UTrafficLightComponent logic
+      TrafficLight->SetTimeIsFrozen(true);
+
+      TrafficSigns.Add(TrafficLight);
+
+      UTrafficLightComponent *TrafficLightComponent =
+          NewObject<UTrafficLightComponent>(TrafficLight);
+      TrafficLightComponent->SetSignId(SignalId.c_str());
+      TrafficLightComponent->RegisterComponent();
+      TrafficLightComponent->AttachToComponent(
+          TrafficLight->GetRootComponent(),
+          FAttachmentTransformRules::KeepRelativeTransform);
+
+      RegisterLightComponent(TrafficLightComponent);
+    }
+  }
+}
+
+void ATrafficLightManager::SpawnSignals()
+{
+  const auto &Signals = GetMap()->GetSignals();
+  for (auto& SignalPair : Signals)
+  {
+    auto &Signal = SignalPair.second;
+    FString SignalType = Signal->GetType().c_str();
+    if (TrafficSignsModels.Contains(SignalType))
+    {
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+
+      FVector SpawnLocation = SpawnTransform.GetLocation();
+      FRotator SpawnRotation(SpawnTransform.GetRotation());
+      SpawnRotation.Yaw += 90;
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride =
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
+          TrafficSignsModels[SignalType],
+          SpawnLocation,
+          SpawnRotation,
+          SpawnParams);
+
+      USignComponent *SignComponent =
+          NewObject<USignComponent>(TrafficSign);
+      SignComponent->SetSignId(Signal->GetSignalId().c_str());
+      SignComponent->RegisterComponent();
+      SignComponent->AttachToComponent(
+          TrafficSign->GetRootComponent(),
+          FAttachmentTransformRules::KeepRelativeTransform);
+
+      TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
+
+      TrafficSigns.Add(TrafficSign);
     }
   }
 }
@@ -301,9 +375,14 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
     for (auto *SignalReference : SignalReferences)
     {
       FString SignalId(SignalReference->GetSignalId().c_str());
-      if(TrafficLightComponents.Contains(SignalId))
+      if(TrafficSignComponents.Contains(SignalId))
       {
-        auto *TrafficLightComponent = TrafficLightComponents[SignalId];
+        UTrafficLightComponent *TrafficLightComponent =
+            Cast<UTrafficLightComponent>(TrafficSignComponents[SignalId]);
+        if (!TrafficLightComponent)
+        {
+          continue;
+        }
         for(auto &validity : SignalReference->GetValidities())
         {
           for(auto lane : GenerateRange(validity._from_lane, validity._to_lane))
@@ -357,11 +436,11 @@ UTrafficLightController* ATrafficLightManager::GetController(FString ControllerI
   return nullptr;
 }
 
-UTrafficLightComponent* ATrafficLightManager::GetTrafficLight(FString SignId)
+USignComponent* ATrafficLightManager::GetTrafficSign(FString SignId)
 {
-  if (!TrafficLightComponents.Contains(SignId))
+  if (!TrafficSignComponents.Contains(SignId))
   {
     return nullptr;
   }
-  return TrafficLightComponents[SignId];
+  return TrafficSignComponents[SignId];
 }
