@@ -187,11 +187,22 @@ pipeline
                                 }
                             }
                         }
-                        stage('Cleaning')
-                        {
-                            steps
+                    }
+                    post 
+                    {
+                        always 
+                        { 
+                            deleteDir() 
+
+                            node('master')
                             {
-                                deleteDir()
+                                script
+                                {
+                                    JOB_ID = "${env.BUILD_TAG}"
+                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    
+                                    jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
+                                }
                             }
                         }
                     }
@@ -296,25 +307,22 @@ pipeline
                     }
                     post 
                     {
-                        always { deleteDir() }
+                        always 
+                        { 
+                            deleteDir() 
+
+                            node('master')
+                            {
+                                script
+                                {
+                                    JOB_ID = "${env.BUILD_TAG}"
+                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    
+                                    jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
-    }
-    post 
-    {
-        always 
-        { 
-            node('master')
-            {
-                script
-                {
-                    JOB_ID = "${env.BUILD_TAG}"
-                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
-                    
-                    jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
-                    jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                 }
             }
         }
