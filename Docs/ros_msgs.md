@@ -1,7 +1,8 @@
 # CARLA messages reference
 
-The following reference lists all the CARLA messages available in the ROS bridge. These can be used to enable communication in both ways.  
-Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum: 
+The following reference lists all the CARLA messages available in the ROS bridge.  
+
+Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum.
 
 <div class="build-buttons">
 <!-- Latest release button -->
@@ -14,45 +15,96 @@ CARLA forum</a>
 ---
 ## CarlaActorInfo.msg
 
-Comprises the information regarding an actor to be shared between ROS and CARLA.  
-The [CarlaActorList.msg](#carlaactorlist) message is a list of these items. 
+Information shared between ROS and CARLA regarding an actor. 
 
-| Field   | Type   | Description |
-| ----------- | ------ | ----------- |
-| `id`        | uint32 | The ID of the actor. |
-| `parent_id` | uint32 | The ID of the parent actor. `0` if no parent available. |
-| `type`      | string | The identifier of the blueprint this actor was based on. |
-| `rolename`  | string | Role assigned to the actor when spawned. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>id</code> </td>
+<td>uint32</td>
+<td>The ID of the actor.</td>
+<tr>
+<td><code>parent_id</code> </td>
+<td>uint32</td>
+<td>The ID of the parent actor. `0` if no parent available.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this actor was based on.</td>
+<tr>
+<td><code>rolename</code> </td>
+<td>string</td>
+<td>Role assigned to the actor when spawned.</td>
+</tbody>
+</table>
+
 
 ---
 ## CarlaActorList.msg
 
-Contains a list of messages with some basic information for CARLA actors.
+A list of messages with some basic information for CARLA actors.
 
-| Field       | Type             | Description |
-| ----------- | ---------------- | ----------- |
-| `actors`    | [CarlaActorInfo](#carlaactorinfomsg)[] | List of messages with actors' information. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>actors</code> </td>
+<td><a href="#carlaactorinfomsg">CarlaActorInfo</a></td>
+<td>List of messages with actors' information.</td>
+</tobody>
+</table>
 
 ---
 ## CarlaCollisionEvent.msg
 
-Registers information regarding a collision event detected by the collision sensor of an actor.
+Data retrieved on a collision event detected by the collision sensor of an actor.
 
-| Field            | Type                  | Description |
-| ---------------- | --------------------- | ----------- |
-| `header`       | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `other_actor_id` | uint32                | ID of the actor against whom the collision was detected.  |
-| `normal_impulse` | geometry_msgs/Vector3 | Vector representing resulting impulse from the collision. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">Header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>other_actor_id</code> </td>
+<td>uint32</td>
+<td>ID of the actor against whom the collision was detected.</td>
+<tr>
+<td><code>normal_impulse</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>Vector representing resulting impulse from the collision.</td>
+</tbody>
+</table>
+
 
 ---
 ## CarlaControl.msg
 
-These messages are used to control the simulation while in synchronous mode. The constant defined is translated as stepping commands.  
+These messages control the simulation while in synchronous mode. The constant defined is translated as stepping commands.  
 
-| Field       | Type | Description |
-| ----------- | ---- | ----------- |
-| `command`   | int8 | __PLAY__=0 <br> __PAUSE__=1 <br> __STEP_ONCE__=2 |
-
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>command</code> </td>
+<td>int8</td>
+<td><b>PLAY</b>=0 <br> <b>PAUSE</b>=1 <br> <b>STEP_ONCE</b>=2</td>
+</tbody>
+</table>
 <br>
 
 !!! Important
@@ -63,239 +115,644 @@ These messages are used to control the simulation while in synchronous mode. The
 
 Messages sent to apply a control to a vehicle in both modes, autopilot and manual. These are published in a stack. 
 
-| Field               | Type    | Description |
-| ------------------- | ------- | ----------- |
-| `header`            | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `throttle`          | float32 | Scalar value to cotrol the vehicle throttle: __[0.0, 1.0]__ |
-| `steer`             | float32 | Scalar value to control the vehicle steering direction: __[-1.0, 1.0]__ to control the vehicle steering   |
-| `brake`             | float32 | Scalar value to control the vehicle brakes: __[0.0, 1.0]__       |
-| `hand_brake`        | bool    | If __True__, the hand brake is enabled. |
-| `reverse`           | bool    | If __True__, the vehicle will move reverse. |
-| `gear`              | int32   | Changes between the available gears in a vehicle. |
-| `manual_gear_shift` | bool    | If __True__, the gears will be shifted using `gear`. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">Header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>throttle</code> </td>
+<td>float32</td>
+<td>Scalar value to cotrol the vehicle throttle: <b>[0.0, 1.0]</b></td>
+<tr>
+<td><code>steer</code> </td>
+<td>float32</td>
+<td>Scalar value to control the vehicle steering direction: <b>[-1.0, 1.0]</b> to control the vehicle steering</td>
+<tr>
+<td><code>brake</code> </td>
+<td>float32</td>
+<td>Scalar value to control the vehicle brakes: <b>[0.0, 1.0]</b></td>
+<tr>
+<td><code>hand_brake</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the hand brake is enabled.</td>
+<tr>
+<td><code>reverse</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the vehicle will move reverse.</td>
+<tr>
+<td><code>gear</code> </td>
+<td>int32</td>
+<td>Changes between the available gears in a vehicle.</td>
+<tr>
+<td><code>manual_gear_shift</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the gears will be shifted using <code>gear</code>.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaEgoVehicleInfo.msg
 
-Contains some static information regarding a vehicle, mostly the attributes used to define the vehicle's physics.  
+Static information regarding a vehicle, mostly the attributes used to define the vehicle's physics.  
 
-| Field                                         | Type                                                    | Description |
-| --------------------------------------------- | ------------------------------------------------------- | ----------- |
-| `id`                                          | uint32                                                  | ID of the vehicle actor. |
-| `type`                                        | string                                                  | The identifier of the blueprint this vehicle was based on. |
-| `rolename`                                    | string                                                  | Role assigned to the vehicle. |
-| `wheels`                                      | [CarlaEgoVehicleInfoWheel](#carlaegovehicleinfowheel)[] | List of messages with information regarding wheels. |
-| `max_rpm`                                     | float32                                                 | Maximum RPM of the vehicle's engine. |
-| `moi`                                         | float32                                                 | Moment of inertia of the vehicle's engine. |
-| `damping_rate_full_throttle`                  | float32                                                 | Damping rate when the throttle is at maximum. |
-| `damping_rate_zero_throttle_clutch_engaged`   | float32                                                 | Damping rate when the throttle is zero with clutch engaged. |
-| `damping_rate_zero_throttle_clutch_disengaged`| float32                                                 | Damping rate when the throttle is zero with clutch disengaged. |
-| `use_gear_autobox`                            | bool                                                    | If __True__, the vehicle will have an automatic transmission. |
-| `gear_switch_time`                            | float32                                                 | Switching time between gears. |
-| `clutch_strength`                             | float32                                                 | The clutch strength of the vehicle. Measured in __Kgm^2/s__. |
-| `mass`                                        | float32                                                 | The mass of the vehicle measured in Kg. |
-| `drag_coefficient`                            | float32                                                 | Drag coefficient of the vehicle's chassis. |
-| `center_of_mass`                              | geometry_msgs/Vector3                                   | The center of mass of the vehicle. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>id</code> </td>
+<td>uint32</td>
+<td>ID of the vehicle actor.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this vehicle was based on.</td>
+<tr>
+<td><code>type</code> </td>
+<td>string</td>
+<td>The identifier of the blueprint this vehicle was based on.</td>
+<tr>
+<td><code>rolename</code> </td>
+<td>string</td>
+<td>Role assigned to the vehicle.</td>
+<tr>
+<td><code>wheels</code> </td>
+<td><a href="#carlaegovehicleinfowheel">CarlaEgoVehicleInfoWheel</a></td>
+<td>List of messages with information regarding wheels.</td>
+<tr>
+<td><code>max_rpm</code> </td>
+<td>float32</td>
+<td>Maximum RPM of the vehicle's engine.</td>
+<tr>
+<td><code>moi</code> </td>
+<td>float32</td>
+<td>Moment of inertia of the vehicle's engine.</td>
+<tr>
+<td><code>damping_rate_full_throttle</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is at maximum.</td>
+<tr>
+<td><code>damping_rate_zero_throttle</code><br><code>_clutch_engaged</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is zero with clutch engaged.</td>
+<tr>
+<td><code>damping_rate_zero_throttle</code><br><code>_clutch_disengaged</code> </td>
+<td>float32</td>
+<td>Damping rate when the throttle is zero with clutch disengaged.</td>
+<tr>
+<td><code>use_gear_autobox</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the vehicle will have an automatic transmission.</td>
+<tr>
+<td><code>gear_switch_time</code> </td>
+<td>float32</td>
+<td>Switching time between gears.</td>
+<tr>
+<td><code>clutch_strength</code> </td>
+<td>float32</td>
+<td>The clutch strength of the vehicle. Measured in <b>Kgm^2/s</b>.</td>
+<tr>
+<td><code>mass</code> </td>
+<td>float32</td>
+<td>The mass of the vehicle measured in Kg.</td>
+<tr>
+<td><code>drag_coefficient</code> </td>
+<td>float32</td>
+<td>Drag coefficient of the vehicle's chassis.</td>
+<tr>
+<td><code>center_of_mass</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>The center of mass of the vehicle.</td>
+</tbody>
+</table>
+<br>
+
 
 ---
 ## CarlaEgoVehicleInfoWheel.msg
 
-Contains some static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfo) message.
+Static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfo) message.
 
-| Field                  | Type                  | Description |
-| ---------------------- | --------------------- | ----------- |
-| `tire_friction`        | float32               | A scalar value that indicates the friction of the wheel. |
-| `damping_rate`         | float32               | The damping rate of the wheel. |
-| `max_steer_angle`      | float32               | The maximum angle in degrees that the wheel can steer. |
-| `radius`               | float32               | The radius of the wheel in centimeters. |
-| `max_brake_torque`     | float32               | The maximum brake torque in Nm. |
-| `max_handbrake_torque` | float32               | The maximum handbrake torque in Nm. |
-| `position`             | gemoetry_msgs/Vector3 | World position of the wheel. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>tire_friction</code> </td>
+<td>float32</td>
+<td>A scalar value that indicates the friction of the wheel.</td>
+<tr>
+<td><code>damping_rate</code> </td>
+<td>float32</td>
+<td>The damping rate of the wheel.</td>
+<tr>
+<td><code>max_steer_angle</code> </td>
+<td>float32</td>
+<td>The maximum angle in degrees that the wheel can steer.</td>
+<tr>
+<td><code>radius</code> </td>
+<td>float32</td>
+<td>The radius of the wheel in centimeters.</td>
+<tr>
+<td><code>max_brake_torque</code> </td>
+<td>float32</td>
+<td>The maximum brake torque in Nm.</td>
+<tr>
+<td><code>max_handbrake_torque</code> </td>
+<td>float32</td>
+<td>The maximum handbrake torque in Nm.</td>
+<tr>
+<td><code>position</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>World position of the wheel.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaEgoVehicleStatus.msg
 
-Details the current status of the vehicle as an object in the world.  
+Current status of the vehicle as an object in the world.  
 
-| Fied          | Type                                              | Description |
-| ------------- | ------------------------------------------------- | ----------- |
-| `header`      | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `velocity`    | float32                                           | Current speed of the vehicle. |
-| `acceleration`| geometry_msgs/Accel                               | Current acceleration of the vehicle. |
-| `orientation` | geometry_msgs/Quaternion                          | Current orientation of the vehicle. |
-| `control`     | [CarlaEgoVehicleControl](#carlaegovehiclecontrol) | Current control values as reported by CARLA. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a hre="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>velocity</code> </td>
+<td>float32</td>
+<td>Current speed of the vehicle.</td>
+<tr>
+<td><code>acceleration</code> </td>
+<td>geometry_msgs/Accel</td>
+<td>Current acceleration of the vehicle.</td>
+<tr>
+<td><code>orientation</code> </td>
+<td>geometry_msgs/Quaternion</td>
+<td>Current orientation of the vehicle.</td>
+<tr>
+<td><code>control</code> </td>
+<td><a href="#carlaegovehiclecontrol">CarlaEgoVehicleControl</a></td>
+<td>Current control values as reported by CARLA.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaLaneInvasionEvent.msg
 
-These messages are used to publish lane invasions detected by a lane-invasion sensor attached to a vehicle. The invasions detected in the last step are passed as a list with a constant definition to identify the lane crossed.  
+These messages publish lane invasions detected by a lane-invasion sensor attached to a vehicle. The invasions detected in the last step are passed as a list with a constant definition to identify the lane crossed.  
 
-| Field                   | Type    | Description |
-| ----------------------- | ------- | ----------- |
-| `header`       | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `crossed_lane_markings` | int32[] | __LANE_MARKING_OTHER__=0 <br> __LANE_MARKING_BROKEN__=1 <br> __LANE_MARKING_SOLID__=2 |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>crossed_lane_markings</code> </td>
+<td>int32[]</td>
+<td><b>LANE_MARKING_OTHER</b>=0 <br> <b>LANE_MARKING_BROKEN</b>=1 <br> <b>LANE_MARKING_SOLID</b>=2</td>
+</tbody>
+</table>
+<br>
+
 
 ---
 ## CarlaScenario.msg
 
 Details for a test scenario. 
 
-| Field          | Type               | Description                                   |
-| ---------------| ------------------ | --------------------------------------------- |
-| `name`         | string             | Name of the scenario.                         |
-| `scenario_file`| string             | Test file for the scenario.                   |
-| `destination`  | geometry_msgs/Pose | Goal location of the scenario.                |
-| `target_speed` | float64            | Desired speed to drive at during the scenario |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>name</code> </td>
+<td>string</td>
+<td>Name of the scenario.</td>
+<tr>
+<td><code>scenario_file</code> </td>
+<td>string</td>
+<td>Test file for the scenario.</td>
+<tr>
+<td><code>destination</code> </td>
+<td>geometry_msgs/Pose</td>
+<td>Goal location of the scenario.</td>
+<tr>
+<td><code>target_speed</code> </td>
+<td>float64</td>
+<td>Desired speed during the scenario.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaScenarioList.msg
 
-Contains a list of test scenarios to run in ScenarioRunner. 
+List of test scenarios to run in ScenarioRunner. 
 
-| Field       | Type                                 | Description            |
-| ----------- | ------------------------------------ | ---------------------- |
-| `scenarios` | [CarlaScenario](#carlascenariomsg)[] | The list of scenarios. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>scenarios</code> </td>
+<td><a href="#carlascenariomsg">CarlaScenario[]</a></td>
+<td>List of scenarios.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaScenarioRunnerStatus.msg
 
-Represents the current state of the ScenarioRunner, that can be managed using an enum definition. 
+Current state of the ScenarioRunner. It is managed using a constant. 
 
-| Field    | Type  | Description                                                                                                                                  |
-| -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status` | uint8 | Current state of the scenario as an enum: <br> __STOPPED__=0 <br> __STARTING__=1 <br> __RUNNING__=2 <br> __SHUTTINGDOWN__=3 <br> __ERROR__=4 |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>status</code> </td>
+<td>uint8</td>
+<td>Current state of the scenario as an enum: <br> <b>STOPPED</b>=0 <br> <b>STARTING</b>=1 <br> <b>RUNNING</b>=2 <br> <b>SHUTTINGDOWN</b>=3 <br> <b>ERROR</b>=4</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaStatus.msg
 
-Details the current world settings of the simulation. 
+Current world settings of the simulation. 
 
-| Field                      | Type    | Description                                                   |
-| -------------------------- | ------- | ------------------------------------------------------------- |
-| `frame`                    | uint64  | Current frame number.                                         |
-| `fixed_delta_seconds`      | float32 | Simulation time between last and current step.                |
-| `synchronous_mode`         | bool    | If __True__, synchronous mode is enabled.                         |
-| `synchronous_mode_running` | bool    | __True__ when the simulation is running. __False__ when it is paused. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>frame</code> </td>
+<td>uint64</td>
+<td>Current frame number.</td>
+<tr>
+<td><code>fixed_delta_seconds</code> </td>
+<td>float32</td>
+<td>Simulation time between last and current step.</td>
+<tr>
+<td><code>synchronous_mode</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, synchronous mode is enabled.</td>
+<tr>
+<td><code>synchronous_mode_running</code> </td>
+<td>bool</td>
+<td><b>True</b> when the simulation is running. <b>False</b> when it is paused.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaTrafficLightStatus.msg
 
-Contains a constant definition regarding the state of a traffic light. 
+Constant definition regarding the state of a traffic light. 
 
-| Field                      | Type    | Description                               |
-| -------------------------- | ------- | ----------------------------------------- |
-| `id`                       | uint32  | ID of the traffic light actor. |
-| `state`                    | uint8   | __RED__=0 <br> __YELLOW__=1 <br> __GREEN__=2 <br> __OFF__=3 <br> __UNKNOWN__=4 |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>id</code> </td>
+<td>uint32</td>
+<td>ID of the traffic light actor.</td>
+<tr>
+<td><code>state</code> </td>
+<td>uint8</td>
+<td><b>RED</b>=0 <br> <b>YELLOW</b>=1 <br> <b>GREEN</b>=2 <br> <b>OFF</b>=3 <br> <b>UNKNOWN</b>=4</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaTrafficLightStatusList.msg
 
-Comprises a list of all traffic lights with their status. 
+List of traffic lights with their status. 
 
-| Field            | Type                                                  | Description      |
-| ---------------- | ----------------------------------------------------- | ---------------- |
-| `traffic_lights` | [CarlaTrafficLightStatus](#carlatrafficlightstatus)[] | A list of messages summarizing traffic light states. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>scenarios</code> </td>
+<td><a href="#carlatrafficlightstatus">CarlaTrafficLightStatus`[]</a></td>
+<td>A list of messages summarizing traffic light states.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaWalkerControl.msg
 
-Contains the information needed to apply a movement controller to a walker. 
+Information needed to apply a movement controller to a walker. 
 
-| Field       | Type                   | Description                   |
-| ----------- | ---------------------- | ----------------------------- |
-| `direction` | geometry_msgs/Vector3  | Vector that controls the direction of the walker. |
-| `speed`     | float32                | A scalar value to control the walker's speed. |
-| `jump`      | bool                   | If __True__, the walker will jump. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>direction</code> </td>
+<td>geometry_msgs/Vector3</td>
+<td>Vector that controls the direction of the walker.</td>
+<tr>
+<td><code>speed</code> </td>
+<td>float32</td>
+<td>A scalar value to control the walker's speed.</td>
+<tr>
+<td><code>jump</code> </td>
+<td>bool</td>
+<td>If <b>True</b>, the walker will jump.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaWaypoint.msg
 
-Summarizes data contained in a waypoint. 
+Data contained in a waypoint object. 
 
-| Field         | Type               | Description                   |
-| ------------- | ------------------ | ----------------------------- |
-| `road_id`     | int32              | OpenDRIVE road's id.  |
-| `section_id`  | int32              | OpenDRIVE section's id, based on the order that they are originally defined. |
-| `lane_id`     | int32              | OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. |
-| `is_junction` | bool               | __True__ if the current Waypoint is on a junction as defined by OpenDRIVE. |
-| `pose`        | [geometry_msgs/Pose](http://docs.ros.org/api/geometry_msgs/html/msg/Pose.html) | Position and orientation of the waypoint. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>road_id</code> </td>
+<td>int32</td>
+<td>OpenDRIVE road's id.</td>
+<tr>
+<td><code>section_id</code> </td>
+<td>int32</td>
+<td>OpenDRIVE section's id, based on the order that they are originally defined.</td>
+<tr>
+<td><code>lane_id</code> </td>
+<td>int32</td>
+<td>OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road.</td>
+<tr>
+<td><code>is_junction</code> </td>
+<td>bool</td>
+<td><b>True</b>, if the current Waypoint is on a junction as defined by OpenDRIVE.</td>
+<tr>
+<td><code>is_junction</code> </td>
+<td><a href="http://docs.ros.org/api/geometry_msgs/html/msg/Pose.html">geometry_msgs/Pose</a></td>
+<td><b>True</b> when the simulation is running. <b>False</b> when it is paused.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## CarlaWorldInfo.msg
 
-Information about the current CARLA map (name and OpenDRIVE). 
+Information about the current CARLA map. 
 
-| Field       | Type    | Description                   |
-| ----------- | ------- | ----------------------------- |
-| `map_name`  | string  | Name of the CARLA map loaded in the current world. |
-| `opendrive` | string  | .xodr OpenDRIVE file of the current map as a string. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>map_name</code> </td>
+<td>string</td>
+<td>Name of the CARLA map loaded in the current world.</td>
+<tr>
+<td><code>opendrive</code> </td>
+<td>string</td>
+<td>.xodr OpenDRIVE file of the current map as a string.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## EgoVehicleControlCurrent.msg
 
-Represents the current time, speed and acceleration values of the vehicle used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Current time, speed and acceleration values of the vehicle. Used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
-| Field       | Type     | Description                   |
-| ----------- | -------- | ----------------------------- |
-| `time_sec`  | float32  | Current time when the controller is applied. |
-| `speed`     | float32  | Current speed applied by the controller. |
-| `speed_abs` | float32  | Speed as an absolute value. | 
-| `accel`     | float32  | Current acceleration applied by the controller. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>time_sec</code> </td>
+<td>float32</td>
+<td>Current time when the controller is applied.</td>
+<tr>
+<td><code>speed</code> </td>
+<td>float32</td>
+<td>Current speed applied by the controller.</td>
+<tr>
+<td><code>speed_abs</code> </td>
+<td>float32</td>
+<td>Speed as an absolute value.</td>
+<tr>
+<td><code>accel</code> </td>
+<td>float32</td>
+<td>Current acceleration applied by the controller.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## EgoVehicleControlInfo.msg
 
-Contains all the current values used within an Ackermann controller. These messages are useful for debugging. 
+Current values within an Ackermann controller. These messages are useful for debugging. 
 
-| Field          | Type                                                                    | Description                    |
-| -------------- | ----------------------------------------------------------------------- | ------------------------------ |
-| `header`       | [Header](http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published. |
-| `restrictions` | [EgoVehicleControlMaxima](#egovehiclecontrolmaximamsg)                  | Limits to the controller values.             |
-| `target`       | [EgoVehicleControlTarget](#egovehiclecontroltargetmsg)                  | Target values the controller aims for. |
-| `current`      | [EgoVehicleControlCurrent](#egovehiclecontrolcurrentmsg)                | Currently measured values. |
-| `status`       | [EgoVehicleControlStatus](#egovehiclecontrolstatusmsg)                  | Current control status.    |
-| `output`       | [CarlaEgoVehicleControl](#carlaegovehiclecontrolmsg)                    | Output controller that will be applied in CARLA. |
-
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>header</code> </td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">header</a></td>
+<td>Time stamp and frame ID when the message is published.</td>
+<tr>
+<td><code>restrictions</code> </td>
+<td><a href="#egovehiclecontrolmaximamsg">EgoVehicleControlMaxima</a></td>
+<td>Limits to the controller values.</td>
+<tr>
+<td><code>target</code> </td>
+<td><a href="#egovehiclecontroltargetmsg">EgoVehicleControlTarget</a></td>
+<td>Limits to the controller values.</td>
+<tr>
+<td><code>current</code> </td>
+<td><a href="#egovehiclecontrolcurrentmsg">EgoVehicleControlCurrent</a></td>
+<td>Limits to the controller values.</td>
+<tr>
+<td><code>status</code> </td>
+<td><a href="#egovehiclecontrolstatusmsg">EgoVehicleControlStatus</a></td>
+<td>Limits to the controller values.</td>
+<tr>
+<td><code>output</code> </td>
+<td><a href="#carlaegovehiclecontrolmsg">CarlaEgoVehicleControl</a></td>
+<td>Limits to the controller values.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## EgoVehicleControlMaxima.msg
 
-Represents the restrictions of a controller (limit values). It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Controller restrictions (limit values). It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
-| Field                | Type     | Description                   |
-| -------------------- | -------- | ----------------------------- |
-| `max_steering_angle` | float32  | Max. steering angle for a vehicle. |
-| `max_speed`          | float32  | Max. speed for a vehicle. |
-| `max_accel`          | float32  | Max. acceleration for a vehicle. |
-| `max_decel`          | float32  | Max. deceleration for a vehicle. Default: __8 m/s^2__ |
-| `min_accel`          | float32  | Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled. |
-| `max_pedal`          | float32  | Min. pedal. |<!---- TBF>
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>max_steering_angle</code> </td>
+<td>float32</td>
+<td>Max. steering angle for a vehicle.</td>
+<tr>
+<td><code>max_speed</code> </td>
+<td>float32</td>
+<td>Max. speed for a vehicle.</td>
+<tr>
+<td><code>max_accel</code> </td>
+<td>float32</td>
+<td>Max. acceleration for a vehicle.</td>
+<tr>
+<td><code>max_decel</code> </td>
+<td>float32</td>
+<td>Max. deceleration for a vehicle. Default: <b>8m/s^2</b></td>
+<tr>
+<td><code>min_accel</code> </td>
+<td>float32</td>
+<td>Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled.</td>
+<tr>
+<td><code>max_pedal</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Min. pedal.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## EgoVehicleControlStatus.msg
 
-Represents the current status of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Current status of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
-| Field                            | Type    | Description                   |
-| -------------------------------- | ------- | ----------------------------- |
-| `status`                         | string  | Current control status.       |<!---- TBF>
-| `speed_control_activation_count` | uint8   | Speed controller. |<!---- TBF>
-| `speed_control_accel_delta`      | float32 | Speed controller. |<!---- TBF>
-| `speed_control_accel_target`     | float32 | Speed controller. |<!---- TBF>
-| `accel_control_pedal_delta`      | float32 | Acceleration controller. |<!---- TBF>
-| `accel_control_pedal_delta`      | float32 | Acceleration controller. |<!---- TBF>
-| `brake_upper_border`             | float32 | Borders for lay off pedal. |<!---- TBF>
-| `throttle_lower_border`          | float32 | Borders for lay off pedal. |<!---- TBF>
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>status</code> </td><!---- TBF> <---->
+<td>string</td>
+<td>Current control status.</td>
+<tr>
+<td><code>speed_control_activation_count</code> </td><!---- TBF> <---->
+<td>uint8</td>
+<td>Speed controller.</td>
+<tr>
+<td><code>speed_control_accel_delta</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Speed controller.</td>
+<tr>
+<td><code>speed_control_accel_target</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Speed controller.</td>
+<tr>
+<td><code>accel_control_pedal_delta</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Acceleration controller.</td>
+<tr>
+<td><code>accel_control_pedal_target</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Acceleration controller.</td>
+<tr>
+<td><code>brake_upper_border</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Borders for lay off pedal.</td>
+<tr>
+<td><code>throttle_lower_border</code> </td><!---- TBF> <---->
+<td>float32</td>
+<td>Borders for lay off pedal.</td>
+</tbody>
+</table>
+<br>
 
 ---
 ## EgoVehicleControlTarget.msg
 
-Represents the target values for the variables of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
+Target values of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
 
-| Field            | Type     | Description                   |
-| ---------------- | -------- | ----------------------------- |
-| `steering_angle` | float32  | Target steering angle for the controller. |
-| `speed`          | float32  | Target speed for the controller. |
-| `speed_abs`      | float32  | Speed as an absolute value. |
-| `accel`          | float32  | Target acceleration for the controller. |
-| `jerk`           | float32  | Target jerk for the controller. |
+<table class ="defTable">
+<thead>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>steering_angle</code> </td>
+<td>float32</td>
+<td>Target steering angle for the controller.</td>
+<tr>
+<td><code>speed</code> </td>
+<td>float32</td>
+<td>Target speed for the controller. </td>
+<tr>
+<td><code>speed_abs</code> </td>
+<td>float32</td>
+<td>Speed as an absolute value.</td>
+<tr>
+<td><code>accel</code> </td>
+<td>float32</td>
+<td>Target acceleration for the controller.</td>
+<tr>
+<td><code>jerk</code> </td>
+<td>float32</td>
+<td>Target jerk for the controller.</td>
+</tbody>
+</table>
+<br>

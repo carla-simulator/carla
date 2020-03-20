@@ -21,6 +21,5 @@ ARssSensor::ARssSensor(const FObjectInitializer &ObjectInitializer)
   MeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
   MeshComp->bHiddenInGame = true;
   MeshComp->CastShadow = false;
-  MeshComp->PostPhysicsComponentTick.bCanEverTick = false;
   RootComponent = MeshComp;
 }
