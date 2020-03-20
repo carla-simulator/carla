@@ -35,7 +35,7 @@ rem -- Download the content ----------------------------------------------------
 rem ============================================================================
 
 echo Downloading "%CONTENT_LINK%"...
-powershell -Command "Start-BitsTransfer -Source '%CONTENT_LINK%' -Destination '%CONTENT_FOLDER%'"
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%CONTENT_LINK%', '%CONTENT_FILE%')"
 if %errorlevel% neq 0 goto error_download
 
 echo %FILE_N% Extracting content from "%CONTENT_FILE%", this can take a while...
