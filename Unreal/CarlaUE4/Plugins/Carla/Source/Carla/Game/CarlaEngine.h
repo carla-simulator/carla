@@ -39,7 +39,7 @@ public:
 
 private:
 
-  void OnPreTick(ELevelTick TickType, float DeltaSeconds);
+  void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 

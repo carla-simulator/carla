@@ -13,6 +13,7 @@
 UENUM(BlueprintType)
 enum class EVehicleInputPriority : uint8
 {
+  Null = 0, // Workarround for UE4.24 issue with enums
   INVALID = 0u  UMETA(Hidden),
 
   Lowest        UMETA(DisplayName = "Lowest Priority", ToolTip = "Use for debugging purposes only"),

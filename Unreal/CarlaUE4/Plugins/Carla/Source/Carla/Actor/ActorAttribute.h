@@ -18,6 +18,7 @@
 UENUM(BlueprintType)
 enum class EActorAttributeType : uint8
 {
+  Null = 0, // Workarround for UE4.24 issue with enums
   Bool      = CARLA_ENUM_FROM_RPC(Bool)      UMETA(DisplayName = "Bool"),
   Int       = CARLA_ENUM_FROM_RPC(Int)       UMETA(DisplayName = "Integer"),
   Float     = CARLA_ENUM_FROM_RPC(Float)     UMETA(DisplayName = "Float"),

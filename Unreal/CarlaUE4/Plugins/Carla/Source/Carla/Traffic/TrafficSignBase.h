@@ -14,6 +14,7 @@ class UBoxComponent;
 
 UENUM(BlueprintType)
 enum class ETrafficSignState : uint8 {
+  Null = 0, // Workarround for UE4.24 issue with enums
   UNKNOWN            = 0u   UMETA(DisplayName = "UNKNOWN"),
   TrafficLightRed    = 1u   UMETA(DisplayName = "Traffic Light - Red"),
   TrafficLightYellow = 2u   UMETA(DisplayName = "Traffic Light - Yellow"),

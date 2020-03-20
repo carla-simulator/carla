@@ -44,7 +44,7 @@ ACityMapMeshHolder::ACityMapMeshHolder(const FObjectInitializer& ObjectInitializ
 {
  IDetailCategoryBuilder& DetailCategory = DetailLayout.EditCategory("Rendering");
  IDetailPropertyRow& row = DetailCategory.AddProperty("Generation", TEXT(""));
- 
+
 }*/
 
 void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
@@ -56,9 +56,9 @@ void ACityMapMeshHolder::OnConstruction(const FTransform &Transform)
 void ACityMapMeshHolder::PostInitializeComponents()
 {
   Super::PostInitializeComponents();
-  
+
   if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
-  {	 
+  {
 	 TArray<AActor*> roadpieces;
      GetAttachedActors(roadpieces);
 	 if(roadpieces.Num()==0)
@@ -68,15 +68,15 @@ void ACityMapMeshHolder::PostInitializeComponents()
        UpdateMap();
 	 }
   }
-  
+
 }
 
 #if WITH_EDITOR
 void ACityMapMeshHolder::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
   Super::PostEditChangeProperty(PropertyChangedEvent);
-  if (PropertyChangedEvent.Property) 
-  { 
+  if (PropertyChangedEvent.Property)
+  {
     DeletePieces();
     UpdateMapScale();
     UpdateMap();
@@ -154,15 +154,16 @@ void ACityMapMeshHolder::UpdateMap() {}
 void ACityMapMeshHolder::DeletePieces()
 {
   //this part will be deprecated: remove the instanced static mesh components
-  TArray<UActorComponent*> oldcomponents = GetComponentsByClass(UInstancedStaticMeshComponent::StaticClass());
+  TArray<UInstancedStaticMeshComponent*> oldcomponents;
+  GetComponents(oldcomponents);
   for(int32 i=0;i<oldcomponents.Num();i++)
   {
 	  oldcomponents[i]->DestroyComponent();
   }
-  
+
   TArray<AActor*> roadpieces;
   GetAttachedActors(roadpieces);
-  
+
   for(int32 i=roadpieces.Num()-1; i>=0; i--)
   {
 	if(roadpieces[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG))
@@ -170,7 +171,7 @@ void ACityMapMeshHolder::DeletePieces()
 	   roadpieces[i]->Destroy();
 	}
   }
-  
+
 }
 
 void ACityMapMeshHolder::UpdateMapScale()
