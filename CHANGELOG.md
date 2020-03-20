@@ -1,5 +1,6 @@
-## CARLA 0.9.9
+## Latest
 
+  * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
 
 ## CARLA 0.9.8
