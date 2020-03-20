@@ -68,10 +68,15 @@ namespace geom {
     // -- Mesh build methods ---------------------------------------------------
     // =========================================================================
 
-    static Mesh TriangleFan(const std::vector<vertex_type> &vertices);
+    void AddTriangleStrip(const std::vector<vertex_type> &vertices);
+
+    void AddTriangleFan(const std::vector<vertex_type> &vertices);
 
     /// Appends a vertex to the vertices list.
     void AddVertex(vertex_type vertex);
+
+    /// Appends a vertex to the vertices list.
+    void AddVertices(const std::vector<vertex_type> &vertices);
 
     /// Appends a normal to the normal list.
     void AddNormal(normal_type normal);
