@@ -52,6 +52,13 @@ private:
 
   void ResetTrafficLightObjects();
 
+  void GenerateTriggerBoxesForTrafficLights();
+
+  void GenerateTriggerBox(const carla::road::Map &Map,
+    const carla::road::element::Waypoint &waypoint,
+    UTrafficLightComponent* TrafficLightComponent,
+    float BoxSize);
+
   // Cached Carla Game Mode
   UPROPERTY()
   ACarlaGameModeBase *GameMode = 0;
