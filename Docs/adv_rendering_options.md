@@ -35,7 +35,7 @@ When working with the build version of CARLA, Unreal Engine needs to be set to u
 
 CARLA also allows for two different graphic quality levels. __Epic__, the default is the most detailed. __Low__ disables all post-processing and shadows, the drawing distance is set to 50m instead of infinite.  
 
-The simulation run significantly faster in __Low__ mode. This is not only used when there are technical limitations or precision is nonessential. It may be useful to train agents under conditions with simpler data or regarding only close elements.  
+The simulation runs significantly faster in __Low__ mode. This is not only used when there are technical limitations or precision is nonessential. It may be useful to train agents under conditions with simpler data or regarding only close elements.  
 
 The images below compare both modes. The flag used is the same for Windows and Linux. There is no equivalent option when working with the build, but the UE editor has its own quality settings. Go to `Settings/Engine Scalability Settings` for a greater customization of the desired quality. 
 

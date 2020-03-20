@@ -116,7 +116,7 @@ print(client.show_recorder_file_info("recording01.log"))
 
 * __Opening information.__ Map, date and time when the simulation was recorded.  
 
-* __Frame information.__ Any event that could happen such as spawning or collisions. It contains the actors' ID and some additional information.  
+* __Frame information.__ Any event that could happen such as actors spawning or collisions. It contains the actors' ID and some additional information.  
 
 * __Closing information.__ Number of frames and total time recorded.  
 

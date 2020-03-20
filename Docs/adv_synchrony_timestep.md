@@ -67,7 +67,7 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 
 	* If the __server is forced to reproduce the exact same time-steps__, the steps simulated will be the same, but the real time between them changes. Time-steps should be passed one by one. Those original time-steps were the result of the original simulation running as fast as possible. As the time taken to represent these will mostly be different, the simulation is bound to be reproduced with weird time fluctuations.  
 
-	* There is also a __float-point arithmetic error__ that variable time-step introduces. The simulation is running with a time-step equal to the real one. Being real time a continuous, and simulation one a float variable, the time-steps show decimal limitations. The time that is cropped for each step accumulates, and prevents the simulation from a precise repetition of what has happened. 
+	* There is also a __float-point arithmetic error__ that variable time-step introduces. The simulation is running with a time-step equal to the real one. Real time is a continuous variable, represented in the simulation with a `float` value, which has decimal limitations. The time that is cropped for each step accumulates, and prevents the simulation from a precise repetition of what has happened.  
 
 ### Time-step limitations
 
@@ -107,7 +107,7 @@ Synchronous mode cannot be enabled using the script, only disabled. Enabling the
 
 ### Using synchronous mode
 
-The synchronous mode becomes specially relevantwith slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait, there will be an overflow of information. The client will not be able to mange everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
+The synchronous mode becomes specially relevant with slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait, there will be an overflow of information. The client will not be able to mange everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
 
 The following fragment of code extends the previous one. The client creates a camera sensor, stores the image data of the current step in a queue, and ticks the server after retrieving it from the queue. A more complex example regarding several sensors can be found [here][syncmodelink].
 
