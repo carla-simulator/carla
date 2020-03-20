@@ -2,7 +2,7 @@
 
 * __[Installation summary](#installation-summary)__  
 * __[Requirements](#requirements)__  
-* __[Downloading CARLA](#downloading-carla)__  
+* __[CARLA installation](#carla-installation)__  
 	* a) deb CARLA installation  
 	* b) GitHub repository installation  
 * __[Running CARLA](#running-carla)__  
@@ -22,9 +22,16 @@
 # Install required modules Pygame and Numpy. 
  pip install --user pygame numpy
 
-# Option A) deb package installation (only Linux)
+# Option A) deb package installation of CARLA 0.9.8 (only Linux)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
+sudo apt-get update
+sudo apt-get install carla
+cd /opt/carla/bin
+./CarlaUE4.sh
+# To install CARLA  0.9.7 instead of 0.9.8
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
-sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
 sudo apt-get update
 sudo apt-get install carla
 cd /opt/carla/bin
@@ -63,23 +70,33 @@ To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), 
  pip install --user pygame numpy
 ```    
 ---
-## Downloading CARLA
+## CARLA installation
 
 The __deb installation__ is the easiest way to get the latest release in Linux.  
 __Download the GitHub repository__ to get either a specific release or the Windows version of CARLA.  
 
 ### a) deb CARLA installation
 
-Add the repository to the system. 
+Add the CARLA 0.9.8 repository to the system. 
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
-sudo add-apt-repository "deb [trusted=yes] http://dist.carla.org/carla-0.9.7/ bionic main"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
 ```
 Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
 sudo apt-get update
 sudo apt-get install carla
 cd /opt/carla
+```
+
+The installation of CARLA 0.9.7 instead of 0.9.8 would be quite similar.
+```sh
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
+sudo apt-get update
+sudo apt-get install carla
+cd /opt/carla/bin
+./CarlaUE4.sh
 ```
 
 ### b) GitHub repository installation
@@ -115,7 +132,7 @@ Open a terminal in the main CARLA folder. Run the following command to execute t
 > CarlaUE4.exe
 ```
 !!! Important
-    In the __deb installation__, `CarlaUE4.sh` will be in `/opt/carla/bin/`, instead of the main `/carla/` folder where it normally is. 
+    In the __deb installation__, `CarlaUE4.sh` will be in `/opt/carla/bin/`, instead of the main `carla/` folder where it normally is. 
 
 A window containing a view over the city will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys (while clicking). The server simulator is now running and waiting for a client to connect and interact with the world.  
 Now it is time to start running scripts. The following example will spawn some life into the city: 
