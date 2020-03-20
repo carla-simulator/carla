@@ -20,6 +20,15 @@
 
 #include <vector>
 
+// TODO delete this
+#include <fstream>
+#include <string>
+#include <iostream>
+//
+
+
+
+
 namespace carla {
 namespace road {
 
@@ -34,6 +43,17 @@ namespace road {
 
     Map(MapData m) : _data(std::move(m)) {
       CreateRtree();
+      // todo: delete -----------
+      // |     |     |     |
+      // v     v     v     v
+
+      std::ofstream out_road("road.obj");
+      out_road << GenerateMesh(2).GenerateOBJForRecast();
+      out_road.close();
+
+      std::ofstream out_cross("cross.obj");
+      out_cross << GetAllCrosswalkMesh().GenerateOBJForRecast();
+      out_cross.close();
     }
 
     /// ========================================================================

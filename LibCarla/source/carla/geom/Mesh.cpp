@@ -37,26 +37,54 @@ namespace geom {
     return true;
   }
 
-  /// 3     2
-  ///  #---#
-  ///  | / |
-  ///  #---#
-  /// 0     1
-  // static Mesh TriangleFan(const std::vector<geom::Location> &vertices) {
-  //   Mesh result;
-  //   for (const auto v : vertices) {
-  //     result.AddVertex(v);
-  //   }
+  /// 0   2   4   6
+  /// #---#---#---#
+  /// | / | / | / |
+  /// #---#---#---#
+  /// 1   3   5   7
+  void Mesh::AddTriangleStrip(const std::vector<Mesh::vertex_type> &vertices) {
+    DEBUG_ASSERT(vertices.size() >= 3);
+    size_t i = GetVerticesNum() + 2;
+    AddVertices(vertices);
+    bool index_clockwise = true;
+    while (i < GetVerticesNum()) {
+      index_clockwise = !index_clockwise;
+      if (index_clockwise) {
+        AddIndex(i + 1);
+        AddIndex(i);
+        AddIndex(i - 1);
+      } else {
+        AddIndex(i - 1);
+        AddIndex(i);
+        AddIndex(i + 1);
+      }
+      ++i;
+    }
+  }
+
+  ///   5   4
+  ///   #---#
+  ///   | / |
+  /// 0 #---# 3
+  ///   | \ |
+  ///   #---#
+  ///   1   2
+  // void Mesh::AddTriangleFan(const std::vector<Mesh::vertex_type> &vertices) {
+  //   AddVertices(vertices);
   //   for (size_t i = 2; i < vertices.size(); ++i) {
-  //     result.AddIndex(0);
-  //     result.AddIndex(i-1);
-  //     result.AddIndex(i);
+  //     AddIndex(0);
+  //     AddIndex(i-1);
+  //     AddIndex(i);
   //   }
   //   return result;
   // }
 
   void Mesh::AddVertex(vertex_type vertex) {
     _vertices.push_back(vertex);
+  }
+
+  void Mesh::AddVertices(const std::vector<Mesh::vertex_type> &vertices) {
+    std::copy(vertices.begin(), vertices.end(), std::back_inserter(_vertices));
   }
 
   void Mesh::AddNormal(normal_type normal) {
@@ -146,9 +174,9 @@ namespace geom {
         }
 
         // Add the actual face using the 3 consecutive indices
-        out << "f " << *it; ++it;
-        out << " " << *it; ++it;
-        out << " " << *it << std::endl; ++it;
+        out << "f " << *it + 1; ++it;
+        out << " " << *it + 1; ++it;
+        out << " " << *it + 1 << std::endl; ++it;
 
         index_counter += 3;
       }
