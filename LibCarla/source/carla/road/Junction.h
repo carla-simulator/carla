@@ -11,6 +11,7 @@
 #include "carla/road/RoadTypes.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <string>
 
@@ -73,6 +74,16 @@ namespace road {
       return _bounding_box;
     }
 
+  std::vector<RoadId> GetConflictsOfRoad(RoadId road_id) const{
+    std::vector<RoadId> result;
+    if(_road_conflicts.count(road_id) > 0){
+      for(RoadId road : _road_conflicts.at(road_id)){
+        result.push_back(road);
+      }
+    }
+    return result;
+  }
+
   private:
 
     friend MapBuilder;
@@ -84,6 +95,9 @@ namespace road {
     std::unordered_map<ConId, Connection> _connections;
 
     std::set<ContId> _controllers;
+
+    std::unordered_map<RoadId, std::unordered_set<RoadId>>
+        _road_conflicts;
 
     carla::geom::BoundingBox _bounding_box;
   };

@@ -741,6 +741,77 @@ namespace road {
     return result;
   }
 
+  std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
+      Map::ComputeJunctionConflicts(JuncId id) const {
+
+    const float epsilon = 0.0001f; // small delta in the road (set to 1
+                                     // milimeter to prevent numeric errors)
+    const Junction *junction = GetJunction(id);
+    std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
+        conflicts;
+
+    // 2d typedefs
+    typedef boost::geometry::model::point
+        <float, 2, boost::geometry::cs::cartesian> Point2d;
+    typedef boost::geometry::model::segment<Point2d> Segment2d;
+    typedef boost::geometry::model::box<Rtree::BPoint> Box;
+
+    // box range
+    auto bbox_pos = junction->GetBoundingBox().location;
+    auto bbox_ext = junction->GetBoundingBox().extent;
+    auto min_corner = geom::Vector3D(
+        bbox_pos.x - bbox_ext.x,
+        bbox_pos.y - bbox_ext.y,
+        bbox_pos.z - bbox_ext.z - epsilon);
+    auto max_corner = geom::Vector3D(
+        bbox_pos.x + bbox_ext.x,
+        bbox_pos.y + bbox_ext.y,
+        bbox_pos.z + bbox_ext.z + epsilon);
+    Box box({min_corner.x, min_corner.y, min_corner.z},
+        {max_corner.x, max_corner.y, max_corner.z});
+    auto segments = _rtree.GetIntersections(box);
+
+    for (size_t i = 0; i < segments.size(); ++i){
+      auto &segment1 = segments[i];
+      auto waypoint1 = segment1.second.first;
+      JuncId junc_id1 = _data.GetRoad(waypoint1.road_id).GetJunctionId();
+      // only segments in the junction
+      if(junc_id1 != id){
+        continue;
+      }
+      Segment2d seg1{{segment1.first.first.get<0>(), segment1.first.first.get<1>()},
+          {segment1.first.second.get<0>(), segment1.first.second.get<1>()}};
+      for (size_t j = i + 1; j < segments.size(); ++j){
+        auto &segment2 = segments[j];
+        auto waypoint2 = segment2.second.first;
+        JuncId junc_id2 = _data.GetRoad(waypoint2.road_id).GetJunctionId();
+        // only segments in the junction
+        if(junc_id2 != id){
+          continue;
+        }
+        // discard same road
+        if(waypoint1.road_id == waypoint2.road_id){
+          continue;
+        }
+        Segment2d seg2{{segment2.first.first.get<0>(), segment2.first.first.get<1>()},
+            {segment2.first.second.get<0>(), segment2.first.second.get<1>()}};
+
+        double distance = boost::geometry::distance(seg1, seg2);
+        // better to set distance to lanewidth
+        if(distance > 2.0){
+          continue;
+        }
+        if(conflicts[waypoint1.road_id].count(waypoint2.road_id) == 0){
+          conflicts[waypoint1.road_id].insert(waypoint2.road_id);
+        }
+        if(conflicts[waypoint2.road_id].count(waypoint1.road_id) == 0){
+          conflicts[waypoint2.road_id].insert(waypoint1.road_id);
+        }
+      }
+    }
+    return conflicts;
+  }
+
   const Lane &Map::GetLane(Waypoint waypoint) const {
     return _data.GetRoad(waypoint.road_id).GetLaneById(waypoint.section_id, waypoint.lane_id);
   }
@@ -808,6 +879,7 @@ namespace road {
       std::vector<Rtree::TreeElement> &rtree_elements,
       geom::Transform &current_transform,
       Waypoint &current_waypoint,
+
       Waypoint &next_waypoint) {
     geom::Transform next_transform = ComputeTransform(next_waypoint);
     AddElementToRtree(rtree_elements, current_transform, next_transform,
