@@ -343,14 +343,6 @@ void ATrafficLightManager::GenerateTriggerBox(const carla::road::Map &Map,
   BoxComponent->OnComponentBeginOverlap.AddDynamic(TrafficLightComponent,
       &UTrafficLightComponent::OnOverlapTriggerBox);
   BoxComponent->SetBoxExtent(FVector(UEBoxSize, UEBoxSize, UEBoxSize), true);
-
-  // Debug
-  // DrawDebugBox(GetWorld(),
-  //     ReferenceTransform.GetLocation(),
-  //     BoxComponent->GetScaledBoxExtent(),
-  //     ReferenceTransform.GetRotation(),
-  //     FColor(0, 0, 200),
-  //     true);
 }
 
 void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
