@@ -40,22 +40,22 @@ sudo apt-get update &&
 sudo apt-get install wget software-properties-common &&
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
-sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-7 main" &&
+sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-8 main" &&
 sudo apt-get update
 
 # Additional dependencies for Ubuntu 18.04.
-sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user setuptools 
 
 # Additional dependencies for previous Ubuntu versions. 
-sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user setuptools 
 
 # Change default clang version.
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-7/bin/clang++ 170 &&
-sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clang 170
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 
 # Get a GitHub and a UE account, and link both. 
 # Install git. 
@@ -108,7 +108,7 @@ sudo apt-get update &&
 sudo apt-get install wget software-properties-common &&
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
-sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" &&
+sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" &&
 sudo apt-get update
 ```
 
@@ -117,22 +117,22 @@ sudo apt-get update
 
 __Ubuntu 18.04__.
 ```sh
-sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user setuptools 
 ```
 __Previous Ubuntu__ versions. 
 ```sh
-sudo apt-get install build-essential clang-7 lld-7 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user setuptools 
 ```
 
-To avoid compatibility issues between Unreal Engine and the CARLA dependencies, it is recommended to use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-7 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
+To avoid compatibility issues between Unreal Engine and the CARLA dependencies, it is recommended to use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
 
 ```sh
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-7/bin/clang++ 170 &&
-sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clang 170
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 ```
 
 ---
