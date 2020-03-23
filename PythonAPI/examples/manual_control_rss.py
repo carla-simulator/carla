@@ -23,7 +23,7 @@ Use ARROWS or WASD keys for control.
     P            : toggle autopilot
     M            : toggle manual transmission
     ,/.          : gear up/down
-    T            : toggle RSS restrictor
+    B            : Toggle RSS Road Boundaries Mode
 
     TAB          : change sensor position
     `            : next sensor
@@ -32,6 +32,8 @@ Use ARROWS or WASD keys for control.
     Backspace    : change vehicle
 
     R            : toggle recording images to disk
+
+    D            : RSS check drop current route
 
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
@@ -95,6 +97,7 @@ try:
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_F1
+    from pygame.locals import K_F2
     from pygame.locals import K_LEFT
     from pygame.locals import K_PERIOD
     from pygame.locals import K_RIGHT
@@ -103,6 +106,7 @@ try:
     from pygame.locals import K_TAB
     from pygame.locals import K_UP
     from pygame.locals import K_a
+    from pygame.locals import K_b
     from pygame.locals import K_c
     from pygame.locals import K_d
     from pygame.locals import K_h
@@ -111,7 +115,6 @@ try:
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
-    from pygame.locals import K_t
     from pygame.locals import K_w
     from pygame.locals import K_MINUS
     from pygame.locals import K_EQUALS
@@ -147,9 +150,10 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero'):
+    def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero', external_actor=False):
         self.world = carla_world
         self.actor_role_name = actor_role_name
+        self.external_actor = external_actor
         self.map = self.world.get_map()
         self.hud = hud
         self.player = None
@@ -170,29 +174,48 @@ class World(object):
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
-        # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        blueprint.set_attribute('role_name', self.actor_role_name)
-        if blueprint.has_attribute('color'):
-            color = random.choice(blueprint.get_attribute('color').recommended_values)
-            blueprint.set_attribute('color', color)
-        if blueprint.has_attribute('driver_id'):
-            driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
-            blueprint.set_attribute('driver_id', driver_id)
-        if blueprint.has_attribute('is_invincible'):
-            blueprint.set_attribute('is_invincible', 'true')
-        # Spawn the player.
-        if self.player is not None:
-            spawn_point = self.player.get_transform()
-            spawn_point.location.z += 2.0
-            spawn_point.rotation.roll = 0.0
-            spawn_point.rotation.pitch = 0.0
-            self.destroy()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-        while self.player is None:
-            spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+
+        if self.external_actor:
+          # Check whether there is already an actor with defined role name
+          for actor in self.world.get_actors():
+            if actor.attributes.get('role_name') == self.actor_role_name:
+              self.player = actor;
+              break;
+        else:
+          # Get a random blueprint.
+          blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+          blueprint.set_attribute('role_name', self.actor_role_name)
+          if blueprint.has_attribute('color'):
+              color = random.choice(blueprint.get_attribute('color').recommended_values)
+              blueprint.set_attribute('color', color)
+          if blueprint.has_attribute('driver_id'):
+              driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
+              blueprint.set_attribute('driver_id', driver_id)
+          if blueprint.has_attribute('is_invincible'):
+              blueprint.set_attribute('is_invincible', 'true')
+          # Spawn the player.
+          if self.player is not None:
+              spawn_point = self.player.get_transform()
+              spawn_point.location.z += 2.0
+              spawn_point.rotation.roll = 0.0
+              spawn_point.rotation.pitch = 0.0
+              self.destroy()
+              self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+          while self.player is None:
+              spawn_points = self.map.get_spawn_points()
+              spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+              self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+
+        if self.external_actor:
+          ego_sensors = []
+          for actor in self.world.get_actors():
+            if actor.parent == self.player:
+              ego_sensors.append(actor)
+
+          for ego_sensor in ego_sensors:
+            if ego_sensor is not None:
+                ego_sensor.destroy()
+
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -246,7 +269,6 @@ class KeyboardControl(object):
         self._autopilot_enabled = args.autopilot
         self._world = world
         self._restrictor = None
-        self._restrictorEnabled = True
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             world.player.set_autopilot(self._autopilot_enabled)
@@ -285,6 +307,9 @@ class KeyboardControl(object):
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
                     world.camera_manager.toggle_recording()
+                elif event.key == K_d and not (pygame.key.get_mods() & KMOD_CTRL):
+                    if self._restrictor:
+                        self._world.rss_sensor.drop_route()
                 elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
                     if (world.recording_enabled):
                         client.stop_recorder()
@@ -320,6 +345,21 @@ class KeyboardControl(object):
                     else:
                         world.recording_start += 1
                     world.hud.notification("Recording start time is %d" % (world.recording_start))
+                elif event.key == K_F2:
+                    if self._world and self._world.rss_sensor:
+                        visualization_mode = self._world.rss_sensor.sensor.visualization_mode
+                        visualization_mode = visualization_mode + 1
+                        if visualization_mode > carla.VisualizationMode.All:
+                            visualization_mode = carla.VisualizationMode.Off
+                        self._world.rss_sensor.sensor.visualization_mode = carla.VisualizationMode(visualization_mode)
+                elif event.key == K_b:
+                    if self._world and self._world.rss_sensor:
+                        if self._world.rss_sensor.sensor.road_boundaries_mode == carla.RoadBoundariesMode.Off:
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On;
+                            print("carla.RoadBoundariesMode.On")
+                        else:
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.Off;
+                            print("carla.RoadBoundariesMode.Off")
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
@@ -336,25 +376,33 @@ class KeyboardControl(object):
                         self._autopilot_enabled = not self._autopilot_enabled
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
-                    elif event.key == K_t:
-                        self._restrictorEnabled = not self._restrictorEnabled
-                        world.hud.notification('RSS Restrictor %s' % ('On' if self._restrictorEnabled else 'Off'))
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
+                prev_steer_cache = self._steer_cache;
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
                 vehicle_control = self._control
                 world.hud.original_vehicle_control = vehicle_control
                 world.hud.restricted_vehicle_control = vehicle_control
-                if self._restrictor and self._restrictorEnabled:
+
+                #limit speed to 30kmh
+                v = self._world.player.get_velocity()
+                if (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)) > 30.0:
+                  self._control.throttle = 0
+
+                #if self._world.rss_sensor and self._world.rss_sensor.ego_dynamics_on_route and not self._world.rss_sensor.ego_dynamics_on_route.ego_center_within_route:
+                #    print ("Not on route!" +  str(self._world.rss_sensor.ego_dynamics_on_route))
+                if self._restrictor:
                     rss_restriction = self._world.rss_sensor.acceleration_restriction if self._world.rss_sensor and self._world.rss_sensor.response_valid else None
                     if rss_restriction:
-                        rss_ego_velocity = self._world.rss_sensor.ego_velocity
+                        rss_ego_dynamics_on_route = self._world.rss_sensor.ego_dynamics_on_route
                         vehicle_physics = world.player.get_physics_control()
 
                         if not (pygame.key.get_mods() & KMOD_CTRL):
-                            vehicle_control = self._restrictor.restrictVehicleControl(vehicle_control, rss_restriction, rss_ego_velocity, vehicle_physics)
+                            vehicle_control = self._restrictor.restrict_vehicle_control(vehicle_control, rss_restriction, rss_ego_dynamics_on_route, vehicle_physics)
                         world.hud.restricted_vehicle_control = vehicle_control
+                        if world.hud.original_vehicle_control.steer != world.hud.restricted_vehicle_control.steer:
+                          self._steer_cache = prev_steer_cache
 
                 world.player.apply_control(vehicle_control)
 
@@ -366,15 +414,9 @@ class KeyboardControl(object):
         self._control.throttle = 1.0 if keys[K_UP] or keys[K_w] else 0.0
         steer_increment = 5e-4 * milliseconds
         if keys[K_LEFT] or keys[K_a]:
-            if self._steer_cache > 0:
-                self._steer_cache = 0
-            else:
-                self._steer_cache -= steer_increment
+            self._steer_cache -= steer_increment
         elif keys[K_RIGHT] or keys[K_d]:
-            if self._steer_cache < 0:
-                self._steer_cache = 0
-            else:
-                self._steer_cache += steer_increment
+            self._steer_cache += steer_increment
         else:
             self._steer_cache = 0.0
         self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
@@ -553,7 +595,7 @@ class HUD(object):
                                 pygame.draw.rect(display, (255, 0, 0), rect)
                                 text_color = (255, 0, 0)
                     item = item[0]
-                if item:  # At this point has to be a str.
+                if isinstance(item, basestring) and len(item) > 0:   # At this point has to be a str.
                     surface = self._font_mono.render(item, True, text_color)
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
@@ -715,18 +757,15 @@ class GnssSensor(object):
 # -- RssSensor --------------------------------------------------------
 # ==============================================================================
 
-
 class RssSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
         self.timestamp = None
         self.response_valid = False
-        self.lon_response = None
-        self.lat_response_right = None
-        self.lat_response_left = None
+        self.proper_response = None
         self.acceleration_restriction = None
-        self.ego_velocity = None
+        self.ego_dynamics_on_route = None
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.rss')
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=0.0)), attach_to=self._parent)
@@ -740,6 +779,7 @@ class RssSensor(object):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
         weak_self = weakref.ref(self)
         self.sensor.visualize_results = True
+        self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On;
         self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
 
     @staticmethod
@@ -747,14 +787,21 @@ class RssSensor(object):
         self = weak_self()
         if not self or not response:
             return
-        self.timestamp = response.timestamp
-        self.response_valid = response.response_valid
-        self.lon_response = response.longitudinal_response
-        self.lat_response_right = response.lateral_response_right
-        self.lat_response_left = response.lateral_response_left
-        self.acceleration_restriction = response.acceleration_restriction
-        self.ego_velocity = response.ego_velocity
+        delta_time = 0.1
+        if self.timestamp:
+            delta_time = response.timestamp - self.timestamp
+        if delta_time > -0.05:
+            self.timestamp = response.timestamp
+            self.response_valid = response.response_valid
+            self.proper_response = response.proper_response
+            self.acceleration_restriction = response.acceleration_restriction
+            self.ego_dynamics_on_route = response.ego_dynamics_on_route
+        #else:
+        #    print("ignore outdated response {}".format(delta_time))
 
+
+    def drop_route(self):
+        self.sensor.drop_route()
 
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------
@@ -882,7 +929,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args.filter, args.rolename)
+        world = World(client.get_world(), hud, args.filter, args.rolename, args.externalActor)
         controller = KeyboardControl(world, args)
 
         clock = pygame.time.Clock()
@@ -948,6 +995,10 @@ def main():
         metavar='NAME',
         default='hero',
         help='actor role name (default: "hero")')
+    argparser.add_argument(
+        '--externalActor',
+        action='store_true',
+        help='attaches to externally created actor by role name')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

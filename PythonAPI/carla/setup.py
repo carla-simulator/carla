@@ -13,12 +13,11 @@ import os
 import platform
 import sys
 
-
 def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
 
     library_dirs = ['dependencies/lib']
-    libraries = []
+    libraries = ['jpeg', 'tiff']
 
 
     sources = ['source/libcarla/libcarla.cpp']
@@ -41,8 +40,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib/libRecast.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
-                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
-                os.path.join(pwd, 'dependencies/lib', pylib)]
+                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a')]
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
@@ -55,14 +53,29 @@ def get_libcarla_extensions():
             if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
                 print('Building AD RSS variant.')
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad-rss.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info[0]) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info[0]) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_python' +  str(sys.version_info[0]) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics_python' +  str(sys.version_info[0]) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libspdlog.a')]
+                extra_link_args += ['/usr/lib/x86_64-linux-gnu/libboost_system.so']
+                extra_link_args += ['-ltbb']
+                extra_link_args += ['-lrt']
+                extra_link_args += ['-lproj']
+
+            extra_link_args += [os.path.join(pwd, 'dependencies/lib', pylib)]
 
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
-                extra_link_args += ['-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
             else:
-                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                libraries += ['png']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']

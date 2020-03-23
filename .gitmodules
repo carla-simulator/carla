@@ -1,0 +1,9 @@
+[submodule "dependencies/ad-rss/src/spdlog"]
+	path = dependencies/ad-rss/src/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "dependencies/ad-rss/src/map"]
+	path = dependencies/ad-rss/src/map
+	url = https://github.com/carla-simulator/map
+[submodule "dependencies/ad-rss/src/ad-rss-lib"]
+	path = dependencies/ad-rss/src/ad-rss-lib
+	url = https://github.com/intel/ad-rss-lib

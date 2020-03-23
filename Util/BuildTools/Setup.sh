@@ -106,18 +106,20 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python,filesystem \
+      --with-libraries=python,filesystem,system,program_options \
       --with-python=${py2} --with-python-root=${py2_root}
 
-  if ${TRAVIS} ; then
+  EXTRA_B2_ARGS=""
+  if [ "${TRAVIS}" == "true" ] ; then
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
+    EXTRA_B2_ARGS="--ignore-user-config"
   fi
 
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
 
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
@@ -143,14 +145,14 @@ else
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
 
-  if ${TRAVIS} ; then
+  if [ "${TRAVIS}" == "true" ] ; then
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
   fi
 
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
   popd >/dev/null
 
