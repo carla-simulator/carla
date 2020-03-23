@@ -4,48 +4,26 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-export CC=/usr/bin/clang-7
-export CXX=/usr/bin/clang++-7
+#export CC=/usr/bin/clang-7
+#export CXX=/usr/bin/clang++-7
 
 source $(dirname "$0")/Environment.sh
 
-mkdir -p ${CARLA_BUILD_FOLDER}
-pushd ${CARLA_BUILD_FOLDER} >/dev/null
-
 # ==============================================================================
-# -- Get and compile ad-rss ----------------------------------------------------
+# -- Get and compile ad-rss -------------------------------------------
 # ==============================================================================
 
-AD_RSS_BASENAME=ad-rss
+pushd ${CARLA_ROOT_FOLDER}/dependencies/ad-rss >/dev/null
 
-if [[ -d "${AD_RSS_BASENAME}-install" ]] ; then
-  log "${AD_RSS_BASENAME} already installed."
+if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
+  export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c7-install
 else
-  rm -Rf ${AD_RSS_BASENAME}-source ${AD_RSS_BASENAME}-build
-
-  log "Retrieving ad-rss."
-
-  git clone --depth=1 -b v1.5.0 https://github.com/intel/ad-rss-lib.git ${AD_RSS_BASENAME}-source
-
-  log "Compiling ad-rss."
-
-  mkdir -p ${AD_RSS_BASENAME}-build
-
-  pushd ${AD_RSS_BASENAME}-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="../${AD_RSS_BASENAME}-install" \
-      ../${AD_RSS_BASENAME}-source
-
-  ninja install
-
-  popd >/dev/null
-
-  rm -Rf ${AD_RSS_BASENAME}-source ${AD_RSS_BASENAME}-build
-
+  export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c7-install
 fi
 
-unset AD_RSS_BASENAME
+#after a fixing clang compile warnings and errors in components
+# -DCMAKE_TOOLCHAIN_FILE=${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake
+colcon build --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------

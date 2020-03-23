@@ -2,6 +2,7 @@
 
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
+  * Upgraded to AD RSS v3.0.0 supporting complex road layouts and i.e. intersections
 
 ## CARLA 0.9.8
 
