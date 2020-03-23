@@ -24,8 +24,8 @@ want
 
 ```cmake
 # Example ToolChain.cmake
-set(CMAKE_C_COMPILER /usr/bin/clang-7)
-set(CMAKE_CXX_COMPILER /usr/bin/clang++-7)
+set(CMAKE_C_COMPILER /usr/bin/clang-8)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++-8)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -DNDEBUG" CACHE STRING "" FORCE)
 ```
 
