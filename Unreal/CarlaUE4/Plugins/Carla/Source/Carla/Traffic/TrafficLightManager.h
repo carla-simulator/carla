@@ -58,8 +58,7 @@ private:
 
   void GenerateTriggerBoxesForTrafficLights();
 
-  void GenerateTriggerBox(const carla::road::Map &Map,
-    const carla::road::element::Waypoint &waypoint,
+  void GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
     UTrafficLightComponent* TrafficLightComponent,
     float BoxSize);
 
