@@ -493,16 +493,19 @@ GeometryComparisonCache CollisionStage:: GetGeometryBetweenActors(const Actor &r
     return mCache;
    }
 
+  snippet_profiler.MeasureExecutionTime("Polygon Construction", true);
   const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
   const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
   const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
   const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
+  snippet_profiler.MeasureExecutionTime("Polygon Construction", false);
 
+  snippet_profiler.MeasureExecutionTime("Compare Geometry", true);
   const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
   const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
-
   const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
   const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
+  snippet_profiler.MeasureExecutionTime("Compare Geometry", false);
 
   GeometryComparisonCache mRetCache = {reference_vehicle_to_other_geodesic,
                                         other_vehicle_to_reference_geodesic,
