@@ -139,6 +139,9 @@ namespace road {
 
     const Junction* GetJunction(JuncId id) const;
 
+    std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
+        ComputeJunctionConflicts(JuncId id) const;
+
     /// Buids a mesh based on the OpenDRIVE
     geom::Mesh GenerateMesh(double distance) const;
 
