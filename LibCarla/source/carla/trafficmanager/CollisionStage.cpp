@@ -270,22 +270,27 @@ namespace CollisionStageConstants {
   }
 
   traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) {
+    snippet_profiler.MeasureExecutionTime("GetPolygon", true);
 
+    snippet_profiler.MeasureExecutionTime("WKT String Building", true);
     std::string boundary_polygon_wkt;
     for (const cg::Location &location: boundary) {
       boundary_polygon_wkt += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
     }
-
     boundary_polygon_wkt += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
+    snippet_profiler.MeasureExecutionTime("WKT String Building", false);
 
+    snippet_profiler.MeasureExecutionTime("Boost Polygon Initialization", true);
     traffic_manager::Polygon boundary_polygon;
     bg::read_wkt("POLYGON((" + boundary_polygon_wkt + "))", boundary_polygon);
+    snippet_profiler.MeasureExecutionTime("Boost Polygon Initialization", false);
 
+    snippet_profiler.MeasureExecutionTime("GetPolygon", false);
     return boundary_polygon;
   }
 
   LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor, const cg::Location &vehicle_location) {
-
+    snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", true);
     if (geodesic_boundaries.find(actor->GetId()) != geodesic_boundaries.end()) {
       return geodesic_boundaries.at(actor->GetId());
     }
@@ -361,10 +366,12 @@ namespace CollisionStageConstants {
       geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
 
       geodesic_boundaries.insert({actor->GetId(), geodesic_boundary});
+      snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", false);
       return geodesic_boundary;
     } else {
 
       geodesic_boundaries.insert({actor->GetId(), bbox});
+      snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", false);
       return bbox;
     }
 
