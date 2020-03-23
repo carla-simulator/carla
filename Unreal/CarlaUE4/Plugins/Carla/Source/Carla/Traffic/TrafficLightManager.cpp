@@ -325,15 +325,14 @@ std::vector<int> GenerateRange(int a, int b)
   return result;
 }
 
-void ATrafficLightManager::GenerateTriggerBox(const carla::road::Map &Map,
-    const carla::road::element::Waypoint &waypoint,
+void ATrafficLightManager::GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
     UTrafficLightComponent* TrafficLightComponent,
     float BoxSize)
 {
   // convert from m to cm
   float UEBoxSize = 100 * BoxSize;
   AActor *ParentActor = TrafficLightComponent->GetOwner();
-  FTransform ReferenceTransform = Map.ComputeTransform(waypoint);
+  FTransform ReferenceTransform = GetMap()->ComputeTransform(waypoint);
   UBoxComponent *BoxComponent = NewObject<UBoxComponent>(ParentActor);
   BoxComponent->RegisterComponent();
   BoxComponent->AttachToComponent(
@@ -401,7 +400,7 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
               signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxSize,
                   LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
             }
-            GenerateTriggerBox(GetMap().get(), signal_waypoint, TrafficLightComponent, BoxSize);
+            GenerateTriggerBox(signal_waypoint, TrafficLightComponent, BoxSize);
           }
         }
       }
