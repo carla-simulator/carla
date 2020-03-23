@@ -61,7 +61,7 @@ namespace road {
     // or move it (will return move -> Map(Map &&))
     Map map(std::move(_map_data));
     CreateJunctionBoundingBoxes(map);
-
+    ComputeJunctionRoadConflicts(map);
 
     return map;
   }
@@ -870,6 +870,12 @@ void MapBuilder::CreateController(
     }
 }
 
+  void MapBuilder::ComputeJunctionRoadConflicts(Map &map) {
+    for (auto &junctionpair : map._data.GetJunctions()) {
+      auto& junction = junctionpair.second;
+      junction._road_conflicts = (map.ComputeJunctionConflicts(junction.GetId()));
+    }
+  }
 
 } // namespace road
 } // namespace carla
