@@ -20,20 +20,17 @@ set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--cle
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
-
 set DO_TARBALL=true
 set DO_CLEAN=false
 
-set UE_VERSION=4.22
+set UE_VERSION=4.24
 set PACKAGES=Carla
+
 
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--clean" (
         set DO_CLEAN=true
-        set DO_TARBALL=false
-        set DO_PACKAGE=false
-        set DO_COPY_FILES=false
     )
 
     if "%1"=="--no-zip" (
@@ -191,7 +188,6 @@ rem ============================================================================
 if %DO_CLEAN%==true (
     echo %FILE_N% Removing intermediate build.
     rmdir /S /Q "!BUILD_FOLDER!"
-    goto :eof
 )
 
 rem ==============================================================================
@@ -324,7 +320,6 @@ for %%i in (%PACKAGES%) do (
     if %DO_CLEAN%==true (
         echo %FILE_N% Removing intermediate build.
         rmdir /S /Q "!BUILD_FOLDER!"
-        goto :eof
     )
   )
 )

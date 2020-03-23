@@ -23,19 +23,21 @@ ATrafficLightManager::ATrafficLightManager()
   }
 }
 
-void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLight)
+void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * TrafficLightComponent)
 {
   // Cast to std::string
-  carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLight->GetSignId())));
+  carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLightComponent->GetSignId())));
 
   // Get OpenDRIVE signal
   if (GetMap()->GetSignals().count(SignId) == 0)
   {
+    UE_LOG(LogCarla, Error, TEXT("Missing signal with id: %s"), *(SignId.c_str()) );
     return;
   }
   const auto &Signal = GetMap()->GetSignals().at(SignId);
   if(Signal->GetControllers().empty())
   {
+    UE_LOG(LogCarla, Error, TEXT("No controllers in signal %s"), *(SignId.c_str()) );
     return;
   }
   // Only one controller per signal
@@ -45,6 +47,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   const auto &Controller = GetMap()->GetControllers().at(ControllerId);
   if(Controller->GetJunctions().empty())
   {
+    UE_LOG(LogCarla, Error, TEXT("No junctions in controller %d"), *(ControllerId.c_str()) );
     return;
   }
   // Get junction of the controller
@@ -70,14 +73,15 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   }
   auto *TrafficLightController = TrafficControllers[ControllerId.c_str()];
 
-  TrafficLight->TrafficLightGroup = TrafficLightGroup;
+  TrafficLightComponent->TrafficLightGroup = TrafficLightGroup;
+  TrafficLightComponent->TrafficLightController = TrafficLightController;
 
   // Add signal to controller
-  TrafficLightController->AddTrafficLight(TrafficLight);
+  TrafficLightController->AddTrafficLight(TrafficLightComponent);
   TrafficLightController->ResetState();
 
   // Add signal to map
-  TrafficLights.Add(TrafficLight->GetSignId(), TrafficLight);
+  TrafficLightComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
 
   TrafficLightGroup->ResetGroup();
 }
@@ -98,43 +102,70 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
 
 void ATrafficLightManager::GenerateTrafficLights()
 {
-  if(!TrafficLightModel)
-  {
-    return;
-  }
-  const auto& Signals = GetMap()->GetSignals();
-  for(const auto& ControllerPair : GetMap()->GetControllers())
-  {
-    const auto& Controller = ControllerPair.second;
-    for(const auto& SignalId : Controller->GetSignals())
+  if(!TrafficLightsGenerated){
+    if(!TrafficLightModel)
     {
-      const auto& Signal = Signals.at(SignalId);
-      auto CarlaTransform = Signal->GetTransform();
-      FTransform SpawnTransform(CarlaTransform);
+      UE_LOG(LogCarla, Error, TEXT("Missing TrafficLightModel"));
+      return;
+    }
+    const auto& Signals = GetMap()->GetSignals();
+    for(const auto& ControllerPair : GetMap()->GetControllers())
+    {
+      const auto& Controller = ControllerPair.second;
+      for(const auto& SignalId : Controller->GetSignals())
+      {
+        const auto& Signal = Signals.at(SignalId);
+        auto CarlaTransform = Signal->GetTransform();
+        FTransform SpawnTransform(CarlaTransform);
 
-      FVector SpawnLocation = SpawnTransform.GetLocation();
-      FRotator SpawnRotation(SpawnTransform.GetRotation());
-      SpawnRotation.Yaw += 90;
+        FVector SpawnLocation = SpawnTransform.GetLocation();
+        FRotator SpawnRotation(SpawnTransform.GetRotation());
+        SpawnRotation.Yaw += 90;
 
-      FActorSpawnParameters SpawnParams;
-      SpawnParams.Owner = this;
-      SpawnParams.SpawnCollisionHandlingOverride =
-          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-      AActor * TrafficLight = GetWorld()->SpawnActor<AActor>(
-          TrafficLightModel,
-          SpawnLocation,
-          SpawnRotation,
-          SpawnParams);
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
+        SpawnParams.SpawnCollisionHandlingOverride =
+            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
+            TrafficLightModel,
+            SpawnLocation,
+            SpawnRotation,
+            SpawnParams);
 
-      UTrafficLightComponent *TrafficLightComponent =
-          NewObject<UTrafficLightComponent>(TrafficLight);
-      TrafficLightComponent->SetSignId(SignalId.c_str());
-      TrafficLightComponent->RegisterComponent();
-      TrafficLightComponent->AttachToComponent(
+        TrafficSigns.Add(TrafficLight);
+
+        UTrafficLightComponent *TrafficLightComponent =
+            NewObject<UTrafficLightComponent>(TrafficLight);
+        TrafficLightComponent->SetSignId(SignalId.c_str());
+        TrafficLightComponent->RegisterComponent();
+        TrafficLightComponent->AttachToComponent(
           TrafficLight->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
+
+        RegisterLightComponent(TrafficLightComponent);
+      }
     }
+    TrafficLightsGenerated = true;
   }
+}
+
+void ATrafficLightManager::RemoveGeneratedTrafficLights()
+{
+  for(auto& Sign : TrafficSigns)
+  {
+    Sign->Destroy();
+  }
+  TrafficSigns.Empty();
+
+  for(auto& TrafficGroup : TrafficGroups)
+  {
+    TrafficGroup.Value->Destroy();
+  }
+  TrafficGroups.Empty();
+
+  TrafficControllers.Empty();
+
+  TrafficLightsGenerated = false;
 }
 
 // Called when the game starts
@@ -142,6 +173,55 @@ void ATrafficLightManager::BeginPlay()
 {
   Super::BeginPlay();
 
+  if (TrafficLightsGenerated)
+  {
+    ResetTrafficLightObjects();
+  }
+  else
+  {
+    GenerateTrafficLights();
+  }
+
+}
+
+void ATrafficLightManager::ResetTrafficLightObjects()
+{
+  // Update TrafficLightGroups
+  for(auto& It : TrafficGroups)
+  {
+    ATrafficLightGroup* Group = It.Value;
+    Group->GetControllers().Empty();
+  }
+  TrafficGroups.Empty();
+  TArray<AActor*> TrafficGroupsArray;
+  UGameplayStatics::GetAllActorsOfClass(
+    GetWorld(),
+    ATrafficLightGroup::StaticClass(),
+    TrafficGroupsArray);
+
+  for(auto& Actor : TrafficGroupsArray) {
+    ATrafficLightGroup* TrafficLightGroup = Cast<ATrafficLightGroup>(Actor);
+    TrafficGroups.Add(TrafficLightGroup->JunctionId, TrafficLightGroup);
+  }
+
+  for(auto& It : TrafficControllers)
+  {
+    UTrafficLightController* Controller = It.Value;
+    Controller->EmptyTrafficLights();
+  }
+  TrafficControllers.Empty();
+
+  for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
+  {
+    ATrafficSignBase* trafficSignBase = (*It);
+    UTrafficLightComponent* TrafficLightComponent =
+      trafficSignBase->FindComponentByClass<UTrafficLightComponent>();
+
+    if(TrafficLightComponent)
+    {
+      RegisterLightComponent(TrafficLightComponent);
+    }
+  }
 }
 
 ATrafficLightGroup* ATrafficLightManager::GetTrafficGroup(carla::road::JuncId JunctionId)
@@ -165,9 +245,9 @@ UTrafficLightController* ATrafficLightManager::GetController(FString ControllerI
 
 UTrafficLightComponent* ATrafficLightManager::GetTrafficLight(FString SignId)
 {
-  if (!TrafficLights.Contains(SignId))
+  if (!TrafficLightComponents.Contains(SignId))
   {
     return nullptr;
   }
-  return TrafficLights[SignId];
+  return TrafficLightComponents[SignId];
 }

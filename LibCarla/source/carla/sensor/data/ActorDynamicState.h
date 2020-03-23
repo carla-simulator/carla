@@ -135,6 +135,21 @@ static_assert(
     "comment this assert, but your platform may have compatibility issues "
     "connecting to other platforms.");
 
+#pragma pack(push, 1)
+
+/// Dynamic state of a component of an actor at a certain frame.
+struct ComponentDynamicState {
+
+  // World transform
+  geom::Transform transform;
+
+  union TypeDependentState {
+    detail::TrafficLightData traffic_light_data;
+  } state;
+
+};
+#pragma pack(pop)
+
 } // namespace data
 } // namespace sensor
 } // namespace carla

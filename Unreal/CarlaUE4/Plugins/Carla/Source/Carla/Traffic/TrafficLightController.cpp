@@ -34,6 +34,11 @@ const TArray<UTrafficLightComponent *> &UTrafficLightController::GetTrafficLight
   return TrafficLights;
 }
 
+void UTrafficLightController::EmptyTrafficLights()
+{
+  TrafficLights.Empty();
+}
+
 void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLight)
 {
   TrafficLights.Add(TrafficLight);
@@ -76,4 +81,57 @@ void UTrafficLightController::ResetState()
 {
   CurrentState = (LightStates.Num() - 1);
   SetTrafficLightsState(GetCurrentState().State);
+}
+
+void UTrafficLightController::SetYellowTime(float NewTime)
+{
+  SetStateTime(ETrafficLightState::Yellow, NewTime);
+}
+
+void UTrafficLightController::SetRedTime(float NewTime)
+{
+  SetStateTime(ETrafficLightState::Red, NewTime);
+}
+
+void UTrafficLightController::SetGreenTime(float NewTime)
+{
+  SetStateTime(ETrafficLightState::Green, NewTime);
+}
+
+float UTrafficLightController::GetGreenTime() const
+{
+  return GetStateTime(ETrafficLightState::Green);
+}
+
+float UTrafficLightController::GetYellowTime() const
+{
+  return GetStateTime(ETrafficLightState::Yellow);
+}
+
+float UTrafficLightController::GetRedTime() const
+{
+  return GetStateTime(ETrafficLightState::Red);
+}
+
+void UTrafficLightController::SetStateTime(const ETrafficLightState State, float NewTime)
+{
+  for(auto& LightState : LightStates)
+  {
+    if(LightState.State == State)
+    {
+      LightState.Time = NewTime;
+    }
+  }
+}
+
+float UTrafficLightController::GetStateTime(const ETrafficLightState State) const
+{
+  for(auto& LightState : LightStates)
+  {
+    if(LightState.State == State)
+    {
+      return LightState.Time;
+    }
+  }
+  return 0.0f;
 }

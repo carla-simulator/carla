@@ -8,6 +8,7 @@
 
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
+#include "TrafficSignBase.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
@@ -40,11 +41,16 @@ public:
   UFUNCTION(CallInEditor)
   void GenerateTrafficLights();
 
+  UFUNCTION(CallInEditor)
+  void RemoveGeneratedTrafficLights();
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
 private:
+
+  void ResetTrafficLightObjects();
 
   // Cached Carla Game Mode
   UPROPERTY()
@@ -60,13 +66,20 @@ private:
 
   // Mapped references to individual TrafficLightComponents
   UPROPERTY()
-  TMap<FString, UTrafficLightComponent *> TrafficLights;
+  TMap<FString, UTrafficLightComponent *> TrafficLightComponents;
+
+  // Mapped references to TrafficSigns
+  TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<AActor> TrafficLightModel;
+  TSubclassOf<ATrafficSignBase> TrafficLightModel;
 
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
 
   boost::optional<carla::road::Map> Map;
+
+  UPROPERTY()
+  bool TrafficLightsGenerated = false;
+
 };

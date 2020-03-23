@@ -1,4 +1,4 @@
-ARG UE4_V=4.22.2
+ARG UE4_V=4.24.3
 FROM adamrehn/ue4-source:${UE4_V}-opengl
 
 USER root

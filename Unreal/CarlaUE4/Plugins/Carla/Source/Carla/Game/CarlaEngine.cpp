@@ -87,7 +87,7 @@ void FCarlaEngine::NotifyEndEpisode()
   CurrentEpisode = nullptr;
 }
 
-void FCarlaEngine::OnPreTick(ELevelTick TickType, float DeltaSeconds)
+void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 {
   if ((TickType == ELevelTick::LEVELTICK_All) && (CurrentEpisode != nullptr))
   {
