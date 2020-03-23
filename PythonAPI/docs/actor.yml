@@ -31,11 +31,6 @@
 
     # - METHODS ----------------------------
     methods:
-    - def_name: __str__
-      return: str
-      doc: >
-        Parses a summary of this actor's information to string. 
-    # --------------------------------------
     - def_name: add_impulse
       params:
       - param_name: impulse
@@ -115,7 +110,11 @@
         type: carla.Vector3D
       doc: >
         Sets the actor's velocity vector.
+    # - DUNDER METHODS ----------------------------
+    dunder:
+    - def_name: __str__
     # --------------------------------------
+
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
@@ -148,6 +147,7 @@
     - var_name: All
       doc: >
         All lights on
+
   - class_name: Vehicle
     parent: carla.Actor
     # - DESCRIPTION ------------------------
@@ -161,20 +161,6 @@
         The vehicle's collider volume.
     # - METHODS ----------------------------
     methods:
-    - def_name: get_light_state
-      return: carla.VehicleLightState
-      doc: >
-        Returns a flag representing the vehicle light state,
-        this represents which lights are active or not
-    # --------------------------------------
-    - def_name: set_light_state
-      params:
-      - param_name: light_state
-        type: carla.VehicleLightState
-      doc: >
-        Sets the light state of a vehicle using a VehicleLightState flag,
-        this represents which lights are active or not
-    # --------------------------------------
     - def_name: apply_control
       params:
       - param_name: control
@@ -189,10 +175,29 @@
       doc: >
         Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more. 
     # --------------------------------------
+    - def_name: is_at_traffic_light
+      return: bool
+      doc: >
+        Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).
+    # --------------------------------------
     - def_name: get_control
       return: carla.VehicleControl
       doc: >
         The client returns the control applied in the last tick. The method does not call the simulator.
+    # --------------------------------------
+    - def_name: get_light_state
+      return: carla.VehicleLightState
+      doc: >
+        Returns a flag representing the vehicle light state,
+        this represents which lights are active or not
+    # --------------------------------------
+    - def_name: set_light_state
+      params:
+      - param_name: light_state
+        type: carla.VehicleLightState
+      doc: >
+        Sets the light state of a vehicle using a VehicleLightState flag,
+        this represents which lights are active or not
     # --------------------------------------
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
@@ -216,11 +221,6 @@
         The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator.
         If no traffic light is currently affecting the vehicle, returns <b>green</b>.
     # --------------------------------------
-    - def_name: is_at_traffic_light
-      return: bool
-      doc: >
-        Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).
-    # --------------------------------------
     - def_name: set_autopilot
       params:
       - param_name: enabled
@@ -228,9 +228,9 @@
         default: True
       doc: >
         Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side. 
-    # --------------------------------------
+    # - DUNDER METHODS ----------------------------
+    dunder:
     - def_name: __str__
-      return: str
     # --------------------------------------
 
   - class_name: Walker
@@ -251,24 +251,23 @@
       - param_name: control
         type: carla.WalkerControl
       doc: >
-        On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
+        On the next tick, this control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
     # --------------------------------------
     - def_name: apply_control
       params:
       - param_name: control
         type: carla.WalkerBoneControl
       doc: >
-        On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton. 
+        On the next tick, this control defines a list of bone transformations that will be applied to the walker's skeleton. 
     # --------------------------------------
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
         The client returns the control applied to this walker during last tick. The method does not call the simulator.
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
-      return: str
     # --------------------------------------
-
   - class_name: WalkerAIController
     parent: carla.Actor
     # - DESCRIPTION ------------------------
@@ -300,7 +299,8 @@
           speed in m/s. An easy walking speed is set by default. 
       doc: >
         Sets a speed for the walker in meters per second.
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
     # --------------------------------------
 
@@ -356,10 +356,10 @@
       doc: >
         The client returns <b>True</b> if a traffic light is frozen according to last tick. The method does not call the simulator.
     # --------------------------------------
-    - def_name: get_pole_index
-      return: int
+    - def_name: get_elapsed_time
+      return: float
       doc: >
-        Returns the index of the pole that identifies it as part of the traffic light group of a junction.
+        The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_group_traffic_lights
       return: list(carla.TrafficLight)
@@ -368,10 +368,10 @@
       note: >
         This function calls the simulator.
     # --------------------------------------
-    - def_name: get_elapsed_time
-      return: float
+    - def_name: get_pole_index
+      return: int
       doc: >
-        The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.
+        Returns the index of the pole that identifies it as part of the traffic light group of a junction.
     # --------------------------------------
     - def_name: get_state
       return: carla.TrafficLightState
@@ -420,7 +420,8 @@
         type: float
       doc: >
         Sets a given time (in seconds) for the yellow light to be active.
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
     # --------------------------------------
 ...

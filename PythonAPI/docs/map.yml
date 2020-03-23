@@ -1,6 +1,6 @@
 ---
 - module_name: carla
-  doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: LaneType
@@ -232,7 +232,8 @@
       return: carla.GeoLocation
       doc: >
         Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
     # --------------------------------------
 
@@ -316,20 +317,6 @@
         The left lane marking information based on the direction of the Waypoint.
     # - METHODS ----------------------------
     methods:
-    - def_name: get_left_lane
-      return: carla.Waypoint
-      doc: >
-        Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location.
-
-        Will return <b>None</b> if the lane does not exist
-    # --------------------------------------
-    - def_name: get_right_lane
-      return: carla.Waypoint
-      doc: >
-        Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
-
-        Will return <b>None</b> if the lane does not exist.
-    # --------------------------------------
     - def_name: next
       params:
       - param_name: distance
@@ -408,6 +395,21 @@
       doc: >
         Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.
     # --------------------------------------
+    - def_name: get_left_lane
+      return: carla.Waypoint
+      doc: >
+        Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location.
+
+        Will return <b>None</b> if the lane does not exist
+    # --------------------------------------
+    - def_name: get_right_lane
+      return: carla.Waypoint
+      doc: >
+        Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
+
+        Will return <b>None</b> if the lane does not exist.
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
     # --------------------------------------
 

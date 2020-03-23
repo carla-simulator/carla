@@ -1,6 +1,5 @@
 ---
 - module_name: carla
-  doc: >
 
   # - CLASSES ------------------------------
   classes:
@@ -40,17 +39,7 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. Each command is different and has its own parameters. These are supported so far:
-            [SpawnActor](#command.SpawnActor)
-            [DestroyActor](#command.DestroyActor)
-            [ApplyVehicleControl](#command.ApplyVehicleControl)
-            [ApplyWalkerControl](#command.ApplyWalkerControl)
-            [ApplyTransform](#command.ApplyTransform)
-            [ApplyVelocity](#command.ApplyVelocity)
-            [ApplyAngularVelocity](#command.ApplyAngularVelocity)
-            [ApplyImpulse](#command.ApplyImpulse)
-            [SetSimulatePhysics](#command.SetSimulatePhysics)
-            [SetAutopilot](#command.SetAutopilot)
+          A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page. 
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.
         [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
@@ -261,11 +250,54 @@
     doc: >
       The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.  
       
-      In order to learn more, visit the [documentation](../traffic_manager) regarding this module.
+      In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
     methods:
+    - def_name: auto_lane_change
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle whose settings are changed.
+      - param_name: enable
+        type: bool
+        doc: >
+          __True__ is default and enables lane changes. __False__ will disable them. 
+      doc: >
+        Turns on or off lane changing behaviour for a vehicle. 
+    # --------------------------------------
+    - def_name: collision_detection
+      params:
+      - param_name: reference_actor
+        type: carla.Actor
+        doc: >
+          Vehicle that is going to ignore collisions. 
+      - param_name: other_actor
+        type: carla.Actor
+        doc: >
+          The actor that `reference_actor` is going to ignore collisions with.
+      - param_name: detect_collision
+        type: bool
+        doc: >
+          __True__ is default and enables collisions. __False will disable them. 
+      doc: >
+        Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
+    # --------------------------------------
+    - def_name: distance_to_leading_vehicle
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose minimum distance is being changed. 
+      - param_name: distance
+        type: float
+        doc: >
+          Meters between both vehicles. 
+      doc: >
+        Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.
+    # --------------------------------------
     - def_name: force_lane_change
       params:
       - param_name: actor
@@ -278,6 +310,39 @@
           Destination lane. __True__ is the one on the left and __False__ is the right one. 
       doc: >
         Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions. 
+    # --------------------------------------
+    - def_name: global_distance_to_leading_vehicle
+      params:
+      - param_name: distance
+        type: float
+        doc: >
+          Meters between vehicles. 
+      doc: >
+        Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
+    - def_name: global_percentage_speed_difference
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Percentage difference between intended speed and the current limit.
+      doc: >
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+        
+        Default is 30. Exceeding a speed limit can be done using negative percentages. 
+    # --------------------------------------
+    - def_name: ignore_lights_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore traffic lights.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times traffic lights will be ignored.
+      doc: >
+        During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle. 
     # --------------------------------------
     - def_name: ignore_vehicles_percentage
       params:
@@ -305,85 +370,9 @@
       doc: >
         During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
     # --------------------------------------
-    - def_name: ignore_lights_percentage
-      params:
-      - param_name: actor
-        type: carla.Actor
-        doc: >
-          The actor that is going to ignore traffic lights.
-      - param_name: perc
-        type: float
-        doc: >
-          Between 0 and 100. Amount of times traffic lights will be ignored.
-      doc: >
-        During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle. 
-    # --------------------------------------
     - def_name: reset_traffic_lights
       doc: >
         Resets every traffic light in the map to its initial state. 
-    # --------------------------------------
-    - def_name: auto_lane_change
-      params:
-      - param_name: actor
-        type: carla.Actor
-        doc: >
-          The vehicle whose settings are changed.
-      - param_name: enable
-        type: bool
-        doc: >
-          __True__ is default and enables lane changes. __False__ will disable them. 
-      doc: >
-        Turns on or off lane changing behaviour for a vehicle. 
-    # --------------------------------------
-    - def_name: distance_to_leading_vehicle
-      params:
-      - param_name: actor
-        type: carla.Actor
-        doc: >
-          Vehicle whose minimum distance is being changed. 
-      - param_name: distance
-        type: float
-        doc: >
-          Meters between both vehicles. 
-      doc: >
-        Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.
-    # --------------------------------------
-    - def_name: collision_detection
-      params:
-      - param_name: reference_actor
-        type: carla.Actor
-        doc: >
-          Vehicle that is going to ignore collisions. 
-      - param_name: other_actor
-        type: carla.Actor
-        doc: >
-          The actor that `reference_actor` is going to ignore collisions with.
-      - param_name: detect_collision
-        type: bool
-        doc: >
-          __True__ is default and enables collisions. __False will disable them. 
-      doc: >
-        Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
-    # --------------------------------------
-    - def_name: global_percentage_speed_difference
-      params:
-      - param_name: percentage
-        type: float
-        doc: >
-          Percentage difference between intended speed and the current limit.
-      doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
-        
-        Default is 30. Exceeding a speed limit can be done using negative percentages. 
-    # --------------------------------------
-    - def_name: global_distance_to_leading_vehicle
-      params:
-      - param_name: distance
-        type: float
-        doc: >
-          Meters between vehicles. 
-      doc: >
-        Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
     # --------------------------------------
     - def_name: vehicle_percentage_speed_difference
       params:

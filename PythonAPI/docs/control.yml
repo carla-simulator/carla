@@ -1,6 +1,6 @@
 ---
 - module_name: carla
-  doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: VehicleControl
@@ -59,25 +59,27 @@
         default: 0.0
       - param_name: hand_brake
         type: bool
-        default: True
+        default: False
       - param_name: reverse
         type: bool
-        default: True
+        default: False
       - param_name: manual_gear_shift
         type: bool
-        default: True
+        default: False
       - param_name: gear
         type: int
         default: 0
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.VehicleControl
+        default: carla.VehicleControl
+    # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.VehicleControl
+        default: carla.VehicleControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -118,20 +120,17 @@
       - param_name: jump
         default: False
         type: bool
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.WalkerControl
-      doc: >
-        Compares every variable with `other` and returns <b>True</b> if these are all the same.
+        default: carla.WalkerControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.WalkerControl
-      doc: >
-        Compares every variable with `other` and returns <b>True</b> if any of these differ.
+        default: carla.WalkerControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -154,7 +153,8 @@
         type: tuple
       doc: >
         Intializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it. 
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __str__
     # --------------------------------------
 
@@ -191,16 +191,17 @@
       - param_name: up_ratio
         type: float 
         default: 0.65
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.GearPhysicsControl
+        default: carla.GearPhysicsControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.GearPhysicsControl
+        default: carla.GearPhysicsControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -344,16 +345,17 @@
         type: list(carla.WheelPhysicsControl)
       doc: >
         VehiclePhysicsControl constructor
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.VehiclePhysicsControl
+        default: carla.VehiclePhysicsControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.VehiclePhysicsControl
+        default: carla.VehiclePhysicsControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -422,16 +424,17 @@
       - param_name: position
         default: (0.0,0.0,0.0)
         type: carla.Vector3D
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.WheelPhysicsControl
+        default: carla.WheelPhysicsControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.WheelPhysicsControl
+        default: carla.WheelPhysicsControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

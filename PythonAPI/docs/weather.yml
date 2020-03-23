@@ -1,6 +1,6 @@
 ---
 - module_name: carla
-  doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: WeatherParameters
@@ -89,26 +89,37 @@
         default: 0.0
         doc: >
           0 is an arbitrary North, 180 its corresponding South.  
+      - param_name: fog_density
+        type: float
+        default: 0.0
+        doc: >
+          Density of the fog, from 0 to 100.  
+      - param_name: fog_distance
+        type: float
+        default: 0.0
+        doc: >
+          Distance where the fog starts in meters.  
+      - param_name: wetness
+        type: float
+        default: 0.0
+        doc: >
+          Humidity percentages of the road, from 0 to 100.  
       note: >
         ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
       doc: >
         Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
-    # --------------------------------------
+    # - DUNDER METHODS----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-      return: bool
-      doc: >
-        Returns <b>True</b> if both objects' variables are the same. 
+        default: carla.WeatherParameters
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-      return: bool
-      doc: >
-        Returns <b>True</b> if both objects' variables are different. 
+        default: carla.WeatherParameters
     # --------------------------------------
     - def_name: __str__
-      doc: >
     # --------------------------------------
 ...

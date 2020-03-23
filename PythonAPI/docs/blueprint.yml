@@ -1,6 +1,6 @@
 ---
 - module_name: carla
-  doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: ActorAttributeType
@@ -10,8 +10,8 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
-    - var_name: Int
     - var_name: Float
+    - var_name: Int
     - var_name: RGBColor
     - var_name: String
 
@@ -55,16 +55,17 @@
         default: 255
       doc: >
         Initializes a color, black by default. 
-    # --------------------------------------
+    # - DUNDER METHODS ----------------------------
+    dunder:
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.Color
+        default: carla.Color
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.Color
+        default: carla.Color
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -79,18 +80,18 @@
       type: str
       doc: >
         The attribute's name and identifier in the library. 
-    - var_name: type
-      type: carla.ActorAttributeType
-      doc: >
-        The attribute's parameter type.
-    - var_name: recommended_values
-      type: list(str)
-      doc: >
-        A list of values suggested by those who designed the blueprint. 
     - var_name: is_modifiable
       type: bool
       doc: >
         It is <b>True</b> if the attribute's value can be modified.
+    - var_name: recommended_values
+      type: list(str)
+      doc: >
+        A list of values suggested by those who designed the blueprint. 
+    - var_name: type
+      type: carla.ActorAttributeType
+      doc: >
+        The attribute's parameter type.
     # - METHODS ----------------------------
     methods:
     - def_name: as_bool
@@ -101,54 +102,41 @@
       doc: >
         Reads the attribute as carla.Color. 
     # --------------------------------------
-    - def_name: as_int
-      doc: >
-        Reads the attribute as int. 
-    # --------------------------------------
     - def_name: as_float
       doc: >
         Reads the attribute as float.  
     # --------------------------------------
+    - def_name: as_int
+      doc: >
+        Reads the attribute as int. 
+    # --------------------------------------
     - def_name: as_str
       doc: >
         Reads the attribute as string. 
-    # --------------------------------------
+    # - DUNDER METHODS ----------------------------
+    dunder:
     - def_name: __bool__
-      doc: >
-        Internal method to manage the attribute as bool. 
-    # --------------------------------------
-    - def_name: __int__
-      doc: >
-        Internal method to manage the attribute as int. 
     # --------------------------------------
     - def_name: __float__
-      doc: >
-        Internal method to manage the attribute as float. 
+    # --------------------------------------
+    - def_name: __int__
     # --------------------------------------
     - def_name: __str__
-      doc: >
-        Parses the attribute ID and its value to string.  
     # --------------------------------------
     - def_name: __eq__
       return: bool
       params:
       - param_name: other
-        type: bool / int / float / str / carla.Color / carla.ActorAttribute
-      doc: >
-        Returns true if this actor's attribute and `other` are the same. 
+        default: bool / int / float / str / carla.Color / carla.ActorAttribute
     # --------------------------------------
     - def_name: __ne__
       return: bool
       params:
       - param_name: other
-        type: bool / int / float / str / carla.Color / carla.ActorAttribute
-      doc: >
-        Returns true if this actor's attribute and `other` are different. 
+        default: bool / int / float / str / carla.Color / carla.ActorAttribute
     # --------------------------------------
     - def_name: __nonzero__
       return: bool
-      doc: >
-        Returns true if this actor's attribute is not zero or null. 
     # --------------------------------------
 
   - class_name: ActorBlueprint
@@ -167,18 +155,6 @@
         A list of tags each blueprint has that helps describing them. E.g. `['0001', 'pedestrian', 'walker']`.
     # - METHODS ----------------------------
     methods:
-    - def_name: __iter__
-      doc: >
-        Allows iteration within this class. 
-    # --------------------------------------
-    - def_name: __len__
-      doc: >
-        Returns the amount of attributes for this blueprint. 
-    # --------------------------------------
-    - def_name: __str__
-      doc: >
-        Parses the information of this blueprint to string. 
-    # --------------------------------------
     - def_name: has_attribute
       return: bool
       params:
@@ -228,6 +204,13 @@
           The new value for said attribute. 
       doc: >
         If the `id` attribute is modifiable, changes its value to `value`. 
+    # - DUNDER METHODS ----------------------------
+    dunder:
+    - def_name: __iter__
+    # --------------------------------------
+    - def_name: __len__
+    # --------------------------------------
+    - def_name: __str__
     # --------------------------------------
 
   - class_name: BlueprintLibrary
@@ -238,28 +221,6 @@
         [Here](bp_library.md) is a reference containing every available blueprint and its specifics.   
     # - METHODS ----------------------------
     methods:
-    - def_name: __getitem__
-      params:
-      - param_name: pos
-        type: int
-      return: carla.ActorBlueprint
-      doc: >
-        Returns the blueprint stored in `pos` position inside the data structure containing them. 
-    # --------------------------------------
-    - def_name: __iter__
-      doc: >
-        Method that allows iteration of this class. 
-    # --------------------------------------
-    - def_name: __len__
-      return: int 
-      doc: >
-        Returns the amount of blueprints comprising the library. 
-    # --------------------------------------
-    - def_name: __str__
-      return: string 
-      doc: >
-        Parses the identifiers for every blueprint to string. 
-    # --------------------------------------
     - def_name: filter
       params:
       - param_name: wildcard_pattern
@@ -275,5 +236,17 @@
       return: carla.ActorBlueprint
       doc: >
         Returns the blueprint corresponding to that identifier. 
+    # - DUNDER METHODS ----------------------------
+    dunder:
+    - def_name: __getitem__
+      params:
+      - param_name: pos
+        default: int
+    # --------------------------------------
+    - def_name: __iter__
+    # --------------------------------------
+    - def_name: __len__
+    # --------------------------------------
+    - def_name: __str__
     # --------------------------------------
 ...
