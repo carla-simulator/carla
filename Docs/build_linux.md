@@ -9,8 +9,8 @@
 	* Install git  
 	* Link GitHub and Unreal Engine 
 * [__Unreal Engine__](#unreal-engine)
-	* Download UE4.22  
-	* Build UE4.22  
+	* Download UE4.24  
+	* Build UE4.24  
 * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
@@ -60,13 +60,13 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clan
 # Get a GitHub and a UE account, and link both. 
 # Install git. 
 
-# Build Unreal Engine 4.22.
-git clone --depth=1 -b 4.22 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.22
-cd ~/UnrealEngine_4.22
+# Build Unreal Engine 4.24.
+git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
+cd ~/UnrealEngine_4.24
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 
 # Open the UE Editor to check everything works properly.
-cd ~/UnrealEngine_4.22/Engine/Binaries/Linux && ./UE4Editor
+cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
 
 # Clone the CARLA repository. 
 git clone https://github.com/carla-simulator/carla
@@ -76,7 +76,7 @@ cd ~/carla
 ./Update.sh
 
 # Set the environment variable. 
-export UE4_ROOT=~/UnrealEngine_4.22
+export UE4_ROOT=~/UnrealEngine_4.24
 
 # make the CARLA server and the CARLA client. 
 make launch
@@ -145,18 +145,18 @@ In order to access the Unreal Engine repositories, which are set to private, cre
 ---
 ## Unreal Engine
 
-The current version of CARLA runs on __Unreal Engine 4.22__ only. The path is irrelevant, but for the sake of this tutorial, installation will be done under `~/UnrealEngine_4.22`. If the path chosen differs, remember to change it accordingly when running the commands on terminal.   
+The current version of CARLA runs on __Unreal Engine 4.24__ only. The path is irrelevant, but for the sake of this tutorial, installation will be done under `~/UnrealEngine_4.24`. If the path chosen differs, remember to change it accordingly when running the commands on terminal.   
 
 !!! Note
-    Alternatively, there is this [guide](https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow/index.html) to build UE on Linux. When consulting it, remember that CARLA will need the __4.22 release__, not the latest. 
+    Alternatively, there is this [guide](https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow/index.html) to build UE on Linux. When consulting it, remember that CARLA will need the __4.24 release__, not the latest. 
 
-Clone the content for Unreal Engine 4.22 in a local computer.
+Clone the content for Unreal Engine 4.24 in a local computer.
 ```sh
-git clone --depth=1 -b 4.22 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.22
+git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
 ```
-Get into said folder. Remember, this is the path where UE4.22 has been cloned.
+Get into said folder. Remember, this is the path where UE4.24 has been cloned.
 ```sh
-cd ~/UnrealEngine_4.22
+cd ~/UnrealEngine_4.24
 ```
 Make the build. 
 ```sh
@@ -165,7 +165,7 @@ Make the build.
 
 Unreal Engine should be installed in the system. Run `Engine/Binaries/Linux/UE4Editor.sh` to open the Editor and check it out.
 ```sh
-cd ~/UnrealEngine_4.22/Engine/Binaries/Linux && ./UE4Editor
+cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
 ```
 
 In case something went wrong, it is related with Unreal Engine There is not much CARLA can do about it. However, the [build documentation](https://wiki.unrealengine.com/Building_On_Linux) provided by Unreal Engine may be helpful.
@@ -177,7 +177,7 @@ The system should be ready to start building CARLA. Just for clarity, a brief su
 * Minimum technical requirements to run CARLA are suitable.  
 * Dependencies have been properly installed.  
 * GitHub account is ready.  
-* Unreal Engine 4.22 runs smooth.  
+* Unreal Engine 4.24 runs smooth.  
 
 !!! Note
     Downloading aria2 with `sudo apt-get install aria2` will speed up the following commands.  
@@ -219,10 +219,10 @@ Run the script to get the assets.
 
 ### Set the environment variable
 
-This is necessary for CARLA to find the Unreal Engine 4.22 installation folder.
+This is necessary for CARLA to find the Unreal Engine 4.24 installation folder.
 
 ```sh
-export UE4_ROOT=~/UnrealEngine_4.22
+export UE4_ROOT=~/UnrealEngine_4.24
 ```
 
 The variable should be added to `~/.bashrc` or `~/.profile` to be set persistently session-wide. Otherwise, it will only be accessible from the current shell.
