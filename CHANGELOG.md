@@ -2,7 +2,7 @@
 
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
-  * Added walkable pedestrian crossings to OpenDRIVE standalone mode
+  * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved manual_control by adding realistic throttle and brake
   * Added new Behavior agent
 

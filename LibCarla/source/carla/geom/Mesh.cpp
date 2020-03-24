@@ -306,10 +306,6 @@ namespace geom {
     return *this;
   }
 
-  // Mesh operator+(Mesh &lhs, const Mesh &rhs) {
-  //   return lhs += rhs;
-  // }
-
   Mesh operator+(const Mesh &lhs, const Mesh &rhs) {
     Mesh m = lhs;
     return m += rhs;
