@@ -128,6 +128,9 @@ namespace road {
     /// Generate waypoints on each @a lane at the start of each @a road
     std::vector<Waypoint> GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type = Lane::LaneType::Driving) const;
 
+    /// Generate waypoints at the entry of each lane of the specified road
+    std::vector<Waypoint> GenerateWaypointsInRoad(RoadId road_id, Lane::LaneType lane_type = Lane::LaneType::Driving) const;
+
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;

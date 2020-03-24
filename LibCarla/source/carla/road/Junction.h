@@ -74,15 +74,13 @@ namespace road {
       return _bounding_box;
     }
 
-  std::vector<RoadId> GetConflictsOfRoad(RoadId road_id) const{
-    std::vector<RoadId> result;
-    if(_road_conflicts.count(road_id) > 0){
-      for(RoadId road : _road_conflicts.at(road_id)){
-        result.push_back(road);
-      }
+    bool RoadHasConflicts(RoadId road_id) const {
+      return _road_conflicts.count(road_id) > 0;
     }
-    return result;
-  }
+
+    const std::unordered_set<RoadId> & GetConflictsOfRoad(RoadId road_id) const {
+      return _road_conflicts.at(road_id);
+    }
 
   private:
 

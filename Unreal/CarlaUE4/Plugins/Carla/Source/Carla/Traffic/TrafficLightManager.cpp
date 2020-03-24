@@ -6,6 +6,7 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "StopSignComponent.h"
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -37,6 +38,7 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<ATrafficSignBase> StopSignModel;
     StopSignModel = StopFinder.Object->GeneratedClass;
     TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopSignModel);
+    SignComponentModels.Add(carla::road::SignalType::StopSign().c_str(), UStopSignComponent::StaticClass());
   }
   static ConstructorHelpers::FObjectFinder<UBlueprint> YieldFinder(
       TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Yield.BP_Yield'" ) );
@@ -45,6 +47,7 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<ATrafficSignBase> YieldSignModel;
     YieldSignModel = YieldFinder.Object->GeneratedClass;
     TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
+    SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), USignComponent::StaticClass());
   }
 }
 
@@ -290,39 +293,19 @@ void ATrafficLightManager::SpawnSignals()
           SpawnParams);
 
       USignComponent *SignComponent =
-          NewObject<USignComponent>(TrafficSign);
+          NewObject<USignComponent>(TrafficSign, SignComponentModels[SignalType]);
       SignComponent->SetSignId(Signal->GetSignalId().c_str());
       SignComponent->RegisterComponent();
       SignComponent->AttachToComponent(
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
+      SignComponent->InitializeSign(GetMap().get());
 
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
 
       TrafficSigns.Add(TrafficSign);
     }
   }
-}
-
-// Helper function to generate a vector of consecutive integers from a to b
-std::vector<int> GenerateRange(int a, int b)
-{
-  std::vector<int> result;
-  if (a < b)
-  {
-    for(int i = a; i <= b; ++i)
-    {
-      result.push_back(i);
-    }
-  }
-  else
-  {
-    for(int i = a; i >= b; --i)
-    {
-      result.push_back(i);
-    }
-  }
-  return result;
 }
 
 void ATrafficLightManager::GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
@@ -376,7 +359,7 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
         }
         for(auto &validity : SignalReference->GetValidities())
         {
-          for(auto lane : GenerateRange(validity._from_lane, validity._to_lane))
+          for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
           {
             if(lane == 0)
               continue;
