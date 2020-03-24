@@ -191,14 +191,6 @@
         Returns a flag representing the vehicle light state,
         this represents which lights are active or not
     # --------------------------------------
-    - def_name: set_light_state
-      params:
-      - param_name: light_state
-        type: carla.VehicleLightState
-      doc: >
-        Sets the light state of a vehicle using a VehicleLightState flag,
-        this represents which lights are active or not
-    # --------------------------------------
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
       doc: >
@@ -228,6 +220,14 @@
         default: True
       doc: >
         Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side. 
+    # --------------------------------------
+    - def_name: set_light_state
+      params:
+      - param_name: light_state
+        type: carla.VehicleLightState
+      doc: >
+        Sets the light state of a vehicle using a VehicleLightState flag,
+        this represents which lights are active or not
     # - DUNDER METHODS ----------------------------
     dunder:
     - def_name: __str__
@@ -268,6 +268,7 @@
     dunder:
     - def_name: __str__
     # --------------------------------------
+
   - class_name: WalkerAIController
     parent: carla.Actor
     # - DESCRIPTION ------------------------
@@ -275,14 +276,6 @@
       Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at carla.World if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in carla.BlueprintLibrary as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way. 
     # - METHODS ----------------------------
     methods:
-    - def_name: start
-      doc: >
-        Enables AI control for its parent walker. 
-    # --------------------------------------
-    - def_name: stop
-      doc: >
-        Disables AI control for its parent walker. 
-    # --------------------------------------
     - def_name: go_to_location
       params:
       - param_name: destination
@@ -299,6 +292,14 @@
           speed in m/s. An easy walking speed is set by default. 
       doc: >
         Sets a speed for the walker in meters per second.
+    # --------------------------------------
+    - def_name: start
+      doc: >
+        Enables AI control for its parent walker. 
+    # --------------------------------------
+    - def_name: stop
+      doc: >
+        Disables AI control for its parent walker. 
     # - DUNDER METHODS----------------------------
     dunder:
     - def_name: __str__

@@ -163,6 +163,27 @@
       doc: >
         Returns a list of waypoints with a certain distance between them for every lane and centered inside of it. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.
     # --------------------------------------
+    - def_name: save_to_disk
+      params:
+      - param_name: path
+        doc: >
+          Path where the file will be saved.
+      doc: >
+        Saves the .xodr OpenDRIVE file of the current map to disk.
+    # --------------------------------------
+    - def_name: to_opendrive
+      doc: >
+        Returns the .xodr OpenDRIVe file of the current map as string.
+      return: str
+    # --------------------------------------
+    - def_name: transform_to_geolocation
+      params:
+      - param_name: location
+        type: carla.Location
+      return: carla.GeoLocation
+      doc: >
+        Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
+    # --------------------------------------
     - def_name: get_spawn_points
       return: list(carla.Transform)
       doc: >
@@ -211,27 +232,6 @@
         doc: >
           Specify the length from the road start
       return: carla.Waypoint
-    # --------------------------------------
-    - def_name: save_to_disk
-      params:
-      - param_name: path
-        doc: >
-          Path where the file will be saved.
-      doc: >
-        Saves the .xodr OpenDRIVE file of the current map to disk.
-    # --------------------------------------
-    - def_name: to_opendrive
-      doc: >
-        Returns the .xodr OpenDRIVe file of the current map as string.
-      return: str
-    # --------------------------------------
-    - def_name: transform_to_geolocation
-      params:
-      - param_name: location
-        type: carla.Location
-      return: carla.GeoLocation
-      doc: >
-        Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
     # - DUNDER METHODS----------------------------
     dunder:
     - def_name: __str__

@@ -300,34 +300,14 @@ Executes a list of commands on a single simulation step, blocks until the comman
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
-- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
-  ['/Game/Carla/Maps/Town01',
-  '/Game/Carla/Maps/Town02',
-  '/Game/Carla/Maps/Town03',
-  '/Game/Carla/Maps/Town04',
-  '/Game/Carla/Maps/Town05',
-  '/Game/Carla/Maps/Town06',
-  '/Game/Carla/Maps/Town07'].  
-    - **Return:** _list(str)_  
-- <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
-    - **Return:** _str_  
-- <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
-    - **Return:** _str_  
-- <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the world object currently active in the simulation. This world will be later used for example to load maps.  
-    - **Return:** _[carla.World](#carla.World)_  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>)  
+Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
+    - **Parameters:**
+        - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
         - `map_name` (_str_) – Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.  
-- <a name="carla.Client.get_trafficmanager"></a>**<font color="#7fb800">get_trafficmanager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**=8000</font>)  
-Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.  
-    - **Parameters:**
-        - `client_connection` (_int_) – Port that will be used by the traffic manager. Default is `8000`.  
-    - **Return:** _[carla.TrafficManager](#carla.TrafficManager)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Raises:** RuntimeError when corresponding.  
@@ -338,18 +318,6 @@ Load a new world with default settings using `map_name` map. All actors present 
         - `start` (_float_) – Time in seconds where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
         - `duration` (_float_) – Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) – ID of the actor to follow. If this is 0 then camera is disabled.  
-- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>)  
-Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
-    - **Parameters:**
-        - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
-- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
-When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
-    - **Parameters:**
-        - `time_factor` (_float_) – 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
-- <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
-Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.  
-    - **Parameters:**
-        - `seconds` (_float_) – New timeout value in seconds. Default is 5 seconds.  
 - <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#7fb800">show_recorder_actors_blocked</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**min_time**</font>, <font color="#00a6ed">**min_distance**</font>)  
 The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.  
     - **Parameters:**
@@ -383,6 +351,38 @@ Enables the recording feature, which will start saving every information possibl
         - `filename` (_str_) – Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
 Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.  
+- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
+  ['/Game/Carla/Maps/Town01',
+  '/Game/Carla/Maps/Town02',
+  '/Game/Carla/Maps/Town03',
+  '/Game/Carla/Maps/Town04',
+  '/Game/Carla/Maps/Town05',
+  '/Game/Carla/Maps/Town06',
+  '/Game/Carla/Maps/Town07'].  
+    - **Return:** _list(str)_  
+- <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
+    - **Return:** _str_  
+- <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
+    - **Return:** _str_  
+- <a name="carla.Client.get_trafficmanager"></a>**<font color="#7fb800">get_trafficmanager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**=8000</font>)  
+Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.  
+    - **Parameters:**
+        - `client_connection` (_int_) – Port that will be used by the traffic manager. Default is `8000`.  
+    - **Return:** _[carla.TrafficManager](#carla.TrafficManager)_  
+- <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the world object currently active in the simulation. This world will be later used for example to load maps.  
+    - **Return:** _[carla.World](#carla.World)_  
+- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
+When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
+    - **Parameters:**
+        - `time_factor` (_float_) – 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
+- <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
+Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.  
+    - **Parameters:**
+        - `seconds` (_float_) – New timeout value in seconds. Default is 5 seconds.  
 
 ---
 
@@ -1415,10 +1415,6 @@ The client returns the control applied in the last tick. The method does not cal
 - <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a flag representing the vehicle light state, this represents which lights are active or not.  
     - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
-- <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
-Sets the light state of a vehicle using a VehicleLightState flag, this represents which lights are active or not.  
-    - **Parameters:**
-        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
 - <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
 The simulator returns the last physics control applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
@@ -1436,6 +1432,10 @@ The client returns the state of the traffic light affecting this vehicle accordi
 Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
+- <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
+Sets the light state of a vehicle using a VehicleLightState flag, this represents which lights are active or not.  
+    - **Parameters:**
+        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
 
 <h3>Dunder methods</h3>
 - <a name="carla.Vehicle.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1596,10 +1596,6 @@ The client returns the control applied to this walker during last tick. The meth
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
-Enables AI control for its parent walker.  
-- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
-Disables AI control for its parent walker.  
 - <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  
 Sets the destination that the pedestrian will reach.  
     - **Parameters:**
@@ -1608,6 +1604,10 @@ Sets the destination that the pedestrian will reach.
 Sets a speed for the walker in meters per second.  
     - **Parameters:**
         - `speed` (_float_) – speed in m/s. An easy walking speed is set by default.  
+- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
+Enables AI control for its parent walker.  
+- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
+Disables AI control for its parent walker.  
 
 <h3>Dunder methods</h3>
 - <a name="carla.WalkerAIController.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  

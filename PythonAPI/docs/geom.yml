@@ -268,11 +268,6 @@
       - param_name: rotation
         type: carla.Rotation
     # --------------------------------------
-    - def_name: get_forward_vector
-      return: carla.Vector3D
-      doc: >
-        Computes a forward vector using its rotation.
-    # --------------------------------------
     - def_name: transform
       params:
       - param_name: in_point
@@ -281,6 +276,11 @@
           Location in the space to which the transformation will be applied.
       doc: >
         Translates a 3D point from global to local coordinates using the current transformation as frame of reference.
+    # --------------------------------------
+    - def_name: get_forward_vector
+      return: carla.Vector3D
+      doc: >
+        Computes a forward vector using its rotation.
     # - DUNDER METHODS----------------------------
     dunder:
     - def_name: __eq__

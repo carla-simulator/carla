@@ -59,36 +59,16 @@
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
     # --------------------------------------
-    - def_name: get_available_maps
+    - def_name: generate_opendrive_world
       params:
-      return: list(str)
+      - param_name: opendrive
+        type: str
+        doc: >
+          Content of an OpenDRIVE file as `string`.
       doc: >
-        Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
-          ['/Game/Carla/Maps/Town01',
-          '/Game/Carla/Maps/Town02',
-          '/Game/Carla/Maps/Town03',
-          '/Game/Carla/Maps/Town04',
-          '/Game/Carla/Maps/Town05',
-          '/Game/Carla/Maps/Town06',
-          '/Game/Carla/Maps/Town07']
-    # --------------------------------------
-    - def_name: get_client_version
-      params:
-      return: str
-      doc: >
-        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.
-    # --------------------------------------
-    - def_name: get_server_version
-      params:
-      return: str
-      doc: >
-        Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.
-    # --------------------------------------
-    - def_name: get_world
-      params:
-      return: carla.World
-      doc: >
-        Returns the world object currently active in the simulation. This world will be later used for example to load maps.
+        Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
+        It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
+        Cars can drive around the map, but there are no graphics besides the road and sidewalks.
     # --------------------------------------
     - def_name: load_world
       params:
@@ -99,17 +79,6 @@
           '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
-    # --------------------------------------
-    - def_name: get_trafficmanager
-      params:
-      - param_name: client_connection
-        type: int
-        default: 8000
-        doc: >
-          Port that will be used by the traffic manager. Default is `8000`. 
-      return: carla.TrafficManager
-      doc: >
-        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created. 
     # --------------------------------------
     - def_name: reload_world
       params:
@@ -140,36 +109,6 @@
       doc: >
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
-    # --------------------------------------
-    - def_name: generate_opendrive_world
-      params:
-      - param_name: opendrive
-        type: str
-        doc: >
-          Content of an OpenDRIVE file as `string`.
-      doc: >
-        Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
-        It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
-        Cars can drive around the map, but there are no graphics besides the road and sidewalks.
-    # --------------------------------------
-    - def_name: set_replayer_time_factor
-      params:
-      - param_name: time_factor
-        type: float
-        default: 1.0
-        doc: >
-            1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).
-      doc: >
-        When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.
-    # --------------------------------------
-    - def_name: set_timeout
-      params:
-      - param_name: seconds
-        type: float
-        doc: >
-          New timeout value in seconds. Default is 5 seconds.
-      doc: >
-        Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
@@ -245,6 +184,68 @@
       doc: >
         Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
     # --------------------------------------
+    - def_name: get_available_maps
+      params:
+      return: list(str)
+      doc: >
+        Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
+          ['/Game/Carla/Maps/Town01',
+          '/Game/Carla/Maps/Town02',
+          '/Game/Carla/Maps/Town03',
+          '/Game/Carla/Maps/Town04',
+          '/Game/Carla/Maps/Town05',
+          '/Game/Carla/Maps/Town06',
+          '/Game/Carla/Maps/Town07']
+    # --------------------------------------
+    - def_name: get_client_version
+      params:
+      return: str
+      doc: >
+        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.
+    # --------------------------------------
+    - def_name: get_server_version
+      params:
+      return: str
+      doc: >
+        Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.
+    # --------------------------------------
+    - def_name: get_trafficmanager
+      params:
+      - param_name: client_connection
+        type: int
+        default: 8000
+        doc: >
+          Port that will be used by the traffic manager. Default is `8000`. 
+      return: carla.TrafficManager
+      doc: >
+        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created. 
+    # --------------------------------------
+    - def_name: get_world
+      params:
+      return: carla.World
+      doc: >
+        Returns the world object currently active in the simulation. This world will be later used for example to load maps.
+    # --------------------------------------
+    - def_name: set_replayer_time_factor
+      params:
+      - param_name: time_factor
+        type: float
+        default: 1.0
+        doc: >
+            1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).
+      doc: >
+        When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.
+    # --------------------------------------
+    - def_name: set_timeout
+      params:
+      - param_name: seconds
+        type: float
+        doc: >
+          New timeout value in seconds. Default is 5 seconds.
+      doc: >
+        Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+    # --------------------------------------
+
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------
     doc: >
