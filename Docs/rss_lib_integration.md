@@ -5,6 +5,8 @@
 This feature integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) into the CARLA Client library.
 
 It provides basic implementations of both a **RssSensor**, the situation analysis and response generation by the **ad-rss-lib** and a basic **RssRestrictor** class which applies the restrictions to given vehicle commands.
+The following image sketches the integration of **RSS** into the CARLA architecture:
+![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
 
 The **RssSensor** results can be visualized within CARLA.
 [![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
@@ -14,7 +16,7 @@ Please see [C++ Library for Responsibility Sensitive Safety documentation](https
 <h2>Compilation</h2>
 
 RSS integration is a Linux-only build variant.
-Please see [Build System](dev/build_system.md) for general information.
+Please see [Build System](build_system.md) for general information.
 Furthermore, there are additional prerequisites required for building RSS and its dependencies (see also [**ad-rss-lib**](https://intel.github.io/ad-rss-lib/BUILDING)); briefly:
 
 Dependencies provided by Ubunutu (>= 16.04):
