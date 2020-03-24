@@ -26,7 +26,6 @@ namespace LocalizationConstants {
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
-
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -176,17 +175,6 @@ namespace LocalizationConstants {
           PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
-
-      ///WIP - Waypoint Binning
-      std::vector<SimpleWaypointPtr> mWayPointBufferOrig;
-      std::vector<SimpleWaypointPtr> mWayPointBuffer = GetBufferByDistance(waypoint_buffer,horizon_size);
-      // for(auto &iWayPt : mWayPointBuffer)
-      // {
-      //   PushWaypoint(waypoint_buffer, actor_id, iWayPt);
-      //  // track_traffic.UpdatePassingVehicle(iWayPt->GetId(), actor_id);
-      // }
-
-      /// Retaining the Original Code for DEBUGGING purpose . Will be removed later
       // Populating the buffer.
       while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
           <= std::pow(horizon_size, 2)) {
@@ -206,40 +194,17 @@ namespace LocalizationConstants {
             }
           }
         }
-         mWayPointBufferOrig.emplace_back(next_wp);
         PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
-      size_t size_o = mWayPointBufferOrig.size();
-      size_t size_c  = mWayPointBuffer.size();
-      std:: cout << "Original Size -> " << size_o << "Computed Size ->" << size_c <<std::endl;
-      for ( auto o:mWayPointBufferOrig)
-      {
-        const cg::Location loc1 = o->GetLocation();
-        std::cout<< loc1.x << " " << loc1.y << " " <<  loc1.z << std::endl;
-      }
-      std::cout <<  "Printing computed Coordinatea" << std::endl;
-      for ( auto o1:mWayPointBuffer)
-      {
-        const cg::Location loc1 = o1->GetLocation();
-        std::cout<< loc1.x << " " << loc1.y << " " <<  loc1.z << std::endl;
-      }
-
-      /// DEBUGGING Code Ends
-      
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-
+      // WayPoint Binning Changes
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
-      SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
-      for (uint64_t j = 0u;
-          (j < waypoint_buffer.size()) &&
-          (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-          < std::pow(target_point_distance, 2));
-          ++j) {
-        target_waypoint = waypoint_buffer.at(j);
-      }
+      uint64_t mIndex = 0u;
+      SimpleWaypointPtr target_waypoint = track_traffic.GetTargetWaypoint(waypoint_buffer, target_point_distance, mIndex);
+
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
       float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
@@ -256,17 +221,8 @@ namespace LocalizationConstants {
       const auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       const float speed_limit = vehicle_reference->GetSpeedLimit();
       const float look_ahead_distance = std::max(2.0f * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
-
-      SimpleWaypointPtr look_ahead_point = waypoint_buffer.front();
       uint64_t look_ahead_index = 0u;
-      for (uint64_t j = 0u;
-          (waypoint_buffer.front()->DistanceSquared(look_ahead_point)
-          < std::pow(look_ahead_distance, 2)) &&
-          (j < waypoint_buffer.size());
-          ++j) {
-        look_ahead_point = waypoint_buffer.at(j);
-        look_ahead_index = j;
-      }
+      SimpleWaypointPtr look_ahead_point = track_traffic.GetTargetWaypoint(waypoint_buffer, look_ahead_distance, look_ahead_index);
 
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
@@ -817,32 +773,5 @@ namespace LocalizationConstants {
     }
     return false;
   }
-
-  std::vector<SimpleWaypointPtr> LocalizationStage::GetBufferByDistance(Buffer& buffer,const float& horizon_size)
-  {
-     // Populating the buffer.
-     std::vector<SimpleWaypointPtr> mWayPointBuffer;
-      if ( buffer.back()->Distance(buffer.front()) <= horizon_size) {
-
-        std::vector<SimpleWaypointPtr> next_waypoints = buffer.back()->GetNextWaypoint();
-        uint64_t selection_index = 0u;
-        // Pseudo-randomized path selection if found more than one choice.
-        if (next_waypoints.size() > 1) {
-          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
-        }
-        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
-        if (next_wp == nullptr) {
-          for (auto& wp: next_waypoints) {
-            if (wp != nullptr) {
-               next_wp = wp;
-            }
-          }
-        }
-        mWayPointBuffer.emplace_back(next_wp);
-      }
-   return mWayPointBuffer;
-  }
-
-
 } // namespace traffic_manager
 } // namespace carla
