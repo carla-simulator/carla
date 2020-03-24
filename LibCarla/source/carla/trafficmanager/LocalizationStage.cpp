@@ -177,27 +177,35 @@ namespace LocalizationConstants {
         }
       }
 
-      // Populating the buffer.
-      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-          <= std::pow(horizon_size, 2)) {
-
-        std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-        uint64_t selection_index = 0u;
-        // Pseudo-randomized path selection if found more than one choice.
-        if (next_waypoints.size() > 1) {
-          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
-        }
-        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
-        if (next_wp == nullptr) {
-          for (auto& wp: next_waypoints) {
-            if (wp != nullptr) {
-              next_wp = wp;
-              break;
-            }
-          }
-        }
-        PushWaypoint(waypoint_buffer, actor_id, next_wp);
+      ///WIP - Waypoint Binning
+      std::vector<SimpleWaypointPtr> mWayPointBuffer = GetBufferByDistance(waypoint_buffer,horizon_size);
+      for(auto &iWayPt : mWayPointBuffer)
+      {
+        PushWaypoint(waypoint_buffer, actor_id, iWayPt);
+        track_traffic.UpdatePassingVehicle(iWayPt->GetId(), actor_id);
       }
+
+      // // Populating the buffer.
+      // while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
+      //     <= std::pow(horizon_size, 2)) {
+
+      //   std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+      //   uint64_t selection_index = 0u;
+      //   // Pseudo-randomized path selection if found more than one choice.
+      //   if (next_waypoints.size() > 1) {
+      //     selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
+      //   }
+      //   SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
+      //   if (next_wp == nullptr) {
+      //     for (auto& wp: next_waypoints) {
+      //       if (wp != nullptr) {
+      //         next_wp = wp;
+      //         break;
+      //       }
+      //     }
+      //   }
+      //   PushWaypoint(waypoint_buffer, actor_id, next_wp);
+      // }
 
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
@@ -790,6 +798,30 @@ namespace LocalizationConstants {
     }
     return false;
   }
+
+  std::vector<SimpleWaypointPtr> LocalizationStage::GetBufferByDistance(Buffer& buffer,const float& horizon_size)
+  {
+     // Populating the buffer.
+     std::vector<SimpleWaypointPtr> mWayPointBuffer;
+      if ( buffer.back()->Distance(buffer.front()) <= horizon_size) {
+
+        std::vector<SimpleWaypointPtr> next_waypoints = buffer.back()->GetNextWaypoint();
+        uint64_t selection_index = 0u;
+        // Pseudo-randomized path selection if found more than one choice.
+        if (next_waypoints.size() > 1) {
+          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
+        }
+        if (next_waypoints.at(selection_index) == nullptr) {
+          for (auto& wp: next_waypoints) {
+            if (wp != nullptr) {
+               mWayPointBuffer.emplace_back(wp);
+            }
+          }
+        }
+      }
+   return mWayPointBuffer;
+  }
+
 
 } // namespace traffic_manager
 } // namespace carla
