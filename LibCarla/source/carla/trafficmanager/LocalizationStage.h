@@ -145,6 +145,7 @@ namespace traffic_manager {
     bool IsVehicleStuck(const Actor& actor);
     void CleanActor(const ActorId actor_id);
     bool TryDestroyVehicle(const Actor& actor);
+    std::vector<SimpleWaypointPtr> GetBufferByDistance(Buffer& buffer,const float& horizon_size);
 
   public:
 
