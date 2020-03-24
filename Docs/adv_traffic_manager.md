@@ -1,40 +1,41 @@
 # Traffic Manager
-  * [__What is it?__](#what-is-it)  
-  * [__How does it work?__](#how-does-it-work)  
-	* Architecture
-	* Stages
-  * [__Using the Traffic Manager__](#using-the-traffic-manager)
-	* Parameters
-	* Creating a Traffic Manager
-	* Setting the Traffic Manager
-  * [__Other considerations__](#other-considerations)
+* [__What is it?__](#what-is-it)  
+* [__How does it work?__](#how-does-it-work)  
+	* Architecture  
+	* Stages  
+* [__Using the Traffic Manager__](#using-the-traffic-manager)  
+	* Parameters  
+	* Creating a Traffic Manager  
+	* Setting the Traffic Manager  
+* [__Other considerations__](#other-considerations)  
 	* FPS limitations  
 	* Multiclient management  
-  * [__Summary__](#summary)
+* [__Summary__](#summary)  
 
 ---
 ## What is it?
 
-The Traffic Manager, TM for short, is a module built on top of the CARLA API in C++ that is in charge of controlling vehicles inside the simulation. Its goal is to populate the simulation with realistic urban traffic conditions allowing users to customize some behaviours, for example to set specific learning circumstances. To do so, every TM controls vehicles registered to it by setting autopilot to true, and is accounting for the rest by considering them unregistered. 
+The Traffic Manager, TM for short, is the module in charge of controlling vehicles inside the simulation. It is built on top of the CARLA API in C++. Its goal is to populate the simulation with realistic urban traffic conditions. Users can customize some behaviours, for example to set specific learning circumstances. Every TM controls vehicles registered to it by setting autopilot to true, and is accounting for the rest by considering them unregistered. 
 
-#### Structured design
-The TM is built on the client-side of the CARLA architecture, replacing the former server-side autopilot after version 0.9.7. The execution flow is divided in __stages__ with independent operations and goals, to facilitate the development of phase-related functionalities and data structures, while also improving computational efficiency. Each stage runs on a different thread and communication with the rest is managed through synchronous messaging between the stages, so the information flows only in one direction.  
+### Structured design
+The TM is built on the client-side of the CARLA architecture. It replaces the server-side autopilot. The execution flow is divided in __stages__ with independent operations and goals. This facilitates the development of phase-related functionalities and data structures, while also improving computational efficiency. Each stage runs on a different thread. Communication with the rest is managed through synchronous messaging between the stages.The information flows only in one direction.  
 
-#### User customization
-Users must have some control over the traffic flow by setting parameters that allow, force or encourage specific behaviours. Thus, users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality, specially to train driving systems under specific and atypical circumstances. 
+### User customization
+Users must have some control over the traffic flow by setting parameters that allow, force or encourage specific behaviours. Users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality. It is necessary to train driving systems under specific and atypical circumstances. 
 
 ---
 ## How does it work?
 
-#### Architecture
-The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies represent the different stages, green ones are additional modules that work with these and the arrows represent communication between elements managed by messenger classes.  
-The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) found inside `LibCarla/source/carla/trafficmanager`. 
+### Architecture
+The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies represent the different stages. Green ones are additional modules that work with these. The arrows represent communication between elements managed by messenger classes.  
+
+The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. 
 
 <div style="text-align:center">
 <img src="../img/traffic_manager_diagram.png">
 </div>
 
-#### Stages
+### Stages
 
 __1. Localization Stage:__ the TM stores a list of waypoints ahead for each vehicle to follow. The list of waypoints is updated each iteration, changing according to the decisions taken during the stage, such as lane changes, to modify the vehicle's trajectory. The amount of waypoints stored depends on the vehicle's speed, being greater the faster it goes. This stage contains a __spatial hashing__ which saves the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
 
@@ -56,7 +57,7 @@ __5. Apply Control Stage:__ receives actuation signals, such as throttle, brake,
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 
-#### Additional modules
+### Additional modules
 
 __Cached map:__ in order to increase computational efficiency during the Localization stage, the map is discretized and cached as a grid of waypoints. These are included in a specific data structure designed to hold more information, such as links between them. The grids allow to easily connect the map, each of them representing sections of a road or a whole junction, by also having an ID that is used to quickly identify vehicles in nearby areas.  
 
@@ -69,7 +70,7 @@ __PID controller:__ the TM module uses a PID controller to regulate throttle, br
 ---
 ## Using the Traffic Manager 
 
-#### General considerations
+### General considerations
 
 First of all there are some general behaviour patterns the TM will generate that should be understood beforehand. These statements are inherent to the way the TM is implemented:  
 
@@ -79,40 +80,37 @@ First of all there are some general behaviour patterns the TM will generate that
 
 The TM provides a set of possibilities so the user can establish specific behaviours. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
-<table style="width:100%">
-  <col width="150">
-  <tr>
-    <td><b> TM creation: </b></td>
-    <td> <li><br>1. Get a TM instance for a client.</li> </td>
-  </tr>
-  <tr>
-    <td><b>Safety conditions: </b></td>
-    <td><br> 
-    1. Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
-    2. Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
-    3. Reset traffic lights. 
+<table class ="defTable">
+<tbody>
+<td><b>TM creation:</b> </td>
+<td><br>
+    <b>1.</b> Get a TM instance for a client.</td>
+<tr>
+<td><b>Safety conditions:</b> </td>
+<td><br>
+    <b>1.</b> Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
+    <b>2.</b> Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
+    <b>3.</b> Reset traffic lights. 
+</td>
+<tr>
+<td><b>Collision managing:</b> </td>
+<td><br>
+    <b>1.</b> Enable/Disable collisions between a vehicle and a specific actor.  <br>
+    <b>2.</b> Make a vehicle ignore all the other vehicles. <br>
+    <b>3.</b> Make a vehicle ignore all the walkers.  <br>
+    <b>4.</b> Make a vehicle ignore all the traffic lights. 
+</td>
+<tr>
+<td><b>Lane changes:</b> </td>
+<td><br>
+    <b>1.</b> Force a lane change disregarding possible collisions. <br>
+    <b>2.</b> Enable/Disable lane changes for a vehicle.
     </td>
-  </tr>
-  <tr>
-    <td><b>Collision managing: </b></td>
-    <td><br>
-    1. Enable/Disable collisions between a vehicle and a specific actor.  <br>
-    2. Make a vehicle ignore all the other vehicles. <br>
-    3. Make a vehicle ignore all the walkers.  <br>
-    4. Make a vehicle ignore all the traffic lights. 
-    </td>
-  </tr>
-  <tr>
-    <td><b>Lane changes: </b></td>
-    <td><br>
-    1. Force a lane change disregarding possible collisions. <br>
-    2. Enable/Disable lane changes for a vehicle.  
-    </td>
-  </tr>
+</tbody>
 </table>
 <br>
 
-#### Creating a Traffic Manager
+### Creating a Traffic Manager
 
 A TM instance can be created by any [carla.Client](python_api.md#carla.Client) specifying the port that will be used. The default port is `8000`.  
 
@@ -138,7 +136,7 @@ batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, Tru
 traffic_manager.global_percentage_speed_difference(30.0)
 ```
 
-#### Setting a Traffic Manager
+### Setting a Traffic Manager
 
 The following example creates an instance of the TM and sets a dangerous behaviour for a specific car that will ignore all traffic lights, leave no safety distance with the rest and drive at 120% its current speed limit. 
 
@@ -168,7 +166,7 @@ for v in my_vehicles:
     Lane changes are currently disabled in the TM due to unintended collisions causing jams. As long as this issues are not fixed, vehicles will remain in the lane they are spawned and the methods to set lane changes will be disabled. 
 
 
-#### Stopping a Traffic Manager
+### Stopping a Traffic Manager
 
 The TM is not an actor that needs to be destroyed, it will stop when the corresponding client does so. This is automatically managed by the API so the user does not have to take care of it.  
 However, it is important that when shutting down a TM, the vehicles registered to it are destroyed. Otherwise, they will stop at place, as no one will be conducting them. The script `spawn_npc.py` does this automatically. 
@@ -179,7 +177,7 @@ However, it is important that when shutting down a TM, the vehicles registered t
 ---
 ## Multiclient and multiTM management
 
-#### Different Traffic Manager definitions 
+### Different Traffic Manager definitions 
 
 When working with different clients containing different TM, understanding inner implementation of the TM in the client-server architecture becomes specially relevant. There is one ruling these scenarios: __the port is the key__.  
 
@@ -208,7 +206,7 @@ tm04 = client04.get_trafficmanager(5000) # tm04(p=5000) --> tm02 (p=5000)
 
 The CARLA server keeps register of all the TM instances internally by storing the port and also the client IP (hidden to the user) that link to them. Right now there is no way to check the TM instances that have been created so far. A connection will always be attempted when trying to create an instance and it will either create a new __TM-Server__ or a __TM-Client__.  
 
-#### Multiclient VS MultiTM
+### Multiclient VS MultiTM
 
 Based on the different definitions for a TM, successfully creating a TM can lead to two different results:  
 
@@ -230,14 +228,14 @@ That creates a clear distinction between having multiple clients and multiple Tr
 
 The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time CARLA 0.9.8 is released: 
 
-#### FPS limitations
+### FPS limitations
 
 The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
 
 !!! Important
     The FPS limitations are specially relevant when working in the night mode. 
 
-#### Synchronous mode
+### Synchronous mode
 
 TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
 If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
