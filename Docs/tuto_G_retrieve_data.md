@@ -1,6 +1,6 @@
 # Retrieve simulation data
 
-Learning an efficient way to retrieve simulation data is essential in CARLA. This tutorial is advised for both, newcomers and more experienced users. It starts from the very beginning, creating a simulation with custom conditions, and spawning an ego vehicle with a sensor. Then it gradually dives into the recorder, how to query it, manage other sensors, and much more. 
+Learning an efficient way to retrieve simulation data is essential in CARLA. This tutorial is advised for both, newcomers and more experienced users. It starts from the very beginning, creating a simulation with custom conditions, and spawning a vehicle with a sensor. Then it gradually dives into the recorder, how to query it, manage other sensors, and much more. 
 
 * [__Overview__](#overview)  
 * [__Set the simulation__](#set-the-simulation)  
@@ -159,7 +159,7 @@ It is quite straightforward, as the intention is to keep things simple. This tut
 
 ### Spawn the ego vehicle
 
-The ego vehicle is usually the main actor of the simulation. Use any of the vehicle blueprints in the library. To differenciate it from the rest of vehicles, the attribute `role_name` is set to `ego`. There are other attributes that can be set, some with recommended values. In this case, the color will be changed at random to one of these. 
+Vehicles controlled by the user are referred as "ego". The attribute `role_name` is set to `ego` to differenciate them. Other attributes that can be set, some with recommended values. First, an ego vehicle will be spawned using any of the vehicle blueprints in the library. In this case, the color will be changed at random to one of these. 
 
 Call the map to get a list of spawn points recommended by the developers. Choose one of them, and use it to spawn the ego vehicle. 
 
@@ -204,7 +204,7 @@ ego_forward = ego_vehicle.get_transform().get_forward_vector()
 cam_rotation = carla.Rotation(0,180,0)
 cam_transform = carla.Transform(cam_location,cam_rotation)
 ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
-ego_cam.listen(lambda image: image.save_to_disk('/home/user/Desktop/tutorial/output/%.6d.png' % image.frame))
+ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/output/%.6d.png' % image.frame))
 ```
 
 ### Place the spectator
@@ -233,16 +233,14 @@ The [__recorder__](adv_recorder.md) can be started at anytime. The script does i
 # --------------
 # Start recording
 # --------------
-client.start_recorder('/home/user/Desktop/tutorial/recorder/recording01.log')
+client.start_recorder('~/tutorial/recorder/recording01.log')
 ```
 
 ### Capture data
 
-It is time to set the ego vehicle free. It could be manually controlled using `/PythonAPI/examples/manual_control.py`. However, the script uses the [__Traffic manager__](adv_traffic_manager.md) to move the vehicle around the map automatically, as the rest of vehicles. This saves the user having to worry about driving according to traffic regulations.  
+It is time to set the ego vehicle free. It could be manually controlled using `/PythonAPI/examples/manual_control.py`. However, the script enables the autopilot mode. The [Traffic Manager](adv_traffic_manager.md) will make it roam around the city automatically. 
 
-Enable the autopilot mode. As other autopilot vehicles have been previously spawned using __spawn_npc.py__, this script will client a __TM-Client__ that will connect to the __TM-Server__ created by __spawn_npc.py__. This is transparent to the user, but noted here for the sake of understanding. The Traffic Manager documentation dives deep into this matter. 
-
-Creating a loop will prevent the script from finishing until the user commands via terminal. The recorder will continue until then. Let the simulation run for a while, depending on the amount of data desired.  
+Create a loop to prevent the script from finishing until the user commands via terminal. The recorder will continue until then. Let the simulation run for a while, depending on the amount of data desired.  
 
 ```py
 # --------------
@@ -260,7 +258,7 @@ while True:
 
 ### Stop recording 
 
-Use `Ctrl+C` or quit the terminal. The script will stop the recorder, destroy the sensor and the ego vehicle, and finish.  
+A timeout can be added to the script. Right now, use `Ctrl+C` or quit the terminal to finish it. The script will stop the recorder, destroy the sensor and the ego vehicle, and finish.  
 
 ```py
 finally:
@@ -286,24 +284,30 @@ Close the simulation and any script runnning. It is time to dive into the last s
 
 ### Query the events
 
-The different queries are detaile in the [__recorder documentation__](adv_recorder.md). In summary, they retrieve different things.  
+The different queries are detailed in the [__recorder documentation__](adv_recorder.md). In summary, they retrieve different things.  
 
 * A log of the most important events in the recording or in every frame. 
 * A log of the actors blocked. Those that do not move a minimum distance in a certain time. 
 * A log of the collisions registered by [collision sensors](ref_sensors.md#collision-detector). 
 
-Use these to study the recording and find moments of remarkable interest. The file info is also useful to identify the ego vehicle, or any actor, with its ID.  
+Run a new simulation. 
+
+```sh
+./CarlaUE4.sh
+```
+
+Use the queries to study the recording. Find moments of remarkable interest. The file info is also useful to identify the ego vehicle, or any actor, with its ID.  
 
 ```py
 # --------------
 # Query the recording
 # --------------
 # Show only the most important events in the recording.  
-print(client.show_recorder_file_info("/home/adas/Desktop/tutorial/recorder/recording01.log",False))
+print(client.show_recorder_file_info("~/tutorial/recorder/recording01.log",False))
 # Show actors not moving 1 meter in 10 seconds.  
-print(client.show_recorder_actors_blocked("/home/adas/Desktop/tutorial/recorder/recording01.log",10,1))
-# Show collisions between any type of actor.  
-print(client.show_recorder_collisions("/home/adas/Desktop/tutorial/recorder/recording01.log",v,a))
+print(client.show_recorder_actors_blocked("~/tutorial/recorder/recording01.log",10,1))
+# Filter collisions between vehicles 'v' and 'a' any other type of actor.  
+print(client.show_recorder_collisions("~/tutorial/recorder/recording01.log",v,a))
 ```
 
 !!! Note
@@ -319,7 +323,7 @@ Use this time to investigate. Play different fragments, follow different actors,
 # --------------
 # Reenact a fragment of the recording
 # --------------
-client.replay_file("/home/adas/Desktop/tutorial/recorder/recording01.log",45,10,0) #310=ego,  237=blocked at 53 for 42
+client.replay_file("~/tutorial/recorder/recording01.log",45,10,0) #310=ego,  237=blocked at 53 for 42
 # Set the ego vehicle, as this will be needed for the rest 
 ego_vehicle = world.get_actor(310)
 ```
@@ -329,9 +333,9 @@ ego_vehicle = world.get_actor(310)
 
 ### Add new sensors
 
-It is time to retrieve more data, as much as desired. Choose any other sensor and spawn it attached to the ego vehicle. The recording ensures the same conditions as the original simulation, so the information will be consistent between different playbacks.  
+The recorder will recreate in this simulation, the exact same conditions as the original. That ensures consistent data within different playbacks. Choose any other sensor and spawn it attached to the ego vehicle. 
 
-The process is exactly the same as before, it only changes depending on the specific needs of teh sensor. Take a look at the [sensor reference]. The script provides as example a semantic segmentation camera. 
+The process is exactly the same as before, it only changes depending on the specific needs of the sensor. Take a look at the [sensor reference](ref_sensors.md). The script provides as example a semantic segmentation camera. 
 
 ```py
 # --------------
@@ -345,7 +349,7 @@ sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
 sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
 # This time, a color converter is applied to the image, to get the semantic segmentation view
-sem_cam.listen(lambda image: image.save_to_disk('/home/user/Desktop/tutorial/rec_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
+sem_cam.listen(lambda image: image.save_to_disk('~/tutorial/rec_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
 ```
 
 ### Change conditions
