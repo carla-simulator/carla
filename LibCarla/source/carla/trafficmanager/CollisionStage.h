@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "boost/geometry.hpp"
+#include "boost/geometry/geometries/geometries.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
 #include "boost/pointer_cast.hpp"
@@ -43,6 +44,7 @@ namespace traffic_manager {
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using Point2D = bg::model::point<double, 2, bg::cs::cartesian>;
   using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
   using LocationList = std::vector<cg::Location>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;

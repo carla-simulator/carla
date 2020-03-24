@@ -22,13 +22,13 @@ namespace CollisionStageConstants {
   static const float BOUNDARY_EXTENSION_1 = 12.0f;
   static const float BOUNDARY_EXTENSION_2 = 7.0f;
   static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
-  static const float BOUNDARY_EDGE_LENGTH = 2.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float MIN_COLLISION_RADIUS = 15.0f;
   static const float WALKER_TIME_EXTENSION = 1.5f;
   static const float EPSILON_VELOCITY = 0.1f;
   static const float INTER_BBOX_DISTANCE_THRESHOLD = 0.3f;
   static const float SQUARE_ROOT_OF_TWO = 1.414f;
+  static const float COS_10_DEGREES = 0.9848f;
 } // namespace CollisionStageConstants
 
   using namespace CollisionStageConstants;
@@ -75,6 +75,10 @@ namespace CollisionStageConstants {
       const Actor ego_actor = data.actor;
       const ActorId ego_actor_id = ego_actor->GetId();
       const cg::Location ego_location = ego_actor->GetLocation();
+
+      ////////////////////////// DEBUG /////////////////////////////
+      // DrawBoundary(GetGeodesicBoundary(ego_actor, ego_location));
+      //////////////////////////////////////////////////////////////
 
       const SimpleWaypointPtr& closest_point = data.closest_waypoint;
       const SimpleWaypointPtr& junction_look_ahead = data.junction_look_ahead_waypoint;
@@ -270,27 +274,17 @@ namespace CollisionStageConstants {
   }
 
   traffic_manager::Polygon CollisionStage::GetPolygon(const LocationList &boundary) {
-    snippet_profiler.MeasureExecutionTime("GetPolygon", true);
 
-    snippet_profiler.MeasureExecutionTime("WKT String Building", true);
-    std::string boundary_polygon_wkt;
-    for (const cg::Location &location: boundary) {
-      boundary_polygon_wkt += std::to_string(location.x) + " " + std::to_string(location.y) + ",";
-    }
-    boundary_polygon_wkt += std::to_string(boundary[0].x) + " " + std::to_string(boundary[0].y);
-    snippet_profiler.MeasureExecutionTime("WKT String Building", false);
-
-    snippet_profiler.MeasureExecutionTime("Boost Polygon Initialization", true);
     traffic_manager::Polygon boundary_polygon;
-    bg::read_wkt("POLYGON((" + boundary_polygon_wkt + "))", boundary_polygon);
-    snippet_profiler.MeasureExecutionTime("Boost Polygon Initialization", false);
+    for (const cg::Location &location: boundary) {
+      bg::append(boundary_polygon.outer(), Point2D(location.x, location.y));
+    }
+    bg::append(boundary_polygon.outer(), Point2D(boundary.front().x, boundary.front().y));
 
-    snippet_profiler.MeasureExecutionTime("GetPolygon", false);
     return boundary_polygon;
   }
 
   LocationList CollisionStage::GetGeodesicBoundary(const Actor &actor, const cg::Location &vehicle_location) {
-    snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", true);
     if (geodesic_boundaries.find(actor->GetId()) != geodesic_boundaries.end()) {
       return geodesic_boundaries.at(actor->GetId());
     }
@@ -334,9 +328,9 @@ namespace CollisionStageConstants {
           reached_distance = true;
         }
 
-        if (boundary_end == nullptr ||
-            boundary_end->DistanceSquared(current_point) > std::pow(BOUNDARY_EDGE_LENGTH, 2) ||
-            reached_distance) {
+        if (boundary_end == nullptr
+            || cg::Math::Dot(boundary_end->GetForwardVector(), current_point->GetForwardVector()) < COS_10_DEGREES
+            || reached_distance) {
 
           const cg::Vector3D heading_vector = current_point->GetForwardVector();
           const cg::Location location = current_point->GetLocation();
@@ -366,12 +360,10 @@ namespace CollisionStageConstants {
       geodesic_boundary.insert(geodesic_boundary.end(), left_boundary.begin(), left_boundary.end());
 
       geodesic_boundaries.insert({actor->GetId(), geodesic_boundary});
-      snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", false);
       return geodesic_boundary;
     } else {
 
       geodesic_boundaries.insert({actor->GetId(), bbox});
-      snippet_profiler.MeasureExecutionTime("GetGeodesicBoundary", false);
       return bbox;
     }
 
