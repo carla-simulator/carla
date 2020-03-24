@@ -76,10 +76,6 @@ namespace CollisionStageConstants {
       const ActorId ego_actor_id = ego_actor->GetId();
       const cg::Location ego_location = ego_actor->GetLocation();
 
-      ////////////////////////// DEBUG /////////////////////////////
-      // DrawBoundary(GetGeodesicBoundary(ego_actor, ego_location));
-      //////////////////////////////////////////////////////////////
-
       const SimpleWaypointPtr& closest_point = data.closest_waypoint;
       const SimpleWaypointPtr& junction_look_ahead = data.junction_look_ahead_waypoint;
       const std::vector<std::pair<ActorId, Actor>>& collision_candidates = data.overlapping_actors;
@@ -309,8 +305,9 @@ namespace CollisionStageConstants {
       const float length = vehicle->GetBoundingBox().extent.x*2;
 
       SimpleWaypointPtr boundary_start = waypoint_buffer.front();
+      SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
       uint64_t boundary_start_index = 0u;
-      while (boundary_start->DistanceSquared(vehicle_location) < std::pow(length, 2) &&
+      while (boundary_start->DistanceSquared(front_waypoint) < std::pow(length, 2) &&
              boundary_start_index < waypoint_buffer.size() -1) {
         boundary_start = waypoint_buffer.at(boundary_start_index);
         ++boundary_start_index;
@@ -324,7 +321,8 @@ namespace CollisionStageConstants {
       bool reached_distance = false;
       for (uint64_t j = boundary_start_index; !reached_distance && (j < waypoint_buffer.size()); ++j) {
 
-        if (boundary_start->DistanceSquared(current_point) > std::pow(bbox_extension, 2)) {
+        if (boundary_start->DistanceSquared(current_point) > std::pow(bbox_extension, 2)
+            || j == waypoint_buffer.size() - 1) {
           reached_distance = true;
         }
 
@@ -492,19 +490,15 @@ GeometryComparisonCache CollisionStage:: GetGeometryBetweenActors(const Actor &r
     return mCache;
    }
 
-  snippet_profiler.MeasureExecutionTime("Polygon Construction", true);
   const Polygon reference_geodesic_polygon = GetPolygon(GetGeodesicBoundary(reference_vehicle, reference_location));
   const Polygon other_geodesic_polygon = GetPolygon(GetGeodesicBoundary(other_vehicle, other_location));
   const Polygon reference_polygon = GetPolygon(GetBoundary(reference_vehicle, reference_location));
   const Polygon other_polygon = GetPolygon(GetBoundary(other_vehicle, other_location));
-  snippet_profiler.MeasureExecutionTime("Polygon Construction", false);
 
-  snippet_profiler.MeasureExecutionTime("Compare Geometry", true);
   const double reference_vehicle_to_other_geodesic = bg::distance(reference_polygon, other_geodesic_polygon);
   const double other_vehicle_to_reference_geodesic = bg::distance(other_polygon, reference_geodesic_polygon);
   const auto inter_geodesic_distance = bg::distance(reference_geodesic_polygon, other_geodesic_polygon);
   const auto inter_bbox_distance = bg::distance(reference_polygon, other_polygon);
-  snippet_profiler.MeasureExecutionTime("Compare Geometry", false);
 
   GeometryComparisonCache mRetCache = {reference_vehicle_to_other_geodesic,
                                         other_vehicle_to_reference_geodesic,
