@@ -178,35 +178,54 @@ namespace LocalizationConstants {
       }
 
       ///WIP - Waypoint Binning
+      std::vector<SimpleWaypointPtr> mWayPointBufferOrig;
       std::vector<SimpleWaypointPtr> mWayPointBuffer = GetBufferByDistance(waypoint_buffer,horizon_size);
-      for(auto &iWayPt : mWayPointBuffer)
-      {
-        PushWaypoint(waypoint_buffer, actor_id, iWayPt);
-        track_traffic.UpdatePassingVehicle(iWayPt->GetId(), actor_id);
-      }
-
-      // // Populating the buffer.
-      // while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-      //     <= std::pow(horizon_size, 2)) {
-
-      //   std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
-      //   uint64_t selection_index = 0u;
-      //   // Pseudo-randomized path selection if found more than one choice.
-      //   if (next_waypoints.size() > 1) {
-      //     selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
-      //   }
-      //   SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
-      //   if (next_wp == nullptr) {
-      //     for (auto& wp: next_waypoints) {
-      //       if (wp != nullptr) {
-      //         next_wp = wp;
-      //         break;
-      //       }
-      //     }
-      //   }
-      //   PushWaypoint(waypoint_buffer, actor_id, next_wp);
+      // for(auto &iWayPt : mWayPointBuffer)
+      // {
+      //   PushWaypoint(waypoint_buffer, actor_id, iWayPt);
+      //  // track_traffic.UpdatePassingVehicle(iWayPt->GetId(), actor_id);
       // }
 
+      /// Retaining the Original Code for DEBUGGING purpose . Will be removed later
+      // Populating the buffer.
+      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
+          <= std::pow(horizon_size, 2)) {
+
+        std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+        uint64_t selection_index = 0u;
+        // Pseudo-randomized path selection if found more than one choice.
+        if (next_waypoints.size() > 1) {
+          selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
+        }
+        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
+        if (next_wp == nullptr) {
+          for (auto& wp: next_waypoints) {
+            if (wp != nullptr) {
+              next_wp = wp;
+              break;
+            }
+          }
+        }
+         mWayPointBufferOrig.emplace_back(next_wp);
+        PushWaypoint(waypoint_buffer, actor_id, next_wp);
+      }
+      size_t size_o = mWayPointBufferOrig.size();
+      size_t size_c  = mWayPointBuffer.size();
+      std:: cout << "Original Size -> " << size_o << "Computed Size ->" << size_c <<std::endl;
+      for ( auto o:mWayPointBufferOrig)
+      {
+        const cg::Location loc1 = o->GetLocation();
+        std::cout<< loc1.x << " " << loc1.y << " " <<  loc1.z << std::endl;
+      }
+      std::cout <<  "Printing computed Coordinatea" << std::endl;
+      for ( auto o1:mWayPointBuffer)
+      {
+        const cg::Location loc1 = o1->GetLocation();
+        std::cout<< loc1.x << " " << loc1.y << " " <<  loc1.z << std::endl;
+      }
+
+      /// DEBUGGING Code Ends
+      
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
 
@@ -811,13 +830,15 @@ namespace LocalizationConstants {
         if (next_waypoints.size() > 1) {
           selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
         }
-        if (next_waypoints.at(selection_index) == nullptr) {
+        SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
+        if (next_wp == nullptr) {
           for (auto& wp: next_waypoints) {
             if (wp != nullptr) {
-               mWayPointBuffer.emplace_back(wp);
+               next_wp = wp;
             }
           }
         }
+        mWayPointBuffer.emplace_back(next_wp);
       }
    return mWayPointBuffer;
   }
