@@ -53,6 +53,7 @@ def get_libcarla_extensions():
             if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
                 print('Building AD RSS variant.')
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
+                extra_compile_args += ['-DLIBCARLA_PYTHON_MAJOR_' +  str(sys.version_info[0])]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info[0]) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info[0]) + '.a')]

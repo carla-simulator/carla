@@ -198,12 +198,6 @@ static auto MakeCallback(boost::python::object callback) {
 
 #ifdef LIBCARLA_RSS_ENABLED
 #include "AdRss.cpp"
-extern "C" {
-  void initlibad_physics_python();
-  void initlibad_rss_python();
-  void initlibad_map_access_python();
-  void initlibad_rss_map_integration_python();
-}
 #endif
 
 
@@ -226,10 +220,6 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_commands();
   export_trafficmanager();
 # ifdef LIBCARLA_RSS_ENABLED
-  initlibad_physics_python();
-  initlibad_rss_python();
-  initlibad_map_access_python();
-  initlibad_rss_map_integration_python();
   export_ad_rss();
 # endif
 }
