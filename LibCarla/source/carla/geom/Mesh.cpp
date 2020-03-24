@@ -37,11 +37,11 @@ namespace geom {
     return true;
   }
 
-  /// 0   2   4   6
-  /// #---#---#---#
-  /// | / | / | / |
-  /// #---#---#---#
-  /// 1   3   5   7
+  // 1   3   5   7
+  // #---#---#---#
+  // | / | / | / |
+  // #---#---#---#
+  // 2   4   6   8
   void Mesh::AddTriangleStrip(const std::vector<Mesh::vertex_type> &vertices) {
     DEBUG_ASSERT(vertices.size() >= 3);
     size_t i = GetVerticesNum() + 2;
@@ -62,22 +62,25 @@ namespace geom {
     }
   }
 
-  ///   5   4
-  ///   #---#
-  ///   | / |
-  /// 0 #---# 3
-  ///   | \ |
-  ///   #---#
-  ///   1   2
-  // void Mesh::AddTriangleFan(const std::vector<Mesh::vertex_type> &vertices) {
-  //   AddVertices(vertices);
-  //   for (size_t i = 2; i < vertices.size(); ++i) {
-  //     AddIndex(0);
-  //     AddIndex(i-1);
-  //     AddIndex(i);
-  //   }
-  //   return result;
-  // }
+  //   6   5
+  //   #---#
+  //   | / |
+  // 1 #---# 4
+  //   | \ |
+  //   #---#
+  //   2   3
+  void Mesh::AddTriangleFan(const std::vector<Mesh::vertex_type> &vertices) {
+    DEBUG_ASSERT(vertices.size() >= 3);
+    const size_t initial_index = GetVerticesNum() + 1;
+    size_t i = GetVerticesNum() + 2;
+    AddVertices(vertices);
+    while (i < GetVerticesNum()) {
+      AddIndex(initial_index);
+      AddIndex(i);
+      AddIndex(i + 1);
+      ++i;
+    }
+  }
 
   void Mesh::AddVertex(vertex_type vertex) {
     _vertices.push_back(vertex);
@@ -174,9 +177,9 @@ namespace geom {
         }
 
         // Add the actual face using the 3 consecutive indices
-        out << "f " << *it + 1; ++it;
-        out << " " << *it + 1; ++it;
-        out << " " << *it + 1 << std::endl; ++it;
+        out << "f " << *it; ++it;
+        out << " " << *it; ++it;
+        out << " " << *it << std::endl; ++it;
 
         index_counter += 3;
       }
@@ -268,32 +271,22 @@ namespace geom {
 
   Mesh &Mesh::operator+=(const Mesh &rhs) {
     const size_t v_num = GetVerticesNum();
-    std::cout << "called operator+=(const Mesh &rhs)" << std::endl;
 
-    std::cout << "  initial Mesh vertex num: " << GetVerticesNum() << std::endl;
     _vertices.insert(
         _vertices.end(),
         rhs.GetVertices().begin(),
         rhs.GetVertices().end());
-    std::cout << "  final   Mesh vertex num: " << GetVerticesNum() << std::endl;
 
     _normals.insert(
         _normals.end(),
         rhs.GetNormals().begin(),
         rhs.GetNormals().end());
 
-    // std::transform(
-    //     rhs.GetIndexes().begin(),
-    //     rhs.GetIndexes().end(),
-    //     std::back_inserter(_indexes),
-    //     [=](size_t index) {return index + v_num;});
-
-    std::cout << "  initial Mesh index num: " << GetIndexes().size() << std::endl;
-    for (auto in : rhs.GetIndexes()) {
-      std::cout << "    added index: " << in + v_num << std::endl;
-      _indexes.emplace_back(in + v_num);
-    }
-    std::cout << "  final   Mesh index num: " << GetIndexes().size() << std::endl;
+    std::transform(
+        rhs.GetIndexes().begin(),
+        rhs.GetIndexes().end(),
+        std::back_inserter(_indexes),
+        [=](size_t index) {return index + v_num;});
 
     _uvs.insert(
         _uvs.end(),
@@ -318,7 +311,6 @@ namespace geom {
   // }
 
   Mesh operator+(const Mesh &lhs, const Mesh &rhs) {
-    std::cout << "called operator+(const Mesh &lhs, const Mesh &rhs)" << std::endl;
     Mesh m = lhs;
     return m += rhs;
   }
