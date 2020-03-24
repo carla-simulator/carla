@@ -941,34 +941,6 @@ namespace road {
     return _data.GetJunction(id);
   }
 
-  static void ExtrudeMeshEdge(
-      geom::Mesh &mesh,
-      geom::Vector3D new_vertex1,
-      geom::Vector3D new_vertex2,
-      size_t connection_index_1,
-      size_t connection_index_2) {
-    // Add the vertices
-    mesh.AddVertex(new_vertex1);
-    mesh.AddVertex(new_vertex2);
-
-    // Find the indexes
-    const size_t last_index = mesh.GetLastVertexIndex();
-    const size_t bottom_left_index = connection_index_1;  // local quad index: 1
-    const size_t bottom_right_index = connection_index_2; // local quad index: 2
-    const size_t top_left_index = last_index - 1;         // local quad index: 3
-    const size_t top_right_index = last_index;            // local quad index: 4
-
-    // Vertex order is counter clockwise:
-    // First triangle: 1 -> 2 -> 4
-    mesh.AddIndex(bottom_left_index);  // local quad index: 1
-    mesh.AddIndex(bottom_right_index); // local quad index: 2
-    mesh.AddIndex(top_right_index);    // local quad index: 4
-    // Second triangle: 1 -> 4 -> 3
-    mesh.AddIndex(bottom_left_index);  // local quad index: 1
-    mesh.AddIndex(top_right_index);    // local quad index: 4
-    mesh.AddIndex(top_left_index);     // local quad index: 3
-  }
-
   /// Computes the location of the edges of the current lane at the current waypoint
   static std::pair<geom::Vector3D, geom::Vector3D> GetWaypointCornerPositions(
       const Map &map, const Waypoint &waypoint, const Lane &lane) {
@@ -1016,42 +988,29 @@ namespace road {
               lane.GetId(),
               lane_section.GetDistance() + EPSILON };
 
-          if (lane.GetType() == Lane::LaneType::Sidewalk) {
-            out_mesh.AddMaterial("sidewalk");
-          } else {
-            out_mesh.AddMaterial("road");
-          }
+          // Iterate over the lane distance and store the vertices based on it's width
+          std::vector<geom::Vector3D> vertices;
+          do {
+            // Get the location of the edges of the current lane at the current waypoint
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            vertices.push_back(edges.first);
+            vertices.push_back(edges.second);
 
-          std::pair<geom::Vector3D, geom::Vector3D> edges;
-          if (!IsLaneStraight(lane)) {
-            do {
-              // Get the location of the edges of the current lane at the current waypoint
-              edges = GetWaypointCornerPositions(*this, current_wp, lane);
-              if (out_mesh.GetVerticesNum() < 2) {
-                // Add 2 first vertices only
-                out_mesh.AddVertex(edges.first);
-                out_mesh.AddVertex(edges.second);
-              } else {
-                // Extrude adding vertices and joining the using indices
-                const size_t last_index = out_mesh.GetLastVertexIndex();
-                ExtrudeMeshEdge(
-                    out_mesh, edges.first, edges.second, last_index - 1, last_index);
-              }
+            // Update the current waypoint's "s"
+            current_wp.s += distance;
+          } while(current_wp.s < end_distance);
 
-              // Update the current waypoint's "s"
-              current_wp.s += distance;
-
-            } while(current_wp.s < end_distance);
-          }
-          // This ensures the mesh is constant and have no gaps between
-          // segments and roads
+          // This ensures the mesh is constant and have no gaps between roads
           if (end_distance - (current_wp.s - distance) > EPSILON) {
             current_wp.s = end_distance;
-            edges = GetWaypointCornerPositions(*this, current_wp, lane);
-            const size_t last_index = out_mesh.GetLastVertexIndex();
-            ExtrudeMeshEdge(
-                out_mesh, edges.first, edges.second, last_index - 1, last_index);
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            vertices.push_back(edges.first);
+            vertices.push_back(edges.second);
           }
+          // Add the adient material, create the strip and close the material
+          out_mesh.AddMaterial(
+              lane.GetType() == Lane::LaneType::Sidewalk ? "sidewalk" : "road");
+          out_mesh.AddTriangleStrip(vertices);
           out_mesh.EndMaterial();
         }
       }

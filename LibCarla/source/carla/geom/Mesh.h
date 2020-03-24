@@ -134,7 +134,6 @@ namespace geom {
 
     /// Merges two meshes into a single mesh
     Mesh &operator+=(const Mesh &rhs);
-    Mesh &operator+(const Mesh &rhs);
 
     friend Mesh operator+(const Mesh &lhs, const Mesh &rhs);
 
@@ -153,18 +152,6 @@ namespace geom {
     std::vector<uv_type> _uvs;
 
     std::vector<material_type> _materials;
-
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-
-    // Location(const FVector &vector) // from centimeters to meters.
-    //   : Location(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
-
-    // operator FVector() const {
-    //   return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
-    // }
-
-#endif // LIBCARLA_INCLUDED_FROM_UE4
-
   };
 
 } // namespace geom
