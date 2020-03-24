@@ -10,6 +10,24 @@
 #include <ad/rss/world/RssDynamics.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#ifdef LIBCARLA_PYTHON_MAJOR_2
+extern "C" {
+  void initlibad_physics_python();
+  void initlibad_rss_python();
+  void initlibad_map_access_python();
+  void initlibad_rss_map_integration_python();
+}
+#endif
+
+#ifdef LIBCARLA_PYTHON_MAJOR_3
+extern "C" {
+  void PyInit_libad_physics_python();
+  void PyInit_libad_rss_python();
+  void PyInit_libad_map_access_python();
+  void PyInit_libad_rss_map_integration_python();
+}
+#endif
+
 namespace carla {
 namespace rss {
 
@@ -61,6 +79,22 @@ static auto GetVisualizationMode(const carla::client::RssSensor &self) {
 }
 
 void export_ad_rss() {
+
+#ifdef LIBCARLA_PYTHON_MAJOR_2
+  initlibad_physics_python();
+  initlibad_rss_python();
+  initlibad_map_access_python();
+  initlibad_rss_map_integration_python();
+#endif
+
+#ifdef LIBCARLA_PYTHON_MAJOR_3
+  PyInit_libad_physics_python();
+  PyInit_libad_rss_python();
+  PyInit_libad_map_access_python();
+  PyInit_libad_rss_map_integration_python();
+#endif
+
+
   using namespace boost::python;
   namespace cc = carla::client;
   namespace cs = carla::sensor;
