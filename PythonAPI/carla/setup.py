@@ -13,11 +13,12 @@ import os
 import platform
 import sys
 
+
 def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
 
     library_dirs = ['dependencies/lib']
-    libraries = ['jpeg', 'tiff']
+    libraries = []
 
 
     sources = ['source/libcarla/libcarla.cpp']
@@ -74,9 +75,10 @@ def get_libcarla_extensions():
 
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
+                extra_link_args += ['-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
             else:
-                libraries += ['png']
+                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
