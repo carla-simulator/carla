@@ -176,45 +176,45 @@ class World(object):
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
 
         if self.external_actor:
-          # Check whether there is already an actor with defined role name
-          for actor in self.world.get_actors():
-            if actor.attributes.get('role_name') == self.actor_role_name:
-              self.player = actor;
-              break;
+            # Check whether there is already an actor with defined role name
+            for actor in self.world.get_actors():
+                if actor.attributes.get('role_name') == self.actor_role_name:
+                    self.player = actor
+                    break
         else:
-          # Get a random blueprint.
-          blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-          blueprint.set_attribute('role_name', self.actor_role_name)
-          if blueprint.has_attribute('color'):
-              color = random.choice(blueprint.get_attribute('color').recommended_values)
-              blueprint.set_attribute('color', color)
-          if blueprint.has_attribute('driver_id'):
-              driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
-              blueprint.set_attribute('driver_id', driver_id)
-          if blueprint.has_attribute('is_invincible'):
-              blueprint.set_attribute('is_invincible', 'true')
-          # Spawn the player.
-          if self.player is not None:
-              spawn_point = self.player.get_transform()
-              spawn_point.location.z += 2.0
-              spawn_point.rotation.roll = 0.0
-              spawn_point.rotation.pitch = 0.0
-              self.destroy()
-              self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-          while self.player is None:
-              spawn_points = self.map.get_spawn_points()
-              spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-              self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            # Get a random blueprint.
+            blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+            blueprint.set_attribute('role_name', self.actor_role_name)
+            if blueprint.has_attribute('color'):
+                color = random.choice(blueprint.get_attribute('color').recommended_values)
+                blueprint.set_attribute('color', color)
+            if blueprint.has_attribute('driver_id'):
+                driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
+                blueprint.set_attribute('driver_id', driver_id)
+            if blueprint.has_attribute('is_invincible'):
+                blueprint.set_attribute('is_invincible', 'true')
+            # Spawn the player.
+            if self.player is not None:
+                spawn_point = self.player.get_transform()
+                spawn_point.location.z += 2.0
+                spawn_point.rotation.roll = 0.0
+                spawn_point.rotation.pitch = 0.0
+                self.destroy()
+                self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            while self.player is None:
+                spawn_points = self.map.get_spawn_points()
+                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+                self.player = self.world.try_spawn_actor(blueprint, spawn_point)
 
         if self.external_actor:
-          ego_sensors = []
-          for actor in self.world.get_actors():
-            if actor.parent == self.player:
-              ego_sensors.append(actor)
+            ego_sensors = []
+            for actor in self.world.get_actors():
+                if actor.parent == self.player:
+                    ego_sensors.append(actor)
 
-          for ego_sensor in ego_sensors:
-            if ego_sensor is not None:
-                ego_sensor.destroy()
+            for ego_sensor in ego_sensors:
+                if ego_sensor is not None:
+                    ego_sensor.destroy()
 
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
@@ -355,10 +355,10 @@ class KeyboardControl(object):
                 elif event.key == K_b:
                     if self._world and self._world.rss_sensor:
                         if self._world.rss_sensor.sensor.road_boundaries_mode == carla.RoadBoundariesMode.Off:
-                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On;
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
                             print("carla.RoadBoundariesMode.On")
                         else:
-                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.Off;
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.Off
                             print("carla.RoadBoundariesMode.Off")
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
@@ -378,7 +378,7 @@ class KeyboardControl(object):
                         world.hud.notification('Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
-                prev_steer_cache = self._steer_cache;
+                prev_steer_cache = self._steer_cache
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
                 vehicle_control = self._control
@@ -388,7 +388,7 @@ class KeyboardControl(object):
                 #limit speed to 30kmh
                 v = self._world.player.get_velocity()
                 if (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)) > 30.0:
-                  self._control.throttle = 0
+                    self._control.throttle = 0
 
                 #if self._world.rss_sensor and self._world.rss_sensor.ego_dynamics_on_route and not self._world.rss_sensor.ego_dynamics_on_route.ego_center_within_route:
                 #    print ("Not on route!" +  str(self._world.rss_sensor.ego_dynamics_on_route))
@@ -402,7 +402,7 @@ class KeyboardControl(object):
                             vehicle_control = self._restrictor.restrict_vehicle_control(vehicle_control, rss_restriction, rss_ego_dynamics_on_route, vehicle_physics)
                         world.hud.restricted_vehicle_control = vehicle_control
                         if world.hud.original_vehicle_control.steer != world.hud.restricted_vehicle_control.steer:
-                          self._steer_cache = prev_steer_cache
+                            self._steer_cache = prev_steer_cache
 
                 world.player.apply_control(vehicle_control)
 
@@ -779,7 +779,7 @@ class RssSensor(object):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
         weak_self = weakref.ref(self)
         self.sensor.visualize_results = True
-        self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On;
+        self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
         self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
 
     @staticmethod
