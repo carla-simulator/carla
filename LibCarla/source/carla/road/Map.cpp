@@ -1063,64 +1063,34 @@ namespace road {
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
 
-    // const std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
-
-    // todo: delete this
-    std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
-    std::transform(
-        crosswalk_vertex.begin(), crosswalk_vertex.end(), crosswalk_vertex.begin(),
-        [=](auto trans) {return trans + geom::Location(0, 0, 1);});
-    //
-
+    // Get the crosswalk vertices for the current map
+    const std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
     if (crosswalk_vertex.empty()) {
       return out_mesh;
     }
 
-    // Create a a list of triangle Fans with material "sidewalk"
+    // Create a a list of triangle fans with material "sidewalk"
     out_mesh.AddMaterial("sidewalk");
     size_t start_vertex_index = 0;
-    size_t fan_index = 1;
-
-    size_t initial_v = 0;
-    out_mesh.AddVertex(crosswalk_vertex[0]);
-
-    std::cout << "v " << 0 << std::endl;
-
-    for (size_t i = 1; i < crosswalk_vertex.size(); ++i) {
-      if (crosswalk_vertex[start_vertex_index] == crosswalk_vertex[i]) {
-        // If is the last vertex of the list, is done
-        std::cout << "fan done" << std::endl;
-        if (i >= crosswalk_vertex.size() - 1 ) {
-          std::cout << "all fan done" << std::endl;
+    size_t i = 0;
+    std::vector<geom::Vector3D> vertices;
+    // Iterate the vertices until a repeated one is found, this indicates
+    // the triangle fan is done and another one must start
+    do {
+      // Except for the first iteration && triangle fan done
+      if (i != 0 && crosswalk_vertex[start_vertex_index] == crosswalk_vertex[i]) {
+        // Create the actual fan
+        out_mesh.AddTriangleFan(vertices);
+        vertices.clear();
+        // End the loop if i reached the end of the vertex list
+        if (i >= crosswalk_vertex.size() - 1) {
           break;
         }
         start_vertex_index = ++i;
-        fan_index = 0;
-        initial_v = out_mesh.GetVerticesNum();
       }
-
-      out_mesh.AddVertex(crosswalk_vertex[i]);
-
-      std::cout << "current vertex: " << out_mesh.GetVerticesNum() - 1 << std::endl;
-
-      if (fan_index >= 2) {
-        // Vertex order is counter clockwise
-
-        // @todo Fix wrong index! It is using the raw index and it should
-        //  depend on start_vertex_index, something like:
-        out_mesh.AddIndex(initial_v);
-        out_mesh.AddIndex(out_mesh.GetVerticesNum() - 2);
-        out_mesh.AddIndex(out_mesh.GetVerticesNum() - 1);
-
-        // instead of
-        // out_mesh.AddIndex(start_vertex_index);
-        // out_mesh.AddIndex(i - 1);
-        // out_mesh.AddIndex(i);
-
-        std::cout << "  " << initial_v << " " << out_mesh.GetVerticesNum() - 2 << " " << out_mesh.GetVerticesNum() - 1 << std::endl;
-      }
-      ++fan_index;
-    }
+      // Append a new Vector3D that will be added to the triangle fan
+      vertices.push_back(crosswalk_vertex[i++]);
+    } while (i < crosswalk_vertex.size());
 
     out_mesh.EndMaterial();
     return out_mesh;
