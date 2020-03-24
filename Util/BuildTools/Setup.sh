@@ -117,9 +117,9 @@ else
     EXTRA_B2_ARGS="--ignore-user-config"
   fi
 
-  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
+  ./b2 "${EXTRA_B2_ARGS}" toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j "${CARLA_BUILD_CONCURRENCY}" stage release
+  ./b2 "${EXTRA_B2_ARGS}" toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j "${CARLA_BUILD_CONCURRENCY}" install
+  ./b2 "${EXTRA_B2_ARGS}" toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j "${CARLA_BUILD_CONCURRENCY}" --clean-all
 
   # Get rid of  python2 build artifacts completely & do a clean build for python3
   popd >/dev/null
@@ -149,10 +149,11 @@ else
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
   else
     echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
+    EXTRA_B2_ARGS="--ignore-user-config"
   fi
 
-  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 ${EXTRA_B2_ARGS} toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+  ./b2 "${EXTRA_B2_ARGS}" toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j "${CARLA_BUILD_CONCURRENCY}" stage release
+  ./b2 "${EXTRA_B2_ARGS}" toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j "${CARLA_BUILD_CONCURRENCY}" install
 
   popd >/dev/null
 
