@@ -51,6 +51,8 @@ namespace traffic_manager {
 
     void UpdateGridPosition(const ActorId actor_id, const Buffer& buffer);
     void UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint);
+    /// Method to return the wayPoints from the waypoint Buffer by using target point distance
+    SimpleWaypointPtr GetTargetWaypoint(Buffer& waypoint_buffer, const float& target_point_distance, uint64_t& index);
 
     ActorIdSet GetOverlappingVehicles(ActorId actor_id);
     /// Method to delete actor data from tracking.
