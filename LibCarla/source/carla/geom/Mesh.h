@@ -68,8 +68,10 @@ namespace geom {
     // -- Mesh build methods ---------------------------------------------------
     // =========================================================================
 
+    /// Adds a triangle strip to the mesh, vertex order is counterclockwise.
     void AddTriangleStrip(const std::vector<vertex_type> &vertices);
 
+    /// Adds a triangle fan to the mesh, vertex order is counterclockwise.
     void AddTriangleFan(const std::vector<vertex_type> &vertices);
 
     /// Appends a vertex to the vertices list.
@@ -151,6 +153,17 @@ namespace geom {
     std::vector<uv_type> _uvs;
 
     std::vector<material_type> _materials;
+
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+
+    // Location(const FVector &vector) // from centimeters to meters.
+    //   : Location(1e-2f * vector.X, 1e-2f * vector.Y, 1e-2f * vector.Z) {}
+
+    // operator FVector() const {
+    //   return FVector{1e2f * x, 1e2f * y, 1e2f * z}; // from meters to centimeters.
+    // }
+
+#endif // LIBCARLA_INCLUDED_FROM_UE4
 
   };
 
