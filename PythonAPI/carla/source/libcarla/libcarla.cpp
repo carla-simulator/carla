@@ -200,7 +200,6 @@ static auto MakeCallback(boost::python::object callback) {
 #include "AdRss.cpp"
 #endif
 
-
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
   PyEval_InitThreads();
@@ -219,7 +218,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_exception();
   export_commands();
   export_trafficmanager();
-# ifdef LIBCARLA_RSS_ENABLED
+  #ifdef LIBCARLA_RSS_ENABLED
   export_ad_rss();
-# endif
+  #endif
 }

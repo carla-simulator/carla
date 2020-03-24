@@ -13,7 +13,7 @@ source $(dirname "$0")/Environment.sh
 # -- Get and compile ad-rss -------------------------------------------
 # ==============================================================================
 
-pushd ${CARLA_ROOT_FOLDER}/dependencies/ad-rss >/dev/null
+pushd "${CARLA_ROOT_FOLDER}/dependencies/ad-rss" >/dev/null
 
 if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
   export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c7-install
