@@ -322,9 +322,9 @@
       All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example. 
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: Green
     - var_name: Red
     - var_name: Yellow
+    - var_name: Green
     - var_name: 'Off'
     - var_name: Unknown
     # --------------------------------------

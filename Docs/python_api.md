@@ -109,10 +109,10 @@ CARLA provides a library of blueprints for actors in [carla.BlueprintLibrary](#c
 
 <h3>Instance Variables</h3>
 - <a name="carla.ActorAttributeType.Bool"></a>**<font color="#f8805a">Bool</font>**  
-- <a name="carla.ActorAttributeType.Float"></a>**<font color="#f8805a">Float</font>**  
 - <a name="carla.ActorAttributeType.Int"></a>**<font color="#f8805a">Int</font>**  
-- <a name="carla.ActorAttributeType.RGBColor"></a>**<font color="#f8805a">RGBColor</font>**  
+- <a name="carla.ActorAttributeType.Float"></a>**<font color="#f8805a">Float</font>**  
 - <a name="carla.ActorAttributeType.String"></a>**<font color="#f8805a">String</font>**  
+- <a name="carla.ActorAttributeType.RGBColor"></a>**<font color="#f8805a">RGBColor</font>**  
 
 ---
 
@@ -776,12 +776,12 @@ Class that defines the permission to turn either left, right, both or none (mean
 <h3>Instance Variables</h3>
 - <a name="carla.LaneChange.NONE"></a>**<font color="#f8805a">NONE</font>**  
 Traffic rules do not allow turning right or left, only going straight.  
-- <a name="carla.LaneChange.Both"></a>**<font color="#f8805a">Both</font>**  
-Traffic rules allow turning either right or left.  
-- <a name="carla.LaneChange.Left"></a>**<font color="#f8805a">Left</font>**  
-Traffic rules allow turning left.  
 - <a name="carla.LaneChange.Right"></a>**<font color="#f8805a">Right</font>**  
 Traffic rules allow turning right.  
+- <a name="carla.LaneChange.Left"></a>**<font color="#f8805a">Left</font>**  
+Traffic rules allow turning left.  
+- <a name="carla.LaneChange.Both"></a>**<font color="#f8805a">Both</font>**  
+Traffic rules allow turning either right or left.  
 
 ---
 
@@ -835,16 +835,16 @@ __Note on double types:__ Lane markings are defined under the OpenDRIVE standard
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
-- <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
-- <a name="carla.LaneMarkingType.Broken"></a>**<font color="#f8805a">Broken</font>**  
-- <a name="carla.LaneMarkingType.BrokenBroken"></a>**<font color="#f8805a">BrokenBroken</font>**  
-- <a name="carla.LaneMarkingType.BrokenSolid"></a>**<font color="#f8805a">BrokenSolid</font>**  
-- <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
-- <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
-- <a name="carla.LaneMarkingType.Solid"></a>**<font color="#f8805a">Solid</font>**  
-- <a name="carla.LaneMarkingType.SolidBroken"></a>**<font color="#f8805a">SolidBroken</font>**  
-- <a name="carla.LaneMarkingType.SolidSolid"></a>**<font color="#f8805a">SolidSolid</font>**  
 - <a name="carla.LaneMarkingType.Other"></a>**<font color="#f8805a">Other</font>**  
+- <a name="carla.LaneMarkingType.Broken"></a>**<font color="#f8805a">Broken</font>**  
+- <a name="carla.LaneMarkingType.Solid"></a>**<font color="#f8805a">Solid</font>**  
+- <a name="carla.LaneMarkingType.SolidSolid"></a>**<font color="#f8805a">SolidSolid</font>**  
+- <a name="carla.LaneMarkingType.SolidBroken"></a>**<font color="#f8805a">SolidBroken</font>**  
+- <a name="carla.LaneMarkingType.BrokenSolid"></a>**<font color="#f8805a">BrokenSolid</font>**  
+- <a name="carla.LaneMarkingType.BrokenBroken"></a>**<font color="#f8805a">BrokenBroken</font>**  
+- <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
+- <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
+- <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
 
 ---
 
@@ -853,26 +853,26 @@ Class that defines the possible lane types accepted by OpenDRIVE 1.4. This stand
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
-- <a name="carla.LaneType.Bidirectional"></a>**<font color="#f8805a">Bidirectional</font>**  
-- <a name="carla.LaneType.Biking"></a>**<font color="#f8805a">Biking</font>**  
-- <a name="carla.LaneType.Border"></a>**<font color="#f8805a">Border</font>**  
 - <a name="carla.LaneType.Driving"></a>**<font color="#f8805a">Driving</font>**  
-- <a name="carla.LaneType.Entry"></a>**<font color="#f8805a">Entry</font>**  
-- <a name="carla.LaneType.Exit"></a>**<font color="#f8805a">Exit</font>**  
-- <a name="carla.LaneType.Median"></a>**<font color="#f8805a">Median</font>**  
-- <a name="carla.LaneType.OffRamp"></a>**<font color="#f8805a">OffRamp</font>**  
-- <a name="carla.LaneType.OnRamp"></a>**<font color="#f8805a">OnRamp</font>**  
-- <a name="carla.LaneType.Parking"></a>**<font color="#f8805a">Parking</font>**  
-- <a name="carla.LaneType.Rail"></a>**<font color="#f8805a">Rail</font>**  
-- <a name="carla.LaneType.Restricted"></a>**<font color="#f8805a">Restricted</font>**  
-- <a name="carla.LaneType.RoadWorks"></a>**<font color="#f8805a">RoadWorks</font>**  
+- <a name="carla.LaneType.Stop"></a>**<font color="#f8805a">Stop</font>**  
 - <a name="carla.LaneType.Shoulder"></a>**<font color="#f8805a">Shoulder</font>**  
+- <a name="carla.LaneType.Biking"></a>**<font color="#f8805a">Biking</font>**  
 - <a name="carla.LaneType.Sidewalk"></a>**<font color="#f8805a">Sidewalk</font>**  
+- <a name="carla.LaneType.Border"></a>**<font color="#f8805a">Border</font>**  
+- <a name="carla.LaneType.Restricted"></a>**<font color="#f8805a">Restricted</font>**  
+- <a name="carla.LaneType.Parking"></a>**<font color="#f8805a">Parking</font>**  
+- <a name="carla.LaneType.Bidirectional"></a>**<font color="#f8805a">Bidirectional</font>**  
+- <a name="carla.LaneType.Median"></a>**<font color="#f8805a">Median</font>**  
 - <a name="carla.LaneType.Special1"></a>**<font color="#f8805a">Special1</font>**  
 - <a name="carla.LaneType.Special2"></a>**<font color="#f8805a">Special2</font>**  
 - <a name="carla.LaneType.Special3"></a>**<font color="#f8805a">Special3</font>**  
-- <a name="carla.LaneType.Stop"></a>**<font color="#f8805a">Stop</font>**  
+- <a name="carla.LaneType.RoadWorks"></a>**<font color="#f8805a">RoadWorks</font>**  
 - <a name="carla.LaneType.Tram"></a>**<font color="#f8805a">Tram</font>**  
+- <a name="carla.LaneType.Rail"></a>**<font color="#f8805a">Rail</font>**  
+- <a name="carla.LaneType.Entry"></a>**<font color="#f8805a">Entry</font>**  
+- <a name="carla.LaneType.Exit"></a>**<font color="#f8805a">Exit</font>**  
+- <a name="carla.LaneType.OffRamp"></a>**<font color="#f8805a">OffRamp</font>**  
+- <a name="carla.LaneType.OnRamp"></a>**<font color="#f8805a">OnRamp</font>**  
 - <a name="carla.LaneType.Any"></a>**<font color="#f8805a">Any</font>**  
 Every type except for NONE.  
 
@@ -1228,9 +1228,9 @@ Sets a given time (in seconds) for the yellow light to be active.
 All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.TrafficLightState.Green"></a>**<font color="#f8805a">Green</font>**  
 - <a name="carla.TrafficLightState.Red"></a>**<font color="#f8805a">Red</font>**  
 - <a name="carla.TrafficLightState.Yellow"></a>**<font color="#f8805a">Yellow</font>**  
+- <a name="carla.TrafficLightState.Green"></a>**<font color="#f8805a">Green</font>**  
 - <a name="carla.TrafficLightState.Off"></a>**<font color="#f8805a">Off</font>**  
 - <a name="carla.TrafficLightState.Unknown"></a>**<font color="#f8805a">Unknown</font>**  
 

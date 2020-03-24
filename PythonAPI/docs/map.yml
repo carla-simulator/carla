@@ -11,35 +11,25 @@
     instance_variables:
     - var_name: NONE
       doc: >
-    - var_name: Bidirectional
-      doc: >
-    - var_name: Biking
-      doc: >
-    - var_name: Border
-      doc: >
     - var_name: Driving
       doc: >
-    - var_name: Entry
-      doc: >
-    - var_name: Exit
-      doc: >
-    - var_name: Median
-      doc: >
-    - var_name: OffRamp
-      doc: >
-    - var_name: OnRamp
-      doc: >
-    - var_name: Parking
-      doc: >
-    - var_name: Rail
-      doc: >
-    - var_name: Restricted
-      doc: >
-    - var_name: RoadWorks
+    - var_name: Stop
       doc: >
     - var_name: Shoulder
       doc: >
+    - var_name: Biking
+      doc: >
     - var_name: Sidewalk
+      doc: >
+    - var_name: Border
+      doc: >
+    - var_name: Restricted
+      doc: >
+    - var_name: Parking
+      doc: >
+    - var_name: Bidirectional
+      doc: >
+    - var_name: Median
       doc: >
     - var_name: Special1
       doc: >
@@ -47,9 +37,19 @@
       doc: >
     - var_name: Special3
       doc: >
-    - var_name: Stop
+    - var_name: RoadWorks
       doc: >
     - var_name: Tram
+      doc: >
+    - var_name: Rail
+      doc: >
+    - var_name: Entry
+      doc: >
+    - var_name: Exit
+      doc: >
+    - var_name: OffRamp
+      doc: >
+    - var_name: OnRamp
       doc: >
     - var_name: Any
       doc: >
@@ -64,15 +64,15 @@
     - var_name: NONE
       doc: >
         Traffic rules do not allow turning right or left, only going straight.
-    - var_name: Both
-      doc: >
-        Traffic rules allow turning either right or left.
-    - var_name: Left
-      doc: >
-        Traffic rules allow turning left.
     - var_name: Right
       doc: >
         Traffic rules allow turning right.
+    - var_name: Left
+      doc: >
+        Traffic rules allow turning left.
+    - var_name: Both
+      doc: >
+        Traffic rules allow turning either right or left.
 
   - class_name: LaneMarkingColor
     # - DESCRIPTION ------------------------
@@ -106,25 +106,25 @@
     instance_variables:
     - var_name: NONE
       doc: >
-    - var_name: BottsDots
+    - var_name: Other
       doc: >
     - var_name: Broken
       doc: >
-    - var_name: BrokenBroken
-      doc: >
-    - var_name: BrokenSolid
-      doc: >
-    - var_name: Curb
-      doc: >
-    - var_name: Grass
-      doc: >
     - var_name: Solid
-      doc: >
-    - var_name: SolidBroken
       doc: >
     - var_name: SolidSolid
       doc: >
-    - var_name: Other
+    - var_name: SolidBroken
+      doc: >
+    - var_name: BrokenSolid
+      doc: >
+    - var_name: BrokenBroken
+      doc: >
+    - var_name: BottsDots
+      doc: >
+    - var_name: Grass
+      doc: >
+    - var_name: Curb
       doc: >
 
   - class_name: Map

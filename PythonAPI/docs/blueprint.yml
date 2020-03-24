@@ -10,10 +10,10 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Bool
-    - var_name: Float
     - var_name: Int
-    - var_name: RGBColor
+    - var_name: Float
     - var_name: String
+    - var_name: RGBColor
 
   - class_name: Color
     # - DESCRIPTION ------------------------
