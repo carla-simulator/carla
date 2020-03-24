@@ -712,6 +712,38 @@ namespace road {
     return result;
   }
 
+  std::vector<Waypoint> Map::GenerateWaypointsInRoad(
+      RoadId road_id,
+      Lane::LaneType lane_type) const {
+    std::vector<Waypoint> result;
+    if(_data.GetRoads().count(road_id)) {
+      const auto &road = _data.GetRoads().at(road_id);
+      // right lanes start at s 0
+      for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the right (negative) lanes
+          if (lane.first < 0 &&
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+            result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
+          }
+        }
+      }
+      // left lanes start at s max
+      const auto road_len = road.GetLength();
+      for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
+        for (const auto &lane : lane_section.GetLanes()) {
+          // add only the left (positive) lanes
+          if (lane.first > 0 &&
+              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+            result.emplace_back(
+              Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
+          }
+        }
+      }
+    }
+    return result;
+  }
+
   std::vector<std::pair<Waypoint, Waypoint>> Map::GenerateTopology() const {
     std::vector<std::pair<Waypoint, Waypoint>> result;
     for (const auto &pair : _data.GetRoads()) {
