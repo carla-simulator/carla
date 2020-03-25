@@ -11,7 +11,7 @@ namespace traffic_manager {
 
 namespace CollisionStageConstants {
 
-  static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
+  static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
   static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
   static const float BOUNDARY_EXTENSION_MAXIMUM = 50.0f;
   static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
