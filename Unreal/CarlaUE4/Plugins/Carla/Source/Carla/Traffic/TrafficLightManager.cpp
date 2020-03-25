@@ -7,6 +7,7 @@
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
 #include "StopSignComponent.h"
+#include "YieldSignComponent.h"
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -47,7 +48,7 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<ATrafficSignBase> YieldSignModel;
     YieldSignModel = YieldFinder.Object->GeneratedClass;
     TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
-    SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), USignComponent::StaticClass());
+    SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), UYieldSignComponent::StaticClass());
   }
 }
 
