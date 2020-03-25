@@ -81,11 +81,13 @@ class LocalPlanner(object):
     def __del__(self):
         if self._vehicle:
             self._vehicle.destroy()
-        print("Destroying ego-vehicle!")
+        if self._debug:
+            print("Destroying ego-vehicle!")
 
     def reset_vehicle(self):
         self._vehicle = None
-        print("Resetting ego-vehicle!")
+        if self._debug:
+            print("Resetting ego-vehicle!")
 
     def _init_controller(self, opt_dict):
         """
@@ -95,10 +97,14 @@ class LocalPlanner(object):
         :return:
         """
         # default params
+        self._debug = True
         self._dt = 1.0 / 20.0
         self._target_speed = 20.0  # Km/h
         self._sampling_radius = self._target_speed * 1 / 3.6  # 1 seconds horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
+        self._max_brake = 0.3
+        self._max_throt = 0.75
+        self._max_steer = 0.8
         args_lateral_dict = {
             'K_P': 1.95,
             'K_D': 0.2,
@@ -123,11 +129,22 @@ class LocalPlanner(object):
                 args_lateral_dict = opt_dict['lateral_control_dict']
             if 'longitudinal_control_dict' in opt_dict:
                 args_longitudinal_dict = opt_dict['longitudinal_control_dict']
+            if 'max_throttle' in opt_dict:
+                self._max_throt = opt_dict['max_throttle']
+            if 'max_brake' in opt_dict:
+                self._max_brake = opt_dict['max_brake']
+            if 'max_steering' in opt_dict:
+                self._max_steer = opt_dict['max_steering']
+            if 'debug' in opt_dict:
+                self._debug = opt_dict['debug']
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self._vehicle_controller = VehiclePIDController(self._vehicle,
                                                         args_lateral=args_lateral_dict,
-                                                        args_longitudinal=args_longitudinal_dict)
+                                                        args_longitudinal=args_longitudinal_dict,
+                                                        max_throttle=self._max_throt,
+                                                        max_brake=self._max_brake,
+                                                        max_steering=self._max_steer,)
 
         self._global_plan = False
 
@@ -162,7 +179,9 @@ class LocalPlanner(object):
             last_waypoint = self._waypoints_queue[-1][0]
             next_waypoints = list(last_waypoint.next(self._sampling_radius))
 
-            if len(next_waypoints) == 1:
+            if len(next_waypoints) == 0:
+                break
+            elif len(next_waypoints) == 1:
                 # only one option available ==> lanefollowing
                 next_waypoint = next_waypoints[0]
                 road_option = RoadOption.LANEFOLLOW
