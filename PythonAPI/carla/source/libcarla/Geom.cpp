@@ -176,7 +176,7 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cg::Transform>>("vector_of_Transform")
+  class_<std::vector<cg::Transform>>("vector_of_transform")
       .def(boost::python::vector_indexing_suite<std::vector<cg::Transform>>())
       .def(self_ns::str(self_ns::self))
   ;
