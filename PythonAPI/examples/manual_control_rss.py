@@ -150,6 +150,7 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
+
     def __init__(self, carla_world, hud, actor_filter, actor_role_name='hero', external_actor=False):
         self.world = carla_world
         self.actor_role_name = actor_role_name
@@ -265,6 +266,7 @@ class World(object):
 
 
 class KeyboardControl(object):
+
     def __init__(self, world, args):
         self._autopilot_enabled = args.autopilot
         self._world = world
@@ -385,12 +387,12 @@ class KeyboardControl(object):
                 world.hud.original_vehicle_control = vehicle_control
                 world.hud.restricted_vehicle_control = vehicle_control
 
-                #limit speed to 30kmh
+                # limit speed to 30kmh
                 v = self._world.player.get_velocity()
                 if (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)) > 30.0:
                     self._control.throttle = 0
 
-                #if self._world.rss_sensor and self._world.rss_sensor.ego_dynamics_on_route and not self._world.rss_sensor.ego_dynamics_on_route.ego_center_within_route:
+                # if self._world.rss_sensor and self._world.rss_sensor.ego_dynamics_on_route and not self._world.rss_sensor.ego_dynamics_on_route.ego_center_within_route:
                 #    print ("Not on route!" +  str(self._world.rss_sensor.ego_dynamics_on_route))
                 if self._restrictor:
                     rss_restriction = self._world.rss_sensor.acceleration_restriction if self._world.rss_sensor and self._world.rss_sensor.response_valid else None
@@ -399,7 +401,8 @@ class KeyboardControl(object):
                         vehicle_physics = world.player.get_physics_control()
 
                         if not (pygame.key.get_mods() & KMOD_CTRL):
-                            vehicle_control = self._restrictor.restrict_vehicle_control(vehicle_control, rss_restriction, rss_ego_dynamics_on_route, vehicle_physics)
+                            vehicle_control = self._restrictor.restrict_vehicle_control(
+                                vehicle_control, rss_restriction, rss_ego_dynamics_on_route, vehicle_physics)
                         world.hud.restricted_vehicle_control = vehicle_control
                         if world.hud.original_vehicle_control.steer != world.hud.restricted_vehicle_control.steer:
                             self._steer_cache = prev_steer_cache
@@ -451,6 +454,7 @@ class KeyboardControl(object):
 
 
 class HUD(object):
+
     def __init__(self, width, height):
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
@@ -609,6 +613,7 @@ class HUD(object):
 
 
 class FadingText(object):
+
     def __init__(self, font, dim, pos):
         self.font = font
         self.dim = dim
@@ -638,6 +643,7 @@ class FadingText(object):
 
 
 class HelpText(object):
+
     def __init__(self, font, width, height):
         lines = __doc__.split('\n')
         self.font = font
@@ -666,6 +672,7 @@ class HelpText(object):
 
 
 class CollisionSensor(object):
+
     def __init__(self, parent_actor, hud):
         self.sensor = None
         self.history = []
@@ -705,6 +712,7 @@ class CollisionSensor(object):
 
 
 class LaneInvasionSensor(object):
+
     def __init__(self, parent_actor, hud):
         self.sensor = None
         self._parent = parent_actor
@@ -732,6 +740,7 @@ class LaneInvasionSensor(object):
 
 
 class GnssSensor(object):
+
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
@@ -757,7 +766,9 @@ class GnssSensor(object):
 # -- RssSensor --------------------------------------------------------
 # ==============================================================================
 
+
 class RssSensor(object):
+
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
@@ -796,9 +807,8 @@ class RssSensor(object):
             self.proper_response = response.proper_response
             self.acceleration_restriction = response.acceleration_restriction
             self.ego_dynamics_on_route = response.ego_dynamics_on_route
-        #else:
+        # else:
         #    print("ignore outdated response {}".format(delta_time))
-
 
     def drop_route(self):
         self.sensor.drop_route()
@@ -809,6 +819,7 @@ class RssSensor(object):
 
 
 class CameraManager(object):
+
     def __init__(self, parent_actor, hud):
         self.sensor = None
         self.surface = None
@@ -896,7 +907,7 @@ class CameraManager(object):
             lidar_data = lidar_data.astype(np.int32)
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
-            lidar_img = np.zeros((lidar_img_size), dtype = int)
+            lidar_img = np.zeros((lidar_img_size), dtype=int)
             lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
             self.surface = pygame.surfarray.make_surface(lidar_img)
         else:
