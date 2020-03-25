@@ -81,13 +81,11 @@ class LocalPlanner(object):
     def __del__(self):
         if self._vehicle:
             self._vehicle.destroy()
-        if self._debug:
             print("Destroying ego-vehicle!")
 
     def reset_vehicle(self):
         self._vehicle = None
-        if self._debug:
-            print("Resetting ego-vehicle!")
+        print("Resetting ego-vehicle!")
 
     def _init_controller(self, opt_dict):
         """
@@ -97,7 +95,6 @@ class LocalPlanner(object):
         :return:
         """
         # default params
-        self._debug = True
         self._dt = 1.0 / 20.0
         self._target_speed = 20.0  # Km/h
         self._sampling_radius = self._target_speed * 1 / 3.6  # 1 seconds horizon
@@ -135,8 +132,6 @@ class LocalPlanner(object):
                 self._max_brake = opt_dict['max_brake']
             if 'max_steering' in opt_dict:
                 self._max_steer = opt_dict['max_steering']
-            if 'debug' in opt_dict:
-                self._debug = opt_dict['debug']
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self._vehicle_controller = VehiclePIDController(self._vehicle,
