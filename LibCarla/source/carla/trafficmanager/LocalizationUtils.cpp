@@ -238,11 +238,12 @@ namespace LocalizationConstants {
     SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
     uint64_t  startPosn  = static_cast<uint64_t>(std::fabs(target_point_distance/SAMPLING_RESOLUTION));
     bool mScanForward = false;
+    double target_point_dist_power = std::pow(target_point_distance, 2);
 
     /// Condition to determine forward or backward scanning of  WayPoint Buffer.
     if((startPosn < waypoint_buffer.size()) &&
         (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-        <= std::pow(target_point_distance, 2))) {
+        <= target_point_dist_power)) {
       mScanForward = true;
     }
 
@@ -250,7 +251,7 @@ namespace LocalizationConstants {
       for (uint64_t j = startPosn ;
           (j < waypoint_buffer.size()) &&
           (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-          < std::pow(target_point_distance, 2));
+          < target_point_dist_power);
           ++j) {
           target_waypoint = waypoint_buffer.at(j);
           index = j;
@@ -261,7 +262,7 @@ namespace LocalizationConstants {
       for (uint64_t j = startPosn ;
         (j >= 0) &&
         (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-        < std::pow(target_point_distance, 2));
+        < target_point_dist_power);
         --j) {
         target_waypoint = waypoint_buffer.at(j);
         index = j;
