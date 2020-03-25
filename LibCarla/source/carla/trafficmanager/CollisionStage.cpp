@@ -12,16 +12,11 @@ namespace traffic_manager {
 namespace CollisionStageConstants {
 
   static const float VERTICAL_OVERLAP_THRESHOLD = 2.0f;
-  static const float EXTENSION_SQUARE_POINT = 7.5f;
-  static const float TIME_HORIZON = 0.5f;
-  static const float HIGHWAY_SPEED = 50.0f / 3.6f;
-  static const float HIGHWAY_TIME_HORIZON = 5.0f;
-  static const float CRAWL_SPEED_1 = 12.0f / 3.6f;
-  static const float CRAWL_SPEED_2 = 8.0f / 3.6f;
-  static const float CRAWL_SPEED_MINIMUM = 3.0f / 3.6f;
-  static const float BOUNDARY_EXTENSION_1 = 12.0f;
-  static const float BOUNDARY_EXTENSION_2 = 7.0f;
   static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
+  static const float BOUNDARY_EXTENSION_MAXIMUM = 50.0f;
+  static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+  static const float LOCKING_DISTANCE_PADDING = 4.0f;
+  static const float MAX_LOCKING_EXTENSION = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
   static const float MIN_COLLISION_RADIUS = 15.0f;
   static const float WALKER_TIME_EXTENSION = 1.5f;
@@ -231,6 +226,7 @@ namespace CollisionStageConstants {
     bool ego_stopped_by_light = reference_vehicle_ptr->GetTrafficLightState() != carla::rpc::TrafficLightState::Green;
     bool ego_at_junction_entrance = !closest_point->CheckJunction() && junction_look_ahead->CheckJunction();
 
+    const ActorId reference_vehicle_id = reference_vehicle->GetId();
     // Conditions to avoid collision negotiation.
     if (!(ego_at_junction_entrance && ego_at_traffic_light && ego_stopped_by_light)
         && !(!ego_inside_junction && !other_vehicle_in_front)
@@ -255,7 +251,8 @@ namespace CollisionStageConstants {
           && !(ego_path_clear && !other_path_clear)
           && (!ego_path_clear
               || (!vehicle_bbox_touching && !ego_path_priority)
-              || (vehicle_bbox_touching && !ego_angular_priority))) {
+              || (vehicle_bbox_touching && !ego_angular_priority)))
+      {
 
         hazard = true;
         // TODO: Remove thresholding after fixing parameters class to return clamped values.
@@ -263,7 +260,52 @@ namespace CollisionStageConstants {
                                                         BOUNDARY_EXTENSION_MINIMUM);
         available_distance_margin = static_cast<float>(std::max(cache.reference_vehicle_to_other_geodesic
                                                                  - specific_distance_margin, 0.0));
+
+        ActorId other_vehicle_id = other_vehicle->GetId();
+        ///////////////////////////////////// Collision locking mechanism /////////////////////////////////
+        // The idea is, when encountering a possible collision, and the distance to lead vehicle is decreasing,
+        // we should ensure that the bounding box extension doesn't decrease too fast and loose collision tracking.
+        // This enables us to smoothly approach the lead vehicle.
+
+        // When possible collision found, check if an entry for collision lock present.
+        if (collision_locks.find(reference_vehicle_id) != collision_locks.end())
+        {
+          CollisionLock &lock = collision_locks.at(reference_vehicle_id);
+          // Check if the same vehicle is under lock.
+          if (other_vehicle_id == lock.lead_vehicle_id)
+          {
+            // If the body of the lead vehicle is touching the reference vehicle bounding box.
+            if (cache.other_vehicle_to_reference_geodesic < 0.1)
+            {
+              // Distance between the bodies of the vehicles.
+              lock.distance_to_lead_vehicle =  cache.inter_bbox_distance;
+            }
+            else
+            {
+              // Distance from reference vehicle body to other vehicle path polygon.
+              lock.distance_to_lead_vehicle = cache.reference_vehicle_to_other_geodesic;
+            }
+          }
+          else
+          {
+            // If possible collision with a new vehicle, re-initialize with new lock entry.
+            lock = {other_vehicle_id, cache.inter_bbox_distance, cache.inter_bbox_distance};
+          }
+        }
+        else
+        {
+          // Insert and initialize lock entry if not present.
+          collision_locks.insert({reference_vehicle_id,
+                                 {other_vehicle_id, cache.inter_bbox_distance, cache.inter_bbox_distance}});
+        }
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
       }
+    }
+
+    // If no collision hazard detected, then flush collision lock held by the vehicle.
+    if (!hazard && collision_locks.find(reference_vehicle_id) != collision_locks.end())
+    {
+      collision_locks.erase(reference_vehicle_id);
     }
 
     return {hazard, available_distance_margin};
@@ -369,21 +411,27 @@ namespace CollisionStageConstants {
 
   float CollisionStage::GetBoundingBoxExtention(const Actor &actor) {
 
-    const float velocity = actor->GetVelocity().Length();
-    float bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
-    if (velocity > HIGHWAY_SPEED) {
-      bbox_extension = HIGHWAY_TIME_HORIZON * velocity;
-    } else if (velocity > CRAWL_SPEED_1 && velocity < HIGHWAY_SPEED) {
-      bbox_extension = std::sqrt(EXTENSION_SQUARE_POINT * velocity) +
-                                 velocity * TIME_HORIZON +
-                                 BOUNDARY_EXTENSION_MINIMUM;
-      bbox_extension = std::max(bbox_extension, BOUNDARY_EXTENSION_1);
-    } else if (velocity > CRAWL_SPEED_2 && velocity < CRAWL_SPEED_1) {
-      bbox_extension = BOUNDARY_EXTENSION_1;
-    } else if (velocity > CRAWL_SPEED_MINIMUM && velocity < CRAWL_SPEED_2) {
-      bbox_extension = BOUNDARY_EXTENSION_2;
-    } else if (velocity < CRAWL_SPEED_MINIMUM) {
-      bbox_extension = BOUNDARY_EXTENSION_MINIMUM;
+    // Calculate velocity along vehicle's heading. This also avoids calculating square root.
+    const float velocity = cg::Math::Dot(actor->GetVelocity(), actor->GetTransform().GetForwardVector());
+    float bbox_extension;
+    // Using a linear function to calculate boundary length.
+    // min speed : 0kmph -> BOUNDARY_EXTENSION_MINIMUM
+    // max speed : 100kmph -> BOUNDARY_EXTENSION_MAXIMUM
+    float slope = (BOUNDARY_EXTENSION_MAXIMUM - BOUNDARY_EXTENSION_MINIMUM) / ARBITRARY_MAX_SPEED;
+    bbox_extension = slope * velocity + BOUNDARY_EXTENSION_MINIMUM;
+    const ActorId actor_id = actor->GetId();
+    // If a valid collision lock present, change boundary length to maintain lock.
+    if (collision_locks.find(actor_id) != collision_locks.end())
+    {
+      CollisionLock &lock = collision_locks.at(actor_id);
+      float lock_boundary_length = static_cast<float>(lock.distance_to_lead_vehicle
+                                                      + LOCKING_DISTANCE_PADDING);
+      // Only extend boundary track vehicle if the leading vehicle
+      // if it is not further than velocity dependent extension by MAX_LOCKING_EXTENSION.
+      if ((lock_boundary_length - lock.initial_lock_distance) < MAX_LOCKING_EXTENSION)
+      {
+        bbox_extension = lock_boundary_length;
+      }
     }
 
     return bbox_extension;

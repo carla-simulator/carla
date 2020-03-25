@@ -51,14 +51,22 @@ namespace traffic_manager {
   using TLS = carla::rpc::TrafficLightState;
 
 
-/// Structure to hold the Geometry of reference vehicle to other vehicle.
+  /// Structure to hold the Geometry of reference vehicle to other vehicle.
   struct GeometryComparisonCache {
 
      double reference_vehicle_to_other_geodesic;
      double other_vehicle_to_reference_geodesic;
      double inter_geodesic_distance;
      double inter_bbox_distance;
-};
+  };
+
+  /// Structure to hold data about collision locking with a lead vehicle.
+  struct CollisionLock {
+
+    ActorId lead_vehicle_id;
+    double distance_to_lead_vehicle;
+    double initial_lock_distance;
+  };
 
 /// This class is the thread executable for the collision detection stage
 /// and is responsible for checking possible collisions with other
@@ -92,6 +100,8 @@ private:
   uint64_t number_of_vehicles;
   /// Structure to hold the geodesic boundaries during one iteration.
   std::unordered_map<ActorId, LocationList> geodesic_boundaries;
+  /// Structure to keep tracking collision tracking.
+  std::unordered_map<ActorId, CollisionLock> collision_locks;
   /// Snippet profiler for measuring execution time.
   SnippetProfiler snippet_profiler;
 

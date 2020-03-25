@@ -12,11 +12,9 @@ namespace traffic_manager {
 namespace PlannerConstants {
 
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
-  static const float STATIONARY_LEAD_APPROACH_SPEED_1 = 10.0f / 3.6f;
-  static const float STATIONARY_LEAD_APPROACH_SPEED_2 = 5.0f / 3.6f;
-  static const float CRITICAL_BRAKING_MARGIN_1 = 5.0f;
-  static const float CRITICAL_BRAKING_MARGIN_2 = 0.1f;
-
+  static const float RELATIVE_APPROACH_SPEED = 10.0f / 3.6f;
+  static const float FOLLOW_LEAD_DISTANCE = 5.0f;
+  static const float CRITICAL_BRAKING_MARGIN = 0.25f;
 } // namespace PlannerConstants
 
   using namespace PlannerConstants;
@@ -106,9 +104,10 @@ namespace PlannerConstants {
       }
 
       // Target velocity for vehicle.
-      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
-
+      float max_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
+      float dynamic_target_velocity = max_target_velocity;
       //////////////////////// Collision related data handling ///////////////////////////
+      bool collision_emergency_stop = false;
       if (collision_data.hazard)
       {
         cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
@@ -117,17 +116,36 @@ namespace PlannerConstants {
         cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
         float other_velocity_along_heading = cg::Math::Dot(other_vehicle_velocity, ego_heading);
 
-        if (ego_relative_velocity > 0.0f
-            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_1)
+        // Consider collision avoidance decisions only if there is positive relative velocity
+        // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
+        if (ego_relative_velocity > 0.0f)
         {
-          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_1);
-        } else if (ego_relative_velocity > 0.0f
-            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_2)
-        {
-          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_2);
+          // If other vehicle is approaching lead vehicle and lead vehicle is further
+          // than FOLLOW_LEAD_DISTANCE.
+          if (collision_data.distance_to_other_vehicle > FOLLOW_LEAD_DISTANCE)
+          {
+            // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
+            // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
+            dynamic_target_velocity = other_velocity_along_heading + RELATIVE_APPROACH_SPEED;
+          }
+          // If vehicle is approaching a lead vehicle and the lead vehicle is further
+          // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
+          else if (collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN)
+          {
+            // Then follow the lead vehicle by acquiring it's speed along current heading.          
+            dynamic_target_velocity = std::max(other_velocity_along_heading, RELATIVE_APPROACH_SPEED);
+          }
+          else
+          {
+            // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
+            collision_emergency_stop = true;
+          }
         }
       }
       ///////////////////////////////////////////////////////////////////////////////////
+
+      // Clip dynamic target velocity to maximum allowed speed for the vehicle.
+      dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
 
       // State update for vehicle.
       StateEntry current_state = controller.StateUpdate(previous_state, current_velocity,
@@ -140,8 +158,7 @@ namespace PlannerConstants {
 
       // In case of traffic light hazard.
       if (traffic_light_frame->at(i).traffic_light_hazard
-          || (collision_data.hazard
-              && collision_data.distance_to_other_vehicle < CRITICAL_BRAKING_MARGIN_2)) {
+          || collision_emergency_stop) {
 
         current_state.deviation_integral = 0.0f;
         current_state.velocity_integral = 0.0f;
