@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "StopSignComponent.h"
+#include "YieldSignComponent.h"
 #include "TrafficLightState.h"
 #include <queue>
 
@@ -12,9 +12,9 @@
 #include <carla/road/element/RoadInfoSpeed.h>
 #include <compiler/enable-ue4-macros.h>
 
-void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
+void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
 {
-  carla::log_warning("StopSign");
+  carla::log_warning("YieldSign");
 
   const double epsilon = 0.00001;
 
@@ -25,8 +25,8 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
     auto RoadId = Reference.first;
     const auto* SignalReference = Reference.second;
     TSet<carla::road::RoadId> SignalPredecessors;
-    carla::log_warning("Stop:", RoadId);
-    // Stop box
+    carla::log_warning("Yield:", RoadId);
+    // Yield box
     for(auto &validity : SignalReference->GetValidities())
     {
       for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
@@ -54,7 +54,7 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         float UnrealBoxSize = 100*BoxSize;
-        GenerateStopBox(Map.ComputeTransform(signal_waypoint), UnrealBoxSize);
+        GenerateYieldBox(Map.ComputeTransform(signal_waypoint), UnrealBoxSize);
 
         auto Predecessors = Map.GetPredecessors(signal_waypoint);
         for(auto &Prev : Predecessors)
@@ -152,27 +152,27 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
   }
 }
 
-void UStopSignComponent::GenerateStopBox(const FTransform BoxTransform,
+void UYieldSignComponent::GenerateYieldBox(const FTransform BoxTransform,
     float BoxSize)
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
-  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapBeginStopEffectBox);
-  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapEndStopEffectBox);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapBeginYieldEffectBox);
+  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapEndYieldEffectBox);
 }
 
-void UStopSignComponent::GenerateCheckBox(const FTransform BoxTransform,
+void UYieldSignComponent::GenerateCheckBox(const FTransform BoxTransform,
     float BoxSize)
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
-  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapBeginStopCheckBox);
-  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapEndStopCheckBox);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapBeginYieldCheckBox);
+  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapEndYieldCheckBox);
 }
 
-void UStopSignComponent::GiveWayIfPossible()
+void UYieldSignComponent::GiveWayIfPossible()
 {
   if (VehiclesToCheck.Num() == 0)
   {
-    for (auto Vehicle : VehiclesInStop)
+    for (auto Vehicle : VehiclesInYield)
     {
       AWheeledVehicleAIController* VehicleController =
         Cast<AWheeledVehicleAIController>(Vehicle->GetController());
@@ -181,9 +181,9 @@ void UStopSignComponent::GiveWayIfPossible()
   }
   else
   {
-    if(VehiclesInStop.Num())
+    if(VehiclesInYield.Num())
     {
-      for (auto Vehicle : VehiclesInStop)
+      for (auto Vehicle : VehiclesInYield)
       {
         AWheeledVehicleAIController* VehicleController =
           Cast<AWheeledVehicleAIController>(Vehicle->GetController());
@@ -191,13 +191,13 @@ void UStopSignComponent::GiveWayIfPossible()
       }
 
       FTimerHandle TimerHandler;
-      // 1 second delay
-      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UStopSignComponent::GiveWayIfPossible, 1.0f);
+      // 0.5 second delay
+      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UYieldSignComponent::GiveWayIfPossible, 0.5f);
     }
   }
 }
 
-void UStopSignComponent::OnOverlapBeginStopEffectBox(UPrimitiveComponent *OverlappedComp,
+void UYieldSignComponent::OnOverlapBeginYieldEffectBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex,
@@ -211,18 +211,14 @@ void UStopSignComponent::OnOverlapBeginStopEffectBox(UPrimitiveComponent *Overla
         Cast<AWheeledVehicleAIController>(Vehicle->GetController());
     if (VehicleController)
     {
-      VehicleController->SetTrafficLightState(ETrafficLightState::Red);
-      VehiclesInStop.Add(Vehicle);
-
-      FTimerHandle TimerHandler;
-      // 2 second delay for stop
-      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UStopSignComponent::GiveWayIfPossible, 2.0f);
+      VehiclesInYield.Add(Vehicle);
+      RemoveSameVehicleInBothLists();
+      GiveWayIfPossible();
     }
   }
-  RemoveSameVehicleInBothLists();
 }
 
-void UStopSignComponent::OnOverlapEndStopEffectBox(UPrimitiveComponent *OverlappedComp,
+void UYieldSignComponent::OnOverlapEndYieldEffectBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex)
@@ -230,11 +226,11 @@ void UStopSignComponent::OnOverlapEndStopEffectBox(UPrimitiveComponent *Overlapp
   ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   if (Vehicle)
   {
-    VehiclesInStop.Remove(Vehicle);
+    VehiclesInYield.Remove(Vehicle);
   }
 }
 
-void UStopSignComponent::OnOverlapBeginStopCheckBox(UPrimitiveComponent *OverlappedComp,
+void UYieldSignComponent::OnOverlapBeginYieldCheckBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex,
@@ -244,7 +240,7 @@ void UStopSignComponent::OnOverlapBeginStopCheckBox(UPrimitiveComponent *Overlap
   ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   if (Vehicle)
   {
-    if(!VehiclesInStop.Contains(Vehicle))
+    if(!VehiclesInYield.Contains(Vehicle))
     {
       if (!VehiclesToCheck.Contains(Vehicle))
       {
@@ -256,7 +252,7 @@ void UStopSignComponent::OnOverlapBeginStopCheckBox(UPrimitiveComponent *Overlap
   }
 }
 
-void UStopSignComponent::OnOverlapEndStopCheckBox(UPrimitiveComponent *OverlappedComp,
+void UYieldSignComponent::OnOverlapEndYieldCheckBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex)
@@ -275,9 +271,9 @@ void UStopSignComponent::OnOverlapEndStopCheckBox(UPrimitiveComponent *Overlappe
     GiveWayIfPossible();
   }
 }
-void UStopSignComponent::RemoveSameVehicleInBothLists()
+void UYieldSignComponent::RemoveSameVehicleInBothLists()
 {
-  for(auto* Vehicle : VehiclesInStop)
+  for(auto* Vehicle : VehiclesInYield)
   {
     if(VehiclesToCheck.Contains(Vehicle))
     {
