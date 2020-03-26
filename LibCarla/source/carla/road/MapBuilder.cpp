@@ -283,7 +283,7 @@ namespace road {
         const std::string signal_reference_orientation) {
 
       _temp_road_info_container[road].emplace_back(std::make_unique<element::RoadInfoSignal>(
-          signal_id, s_position, t_position, signal_reference_orientation));
+          signal_id, road->GetId(), s_position, t_position, signal_reference_orientation));
       auto road_info_signal = static_cast<element::RoadInfoSignal*>(
           _temp_road_info_container[road].back().get());
       _temp_signal_reference_container.emplace_back(road_info_signal);
@@ -761,6 +761,8 @@ namespace road {
     }
 
     _map_data._signals = std::move(_temp_signal_container);
+
+    GenerateDefaultValiditiesForSignalReferences();
   }
 
   void MapBuilder::SolveControllerAndJuntionReferences() {
@@ -874,6 +876,73 @@ void MapBuilder::CreateController(
     for (auto &junctionpair : map._data.GetJunctions()) {
       auto& junction = junctionpair.second;
       junction._road_conflicts = (map.ComputeJunctionConflicts(junction.GetId()));
+    }
+  }
+
+  void MapBuilder::GenerateDefaultValiditiesForSignalReferences() {
+    for (auto * signal_reference : _temp_signal_reference_container) {
+      if (signal_reference->_validities.size() == 0) {
+        Road* road = GetRoad(signal_reference->GetRoadId());
+        auto lanes = road->GetLanesByDistance(signal_reference->GetS());
+        switch (signal_reference->GetOrientation()) {
+          case SignalOrientation::Positive: {
+            LaneId min_lane = 1;
+            LaneId max_lane = 0;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id > max_lane) {
+                max_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+          case SignalOrientation::Negative: {
+            LaneId min_lane = 0;
+            LaneId max_lane = -1;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id < min_lane) {
+                min_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+          case SignalOrientation::Both: {
+            // Get positive lanes
+            LaneId min_lane = 1;
+            LaneId max_lane = 0;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id > max_lane) {
+                max_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+
+            // get negative lanes
+            min_lane = 0;
+            max_lane = -1;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id < min_lane) {
+                min_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+        }
+      }
     }
   }
 
