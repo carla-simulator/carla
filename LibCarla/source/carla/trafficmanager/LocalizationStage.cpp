@@ -177,7 +177,6 @@ namespace LocalizationConstants {
           PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
-
       // Populating the buffer.
       while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
           <= std::pow(horizon_size, 2)) {
@@ -205,18 +204,13 @@ namespace LocalizationConstants {
 
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-
+      // WayPoint Binning Changes
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
-      SimpleWaypointPtr target_waypoint = updated_front_waypoint;
-      for (uint64_t j = 0u;
-          (j < waypoint_buffer.size()) &&
-          (updated_front_waypoint->DistanceSquared(target_waypoint)
-          < std::pow(target_point_distance, 2));
-          ++j) {
-        target_waypoint = waypoint_buffer.at(j);
-      }
+
+      std::pair<SimpleWaypointPtr,uint64_t> target_waypoint_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, target_point_distance);
+      SimpleWaypointPtr &target_waypoint = target_waypoint_index_pair.first;
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
       float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
@@ -234,17 +228,9 @@ namespace LocalizationConstants {
       const float speed_limit = vehicle_reference->GetSpeedLimit();
       const float look_ahead_distance = std::max(2.0f * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
 
-      SimpleWaypointPtr look_ahead_point = updated_front_waypoint;
-      uint64_t look_ahead_index = 0u;
-      for (uint64_t j = 0u;
-          (updated_front_waypoint->DistanceSquared(look_ahead_point)
-          < std::pow(look_ahead_distance, 2)) &&
-          (j < waypoint_buffer.size());
-          ++j) {
-        look_ahead_point = waypoint_buffer.at(j);
-        look_ahead_index = j;
-      }
-
+      std::pair<SimpleWaypointPtr,uint64_t> look_ahead_point_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, look_ahead_distance);
+      SimpleWaypointPtr &look_ahead_point = look_ahead_point_index_pair.first;
+      uint64_t &look_ahead_index = look_ahead_point_index_pair.second;
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(updated_front_waypoint->CheckJunction())) {
         if (speed_limit*3.6f > HIGHWAY_SPEED) {
@@ -828,6 +814,5 @@ namespace LocalizationConstants {
     }
     return false;
   }
-
 } // namespace traffic_manager
 } // namespace carla
