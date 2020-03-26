@@ -233,42 +233,46 @@ namespace LocalizationConstants {
     }
 
   }
-  SimpleWaypointPtr TrackTraffic::GetTargetWaypoint(Buffer& waypoint_buffer,const float& target_point_distance,uint64_t& index)
-  {
+
+  std::pair<SimpleWaypointPtr,uint64_t> TrackTraffic::GetTargetWaypoint(const Buffer& waypoint_buffer,const float& target_point_distance) {
+
     SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
+    const SimpleWaypointPtr& buffer_front = waypoint_buffer.front();
     uint64_t  startPosn  = static_cast<uint64_t>(std::fabs(target_point_distance/SAMPLING_RESOLUTION));
-    bool mScanForward = false;
-    double target_point_dist_power = std::pow(target_point_distance, 2);
-
+    uint64_t index = 0;
     /// Condition to determine forward or backward scanning of  WayPoint Buffer.
-    if((startPosn < waypoint_buffer.size()) &&
-        (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-        <= target_point_dist_power)) {
-      mScanForward = true;
-    }
 
-    if(mScanForward) {
-      for (uint64_t j = startPosn ;
-          (j < waypoint_buffer.size()) &&
-          (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-          < target_point_dist_power);
-          ++j) {
+    if (startPosn < waypoint_buffer.size()) {
+      bool mScanForward = false;
+      double target_point_dist_power = std::pow(target_point_distance, 2);
+      if(buffer_front->DistanceSquared(target_waypoint) < target_point_dist_power) {
+        mScanForward = true;
+      }
+
+      if(mScanForward) {
+        for (uint64_t j = startPosn ;
+            (j < waypoint_buffer.size()) &&
+            (buffer_front->DistanceSquared(target_waypoint)
+            < target_point_dist_power);
+            ++j) {
+            target_waypoint = waypoint_buffer.at(j);
+            index = j;
+            }
+      }
+      else {
+        for (uint64_t j = startPosn ;
+          (buffer_front->DistanceSquared(target_waypoint)
+          > target_point_dist_power);
+          --j) {
           target_waypoint = waypoint_buffer.at(j);
           index = j;
           }
+      }
     }
-    else
-    {
-      for (uint64_t j = startPosn ;
-        (j >= 0) &&
-        (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-        < target_point_dist_power);
-        --j) {
-        target_waypoint = waypoint_buffer.at(j);
-        index = j;
-        }
+    else {
+      target_waypoint = waypoint_buffer.back();
     }
-  return target_waypoint;
+  return std::make_pair(target_waypoint,index);
   }
 
 } // namespace traffic_manager
