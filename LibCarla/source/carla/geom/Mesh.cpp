@@ -257,6 +257,10 @@ namespace geom {
     return _indexes;
   }
 
+  size_t Mesh::GetIndexesNum() const {
+    return _indexes.size();
+  }
+
   const std::vector<Mesh::uv_type> &Mesh::GetUVs() const {
     return _uvs;
   }
@@ -271,6 +275,7 @@ namespace geom {
 
   Mesh &Mesh::operator+=(const Mesh &rhs) {
     const size_t v_num = GetVerticesNum();
+    const size_t i_num = GetIndexesNum();
 
     _vertices.insert(
         _vertices.end(),
@@ -298,8 +303,8 @@ namespace geom {
         rhs.GetMaterials().end(),
         std::back_inserter(_materials),
         [=](MeshMaterial mat) {
-          mat.index_start += v_num;
-          mat.index_end += v_num;
+          mat.index_start += i_num;
+          mat.index_end += i_num;
           return mat;
         });
 

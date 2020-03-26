@@ -125,6 +125,8 @@ namespace geom {
 
     const std::vector<index_type> &GetIndexes() const;
 
+    size_t GetIndexesNum() const;
+
     const std::vector<uv_type> &GetUVs() const;
 
     const std::vector<material_type> &GetMaterials() const;
