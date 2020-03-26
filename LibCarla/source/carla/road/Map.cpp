@@ -988,19 +988,28 @@ namespace road {
               lane.GetId(),
               lane_section.GetDistance() + EPSILON };
 
-          // Iterate over the lane distance and store the vertices based on it's width
           std::vector<geom::Vector3D> vertices;
-          do {
-            // Get the location of the edges of the current lane at the current waypoint
+          if (IsLaneStraight(lane)) {
+            // Mesh optimization: If the lane is straight just add vertices at the
+            // begining and at the end of it
             const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
             vertices.push_back(edges.first);
             vertices.push_back(edges.second);
+          } else {
+            // Iterate over the lane's 's' and store the vertices based on it's width
+            do {
+              // Get the location of the edges of the current lane at the current waypoint
+              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+              vertices.push_back(edges.first);
+              vertices.push_back(edges.second);
 
-            // Update the current waypoint's "s"
-            current_wp.s += distance;
-          } while(current_wp.s < end_distance);
+              // Update the current waypoint's "s"
+              current_wp.s += distance;
+            } while(current_wp.s < end_distance);
+          }
 
-          // This ensures the mesh is constant and have no gaps between roads
+          // This ensures the mesh is constant and have no gaps between roads,
+          // adding geometry at the very end of the lane
           if (end_distance - (current_wp.s - distance) > EPSILON) {
             current_wp.s = end_distance;
             const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
