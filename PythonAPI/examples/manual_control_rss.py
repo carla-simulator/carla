@@ -803,7 +803,8 @@ class RssSensor(object):
         self.sensor.visualization_mode = carla.VisualizationMode.All
         self.sensor.visualize_results = True
         self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
-        self.sensor.listen(lambda event: self._on_rss_response(event))
+        weak_self = weakref.ref(self)
+        self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
         self.set_default_parameters()
         self.sensor.reset_routing_targets()
         if routing_targets:
@@ -851,7 +852,9 @@ class RssSensor(object):
         self.sensor.ego_vehicle_dynamics = ego_dynamics
         self.current_display_parameters = ego_dynamics
 
-    def _on_rss_response(self, response):
+    @staticmethod
+    def _on_rss_response(weak_self, response):
+        self = weak_self()
         if not self or not response:
             return
         delta_time = 0.1
