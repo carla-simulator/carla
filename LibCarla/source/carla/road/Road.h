@@ -49,6 +49,11 @@ namespace road {
 
     const Lane &GetLaneByDistance(double s, LaneId lane_id) const;
 
+    /// Get all lanes from all lane sections in a specific s
+    std::vector<Lane*> GetLanesByDistance(double s);
+
+    std::vector<const Lane*> GetLanesByDistance(double s) const;
+
     RoadId GetSuccessor() const;
 
     RoadId GetPredecessor() const;
@@ -156,6 +161,8 @@ namespace road {
     const LaneSection &GetLaneSectionById(SectionId id) const {
       return _lane_sections.GetById(id);
     }
+
+
 
     /// Return the upper bound "s", i.e., the end distance of the lane section
     /// at @a s (clamped at road's length).
