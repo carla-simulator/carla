@@ -368,6 +368,9 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
             auto signal_waypoint = GetMap()->GetWaypoint(
                 waypoint.road_id, lane, SignalReference->GetS()).get();
 
+            if(GetMap()->GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
+              continue;
+
             // Get 90% of the half size of the width of the lane
             float BoxSize = static_cast<float>(
                 0.9*GetMap()->GetLaneWidth(waypoint)/2.0);
