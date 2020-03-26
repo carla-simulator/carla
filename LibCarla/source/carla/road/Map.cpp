@@ -1028,8 +1028,8 @@ namespace road {
       return out_mesh;
     }
 
-    // Create a a list of triangle fans with material "sidewalk"
-    out_mesh.AddMaterial("sidewalk");
+    // Create a a list of triangle fans with material "crosswalk"
+    out_mesh.AddMaterial("crosswalk");
     size_t start_vertex_index = 0;
     size_t i = 0;
     std::vector<geom::Vector3D> vertices;
