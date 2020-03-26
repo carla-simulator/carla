@@ -23,7 +23,6 @@ Use ARROWS or WASD keys for control.
     P            : toggle autopilot
     M            : toggle manual transmission
     ,/.          : gear up/down
-    B            : Toggle RSS Road Boundaries Mode
 
     TAB          : change sensor position
     `            : next sensor
@@ -33,7 +32,10 @@ Use ARROWS or WASD keys for control.
 
     R            : toggle recording images to disk
 
-    D            : RSS check drop current route
+    F2           : toggle RSS visualization mode
+    B            : toggle RSS Road Boundaries Mode
+    G            : RSS check drop current route
+    T            : toggle RSS parameters
 
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
@@ -109,12 +111,14 @@ try:
     from pygame.locals import K_b
     from pygame.locals import K_c
     from pygame.locals import K_d
+    from pygame.locals import K_g
     from pygame.locals import K_h
     from pygame.locals import K_m
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
+    from pygame.locals import K_t
     from pygame.locals import K_w
     from pygame.locals import K_MINUS
     from pygame.locals import K_EQUALS
@@ -309,9 +313,6 @@ class KeyboardControl(object):
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
                     world.camera_manager.toggle_recording()
-                elif event.key == K_d and not (pygame.key.get_mods() & KMOD_CTRL):
-                    if self._restrictor:
-                        self._world.rss_sensor.drop_route()
                 elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
                     if (world.recording_enabled):
                         client.stop_recorder()
@@ -362,6 +363,15 @@ class KeyboardControl(object):
                         else:
                             self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.Off
                             print("carla.RoadBoundariesMode.Off")
+                elif event.key == K_g:
+                    if self._world and self._world.rss_sensor:
+                        self._world.rss_sensor.drop_route()
+                elif event.key == K_t:
+                    if self._world and self._world.rss_sensor:
+                        if self._world.rss_sensor.assertive_parameters:
+                            self._world.rss_sensor.set_default_parameters()
+                        else:
+                            self._world.rss_sensor.set_assertive_parameters()
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
@@ -769,7 +779,7 @@ class GnssSensor(object):
 
 class RssSensor(object):
 
-    def __init__(self, parent_actor):
+    def __init__(self, parent_actor, routing_targets=None):
         self.sensor = None
         self._parent = parent_actor
         self.timestamp = None
@@ -777,6 +787,8 @@ class RssSensor(object):
         self.proper_response = None
         self.acceleration_restriction = None
         self.ego_dynamics_on_route = None
+        self.current_display_parameters = None  # for display
+        self.assertive_parameters = False
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.rss')
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=0.0)), attach_to=self._parent)
@@ -788,19 +800,65 @@ class RssSensor(object):
 
         if not inspect.getmembers(carla, check_rss_class):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
-        weak_self = weakref.ref(self)
+        self.sensor.visualization_mode = carla.VisualizationMode.All
         self.sensor.visualize_results = True
         self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
-        self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
+        self.sensor.listen(lambda event: self._on_rss_response(event))
+        self.set_default_parameters()
+        self.sensor.reset_routing_targets()
+        if routing_targets:
+            for target in routing_targets:
+                self.sensor.append_routing_target(target)
 
-    @staticmethod
-    def _on_rss_response(weak_self, response):
-        self = weak_self()
+    def get_assertive_parameters(self):
+        ego_dynamics = self.sensor.ego_vehicle_dynamics
+        ego_dynamics.alphaLon.accelMax = 4.1
+        ego_dynamics.alphaLon.brakeMin = -4.64
+        ego_dynamics.alphaLon.brakeMinCorrect = -1.76
+        ego_dynamics.alphaLon.brakeMax = -8.03
+        ego_dynamics.alphaLat.brakeMin = -0.96
+        ego_dynamics.alphaLat.accelMax = 0.43
+        ego_dynamics.lateralFluctuationMargin = 0.07
+        ego_dynamics.responseTime = 0.53
+        ego_dynamics.maxSpeed = 100
+        return ego_dynamics
+
+    def set_assertive_parameters(self):
+        print("Use 'assertive' Ego RSS Parameters")
+        ego_dynamics = self.get_assertive_parameters()
+        self.assertive_parameters = True
+        self.sensor.ego_vehicle_dynamics = ego_dynamics
+        self.current_display_parameters = ego_dynamics
+
+    def get_default_parameters(self):
+        ego_dynamics = self.sensor.ego_vehicle_dynamics
+        # default, from ad_rss documentation
+        ego_dynamics.alphaLon.accelMax = 3.5
+        ego_dynamics.alphaLon.brakeMin = -4
+        ego_dynamics.alphaLon.brakeMax = -8
+        ego_dynamics.alphaLon.brakeMinCorrect = -3
+        ego_dynamics.alphaLat.brakeMin = -0.8
+        ego_dynamics.alphaLat.accelMax = 0.2
+        ego_dynamics.lateralFluctuationMargin = 0.1
+        ego_dynamics.responseTime = 1.0
+        ego_dynamics.maxSpeed = 100
+        return ego_dynamics
+
+    def set_default_parameters(self):
+        print("Use 'default' Ego RSS Parameters")
+        ego_dynamics = self.get_default_parameters()
+        self.assertive_parameters = False
+        self.sensor.ego_vehicle_dynamics = ego_dynamics
+        self.current_display_parameters = ego_dynamics
+
+    def _on_rss_response(self, response):
         if not self or not response:
             return
         delta_time = 0.1
         if self.timestamp:
             delta_time = response.timestamp - self.timestamp
+        # debug drawing within the RssSensor takes quite some time
+        # while debug drawing is blocking a thread the respective response usually arrives later
         if delta_time > -0.05:
             self.timestamp = response.timestamp
             self.response_valid = response.response_valid
@@ -808,7 +866,7 @@ class RssSensor(object):
             self.acceleration_restriction = response.acceleration_restriction
             self.ego_dynamics_on_route = response.ego_dynamics_on_route
         # else:
-        #    print("ignore outdated response {}".format(delta_time))
+        #     print("ignore outdated response {}".format(delta_time))
 
     def drop_route(self):
         self.sensor.drop_route()
