@@ -362,6 +362,9 @@ namespace road {
     /// Compute the conflicts of the roads (intersecting roads)
     void ComputeJunctionRoadConflicts(Map &map);
 
+    /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
+    void GenerateDefaultValiditiesForSignalReferences();
+
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
 

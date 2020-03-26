@@ -35,20 +35,20 @@ void USignComponent::SetSignId(const FString &Id) {
   SignId = Id;
 }
 
-void USignComponent::InitializeSign(const carla::road::Map &Map)
+void USignComponent::InitializeSign(const cr::Map &Map)
 {
 
 }
 
-TArray<std::pair<carla::road::RoadId, const carla::road::element::RoadInfoSignal*>>
-    USignComponent::GetAllReferencesToThisSignal(const carla::road::Map &Map)
+TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>>
+    USignComponent::GetAllReferencesToThisSignal(const cr::Map &Map)
 {
-  TArray<std::pair<carla::road::RoadId, const carla::road::element::RoadInfoSignal*>> Result;
+  TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>> Result;
   auto waypoints = Map.GenerateWaypointsOnRoadEntries();
-  std::unordered_set<carla::road::RoadId> ExploredRoads;
+  std::unordered_set<cr::RoadId> ExploredRoads;
   for (auto & waypoint : waypoints)
   {
-    // Check if we alredy explored this road
+    // Check if we already explored this road
     if (ExploredRoads.count(waypoint.road_id) > 0)
     {
       continue;
@@ -57,7 +57,7 @@ TArray<std::pair<carla::road::RoadId, const carla::road::element::RoadInfoSignal
 
     // Multiple times for same road (performance impact, not in behavior)
     auto SignalReferences = Map.GetLane(waypoint).
-        GetRoad()->GetInfos<carla::road::element::RoadInfoSignal>();
+        GetRoad()->GetInfos<cre::RoadInfoSignal>();
     for (auto *SignalReference : SignalReferences)
     {
       FString SignalId(SignalReference->GetSignalId().c_str());

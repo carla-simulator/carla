@@ -85,6 +85,28 @@ namespace road {
     return const_cast<Road *>(this)->GetLaneByDistance(s, lane_id);
   }
 
+  std::vector<Lane*> Road::GetLanesByDistance(double s) {
+    std::vector<Lane*> result;
+    auto lane_sections = GetLaneSectionsAt(s);
+    for (auto &lane_section : lane_sections) {
+      for (auto & lane_pair : lane_section.GetLanes()) {
+        result.emplace_back(&lane_pair.second);
+      }
+    }
+    return result;
+  }
+
+  std::vector<const Lane*> Road::GetLanesByDistance(double s) const {
+    std::vector<const Lane*> result;
+    const auto lane_sections = GetLaneSectionsAt(s);
+    for (const auto &lane_section : lane_sections) {
+      for (const auto & lane_pair : lane_section.GetLanes()) {
+        result.emplace_back(&lane_pair.second);
+      }
+    }
+    return result;
+  }
+
   Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) {
     return GetLaneSectionById(section_id).GetLanes().at(lane_id);
   }

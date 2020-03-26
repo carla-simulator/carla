@@ -25,6 +25,9 @@ namespace element
 }
 }
 
+namespace cr = carla::road;
+namespace cre = carla::road::element;
+
 /// Class representing an OpenDRIVE Signal
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CARLA_API USignComponent : public USceneComponent
@@ -41,7 +44,7 @@ public:
   void SetSignId(const FString &Id);
 
   // Initialize sign (e.g. generate trigger boxes)
-  virtual void InitializeSign(const carla::road::Map &Map);
+  virtual void InitializeSign(const cr::Map &Map);
 
 protected:
   // Called when the game starts
@@ -50,8 +53,8 @@ protected:
   // Called every frame
   virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-  TArray<std::pair<carla::road::RoadId, const carla::road::element::RoadInfoSignal*>>
-      GetAllReferencesToThisSignal(const carla::road::Map &Map);
+  TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>>
+      GetAllReferencesToThisSignal(const cr::Map &Map);
 
   /// Generates a trigger box component in the parent actor
   /// BoxSize should be in Unreal units

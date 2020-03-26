@@ -776,8 +776,8 @@ namespace road {
   std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
       Map::ComputeJunctionConflicts(JuncId id) const {
 
-    const float epsilon = 0.0001f; // small delta in the road (set to 1
-                                     // milimeter to prevent numeric errors)
+    const float epsilon = 0.0001f; // small delta in the road (set to 0.1
+                                     // millimeters to prevent numeric errors)
     const Junction *junction = GetJunction(id);
     std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
         conflicts;
@@ -911,7 +911,6 @@ namespace road {
       std::vector<Rtree::TreeElement> &rtree_elements,
       geom::Transform &current_transform,
       Waypoint &current_waypoint,
-
       Waypoint &next_waypoint) {
     geom::Transform next_transform = ComputeTransform(next_waypoint);
     AddElementToRtree(rtree_elements, current_transform, next_transform,
