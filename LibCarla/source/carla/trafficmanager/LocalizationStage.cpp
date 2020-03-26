@@ -202,9 +202,9 @@ namespace LocalizationConstants {
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
-      uint64_t mIndex = 0u;
-      SimpleWaypointPtr target_waypoint = track_traffic.GetTargetWaypoint(waypoint_buffer, target_point_distance, mIndex);
 
+      std::pair<SimpleWaypointPtr,uint64_t> target_waypoint_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, target_point_distance);
+      SimpleWaypointPtr &target_waypoint = target_waypoint_index_pair.first;
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
       float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
@@ -221,9 +221,10 @@ namespace LocalizationConstants {
       const auto vehicle_reference = boost::static_pointer_cast<cc::Vehicle>(vehicle);
       const float speed_limit = vehicle_reference->GetSpeedLimit();
       const float look_ahead_distance = std::max(2.0f * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
-      uint64_t look_ahead_index = 0u;
-      SimpleWaypointPtr look_ahead_point = track_traffic.GetTargetWaypoint(waypoint_buffer, look_ahead_distance, look_ahead_index);
 
+      std::pair<SimpleWaypointPtr,uint64_t> look_ahead_point_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, look_ahead_distance);
+      SimpleWaypointPtr &look_ahead_point = look_ahead_point_index_pair.first;
+      uint64_t &look_ahead_index = look_ahead_point_index_pair.second;
       bool approaching_junction = false;
       if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
         if (speed_limit*3.6f > HIGHWAY_SPEED) {
