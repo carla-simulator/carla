@@ -40,7 +40,7 @@ sudo apt-get update &&
 sudo apt-get install wget software-properties-common &&
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
-sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" &&
+sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-7 main" &&
 sudo apt-get update
 
 # Additional dependencies for Ubuntu 18.04.
