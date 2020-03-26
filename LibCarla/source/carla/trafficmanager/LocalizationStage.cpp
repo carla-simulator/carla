@@ -285,22 +285,24 @@ namespace LocalizationConstants {
 
       // Run through vehicles with overlapping paths, obtain actor reference,
       // and filter them based on distance to ego vehicle.
+      Actor overlapping_actor_ptr = nullptr;
       for (ActorId overlapping_actor_id: overlapping_actor_set) {
-        Actor actor_ptr = nullptr;
+
         // If actor is part of the registered actors.
         if (vehicle_id_to_index.find(overlapping_actor_id) != vehicle_id_to_index.end()) {
-          actor_ptr = actor_list.at(vehicle_id_to_index.at(overlapping_actor_id));
+          overlapping_actor_ptr = actor_list.at(vehicle_id_to_index.at(overlapping_actor_id));
         }
         // If actor is part of the unregistered actors.
         else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
-          actor_ptr = unregistered_actors.at(overlapping_actor_id);
+          overlapping_actor_ptr = unregistered_actors.at(overlapping_actor_id);
         }
         // If actor is within maximum collision avoidance range.
-        if (actor_ptr!=nullptr && actor_ptr->IsAlive()
-            && cg::Math::DistanceSquared(actor_ptr->GetLocation(),
+        if (overlapping_actor_ptr!=nullptr && overlapping_actor_ptr->IsAlive()
+            && cg::Math::DistanceSquared(overlapping_actor_ptr->GetLocation(),
                                          vehicle_location) < std::pow(MAX_COLLISION_RADIUS, 2))
         {
-          overlapping_actor_info.insert({overlapping_actor_id, {actor_ptr, actor_ptr->GetLocation()}});
+          overlapping_actor_info.insert({overlapping_actor_id,
+                                         {overlapping_actor_ptr, overlapping_actor_ptr->GetLocation()}});
           collision_candidate_ids.push_back(overlapping_actor_id);
         }
       }

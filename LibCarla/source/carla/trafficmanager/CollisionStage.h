@@ -100,7 +100,7 @@ private:
   uint64_t number_of_vehicles;
   /// Structure to hold the geodesic boundaries during one iteration.
   std::unordered_map<ActorId, LocationList> geodesic_boundaries;
-  /// Structure to keep tracking collision tracking.
+  /// Structure to keep track of collision locking.
   std::unordered_map<ActorId, CollisionLock> collision_locks;
   /// Snippet profiler for measuring execution time.
   SnippetProfiler snippet_profiler;

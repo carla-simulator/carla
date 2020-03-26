@@ -108,8 +108,7 @@ namespace PlannerConstants {
       float dynamic_target_velocity = max_target_velocity;
       //////////////////////// Collision related data handling ///////////////////////////
       bool collision_emergency_stop = false;
-      if (collision_data.hazard)
-      {
+      if (collision_data.hazard) {
         cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
         float ego_relative_velocity =  (current_velocity_vector - other_vehicle_velocity).Length();
 
@@ -118,25 +117,20 @@ namespace PlannerConstants {
 
         // Consider collision avoidance decisions only if there is positive relative velocity
         // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-        if (ego_relative_velocity > 0.0f)
-        {
+        if (ego_relative_velocity > 0.0f) {
           // If other vehicle is approaching lead vehicle and lead vehicle is further
           // than FOLLOW_LEAD_DISTANCE.
-          if (collision_data.distance_to_other_vehicle > FOLLOW_LEAD_DISTANCE)
-          {
+          if (collision_data.distance_to_other_vehicle > FOLLOW_LEAD_DISTANCE) {
             // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
             // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
             dynamic_target_velocity = other_velocity_along_heading + RELATIVE_APPROACH_SPEED;
           }
           // If vehicle is approaching a lead vehicle and the lead vehicle is further
           // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-          else if (collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN)
-          {
-            // Then follow the lead vehicle by acquiring it's speed along current heading.          
+          else if (collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN) {
+            // Then follow the lead vehicle by acquiring it's speed along current heading.
             dynamic_target_velocity = std::max(other_velocity_along_heading, RELATIVE_APPROACH_SPEED);
-          }
-          else
-          {
+          } else {
             // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
             collision_emergency_stop = true;
           }

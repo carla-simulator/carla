@@ -21,8 +21,6 @@ BatchControlStage::BatchControlStage(
 
   // Initializing number of vehicles to zero in the beginning.
   number_of_vehicles = 0u;
-  // Initializing time instance for limiting throughput in asynchronous mode.
-  // previous_frame_instance = chr::system_clock::now();
 }
 
 BatchControlStage::~BatchControlStage() {}
@@ -73,6 +71,8 @@ void BatchControlStage::DataSender() {
     if (commands != nullptr) {
       episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
     }
+    // Applying an infinitesimal sleep statement for providing a system cancellation point.
+    std::this_thread::sleep_for(1us);
   }
   // Synchronous mode.
   else {

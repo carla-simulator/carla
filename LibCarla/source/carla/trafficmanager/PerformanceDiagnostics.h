@@ -65,7 +65,7 @@ namespace traffic_manager {
       }
       if (number_of_calls.find(snippet_name) == number_of_calls.end()) {
         number_of_calls.insert({snippet_name, 0u});
-      }      
+      }
 
       TimePoint current_time = chr::system_clock::now();
       TimePoint& print_clock = print_clocks.at(snippet_name);

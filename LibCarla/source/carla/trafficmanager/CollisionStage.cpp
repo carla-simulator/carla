@@ -6,6 +6,8 @@
 
 #include "CollisionStage.h"
 
+#define MAX(__a, __b) ((__a) > (__b) ? (__a) : (__b))
+
 namespace carla {
 namespace traffic_manager {
 
@@ -80,8 +82,7 @@ namespace CollisionStageConstants {
       cg::Vector3D other_vehicle_velocity;
       const SimpleWaypointPtr safe_point_junction = data.safe_point_after_junction;
 
-      try
-      {
+      try {
         // Check every actor in the vicinity if it poses a collision hazard.
         for (auto actor_info = collision_candidates.begin();
             actor_info != collision_candidates.end() && !collision_hazard;
@@ -184,8 +185,7 @@ namespace CollisionStageConstants {
                                                             const cg::Location &reference_location,
                                                             const cg::Location &other_location,
                                                             const SimpleWaypointPtr &closest_point,
-                                                            const SimpleWaypointPtr &junction_look_ahead)
-  {
+                                                            const SimpleWaypointPtr &junction_look_ahead) {
     // Output variables for the method.
     bool hazard = false;
     float available_distance_margin = std::numeric_limits<float>::infinity();
@@ -227,84 +227,68 @@ namespace CollisionStageConstants {
     bool ego_at_junction_entrance = !closest_point->CheckJunction() && junction_look_ahead->CheckJunction();
 
     const ActorId reference_vehicle_id = reference_vehicle->GetId();
-    // Conditions to avoid collision negotiation.
+    // Conditions to consider collision negotiation.
     if (!(ego_at_junction_entrance && ego_at_traffic_light && ego_stopped_by_light)
-        && !(!ego_inside_junction && !other_vehicle_in_front)
-        && !(!ego_inside_junction && other_vehicle_in_front && !other_vehicle_in_ego_range)
-        && !(ego_inside_junction && !other_vehicles_in_cross_detection_range)
-    ) {
+        && ((ego_inside_junction && other_vehicles_in_cross_detection_range)
+            || (!ego_inside_junction && other_vehicle_in_front && other_vehicle_in_ego_range))) {
 
       GeometryComparisonCache cache = GetGeometryBetweenActors(reference_vehicle, other_vehicle,
-                                     reference_location, other_location);
+                                                               reference_location, other_location);
 
       // Conditions for collision negotiation.
       bool geodesic_path_bbox_touching = cache.inter_geodesic_distance < 0.1;
       bool vehicle_bbox_touching = cache.inter_bbox_distance < 0.1;
       bool ego_path_clear = cache.other_vehicle_to_reference_geodesic > 0.1;
-      bool other_path_clear = cache.reference_vehicle_to_other_geodesic > 0.1;
       bool ego_path_priority = cache.reference_vehicle_to_other_geodesic < cache.other_vehicle_to_reference_geodesic;
       bool ego_angular_priority = cg::Math::Dot(reference_heading, reference_to_other)
                                   < cg::Math::Dot(other_heading, other_to_reference);
 
       // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
       if (geodesic_path_bbox_touching
-          && !(ego_path_clear && !other_path_clear)
           && (!ego_path_clear
-              || (!vehicle_bbox_touching && !ego_path_priority)
-              || (vehicle_bbox_touching && !ego_angular_priority)))
-      {
+              || (ego_path_clear && !ego_path_priority)
+              || (vehicle_bbox_touching && !ego_angular_priority))) {
 
         hazard = true;
-        // TODO: Remove thresholding after fixing parameters class to return clamped values.
-        const float specific_distance_margin = std::max(parameters.GetDistanceToLeadingVehicle(reference_vehicle),
+
+        const float specific_distance_margin = MAX(parameters.GetDistanceToLeadingVehicle(reference_vehicle),
                                                         BOUNDARY_EXTENSION_MINIMUM);
-        available_distance_margin = static_cast<float>(std::max(cache.reference_vehicle_to_other_geodesic
+        available_distance_margin = static_cast<float>(MAX(cache.reference_vehicle_to_other_geodesic
                                                                  - specific_distance_margin, 0.0));
 
         ActorId other_vehicle_id = other_vehicle->GetId();
         ///////////////////////////////////// Collision locking mechanism /////////////////////////////////
-        // The idea is, when encountering a possible collision, and the distance to lead vehicle is decreasing,
+        // The idea is, when encountering a possible collision,
         // we should ensure that the bounding box extension doesn't decrease too fast and loose collision tracking.
         // This enables us to smoothly approach the lead vehicle.
 
         // When possible collision found, check if an entry for collision lock present.
-        if (collision_locks.find(reference_vehicle_id) != collision_locks.end())
-        {
+        if (collision_locks.find(reference_vehicle_id) != collision_locks.end()) {
           CollisionLock &lock = collision_locks.at(reference_vehicle_id);
           // Check if the same vehicle is under lock.
-          if (other_vehicle_id == lock.lead_vehicle_id)
-          {
+          if (other_vehicle_id == lock.lead_vehicle_id) {
             // If the body of the lead vehicle is touching the reference vehicle bounding box.
-            if (cache.other_vehicle_to_reference_geodesic < 0.1)
-            {
+            if (cache.other_vehicle_to_reference_geodesic < 0.1) {
               // Distance between the bodies of the vehicles.
               lock.distance_to_lead_vehicle =  cache.inter_bbox_distance;
-            }
-            else
-            {
+            } else {
               // Distance from reference vehicle body to other vehicle path polygon.
               lock.distance_to_lead_vehicle = cache.reference_vehicle_to_other_geodesic;
             }
-          }
-          else
-          {
+          } else {
             // If possible collision with a new vehicle, re-initialize with new lock entry.
             lock = {other_vehicle_id, cache.inter_bbox_distance, cache.inter_bbox_distance};
           }
-        }
-        else
-        {
+        } else {
           // Insert and initialize lock entry if not present.
           collision_locks.insert({reference_vehicle_id,
                                  {other_vehicle_id, cache.inter_bbox_distance, cache.inter_bbox_distance}});
         }
-        ///////////////////////////////////////////////////////////////////////////////////////////////////
       }
     }
 
     // If no collision hazard detected, then flush collision lock held by the vehicle.
-    if (!hazard && collision_locks.find(reference_vehicle_id) != collision_locks.end())
-    {
+    if (!hazard && collision_locks.find(reference_vehicle_id) != collision_locks.end()) {
       collision_locks.erase(reference_vehicle_id);
     }
 
@@ -335,7 +319,7 @@ namespace CollisionStageConstants {
 
       const float specific_distance_margin = parameters.GetDistanceToLeadingVehicle(actor);
       if (specific_distance_margin > 0.0f) {
-        bbox_extension = std::max(specific_distance_margin, bbox_extension);
+        bbox_extension = MAX(specific_distance_margin, bbox_extension);
       }
 
       const auto &waypoint_buffer =  localization_frame->at(vehicle_id_to_index.at(actor->GetId())).buffer;
@@ -344,12 +328,12 @@ namespace CollisionStageConstants {
       LocationList right_boundary;
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       const float width = vehicle->GetBoundingBox().extent.y;
-      const float length = vehicle->GetBoundingBox().extent.x*2;
+      const float length_squared = std::pow(vehicle->GetBoundingBox().extent.x*2, 2.0f);
 
       SimpleWaypointPtr boundary_start = waypoint_buffer.front();
       SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
       uint64_t boundary_start_index = 0u;
-      while (boundary_start->DistanceSquared(front_waypoint) < std::pow(length, 2) &&
+      while (boundary_start->DistanceSquared(front_waypoint) < length_squared &&
              boundary_start_index < waypoint_buffer.size() -1) {
         boundary_start = waypoint_buffer.at(boundary_start_index);
         ++boundary_start_index;
@@ -474,7 +458,10 @@ namespace CollisionStageConstants {
     return bbox_boundary;
   }
 
-  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &other_actor, const SimpleWaypointPtr safe_point , const cg::Location &other_location){
+  bool CollisionStage::IsLocationAfterJunctionSafe(const Actor &ego_actor,
+                                                   const Actor &other_actor,
+                                                   const SimpleWaypointPtr safe_point,
+                                                   const cg::Location &other_location) {
 
     bool safe_junction = true;
 
