@@ -250,22 +250,20 @@ namespace LocalizationConstants {
       }
 
       if(mScanForward) {
-        for (uint64_t j = startPosn ;
-            (j < waypoint_buffer.size()) &&
+        for (index = startPosn ;
+            (index < waypoint_buffer.size()) &&
             (buffer_front->DistanceSquared(target_waypoint)
             < target_point_dist_power);
-            ++j) {
-            target_waypoint = waypoint_buffer.at(j);
-            index = j;
+            ++index) {
+            target_waypoint = waypoint_buffer.at(index);
             }
       }
       else {
-        for (uint64_t j = startPosn ;
+        for (index = startPosn ;
           (buffer_front->DistanceSquared(target_waypoint)
           > target_point_dist_power);
-          --j) {
-          target_waypoint = waypoint_buffer.at(j);
-          index = j;
+          --index) {
+          target_waypoint = waypoint_buffer.at(index);
           }
       }
     }
