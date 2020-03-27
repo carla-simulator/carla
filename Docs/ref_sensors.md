@@ -219,12 +219,12 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 <tbody>
 <td>
 <code>noise_alt_bias</code> </td>
-<td>int</td>
+<td>float</td>
 <td>0.0</td>
 <td>Mean parameter in the noise model for altitude.</td>
 <tr>
 <td><code>noise_alt_stddev</code></td>
-<td>int</td>
+<td>float</td>
 <td>0.0</td>
 <td>Standard deviation parameter in the noise model for altitude.</td>
 <tr>
@@ -397,11 +397,11 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 <td>Location and rotation in world coordinates of the sensor at the time of the measurement.</td>
 <tr>
 <td><code>accelerometer</code></td>
-<td><a href="../python_api#carlavector3d">carla.Transform</a></td>
+<td><a href="../python_api#carlavector3d">carla.Vector3D</a></td>
 <td>Measures linear acceleration in <code>m/s^2</code>.</td>
 <tr>
 <td><code>gyroscope</code></td>
-<td><a href="../python_api#carlavector3d">carla.Transform</a></td>
+<td><a href="../python_api#carlavector3d">carla.Vector3D</a></td>
 <td>Measures angular velocity in <code>rad/sec</code>.</td>
 <tr>
 <td><code>compass</code></td>
@@ -455,7 +455,7 @@ This sensor does not have any configurable attribute.
 <td>Vehicle that invaded another lane (parent actor).</td>
 <tr>
 <td><code>crossed_lane_markings</code></td>
-<td><a href="../python_api#carlalanemarking">carla.LaneMarking</a></td>
+<td>list(<a href="../python_api#carlalanemarking">carla.LaneMarking</a>)</td>
 <td>List of lane markings that have been crossed.</td>
 </tbody>
 </table>
@@ -1235,10 +1235,21 @@ The following tags are currently available:
 <th>Description</th>
 </thead>
 <tbody>
-<td>
-<code>frame</code> </td>
+<td><code>fov</code></td>
+<td>float</td>
+<td>Horizontal field of view in degrees.</td>
+<tr>
+<td><code>frame</code> </td>
 <td>int</td>
 <td>Frame number when the measurement took place.</td>
+<tr>
+<td><code>height</code></td>
+<td>int</td>
+<td>Image height in pixels.</td>
+<tr>
+<td><code>raw_data</code></td>
+<td>bytes</td>
+<td>Array of BGRA 32-bit pixels.</td>
 <tr>
 <td><code>timestamp</code></td>
 <td>double</td>
