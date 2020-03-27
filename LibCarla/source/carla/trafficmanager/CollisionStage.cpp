@@ -239,6 +239,7 @@ namespace CollisionStageConstants {
       bool geodesic_path_bbox_touching = cache.inter_geodesic_distance < 0.1;
       bool vehicle_bbox_touching = cache.inter_bbox_distance < 0.1;
       bool ego_path_clear = cache.other_vehicle_to_reference_geodesic > 0.1;
+      bool other_path_clear = cache.reference_vehicle_to_other_geodesic > 0.1;
       bool ego_path_priority = cache.reference_vehicle_to_other_geodesic < cache.other_vehicle_to_reference_geodesic;
       bool ego_angular_priority = cg::Math::Dot(reference_heading, reference_to_other)
                                   < cg::Math::Dot(other_heading, other_to_reference);
@@ -246,7 +247,7 @@ namespace CollisionStageConstants {
       // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
       if (geodesic_path_bbox_touching
           && (!ego_path_clear
-              || (ego_path_clear && !ego_path_priority)
+              || (!vehicle_bbox_touching && ego_path_clear && other_path_clear && !ego_path_priority)
               || (vehicle_bbox_touching && !ego_angular_priority))) {
 
         hazard = true;
