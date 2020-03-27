@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+
 pipeline
 {
     agent none
@@ -9,16 +11,31 @@ pipeline
 
     stages
     {
-        stage('windows and ubuntu in parallel')
+        stage('Creating nodes')
+        {
+            agent { label "master" }
+            steps
+            {
+                script
+                {
+                    JOB_ID = "${env.BUILD_TAG}"
+                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                    
+                    jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
+                    jenkinsLib.CreateWindowsBuildNode(JOB_ID)
+                }
+            }
+        }
+        stage('Building CARLA')
         {
             parallel
             {
                 stage('ubuntu')
                 {
-                    agent { label 'ubuntu && build' }
+                    agent { label "ubuntu && build && ${JOB_ID}" }
                     environment
                     {
-                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.22'
+                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.24'
                     }
                     stages
                     {
@@ -77,17 +94,32 @@ pipeline
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
-                            post {
-                                always {
+                            post 
+                            {
+                                always 
+                                {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
+                                }
+                                success
+                                {
+                                    node('master')
+                                    {
+                                        script
+                                        {
+                                            JOB_ID = "${env.BUILD_TAG}"
+                                            jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                            
+                                            jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                                        }
+                                    }
                                 }
                             }
                         }
                         stage('ubuntu smoke tests')
                         {
-                            agent { label 'ubuntu && gpu' }
+                            agent { label "ubuntu && gpu && ${JOB_ID}" }
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
@@ -105,6 +137,16 @@ pipeline
                                     archiveArtifacts 'CarlaUE4.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
                                     deleteDir()
+                                    node('master')
+                                    {
+                                        script
+                                        {
+                                            JOB_ID = "${env.BUILD_TAG}"
+                                            jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                            
+                                            jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -137,105 +179,151 @@ pipeline
                                     git push
                                 '''
                             }
-                        }
-                        stage('Cleanning')
-                        {
-                            steps
+                            post
                             {
-                                deleteDir()
+                                always
+                                {
+                                    deleteDir()
+                                }
+                            }
+                        }
+                    }
+                    post 
+                    {
+                        always 
+                        { 
+                            deleteDir() 
+
+                            node('master')
+                            {
+                                script
+                                {
+                                    JOB_ID = "${env.BUILD_TAG}"
+                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    
+                                    jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
+                                }
                             }
                         }
                     }
                 }
-                // stage('windows')
-                // {
-                //     agent { label 'windows && build' }
-                //     environment
-                //     {
-                //         UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.22'
-                //     }
-                //     stages
-                //     {
-                //         stage('windows setup')
-                //         {
-                //             steps
-                //             {
-                //                 bat """
-                //                     call ../setEnv64.bat
-                //                     make setup
-                //                 """
-                //             }
-                //         }
-                //         stage('windows build')
-                //         {
-                //             steps
-                //             {
-                //                 bat """
-                //                     call ../setEnv64.bat
-                //                     make LibCarla
-                //                     make PythonAPI
-                //                     make CarlaUE4Editor
-                //                 //     make examples
-                //                 // """
-                //             }
-                //             post
-                //             {
-                //                 always
-                //                 {
-                //                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                //                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
-                //                 }
-                //             }
-                //         }
-                //         // stage('windows unit tests')
-                //         // {
-                //         //     steps { bat 'rem Not Implemented'}
-                //         // }
-                //         stage('windows retrieve content')
-                //         {
-                //             steps
-                //             {
-                //                 bat """
-                //                     call ../setEnv64.bat
-                //                     call Update.bat
-                //                 """
-                //             }
-                //         }
-                //         stage('windows package')
-                //         {
-                //             steps
-                //             {
-                //                 bat """
-                //                     call ../setEnv64.bat
-                //                     make package
-                //                     make package ARGS="--packages=AdditionalMaps --clean-intermediate"
-                //                 """
-                //                     // make examples ARGS="localhost 3654"
-                //             }
-                //             post {
-                //                 always {
-                //                     archiveArtifacts 'Build/UE4Carla/*.zip'
-                //                     // stash includes: 'Build/UE4Carla/CARLA*.zip', name: 'windows_package'
-                //                     // stash includes: 'Examples/', name: 'windows_examples'
-                //                 }
-                //             }
-                //         }
-                //         // stage('windows smoke test')
-                //         // {
-                //         //     steps { bat 'rem Not Implemented'}
-                //         // }
-                //         stage('windows deploy')
-                //         {
-                //             when { anyOf { branch "master"; buildingTag() } }
-                //             steps {
-                //                 bat """
-                //                     call ../setEnv64.bat
-                //                     make deploy ARGS="--replace-latest"
-                //                 """
-                //             }
-                //         }
-                //     }
-                // }
+                stage('windows')
+                {
+                    agent { label "windows && build && ${JOB_ID}" }
+                    environment
+                    {
+                        UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.24'
+                    }
+                    stages
+                    {
+                        stage('windows setup')
+                        {
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make setup
+                                """
+                            }
+                        }
+                        stage('windows build')
+                        {
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make LibCarla
+                                """
+                                bat """
+                                    call ../setEnv64.bat
+                                    make PythonAPI
+                                """
+                                bat """
+                                    call ../setEnv64.bat
+                                    make CarlaUE4Editor
+                                """
+                                // make examples
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
+                                }
+                            }
+                        }
+                        // stage('windows unit tests')
+                        // {
+                        //     steps { bat 'rem Not Implemented'}
+                        // }
+                        stage('windows retrieve content')
+                        {
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    call Update.bat
+                                """
+                            }
+                        }
+                        stage('windows package')
+                        {
+                            steps
+                            {
+                                bat """
+                                    call ../setEnv64.bat
+                                    make package
+                                """
+                                bat """
+                                    call ../setEnv64.bat
+                                    make package ARGS="--packages=AdditionalMaps --clean"
+                                """
+                                // make examples ARGS="localhost 3654"
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts 'Build/UE4Carla/*.zip'
+                                    // stash includes: 'Build/UE4Carla/CARLA*.zip', name: 'windows_package'
+                                    // stash includes: 'Examples/', name: 'windows_examples'
+                                }
+                            }
+                        }
+                        // stage('windows smoke test')
+                        // {
+                        //     steps { bat 'rem Not Implemented'}
+                        // }
+                        stage('windows deploy')
+                        {
+                            when { anyOf { branch "master"; buildingTag() } }
+                            steps {
+                                bat """
+                                    call ../setEnv64.bat
+                                    git checkout .
+                                    make deploy ARGS="--replace-latest"
+                                """
+                            }
+                        }
+                    }
+                    post 
+                    {
+                        always 
+                        { 
+                            deleteDir() 
+
+                            node('master')
+                            {
+                                script
+                                {
+                                    JOB_ID = "${env.BUILD_TAG}"
+                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    
+                                    jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

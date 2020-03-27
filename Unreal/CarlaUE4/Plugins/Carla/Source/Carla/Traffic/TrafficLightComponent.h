@@ -9,10 +9,12 @@
 #include "CoreMinimal.h"
 #include "SignComponent.h"
 #include "TrafficLightState.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "TrafficLightComponent.generated.h"
 
 class ATrafficLightManager;
 class ATrafficLightGroup;
+class UTrafficLightController;
 
 // Delegate to define dispatcher
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLightChangeDispatcher);
@@ -27,24 +29,30 @@ public:
   // Sets default values for this component's properties
   UTrafficLightComponent();
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetLightState(ETrafficLightState NewState);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   ETrafficLightState GetLightState() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetFrozenGroup(bool InFreeze);
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Light", BlueprintPure)
   ATrafficLightGroup* GetGroup();
 
-protected:
-  // Called when the game starts
-  virtual void BeginPlay() override;
+  UFUNCTION(Category = "Traffic Light", BlueprintPure)
+  UTrafficLightController* GetController();
 
-  // Called every frame
-  virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+protected:
+
+  UFUNCTION(BlueprintCallable)
+  virtual void OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+      AActor *OtherActor,
+      UPrimitiveComponent *OtherComp,
+      int32 OtherBodyIndex,
+      bool bFromSweep,
+      const FHitResult &SweepResult);
 
 private:
 
@@ -52,9 +60,17 @@ private:
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
   ETrafficLightState LightState;
 
-  UPROPERTY(BlueprintAssignable, Category = "Traffic Light")
+  UPROPERTY(Category = "Traffic Light", BlueprintAssignable)
   FLightChangeDispatcher LightChangeDispatcher;
 
   UPROPERTY()
   ATrafficLightGroup *TrafficLightGroup = nullptr;
+
+  UPROPERTY()
+  UTrafficLightController *TrafficLightController = nullptr;
+
+  // Vehicles that have entered the trigger box of the traffic light
+  UPROPERTY()
+  TArray<AWheeledVehicleAIController*> Vehicles;
+
 };

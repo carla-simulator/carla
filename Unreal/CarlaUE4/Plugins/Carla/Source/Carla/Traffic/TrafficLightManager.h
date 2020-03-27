@@ -8,6 +8,7 @@
 
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
+#include "TrafficSignBase.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
@@ -35,16 +36,31 @@ public:
   UTrafficLightController* GetController(FString ControllerId);
 
   UFUNCTION(BlueprintCallable)
-  UTrafficLightComponent* GetTrafficLight(FString SignId);
+  USignComponent* GetTrafficSign(FString SignId);
 
   UFUNCTION(CallInEditor)
-  void GenerateTrafficLights();
+  void GenerateSignalsAndTrafficLights();
+
+  UFUNCTION(CallInEditor)
+  void RemoveGeneratedSignalsAndTrafficLights();
 
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
 private:
+
+  void ResetTrafficLightObjects();
+
+  void SpawnTrafficLights();
+
+  void SpawnSignals();
+
+  void GenerateTriggerBoxesForTrafficLights();
+
+  void GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
+    UTrafficLightComponent* TrafficLightComponent,
+    float BoxSize);
 
   // Cached Carla Game Mode
   UPROPERTY()
@@ -60,13 +76,24 @@ private:
 
   // Mapped references to individual TrafficLightComponents
   UPROPERTY()
-  TMap<FString, UTrafficLightComponent *> TrafficLights;
+  TMap<FString, USignComponent *> TrafficSignComponents;
+
+  // Mapped references to TrafficSigns
+  TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<AActor> TrafficLightModel;
+  TSubclassOf<ATrafficSignBase> TrafficLightModel;
+
+  // Relates an OpenDRIVE type to a traffic sign blueprint
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TMap<FString, TSubclassOf<ATrafficSignBase>> TrafficSignsModels;
 
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
 
   boost::optional<carla::road::Map> Map;
+
+  UPROPERTY()
+  bool TrafficLightsGenerated = false;
+
 };

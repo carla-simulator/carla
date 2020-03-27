@@ -401,6 +401,7 @@ The terminal will show the information registered for actors considered blocked.
         - `filename` (_str_) – Name of the recorded file to load.  
         - `min_time` (_float_) – Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.  
         - `min_distance` (_float_) – Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.  
+    - **Return:** _string_  
 - <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  
 The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows:
   'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
@@ -414,11 +415,13 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
+    - **Return:** _string_  
 - <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**=False</font>)  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) – When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.  
+    - **Return:** _string_  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
     - **Parameters:**
@@ -732,63 +735,6 @@ Returns which lanes the landmark is affecting to. As there may be specific lanes
 
 ---
 
-## carla.Landmark<a name="carla.Landmark"></a>
-Class containing the definition of a signal affecting a specific road.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.Landmark.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
-Id of the road where this signal is defined. This road may be different from the road this signal is currently affecting.  
-- <a name="carla.Landmark.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
-Remaining distance to the signal from the waypoint calling `get_landmarks` or `get_landmarks_of_type`.  
-- <a name="carla.Landmark.s"></a>**<font color="#f8805a">s</font>** (_float_)  
-Distance position of the signal along the geometry of the road `road_id`.  
-- <a name="carla.Landmark.t"></a>**<font color="#f8805a">t</font>** (_float_)  
-Lateral position of the signal along the geometry of the road `road_id`.  
-- <a name="carla.Landmark.id"></a>**<font color="#f8805a">id</font>** (_str_)  
-Unique id of the signal in the OpenDRIVE file.  
-- <a name="carla.Landmark.name"></a>**<font color="#f8805a">name</font>** (_str_)  
-Name of the signal in the in the OpenDRIVE file.  
-- <a name="carla.Landmark.is_dynamic"></a>**<font color="#f8805a">is_dynamic</font>** (_bool_)  
-Indicates if the signal state changes over time such as traffic lights.  
-- <a name="carla.Landmark.orientation"></a>**<font color="#f8805a">orientation</font>** (_LandmarkOrientation_)  
-Indicates if the signal state changes over time such as traffic lights.  
-- <a name="carla.Landmark.z_offset"></a>**<font color="#f8805a">z_offset</font>** (_float_)  
-Elevation from the ground of the signal.  
-- <a name="carla.Landmark.country"></a>**<font color="#f8805a">country</font>** (_str_)  
-Country code where this signal is defined (default to OpenDRIVE).  
-- <a name="carla.Landmark.type"></a>**<font color="#f8805a">type</font>** (_str_)  
-Type identification of the signal according to country code.  
-- <a name="carla.Landmark.sub_type"></a>**<font color="#f8805a">sub_type</font>** (_str_)  
-Subtype identification of the signal according to country code.  
-- <a name="carla.Landmark.value"></a>**<font color="#f8805a">value</font>** (_float_)  
-Value printed in the signal (e.g. speed limit, maximum weight, etc).  
-- <a name="carla.Landmark.unit"></a>**<font color="#f8805a">unit</font>** (_str_)  
-Units of attribute `value`.  
-- <a name="carla.Landmark.height"></a>**<font color="#f8805a">height</font>** (_float_)  
-Total height of the signal.  
-- <a name="carla.Landmark.width"></a>**<font color="#f8805a">width</font>** (_float_)  
-Total width of the signal.  
-- <a name="carla.Landmark.text"></a>**<font color="#f8805a">text</font>** (_str_)  
-Additional text in the signal.  
-- <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float_)  
-Heading of the signal relative to the orientation of the road.  
-- <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float_)  
-Pitch of the signal.  
-- <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll of the signal.  
-- <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
-The waypoint where this signal is producing an effect in the road.  
-- <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
-The position and orientation of this signal in the world.  
-
-<h3>Methods</h3>
-- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of pairs of lane ids defining to which lanes this signal is producing an effect.
-The pair defines a range of lanes (from_lane_id, to_lane_id).  
-    - **Return:** _list(tuple(int))_  
-
----
-
 ## carla.LandmarkOrientation<a name="carla.LandmarkOrientation"></a>
 Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding.  
 
@@ -799,19 +745,6 @@ The landmark faces towards vehicles going on the same direction as the road's ge
 The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE).  
 - <a name="carla.LandmarkOrientation.Both"></a>**<font color="#f8805a">Both</font>**  
 Affects vehicles going in both directions of the road.  
-
----
-
-## carla.LandmarkOrientation<a name="carla.LandmarkOrientation"></a>
-Class defining the orientation of a landmark in the road.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.LandmarkOrientation.Positive"></a>**<font color="#f8805a">Positive</font>**  
-Positive direction of the road's geometry definition (negative lanes).  
-- <a name="carla.LandmarkOrientation.Negative"></a>**<font color="#f8805a">Negative</font>**  
-Negative direction of the road's geometry definition (positive lanes).  
-- <a name="carla.LandmarkOrientation.Both"></a>**<font color="#f8805a">Both</font>**  
-Affects lanes in both directions of the road.  
 
 ---
 
@@ -833,81 +766,6 @@ Type 150.
 - <a name="carla.LandmarkType.StopSign"></a>**<font color="#f8805a">StopSign</font>**  
 Type 206.  
 - <a name="carla.LandmarkType.YieldSign"></a>**<font color="#f8805a">YieldSign</font>**  
-Type 205.  
-- <a name="carla.LandmarkType.MandatoryTurnDirection"></a>**<font color="#f8805a">MandatoryTurnDirection</font>**  
-Type 209.  
-- <a name="carla.LandmarkType.MandatoryLeftRightDirection"></a>**<font color="#f8805a">MandatoryLeftRightDirection</font>**  
-Type 211.  
-- <a name="carla.LandmarkType.TwoChoiceTurnDirection"></a>**<font color="#f8805a">TwoChoiceTurnDirection</font>**  
-Type 214.  
-- <a name="carla.LandmarkType.Roundabout"></a>**<font color="#f8805a">Roundabout</font>**  
-Type 215.  
-- <a name="carla.LandmarkType.PassRightLeft"></a>**<font color="#f8805a">PassRightLeft</font>**  
-Type 222.  
-- <a name="carla.LandmarkType.AccessForbidden"></a>**<font color="#f8805a">AccessForbidden</font>**  
-Type 250.  
-- <a name="carla.LandmarkType.AccessForbiddenMotorvehicles"></a>**<font color="#f8805a">AccessForbiddenMotorvehicles</font>**  
-Type 251.  
-- <a name="carla.LandmarkType.AccessForbiddenTrucks"></a>**<font color="#f8805a">AccessForbiddenTrucks</font>**  
-Type 253.  
-- <a name="carla.LandmarkType.AccessForbiddenBicycle"></a>**<font color="#f8805a">AccessForbiddenBicycle</font>**  
-Type 254.  
-- <a name="carla.LandmarkType.AccessForbiddenWeight"></a>**<font color="#f8805a">AccessForbiddenWeight</font>**  
-Type 263.  
-- <a name="carla.LandmarkType.AccessForbiddenWidth"></a>**<font color="#f8805a">AccessForbiddenWidth</font>**  
-Type 264.  
-- <a name="carla.LandmarkType.AccessForbiddenHeight"></a>**<font color="#f8805a">AccessForbiddenHeight</font>**  
-Type 265.  
-- <a name="carla.LandmarkType.AccessForbiddenWrongDirection"></a>**<font color="#f8805a">AccessForbiddenWrongDirection</font>**  
-Type 267.  
-- <a name="carla.LandmarkType.ForbiddenUTurn"></a>**<font color="#f8805a">ForbiddenUTurn</font>**  
-Type 272.  
-- <a name="carla.LandmarkType.MaximumSpeed"></a>**<font color="#f8805a">MaximumSpeed</font>**  
-Type 274.  
-- <a name="carla.LandmarkType.ForbiddenOvertakingMotorvehicles"></a>**<font color="#f8805a">ForbiddenOvertakingMotorvehicles</font>**  
-Type 276.  
-- <a name="carla.LandmarkType.ForbiddenOvertakingTrucks"></a>**<font color="#f8805a">ForbiddenOvertakingTrucks</font>**  
-Type 277.  
-- <a name="carla.LandmarkType.AbsoluteNoStop"></a>**<font color="#f8805a">AbsoluteNoStop</font>**  
-Type 283.  
-- <a name="carla.LandmarkType.RestrictedStop"></a>**<font color="#f8805a">RestrictedStop</font>**  
-Type 286.  
-- <a name="carla.LandmarkType.HasWayNextIntersection"></a>**<font color="#f8805a">HasWayNextIntersection</font>**  
-Type 301.  
-- <a name="carla.LandmarkType.PriorityWay"></a>**<font color="#f8805a">PriorityWay</font>**  
-Type 306.  
-- <a name="carla.LandmarkType.PriorityWayEnd"></a>**<font color="#f8805a">PriorityWayEnd</font>**  
-Type 307.  
-- <a name="carla.LandmarkType.CityBegin"></a>**<font color="#f8805a">CityBegin</font>**  
-Type 310.  
-- <a name="carla.LandmarkType.CityEnd"></a>**<font color="#f8805a">CityEnd</font>**  
-Type 311.  
-- <a name="carla.LandmarkType.Highway"></a>**<font color="#f8805a">Highway</font>**  
-Type 330.  
-- <a name="carla.LandmarkType.RecomendedSpeed"></a>**<font color="#f8805a">RecomendedSpeed</font>**  
-Type 380.  
-- <a name="carla.LandmarkType.RecomendedSpeedEnd"></a>**<font color="#f8805a">RecomendedSpeedEnd</font>**  
-Type 381.  
-
----
-
-## carla.LandmarkType<a name="carla.LandmarkType"></a>
-Class containing a set of landmarks using the country code OpenDRIVE. See section 6.10 in the OpenDrive 1.5M specification.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.LandmarkType.Danger"></a>**<font color="#f8805a">Danger</font>**  
-Type 101.  
-- <a name="carla.LandmarkType.LanesMerging"></a>**<font color="#f8805a">LanesMerging</font>**  
-Type 121.  
-- <a name="carla.LandmarkType.CautionPedestrian"></a>**<font color="#f8805a">CautionPedestrian</font>**  
-Type 133.  
-- <a name="carla.LandmarkType.CautionBicycle"></a>**<font color="#f8805a">CautionBicycle</font>**  
-Type 138.  
-- <a name="carla.LandmarkType.LevelCrossing"></a>**<font color="#f8805a">LevelCrossing</font>**  
-Type 150.  
-- <a name="carla.LandmarkType.Stop"></a>**<font color="#f8805a">Stop</font>**  
-Type 206.  
-- <a name="carla.LandmarkType.Yield"></a>**<font color="#f8805a">Yield</font>**  
 Type 205.  
 - <a name="carla.LandmarkType.MandatoryTurnDirection"></a>**<font color="#f8805a">MandatoryTurnDirection</font>**  
 Type 209.  

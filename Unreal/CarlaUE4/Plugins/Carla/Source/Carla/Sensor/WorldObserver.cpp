@@ -8,6 +8,9 @@
 #include "Carla/Sensor/WorldObserver.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficLightComponent.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/Walker/WalkerController.h"
 
 #include "CoreGlobals.h"
@@ -64,18 +67,89 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
     auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
     if (TrafficLight != nullptr)
     {
+
+      UTrafficLightComponent* TrafficLightComponent =
+      Cast<UTrafficLightComponent>(TrafficLight->FindComponentByClass<UTrafficLightComponent>());
+
       using TLS = carla::rpc::TrafficLightState;
-      state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
-      state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
-      state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
-      state.traffic_light_data.red_time = TrafficLight->GetRedTime();
-      state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
-      state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
-      state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+
+      if(TrafficLightComponent == nullptr) {
+        // Old way: traffic lights are actors
+        state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
+        state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
+        state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
+        state.traffic_light_data.red_time = TrafficLight->GetRedTime();
+        state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
+        state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
+        state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+      } else {
+        UTrafficLightController* Controller =  TrafficLightComponent->GetController();
+        ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
+
+        if (!Controller)
+        {
+          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Controller assigned"));
+        }
+        else if (!Group)
+        {
+          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Group assigned"));
+        }
+        else
+        {
+          state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
+          state.traffic_light_data.green_time = Controller->GetGreenTime();
+          state.traffic_light_data.yellow_time = Controller->GetYellowTime();
+          state.traffic_light_data.red_time = Controller->GetRedTime();
+          state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+          state.traffic_light_data.time_is_frozen = Group->IsFrozen();
+          state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
+        }
+      }
     }
   }
 
   return state;
+}
+
+static void FWorldObserver_GetActorComponentsState(
+  const FActorView &View,
+  const FActorRegistry &Registry,
+  TArray<carla::sensor::data::ComponentDynamicState>& Out)
+{
+  using AType = FActorView::ActorType;
+
+  if (AType::TrafficLight == View.GetActorType())
+  {
+    auto TrafficLightActor = Cast<ATrafficLightBase>(View.GetActor());
+    if (TrafficLightActor == nullptr)
+    {
+      return;
+    }
+
+    TArray<UTrafficLightComponent*> TrafficLights;
+    TrafficLightActor->GetComponents<UTrafficLightComponent>(TrafficLights);
+
+    for(auto& TrafficLight : TrafficLights)
+    {
+      using TLS = carla::rpc::TrafficLightState;
+
+      UTrafficLightController* Controller =  TrafficLight->GetController();
+      ATrafficLightGroup* Group = TrafficLight->GetGroup();
+
+      carla::sensor::data::ComponentDynamicState CompState;
+      CompState.transform = TrafficLight->GetComponentTransform();
+      CompState.state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetLightState());
+      CompState.state.traffic_light_data.green_time = Controller->GetGreenTime();
+      CompState.state.traffic_light_data.yellow_time = Controller->GetYellowTime();
+      CompState.state.traffic_light_data.red_time = Controller->GetRedTime();
+      CompState.state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+      CompState.state.traffic_light_data.time_is_frozen = Group->IsFrozen();
+      // Nobody is using this right now, perhaps we should remove it?
+      CompState.state.traffic_light_data.pole_index = 0;
+
+      Out.Push(CompState);
+    }
+  }
 }
 
 static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
@@ -104,18 +178,22 @@ static carla::Buffer FWorldObserver_Serialize(
     const UCarlaEpisode &Episode,
     float DeltaSeconds)
 {
+
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
+  using ComponentDynamicState = carla::sensor::data::ComponentDynamicState;
 
   const auto &Registry = Episode.GetActorRegistry();
 
+  auto total_size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
+  auto current_size = 0;
   // Set up buffer for writing.
-  buffer.reset(sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num());
-  auto begin = buffer.begin();
-  auto write_data = [&begin](const auto &data)
+  buffer.reset(total_size);
+  auto write_data = [&current_size, &buffer](const auto &data)
   {
+    auto begin = buffer.begin() + current_size;
     std::memcpy(begin, &data, sizeof(data));
-    begin += sizeof(data);
+    current_size += sizeof(data);
   };
 
   // Write header.
@@ -138,12 +216,16 @@ static carla::Buffer FWorldObserver_Serialize(
       carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
       FWorldObserver_GetAngularVelocity(*View.GetActor()),
       FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
-      FWorldObserver_GetActorState(View, Registry)
+      FWorldObserver_GetActorState(View, Registry),
     };
     write_data(info);
   }
 
-  check(begin == buffer.end());
+  // Shrink buffer
+  buffer.resize(current_size);
+
+  check(buffer.size() == current_size);
+
   return std::move(buffer);
 }
 
