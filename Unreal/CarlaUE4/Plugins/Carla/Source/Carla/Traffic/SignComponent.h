@@ -20,10 +20,10 @@ class CARLA_API USignComponent : public USceneComponent
 public:
   USignComponent();
 
-  UFUNCTION(BlueprintPure)
+  UFUNCTION(Category = "Traffic Sign", BlueprintPure)
   const FString &GetSignId() const;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(Category = "Traffic Sign", BlueprintCallable)
   void SetSignId(const FString &Id);
 
 protected:

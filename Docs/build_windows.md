@@ -6,7 +6,7 @@
 * [__Necessary software__](#necessary-software)  
 	* Minor installations: CMake, git, make, Python3 x64  
 	* Visual Studio 2017
-	* Unreal Engine 4.22 
+	* Unreal Engine 4.24 
 * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
@@ -35,7 +35,7 @@ CARLA forum</a>
 #   Git
 #   Make
 #   Python3 x64
-#   Unreal Engine 4.22
+#   Unreal Engine 4.24
 #   Visual Studio 2017 with Windows 8.1 SDK and x64 Visual C++ Toolset.
 
 # Set environment variables for the software
@@ -85,12 +85,12 @@ Get the 2017 version from [here](https://developerinsider.co/download-visual-stu
 !!! Important
     Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
 
-### Unreal Engine 4.22
+### Unreal Engine 4.24
 
-Go to [Unreal Engine](https://www.unrealengine.com/download) and download the _Epic Games Launcher_. In `Engine versions/Library`, download __Unreal Engine 4.22.x__. Make sure to run it in order to check that everything was properly installed.  
+Go to [Unreal Engine](https://www.unrealengine.com/download) and download the _Epic Games Launcher_. In `Engine versions/Library`, download __Unreal Engine 4.24.x__. Make sure to run it in order to check that everything was properly installed.  
 
 !!! Note 
-    Having VS2017 and UE4.22 installed, a __Generate Visual Studio project files__ option should appear when doing right-click on __.uproject__ files. If this is not available, something went wrong whith the UE4.22 installation. Create a UE project to check it out and reinstall if necessary. 
+    Having VS2017 and UE4.24 installed, a __Generate Visual Studio project files__ option should appear when doing right-click on __.uproject__ files. If this is not available, something went wrong whith the UE4.24 installation. Create a UE project to check it out and reinstall if necessary. 
 
 ---
 ## CARLA build

@@ -1,55 +1,58 @@
 # Rendering options
 
-Before you start running your own experiments there are few details to take into
-account at the time of configuring your simulation. In this document we cover
-the most important ones.
+There are few details to take into account at the time of configuring a simulation. This page covers the more important ones.
 
-  * [__Graphics quality__](#graphics-quality):  
-	* Vulkan vs OpenGL 
-	* Quality levels 
-  * [__No-rendering mode__](#no-rendering-mode)  
-  * [__Off-screen mode__](#off-screen-mode)  
-	* Off-screen Vs no-rendering
-  * [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu): 
-	* Docker: recommended approach
-	* Deprecated: emulate the virtual display
+* [__Graphics quality__](#graphics-quality)  
+	* Vulkan vs OpenGL  
+	* Quality levels  
+* [__No-rendering mode__](#no-rendering-mode)  
+* [__Off-screen mode__](#off-screen-mode)  
+	* Off-screen Vs no-rendering  
+* [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu)  
+	* Docker: recommended approach  
+	* Deprecated: emulate the virtual display  
 
 
 !!! Important
-    Some of the command options shown below are not directly equivalent when using the CARLA packaged releases. Read the [Command line options](#command-line-options) section to learn more about this. 
+    Some of the command options below are not equivalent in the CARLA packaged releases. Read the [Command line options](start_quickstart.md#command-line-options) section to learn more about this. 
 
 ---
 ## Graphics quality
 
-#### Vulkan vs OpenGL
+### Vulkan vs OpenGL
 
-Vulkan is the default graphics API used by Unreal Engine and CARLA (if installed). It consumes more memory, but performs faster and makes for a better frame rate. However, it is quite experimental, especially in Linux, and it may lead to some issues.  
-For said reasons, there is the option to change to OpenGL simply by using a flag when running CARLA. The same flag works for both Linux and Windows: 
+Vulkan is the default graphics API used by Unreal Engine, and CARLA. It consumes more memory, but performs faster and makes for a better frame rate. However, it is quite experimental, especially in Linux, and it may lead to some issues.  
+
+There is the option to change to OpenGL. Use a flag when running CARLA.  
 
 ```sh
 cd carla && ./CarlaUE4.sh -opengl
 ```
-When working with the build version of CARLA it is Unreal Engine the one that needs to be set to use OpenGL. [Here][UEdoc] is a documentation regarding different command line options for Unreal Engine. 
+When working with the build version of CARLA, Unreal Engine needs to be set to use OpenGL. [Here][UEdoc] is a documentation regarding different command line options for Unreal Engine. 
 [UEdoc]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments/index.html
 
-#### Quality levels
+### Quality levels
 
-CARLA also allows for two different graphic quality levels named as __Epic__, the default, and __Low__, which disables all post-processing, shadows and the drawing distance is set to 50m instead of infinite and makes the simulation run significantly faster.  
-Low mode is not only used when precision is nonessential or there are technical limitations, but also to train agents under conditions with simpler data or regarding only close elements. 
+CARLA also allows for two different graphic quality levels. __Epic__, the default is the most detailed. __Low__ disables all post-processing and shadows, the drawing distance is set to 50m instead of infinite.  
 
-The images below show how do both modes look like and how to start the CARLA packaged release with the appropiate flag in order to set a quality level. The same flag works for both Linux and Windows. There is no equivalent option when working with the build, but the UE editor has its own quality settings in _Settings>Engine Scalability Settings_ that allow for a greater customization of the desired quality. 
+The simulation runs significantly faster in __Low__ mode. This is not only used when there are technical limitations or precision is nonessential. It may be useful to train agents under conditions with simpler data or regarding only close elements.  
+
+The images below compare both modes. The flag used is the same for Windows and Linux. There is no equivalent option when working with the build, but the UE editor has its own quality settings. Go to `Settings/Engine Scalability Settings` for a greater customization of the desired quality. 
 
 ![](img/epic_quality_capture.png)  |  ![](img/low_quality_capture.png)
 :-------------------------:|:-------------------------:
 `./CarlaUE4.sh -quality-level=Epic`  |  `./CarlaUE4.sh -quality-level=Low`
 
+<br>
+
 !!! Important
-    The issue that made Epic mode show an abnormal whiteness has been fixed. If the problem persists delete `GameUserSettings.ini` as it is saving the previous settings. It will be generated again in the next run. __Ubuntu path:__ `  ~/.config/Epic/CarlaUE4/Saved/Config/LinuxNoEditor/` __Windows path:__ `<Package folder>\WindowsNoEditor\CarlaUE4\Saved\Config\WindowsNoEditor\`
+    The issue that made Epic mode show an abnormal whiteness has been fixed. If the problem persists, delete `GameUserSettings.ini`. It is saving previous settings, and will be generated again in the next run. __Ubuntu path:__ `  ~/.config/Epic/CarlaUE4/Saved/Config/LinuxNoEditor/` __Windows path:__ `<Package folder>\WindowsNoEditor\CarlaUE4\Saved\Config\WindowsNoEditor\`
 
 ---
 ## No-rendering mode
 
-This mode completely disables rendering in the simulator, Unreal Engine will skip everything regarding graphics. This facilitates a lot simulating traffic and road behaviours at very high frequencies without the rendering overhead. To enable or disable no-rendering mode the user can either change the world settings in a script or use the provided script in `/PythonAPI/util/config.py` that does that same thing automatically.  
+This mode disables rendering. Unreal Engine will skip everything regarding graphics. This mode prevents rendering overheads. It facilitates a lot traffic simulation and road behaviours at very high frequencies. To enable or disable no-rendering mode, change the world settings, or use the provided script in `/PythonAPI/util/config.py`.  
+
 Here is an example on how to enable and then disable it via script.  
 ```py
 settings = world.get_settings()
@@ -59,7 +62,7 @@ world.apply_settings(settings)
 settings.no_rendering_mode = False
 world.apply_settings(settings)
 ```
-And here is an example on how to disable and then enable rendering using the `config.py`: 
+And here is an example on how to disable and then enable rendering using the `config.py`. 
 ```sh
 cd PythonAPI/util && ./config.py --no-rendering
 ```
@@ -67,44 +70,46 @@ cd PythonAPI/util && ./config.py --no-rendering
 cd PythonAPI/util && ./config.py --rendering
 ```
 
-On of the example scripts in `PythonAPI/examples/no_rendering_mode.py` will enable no-rendering mode and use __Pygame__ to create an aerial view using simple graphics: 
+The script `PythonAPI/examples/no_rendering_mode.py` will enable no-rendering mode, and use __Pygame__ to create an aerial view using simple graphics. 
 ```sh
 cd PythonAPI/examples && ./no_rendering_mode.py
 ```
 
 !!! Warning
-    In no-rendering mode, cameras and GPU sensors will return empty data. The GPU is not used, as Unreal Engine is not drawing any scene. 
+    In no-rendering mode, cameras and GPU sensors will return empty data. The GPU is not used. Unreal Engine is not drawing any scene. 
 
 ---
 ## Off-screen mode
 
-Unreal Engine needs for a screen in order to run, but there is a workaround for this that makes possible to work on rendering for remote servers with no display or desktop users with a GPU not connected to any screen.  
-The simulator launches but there is no available window. However, it can be connected in the usual manner and scripts run the same way. For the sake of understanding let's sake that this mode tricks Unreal Engine into running in a fake screen.
+Unreal Engine needs for a screen in order to run. However, there is a workaround for remote servers with no display, or desktop users with a GPU not connected to any screen.  
 
+The simulator launches but there is no available window. It runs in the same way as normal mode. This mode tricks Unreal Engine into running in a "fake screen".
 
-#### Off-screen vs no-rendering
+### Off-screen vs no-rendering
 
-These may look similar but are indeed quite different. It is important to understand the disctintion them to prevent misunderstandings. In off-screen Unreal Engine is working as usual and rendering is computed as usual. The only difference is that there is no available display. In no-rendering, it is Unreal Engine the one that is said to avoid rendering and thus, graphics are not computed. For said reasons, GPU sensors return data when off-screen and no-rendering mode can be enabled at will. 
+It is important to understand the disctintion them to prevent misunderstandings.  
 
-#### Setting off-screen mode
+* In __no-rendering__, Unreal Engine does not render anything. Graphics are not computed.  
+* In __off-screen__, Unreal Engine is working as usual, rendering is computed. Simply, there is no display available. GPU sensors return data when off-screen, and no-rendering mode can be enabled at will. 
 
-Right now this is __only possible in Linux while using OpenGL__ instead of Vulkan. Unreal Engine crushes when Vulkan is running off-screen, and this issue is yet to be fixed by Epic. 
+### Setting off-screen mode
 
-To force the simulator run off-screen set the environment variable `DISPLAY` to empty and run CARLA using OpenGL:
+This is __only possible in Linux while using OpenGL__. Unreal Engine crushes when Vulkan is running off-screen, and this issue is yet to be fixed by Epic.  
+
+To force the simulator run off-screen set the environment variable `DISPLAY` to empty and run CARLA using OpenGL.
 
 ```sh
 # Linux
 DISPLAY= ./CarlaUE4.sh -opengl
 ```
-Note that this method, in multi-GPU environments, does not allow to choose the GPU that the simulator will use for rendering. To do so, read the following section.
-
 ---
 ## Running off-screen using a preferred GPU  
 
-#### Docker: recommended approach 
+### Docker: recommended approach 
 
-The best way to run a headless CARLA and select the GPU is to [__run CARLA in a Docker__](build_docker.md). 
-This section contains an alternative tutorial, but this method is deprecated and performance is much worse. However, it is here just in case, for those who Docker is not an option. 
+The best way to run a headless CARLA and select the GPU is to [__run CARLA in a Docker__](build_docker.md).  
+
+This section contains an alternative tutorial, but this method is deprecated and performance is much worse. It is here only for those who Docker is not an option. 
 
   <details>
     <summary><h4 style="display:inline">
@@ -124,16 +129,16 @@ __3.__ Run CARLA.
 
 This tutorial was tested in Ubuntu 16.04 using NVIDIA 384.11 drivers.
 
-  * __[Latest Nvidia drivers](http://www.nvidia.es/Download/index.aspx)__ 
-  * __[OpenGL](https://www.khronos.org/opengl/wiki/Getting_Started)__: needed to use Virtual GL (VGL). OpenGL can be installed via apt:  
+* __[Latest Nvidia drivers](http://www.nvidia.es/Download/index.aspx)__ 
+* __[OpenGL](https://www.khronos.org/opengl/wiki/Getting_Started)__: needed to use Virtual GL (VGL). OpenGL can be installed via apt:  
 ```sh
 sudo apt-get install freeglut3-dev mesa-utils
 ```
-  * __[VGL](https://virtualgl.org/vgldoc/2_2_1/#hd004001)__: redirects 3D rendering commands from Unix and Linux OpenGL to the hardware in a dedicated server. 
+* __[VGL](https://virtualgl.org/vgldoc/2_2_1/#hd004001)__: redirects 3D rendering commands from Unix and Linux OpenGL to the hardware in a dedicated server. 
 
-  * __[TurboVNC 2.11](https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001)__: graphical desktop-sharing system to connect remotely to the server.  
+* __[TurboVNC 2.11](https://cdn.rawgit.com/TurboVNC/turbovnc/2.1.1/doc/index.html#hd005001)__: graphical desktop-sharing system to connect remotely to the server.  
 
-  * __Extra packages__: necessary to make Unreal work.
+* __Extra packages__: necessary to make Unreal work.
 ```sh
 sudo apt install x11-xserver-utils libxrandr-dev
 ```
@@ -186,7 +191,8 @@ To run CARLA on a certain `<gpu_number>` in a certain `$CARLA_PATH` use the foll
 ---
 
 That is all there is to know about the different rendering options in CARLA.  
-Open CARLA and mess around for a while to make sure that everything is clear and yet, if there are any doubts, feel free to post these in the forum. 
+
+Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 
 <div class="build-buttons">
 <p>

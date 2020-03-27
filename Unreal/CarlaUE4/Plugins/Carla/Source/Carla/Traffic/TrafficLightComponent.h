@@ -9,6 +9,7 @@
 #include "CoreMinimal.h"
 #include "SignComponent.h"
 #include "TrafficLightState.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "TrafficLightComponent.generated.h"
 
 class ATrafficLightManager;
@@ -43,6 +44,16 @@ public:
   UFUNCTION(Category = "Traffic Light", BlueprintPure)
   UTrafficLightController* GetController();
 
+protected:
+
+  UFUNCTION(BlueprintCallable)
+  virtual void OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+      AActor *OtherActor,
+      UPrimitiveComponent *OtherComp,
+      int32 OtherBodyIndex,
+      bool bFromSweep,
+      const FHitResult &SweepResult);
+
 private:
 
   friend ATrafficLightManager;
@@ -57,5 +68,9 @@ private:
 
   UPROPERTY()
   UTrafficLightController *TrafficLightController = nullptr;
+
+  // Vehicles that have entered the trigger box of the traffic light
+  UPROPERTY()
+  TArray<AWheeledVehicleAIController*> Vehicles;
 
 };
