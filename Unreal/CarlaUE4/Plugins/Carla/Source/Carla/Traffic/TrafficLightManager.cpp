@@ -23,30 +23,27 @@ ATrafficLightManager::ATrafficLightManager()
   RootComponent = SceneComponent;
 
   // Hard codded default traffic light blueprint
-  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightFinder(
-      TEXT( "Blueprint'/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightFinder(
+      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive" ) );
   if (TrafficLightFinder.Succeeded())
   {
-    TSubclassOf<AActor> Model;
-    Model = TrafficLightFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> Model = TrafficLightFinder.Class;
     TrafficLightModel = Model;
   }
   // Default traffic signs models
-  static ConstructorHelpers::FObjectFinder<UBlueprint> StopFinder(
-      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Stop.BP_Stop'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> StopFinder(
+      TEXT( "/Game/Carla/Static/TrafficSigns/BP_Stop" ) );
   if (StopFinder.Succeeded())
   {
-    TSubclassOf<ATrafficSignBase> StopSignModel;
-    StopSignModel = StopFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> StopSignModel = StopFinder.Class;
     TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopSignModel);
     SignComponentModels.Add(carla::road::SignalType::StopSign().c_str(), UStopSignComponent::StaticClass());
   }
-  static ConstructorHelpers::FObjectFinder<UBlueprint> YieldFinder(
-      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Yield.BP_Yield'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> YieldFinder(
+      TEXT( "/Game/Carla/Static/TrafficSigns/BP_Yield" ) );
   if (YieldFinder.Succeeded())
   {
-    TSubclassOf<ATrafficSignBase> YieldSignModel;
-    YieldSignModel = YieldFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> YieldSignModel = YieldFinder.Class;
     TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
     SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), UYieldSignComponent::StaticClass());
   }
