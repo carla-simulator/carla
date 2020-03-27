@@ -82,11 +82,11 @@ private:
   TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<ATrafficSignBase> TrafficLightModel;
+  TSubclassOf<AActor> TrafficLightModel;
 
   // Relates an OpenDRIVE type to a traffic sign blueprint
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TMap<FString, TSubclassOf<ATrafficSignBase>> TrafficSignsModels;
+  TMap<FString, TSubclassOf<AActor>> TrafficSignsModels;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TMap<FString, TSubclassOf<USignComponent>> SignComponentModels;
