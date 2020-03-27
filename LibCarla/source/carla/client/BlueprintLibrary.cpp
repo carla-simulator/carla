@@ -18,7 +18,7 @@ namespace client {
       const std::vector<rpc::ActorDefinition> &blueprints) {
     _blueprints.reserve(blueprints.size());
     for (auto &definition : blueprints) {
-      _blueprints.emplace(definition.id, definition);
+      _blueprints.emplace(definition.id, ActorBlueprint{definition});
     }
   }
 
