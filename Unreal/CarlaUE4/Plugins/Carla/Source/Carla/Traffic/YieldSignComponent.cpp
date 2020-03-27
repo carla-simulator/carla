@@ -135,16 +135,16 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
             }
             while (!WaypointQueue.empty())
             {
-              auto CurrentWaypoint = WaypointQueue.front();
+              auto CurrentElement = WaypointQueue.front();
               WaypointQueue.pop();
-              GenerateCheckBox(Map.ComputeTransform(CurrentWaypoint.second), UEBoxSize);
+              GenerateCheckBox(Map.ComputeTransform(CurrentElement.second), UEBoxSize);
 
-              float Speed = Map.GetLane(CurrentWaypoint.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentWaypoint.second.s)->GetSpeed();
+              float Speed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s)->GetSpeed();
               carla::log_warning("Speed:", Speed);
-              float RemainingTime = CurrentWaypoint.first - BoxSize/Speed;
+              float RemainingTime = CurrentElement.first - BoxSize/Speed;
               if(RemainingTime > 0)
               {
-                Previous = Map.GetPrevious(CurrentWaypoint.second, 2*BoxSize);
+                Previous = Map.GetPrevious(CurrentElement.second, 2*BoxSize);
                 for (auto & Prev : Previous)
                 {
                   WaypointQueue.push({RemainingTime, Prev});
