@@ -19,11 +19,8 @@ class VehiclePIDController():
     low level control a vehicle from client side
     """
 
-    MAX_BRAKE = 0.3
-    MAX_ACCEL = 0.75
-    MAX_STEER = 0.8
 
-    def __init__(self, vehicle, args_lateral, args_longitudinal):
+    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=0.75, max_brake=0.3, max_steering=0.8):
         """
         Constructor method.
 
@@ -39,6 +36,10 @@ class VehiclePIDController():
             K_D -- Differential term
             K_I -- Integral term
         """
+
+        self.max_brake = max_brake
+        self.max_throt = max_throttle
+        self.max_steer = max_steering
 
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
@@ -61,11 +62,11 @@ class VehiclePIDController():
         current_steering = self._lat_controller.run_step(waypoint)
         control = carla.VehicleControl()
         if acceleration >= 0.0:
-            control.throttle = min(acceleration, self.MAX_ACCEL)
+            control.throttle = min(acceleration, self.max_throt)
             control.brake = 0.0
         else:
             control.throttle = 0.0
-            control.brake = min(abs(acceleration), self.MAX_ACCEL)
+            control.brake = min(abs(acceleration), self.max_brake)
 
         # Steering regulation: changes cannot happen abruptly, can't steer too much.
 
@@ -75,9 +76,9 @@ class VehiclePIDController():
             current_steering = self.past_steering - 0.1
 
         if current_steering >= 0:
-            steering = min(self.MAX_STEER, current_steering)
+            steering = min(self.max_steer, current_steering)
         else:
-            steering = max(-self.MAX_STEER, current_steering)
+            steering = max(-self.max_steer, current_steering)
 
         control.steer = steering
         control.hand_brake = False
