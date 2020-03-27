@@ -11,11 +11,9 @@
 # -- imports ---------------------------------------------------------------------------------------
 # ==================================================================================================
 
-import collections
 import enum
 import logging
 import math
-import sys
 
 import carla  # pylint: disable=import-error
 from ctypes import *

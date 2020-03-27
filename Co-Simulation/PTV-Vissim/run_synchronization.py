@@ -16,7 +16,6 @@ Script to co-simulate CARLA and PTV-Vissim.
 import argparse
 import json
 import logging
-import random
 import time
 
 # ==================================================================================================
