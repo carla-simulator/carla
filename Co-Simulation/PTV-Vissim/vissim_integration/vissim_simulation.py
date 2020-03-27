@@ -86,8 +86,8 @@ class VissimVehicle(object):
     VissimVehicle holds the data relative to traffic vehicles in vissim.
     """
     def __init__(self,
-                 id,
-                 type,
+                 vehicle_id,
+                 type_id,
                  model_filename,
                  color,
                  location,
@@ -95,8 +95,8 @@ class VissimVehicle(object):
                  velocity,
                  lights_state=VissimLightState.NONE):
         # Static parameters.
-        self.id = id
-        self.type = type
+        self.id = vehicle_id
+        self.type = type_id
         self.model_filename = model_filename
         self.color = color
 
@@ -219,7 +219,6 @@ class PTVVissimSimulation(object):
             :param carla.Vector3D velocity: new vehicle velocity.
             :return: True if successfully updated. Otherwise, False.
         """
-        assert vehicle_id in self._simulator_vehicles
         self._simulator_vehicles[vehicle_id] = Simulator_Veh_Data(
             transform.location.x, transform.location.y, transform.location.z,
             math.radians(transform.rotation.yaw), math.radians(transform.rotation.pitch),
@@ -259,7 +258,6 @@ class PTVVissimSimulation(object):
         vehicles = {}
         for i in range(num_vehicles.value):
             vehicle_data = traffic_data[i]
-            assert vehicle_data.VehicleID > self._max_simulator_vehicles
 
             vehicles[vehicle_data.VehicleID] = VissimVehicle(
                 vehicle_data.VehicleID, vehicle_data.VehicleType, vehicle_data.ModelFileName,
