@@ -127,12 +127,12 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 <tbody>
 <td>
 <code>lens_circle_falloff</code> </td>
-<td>int</td>
+<td>float</td>
 <td>5.0</td>
 <td>Range: [0.0, 10.0]</td>
 <tr>
 <td><code>lens_circle_multiplier</code></td>
-<td>int</td>
+<td>float</td>
 <td>0.0</td>
 <td>Range: [0.0, 10.0]</td>
 <tr>
@@ -593,23 +593,23 @@ To ensure that collisions with any kind of object are detected, the server creat
 <tbody>
 <td>
 <code>distance</code> </td>
-<td>int</td>
-<td>32</td>
+<td>float</td>
+<td>5</td>
 <td>Distance to trace.</td>
 <tr>
 <td><code>hit_radius</code></td>
 <td>float</td>
-<td>10.0</td>
+<td>0.5</td>
 <td>Radius of the trace.</td>
 <tr>
 <td><code>only_dynamics</code></td>
-<td>int</td>
-<td>56000</td>
+<td>bool</td>
+<td>False</td>
 <td>If true, the trace will only consider dynamic objects.</td>
 <tr>
 <td><code>debug_linetrace</code></td>
-<td>float</td>
-<td>10.0</td>
+<td>bool</td>
+<td>False</td>
 <td>If true, the trace will be visible.</td>
 <tr>
 <td><code>sensor_tick</code></td>
@@ -732,7 +732,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 
 <table class ="defTable">
 <thead>
-<th>Sensor data attribute</th>
+<th>RadarDetection attributes</th>
 <th>Type</th>
 <th>Description</th>
 </thead>
@@ -1170,7 +1170,7 @@ The following tags are currently available:
 <td>Image width in pixels.</td>
 <tr>
 <td><code>image_size_y</code></td>
-<td>float</td>
+<td>int</td>
 <td>600</td>
 <td>Image height in pixels.</td>
 <tr>
