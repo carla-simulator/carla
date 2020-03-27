@@ -399,17 +399,6 @@ def add_doc_dunder(md, dunder, class_key):
         md.textn(italic(create_hyperlinks(dunder['return'])))
         md.list_pop()
 
-    printed_title = False
-    if valid_dic_val(dunder, 'params'):
-        for param in dunder['params']:
-            have_type = valid_dic_val(param, 'type')
-    #        if not have_type:
-    #            continue
-    #        add_doc_dunder_param(md, param)
-    #if printed_title:
-    #    md.list_pop()
-
-    
     md.list_pop()
 
 def add_doc_dunder_param(md, param):
