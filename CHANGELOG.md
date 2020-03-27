@@ -5,6 +5,7 @@
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved manual_control by adding realistic throttle and brake
   * Added new Behavior agent
+  * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
 
 ## CARLA 0.9.8
 
