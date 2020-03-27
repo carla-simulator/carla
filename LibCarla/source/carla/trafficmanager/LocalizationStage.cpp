@@ -345,7 +345,6 @@ namespace LocalizationConstants {
           }
         }
       }
-      std::cout << "SIZE : " << position_window.size() << std::endl;
 
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
@@ -930,16 +929,16 @@ namespace LocalizationConstants {
       if (enable_physics) {
 
         ////////////////////////////// DEBUG /////////////////////////////
-        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-                                "Vehicle with physics on", false, {255u, 255u, 0u}, 0.05f);
+        //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+        //                        "Vehicle with physics on", false, {255u, 255u, 0u}, 0.05f);
         //////////////////////////////////////////////////////////////////
         kinematic_state_map.at(actor_id).velocity = cg::Math::Dot(actor->GetVelocity(), heading) * heading;
       } else {
 
 
         ////////////////////////////// DEBUG /////////////////////////////
-        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
-                                "Vehicle without physics", false, {255u, 0u, 255u}, 0.05f);
+        //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 3),
+        //                        "Vehicle without physics", false, {255u, 0u, 255u}, 0.05f);
         //////////////////////////////////////////////////////////////////
 
         cg::Vector3D displacement = (vehicle_location - kinematic_state_map.at(actor_id).location);
