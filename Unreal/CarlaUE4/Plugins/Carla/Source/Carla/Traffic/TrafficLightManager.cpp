@@ -6,6 +6,12 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "Components/BoxComponent.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/road/SignalType.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include <string>
 
 ATrafficLightManager::ATrafficLightManager()
@@ -19,7 +25,26 @@ ATrafficLightManager::ATrafficLightManager()
       TEXT( "Blueprint'/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive'" ) );
   if (TrafficLightFinder.Succeeded())
   {
-    TrafficLightModel = TrafficLightFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> Model;
+    Model = TrafficLightFinder.Object->GeneratedClass;
+    TrafficLightModel = Model;
+  }
+  // Default traffic signs models
+  static ConstructorHelpers::FObjectFinder<UBlueprint> StopFinder(
+      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Stop.BP_Stop'" ) );
+  if (StopFinder.Succeeded())
+  {
+    TSubclassOf<ATrafficSignBase> StopSignModel;
+    StopSignModel = StopFinder.Object->GeneratedClass;
+    TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopSignModel);
+  }
+  static ConstructorHelpers::FObjectFinder<UBlueprint> YieldFinder(
+      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Yield.BP_Yield'" ) );
+  if (YieldFinder.Succeeded())
+  {
+    TSubclassOf<ATrafficSignBase> YieldSignModel;
+    YieldSignModel = YieldFinder.Object->GeneratedClass;
+    TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
   }
 }
 
@@ -81,7 +106,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
   TrafficLightController->ResetState();
 
   // Add signal to map
-  TrafficLightComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
+  TrafficSignComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
 
   TrafficLightGroup->ResetGroup();
 }
@@ -100,56 +125,26 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
   return Map;
 }
 
-void ATrafficLightManager::GenerateTrafficLights()
+void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
-  if(!TrafficLightsGenerated){
+  if(!TrafficLightsGenerated)
+  {
     if(!TrafficLightModel)
     {
       UE_LOG(LogCarla, Error, TEXT("Missing TrafficLightModel"));
       return;
     }
-    const auto& Signals = GetMap()->GetSignals();
-    for(const auto& ControllerPair : GetMap()->GetControllers())
-    {
-      const auto& Controller = ControllerPair.second;
-      for(const auto& SignalId : Controller->GetSignals())
-      {
-        const auto& Signal = Signals.at(SignalId);
-        auto CarlaTransform = Signal->GetTransform();
-        FTransform SpawnTransform(CarlaTransform);
 
-        FVector SpawnLocation = SpawnTransform.GetLocation();
-        FRotator SpawnRotation(SpawnTransform.GetRotation());
-        SpawnRotation.Yaw += 90;
+    SpawnTrafficLights();
+    GenerateTriggerBoxesForTrafficLights();
 
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.Owner = this;
-        SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
-            TrafficLightModel,
-            SpawnLocation,
-            SpawnRotation,
-            SpawnParams);
+    SpawnSignals();
 
-        TrafficSigns.Add(TrafficLight);
-
-        UTrafficLightComponent *TrafficLightComponent =
-            NewObject<UTrafficLightComponent>(TrafficLight);
-        TrafficLightComponent->SetSignId(SignalId.c_str());
-        TrafficLightComponent->RegisterComponent();
-        TrafficLightComponent->AttachToComponent(
-          TrafficLight->GetRootComponent(),
-          FAttachmentTransformRules::KeepRelativeTransform);
-
-        RegisterLightComponent(TrafficLightComponent);
-      }
-    }
     TrafficLightsGenerated = true;
   }
 }
 
-void ATrafficLightManager::RemoveGeneratedTrafficLights()
+void ATrafficLightManager::RemoveGeneratedSignalsAndTrafficLights()
 {
   for(auto& Sign : TrafficSigns)
   {
@@ -179,7 +174,7 @@ void ATrafficLightManager::BeginPlay()
   }
   else
   {
-    GenerateTrafficLights();
+    GenerateSignalsAndTrafficLights();
   }
 
 }
@@ -224,6 +219,195 @@ void ATrafficLightManager::ResetTrafficLightObjects()
   }
 }
 
+void ATrafficLightManager::SpawnTrafficLights()
+{
+  const auto& Signals = GetMap()->GetSignals();
+  for(const auto& ControllerPair : GetMap()->GetControllers())
+  {
+    const auto& Controller = ControllerPair.second;
+    for(const auto& SignalId : Controller->GetSignals())
+    {
+      const auto& Signal = Signals.at(SignalId);
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+
+      FVector SpawnLocation = SpawnTransform.GetLocation();
+      FRotator SpawnRotation(SpawnTransform.GetRotation());
+      SpawnRotation.Yaw += 90;
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride =
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
+          TrafficLightModel,
+          SpawnLocation,
+          SpawnRotation,
+          SpawnParams);
+
+      // Hack to prevent mixing ATrafficLightBase and UTrafficLightComponent logic
+      TrafficLight->SetTimeIsFrozen(true);
+
+      TrafficSigns.Add(TrafficLight);
+
+      UTrafficLightComponent *TrafficLightComponent =
+          NewObject<UTrafficLightComponent>(TrafficLight);
+      TrafficLightComponent->SetSignId(SignalId.c_str());
+      TrafficLightComponent->RegisterComponent();
+      TrafficLightComponent->AttachToComponent(
+          TrafficLight->GetRootComponent(),
+          FAttachmentTransformRules::KeepRelativeTransform);
+
+      RegisterLightComponent(TrafficLightComponent);
+    }
+  }
+}
+
+void ATrafficLightManager::SpawnSignals()
+{
+  const auto &Signals = GetMap()->GetSignals();
+  for (auto& SignalPair : Signals)
+  {
+    auto &Signal = SignalPair.second;
+    FString SignalType = Signal->GetType().c_str();
+    if (TrafficSignsModels.Contains(SignalType))
+    {
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+
+      FVector SpawnLocation = SpawnTransform.GetLocation();
+      FRotator SpawnRotation(SpawnTransform.GetRotation());
+      SpawnRotation.Yaw += 90;
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride =
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
+          TrafficSignsModels[SignalType],
+          SpawnLocation,
+          SpawnRotation,
+          SpawnParams);
+
+      USignComponent *SignComponent =
+          NewObject<USignComponent>(TrafficSign);
+      SignComponent->SetSignId(Signal->GetSignalId().c_str());
+      SignComponent->RegisterComponent();
+      SignComponent->AttachToComponent(
+          TrafficSign->GetRootComponent(),
+          FAttachmentTransformRules::KeepRelativeTransform);
+
+      TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
+
+      TrafficSigns.Add(TrafficSign);
+    }
+  }
+}
+
+// Helper function to generate a vector of consecutive integers from a to b
+std::vector<int> GenerateRange(int a, int b)
+{
+  std::vector<int> result;
+  if (a < b)
+  {
+    for(int i = a; i <= b; ++i)
+    {
+      result.push_back(i);
+    }
+  }
+  else
+  {
+    for(int i = a; i >= b; --i)
+    {
+      result.push_back(i);
+    }
+  }
+  return result;
+}
+
+void ATrafficLightManager::GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
+    UTrafficLightComponent* TrafficLightComponent,
+    float BoxSize)
+{
+  // convert from m to cm
+  float UEBoxSize = 100 * BoxSize;
+  AActor *ParentActor = TrafficLightComponent->GetOwner();
+  FTransform ReferenceTransform = GetMap()->ComputeTransform(waypoint);
+  UBoxComponent *BoxComponent = NewObject<UBoxComponent>(ParentActor);
+  BoxComponent->RegisterComponent();
+  BoxComponent->AttachToComponent(
+      ParentActor->GetRootComponent(),
+      FAttachmentTransformRules::KeepRelativeTransform);
+  BoxComponent->SetWorldTransform(ReferenceTransform);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(TrafficLightComponent,
+      &UTrafficLightComponent::OnOverlapTriggerBox);
+  BoxComponent->SetBoxExtent(FVector(UEBoxSize, UEBoxSize, UEBoxSize), true);
+}
+
+void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
+{
+  const double epsilon = 0.00001;
+
+  // Spawn trigger boxes
+  auto waypoints = GetMap()->GenerateWaypointsOnRoadEntries();
+  std::unordered_set<carla::road::RoadId> ExploredRoads;
+  for (auto & waypoint : waypoints)
+  {
+    // Check if we alredy explored this road
+    if (ExploredRoads.count(waypoint.road_id) > 0)
+    {
+      continue;
+    }
+    ExploredRoads.insert(waypoint.road_id);
+
+    // Multiple times for same road (performance impact, not in behavior)
+    auto SignalReferences = GetMap()->GetLane(waypoint).
+        GetRoad()->GetInfos<carla::road::element::RoadInfoSignal>();
+    for (auto *SignalReference : SignalReferences)
+    {
+      FString SignalId(SignalReference->GetSignalId().c_str());
+      if(TrafficSignComponents.Contains(SignalId))
+      {
+        UTrafficLightComponent *TrafficLightComponent =
+            Cast<UTrafficLightComponent>(TrafficSignComponents[SignalId]);
+        if (!TrafficLightComponent)
+        {
+          continue;
+        }
+        for(auto &validity : SignalReference->GetValidities())
+        {
+          for(auto lane : GenerateRange(validity._from_lane, validity._to_lane))
+          {
+            if(lane == 0)
+              continue;
+
+            auto signal_waypoint = GetMap()->GetWaypoint(
+                waypoint.road_id, lane, SignalReference->GetS()).get();
+
+            // Get 90% of the half size of the width of the lane
+            float BoxSize = static_cast<float>(
+                0.9*GetMap()->GetLaneWidth(waypoint)/2.0);
+            // Get min and max
+            double LaneLength = GetMap()->GetLane(signal_waypoint).GetLength();
+            double LaneDistance = GetMap()->GetLane(signal_waypoint).GetDistance();
+            if(lane < 0)
+            {
+              signal_waypoint.s = FMath::Clamp(signal_waypoint.s - BoxSize,
+                  LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
+            }
+            else
+            {
+              signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxSize,
+                  LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
+            }
+            GenerateTriggerBox(signal_waypoint, TrafficLightComponent, BoxSize);
+          }
+        }
+      }
+    }
+  }
+}
+
 ATrafficLightGroup* ATrafficLightManager::GetTrafficGroup(carla::road::JuncId JunctionId)
 {
   if (TrafficGroups.Contains(JunctionId))
@@ -243,11 +427,11 @@ UTrafficLightController* ATrafficLightManager::GetController(FString ControllerI
   return nullptr;
 }
 
-UTrafficLightComponent* ATrafficLightManager::GetTrafficLight(FString SignId)
+USignComponent* ATrafficLightManager::GetTrafficSign(FString SignId)
 {
-  if (!TrafficLightComponents.Contains(SignId))
+  if (!TrafficSignComponents.Contains(SignId))
   {
     return nullptr;
   }
-  return TrafficLightComponents[SignId];
+  return TrafficSignComponents[SignId];
 }

@@ -29,7 +29,7 @@ namespace opendrive {
     pugi::xml_parse_result parse_result = xml.load_string(opendrive.c_str());
 
     if (parse_result == false) {
-      log_error("unable to parse the XML string");
+      log_error("unable to parse the OpenDRIVE XML string");
       return {};
     }
 

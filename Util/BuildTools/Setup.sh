@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
-  echo >&2 "clang 7 is required, but it's not installed.";
+command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
+  echo >&2 "clang 8 is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c7
-export CC=/usr/bin/clang-7
-export CXX=/usr/bin/clang++-7
+CXX_TAG=c8
+export CC=/usr/bin/clang-8
+export CXX=/usr/bin/clang++-8
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-7.0
+LLVM_BASENAME=llvm-8.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -34,9 +34,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -97,7 +97,7 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-7.1"
+  BOOST_TOOLSET="clang-8.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"

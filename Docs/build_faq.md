@@ -54,9 +54,9 @@ To run CARLA using `CarlaUE4.sh`, follow the [quick start installation](start_qu
 
 Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
 
-* __Run Unreal Engine 4.22.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check out that it is the 4.22 release.  
+* __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check out that it is the 4.24 release.  
 * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-* __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.22` to set the variable this time.  
+* __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.24` to set the variable this time.  
 * __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
 * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run.  
@@ -134,7 +134,7 @@ To keep other Visual Studio versions, edit ```%appdata%\Unreal Engine\UnrealBuil
 Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
 
 * __Restart the computer.__ There are many going on in the Windows build. Restart and make sure that everything is updated properly.  
-* __Run Unreal Engine 4.22.__ Something may have failed when building Unreal Engine. Run the Editor and check that 4.22 is being used.  
+* __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Run the Editor and check that 4.24 is being used.  
 * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
 * __Visual Studio 2017.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
 * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  

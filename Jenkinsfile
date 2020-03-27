@@ -19,7 +19,7 @@ pipeline
                 script
                 {
                     JOB_ID = "${env.BUILD_TAG}"
-                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
                     
                     jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
                     jenkinsLib.CreateWindowsBuildNode(JOB_ID)
@@ -109,7 +109,7 @@ pipeline
                                         script
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
                                             
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
@@ -142,7 +142,7 @@ pipeline
                                         script
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
                                             
                                             jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
                                         }
@@ -199,7 +199,7 @@ pipeline
                                 script
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
                                     
                                     jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
                                 }
@@ -316,7 +316,7 @@ pipeline
                                 script
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins424.groovy")
+                                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
                                     
                                     jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                                 }

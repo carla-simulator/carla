@@ -148,7 +148,9 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
   }
 
   // Generate the OBJ (as string)
-  const auto RecastOBJ = CarlaMap->GenerateGeometry(2).GenerateOBJForRecast();
+  const auto RoadMesh = CarlaMap->GenerateMesh(2);
+  const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
+  const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
   const FString AbsoluteOBJPath = FPaths::ConvertRelativePathToFull(
       FPaths::ProjectContentDir() + "Carla/Maps/Nav/OpenDriveMap.obj");

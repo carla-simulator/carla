@@ -1,31 +1,31 @@
 # Recorder  
 
-This is one of the advanced CARLA features. It allows to record and reenact a simulation while providing with a complete log of the events happened and a few queries to ease the trace and study of those.  
-To learn about the generated file and its specifics take a look at this [reference](ref_recorder_binary_file_format.md). 
+This feature allows to record and reenact a previous simulation. All the events happened are registered in the [recorder file](ref_recorder_binary_file_format.md). There are some high-level queries to trace and study those events.  
 
-  * [__Recording__](#recording)  
-  * [__Simulation playback__](#simulation-playback):  
-	* Setting a time factor
-  * [__Recorded file__](#unreal-engine)
-  * [__Queries__](#queries):
-	* Collisions
-	* Blocked actors
-  * [__Sample Python scripts__](#sample-python-scripts)  
+* [__Recording__](#recording)  
+* [__Simulation playback__](#simulation-playback)  
+	* Setting a time factor  
+* [__Recorded file__](#unreal-engine)  
+* [__Queries__](#queries)  
+	* Collisions  
+	* Blocked actors  
+* [__Sample Python scripts__](#sample-python-scripts)  
 
 ---
 ## Recording
 
 All the data is written in a binary file on the server side only. However, the recorder is managed using the [carla.Client](python_api.md#carla.Client).  
-To reenact the simulation, actors will be updated on every frame according to the data contained in the recorded file. Actors that appear in the simulation will be either moved or re-spawned to emulate the recording. Those that do not appear in the recording will continue their way as if nothing happened.  
+
+Actors are updated on every frame according to the data contained in the recorded file. Actors in the current simulation that appear in the recording will be either moved or re-spawned to emulate it. Those that do not appear in the recording will continue their way as if nothing happened.  
 
 !!! Important
-    By the end of the playback, vehicles will be set to autopilot, but __pedestrians will stop at their current location__. 
+    By the end of the playback, vehicles will be set to autopilot, but __pedestrians will stop__. 
 
-The information registered by the recorder basically includes:  
+The recorder file includes information regarding actors.  
 
-* __Actors:__ Creation and destruction.  
-* __Traffic lights:__ State changes.  
-* __Vehicles and pedestrians:__ Position and orientation. 
+* __Actors'__ creation and destruction.  
+* __Traffic lights'__ state changes.  
+* __Vehicles and pedestrians'__ position and orientation. 
 
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
 
@@ -33,78 +33,92 @@ To start recording there is only need for a file name. Using `\`, `/` or `:` cha
 client.start_recorder("/home/carla/recording01.log")
 ```
 
-To stop the recording, the call is also straightforward:
+To stop the recording, the call is also straightforward.
 
 ```py
 client.stop_recorder()
 ```
 
 !!! Note
-    As an estimate: 1h recording with 50 traffic lights and 100 vehicles takes around 200MB in size.
+    As an estimate, 1h recording with 50 traffic lights and 100 vehicles takes around 200MB in size.
 
 ---
 ## Simulation playback
 
-A playback can be started at any point during a simulation only specifying the file name.  
-
-```py
-client.replay_file("recording01.log")
-```
-Additionally, this method allows for some parameters to specify which segment of the recording is reenacted:
+A playback can be started at any point during a simulation. Besides the path to the log file, this method needs some parameters.
 
 ```py
 client.replay_file("recording01.log", start, duration, camera)
 ```
-| Parameters | Description                                           | Notes |
-| ---------- | ----------------------------------------------------- | ----- |
-| `start`    | Recording time in seconds to start the simulation at. | If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.  |
-| `duration` | Seconds to playback. 0 is all the recording.          | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop. |
-| `camera`   | ID of the actor that the camera will focus on.        | By default the spectator will move freely. |  
 
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+<th>Notes</th>
+</thead>
+<tbody>
+<td><code>start</code> </td>
+<td>Recording time in seconds to start the simulation at.</td>
+<td>If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.</td>
+<tr>
+<td><code>duration</code></td>
+<td>Seconds to playback. 0 is all the recording.</td>
+<td>By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.</td>
+<tr>
+<td><code>camera</code></td>
+<td>ID of the actor that the camera will focus on. </td>
+<td>Set it to <code>0</code> to let the spectator move freely.</td>
+</tbody>
+</table>
 <br>
 
-!!! Note
-    These parameters allows to recall an event and then let the simulation run free, as vehicles will be set to autopilot when the recording stops. 
+### Setting a time factor
 
-#### Setting a time factor
-
-The time factor will determine the playback speed.  
-
-It can be changed any moment without stopping the playback, using the following API call:
+The time factor will determine the playback speed. It can be changed any moment without stopping the playback.
 
 ```py
 client.set_replayer_time_factor(2.0)
 ```
-| Parameters    | Default | Fast motion | slow motion |
-| ------------- | ------- | ----------- | ----------- |
-| `time_factor` | __1.0__ | __>1.0__    | __<1.0__    |  
 
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Default</th>
+<th>Fast motion</th>
+<th>Slow motion</th>
+</thead>
+<tbody>
+<td><code>time_factor</code> </td>
+<td><b>1.0</b></td>
+<td><b>>1.0</b></td>
+<td><b> <1.0 </b></td>
+</tbody>
+</table>
 <br>
 
 !!! Important
-    Over 2.0 position interpolation is disabled and just updated. Pedestrians' animations are not affected by the time factor.  
+    If `time_factor>2.0`, the actors' position interpolation is disabled and just updated. Pedestrians' animations are not affected by the time factor.  
 
-For instance, with a time factor of __20x__ traffic flow is easily appreciated:
+When the time factor is around __20x__ traffic flow is easily appreciated.
 
 ![flow](img/RecorderFlow2.gif)
 
 ---
 ## Recorded file
 
-The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered, but setting the parameter `show_all` would return all the information for every frame. The specifics on how the data is stored are detailed in the [recorder's reference](ref_recorder_binary_file_format.md).  
-The following example only would retrieve remarkable events:
+The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered. Setting the parameter `show_all` would return all the information for every frame. The specifics on how the data is stored are detailed in the [recorder's reference](ref_recorder_binary_file_format.md).  
 
 ```py
-client.show_recorder_file_info("recording01.log")
+# Show info for relevant frames
+print(client.show_recorder_file_info("recording01.log"))
 ``` 
 
-* __Opening information:__ map, date and time when the simulation was recorded.  
+* __Opening information.__ Map, date and time when the simulation was recorded.  
 
-* __Frame information:__ any event that could happen (actor spawning/destruction, collisions...). The output contains the actor's ID and some additional information.
+* __Frame information.__ Any event that could happen such as actors spawning or collisions. It contains the actors' ID and some additional information.  
 
-* __Closing information:__ a summary of number of frames and total time recorded.  
-
-The output result should be similar to this one:
+* __Closing information.__ Number of frames and total time recorded.  
 
 ```
 Version: 1
@@ -136,31 +150,31 @@ Frame 2351 at 60.3057 seconds
 Frames: 2354
 Duration: 60.3753 seconds
 ```
+
 ---
 ## Queries
 
-#### Collisions
+### Collisions
 
-In order to record collisions, vehicles must have a [collision detector](ref_sensors.md#collision-detector) attached. The collisions registered by the recorder can be queried using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user.  
-Currently, the actor types that can be used in the query are:  
+Vehicles must have a [collision detector](ref_sensors.md#collision-detector) attached to record collisions. These can be queried, using arguments to filter the type of the actors involved in the collisions. For example, `h` identifies actors whose `role_name = hero`, usually assigned to vehicles managed by the user. There is a specific set of actor types available for the query. 
 
-* __h__ = Hero
-* __v__ = Vehicle
-* __w__ = Walker
-* __t__ = Traffic light
-* __o__ = Other
-* __a__ = Any
+* __h__ = Hero  
+* __v__ = Vehicle  
+* __w__ = Walker  
+* __t__ = Traffic light  
+* __o__ = Other  
+* __a__ = Any  
 
 !!! Note
-    The `manual_control.py` script automatically assigns the `role_name` of the vehicle to `hero` besides providing control over it.
+    The `manual_control.py` script assigns `role_name = hero` for the ego vehicle.  
 
-The API call to query collisions requires two of the previous flags to filter the collisions. The following example would show collisions registered between vehicles and any other object:  
+The collision query requires two flags to filter the collisions. The following example would show collisions between vehicles, and any other object.  
 
 ```py
-client.show_recorder_collisions("recording01.log", "v", "a")
+print(client.show_recorder_collisions("recording01.log", "v", "a"))
 ```
 
-The output summarizes time of the collision and type, ID and description of the actors involved. It should be similar to this one:
+The output summarizes time of the collision, and type, ID and description of the actors involved.  
 
 ```
 Version: 1
@@ -179,40 +193,51 @@ Duration: 46 seconds
     As it is the `hero` or `ego` vehicle who registers the collision, this will always be `Actor 1`. 
 
 
-To understand how that collision happened, it could be a good idea to replay it just moments before the event: 
+The collision can be reenacted by using the recorder and setting it seconds before the event.
 
 ```py
 client.replay_file("col2.log", 13, 0, 122)
 ```
-In this case, the playback showed this: 
+In this case, the playback showed this. 
 
 ![collision](img/collision1.gif)
 
-#### Blocked actors
+### Blocked actors
 
-This query is used to detect vehicles that where stucked during the recording. An actor is considered blocked if it does not move a minimum distance in a certain time. This definition is made by the user during the query:
+Detects vehicles that where stucked during the recording. An actor is considered blocked if it does not move a minimum distance in a certain time. This definition is made by the user during the query.
 
 ```py
-client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
+print(client.show_recorder_actors_blocked("recording01.log", min_time, min_distance))
 ```
 
-| Parameters     | Description                                               | Default |
-| -------------- | --------------------------------------------------------- | ----- |
-| `min_time`     | Minimum seconds to move `min_distance`.                   | 30 secs. |
-| `min_distance` | Minimum centimeters to move to not be considered blocked. | 10 cm. |  
-
-<br> 
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</thead>
+<tbody>
+<td><code>min_time</code> </td>
+<td>Minimum seconds to move `min_distance`.</td>
+<td>30secs.</td>
+<tr>
+<td><code>min_distance</code> </td>
+<td>Minimum centimeters to move to not be considered blocked.</td>
+<td>10cm.</td>
+</tbody>
+</table>
+<br>
 
 !!! Note
-    Take into account that vehicles are stopped at traffic lights sometimes for longer than expected.  
+    Sometimes vehicles are stopped at traffic lights for longer than expected.  
 
-For the sake of comprehension, let's make an example to look for vehicles stopped (moving less than 1 meter during 60 seconds):
+The following example considers that vehicles are blocked when moving less than 1 meter during 60 seconds.
 
 ```py
 client.show_recorder_actors_blocked("col3.log", 60, 100)
 ```
 
-The output is sorted by __duration__, which states how long it took to stop being "blocked" and move the `min_distance`:
+The output is sorted by __duration__, which states how long it took to stop being "blocked" and move the `min_distance`.
 
 ```
 Version: 1
@@ -228,7 +253,7 @@ Frames: 6985
 Duration: 374 seconds
 ```
 
-In this example, the vehicle `173` was stopped for `336` seconds at time `36` seconds. To check the cause of it , it would be useful to check how it arrived to that situation by replaying a few seconds before the second `36`:
+The vehicle `173` was stopped for `336` seconds at time `36` seconds. Reenact the simulation a few seconds before the second `36` to check it out.
 
 ```py
 client.replay_file("col3.log", 34, 0, 173)
@@ -239,61 +264,109 @@ client.replay_file("col3.log", 34, 0, 173)
 ---
 ## Sample python scripts
 
-Some of the provided scripts in `PythonAPI/examples` facilitate the use of the recorder:
+Some of the provided scripts in `PythonAPI/examples` facilitate the use of the recorder.
 
-* __start_recording.py__: starts the recording. Optionally actors can be spawned at the beginning and duration of the recording set.  
+* __start_recording.py__ starts the recording. The duration of the recording can be set, and actors can be spawned at the beginning of it.  
 
-| Parameters     | Description  |
-| -------------- | ------------ |
-| `-f`           | Filename.     |
-| `-n` <small>(optional)</small>| Vehicles to spawn. Default is 10. |
-| `-t` <small>(optional)</small>| Duration of the recording. |  
-
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>-f</code> </td>
+<td>Filename.</td>
+<tr>
+<td><code>-n</code><small> (optional)</small></td>
+<td>Vehicles to spawn. Default is 10.</td>
+<tr>
+<td><code>-t</code><small> (optional)</small></td>
+<td>Duration of the recording.</td>
+</tbody>
+</table>
 <br>
 
-* __start_replaying.py__: starts the playback of a recording. Starting time, duration and actor to follow can be set.
+* __start_replaying.py__ starts the playback of a recording. Starting time, duration, and actor to follow can be set.
 
-| Parameters  | Description  |
-| -------------- | ------------ |
-| `-f`           | Filename.     |
-| `-s` <small>(optional)</small>| Starting time. Default is 0. |
-| `-d` <small>(optional)</small>| Duration. Default is all. |
-| `-c` <small>(optional)</small>| ID of the actor to follow. |  
-
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>-f</code> </td>
+<td>Filename.</td>
+<tr>
+<td><code>-s</code><small> (optional)</small></td>
+<td>Starting time. Default is 10.</td>
+<tr>
+<td><code>-d</code><small> (optional)</small></td>
+<td>Duration. Default is all.</td>
+<tr>
+<td><code>-c</code><small> (optional)</small></td>
+<td>IDof the actor to follow.</td>
+</tbody>
+</table>
 <br>
 
-* __show_recorder_file_info.py__: shows all the information in the recording file.  
-Two modes of detail: by default it only shows frames where some event is recorded. The second shows all information for all frames.
+* __show_recorder_file_info.py__ shows all the information in the recording file. By default, it only shows frames where an event is recorded. However, all of them can be shown.  
 
-| Parameters     | Description  |
-| -------------- | ------------ |
-| `-f`           | Filename.     |
-| `-s` <small>(optional)</small>| Flag to show all details. |  
-
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>-f</code> </td>
+<td>Filename.</td>
+<tr>
+<td><code>-s</code><small> (optional)</small></td>
+<td>Flag to show all details.</td>
+</tbody>
+</table>
 <br>
 
-* __show_recorder_collisions.py__: shows recorded collisions between two actors of type __A__ and __B__ defined using a series of flags: `-t = vv` would show all collisions between vehicles. 
+* __show_recorder_collisions.py__ shows recorded collisions between two flags of actors of types __A__ and __B__. `-t = vv` would show all collisions between vehicles. 
 
-| Parameters  | Description   |
-| ----------- | ------------- |
-| `-f`        | Filename.     |
-| `-t`        | Flags of the actors involved: <br> `h` = hero <br> `v` = vehicle <br> `w` = walker <br> `t` = traffic light <br> `o` = other <br> `a` = any |
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>-f</code> </td>
+<td>Filename.</td>
+<tr>
+<td><code>-t</code></td>
+<td>Flags of the actors involved. <br> <code>h</code> = hero <br> <code>v</code> = vehicle <br> <code>w</code> = walker <br> <code>t</code> = traffic light <br> <code>o</code> = other <br> <code>a</code> = any</td>
+</tbody>
+</table>
+<br>
 
+* __show_recorder_actors_blocked.py__ lists vehicles considered blocked. Actors are considered blocked when not moving a minimum distance in a certain time.  
 
-* __show_recorder_actors_blocked.py__: shows a register for vehicles considered blocked. Actors are considered blocked when not moving a minimum distance in a certain time.  
-
-| Parameters      | Description  |
-| --------------- | ------------ |
-| `-f`            | Filename.     |
-| `-t` <small>(optional)</small> | Time to move `-d` before being considered blocked. |
-| `-d` <small>(optional)</small> | Distance to move to not be considered blocked. |  
-
+<table class ="defTable">
+<thead>
+<th>Parameter</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>-f</code> </td>
+<td>Filename.</td>
+<tr>
+<td><code>-t</code><small> (optional)</small></td>
+<td>Time to move <code>-d</code> before being considered blocked.</td>
+<tr>
+<td><code>-d</code><small> (optional)</small></td>
+<td>Distance to move to not be considered blocked.</td>
+</tbody>
+</table>
 <br>
 
 ---
-Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter: 
+Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter.  
+
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
 <a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>

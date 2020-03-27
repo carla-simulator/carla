@@ -9,11 +9,11 @@ RUN apt-get update ; \
   apt-get install -y wget software-properties-common && \
   add-apt-repository ppa:ubuntu-toolchain-r/test && \
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|apt-key add - && \
-  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" && \
+  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" && \
   apt-get update ; \
   apt-get install -y build-essential \
-    clang-7 \
-    lld-7 \
+    clang-8 \
+    lld-8 \
     g++-7 \
     cmake \
     ninja-build \
@@ -37,8 +37,8 @@ RUN apt-get update ; \
     aria2 && \
   pip2 install setuptools && \
   pip3 install setuptools && \
-  update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-7/bin/clang++ 170 && \
-  update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-7/bin/clang 170
+  update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 && \
+  update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 
 USER ue4
 

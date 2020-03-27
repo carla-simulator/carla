@@ -8,8 +8,10 @@
 
 #include <string>
 #include <sstream>
-#include <carla/geom/Math.h>
 #include <ios>
+
+#include <carla/geom/Math.h>
+#include <carla/geom/Location.h>
 
 namespace carla {
 namespace geom {
@@ -35,8 +37,57 @@ namespace geom {
     return true;
   }
 
+  // 1   3   5   7
+  // #---#---#---#
+  // | / | / | / |
+  // #---#---#---#
+  // 2   4   6   8
+  void Mesh::AddTriangleStrip(const std::vector<Mesh::vertex_type> &vertices) {
+    DEBUG_ASSERT(vertices.size() >= 3);
+    size_t i = GetVerticesNum() + 2;
+    AddVertices(vertices);
+    bool index_clockwise = true;
+    while (i < GetVerticesNum()) {
+      index_clockwise = !index_clockwise;
+      if (index_clockwise) {
+        AddIndex(i + 1);
+        AddIndex(i);
+        AddIndex(i - 1);
+      } else {
+        AddIndex(i - 1);
+        AddIndex(i);
+        AddIndex(i + 1);
+      }
+      ++i;
+    }
+  }
+
+  //   6   5
+  //   #---#
+  //   | / |
+  // 1 #---# 4
+  //   | \ |
+  //   #---#
+  //   2   3
+  void Mesh::AddTriangleFan(const std::vector<Mesh::vertex_type> &vertices) {
+    DEBUG_ASSERT(vertices.size() >= 3);
+    const size_t initial_index = GetVerticesNum() + 1;
+    size_t i = GetVerticesNum() + 2;
+    AddVertices(vertices);
+    while (i < GetVerticesNum()) {
+      AddIndex(initial_index);
+      AddIndex(i);
+      AddIndex(i + 1);
+      ++i;
+    }
+  }
+
   void Mesh::AddVertex(vertex_type vertex) {
     _vertices.push_back(vertex);
+  }
+
+  void Mesh::AddVertices(const std::vector<Mesh::vertex_type> &vertices) {
+    std::copy(vertices.begin(), vertices.end(), std::back_inserter(_vertices));
   }
 
   void Mesh::AddNormal(normal_type normal) {
@@ -190,12 +241,12 @@ namespace geom {
     return out.str();
   }
 
-  size_t Mesh::GetLastVertexIndex() const {
-    return _vertices.size();
-  }
-
   const std::vector<Mesh::vertex_type> &Mesh::GetVertices() const {
     return _vertices;
+  }
+
+  size_t Mesh::GetVerticesNum() const {
+    return _vertices.size();
   }
 
   const std::vector<Mesh::normal_type> &Mesh::GetNormals() const {
@@ -206,12 +257,63 @@ namespace geom {
     return _indexes;
   }
 
+  size_t Mesh::GetIndexesNum() const {
+    return _indexes.size();
+  }
+
   const std::vector<Mesh::uv_type> &Mesh::GetUVs() const {
     return _uvs;
   }
 
   const std::vector<Mesh::material_type> &Mesh::GetMaterials() const {
     return _materials;
+  }
+
+  size_t Mesh::GetLastVertexIndex() const {
+    return _vertices.size();
+  }
+
+  Mesh &Mesh::operator+=(const Mesh &rhs) {
+    const size_t v_num = GetVerticesNum();
+    const size_t i_num = GetIndexesNum();
+
+    _vertices.insert(
+        _vertices.end(),
+        rhs.GetVertices().begin(),
+        rhs.GetVertices().end());
+
+    _normals.insert(
+        _normals.end(),
+        rhs.GetNormals().begin(),
+        rhs.GetNormals().end());
+
+    std::transform(
+        rhs.GetIndexes().begin(),
+        rhs.GetIndexes().end(),
+        std::back_inserter(_indexes),
+        [=](size_t index) {return index + v_num;});
+
+    _uvs.insert(
+        _uvs.end(),
+        rhs.GetUVs().begin(),
+        rhs.GetUVs().end());
+
+    std::transform(
+        rhs.GetMaterials().begin(),
+        rhs.GetMaterials().end(),
+        std::back_inserter(_materials),
+        [=](MeshMaterial mat) {
+          mat.index_start += i_num;
+          mat.index_end += i_num;
+          return mat;
+        });
+
+    return *this;
+  }
+
+  Mesh operator+(const Mesh &lhs, const Mesh &rhs) {
+    Mesh m = lhs;
+    return m += rhs;
   }
 
 } // namespace geom
