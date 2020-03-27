@@ -765,15 +765,15 @@ namespace road {
     }
     auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
     for (auto *lane_offset : lane_offsets) {
-      if (abs(lane_offset->GetPolynomial().GetC()) > 0 ||
-      abs(lane_offset->GetPolynomial().GetD()) > 0) {
+      if (std::abs(lane_offset->GetPolynomial().GetC()) > 0 ||
+          std::abs(lane_offset->GetPolynomial().GetD()) > 0) {
         return false;
       }
     }
     auto elevations = road->GetInfos<element::RoadInfoElevation>();
     for (auto *elevation : elevations) {
-      if (abs(elevation->GetPolynomial().GetC()) > 0 ||
-      abs(elevation->GetPolynomial().GetD()) > 0) {
+      if (std::abs(elevation->GetPolynomial().GetC()) > 0 ||
+          std::abs(elevation->GetPolynomial().GetD()) > 0) {
         return false;
       }
     }
@@ -916,7 +916,7 @@ namespace road {
           double angle = geom::Math::GetVectorAngle(
               current_transform.GetForwardVector(), next_transform.GetForwardVector());
 
-          if (abs(angle) > angle_threshold) {
+          if (std::abs(angle) > angle_threshold) {
             AddElementToRtree(
                 rtree_elements,
                 current_transform,
