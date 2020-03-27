@@ -113,8 +113,8 @@ void TrafficManager::CreateTrafficManagerServer(
   };
 
   /// Define local constants
-  const std::vector<float> longitudinal_param = {2.0f, 0.05f, 0.07f};
-  const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.03f};
+  const std::vector<float> longitudinal_param = {2.0f, 0.01f, 0.4f};
+  const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.2f};
   const std::vector<float> lateral_param = {9.0f, 0.02f, 1.0f};
   const std::vector<float> lateral_highway_param = {7.0f, 0.02f, 1.0f};
   const float perc_difference_from_limit = 30.0f;
