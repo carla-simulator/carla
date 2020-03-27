@@ -55,17 +55,16 @@
         default: 255
       doc: >
         Initializes a color, black by default. 
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
-        default: carla.Color
+        type: carla.Color
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.Color
+        type: carla.Color
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -113,8 +112,7 @@
     - def_name: as_str
       doc: >
         Reads the attribute as string. 
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __bool__
     # --------------------------------------
     - def_name: __float__
@@ -127,16 +125,22 @@
       return: bool
       params:
       - param_name: other
-        default: bool / int / float / str / carla.Color / carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
+      doc: >
+        Returns true if this actor's attribute and `other` are the same. 
     # --------------------------------------
     - def_name: __ne__
       return: bool
       params:
       - param_name: other
-        default: bool / int / float / str / carla.Color / carla.ActorAttribute
+        type: bool / int / float / str / carla.Color / carla.ActorAttribute
+      doc: >
+        Returns true if this actor's attribute and `other` are different. 
     # --------------------------------------
     - def_name: __nonzero__
       return: bool
+      doc: >
+        Returns true if this actor's attribute is not zero or null. 
     # --------------------------------------
 
   - class_name: ActorBlueprint
@@ -204,11 +208,14 @@
           The new value for said attribute. 
       doc: >
         If the `id` attribute is modifiable, changes its value to `value`. 
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Allows iteration within this class' attributes. 
     # --------------------------------------
     - def_name: __len__
+      doc: >
+        Returns the amount of attributes for this blueprint. 
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -236,17 +243,27 @@
       return: carla.ActorBlueprint
       doc: >
         Returns the blueprint corresponding to that identifier. 
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __getitem__
       params:
       - param_name: pos
-        default: int
+        type: int
+      return: carla.ActorBlueprint
+      doc: >
+        Returns the blueprint stored in `pos` position inside the data structure containing them. 
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Method that allows iteration within the blueprints provided. 
     # --------------------------------------
     - def_name: __len__
+      return: int 
+      doc: >
+        Returns the amount of blueprints comprising the library. 
     # --------------------------------------
     - def_name: __str__
+      return: string 
+      doc: >
+        Parses the identifiers for every blueprint to string. 
     # --------------------------------------
 ...

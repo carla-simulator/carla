@@ -110,11 +110,9 @@
         type: carla.Vector3D
       doc: >
         Sets the actor's velocity vector.
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
-
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
@@ -228,8 +226,7 @@
       doc: >
         Sets the light state of a vehicle using a VehicleLightState flag,
         this represents which lights are active or not
-    # - DUNDER METHODS ----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -251,21 +248,20 @@
       - param_name: control
         type: carla.WalkerControl
       doc: >
-        On the next tick, this control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
+        On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
     # --------------------------------------
     - def_name: apply_control
       params:
       - param_name: control
         type: carla.WalkerBoneControl
       doc: >
-        On the next tick, this control defines a list of bone transformations that will be applied to the walker's skeleton. 
+        On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton. 
     # --------------------------------------
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
         The client returns the control applied to this walker during last tick. The method does not call the simulator.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -283,6 +279,14 @@
       doc: >
         Sets the destination that the pedestrian will reach.
     # --------------------------------------
+    - def_name: start
+      doc: >
+        Enables AI control for its parent walker. 
+    # --------------------------------------
+    - def_name: stop
+      doc: >
+        Disables AI control for its parent walker. 
+    # --------------------------------------
     - def_name: set_max_speed
       params:
       - param_name: speed
@@ -293,15 +297,6 @@
       doc: >
         Sets a speed for the walker in meters per second.
     # --------------------------------------
-    - def_name: start
-      doc: >
-        Enables AI control for its parent walker. 
-    # --------------------------------------
-    - def_name: stop
-      doc: >
-        Disables AI control for its parent walker. 
-    # - DUNDER METHODS----------------------------
-    dunder:
     - def_name: __str__
     # --------------------------------------
 
@@ -421,8 +416,7 @@
         type: float
       doc: >
         Sets a given time (in seconds) for the yellow light to be active.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 ...

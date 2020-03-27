@@ -25,39 +25,47 @@
       - param_name: y
         type: float
         default: 0.0
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
-        default: carla.Vector2D
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __sub__
       params:
       - param_name: other
-        default: carla.Vector2D
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __mul__
       params:
       - param_name: other
-        default: carla.Vector2D
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __truediv__
       params:
       - param_name: other
-        default: carla.Vector2D
+        type: carla.Vector2D
     # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.Vector2D
+        type: carla.Vector2D
+      doc: >
+        Returns __True__ if values for every axis are equal. 
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: bool
-        default: carla.Vector2D
+        type: carla.Vector2D
+      doc: >
+        Returns __True__ if the value for any axis is different. 
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Returns the axis values for the vector parsed as string. 
     # --------------------------------------
 
   - class_name: Vector3D
@@ -91,39 +99,47 @@
       - param_name: z
         type: float
         default: 0.0
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __sub__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __mul__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __truediv__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
+      return: bool
+      doc: >
+        Returns __True__ if values for every axis are equal.
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.Vector3D
+        type: carla.Vector3D
+      return: bool
+      doc: >
+        Returns __True__ if the value for any axis is different. 
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Returns the axis values for the vector parsed as string. 
     # --------------------------------------
 
   - class_name: Location
@@ -168,19 +184,27 @@
       return: float
       doc: >
         Returns Euclidean distance in meters from this location to another one. 
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.Location
+        type: carla.Location
+      doc: >
+        Returns __True__ if both locations are the same point in space.  
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: other
-        default: carla.Location
+        type: carla.Location
+      doc: >
+        Returns __True__ if both locations are different points in space. 
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Parses the axis' values to string. 
     # --------------------------------------
 
   - class_name: Rotation
@@ -230,19 +254,26 @@
       return: carla.Vector3D
       doc: >
         Computes the vector pointing forward according to the orientation of each axis. 
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.Rotation
+        type: carla.Rotation
+      doc: >
+        Returns __True__ if both rotations represent the same orientation of each axis.   
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.Rotation
+        type: carla.Rotation
+      return: bool
+      doc: >
+        Returns __True__ if both rotations represent the same orientation for every axis.  
     # -------------------------------------- 
     - def_name: __str__
+      doc: >
+        Parses the axis' orientations to string. 
     # --------------------------------------
 
   - class_name: Transform
@@ -281,19 +312,27 @@
       return: carla.Vector3D
       doc: >
         Computes a forward vector using its rotation.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.Transform
+        type: carla.Transform
+      doc: >
+        Returns __True__ if both location and rotation are equal for this and `other`.
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: other
-        default: carla.Transform
+        type: carla.Transform
+      doc: >
+        Returns __True__ if any location and rotation are not equal for this and `other`.
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Parses both location and rotation to string. 
     # --------------------------------------
 
   - class_name: BoundingBox
@@ -353,19 +392,27 @@
           Contains location and rotation needed to convert this object's local space to world space.
       doc: >
         Returns a list containing the locations of this object's vertices in world space.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.BoundingBox
+        type: carla.BoundingBox
+      doc: >
+        Returns true if both location and extent are equal for this and `other`.
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: other
-        default: carla.BoundingBox
+        type: carla.BoundingBox
+      doc: >
+        Returns true if either location or extent are different for this and `other`.
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Parses the location and extent of the bounding box to string.
     # --------------------------------------
 
   - class_name: GeoLocation
@@ -399,17 +446,16 @@
       - param_name: altitude
         type: float
         default: 0.0
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
-        default: carla.GeoLocation
+        type: carla.GeoLocation
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.GeoLocation
+        type: carla.GeoLocation
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

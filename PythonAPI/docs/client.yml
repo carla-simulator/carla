@@ -1,5 +1,6 @@
 ---
 - module_name: carla
+  doc: >
 
   # - CLASSES ------------------------------
   classes:
@@ -109,7 +110,7 @@
       doc: >
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
-     # --------------------------------------
+    # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
       - param_name: filename
@@ -244,7 +245,7 @@
           New timeout value in seconds. Default is 5 seconds.
       doc: >
         Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
-    # --------------------------------------
+     # --------------------------------------
 
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------

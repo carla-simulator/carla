@@ -37,17 +37,16 @@
         type: float
       - param_name: platform_timestamp
         type: float
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
-        default: carla.Timestamp
+        type: carla.Timestamp
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.Timestamp
+        type: carla.Timestamp
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -73,18 +72,28 @@
         type: int
       doc: >
         Finds an actor using its identifier and returns it or <b>None</b> if it is not present. 
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __getitem__
+      return: carla.Actor
       params:
       - param_name: pos
-        default: int
+        type: int
+      doc: >
+        Returns the actor corresponding to `pos` position in the list. 
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Allows the iteration for the actors in this object. 
     # --------------------------------------
     - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of actors listed. 
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: >
+        Parses to the ID for every actor listed.  
     # --------------------------------------
 
   - class_name: WorldSettings
@@ -126,19 +135,31 @@
           Set this time in seconds to get a fixed time-step in between frames. 0.0 means variable time-step and it is the default mode. 
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method **<font color="#7fb800">apply_settings()</font>**.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
       - param_name: other
-        default: carla.WorldSettings
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
+      doc: >
+        Returns <b>True</b> if both objects' variables are the same. 
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
       - param_name: other
-        default: carla.WorldSettings
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
+      doc: >
+        Returns <b>True</b> if both objects' variables are different. 
     # --------------------------------------
     - def_name: __str__
+      return: str
+      doc: > 
+        Parses the established settings to a string and shows them in command line. 
     # --------------------------------------
 
   - class_name: AttachmentType
@@ -325,9 +346,12 @@
           New conditions to be applied. 
       doc: >
         Changes the weather parameteres ruling the simulation to another ones defined in an object. 
-    # - DUNDER METHODS----------------------------
-    dunder:
+     # --------------------------------------
     - def_name: __str__
+      return:
+        string
+      doc: >
+        The content of the world is parsed and printed as a brief report of its current state. 
      # --------------------------------------
 
   - class_name: DebugHelper

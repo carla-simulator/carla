@@ -1,6 +1,5 @@
 ---
 - module_name: carla
-
   # - CLASSES ------------------------------
 
   classes:
@@ -39,23 +38,33 @@
           type: int
       doc: >
         Given a certain actor ID, checks if there is a snapshot corresponding it and so, if the actor was present at that moment.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value. 
     # --------------------------------------
     - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of carla.ActorSnapshot present in this snapshot.
     # --------------------------------------
     - def_name: __eq__
+      return: bool
       params:
         - param_name: other
-          default: carla.WorldSnapshot
+          type: carla.WorldSnapshot
+      doc: >
+        Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same. 
     # --------------------------------------
     - def_name: __ne__
+      return: bool
       params:
         - param_name: other
-          default: carla.WorldSnapshot
+          type: carla.WorldSnapshot
+      doc: >
+        Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different. 
     # --------------------------------------
-    
+
   - class_name: ActorSnapshot
     # - DESCRIPTION ------------------------
     doc: >

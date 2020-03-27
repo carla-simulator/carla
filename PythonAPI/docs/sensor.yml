@@ -42,8 +42,7 @@
     - def_name: stop
       doc: >
         Commands the sensor to stop listening for data.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 ...

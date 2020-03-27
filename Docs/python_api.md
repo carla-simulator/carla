@@ -99,8 +99,14 @@ Reads the attribute as string.
 - <a name="carla.ActorAttribute.__int__"></a>**<font color="#7fb800">\__int__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=bool / int / float / str / [carla.Color](#carla.Color) / [carla.ActorAttribute](#carla.ActorAttribute)</font>)  
+Returns true if this actor's attribute and `other` are the same.  
+    - **Return:** _bool_  
 - <a name="carla.ActorAttribute.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=bool / int / float / str / [carla.Color](#carla.Color) / [carla.ActorAttribute](#carla.ActorAttribute)</font>)  
+Returns true if this actor's attribute and `other` are different.  
+    - **Return:** _bool_  
 - <a name="carla.ActorAttribute.__nonzero__"></a>**<font color="#7fb800">\__nonzero__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns true if this actor's attribute is not zero or null.  
+    - **Return:** _bool_  
 
 ---
 
@@ -154,7 +160,9 @@ If the `id` attribute is modifiable, changes its value to `value`.
 
 <h3>Dunder methods</h3>
 - <a name="carla.ActorBlueprint.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Allows iteration within this class' attributes.  
 - <a name="carla.ActorBlueprint.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the amount of attributes for this blueprint.  
 - <a name="carla.ActorBlueprint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -176,9 +184,16 @@ Finds an actor using its identifier and returns it or <b>None</b> if it is not p
 
 <h3>Dunder methods</h3>
 - <a name="carla.ActorList.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+Returns the actor corresponding to `pos` position in the list.  
+    - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.ActorList.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Allows the iteration for the actors in this object.  
 - <a name="carla.ActorList.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the amount of actors listed.  
+    - **Return:** _int_  
 - <a name="carla.ActorList.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses to the ID for every actor listed.  
+    - **Return:** _str_  
 
 ---
 
@@ -235,9 +250,16 @@ Returns the blueprint corresponding to that identifier.
 
 <h3>Dunder methods</h3>
 - <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+Returns the blueprint stored in `pos` position inside the data structure containing them.  
+    - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 - <a name="carla.BlueprintLibrary.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Method that allows iteration within the blueprints provided.  
 - <a name="carla.BlueprintLibrary.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the amount of blueprints comprising the library.  
+    - **Return:** _int_  
 - <a name="carla.BlueprintLibrary.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the identifiers for every blueprint to string.  
+    - **Return:** _string_  
 
 ---
 
@@ -273,8 +295,14 @@ Returns a list containing the locations of this object's vertices in world space
 
 <h3>Dunder methods</h3>
 - <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.BoundingBox](#carla.BoundingBox)</font>)  
+Returns true if both location and extent are equal for this and `other`.  
+    - **Return:** _bool_  
 - <a name="carla.BoundingBox.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.BoundingBox](#carla.BoundingBox)</font>)  
+Returns true if either location or extent are different for this and `other`.  
+    - **Return:** _bool_  
 - <a name="carla.BoundingBox.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the location and extent of the bounding box to string.  
+    - **Return:** _str_  
 
 ---
 
@@ -551,6 +579,8 @@ North/South value of a point on the map.
 - <a name="carla.GnssMeasurement.longitude"></a>**<font color="#f8805a">longitude</font>** (_float_)  
 West/East value of a point on the map.  
 
+<h3>Methods</h3>
+
 <h3>Dunder methods</h3>
 - <a name="carla.GnssMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -566,6 +596,8 @@ Linear acceleration in m/s^2.
 Orientation with regard to the North ((0.0, -1.0, 0.0) in Unreal Engine) in radians.  
 - <a name="carla.IMUMeasurement.gyroscope"></a>**<font color="#f8805a">gyroscope</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 Angular velocity in rad/sec.  
+
+<h3>Methods</h3>
 
 <h3>Dunder methods</h3>
 - <a name="carla.IMUMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -596,10 +628,10 @@ Saves the image to disk using a converter pattern stated as `color_converter`. T
         - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_) – Default <b>Raw</b> will make no changes.  
 
 <h3>Dunder methods</h3>
-- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>)  
+- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.Image.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**</font>, <font color="#00a6ed">**color**</font>)  
+- <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
 - <a name="carla.Image.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -794,6 +826,8 @@ Gets the actor the sensor is attached to, the one that invaded another lane.
 - <a name="carla.LaneInvasionEvent.crossed_lane_markings"></a>**<font color="#f8805a">crossed_lane_markings</font>** (_list([carla.LaneMarking](#carla.LaneMarking))_)  
 List of lane markings that have been crossed and detected by the sensor.  
 
+<h3>Methods</h3>
+
 <h3>Dunder methods</h3>
 - <a name="carla.LaneInvasionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -933,8 +967,14 @@ Returns Euclidean distance in meters from this location to another one.
 
 <h3>Dunder methods</h3>
 - <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Location](#carla.Location)</font>)  
+Returns __True__ if both locations are the same point in space.  
+    - **Return:** _bool_  
 - <a name="carla.Location.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Location](#carla.Location)</font>)  
+Returns __True__ if both locations are different points in space.  
+    - **Return:** _bool_  
 - <a name="carla.Location.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the axis' values to string.  
+    - **Return:** _str_  
 
 ---
 
@@ -1007,6 +1047,8 @@ The actor or object considered to be an obstacle.
 - <a name="carla.ObstacleDetectionEvent.distance"></a>**<font color="#f8805a">distance</font>** (_float_)  
 Distance between `actor` and `other`.  
 
+<h3>Methods</h3>
+
 <h3>Dunder methods</h3>
 - <a name="carla.ObstacleDetectionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1024,6 +1066,8 @@ Azimuth angle of the detection in radians.
 Distance in meters from the sensor to the detection position.  
 - <a name="carla.RadarDetection.velocity"></a>**<font color="#f8805a">velocity</font>** (_float_)  
 The velocity of the detected object towards the sensor in m/s.  
+
+<h3>Methods</h3>
 
 <h3>Dunder methods</h3>
 - <a name="carla.RadarDetection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1075,8 +1119,13 @@ Computes the vector pointing forward according to the orientation of each axis.
 
 <h3>Dunder methods</h3>
 - <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Rotation](#carla.Rotation)</font>)  
+Returns __True__ if both rotations represent the same orientation of each axis.  
+    - **Return:** _bool_  
 - <a name="carla.Rotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Rotation](#carla.Rotation)</font>)  
+Returns __True__ if both rotations represent the same orientation for every axis.  
+    - **Return:** _bool_  
 - <a name="carla.Rotation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the axis' orientations to string.  
 
 ---
 
@@ -1330,8 +1379,14 @@ Computes a forward vector using its rotation.
 
 <h3>Dunder methods</h3>
 - <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
+Returns __True__ if both location and rotation are equal for this and `other`.  
+    - **Return:** _bool_  
 - <a name="carla.Transform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
+Returns __True__ if any location and rotation are not equal for this and `other`.  
+    - **Return:** _bool_  
 - <a name="carla.Transform.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses both location and rotation to string.  
+    - **Return:** _str_  
 
 ---
 
@@ -1356,8 +1411,14 @@ Y-axis value.
 - <a name="carla.Vector2D.__mul__"></a>**<font color="#7fb800">\__mul__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
 - <a name="carla.Vector2D.__truediv__"></a>**<font color="#7fb800">\__truediv__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
 - <a name="carla.Vector2D.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
+Returns __True__ if values for every axis are equal.  
+    - **Return:** _bool_  
 - <a name="carla.Vector2D.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**bool**=[carla.Vector2D](#carla.Vector2D)</font>)  
+Returns __True__ if the value for any axis is different.  
+    - **Return:** _bool_  
 - <a name="carla.Vector2D.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the axis values for the vector parsed as string.  
+    - **Return:** _str_  
 
 ---
 
@@ -1385,8 +1446,14 @@ Z-axis value.
 - <a name="carla.Vector3D.__mul__"></a>**<font color="#7fb800">\__mul__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
 - <a name="carla.Vector3D.__truediv__"></a>**<font color="#7fb800">\__truediv__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
 - <a name="carla.Vector3D.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
+Returns __True__ if values for every axis are equal.  
+    - **Return:** _bool_  
 - <a name="carla.Vector3D.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
+Returns __True__ if the value for any axis is different.  
+    - **Return:** _bool_  
 - <a name="carla.Vector3D.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the axis values for the vector parsed as string.  
+    - **Return:** _str_  
 
 ---
 
@@ -1576,11 +1643,11 @@ The walker's collider defined by a bounding box.
 
 <h3>Methods</h3>
 - <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
-On the next tick, this control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.  
+On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.  
     - **Parameters:**
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
 - <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
-On the next tick, this control defines a list of bone transformations that will be applied to the walker's skeleton.  
+On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton.  
     - **Parameters:**
         - `control` (_[carla.WalkerBoneControl](#carla.WalkerBoneControl)_)  
 - <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1600,14 +1667,14 @@ The client returns the control applied to this walker during last tick. The meth
 Sets the destination that the pedestrian will reach.  
     - **Parameters:**
         - `destination` (_[carla.Location](#carla.Location)_)  
-- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
-Sets a speed for the walker in meters per second.  
-    - **Parameters:**
-        - `speed` (_float_) – speed in m/s. An easy walking speed is set by default.  
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
 Enables AI control for its parent walker.  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Disables AI control for its parent walker.  
+- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
+Sets a speed for the walker in meters per second.  
+    - **Parameters:**
+        - `speed` (_float_) – speed in m/s. An easy walking speed is set by default.  
 
 <h3>Dunder methods</h3>
 - <a name="carla.WalkerAIController.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1654,7 +1721,9 @@ If <b>True</b>, the walker will perform a jump.
 
 <h3>Dunder methods</h3>
 - <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WalkerControl](#carla.WalkerControl)</font>)  
+Compares every variable with `other` and returns <b>True</b> if these are all the same.  
 - <a name="carla.WalkerControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WalkerControl](#carla.WalkerControl)</font>)  
+Compares every variable with `other` and returns <b>True</b> if any of these differ.  
 - <a name="carla.WalkerControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -1779,8 +1848,12 @@ Method to initialize an object defining weather conditions. This class has some 
 _</font>  
 
 <h3>Dunder methods</h3>
-- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WeatherParameters](#carla.WeatherParameters)</font>)  
-- <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WeatherParameters](#carla.WeatherParameters)</font>)  
+- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns <b>True</b> if both objects' variables are the same.  
+    - **Return:** _bool_  
+- <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Returns <b>True</b> if both objects' variables are different.  
+    - **Return:** _bool_  
 - <a name="carla.WeatherParameters.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
@@ -1908,6 +1981,8 @@ Changes the weather parameteres ruling the simulation to another ones defined in
 
 <h3>Dunder methods</h3>
 - <a name="carla.World.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+The content of the world is parsed and printed as a brief report of its current state.  
+    - **Return:** _string_  
 
 ---
 
@@ -1932,8 +2007,14 @@ Creates an object containing desired settings that could later be applied throug
 
 <h3>Dunder methods</h3>
 - <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
+Returns <b>True</b> if both objects' variables are the same.  
+    - **Return:** _bool_  
 - <a name="carla.WorldSettings.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
+Returns <b>True</b> if both objects' variables are different.  
+    - **Return:** _bool_  
 - <a name="carla.WorldSettings.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the established settings to a string and shows them in command line.  
+    - **Return:** _str_  
 
 ---
 
@@ -1962,9 +2043,16 @@ Given a certain actor ID, checks if there is a snapshot corresponding it and so,
 
 <h3>Dunder methods</h3>
 - <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value.  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the amount of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this snapshot.  
+    - **Return:** _int_  
 - <a name="carla.WorldSnapshot.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
+Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same.  
+    - **Return:** _bool_  
 - <a name="carla.WorldSnapshot.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
+Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different.  
+    - **Return:** _bool_  
 
 ---
 

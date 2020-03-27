@@ -108,17 +108,20 @@
         ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
       doc: >
         Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
-        default: carla.WeatherParameters
+      return: bool
+      doc: >
+        Returns <b>True</b> if both objects' variables are the same. 
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        default: carla.WeatherParameters
+      return: bool
+      doc: >
+        Returns <b>True</b> if both objects' variables are different. 
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

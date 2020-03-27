@@ -1,6 +1,5 @@
 ---
 - module_name: carla
-
   # - CLASSES ------------------------------
   classes:
   - class_name: LaneType
@@ -232,8 +231,7 @@
         doc: >
           Specify the length from the road start
       return: carla.Waypoint
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -408,8 +406,7 @@
         Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
 
         Will return <b>None</b> if the lane does not exist.
-    # - DUNDER METHODS----------------------------
-    dunder:
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 

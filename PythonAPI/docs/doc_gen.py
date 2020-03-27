@@ -257,6 +257,42 @@ def gen_doc_method_def(method, is_indx=False, with_self=True):
     param = param[:-2]  # delete the last ', '
     return join([method_name, parentheses(param)])
 
+def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
+    """Return python def as it should be written in docs"""
+    param = ''
+    dunder_name = dunder['def_name']
+    if valid_dic_val(dunder, 'static'):
+        with_self = False
+
+    # to correclty render methods like __init__ in md
+    if dunder_name[0] == '_':
+        dunder_name = '\\' + dunder_name
+    if is_indx:
+        dunder_name = bold(method_name)
+    else:
+        dunder_name = bold(color(COLOR_METHOD, dunder_name))
+
+    if with_self:
+        if not 'params' in dunder or dunder['params'] is None:
+            dunder['params'] = []
+        dunder['params'].insert(0, {'param_name': 'self'})
+
+    if valid_dic_val(dunder, 'params'):
+        for p in dunder['params']:
+            default = join(['=', str(p['type'])]) if 'type' in p else ''
+            if is_indx:
+                param = join([param, bold(p['param_name']), default, ', '])
+            else:
+                param = join([param, color(COLOR_PARAM, bold(p['param_name']) + create_hyperlinks(default)), ', '])
+
+    if with_self:
+        dunder['params'] = dunder['params'][1:]
+        if not dunder['params']:  # if is empty delete it
+            del dunder['params']
+
+    param = param[:-2]  # delete the last ', '
+    return join([dunder_name, parentheses(param)])
+
 
 def gen_inst_var_indx(inst_var, class_key):
     inst_var_name = inst_var['var_name']
@@ -350,18 +386,30 @@ def add_doc_method(md, method, class_key):
 def add_doc_dunder(md, dunder, class_key):
     dunder_name = dunder['def_name']
     dunder_key = join([class_key, dunder_name], '.')
-    dunder_def = gen_doc_method_def(dunder, False)
+    dunder_def = gen_doc_dunder_def(dunder, False)
     md.list_pushn(join([html_key(dunder_key), dunder_def]))
 
-    #printed_title = False
-    #if valid_dic_val(dunder, 'params'):
-    #    for param in dunder['params']:
-    #        have_type = valid_dic_val(param, 'type')
+    # Dunder doc
+    if valid_dic_val(dunder, 'doc'):
+        md.textn(create_hyperlinks(md.prettify_doc(dunder['doc'])))
+
+    # Return doc
+    if valid_dic_val(dunder, 'return'):
+        md.list_push(bold('Return:') + ' ')
+        md.textn(italic(create_hyperlinks(dunder['return'])))
+        md.list_pop()
+
+    printed_title = False
+    if valid_dic_val(dunder, 'params'):
+        for param in dunder['params']:
+            have_type = valid_dic_val(param, 'type')
     #        if not have_type:
     #            continue
     #        add_doc_dunder_param(md, param)
     #if printed_title:
     #    md.list_pop()
+
+    
     md.list_pop()
 
 def add_doc_dunder_param(md, param):
@@ -497,14 +545,21 @@ class Documentation:
                             add_doc_inst_var(md, inst_var, class_key)
                     # Generate method doc (if any)
                     if valid_dic_val(cl, 'methods'):
-                        md.title_html(3, 'Methods')
+                        method_list = list()
+                        dunder_list = list()
                         for method in cl['methods']:
+                            method_name = method['def_name']
+                            if method_name[0] == '_' and method_name != '__init__':
+                                dunder_list.append(method)
+                            else:
+                                method_list.append(method)
+                        md.title_html(3, 'Methods')
+                        for method in method_list:
                             add_doc_method(md, method, class_key)
-                    # Generate dunder doc (if any)
-                    if valid_dic_val(cl, 'dunder'):
-                        md.title_html(3, 'Dunder methods')
-                        for dunder in cl['dunder']:
-                            add_doc_dunder(md, dunder, class_key)
+                        if len(dunder_list)>0:
+                            md.title_html(3, 'Dunder methods')
+                        for method in dunder_list:
+                            add_doc_dunder(md, method, class_key)
                     md.separator()
         return md.data().strip()
 
