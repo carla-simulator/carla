@@ -70,7 +70,7 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     return;
   }
 
-  const auto MeshData = CarlaMap->GenerateGeometry(2);
+  const auto MeshData = CarlaMap->GenerateMesh(2);
 
   // Build the mesh
   TArray<FVector> Vertices;

@@ -4,8 +4,8 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-export CC=/usr/bin/clang-7
-export CXX=/usr/bin/clang++-7
+export CC=/usr/bin/clang-8
+export CXX=/usr/bin/clang++-8
 
 source $(dirname "$0")/Environment.sh
 

@@ -68,8 +68,17 @@ namespace geom {
     // -- Mesh build methods ---------------------------------------------------
     // =========================================================================
 
+    /// Adds a triangle strip to the mesh, vertex order is counterclockwise.
+    void AddTriangleStrip(const std::vector<vertex_type> &vertices);
+
+    /// Adds a triangle fan to the mesh, vertex order is counterclockwise.
+    void AddTriangleFan(const std::vector<vertex_type> &vertices);
+
     /// Appends a vertex to the vertices list.
     void AddVertex(vertex_type vertex);
+
+    /// Appends a vertex to the vertices list.
+    void AddVertices(const std::vector<vertex_type> &vertices);
 
     /// Appends a normal to the normal list.
     void AddNormal(normal_type normal);
@@ -110,9 +119,13 @@ namespace geom {
 
     const std::vector<vertex_type> &GetVertices() const;
 
+    size_t GetVerticesNum() const;
+
     const std::vector<normal_type> &GetNormals() const;
 
     const std::vector<index_type> &GetIndexes() const;
+
+    size_t GetIndexesNum() const;
 
     const std::vector<uv_type> &GetUVs() const;
 
@@ -120,6 +133,11 @@ namespace geom {
 
     /// Returns the index of the last added vertex (number of vertices).
     size_t GetLastVertexIndex() const;
+
+    /// Merges two meshes into a single mesh
+    Mesh &operator+=(const Mesh &rhs);
+
+    friend Mesh operator+(const Mesh &lhs, const Mesh &rhs);
 
   private:
 
@@ -136,7 +154,6 @@ namespace geom {
     std::vector<uv_type> _uvs;
 
     std::vector<material_type> _materials;
-
   };
 
 } // namespace geom
