@@ -32,6 +32,8 @@ namespace road {
 
     Lane *GetLane(const LaneId id);
 
+    const Lane *GetLane(const LaneId id) const;
+
     bool ContainsLane(LaneId id) const {
       return (_lanes.find(id) != _lanes.end());
     }
