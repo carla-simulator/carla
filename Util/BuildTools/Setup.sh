@@ -84,7 +84,12 @@ else
   BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
   log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
+  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+  # try to use the backup boost we have in Jenkins
+  if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+    log "Using boost backup"
+    aws s3 cp "s3://carla-internal/build-backup/${BOOST_PACKAGE_BASENAME}.tar.gz" "${BOOST_PACKAGE_BASENAME}.tar.gz"
+  fi
 
   log "Extracting boost for Python 2."
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
