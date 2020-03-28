@@ -88,7 +88,7 @@ else
   # try to use the backup boost we have in Jenkins
   if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
     log "Using boost backup"
-    aws s3 cp "s3://carla-internal/build-backup/${BOOST_PACKAGE_BASENAME}.tar.gz" "${BOOST_PACKAGE_BASENAME}.tar.gz"
+    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
   fi
 
   log "Extracting boost for Python 2."
