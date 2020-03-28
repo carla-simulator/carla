@@ -268,7 +268,7 @@ def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
     if dunder_name[0] == '_':
         dunder_name = '\\' + dunder_name
     if is_indx:
-        dunder_name = bold(method_name)
+        dunder_name = bold(dunder_name)
     else:
         dunder_name = bold(color(COLOR_METHOD, dunder_name))
 
