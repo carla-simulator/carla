@@ -1070,7 +1070,7 @@ namespace road {
     return std::make_pair(loc_r, loc_l);
   }
 
-  geom::Mesh Map::GenerateMesh(double distance) const {
+  geom::Mesh Map::GenerateMesh(const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
     // Iterate each lane in each lane_section in each road
@@ -1164,6 +1164,110 @@ namespace road {
     } while (i < crosswalk_vertex.size());
 
     out_mesh.EndMaterial();
+    return out_mesh;
+  }
+
+  geom::Mesh Map::GenerateWalls(const double distance, const float wall_height) const {
+    RELEASE_ASSERT(distance > 0.0);
+    // TODO: clean up this code
+    geom::Mesh out_mesh;
+    // Iterate each lane in each lane_section in each road
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (road.IsJunction()) {
+        continue;
+      }
+      for (const auto &lane_section : road.GetLaneSections()) {
+        // Get the lane reference
+        // -- RIGHT WALL --
+        const auto *lane0 = lane_section.GetLane(lane_section.GetLanes().begin()->first);
+        // The lane with lane_id 0 have no physical representation in OpenDRIVE
+        if (lane0 == nullptr || lane0->GetId() == 0) {
+          continue;
+        }
+        const auto end_distance = lane0->GetDistance() + lane0->GetLength() - EPSILON;
+        Waypoint current_wp0 {
+            road.GetId(),
+            lane_section.GetId(),
+            lane0->GetId(),
+            lane_section.GetDistance() + EPSILON };
+
+        std::vector<geom::Vector3D> vertices;
+        if (IsLaneStraight(*lane0)) {
+          // Mesh optimization: If the lane is straight just add vertices at the
+          // begining and at the end of it
+          const auto edges = GetWaypointCornerPositions(*this, current_wp0, *lane0);
+          vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
+          vertices.push_back(edges.first);
+        } else {
+          // Iterate over the lane's 's' and store the vertices based on it's width
+          do {
+            // Get the location of the edges of the current lane at the current waypoint
+            const auto edges = GetWaypointCornerPositions(*this, current_wp0, *lane0);
+            vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
+            vertices.push_back(edges.first);
+
+            // Update the current waypoint's "s"
+            current_wp0.s += distance;
+          } while(current_wp0.s < end_distance);
+        }
+
+        // This ensures the mesh is constant and have no gaps between roads,
+        // adding geometry at the very end of the lane
+        if (end_distance - (current_wp0.s - distance) > EPSILON) {
+          current_wp0.s = end_distance;
+          const auto edges = GetWaypointCornerPositions(*this, current_wp0, *lane0);
+          vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
+          vertices.push_back(edges.first);
+        }
+        out_mesh.AddMaterial("security_wall");
+        out_mesh.AddTriangleStrip(vertices);
+        vertices.clear();
+        // -- LEFT WALL --
+        const auto *lane1 = lane_section.GetLane(lane_section.GetLanes().rbegin()->first);
+        // The lane with lane_id 0 have no physical representation in OpenDRIVE
+        if (lane1 == nullptr || lane1->GetId() == 0) {
+          continue;
+        }
+        Waypoint current_wp1 {
+            road.GetId(),
+            lane_section.GetId(),
+            lane1->GetId(),
+            lane_section.GetDistance() + EPSILON };
+
+        if (IsLaneStraight(*lane1)) {
+          // Mesh optimization: If the lane is straight just add vertices at the
+          // begining and at the end of it
+          const auto edges = GetWaypointCornerPositions(*this, current_wp1, *lane1);
+          vertices.push_back(edges.second);
+          vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
+        } else {
+          // Iterate over the lane's 's' and store the vertices based on it's width
+          do {
+            // Get the location of the edges of the current lane at the current waypoint
+            const auto edges = GetWaypointCornerPositions(*this, current_wp1, *lane1);
+            vertices.push_back(edges.second);
+            vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
+
+            // Update the current waypoint's "s"
+            current_wp1.s += distance;
+          } while(current_wp1.s < end_distance);
+        }
+
+        // This ensures the mesh is constant and have no gaps between roads,
+        // adding geometry at the very end of the lane
+        if (end_distance - (current_wp1.s - distance) > EPSILON) {
+          current_wp1.s = end_distance;
+          const auto edges = GetWaypointCornerPositions(*this, current_wp1, *lane1);
+          vertices.push_back(edges.second);
+          vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
+        }
+
+        out_mesh.AddTriangleStrip(vertices);
+        out_mesh.EndMaterial();
+      }
+    }
+
     return out_mesh;
   }
 
