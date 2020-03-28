@@ -32,15 +32,15 @@ void BatchControlStage::Action() {
 
     carla::rpc::VehicleControl vehicle_control;
 
-      const PlannerToControlData &element = data_frame->at(i);
-      if (!element.actor || !element.actor->IsAlive()) {
-        continue;
-      }
-      const carla::ActorId actor_id = element.actor->GetId();
+    const PlannerToControlData &element = data_frame->at(i);
+    if (!element.actor || !element.actor->IsAlive()) {
+      continue;
+    }
+    const carla::ActorId actor_id = element.actor->GetId();
 
-      vehicle_control.throttle = element.throttle;
-      vehicle_control.brake = element.brake;
-      vehicle_control.steer = element.steer;
+    vehicle_control.throttle = element.throttle;
+    vehicle_control.brake = element.brake;
+    vehicle_control.steer = element.steer;
 
     commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
   }
@@ -71,8 +71,8 @@ void BatchControlStage::DataSender() {
     if (commands != nullptr) {
       episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
     }
-    // Limiting updates to 100 frames per second.
-    std::this_thread::sleep_for(10ms);
+    // Applying an infinitesimal sleep statement for providing a system cancellation point.
+    std::this_thread::sleep_for(1us);
   }
   // Synchronous mode.
   else {
