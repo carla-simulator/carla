@@ -14,7 +14,7 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ### ROS Kinetic/Melodic
 
 *  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
-*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](../getting_started/quickstart) or make the build for the corresponding platform. 
+*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
 
 !!! Important
     Make sure that both CARLA and ROS work properly before continuing with the installation. 
@@ -132,7 +132,7 @@ To modify the way CARLA works along with the ROS bridge, edit [`share/carla_ros_
 	*  __If false (default).__ Data is published on every `world.on_tick()` and every `sensor.listen()` callbacks.  
 	*  __If true__ The bridge waits for all the sensor messages expected before the next tick. This might slow down the overall simulation but ensures reproducible results.  
 *  __Wait for vehicle command.__ In synchronous mode, pauses the tick until a vehicle control is completed. 
-*  __Simulation time-step.__ Simulation time (delta seconds) between simulation steps. __It must be lower than 0.1__. Take a look at the [documentation](../simulation_time_and_synchrony) to learn more about this.  
+*  __Simulation time-step.__ Simulation time (delta seconds) between simulation steps. __It must be lower than 0.1__. Take a look at the [documentation](adv_synchrony_timestep.md) to learn more about this.  
 *  __Role names for the Ego vehicles.__ Role names to identify ego vehicles. These will be controllable from ROS and thus, relevant topics will be created.  
 
 !!! Warning
