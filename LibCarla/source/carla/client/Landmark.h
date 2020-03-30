@@ -19,7 +19,7 @@ namespace carla {
 namespace client {
 
   /// Class containing a reference to RoadInfoSignal
-  class Landmark : private MovableNonCopyable {
+  class Landmark {
   public:
 
     SharedPtr<Waypoint> GetWaypoint() const {
