@@ -6,6 +6,7 @@
   * Improved manual_control by adding realistic throttle and brake
   * Added new Behavior agent
   * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
+  * Added examples of sumo co-simulation for Town01, Town04 and Town05
 
 ## CARLA 0.9.8
 
