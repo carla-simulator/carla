@@ -17,8 +17,6 @@
 * [__Add pedestrian navigation__](#add-pedestrian-navigation)  
 * [__Final tips__](#final-tips)  
 
-<a href="#a._Docker_import">Go to the anchor</a>
-
 ---
 ## Introduction
 
@@ -84,15 +82,11 @@ __1. Build a Docker image of Unreal Engine.__ Go to `~/carla/Util/Docker` and ru
 ```sh
 python docker_utils.py
 ```
---> Where is the image generated?  
 
 __2. Run the script to bake the map.__ In the same folder, `~/carla/Util/Docker`. This script will connect with the Docker image previously created, and bake the map.  
 ```sh
 python docker_tools.py --input ~/assets_to_convert --output ~/path_for_output_assets
 ```
-
---> What to do now? Move all of the output to Content/Carla/Maps?  
-
 
 ---
 ## B- RoadRunner plugin import
