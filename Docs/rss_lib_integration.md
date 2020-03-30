@@ -24,6 +24,11 @@ Dependencies provided by Ubunutu (>= 16.04):
 sudo apt-get install libgtest-dev libpython-dev
 ```
 
+As the dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html) you have to install the following:
+```sh
+pip3 install --user -U colcon-common-extensions
+```
+
 Additional dependencies for the python bindings:
 ```sh
 sudo apt-get install castxml
