@@ -2,6 +2,7 @@
 
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
+  * Added ptv vissim and carla co-simulation
 
 ## CARLA 0.9.8
 
