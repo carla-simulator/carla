@@ -7,11 +7,13 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Transform.h"
 #include "carla/Memory.h"
 #include "carla/rpc/ActorId.h"
 
@@ -22,6 +24,7 @@ namespace carla {
 namespace traffic_manager {
 
   namespace cc = carla::client;
+  namespace cg = carla::geom;
 
   /// Convenience typing.
 
@@ -41,6 +44,9 @@ namespace traffic_manager {
     float deviation;
     float distance;
     bool approaching_true_junction;
+    cg::Vector3D velocity;
+    bool physics_enabled;
+    std::vector<std::shared_ptr<SimpleWaypoint>> position_window;
   };
 
   /// Type of data sent by the motion planner stage to the batch control stage.
@@ -49,16 +55,19 @@ namespace traffic_manager {
     float throttle;
     float brake;
     float steer;
+    bool physics_enabled;
+    cg::Transform transform;
   };
 
   /// Type of data sent by the localization stage to the collision stage.
   struct LocalizationToCollisionData {
     Actor actor;
     Buffer buffer;
-    std::vector<std::pair<ActorId, Actor>> overlapping_actors;
+    std::vector<std::tuple<ActorId, Actor, cg::Vector3D>> overlapping_actors;
     std::shared_ptr<SimpleWaypoint> safe_point_after_junction;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
+    cg::Vector3D velocity;
   };
 
   /// Type of data sent by the collision stage to the motion planner stage.

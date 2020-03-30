@@ -201,6 +201,10 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
+  parameters.SetHybridPhysicsMode(mode_switch);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto& elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
