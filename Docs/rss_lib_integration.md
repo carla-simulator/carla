@@ -36,11 +36,6 @@ pip install --user pygccxml
 pip install --user https://bitbucket.org/ompl/pyplusplus/get/1.8.1.zip
 ```
 
-Remaining dependencies are part of the **dependencies/ad-rss** folder as GIT submodules. To properly fetch these, the submodules have to be updated and initialized.
-```sh
-git submodule update --init
-```
-
 Once this is done, the full set of dependencies and RSS components can be built calling the following.
 
 _LibCarla_ with RSS has the be explicitly compiled by
