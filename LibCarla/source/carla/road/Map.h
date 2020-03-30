@@ -146,7 +146,7 @@ namespace road {
         ComputeJunctionConflicts(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
-    geom::Mesh GenerateMesh(const double distance) const;
+    geom::Mesh GenerateMesh(const double distance, const float extra_width = 0.f) const;
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
