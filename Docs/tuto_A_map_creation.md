@@ -1,221 +1,202 @@
-# How to create and import a new map
-
 ![Town03](img/create_map_01.jpg)
 
+# Create and import a map
+
+* [__Introduction__](#introduction)  
+* [__Map creation with RoadRunner__](#map-creation-with-roadrunner)  
+	* [Export the map](#export-the-map)  
+* [__A- Docker import__](#a-docker-import)  
+* [__B- RoadRunner plugin import__](#b-RoadRunner-plugin-import)  
+	* [Plugin installation](#plugin-installation)  
+	* [Import map](#import-map)  
+* [__C- Manual import from files__](#c-manual-import-from-files)  
+	* [Import binaries](#import-binaries)  
+	* [Import OpenDRIVE files](#import-opendrive-files)  
+* [__Set traffic behaviour__](#set-traffic-behaviour)  
+	* [Traffic lights and signs](#traffic-lights-and-signs)
+* [__Add pedestrian navigation__](#add-pedestrian-navigation)  
+* [__Final tips__](#final-tips)  
+
+<a href="#a._Docker_import">Go to the anchor</a>
+
 ---
-## 1 Create a new map
+## Introduction
 
-Files needed:
+In order to create a CARLA map, two elements are needed. This tutorial explains how to properly import them to CARLA. 
 
-* Binaries `.fbx` - All meshes you need to build the map, i.e., roads, lanemarking, sidewalk, ect.
-* OpenDRIVE `.xodr` - Road network information that cars need to circulate on the map.
+* __`.fbx` binaries.__ The meshes needed to build the map, such as roads, lanemarkings, sidewalks, ect.
+* __`.xodr` OpenDRIVE file.__ Contains the road network information necessary for vehicles to navigate the map.
 
-It is possible to modify an existing CARLA map, check out the [map customization](tuto_A_map_customization.md)
-tutorial.
+In order to create them, RoadRunner is the recommended software. It is quite easy to use, and it provides plugins that make the import process much simpler. Some basic steps are provided below. 
 
-The following steps will introduce the RoadRunner software for map creation. If the map is
-created by other software, go to this [section](#3-importing-into-unreal).
+There are three different ways to import these elements into CARLA. They go from the simplest to the most laborious.  
+
+* __A) Docker import.__ Simplicity at its best. Build a Docker image of Unreal Engine and run a script to automatically bake the map. This will also generate the traffic and pedestrian navigations.  
+* __B) RoadRunner import.__ This software provides specific plugins for CARLA. Get those and follow some simple steps to get the map.  
+* __C) Manual import.__ This process requires to go through all the process manually. From importing _.fbx_ and _.xodr_ to setting the static meshes.  
+
+!!! Note
+    This tutorial creates a new map from scratch. Check these other tutorials to [customize a town](tuto_A_map_customization.md) or [import other assets](tuto_A_import_assets.md) to CARLA.
 
 ---
-## 2 Create a new map with RoadRunner
+## Map creation with RoadRunner
 
-RoadRunner is a powerful software from Vector Zero to create 3D scenes. Using RoadRunner is easy,
-in a few steps you will be able to create an impressive scene. You can download
-a trial of RoadRunner at VectorZero's web page.
-
-<div class="vector-zero">
-  <a href="https://www.vectorzero.io/"><img src="../img/VectorZeroAndIcon.webp"/></a>
-</div> <br>
-
-Read VectorZero's RoadRunner [documentation][rr_docs] to install it and get started.
-
-They also have very useful [tutorials][rr_tutorials] on how to use RoadRunner, check them out!
+RoadRunner is an accessible and powerful software from Vector Zero to create 3D scenes. There is a trial version available at their [site](https://www.vectorzero.io/), and an [installation guide][rr_docs].
 
 [rr_docs]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/740622413/Getting+Started
 
-[rr_tutorials]: https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists
+The process is quite straighforward, but there are some things to take into account.  
 
-!!! important
-    Create the map centered arround (0, 0).
-
-#### 2.1 Validate the map
-
-* Check that all connections and geometries seem correct.
+* Center the map in (0,0).  
+* Create the map definition. Take a look at the [official tutorials](https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists).
+* Check the map validation. Take a close look at all connections and geometries.
 
 ![CheckGeometry](img/check_geometry.jpg)
 
-* Visualize the OpenDRIVE road network by clicking on the `OpenDRIVE Preview Tool`
-button and export.
+Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network. Give one last check to everything. Once the map is exported, it cannot be modified. 
 
 ![checkopen](img/check_open.jpg)
 
 !!! note
-    The _OpenDrive Preview Tool_ button lets you test the integrity of the current map.
-    If there is any error with map junctions, click on `Maneuver Tool`
-    and `Rebuild Maneuver Roads` buttons.
+    _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there is any error with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
   
-#### 2.2 Export the map
+### Export the map
 
-After verifying that everything is correct, it is time to export the map to CARLA.
+__1. Export the scene using the CARLA option.__ `File/Export/CARLA(.fbx+.xml+.xodr)`
 
-  1. Export the scene using the CARLA option in the main menu:<br>
-  `File > Export > CARLA (.fbx + .xml + .xodr)`.
+__2. Leave `Export individual Tiles` unchecked.__ This will generate only one _.fbx_ with all the pieces. It makes easier to keep track of the map.  
 
-  2. Leave `Export individual Tiles` _unchecked_, this will generate only one fbx
-  file with all the pieces making it easier to keep track of the map.
+__3. Click `Export`.__  
 
-      ![rr_export](img/rr_export_view.png)
-
-      <br>
-
-  3. Click `Export`.
-
-This will generate a `mapname.fbx` and `mapname.xodr` files within others.
-
-_For a more in-depth guide on how to use the exportation option,_
-_check VectorZeros's [documentation][exportlink]._
+This will generate a `mapname.fbx` and `mapname.xodr` files within others. There is more detailed information about how to export to CARLA in [VectorZero's documentation][exportlink].
 
 [exportlink]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/752779356/Exporting+to+CARLA
 
+!!! Warning
+    Make sure that the .xodr and the .fbx files have the same name.  
+
 ---
-## 3 Importing into Unreal
+## A- Docker import
 
-This section is divided into two. The first part shows how to import a map from RoadRunner
-and the second part shows how to import a map from other software that generates `.fbx` and `.xodr` files.
+This process will bake the map automatically from start to finish. 
 
-!!! important
-    The `.xodr` OpenDRIVE file should have the same name as the binary file `.fbx`
-    i.e. `mapname.fbx` `mapname.xodr`.
+__1. Build a Docker image of Unreal Engine.__ Go to `~/carla/Util/Docker` and run the utils script.  
+```sh
+python docker_utils.py
+```
+--> Where is the image generated?  
 
-We have also created a new way to import assets into Unreal,
-check this [`guide`](tuto_A_import_assets.md)!
+__2. Run the script to bake the map.__ In the same folder, `~/carla/Util/Docker`. This script will connect with the Docker image previously created, and bake the map.  
+```sh
+python docker_tools.py --input ~/assets_to_convert --output ~/path_for_output_assets
+```
 
-#### 3.1 Importing from RoadRunner
+--> What to do now? Move all of the output to Content/Carla/Maps?  
 
-##### 3.1.1 Plugin Installation
 
-RoadRunner provides a series of plugins that make the importing simpler.
+---
+## B- RoadRunner plugin import
 
-1. Locate the plugins under RoadRunner's installation folder:<br>
-   `/usr/bin/VectorZero/Tools/Unreal/Plugins`.
+### Plugin installation
 
-2. Copy those folders to the CarlaUE4 plugins directory: `/carla/Unreal/CarlaUE4/Plugins/`.
+These plugins will set everything ready to be used in CARLA. It makes the import process more simple. 
 
-3. Rebuild the plugin.
+__1. Locate the plugins__ in RoadRunner's installation folder  
+`/usr/bin/VectorZero/Tools/Unreal/Plugins`.
 
-###### Rebuild on Windows
+__2. Copy those folders__ to the CarlaUE4 plugins directory `/carla/Unreal/CarlaUE4/Plugins/`.
 
-1. Generate project files.
+__3. Rebuild the plugin__ following the instructions below.  
 
-    * Right-click the `.uproject` file and `Generate Visual Studio project files`.
+* __a) Rebuild on Windows.__  
+	* Right-click the `.uproject` file and `Generate Visual Studio project files`.  
+	* Open the project and build the plugins.  
 
-2. Open the project and build the plugins.
-
-###### Rebuild on Linux
-
+* __b) Rebuild on Linux.__  
+	* Run the following command.  
 ```sh
 > UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
 ```
 
-Finally, restart Unreal Engine and make sure the checkbox is on for both plugins `Edit > Plugins`.
+__4. Restart Unreal Engine.__ Make sure the checkbox is on for both plugins `Edit > Plugins`. 
 
 ![rr_ue_plugins](img/rr-ue4_plugins.png)
 
-##### 3.1.2 Importing
+### Import map
 
-  1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
-   with the `Import` button.
+__1. Import the _mapname.fbx_ file__ to a new folder under `/Content/Carla/Maps` with the `Import` button.  
 
-      ![ue_import](img/ue_import_mapname.png)
+![ue_import](img/ue_import_mapname.png)
 
-      <br>
+__2. Set `Scene > Hierarchy Type`__ to _Create One Blueprint Asset_ (selected by default).  
+__3. Set `Static Meshes > Normal Import Method`__ to _Import Normals_.  
 
-  2. Set `Scene > Hierarchy Type` to _Create One Blueprint Asset_ (selected by default).
-  3. Set `Static Meshes > Normal Import Method` to _Import Normals_.
+![ue_import_options](img/ue_import_options.png)
 
-      ![ue_import_options](img/ue_import_options.png)
-
-      <br>
-
-  4. Click `Import`.
-
-  5. Save the current level `File > Save Current As...` > _mapname_.
+__4. Click `Import`.__  
+__5. Save the current level__ `File > Save Current As...` > _mapname_.  
 
 The new map should now appear next to the others in the Unreal Engine _Content Browser_.
 
 ![ue_level_content](img/ue_level_content.png)
 
-And that's it! The map is ready!
+---
+## C- Manual import from files
 
-#### 3.2 Importing from the files
+This is the generic way to import maps into Unreal Engine using any _.fbx_ and _.xodr_ files. As there is no plugin to ease the process, there are many settings to be done before the map is available in CARLA.  
 
-This is the generic way to import maps into Unreal.
-
-1. Create a new level with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.
-2. Copy the Illumination folder and its content from the BaseMap `Content/Carla/Maps/BaseMap`
-and paste it in the new level, otherwise, the map will be in the dark.
+__1. Create a new level__ with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.  
+__2. Copy the illumination folder and its content__ from the BaseMap `Content/Carla/Maps/BaseMap`, and paste it in the new level. Otherwise, the map will be in the dark.
 
 ![ue_illumination](img/ue_illumination.png)
 
-##### 3.2.1 Binaries (.fbx)
+### Import binaries
 
-1. Import the _mapname.fbx_ file to a new folder under `/Content/Carla/Maps`
-  with the `Import` button. Make sure the following options are unchecked:
+__1. Import the _mapname.fbx_ file__ to a new folder under `/Content/Carla/Maps` with the `Import` button. __Make sure the following options are unchecked.__
 
-    * Auto Generate Collision
-    * Combine Meshes
-    * Force Front xAxis
-    * Normal Import Method - _Import Normals_
+* Auto Generate Collision  
+* Combine Meshes  
+* Force Front xAxis  
+* Normal Import Method - _To import normals_  
 
-    <br>
+__2. Check the following options.__  
 
-2. Check the following options:
+* Convert Scene Unit
+* _To import materials and textures._
+    * Material Import Method - _To create new materials_
+    * Import Textures
 
-    * Convert Scene Unit
-    * _If you want to import materials and textures:_
-        * Material Import Method - _Create new materials_
-        * Import Textures
+![ue_import_file](img/ue_import_file.png)
 
-    ![ue_import_file](img/ue_import_file.png)
+__3. Check that the static meshes have appeared__ in the chosen folder.
 
-    <br>
+__4. Drag the meshes__ into the level.
 
-    Once everything is loaded up, you should end with several static Meshes in the folder
-    you have selected.
+![ue_meshes](img/ue_drag_meshes.png)
 
-3. Drag them all into the level.
+__5. Center the meshes at point (0,0,0)__ when Unreal finishes loading. 
 
-    ![ue_meshes](img/ue_drag_meshes.png)
+![Transform_Map](img/transform.jpg)
 
-    <br>
+__6. Generate collisions__. Otherwise, pedestrians and vehicles will fall into the abyss.
 
-4. When Unreal Engine finishes loading, center the meshes at point (0, 0, 0) and you will have
-  your map in Unreal! Congratulations!
+* Select the meshes meant to have colliders.
+* Right-click `Asset Actions > Bulk Edit via Property Matrix...`.
 
-    ![Transform_Map](img/transform.jpg)
+  ![ue_selectmesh_collision](img/ue_selectmesh_collision.png)
 
-    <br>
+* Search for _collision_ in Property's Matrix search box.
+* Change `Collision complexity` from `Project Default` to `Use Complex Collision As Simple`.
 
-5. Generate collisions, so pedestrians and vehicles don't fall into the abyss.
+  ![ue_collision_complexity](img/ue_collision_complexity.png)
 
-    * Select the meshes that will have collision.
-    * Right-click `Asset Actions > Bulk Edit via Property Matrix...`.
+* Go to `File > Save All`.
 
-      ![ue_selectmesh_collision](img/ue_selectmesh_collision.png)
+__7. Move the static meshes__ from `Content/Carla/Maps/mapfolder` to the corresponding `Carla/Static` subsequent folder. This will be meaningful for the semantic segmentation ground truth.  
 
-    * Search for _collision_ in Property's Matrix search box.
-    * Change `Collision complexity` from `Project Default` to `Use Complex Collision As Simple`.
-
-      ![ue_collision_complexity](img/ue_collision_complexity.png)
-
-    * Go to `File > Save All`.
-
-6. Lastly, for the **semantic segmentation ground truth**, move the static meshes imported
- under `Content/Carla/Maps/mapfolder` to `Carla/Static` subsequent folders:
-
-    * `Terrain/mapname`
-    * `Road/mapname`
-    * `RoadLines/mapname`
+  * `Terrain/mapname`
+  * `Road/mapname`
+  * `RoadLines/mapname`
 
 ```sh
 Content
@@ -241,65 +222,55 @@ Content
 
 ![ue__semantic_segmentation](img/ue_ssgt.png)
 
-##### 3.2.2 OpenDRIVE (.xodr)
+### Import OpenDRIVE files
 
-1. Copy the `.xodr` file inside the `Content/Carla/Maps/OpenDrive` folder.
-2. Open the Unreal level and drag the _Open Drive Actor_ inside the level.
-It will read the level's name, search the Opendrive file with the same name and load it.
+__1. Copy the `.xodr` file__ inside the `Content/Carla/Maps/OpenDrive` folder.  
+__2. Open the Unreal level.__ Drag the _Open Drive Actor_ inside the level. It will read the level's name. Search the Opendrive file with the same name and load it.
 
 ![ue_opendrive_actor](img/ue_opendrive_actor.png)
 
-And that's it! Now the road network information is loaded into the map.
-
 ---
-## 4. Setting up traffic behavior
+## Set traffic behavior
 
-Once everything is loaded into the level, it is time to create traffic behavior.
+Once everything is loaded into the level, it is time to create traffic behavior.  
 
-1. Click on the _Open Drive Actor_.
-2. Check the following boxes in the same order:
-    * Add Spawners
-    * (Optional) On Intersections (For more spawn points)
-    * Generate Routes
+__1. Click on the _Open Drive Actor_.__  
+__2. Check the following boxes in the same order.__  
 
-This will generate a bunch of _RoutePlanner_ and _VehicleSpawnPoint_ actors that make
-it possible for vehicles to spawn and go in autopilot mode.
+* Add Spawners.  
+* _(Optional for more spawn points)_ On Intersections.  
+* Generate Routes.  
 
-#### 4.1 Traffic lights and signs
+This will generate a series of _RoutePlanner_ and _VehicleSpawnPoint_ actors. These are used for vehicle spawning and navigation.
 
-To regulate the traffic, traffic lights and signs must be placed all over the map.
+### Traffic lights and signs
 
-1. Drag _traffic light / sign actors_ into the level and place them.
+Traffic lights and signs must be placed all over the map.
 
-2. Adjust the _[`trigger box`][triggerlink]_ of each traffic light / sign
- until it covers the road it affects.
+__1. Drag traffic light/sign actors__ into the level and place them.  
+__2. Adjust the [`trigger volume`][triggerlink]__ for each of them. This will determine their area of influence.  
   [triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
 
-    ![ue_trafficlight](img/ue_trafficlight.png)
+![ue_trafficlight](img/ue_trafficlight.png)
 
-    <br>
+__3. In junctions, drag a traffic light group actor__ into the level. Assign to it all the traffic lights involved and configure their timing. Make sure to understand [how do traffic lights work](http://127.0.0.1:8000/core_actors/#traffic-signs-and-traffic-lights).  
 
-3. For traffic lights in junctions, drag a _traffic light group actor_ into the level and assign
-  all traffic lights involved.
+![ue_tl_group](img/ue_tl_group.png)
 
-    ![ue_tl_group](img/ue_tl_group.png)
-
-These last steps may require some trial and error. _Traffic light timing_ and _traffic trigger boxes_
-might need some tweaking and testing to fit perfectly into the city.
+__4. Test traffic light timing and traffic trigger volumes.__ This may need trial and error to fit perfectly.
 
 ![ue_tlsigns_example](img/ue_tlsigns_example.png)
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
 ---
-## 5 Adding pedestrian navigation areas
+## Add pedestrian navigation
 
-To make a navigable mesh for pedestrians, we use the _Recast & Detour_ library.<br>
-<https://github.com/recastnavigation/recastnavigation>.
+The _Recast & Detour_ library is used to make a navigable mesh for pedestrians.
 
-1. Clone or download _Recast & Detour_.
+__1.__ Clone or download [_Recast & Detour_ repository](https://github.com/recastnavigation/recastnavigation).
 
-2. Before building RecastDemo you need to change `m_scale` variable from `1.0f` to `0.01f` in the
+__2.__ Before building RecastDemo, change the `m_scale` variable from `1.0f` to `0.01f` in the
  _MeshLoaderObj contructor_ in `RecastDemo/Source/MeshLoaderObj.cpp`.
 
 ```cpp
@@ -313,70 +284,49 @@ rcMeshLoaderObj::rcMeshLoaderObj() :
 {
 }
 ```
-Then build RecastDemo. Follow their [instructions][buildrecastlink] on how to build it.
 
-[buildrecastlink]: https://github.com/recastnavigation/recastnavigation#building-recastdemo
+__3.__ Follow he instructions to [build RecastDemo](https://github.com/recastnavigation/recastnavigation#building-recastdemo).
 
-**Back to Unreal Engine**
 
-1. Select the meshes you want the pedestrians to be able to spawn and walk on.
+__4.__ In Unreal Engine, select the meshes for the pedestrians to be able to spawn and walk on.
 
-    ![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
+![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
 
-    <br>
+__5.__ Export and save them as a `mapname.obj` file. `File > Export Selected...`.  
+__6.__ Run RecastDemo `./RecastDemo`.  
 
-2. Export and save them as a `mapname.obj` file. `File > Export Selected...`.
-3. Run RecastDemo `./RecastDemo`.
-      * Select `Solo Mesh` from the `Sample` parameter's box.
-      * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
+  * Select `Solo Mesh` from the `Sample` parameter's box.
+  * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
+![recast_example](img/recast_example.png)
 
-        ![recast_example](img/recast_example.png)
-
-      <br>
-
-4. First click on the `Build` button, then once the built has finished, click on the `Save` button.
-5. Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.
-6. Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.
-
-Now pedestrians will be able to spawn randomly and walk on the selected meshes!
+__7.__ Click on the `Build` button.  
+__8.__ Once the build has finished, click on the `Save` button.  
+__9.__ Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.  
+__10.__ Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.  
 
 ---
-## Tips and Tricks
+## Final tips
 
-* Traffic light group controls wich traffic light is active (green state) at each moment.
- You can configure the timing that the lights stay in green `GreenTime`, the time it stays yellow
- `YellowTime`, and the time it takes between one traffic light goes red and the next one
- goes green `ChangeTime`.
-
-<div style="text-align:center"><img src="../img/ue_tl_group_times.png"/></div>
-<br>
-
-* You can add a vehicle spawn point. This should be placed 2 to 3 meters above a Route Planner's
- trigger box and oriented as the route shows. When the vehicle falls, it will hit the trigger box
- and the autopilot will take control of the vehicle.
+* __Place vehicle spawn points__ 2 to 3 meters above a Route Planner's  trigger box, and oriented in the same direction. When the vehicle falls into the trigger box, the autopilot takes control of it.
 
   ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
 
-* When you check `Generate Routes` in Open Drive Actor, it generates the road network but it won't
-  show individual planners. In order to show those points, please do the following:
+* __Show individual route planners.__ `Generate Routes` in Open Drive Actor generates the road network but it does not show these. In order to do so, do the following.
 
     1. Select all `RoutePlanner` actors.
     2. Move them.
-    3. Press `ctr + z` and they will show up on the map.
+    3. Press `ctr + z`. They will show up on the map.
     ![ue_route_points](img/ue_route_points.png)
 
-* OpenDRIVE routes can be manually modified.
+* __Modify OpenDRIVE routes.__ This can be done manually.
 
   ![ue_routeplanner_mod](img/ue_routeplanner_mod.png)
 
-* In order to add the map to the Unreal packaging system, go to:<br>
-  `Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
-  Then add the level to the array.
+* __Add the map to the Unreal packaging system.__ Go to the following path and add the level. 
+`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
 
   ![ue_maps_to_include](img/ue_maps_to_include.png)
 
-* To change default materials and use the ones that come with CARLA at:<br>
-`Content/Carla/Static/GenericMaterials`.
-    * Unreal shortcuts to find materials and assets:
-        * `Right-click on the Asset > Browse to Asset`
-        * `Right-click on the Material > Asset Actions > Select Actors Using This Asset`
+* __Use CARLA materials__ contained in `Content/Carla/Static/GenericMaterials`.
+	* Go to the material. `Right-click on the Asset > Browse to Asset`.
+	* Set the actors. `Right-click on Material > Asset Actions > Select Actors Using This Asset`
