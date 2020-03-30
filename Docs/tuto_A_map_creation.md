@@ -5,17 +5,9 @@
 * [__Introduction__](#introduction)  
 * [__Map creation with RoadRunner__](#map-creation-with-roadrunner)  
 	* [Export the map](#export-the-map)  
-* [__A- Docker import__](#a-docker-import)  
-* [__B- RoadRunner plugin import__](#b-RoadRunner-plugin-import)  
-	* [Plugin installation](#plugin-installation)  
-	* [Import map](#import-map)  
-* [__C- Manual import from files__](#c-manual-import-from-files)  
-	* [Import binaries](#import-binaries)  
-	* [Import OpenDRIVE files](#import-opendrive-files)  
-* [__Set traffic behaviour__](#set-traffic-behaviour)  
-	* [Traffic lights and signs](#traffic-lights-and-signs)
-* [__Add pedestrian navigation__](#add-pedestrian-navigation)  
+* [__Import a map into CARLA__](#import-a-map-into-carla)  
 * [__Final tips__](#final-tips)  
+* [__Previous ways to import a map__](#previous-methods-to-import-a-map)  
 
 ---
 ## Introduction
@@ -27,11 +19,7 @@ In order to create a CARLA map, two elements are needed. This tutorial explains 
 
 In order to create them, RoadRunner is the recommended software. It is quite easy to use, and it provides plugins that make the import process much simpler. Some basic steps are provided below. 
 
-There are three different ways to import these elements into CARLA. They go from the simplest to the most laborious.  
-
-* __A) Docker import.__ Simplicity at its best. Build a Docker image of Unreal Engine and run a script to automatically cook the map. This will also generate the traffic and pedestrian navigations.  
-* __B) RoadRunner import.__ This software provides specific plugins for CARLA. Get those and follow some simple steps to get the map.  
-* __C) Manual import.__ This process requires to go through all the process manually. From importing _.fbx_ and _.xodr_ to setting the static meshes.  
+The process to import a map into CARLA is now out-of-the-box. A Docker image of Unreal Engine is used so that the user does not have neither to compile anything nor manually set the assets to fit into CARLA. 
 
 !!! Note
     This tutorial creates a new map from scratch. Check these other tutorials to [customize a town](tuto_A_map_customization.md) or [import other assets](tuto_A_import_assets.md) to CARLA.
@@ -43,7 +31,7 @@ RoadRunner is an accessible and powerful software from Vector Zero to create 3D 
 
 [rr_docs]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/740622413/Getting+Started
 
-The process is quite straighforward, but there are some things to take into account.  
+The process is quite straightforward, but there are some things to take into account.  
 
 * Center the map in (0,0).  
 * Create the map definition. Take a look at the [official tutorials](https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists).
@@ -74,9 +62,9 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
     Make sure that the .xodr and the .fbx files have the same name.  
 
 ---
-## A- Docker import
+## Import a map into CARLA
 
-This process will cook the map automatically from start to finish. 
+This process will cook the map automatically from start to finish. Using only the .fbx and .xodr, the output will provide a fully usable CARLA map with traffic behaviour, and pedestrian navigation already implemented.  
 
 __1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). The process takes quite a lot of time and disk space. Around 4h and 400GB to build the Docker image. However, this is only needed the first time. Then, the process of importing a new map is out-of-the-box. 
 
@@ -88,7 +76,57 @@ python docker_tools.py --input ~/path_to_input_assets --output ~/path_for_output
 __3. Move the output files__ to `Content/Carla/Maps` in case they are not already there. 
 
 ---
-## B- RoadRunner plugin import
+## Final tips
+
+* __Add and test traffic light timing.__ This are not set automatically, and will need trial and error to fit perfectly with the city.
+
+![ue_tlsigns_example](img/ue_tlsigns_example.png)
+
+> _Example: Traffic Signs, Traffic lights and Turn based stop._
+
+
+* __Place vehicle spawn points__ 2 to 3 meters above a Route Planner's trigger box, and oriented in the same direction. When the vehicle falls into the trigger box, the autopilot takes control of it.
+
+  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
+
+* __Show individual route planners.__ `Generate Routes` in Open Drive Actor generates the road network but it does not show these. In order to do so, do the following.
+
+    1. Select all `RoutePlanner` actors.
+    2. Move them.
+    3. Press `ctr + z`. They will show up on the map.
+    ![ue_route_points](img/ue_route_points.png)
+
+* __Modify OpenDRIVE routes.__ This can be done manually.
+
+  ![ue_routeplanner_mod](img/ue_routeplanner_mod.png)
+
+* __Add the map to the Unreal packaging system.__ Go to the following path and add the level. 
+`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
+
+  ![ue_maps_to_include](img/ue_maps_to_include.png)
+
+* __Use CARLA materials__ contained in `Content/Carla/Static/GenericMaterials`.
+	* Go to the material. `Right-click on the Asset > Browse to Asset`.
+	* Set the actors. `Right-click on Material > Asset Actions > Select Actors Using This Asset`
+
+
+---
+## Previous ways to import a map
+
+There are other ways to import a map used in previous CARLA releases. These required to manually cook the map and prepare everything, so they became deprecated when the Docker method was developed. However, they are explained below in case they are needed. 
+
+* __A) RoadRunner plugin import.__ This software provides specific plugins for CARLA. Get those and follow some simple steps to get the map.  
+* __B) Manual import.__ This process requires to go through all the process manually. From importing _.fbx_ and _.xodr_ to setting the static meshes.  
+
+  <details>
+    <summary><h4 style="display:inline">
+    Deprecated tutorials to import a map
+    </h4></summary>
+
+!!! Warning
+    These importing tutorials are deprecated. The best way to import a map into CARLA is to use the Docker as explained above. 
+
+## A- RoadRunner plugin import
 
 ### Plugin installation
 
@@ -134,7 +172,7 @@ The new map should now appear next to the others in the Unreal Engine _Content B
 ![ue_level_content](img/ue_level_content.png)
 
 ---
-## C- Manual import from files
+## B- Manual import from files
 
 This is the generic way to import maps into Unreal Engine using any _.fbx_ and _.xodr_ files. As there is no plugin to ease the process, there are many settings to be done before the map is available in CARLA.  
 
@@ -297,29 +335,5 @@ __8.__ Once the build has finished, click on the `Save` button.
 __9.__ Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.  
 __10.__ Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.  
 
----
-## Final tips
-
-* __Place vehicle spawn points__ 2 to 3 meters above a Route Planner's  trigger box, and oriented in the same direction. When the vehicle falls into the trigger box, the autopilot takes control of it.
-
-  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
-
-* __Show individual route planners.__ `Generate Routes` in Open Drive Actor generates the road network but it does not show these. In order to do so, do the following.
-
-    1. Select all `RoutePlanner` actors.
-    2. Move them.
-    3. Press `ctr + z`. They will show up on the map.
-    ![ue_route_points](img/ue_route_points.png)
-
-* __Modify OpenDRIVE routes.__ This can be done manually.
-
-  ![ue_routeplanner_mod](img/ue_routeplanner_mod.png)
-
-* __Add the map to the Unreal packaging system.__ Go to the following path and add the level. 
-`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
-
-  ![ue_maps_to_include](img/ue_maps_to_include.png)
-
-* __Use CARLA materials__ contained in `Content/Carla/Static/GenericMaterials`.
-	* Go to the material. `Right-click on the Asset > Browse to Asset`.
-	* Set the actors. `Right-click on Material > Asset Actions > Select Actors Using This Asset`
+</details>
+<br>
