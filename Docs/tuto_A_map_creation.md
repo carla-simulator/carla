@@ -7,7 +7,7 @@
 	* [Export the map](#export-the-map)  
 * [__Import a map into CARLA__](#import-a-map-into-carla)  
 * [__Final tips__](#final-tips)  
-* [__Previous ways to import a map__](#previous-methods-to-import-a-map)  
+* [__Previous ways to import a map__](#previous-ways-to-import-a-map)  
 
 ---
 ## Introduction
