@@ -7,6 +7,7 @@
   * Added new Behavior agent
   * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
   * Added examples of sumo co-simulation for Town01, Town04 and Town05
+  * Added ptv vissim and carla co-simulation
 
 ## CARLA 0.9.8
 
