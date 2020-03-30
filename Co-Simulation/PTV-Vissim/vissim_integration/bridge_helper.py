@@ -12,6 +12,7 @@
 # ==================================================================================================
 
 import logging
+import math
 import random
 
 import carla  # pylint: disable=import-error
@@ -30,38 +31,52 @@ class BridgeHelper(object):
     vtypes = {}
 
     @staticmethod
-    def get_carla_transform(in_vissim_transform):
+    def get_carla_transform(in_vissim_transform, extent=None):
         """
         Returns carla transform based on vissim transform.
         """
         in_location = in_vissim_transform.location
         in_rotation = in_vissim_transform.rotation
 
-        # Transform to carla reference system (left-handed system).
-        out_location = (in_location.x, -in_location.y, in_location.z)
-        out_rotation = (in_rotation.pitch, -in_rotation.yaw, in_rotation.roll)
+        # From front-center-bumper to center (vissim reference system).
+        if extent is not None:
+            out_location = (in_location.x - math.cos(math.radians(in_rotation.yaw)) * extent.x,
+                            in_location.y - math.sin(math.radians(in_rotation.yaw)) * extent.x,
+                            in_location.z - math.sin(math.radians(in_rotation.pitch)) * extent.x)
+        else:
+            out_location = (in_location.x, in_location.y, in_location.z)
+        out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
+        # Transform to carla reference system (left-handed system).
         out_transform = carla.Transform(
-            carla.Location(out_location[0], out_location[1], out_location[2]),
-            carla.Rotation(out_rotation[0], out_rotation[1], out_rotation[2]))
+            carla.Location(out_location[0], -out_location[1], out_location[2]),
+            carla.Rotation(out_rotation[0], -out_rotation[1], out_rotation[2]))
 
         return out_transform
 
     @staticmethod
-    def get_vissim_transform(in_carla_transform):
+    def get_vissim_transform(in_carla_transform, extent=None):
         """
         Returns vissim transform based on carla transform.
         """
         in_location = in_carla_transform.location
         in_rotation = in_carla_transform.rotation
 
-        # Transform to vissim reference system (right-handed system).
-        out_location = (in_location.x, -in_location.y, in_location.z)
-        out_rotation = (in_rotation.pitch, -in_rotation.yaw, in_rotation.roll)
+        # From center to front-center-bumper (carla reference system).
+        if extent is not None:
+            yaw = -1 * in_rotation.yaw
+            pitch = in_rotation.pitch
+            out_location = (in_location.x + math.cos(math.radians(yaw)) * extent.x,
+                            in_location.y - math.sin(math.radians(yaw)) * extent.x,
+                            in_location.z - math.sin(math.radians(pitch)) * extent.x)
+        else:
+            out_location = (in_location.x, in_location.y, in_location.z)
+        out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
 
+        # Transform to vissim reference system (right-handed system).
         out_transform = carla.Transform(
-            carla.Location(out_location[0], out_location[1], out_location[2]),
-            carla.Rotation(out_rotation[0], out_rotation[1], out_rotation[2]))
+            carla.Location(out_location[0], -out_location[1], out_location[2]),
+            carla.Rotation(out_rotation[0], -out_rotation[1], out_rotation[2]))
 
         return out_transform
 
