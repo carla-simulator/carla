@@ -11,11 +11,14 @@
 #include "Carla/Traffic/TrafficLightComponent.h"
 #include "Carla/Traffic/TrafficLightController.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/SignComponent.h"
 #include "Carla/Walker/WalkerController.h"
 
 #include "CoreGlobals.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
@@ -67,14 +70,15 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
     auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
     if (TrafficLight != nullptr)
     {
-
       UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(TrafficLight->FindComponentByClass<UTrafficLightComponent>());
+        Cast<UTrafficLightComponent>(TrafficLight->FindComponentByClass<UTrafficLightComponent>());
 
       using TLS = carla::rpc::TrafficLightState;
 
-      if(TrafficLightComponent == nullptr) {
+      if(TrafficLightComponent == nullptr)
+      {
         // Old way: traffic lights are actors
+        state.traffic_light_data.sign_id[0] = '\0';
         state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetTrafficLightState());
         state.traffic_light_data.green_time = TrafficLight->GetGreenTime();
         state.traffic_light_data.yellow_time = TrafficLight->GetYellowTime();
@@ -82,7 +86,9 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
         state.traffic_light_data.elapsed_time = TrafficLight->GetElapsedTime();
         state.traffic_light_data.time_is_frozen = TrafficLight->GetTimeIsFrozen();
         state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
-      } else {
+      }
+      else
+      {
         UTrafficLightController* Controller =  TrafficLightComponent->GetController();
         ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
 
@@ -96,6 +102,16 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
         }
         else
         {
+          const FString fstring_sign_id = TrafficLightComponent->GetSignId();
+          const std::string sign_id = carla::rpc::FromFString(fstring_sign_id);
+          constexpr size_t max_size = sizeof(state.traffic_light_data.sign_id);
+          size_t sign_id_length = sign_id.length();
+          if(max_size < sign_id_length)
+          {
+            UE_LOG(LogCarla, Warning, TEXT("The max size of a signal id is 32. %s (%d)"), *fstring_sign_id, sign_id.length());
+            sign_id_length = max_size;
+          }
+          std::strncpy(state.traffic_light_data.sign_id, sign_id.c_str(), sign_id_length);
           state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
           state.traffic_light_data.green_time = Controller->GetGreenTime();
           state.traffic_light_data.yellow_time = Controller->GetYellowTime();
@@ -107,49 +123,30 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
       }
     }
   }
-
-  return state;
-}
-
-static void FWorldObserver_GetActorComponentsState(
-  const FActorView &View,
-  const FActorRegistry &Registry,
-  TArray<carla::sensor::data::ComponentDynamicState>& Out)
-{
-  using AType = FActorView::ActorType;
-
-  if (AType::TrafficLight == View.GetActorType())
+  else if (AType::TrafficSign == View.GetActorType())
   {
-    auto TrafficLightActor = Cast<ATrafficLightBase>(View.GetActor());
-    if (TrafficLightActor == nullptr)
+    auto TrafficSign = Cast<ATrafficSignBase>(View.GetActor());
+    if (TrafficSign != nullptr)
     {
-      return;
-    }
+      USignComponent* TrafficSignComponent =
+        Cast<USignComponent>(TrafficSign->FindComponentByClass<USignComponent>());
 
-    TArray<UTrafficLightComponent*> TrafficLights;
-    TrafficLightActor->GetComponents<UTrafficLightComponent>(TrafficLights);
-
-    for(auto& TrafficLight : TrafficLights)
-    {
-      using TLS = carla::rpc::TrafficLightState;
-
-      UTrafficLightController* Controller =  TrafficLight->GetController();
-      ATrafficLightGroup* Group = TrafficLight->GetGroup();
-
-      carla::sensor::data::ComponentDynamicState CompState;
-      CompState.transform = TrafficLight->GetComponentTransform();
-      CompState.state.traffic_light_data.state = static_cast<TLS>(TrafficLight->GetLightState());
-      CompState.state.traffic_light_data.green_time = Controller->GetGreenTime();
-      CompState.state.traffic_light_data.yellow_time = Controller->GetYellowTime();
-      CompState.state.traffic_light_data.red_time = Controller->GetRedTime();
-      CompState.state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
-      CompState.state.traffic_light_data.time_is_frozen = Group->IsFrozen();
-      // Nobody is using this right now, perhaps we should remove it?
-      CompState.state.traffic_light_data.pole_index = 0;
-
-      Out.Push(CompState);
+      if(TrafficSignComponent)
+      {
+        const FString fstring_sign_id = TrafficSignComponent->GetSignId();
+        const std::string sign_id = carla::rpc::FromFString(fstring_sign_id);
+        constexpr size_t max_size = sizeof(state.traffic_sign_data.sign_id);
+        size_t sign_id_length = sign_id.length();
+        if(max_size < sign_id_length)
+        {
+          UE_LOG(LogCarla, Warning, TEXT("The max size of a signal id is 32. %s (%d)"), *fstring_sign_id, sign_id.length());
+          sign_id_length = max_size;
+        }
+        std::strncpy(state.traffic_sign_data.sign_id, sign_id.c_str(), sign_id_length);
+      }
     }
   }
+  return state;
 }
 
 static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
@@ -181,7 +178,6 @@ static carla::Buffer FWorldObserver_Serialize(
 
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
-  using ComponentDynamicState = carla::sensor::data::ComponentDynamicState;
 
   const auto &Registry = Episode.GetActorRegistry();
 
