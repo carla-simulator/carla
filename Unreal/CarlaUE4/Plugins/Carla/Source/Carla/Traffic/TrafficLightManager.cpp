@@ -267,7 +267,7 @@ void ATrafficLightManager::SpawnTrafficLights()
             (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
         double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
 
-        if(SignalDistanceToRoad < LaneWidth / 2.0)
+        if(SignalDistanceToRoad < LaneWidth * 0.5)
         {
           UE_LOG(LogCarla, Warning,
               TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
@@ -330,7 +330,7 @@ void ATrafficLightManager::SpawnSignals()
             (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
         double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
 
-        if(SignalDistanceToRoad < LaneWidth / 2.0)
+        if(SignalDistanceToRoad < LaneWidth * 0.5)
         {
           UE_LOG(LogCarla, Warning,
               TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
@@ -416,7 +416,7 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
 
             // Get 90% of the half size of the width of the lane
             float BoxSize = static_cast<float>(
-                0.9*GetMap()->GetLaneWidth(waypoint)/2.0);
+                0.9f*GetMap()->GetLaneWidth(waypoint)*0.5);
             // Get min and max
             double LaneLength = GetMap()->GetLane(signal_waypoint).GetLength();
             double LaneDistance = GetMap()->GetLane(signal_waypoint).GetDistance();
