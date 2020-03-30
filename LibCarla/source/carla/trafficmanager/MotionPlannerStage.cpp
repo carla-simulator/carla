@@ -80,12 +80,12 @@ namespace PlannerConstants {
       const Actor actor = localization_data.actor;
       const float current_deviation = localization_data.deviation;
       const float current_distance = localization_data.distance;
-
-      const ActorId actor_id = actor->GetId();
-
-      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       const cg::Vector3D current_velocity_vector = localization_data.velocity;
       const float current_velocity = current_velocity_vector.Length();
+
+      const ActorId actor_id = actor->GetId();
+      const cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
+      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
 
       const auto current_time = chr::system_clock::now();
 
@@ -116,8 +116,6 @@ namespace PlannerConstants {
       if (collision_data.hazard) {
         cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
         float ego_relative_velocity =  (current_velocity_vector - other_vehicle_velocity).Length();
-
-        cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
         float other_velocity_along_heading = cg::Math::Dot(other_vehicle_velocity, ego_heading);
 
         // Consider collision avoidance decisions only if there is positive relative velocity
@@ -203,7 +201,7 @@ namespace PlannerConstants {
         chr::duration<float> elapsed_time = current_time - teleportation_instance.at(actor_id);
 
         // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-        if (!emergency_stop && !(!parameters.GetSynchronousMode() && elapsed_time.count() < HYBRID_MODE_DT)) {
+        if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT)) {
 
           // Target displacement magnitude to achieve target velocity.
           float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
@@ -213,6 +211,14 @@ namespace PlannerConstants {
           bool teleportation_interval_found = false;
           cg::Location vehicle_location = actor->GetLocation();
 
+          uint64_t buffer_size = localization_data.position_window.size();
+          uint64_t step_size =  buffer_size/10u;
+          for (uint64_t k = 0u; k + step_size < buffer_size; k += step_size) {
+            debug_helper.DrawLine(localization_data.position_window.at(k)->GetLocation() + cg::Location(0.0, 0.0, 3.0),
+                                  localization_data.position_window.at(k + step_size)->GetLocation() + cg::Location(0.0, 0.0, 3.0),
+                                  0.2f, {0u, 0u, 255u}, 0.05f);
+          }
+
           // Find the interval containing position to achieve target displacement.
           for (uint32_t j = 0u;
                 j+1 < localization_data.position_window.size() && !teleportation_interval_found;
@@ -221,10 +227,11 @@ namespace PlannerConstants {
             target_interval_begin = localization_data.position_window.at(j);
             target_interval_end = localization_data.position_window.at(j+1);
 
-            if (target_interval_begin->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2)
-                || (target_interval_begin->DistanceSquared(vehicle_location) < std::pow(target_displacement, 2)
-                    && target_interval_end->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2))
-            ) {
+            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_location;
+            if (cg::Math::Dot(relative_position, ego_heading) > 0.0f
+                && ((target_interval_begin->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2))
+                    || (target_interval_begin->DistanceSquared(vehicle_location) < std::pow(target_displacement, 2)
+                        && target_interval_end->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2)))) {
               teleportation_interval_found = true;
             }
           }
@@ -240,10 +247,18 @@ namespace PlannerConstants {
                                                   + cg::Location(target_heading * missing_displacement);
             teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
 
+            debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 4),
+                                   teleportation_location + cg::Location(0, 0, 4),
+                                   0.2f, 0.2f, {255u, 0u, 0u}, 0.05f);
+
+            debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
+                                   0.15f, {255u, 255u, 0u}, 0.05f);
           } else {
 
             teleportation_transform = actor->GetTransform();
 
+            debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
+                                   0.15f, {255u, 0u, 255u}, 0.05f);
           }
 
         }
@@ -253,6 +268,8 @@ namespace PlannerConstants {
 
           teleportation_transform = actor->GetTransform();
 
+          debug_helper.DrawPoint(actor->GetLocation() + cg::Location(0, 0, 6),
+                                  0.15f, {0u, 255u, 255u}, 0.05f);
         }
 
       }
