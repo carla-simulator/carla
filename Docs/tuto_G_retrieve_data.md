@@ -6,19 +6,29 @@ Learning an efficient way to retrieve simulation data is essential in CARLA. Thi
 * [__Set the simulation__](#set-the-simulation)  
 	* Map setting
 	* Weather setting
-	* AI actor setting
+* [__Set traffic__](#set-traffic)  
+	* CARLA traffic
+	* SUMO co-simulation traffic
 * [__Set the ego vehicle__](#set-the-ego-vehicle)  
 	* Spawn the ego vehicle
-	* Spawn a sensor
 	* Place the spectator
+* [__Set basic sensors__](#set-basic-sensors)  
+	* RGB camera
+	* Detectors
+	* Other sensors
 * [__Record and retrieve data__](#record-and-retrieve-data)  
 	* Start recording
 	* Capture data
 	* Stop recording
+* [__Set advanced sensors__](#set-advanced-sensors)  
+	* [Depth camera](#depth-camera)
+	* [Semantic segmentation camera](#semantic-segmentation-camera)
+	* [LIDAR raycast sensor](#lidar-raycast-sensor)
+	* [Radar sensor](#radar-sensor)
 * [__Exploit the recording__](#exploit-the-recording)  
 	* Query the recording
 	* Reenact 
-	* Adding new sensors
+    * Add new sensors
 	* Changing conditions
 
 ---
@@ -56,13 +66,13 @@ cd /opt/carla/bin
 
 ### Map setting
 
-Choose a map for the simulation to run. Take a look at the [map documentation](core_map.md#carla-maps) to learn more about their specific attributes. For the sake of this tutorial, __Town07__ is chosen due to the rural setting. 
+Choose a map for the simulation to run. Take a look at the [map documentation](core_map.md#carla-maps) to learn more about their specific attributes. For the sake of this tutorial, __Town01__ is chosen. 
 
 Open a new terminal. Change the map using the __config.py__ script. 
 
 ```
 cd /opt/carla/PythonAPI/utils
-./config.py --map Town07
+./config.py --map Town01
 ```
 This script has many other different options that, for the sake of simplicity, are left out in this tutorial. Here is a brief summary. 
 
@@ -110,8 +120,10 @@ cd /opt/carla/PythonAPI/util
 !!! Note
     The script to set custom weather conditions is [__weather.py__](http://carla.org/2020/03/09/release-0.9.8/#weather-extension) in `PythonAPI/util/`.  
 
+---
+## Set traffic
 
-### AI actor setting
+### CARLA traffic
 
 Now let's spawn some life into the town. 
 
@@ -141,6 +153,33 @@ cd /opt/carla/PythonAPI/examples
 ```
 </details>
 <br>
+
+### SUMO co-simulation traffic
+
+CARLA also can run a co-simulation with SUMO. This allows for creating traffic in SUMO that will correlate in CARLA. 
+
+* First of all, install SUMO. 
+```sh
+sudo add-apt-repository ppa:sumo/stable
+sudo apt-get update
+sudo apt-get install sumo sumo-tools sumo-doc
+```
+* Set the environment variable SUMO_HOME and reset the terminal in order to have it properly working. 
+```sh
+echo "export SUMO_HOME=/usr/share/sumo" >> ~/.bashrc
+```
+* With the CARLA server on, run the SUMO-CARLA synchrony script. 
+```sh
+cd ~/carla/Co-Simulation/Sumo
+python run_synchronization.py -c examples/Town01.sumocfg
+```
+* A SUMO window should have opened. __Press Play__ in order to start traffic in both simulations. 
+```
+> "Play" on SUMO window.
+```
+
+!!! Important
+    (Only available on Build?) SUMO co-simulation is only available in CARLA 0.9.8 and later. Only a few towns are supported so far. 
 
 ---
 ## Set the ego vehicle
@@ -186,27 +225,6 @@ else:
     logging.warning('Could not found any spawn points')
 ```
 
-### Spawn a sensor
-
-Use the library to find a sensor blueprint. This tutorial will first use the [__RGB camera__](ref_sensors.md#rgb-camera), which generates retrieves realistic shots of the scene.  
-
-The sensor will be attached to the ego vehicle at spawning. That means that its transform is __relative to its parent__. The script locates the camera in the hood of the car, and pointing forward. It will capture the front view of the car. The `AttachmentType.SpringArm` will make that the camera position updates smooth, with little eases regarding its parent.  
-
-The key element is the `listen()` method. The [__lambda__](https://www.w3schools.com/python/python_lambda.asp) method will be called each time the sensor listens for data in the simulation. The argument `image` is the sensor data retrieved, in this case, a [carla.Image](python_api.md#carla.Image). The script calls for it, and saves the image to disk. The path can be altered at will, and the name of each file is based on the simulation frame stated in the image.  
-
-```py
-# --------------
-# Spawn attached RGB camera
-# --------------
-cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-cam_location = carla.Location(2,0,1)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
-cam_rotation = carla.Rotation(0,180,0)
-cam_transform = carla.Transform(cam_location,cam_rotation)
-ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
-ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/output/%.6d.png' % image.frame))
-```
-
 ### Place the spectator
 
 Now that the ego vehicle and the sensor have been spawned, it is time to find them. The spectator actor controls the simulation view. Find it and move it where the ego vehicle is. To find the ego vehicle, use one of the snapshots that the vehicle sends to the world on every tick.  
@@ -221,6 +239,154 @@ ego_snapshot = world_snapshot.find(ego_vehicle.id)
 spectator.set_transform(ego_snapshot.get_transform())
 print('\nSpectator located where ego')
 ```
+
+---
+## Set basic sensors
+
+The process to spawn any sensor is quite similar.  
+
+__1.__ Use the library to find sensor blueprints.  
+__2.__ Set specific attributes for the sensor. This is crucial, as the attributes will determine the data retrieved.  
+__3.__ Attach the sensor to the ego vehicle. That means that its transform is __relative to its parent__. The `AttachmentType.SpringArm` will make that the camera position updates smooth, with little eases regarding its parent.  
+__4.__ Add a `listen()` method. This is the key element. A [__lambda__](https://www.w3schools.com/python/python_lambda.asp) method that will be called each time the sensor listens for data. The argument is the sensor data retrieved.  
+
+Having this basic guideline in mind, let's set some basic sensors for the ego vehicle. 
+
+### RGB camera
+
+This sensor generates realistic shots of the scene. It is the sensor with more settable attributes in all of them, but it is also a fundamental one. It should be understood as a real camera, with attributtes such as `focal_distance`, `shutter_speed` or `gamma` to determine how it would work internally. There is also a specific set of attributtes to define the lens distorsion, and lots of advanced attributes. For example, the `lens_circle_multiplier` can be used to achieve an effect similar to an eyefish lens. 
+
+Learn all about them in the [RGB camera documentation](ref_sensors.md#rgb-camera). For the sake of simplicity, the `tutorial_ego` scripts only sets the most commonly used attributes of this sensor. 
+* `image_size_x` and `image_size_y` will change the resolution of the output image. 
+* `fov` is the horizontal field of view of the camera. This is usually changes in correlation with the resolution, to get a similar view. 
+
+After setting the attributes, it is time to locate the sensor. The script places the camera in the hood of the car, and pointing forward. It will capture the front view of the car. 
+
+The data is retrieved as a [carla.Image](python_api.md#carla.Image) on every step. The listen method saves these to disk. The path can be altered at will, and the name of each shot is coded to be based on the simulation frame where the shot was taken.  
+
+```py
+# --------------
+# Spawn attached RGB camera
+# --------------
+cam_bp = None
+cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+cam_bp.set_attribute("image_size_x",str(1920))
+cam_bp.set_attribute("image_size_y",str(1080))
+cam_bp.set_attribute("fov",str(105))
+cam_location = carla.Location(2,0,1)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+cam_rotation = carla.Rotation(0,180,0)
+cam_transform = carla.Transform(cam_location,cam_rotation)
+ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+ego_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/output/%.6d.png' % image.frame))
+```
+
+### Detectors
+
+These sensors retrieve data when the object they are attached to registers a specific event. There are three type of detector sensors, each one describing one type of event.
+* [__Collision detector.__](ref_sensors.md#collision-detector) Retrieves collisions between its parent and other actors.
+* [__Lane invasion detector.__](ref_sensors.md#lane-invasion-detector) Registers when its parent crosses a lane marking.
+* [__Obstacle detector.__](ref_sensors.md#obstacle-detector) Detects possible obstacles ahead of its parent.
+
+The data they retrieve is commonly printed. This will be helpful later when deciding which part of the simulation is going to be reenacted. In fact, the collisions can be explicitely queried using the recorder. Let's take a look at their description in `tutorial_ego.py`. 
+
+Only the obstacle detector blueprint has attributes to be set. Here are some important ones. 
+
+* `sensor_tick` is commonplace for sensors that retrieve data on every step. It sets the sensor to retrieve data only after `x` seconds pass. 
+* `distance` and `hit-radius` determine the debug line used to detect obstacles ahead. 
+* `only_dynamics` determines if static objects should be taken into account or not. By default, any object is considered. 
+
+The script sets the sensor to only consider dynamic objects. The intention is to avoid unnecessary data. If the vehicle collides with any static object, it will be detected by the collision sensor.  
+
+```py
+# --------------
+# Spawn attached collision
+# --------------
+col_bp = world.get_blueprint_library().find('sensor.other.collision')
+col_location = carla.Location(0,0,0)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+col_rotation = carla.Rotation(0,0,0)
+col_transform = carla.Transform(col_location,col_rotation)
+ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def collision_callback(colli):
+    print(colli)
+ego_col.listen(lambda colli: collision_callback(colli))
+
+# --------------
+# Spawn attached Lane invasion
+# --------------
+lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
+lane_location = carla.Location(0,0,0)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+lane_rotation = carla.Rotation(0,0,0)
+lane_transform = carla.Transform(lane_location,lane_rotation)
+ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def collision_callback(lane):
+    print(lane)
+ego_lane.listen(lambda lane: collision_callback(lane))
+
+# --------------
+# Spawn attached Obstacle detector
+# --------------
+obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
+obs_bp.set_attribute("only_dynamics",str(True))
+obs_location = carla.Location(0,0,0)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+obs_rotation = carla.Rotation(0,0,0)
+obs_transform = carla.Transform(obs_location,obs_rotation)
+ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def collision_callback(obs):
+    print(obs)
+ego_obs.listen(lambda obs: collision_callback(obs))
+```
+
+### Other sensors
+
+Among this category, only two sensors will be considered for the time being. 
+
+* [__GNSS sensor.__](ref_sensors.md#collision-detector) Retrieves the geolocation of the sensor.
+* [__IMU sensor.__](ref_sensors.md#collision-detector) Comprises an accelerometer, a gyroscope, and a compass.
+
+The attributes available for these sensors mostly set the mean or standard deviation parameter in the noise model of the measure. This is useful to get more realistic measures. However, the script only sets on attribute.  
+
+* `sensor_tick`. As this measures are not supposed to vary significantly between steps, it is okay to retrieve the data every so often. In this case, it is set to be printed every three seconds.  
+
+```py
+# --------------
+# Spawn attached GNSS
+# --------------
+gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
+gnss_location = carla.Location(0,0,0)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+gnss_rotation = carla.Rotation(0,0,0)
+gnss_transform = carla.Transform(gnss_location,gnss_rotation)
+gnss_bp.set_attribute("sensor_tick",str(3.0))
+ego_gnss = world.spawn_actor(gnss_bp,gnss_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def collision_callback(gnss):
+    print(gnss)
+ego_gnss.listen(lambda gnss: collision_callback(gnss))
+
+# --------------
+# Spawn attached IMU
+# --------------
+imu_bp = world.get_blueprint_library().find('sensor.other.imu')
+imu_location = carla.Location(0,0,0)
+ego_forward = ego_vehicle.get_transform().get_forward_vector()
+imu_rotation = carla.Rotation(0,0,0)
+imu_transform = carla.Transform(imu_location,imu_rotation)
+imu_bp.set_attribute("sensor_tick",str(3.0))
+ego_imu = world.spawn_actor(imu_bp,imu_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def collision_callback(imu):
+    print(imu)
+ego_imu.listen(lambda imu: collision_callback(imu))
+```
+
+---
+## No rendering mode
+
+Update the script to go full speed. 
+Disable rendering. 
+No waits (clocks). 
 
 ---
 ## Record and retrieve data
@@ -274,6 +440,47 @@ if ego_vehicle is not None:
     print('\nDestroying ego vehicle in tutorial')
     ego_vehicle.destroy()
 ```
+
+---
+## Set advanced sensors
+
+Now that a simulation has been recorded sucessfully, it is time to play with it. One of the best ways to do so is adding new sensors to gather new data. The script __tutorial_replay.py__ contains definitions of more sensors. They work in the same way as the basic ones, but their comprehension may be a bit harder.
+
+### Depth camera
+
+This sensor generates shot that maps every element on sight in a grayscale depth map. However, the output is not directly this. It originally maps the depth buffer of the camera using a RGB color space, but this has to be translated to a grayscale to be comprehensible.  
+
+In order to do this, simply save the image as previously done with the RGB camera, but this time, apply a [carla.ColorConverter](python_api.md#carla.ColorConverter) to it. There are two conversions available for depth cameras.  
+
+* __carla.ColorConverter.Depth__ translates the original depth with milimetric precision.  
+* __carla.ColorConverter.LogarithmicDepth__ also has milimetric granularity, but provides better results in close distances and a little worse for further elements.  
+
+
+```py
+# --------------
+# Add a Depth sensor to ego vehicle. 
+# --------------
+depth_cam = None
+depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
+depth_location = carla.Location(2,0,1)
+depth_forward = ego_vehicle.get_transform().get_forward_vector()
+depth_rotation = carla.Rotation(0,180,0)
+depth_transform = carla.Transform(depth_location,depth_rotation)
+depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+# This time, a color converter is applied to the image, to get the semantic segmentation view
+depth_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_depth_output/%.6d.png' % image.frame,carla.ColorConverter.LogarithmicDepth))
+```
+
+### Semantic segmentation camera
+
+
+
+### LIDAR raycast sensor
+
+
+
+### Radar sensor
+
 
 ---
 ## Exploit the recording
