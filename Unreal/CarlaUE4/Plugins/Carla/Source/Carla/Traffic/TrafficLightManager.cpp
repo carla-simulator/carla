@@ -259,6 +259,29 @@ void ATrafficLightManager::SpawnTrafficLights()
           TrafficLight->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
 
+      auto ClosestWaypointToSignal =
+          GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+      if (ClosestWaypointToSignal)
+      {
+        auto SignalDistanceToRoad =
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+
+        if(SignalDistanceToRoad < LaneWidth / 2.0)
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
+              *TrafficLightComponent->GetSignId());
+
+          TArray<UPrimitiveComponent*> Primitives;
+          TrafficLight->GetComponents(Primitives);
+          for (auto* Primitive : Primitives)
+          {
+            Primitive->SetCollisionProfileName(TEXT("NoCollision"));
+          }
+        }
+      }
+
       RegisterLightComponent(TrafficLightComponent);
     }
   }
@@ -298,6 +321,29 @@ void ATrafficLightManager::SpawnSignals()
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
       SignComponent->InitializeSign(GetMap().get());
+
+      auto ClosestWaypointToSignal =
+          GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+      if (ClosestWaypointToSignal)
+      {
+        auto SignalDistanceToRoad =
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+
+        if(SignalDistanceToRoad < LaneWidth / 2.0)
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
+              *SignComponent->GetSignId());
+
+          TArray<UPrimitiveComponent*> Primitives;
+          TrafficSign->GetComponents(Primitives);
+          for (auto* Primitive : Primitives)
+          {
+            Primitive->SetCollisionProfileName(TEXT("NoCollision"));
+          }
+        }
+      }
 
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
 
