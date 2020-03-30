@@ -35,7 +35,7 @@ else
 
   pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" >/dev/null
   git clone --depth=1 -b v1.x https://github.com/gabime/spdlog.git
-  git clone --depth=1 -b v2.0.0 https://github.com/carla-simulator/map
+  git clone --depth=1 -b v2.0.1 https://github.com/carla-simulator/map
   git clone --depth=1 -b v3.0.0 https://github.com/intel/ad-rss-lib
   popd
 
@@ -79,11 +79,18 @@ EOL
   # -DCMAKE_TOOLCHAIN_FILE=${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake
   colcon build --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
+  COLCON_RESULT=$?
+  if (( COLCON_RESULT )); then
+    rm -rf "${ADRSS_INSTALL_DIR}"
+    log "Failed !"
+  else
+    log "Success!"
+  fi
+
   # ==============================================================================
   # -- ...and we are done --------------------------------------------------------
   # ==============================================================================
 
   popd >/dev/null
 
-  log "Success!"
 fi
