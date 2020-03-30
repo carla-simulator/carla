@@ -1,6 +1,6 @@
 ---
 - module_name: command
-  doc: >
+
   classes:
   - class_name: Response
     # - DESCRIPTION ------------------------
