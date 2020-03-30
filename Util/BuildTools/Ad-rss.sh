@@ -16,9 +16,9 @@ source $(dirname "$0")/Environment.sh
 pushd "${CARLA_ROOT_FOLDER}/dependencies/ad-rss" >/dev/null
 
 if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
-  export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c7-install
+  export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
 else
-  export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c7-install
+  export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
 fi
 
 #after a fixing clang compile warnings and errors in components
