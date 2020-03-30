@@ -1046,12 +1046,12 @@ namespace road {
 
   /// Computes the location of the edges of the current lane at the current waypoint
   static std::pair<geom::Vector3D, geom::Vector3D> GetWaypointCornerPositions(
-      const Map &map, const Waypoint &waypoint, const Lane &lane) {
+      const Map &map, const Waypoint &waypoint, const Lane &lane, const float extra_width=0.f) {
     float lane_width = static_cast<float>(map.GetLaneWidth(waypoint)) / 2.0f;
 
     DEBUG_ASSERT(lane.GetRoad() != nullptr);
-    if (lane.GetRoad()->IsJunction() && lane.GetType() == Lane::LaneType::Driving) {
-      lane_width += 1.f;
+    if (extra_width != 0.f && lane.GetRoad()->IsJunction() && lane.GetType() == Lane::LaneType::Driving) {
+      lane_width += extra_width;
     }
     lane_width = waypoint.lane_id > 0 ? -lane_width : lane_width;
 
@@ -1076,7 +1076,7 @@ namespace road {
     return std::make_pair(loc_r, loc_l);
   }
 
-  geom::Mesh Map::GenerateMesh(const double distance) const {
+  geom::Mesh Map::GenerateMesh(const double distance, const float extra_width) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
     // Iterate each lane in each lane_section in each road
@@ -1101,14 +1101,14 @@ namespace road {
           if (IsLaneStraight(lane)) {
             // Mesh optimization: If the lane is straight just add vertices at the
             // begining and at the end of it
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
             vertices.push_back(edges.first);
             vertices.push_back(edges.second);
           } else {
             // Iterate over the lane's 's' and store the vertices based on it's width
             do {
               // Get the location of the edges of the current lane at the current waypoint
-              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
               vertices.push_back(edges.first);
               vertices.push_back(edges.second);
 
@@ -1121,7 +1121,7 @@ namespace road {
           // adding geometry at the very end of the lane
           if (end_distance - (current_wp.s - distance) > EPSILON) {
             current_wp.s = end_distance;
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
             vertices.push_back(edges.first);
             vertices.push_back(edges.second);
           }
@@ -1173,9 +1173,13 @@ namespace road {
     return out_mesh;
   }
 
-  geom::Mesh Map::GenerateWalls(const double distance, const float wall_height) const {
+  geom::Mesh Map::GenerateWalls(
+      const double distance, const float wall_height) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
+    if (wall_height == 0.0f) {
+      return out_mesh;
+    }
     // Iterate each lane in each lane_section in each road
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;

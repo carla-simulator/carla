@@ -59,7 +59,11 @@ public:
   ///
   /// If @a MapString is empty, it fails.
   UFUNCTION(BlueprintCallable)
-  bool LoadNewOpendriveEpisode(const FString &OpenDriveString);
+  bool LoadNewOpendriveEpisode(
+      const FString &OpenDriveString,
+      float Resolution,
+      float WallHeight,
+      float AdditionalWidth);
 
   // ===========================================================================
   // -- Episode settings -------------------------------------------------------

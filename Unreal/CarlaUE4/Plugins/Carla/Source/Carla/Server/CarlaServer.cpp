@@ -234,10 +234,10 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive) -> R<void>
+  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, double resolution, double wall_height, double additional_width) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive)))
+    if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive), resolution, wall_height, additional_width))
     {
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }

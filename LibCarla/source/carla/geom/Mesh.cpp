@@ -109,7 +109,8 @@ namespace geom {
     const size_t open_index = _indexes.size();
     if (!_materials.empty()) {
       if (_materials.back().index_end == 0) {
-        std::cout << "last material was not closed, closing it..." << std::endl;
+        // @todo: change this comment to a debug warning
+        // std::cout << "last material was not closed, closing it..." << std::endl;
         EndMaterial();
       }
     }
@@ -125,11 +126,13 @@ namespace geom {
     if (_materials.empty() ||
         _materials.back().index_start == close_index ||
         _materials.back().index_end != 0) {
-      std::cout << "WARNING: Bad end of material. Material not started." << std::endl;
+      // @todo: change this comment to a debug warning
+      // std::cout << "WARNING: Bad end of material. Material not started." << std::endl;
       return;
     }
     if (_indexes.empty() || close_index % 3 != 0) {
-      std::cout << "WARNING: Bad end of material. Face not started/ended." << std::endl;
+      // @todo: change this comment to a debug warning
+      // std::cout << "WARNING: Bad end of material. Face not started/ended." << std::endl;
       return;
     }
     _materials.back().index_end = close_index;
