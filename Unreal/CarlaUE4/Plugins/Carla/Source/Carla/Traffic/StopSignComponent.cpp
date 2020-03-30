@@ -40,7 +40,7 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
 
         // Get 90% of the half size of the width of the lane
         float BoxSize = static_cast<float>(
-            0.9*Map.GetLaneWidth(signal_waypoint)/2.0);
+            0.9*Map.GetLaneWidth(signal_waypoint)*0.5);
         // Get min and max
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
@@ -102,7 +102,7 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
             auto CurrentWaypoint = Waypoint;
             auto NextWaypoint = CurrentWaypoint;
             float BoxSize = static_cast<float>(
-                0.9*Map.GetLaneWidth(NextWaypoint)/2.0);
+                0.9*Map.GetLaneWidth(NextWaypoint)*0.5);
             float UEBoxSize = 100*BoxSize;
             GenerateCheckBox(Map.ComputeTransform(NextWaypoint), UEBoxSize);
             while (true)
