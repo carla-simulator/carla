@@ -29,7 +29,7 @@ In order to create them, RoadRunner is the recommended software. It is quite eas
 
 There are three different ways to import these elements into CARLA. They go from the simplest to the most laborious.  
 
-* __A) Docker import.__ Simplicity at its best. Build a Docker image of Unreal Engine and run a script to automatically bake the map. This will also generate the traffic and pedestrian navigations.  
+* __A) Docker import.__ Simplicity at its best. Build a Docker image of Unreal Engine and run a script to automatically cook the map. This will also generate the traffic and pedestrian navigations.  
 * __B) RoadRunner import.__ This software provides specific plugins for CARLA. Get those and follow some simple steps to get the map.  
 * __C) Manual import.__ This process requires to go through all the process manually. From importing _.fbx_ and _.xodr_ to setting the static meshes.  
 
@@ -76,17 +76,19 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
 ---
 ## A- Docker import
 
-This process will bake the map automatically from start to finish. 
+This process will cook the map automatically from start to finish. 
 
-__1. Build a Docker image of Unreal Engine.__ Go to `~/carla/Util/Docker` and run the utils script.  
+__1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). The process takes quite a lot of time and disk space. Around 4h and 400GB to build the Docker image. However, this is only needed the first time. Then, the process of importing a new map is out-of-the-box. 
 ```sh
 python docker_utils.py
 ```
 
-__2. Run the script to bake the map.__ In the same folder, `~/carla/Util/Docker`. This script will connect with the Docker image previously created, and bake the map.  
+__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and cooks the map automatically. It only needs the path for the input and output files.  
 ```sh
-python docker_tools.py --input ~/assets_to_convert --output ~/path_for_output_assets
+python docker_tools.py --input ~/path_to_input_assets --output ~/path_for_output_assets
 ```
+
+__3. Move the output files__ to `Content/Carla/Maps` in case they are not already there. 
 
 ---
 ## B- RoadRunner plugin import
