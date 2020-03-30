@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "OpenDriveGenerator.h"
+#include "Traffic/TrafficLightManager.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -169,4 +170,7 @@ void AOpenDriveGenerator::BeginPlay()
   LoadOpenDrive(XodrContent);
 
   GenerateAll();
+
+  // Autogenerate signals
+  GetWorld()->SpawnActor<ATrafficLightManager>();
 }

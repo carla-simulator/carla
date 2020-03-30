@@ -97,23 +97,35 @@ namespace geom {
     /// return a bool to accept or reject the value
     /// [&](Rtree::TreeElement const &element){if (IsOk(element)) return true;
     /// else return false;}
-    template <typename Filter>
+    template <typename Geometry, typename Filter>
     std::vector<TreeElement> GetNearestNeighboursWithFilter(
-        const BPoint &point,
+        const Geometry &geometry,
         Filter filter,
         size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
       _rtree.query(
-          boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours)) &&
+          boost::geometry::index::nearest(geometry, static_cast<unsigned int>(number_neighbours)) &&
               boost::geometry::index::satisfies(filter),
           std::back_inserter(query_result));
       return query_result;
     }
 
-    std::vector<TreeElement> GetNearestNeighbours(const BPoint &point, size_t number_neighbours = 1) const {
+    template<typename Geometry>
+    std::vector<TreeElement> GetNearestNeighbours(const Geometry &geometry, size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
       _rtree.query(
-          boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours)),
+          boost::geometry::index::nearest(geometry, static_cast<unsigned int>(number_neighbours)),
+          std::back_inserter(query_result));
+      return query_result;
+    }
+
+    /// Returns segments that intersec the specified geometry
+    /// Warning: intersection between 3D segments is not implemented by boost
+    template<typename Geometry>
+    std::vector<TreeElement> GetIntersections(const Geometry &geometry) const {
+      std::vector<TreeElement> query_result;
+      _rtree.query(
+          boost::geometry::index::intersects(geometry),
           std::back_inserter(query_result));
       return query_result;
     }

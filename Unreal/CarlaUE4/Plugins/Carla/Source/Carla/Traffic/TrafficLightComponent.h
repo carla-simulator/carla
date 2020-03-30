@@ -47,7 +47,7 @@ public:
 protected:
 
   UFUNCTION(BlueprintCallable)
-  virtual void OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+  void OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
       AActor *OtherActor,
       UPrimitiveComponent *OtherComp,
       int32 OtherBodyIndex,
