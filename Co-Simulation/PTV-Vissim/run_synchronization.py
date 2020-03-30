@@ -102,7 +102,8 @@ class SimulationSynchronization(object):
             vissim_actor = self.vissim.get_actor(vissim_actor_id)
             carla_actor = self.carla.get_actor(carla_actor_id)
 
-            carla_transform = BridgeHelper.get_carla_transform(vissim_actor.get_transform())
+            carla_transform = BridgeHelper.get_carla_transform(vissim_actor.get_transform(),
+                                                               carla_actor.bounding_box.extent)
             carla_velocity = BridgeHelper.get_carla_velocity(vissim_actor.get_velocity())
             self.carla.synchronize_vehicle(carla_actor_id, carla_transform, carla_velocity)
 
@@ -137,7 +138,8 @@ class SimulationSynchronization(object):
             if vissim_actor_id != INVALID_ACTOR_ID:
                 carla_actor = self.carla.get_actor(carla_actor_id)
 
-                vissim_transform = BridgeHelper.get_vissim_transform(carla_actor.get_transform())
+                vissim_transform = BridgeHelper.get_vissim_transform(
+                    carla_actor.get_transform(), carla_actor.bounding_box.extent)
                 vissim_velocity = BridgeHelper.get_vissim_velocity(carla_actor.get_velocity())
                 self.vissim.synchronize_vehicle(vissim_actor_id, vissim_transform, vissim_velocity)
 
