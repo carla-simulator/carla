@@ -111,7 +111,8 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
             UE_LOG(LogCarla, Warning, TEXT("The max size of a signal id is 32. %s (%d)"), *fstring_sign_id, sign_id.length());
             sign_id_length = max_size;
           }
-          std::strncpy(state.traffic_light_data.sign_id, sign_id.c_str(), sign_id_length);
+          std::memset(state.traffic_light_data.sign_id, '\0', max_size);
+          std::memcpy(state.traffic_light_data.sign_id, sign_id.c_str(), sign_id_length);
           state.traffic_light_data.state = static_cast<TLS>(TrafficLightComponent->GetLightState());
           state.traffic_light_data.green_time = Controller->GetGreenTime();
           state.traffic_light_data.yellow_time = Controller->GetYellowTime();
@@ -142,7 +143,8 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
           UE_LOG(LogCarla, Warning, TEXT("The max size of a signal id is 32. %s (%d)"), *fstring_sign_id, sign_id.length());
           sign_id_length = max_size;
         }
-        std::strncpy(state.traffic_sign_data.sign_id, sign_id.c_str(), sign_id_length);
+        std::memset(state.traffic_light_data.sign_id, '\0', max_size);
+        std::memcpy(state.traffic_sign_data.sign_id, sign_id.c_str(), sign_id_length);
       }
     }
   }
