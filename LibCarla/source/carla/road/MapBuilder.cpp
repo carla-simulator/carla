@@ -62,6 +62,7 @@ namespace road {
     Map map(std::move(_map_data));
     CreateJunctionBoundingBoxes(map);
     ComputeJunctionRoadConflicts(map);
+    CheckSignalsOnRoads(map);
 
     return map;
   }
@@ -941,6 +942,25 @@ void MapBuilder::CreateController(
             }
             break;
           }
+        }
+      }
+    }
+  }
+
+  void MapBuilder::CheckSignalsOnRoads(Map &map) {
+    for (auto& signal_pair : map._data.GetSignals()) {
+      auto& signal = signal_pair.second;
+      auto closest_waypoint_to_signal =
+          map.GetClosestWaypointOnRoad(signal->GetTransform().location);
+      if(closest_waypoint_to_signal) {
+        auto distance_to_road =
+            (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
+            signal->GetTransform().location).Length();
+        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+        if(distance_to_road < lane_width * 0.5) {
+          carla::log_warning("Traffic sign",
+              signal->GetSignalId(),
+              "overlaps a driving lane.");
         }
       }
     }
