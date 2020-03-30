@@ -84,8 +84,7 @@ namespace CollisionStageConstants {
       cg::Vector3D obstacle_velocity;
       const SimpleWaypointPtr safe_point_junction = data.safe_point_after_junction;
 
-      try
-      {
+      try {
         // Check every actor in the vicinity if it poses a collision hazard.
         for (auto actor_info = collision_candidates.begin();
             actor_info != collision_candidates.end() && !collision_hazard;
@@ -124,7 +123,6 @@ namespace CollisionStageConstants {
                   if ((other_actor_type[0] == 'v' && parameters.GetPercentageIgnoreVehicles(ego_actor) <= (rand() % 101)) ||
                       (other_actor_type[0] == 'w' && parameters.GetPercentageIgnoreWalkers(ego_actor) <= (rand() % 101)))
                   {
-
                     collision_hazard = true;
                     available_distance_margin = negotiation_result.second;
                     obstacle_velocity = other_velocity;

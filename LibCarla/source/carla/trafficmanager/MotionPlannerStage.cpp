@@ -19,6 +19,7 @@ namespace PlannerConstants {
   static const float FOLLOW_DISTANCE_RATE = (MAX_FOLLOW_LEAD_DISTANCE-MIN_FOLLOW_LEAD_DISTANCE)/ARBITRARY_MAX_SPEED;
   static const float CRITICAL_BRAKING_MARGIN = 0.25f;
   static const float HYBRID_MODE_DT = 0.05f;
+  static const float EPSILON_VELOCITY = 0.001f;
 } // namespace PlannerConstants
 
   using namespace PlannerConstants;
@@ -121,7 +122,7 @@ namespace PlannerConstants {
 
         // Consider collision avoidance decisions only if there is positive relative velocity
         // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-        if (ego_relative_velocity > 0.0f) {
+        if (ego_relative_velocity > EPSILON_VELOCITY) {
           // If other vehicle is approaching lead vehicle and lead vehicle is further
           // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
           float follow_lead_distance = ego_relative_velocity * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
@@ -139,6 +140,9 @@ namespace PlannerConstants {
             // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
             collision_emergency_stop = true;
           }
+        }
+        if (collision_data.distance_to_other_vehicle < CRITICAL_BRAKING_MARGIN) {
+          collision_emergency_stop = true;
         }
       }
       ///////////////////////////////////////////////////////////////////////////////////

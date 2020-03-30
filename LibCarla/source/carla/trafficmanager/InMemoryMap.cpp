@@ -360,7 +360,7 @@ namespace MapConstants {
         }
       }
 
-      if (lane_change == change_left || lane_change == change_both) {
+      else if (lane_change == change_left || lane_change == change_both) {
 
         const WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
         if (left_waypoint != nullptr &&
