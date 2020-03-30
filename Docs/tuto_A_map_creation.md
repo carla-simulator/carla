@@ -79,9 +79,6 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
 This process will cook the map automatically from start to finish. 
 
 __1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). The process takes quite a lot of time and disk space. Around 4h and 400GB to build the Docker image. However, this is only needed the first time. Then, the process of importing a new map is out-of-the-box. 
-```sh
-python docker_utils.py
-```
 
 __2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and cooks the map automatically. It only needs the path for the input and output files.  
 ```sh
