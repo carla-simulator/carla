@@ -11,6 +11,7 @@
 #include <deque>
 #include <stdlib.h>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -105,37 +106,43 @@ private:
   /// Snippet profiler for measuring execution time.
   SnippetProfiler snippet_profiler;
 
-  /// Returns the bounding box corners of the vehicle passed to the method.
-  LocationList GetBoundary(const Actor &actor, const cg::Location &location);
+    /// Returns the bounding box corners of the vehicle passed to the method.
+    LocationList GetBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
 
-  /// Returns the extrapolated bounding box of the vehicle along its
-  /// trajectory.
-  LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location);
+    /// Returns the extrapolated bounding box of the vehicle along its
+    /// trajectory.
+    LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
 
-  /// Method to construct a boost polygon object.
-  Polygon GetPolygon(const LocationList &boundary);
+    /// Method to construct a boost polygon object.
+    Polygon GetPolygon(const LocationList &boundary);
 
-  /// The method returns true if ego_vehicle should stop and wait for
-  /// other_vehicle to pass.
+    /// The method returns true if ego_vehicle should stop and wait for
+    /// other_vehicle to pass.
     std::pair<bool, float> NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
                                               const cg::Location &reference_location,
                                               const cg::Location &other_location,
                                               const SimpleWaypointPtr& closest_point,
-                                              const SimpleWaypointPtr& junction_look_ahead);
+                                              const SimpleWaypointPtr& junction_look_ahead,
+                                              const cg::Vector3D reference_velocity,
+                                              const cg::Vector3D other_velocity);
 
-  /// Method to calculate the speed dependent bounding box extention for a vehicle.
-  float GetBoundingBoxExtention(const Actor &ego_vehicle);
+    /// Method to calculate the speed dependent bounding box extention for a vehicle.
+    float GetBoundingBoxExtention(const ActorId actor_id,
+                                  const cg::Vector3D velocity_vector,
+                                  const cg::Vector3D heading_vector);
 
-  /// At intersections, used to see if there is space after the junction
-  bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor,
-                                   const SimpleWaypointPtr safe_point, const cg::Location &other_location);
+    /// At intersections, used to see if there is space after the junction
+    bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor,
+                                     const SimpleWaypointPtr safe_point, const cg::Location &other_location,
+                                     const cg::Vector3D other_velocity);
 
   /// A simple method used to draw bounding boxes around vehicles
   void DrawBoundary(const LocationList &boundary);
 
   /// Method to compute Geometry result between two vehicles
   GeometryComparisonCache GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
-                                                   const cg::Location &reference_location, const cg::Location &other_location);
+                                                   const cg::Location &reference_location, const cg::Location &other_location,
+                                                   const cg::Vector3D reference_velocity,const cg::Vector3D other_velocity);
 
 public:
 
