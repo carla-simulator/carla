@@ -128,7 +128,11 @@ static FString BuildRecastBuilderFile()
   return AbsoluteRecastBuilderPath;
 }
 
-bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
+bool UCarlaEpisode::LoadNewOpendriveEpisode(
+    const FString &OpenDriveString,
+    float Resolution,
+    float WallHeight,
+    float AdditionalWidth)
 {
   if (OpenDriveString.IsEmpty())
   {
@@ -148,7 +152,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
   }
 
   // Generate the OBJ (as string)
-  const auto RoadMesh = CarlaMap->GenerateMesh(2);
+  const auto RoadMesh = CarlaMap->GenerateMesh(Resolution);
   const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
   const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
@@ -177,6 +181,23 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
     UE_LOG(LogCarla, Error, TEXT("ERROR: XODR not copied!"));
     return false;
   }
+
+  const FString AbsoluteCONFPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf");
+
+  // Build the mesh generation config file
+  const FString ConfigData = FString::Printf(
+      TEXT("resolution=%s\nwall_height=%s\nadditional_width=%s\n"),
+      *FString::SanitizeFloat(Resolution),
+      *FString::SanitizeFloat(WallHeight),
+      *FString::SanitizeFloat(AdditionalWidth));
+
+  // Save the config file
+  FFileHelper::SaveStringToFile(
+      ConfigData,
+      *AbsoluteCONFPath,
+      FFileHelper::EEncodingOptions::ForceUTF8,
+      &IFileManager::Get());
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 
