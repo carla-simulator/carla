@@ -22,6 +22,13 @@ if [[ -d "${ADRSS_INSTALL_DIR}" ]]; then
   log "${ADRSS_BASENAME} already installed."
 else
   # ad-rss is built inside a colcon workspace, therefore we have to setup the workspace first
+  if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" ]]; then
+    rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
+  fi
+  if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build" ]]; then
+    rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build"
+  fi
+
   mkdir -p "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
 
   log "Retrieving ${ADRSS_BASENAME}."
