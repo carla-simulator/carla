@@ -90,7 +90,9 @@ namespace CollisionStageConstants {
             actor_info != collision_candidates.end() && !collision_hazard;
             ++actor_info) {
 
-          ActorId other_actor_id; Actor other_actor; cg::Vector3D other_velocity;
+          ActorId other_actor_id;
+          Actor other_actor;
+          cg::Vector3D other_velocity;
           std::tie(other_actor_id, other_actor, other_velocity) = *actor_info;
 
           if (!other_actor->IsAlive()) continue;
