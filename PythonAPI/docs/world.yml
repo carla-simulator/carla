@@ -313,6 +313,26 @@
       doc: >
         Returns the object containing the navigation map used to describe this world.
     # --------------------------------------
+    - def_name: get_traffic_light
+      return: carla.TrafficLight
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          The landmark object describing a traffic light. 
+      doc: >
+        Provided a landmark, returns the traffic light object it describes. 
+    # --------------------------------------
+    - def_name: get_traffic_sign
+      return: carla.TrafficSign
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          The landmark object describing a traffic sign. 
+      doc: >
+        Provided a landmark, returns the traffic sign object it describes. 
+    # --------------------------------------
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
