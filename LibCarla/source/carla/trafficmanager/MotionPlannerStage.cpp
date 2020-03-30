@@ -158,7 +158,7 @@ namespace PlannerConstants {
       }
 
       // Message items to be sent to batch control stage.
-      ActuationSignal actuation_signal;
+      ActuationSignal actuation_signal {0.0f, 0.0f, 0.0f};
       bool physics_enabled = true;
       cg::Transform teleportation_transform;
 
