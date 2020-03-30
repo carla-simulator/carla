@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "boost/geometry.hpp"
+#include "boost/geometry/geometries/geometries.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
 #include "boost/pointer_cast.hpp"
@@ -43,20 +44,29 @@ namespace traffic_manager {
 
   using ActorId = carla::ActorId;
   using Actor = carla::SharedPtr<cc::Actor>;
+  using Point2D = bg::model::point<double, 2, bg::cs::cartesian>;
   using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
   using LocationList = std::vector<cg::Location>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using TLS = carla::rpc::TrafficLightState;
 
 
-/// Structure to hold the Geometry of reference vehicle to other vehicle.
+  /// Structure to hold the Geometry of reference vehicle to other vehicle.
   struct GeometryComparisonCache {
 
      double reference_vehicle_to_other_geodesic;
      double other_vehicle_to_reference_geodesic;
      double inter_geodesic_distance;
      double inter_bbox_distance;
-};
+  };
+
+  /// Structure to hold data about collision locking with a lead vehicle.
+  struct CollisionLock {
+
+    ActorId lead_vehicle_id;
+    double distance_to_lead_vehicle;
+    double initial_lock_distance;
+  };
 
 /// This class is the thread executable for the collision detection stage
 /// and is responsible for checking possible collisions with other
@@ -64,6 +74,7 @@ namespace traffic_manager {
 class CollisionStage : public PipelineStage {
 
 private:
+
   /// Geometry data for the vehicle
   std::unordered_map<std::string, GeometryComparisonCache> vehicle_cache;
   /// Selection key for switching between output frames.
@@ -89,6 +100,8 @@ private:
   uint64_t number_of_vehicles;
   /// Structure to hold the geodesic boundaries during one iteration.
   std::unordered_map<ActorId, LocationList> geodesic_boundaries;
+  /// Structure to keep track of collision locking.
+  std::unordered_map<ActorId, CollisionLock> collision_locks;
   /// Snippet profiler for measuring execution time.
   SnippetProfiler snippet_profiler;
 
@@ -104,10 +117,11 @@ private:
 
   /// The method returns true if ego_vehicle should stop and wait for
   /// other_vehicle to pass.
-  bool NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
-                          const cg::Location &reference_location, const cg::Location &other_location,
-                          const SimpleWaypointPtr& closest_point,
-                          const SimpleWaypointPtr& junction_look_ahead);
+    std::pair<bool, float> NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
+                                              const cg::Location &reference_location,
+                                              const cg::Location &other_location,
+                                              const SimpleWaypointPtr& closest_point,
+                                              const SimpleWaypointPtr& junction_look_ahead);
 
   /// Method to calculate the speed dependent bounding box extention for a vehicle.
   float GetBoundingBoxExtention(const Actor &ego_vehicle);

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "carla/client/Vehicle.h"
+#include "carla/geom/Math.h"
 #include "carla/rpc/Actor.h"
 
 #include "carla/trafficmanager/MessengerAndDataTypes.h"

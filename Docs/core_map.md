@@ -36,7 +36,7 @@ print(client.get_available_maps())
 
 The lane types defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API in [__carla.LaneType__](python_api.md#carla.LaneType) as a series of enum values.  
 
-The lane markings surrounding a lane can be accessed through [__carla.LaneMarking__](python_api.md#carla.LaneMarkingType). These are defined with a series of variables.  
+The lane markings surrounding a lane can be accessed through [__carla.LaneMarking__](python_api.md#carla.LaneMarking). These are defined with a series of variables.  
 
 * [__carla.LaneMarkingType__](python_api.md#carla.LaneMarkingType) are enum values according to OpenDRIVE standards. 
 * [__carla.LaneMarkingColor__](python_api.md#carla.LaneMarkingColor) are enum values to determine the color of the marking. 
@@ -137,7 +137,7 @@ waypoint_list = map.generate_waypoints(2.0)
 waypoint_tuple_list = map.get_topology()
 ```
 
-* __Convert simulation point to geographical coordinates.__ Transforms a certain location to a [carla.Geolocation](python_api.md#carla.Geolocation) with latitude and longitude values. 
+* __Convert simulation point to geographical coordinates.__ Transforms a certain location to a [carla.GeoLocation](python_api.md#carla.GeoLocation) with latitude and longitude values. 
 ```py
 my_geolocation = map.transform_to_geolocation(vehicle.transform)
 ```

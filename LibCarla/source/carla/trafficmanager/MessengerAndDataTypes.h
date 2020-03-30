@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "carla/client/Actor.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
 #include "carla/rpc/ActorId.h"
 
@@ -54,7 +55,7 @@ namespace traffic_manager {
   struct LocalizationToCollisionData {
     Actor actor;
     Buffer buffer;
-    std::unordered_map<ActorId, Actor> overlapping_actors;
+    std::vector<std::pair<ActorId, Actor>> overlapping_actors;
     std::shared_ptr<SimpleWaypoint> safe_point_after_junction;
     std::shared_ptr<SimpleWaypoint> closest_waypoint;
     std::shared_ptr<SimpleWaypoint> junction_look_ahead_waypoint;
@@ -63,6 +64,8 @@ namespace traffic_manager {
   /// Type of data sent by the collision stage to the motion planner stage.
   struct CollisionToPlannerData {
     bool hazard;
+    float distance_to_other_vehicle;
+    cg::Vector3D other_vehicle_velocity;
   };
 
   /// Type of data sent by the localization stage to the traffic light stage.
