@@ -23,8 +23,9 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 
+#include <boost/optional.hpp>
+
 #include <memory>
-#include <optional>
 
 namespace carla {
 namespace client {

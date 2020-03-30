@@ -84,6 +84,8 @@ namespace road {
         const geom::Location &origin,
         const geom::Location &destination) const;
 
+    /// Returns a list of locations defining 2d areas,
+    /// when a location is repeated an area is finished
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
     /// Data structure for the signal search
@@ -138,7 +140,10 @@ namespace road {
     const Junction* GetJunction(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
-    geom::Mesh GenerateGeometry(double distance) const;
+    geom::Mesh GenerateMesh(double distance) const;
+
+    /// Buids a mesh of all crosswalks based on the OpenDRIVE
+    geom::Mesh GetAllCrosswalkMesh() const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
       return _data.GetSignals();

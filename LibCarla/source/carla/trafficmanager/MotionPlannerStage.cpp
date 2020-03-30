@@ -12,12 +12,13 @@ namespace traffic_manager {
 namespace PlannerConstants {
 
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
-  static const float STATIONARY_LEAD_APPROACH_SPEED_1 = 10.0f / 3.6f;
-  static const float STATIONARY_LEAD_APPROACH_SPEED_2 = 5.0f / 3.6f;
-  static const float CRITICAL_BRAKING_MARGIN_1 = 5.0f;
-  static const float CRITICAL_BRAKING_MARGIN_2 = 0.1f;
+  static const float RELATIVE_APPROACH_SPEED = 10.0f / 3.6f;
+  static const float MIN_FOLLOW_LEAD_DISTANCE = 5.0f;
+  static const float MAX_FOLLOW_LEAD_DISTANCE = 10.0f;
+  static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+  static const float FOLLOW_DISTANCE_RATE = (MAX_FOLLOW_LEAD_DISTANCE-MIN_FOLLOW_LEAD_DISTANCE)/ARBITRARY_MAX_SPEED;
+  static const float CRITICAL_BRAKING_MARGIN = 0.25f;
   static const float HYBRID_MODE_DT = 0.05f;
-
 } // namespace PlannerConstants
 
   using namespace PlannerConstants;
@@ -107,34 +108,48 @@ namespace PlannerConstants {
       }
 
       // Target velocity for vehicle.
-      float dynamic_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
-
+      float max_target_velocity = parameters.GetVehicleTargetVelocity(actor) / 3.6f;
+      float dynamic_target_velocity = max_target_velocity;
       //////////////////////// Collision related data handling ///////////////////////////
-      if (collision_data.hazard)
-      {
+      bool collision_emergency_stop = false;
+      if (collision_data.hazard) {
         cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
         float ego_relative_velocity =  (current_velocity_vector - other_vehicle_velocity).Length();
 
         cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
         float other_velocity_along_heading = cg::Math::Dot(other_vehicle_velocity, ego_heading);
 
-        if (ego_relative_velocity > 0.0f
-            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_1)
-        {
-          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_1);
-        } else if (ego_relative_velocity > 0.0f
-            && collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN_2)
-        {
-          dynamic_target_velocity = std::max(other_velocity_along_heading, STATIONARY_LEAD_APPROACH_SPEED_2);
+        // Consider collision avoidance decisions only if there is positive relative velocity
+        // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
+        if (ego_relative_velocity > 0.0f) {
+          // If other vehicle is approaching lead vehicle and lead vehicle is further
+          // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
+          float follow_lead_distance = ego_relative_velocity * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
+          if (collision_data.distance_to_other_vehicle > follow_lead_distance) {
+            // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
+            // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
+            dynamic_target_velocity = other_velocity_along_heading + RELATIVE_APPROACH_SPEED;
+          }
+          // If vehicle is approaching a lead vehicle and the lead vehicle is further
+          // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
+          else if (collision_data.distance_to_other_vehicle > CRITICAL_BRAKING_MARGIN) {
+            // Then follow the lead vehicle by acquiring it's speed along current heading.
+            dynamic_target_velocity = std::max(other_velocity_along_heading, RELATIVE_APPROACH_SPEED);
+          } else {
+            // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
+            collision_emergency_stop = true;
+          }
         }
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
+      // Clip dynamic target velocity to maximum allowed speed for the vehicle.
+      dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
+
       bool emergency_stop = false;
       // In case of collision or traffic light hazard.
       if (traffic_light_frame->at(i).traffic_light_hazard
-          || (collision_data.hazard
-              && collision_data.distance_to_other_vehicle < CRITICAL_BRAKING_MARGIN_2)) {
+          || collision_emergency_stop) {
       emergency_stop = true;
       }
 
@@ -221,21 +236,9 @@ namespace PlannerConstants {
                                                   + cg::Location(target_heading * missing_displacement);
             teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
 
-            ////////////////////////////////////// DEBUG /////////////////////////////////////////
-            //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
-            //                        "Found target waypoints", false, {0u, 255u, 0u}, 0.05f);
-            //////////////////////////////////////////////////////////////////////////////////////
-
           } else {
 
             teleportation_transform = actor->GetTransform();
-
-            ////////////////////////////////////// DEBUG /////////////////////////////////////////
-            //debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2),
-            //                        "Couldn't find waypoints, window size : "
-            //                        + std::to_string(localization_data.position_window.size()),
-            //                        false, {0u, 0u, 255u}, 0.05f);
-            //////////////////////////////////////////////////////////////////////////////////////
 
           }
 
@@ -245,11 +248,6 @@ namespace PlannerConstants {
         else {
 
           teleportation_transform = actor->GetTransform();
-
-          ////////////////////////////////////// DEBUG /////////////////////////////////////////
-          //debug_helper.DrawString(actor->GetLocation() + cg::Location(0, 0, 4),
-          //                        "Emergency stop", false, {255u, 0u, 0u}, 0.05f);
-          //////////////////////////////////////////////////////////////////////////////////////
 
         }
 

@@ -80,6 +80,8 @@ void BatchControlStage::DataSender() {
     if (commands != nullptr) {
       episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
     }
+    // Applying an infinitesimal sleep statement for providing a system cancellation point.
+    std::this_thread::sleep_for(1us);
   }
   // Synchronous mode.
   else {

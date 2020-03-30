@@ -173,9 +173,8 @@ _a new one with the same name._
 
 !!! note
     The imported map won't have collisions, so they should be generated manually. This
-    [tutorial][collisionlink] (_Section 3.2.1 - 5_) shows how to do it.
+    [tutorial](tuto_A_map_creation.md#3.2-importing-from-the-files) (_Section 3.2.1 - 5_) shows how to do it.
 
-[collisionlink]: how_to_make_a_new_map.md/#32-importing-from-the-files
 
 ---
 ## How to export assets

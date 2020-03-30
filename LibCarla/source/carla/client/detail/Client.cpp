@@ -197,23 +197,23 @@ namespace detail {
   }
 
   rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(
-      const rpc::ActorId &vehicle) const {
+      rpc::ActorId vehicle) const {
     return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", vehicle);
   }
 
   rpc::VehicleLightState Client::GetVehicleLightState(
-      const rpc::ActorId &vehicle) const {
+      rpc::ActorId vehicle) const {
     return _pimpl->CallAndWait<carla::rpc::VehicleLightState>("get_vehicle_light_state", vehicle);
   }
 
   void Client::ApplyPhysicsControlToVehicle(
-      const rpc::ActorId &vehicle,
+      rpc::ActorId vehicle,
       const rpc::VehiclePhysicsControl &physics_control) {
     return _pimpl->AsyncCall("apply_physics_control", vehicle, physics_control);
   }
 
   void Client::SetLightStateToVehicle(
-      const rpc::ActorId &vehicle,
+      rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {
     return _pimpl->AsyncCall("apply_vehicle_light_state", vehicle, light_state);
   }
@@ -307,7 +307,7 @@ namespace detail {
     _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
   }
 
-  std::vector<ActorId> Client::GetGroupTrafficLights(const rpc::ActorId &traffic_light) {
+  std::vector<ActorId> Client::GetGroupTrafficLights(rpc::ActorId traffic_light) {
     using return_t = std::vector<ActorId>;
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);
   }

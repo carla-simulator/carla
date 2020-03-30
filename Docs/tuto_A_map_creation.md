@@ -88,7 +88,7 @@ and the second part shows how to import a map from other software that generates
     i.e. `mapname.fbx` `mapname.xodr`.
 
 We have also created a new way to import assets into Unreal,
-check this [`guide`](tuto_A_standalone_packages).md)!
+check this [`guide`](tuto_A_import_assets.md)!
 
 #### 3.1 Importing from RoadRunner
 

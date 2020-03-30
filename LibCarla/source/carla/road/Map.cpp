@@ -765,15 +765,15 @@ namespace road {
     }
     auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
     for (auto *lane_offset : lane_offsets) {
-      if (abs(lane_offset->GetPolynomial().GetC()) > 0 ||
-      abs(lane_offset->GetPolynomial().GetD()) > 0) {
+      if (std::abs(lane_offset->GetPolynomial().GetC()) > 0 ||
+          std::abs(lane_offset->GetPolynomial().GetD()) > 0) {
         return false;
       }
     }
     auto elevations = road->GetInfos<element::RoadInfoElevation>();
     for (auto *elevation : elevations) {
-      if (abs(elevation->GetPolynomial().GetC()) > 0 ||
-      abs(elevation->GetPolynomial().GetD()) > 0) {
+      if (std::abs(elevation->GetPolynomial().GetC()) > 0 ||
+          std::abs(elevation->GetPolynomial().GetD()) > 0) {
         return false;
       }
     }
@@ -916,7 +916,7 @@ namespace road {
           double angle = geom::Math::GetVectorAngle(
               current_transform.GetForwardVector(), next_transform.GetForwardVector());
 
-          if (abs(angle) > angle_threshold) {
+          if (std::abs(angle) > angle_threshold) {
             AddElementToRtree(
                 rtree_elements,
                 current_transform,
@@ -939,34 +939,6 @@ namespace road {
 
   const Junction* Map::GetJunction(JuncId id) const {
     return _data.GetJunction(id);
-  }
-
-  static void ExtrudeMeshEdge(
-      geom::Mesh &mesh,
-      geom::Vector3D new_vertex1,
-      geom::Vector3D new_vertex2,
-      size_t connection_index_1,
-      size_t connection_index_2) {
-    // Add the vertices
-    mesh.AddVertex(new_vertex1);
-    mesh.AddVertex(new_vertex2);
-
-    // Find the indexes
-    const size_t last_index = mesh.GetLastVertexIndex();
-    const size_t bottom_left_index = connection_index_1;  // local quad index: 1
-    const size_t bottom_right_index = connection_index_2; // local quad index: 2
-    const size_t top_left_index = last_index - 1;         // local quad index: 3
-    const size_t top_right_index = last_index;            // local quad index: 4
-
-    // Vertex order is counter clockwise:
-    // First triangle: 1 -> 2 -> 4
-    mesh.AddIndex(bottom_left_index);  // local quad index: 1
-    mesh.AddIndex(bottom_right_index); // local quad index: 2
-    mesh.AddIndex(top_right_index);    // local quad index: 4
-    // Second triangle: 1 -> 4 -> 3
-    mesh.AddIndex(bottom_left_index);  // local quad index: 1
-    mesh.AddIndex(top_right_index);    // local quad index: 4
-    mesh.AddIndex(top_left_index);     // local quad index: 3
   }
 
   /// Computes the location of the edges of the current lane at the current waypoint
@@ -995,7 +967,7 @@ namespace road {
     return std::make_pair(loc_r, loc_l);
   }
 
-  geom::Mesh Map::GenerateGeometry(double distance) const {
+  geom::Mesh Map::GenerateMesh(double distance) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::Mesh out_mesh;
     // Iterate each lane in each lane_section in each road
@@ -1016,40 +988,38 @@ namespace road {
               lane.GetId(),
               lane_section.GetDistance() + EPSILON };
 
-          if (lane.GetType() == Lane::LaneType::Sidewalk) {
-            out_mesh.AddMaterial("sidewalk");
+          std::vector<geom::Vector3D> vertices;
+          if (IsLaneStraight(lane)) {
+            // Mesh optimization: If the lane is straight just add vertices at the
+            // begining and at the end of it
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            vertices.push_back(edges.first);
+            vertices.push_back(edges.second);
           } else {
-            out_mesh.AddMaterial("road");
-          }
-          // Add 2 first vertices only
-          std::pair<geom::Vector3D, geom::Vector3D> edges =
-              GetWaypointCornerPositions(*this, current_wp, lane);
-          out_mesh.AddVertex(edges.first);
-          out_mesh.AddVertex(edges.second);
-
-          if (!IsLaneStraight(lane)) {
+            // Iterate over the lane's 's' and store the vertices based on it's width
             do {
               // Get the location of the edges of the current lane at the current waypoint
-              edges = GetWaypointCornerPositions(*this, current_wp, lane);
-              // Extrude adding vertices and joining the using indices
-              const size_t last_index = out_mesh.GetLastVertexIndex();
-              ExtrudeMeshEdge(
-                  out_mesh, edges.first, edges.second, last_index - 1, last_index);
+              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+              vertices.push_back(edges.first);
+              vertices.push_back(edges.second);
 
               // Update the current waypoint's "s"
               current_wp.s += distance;
-
             } while(current_wp.s < end_distance);
           }
-          // This ensures the mesh is constant and have no gaps between
-          // segments and roads
+
+          // This ensures the mesh is constant and have no gaps between roads,
+          // adding geometry at the very end of the lane
           if (end_distance - (current_wp.s - distance) > EPSILON) {
             current_wp.s = end_distance;
-            edges = GetWaypointCornerPositions(*this, current_wp, lane);
-            const size_t last_index = out_mesh.GetLastVertexIndex();
-            ExtrudeMeshEdge(
-                out_mesh, edges.first, edges.second, last_index - 1, last_index);
+            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
+            vertices.push_back(edges.first);
+            vertices.push_back(edges.second);
           }
+          // Add the adient material, create the strip and close the material
+          out_mesh.AddMaterial(
+              lane.GetType() == Lane::LaneType::Sidewalk ? "sidewalk" : "road");
+          out_mesh.AddTriangleStrip(vertices);
           out_mesh.EndMaterial();
         }
       }
@@ -1058,6 +1028,41 @@ namespace road {
     return out_mesh;
   }
 
+  geom::Mesh Map::GetAllCrosswalkMesh() const {
+    geom::Mesh out_mesh;
+
+    // Get the crosswalk vertices for the current map
+    const std::vector<geom::Location> crosswalk_vertex = GetAllCrosswalkZones();
+    if (crosswalk_vertex.empty()) {
+      return out_mesh;
+    }
+
+    // Create a a list of triangle fans with material "crosswalk"
+    out_mesh.AddMaterial("crosswalk");
+    size_t start_vertex_index = 0;
+    size_t i = 0;
+    std::vector<geom::Vector3D> vertices;
+    // Iterate the vertices until a repeated one is found, this indicates
+    // the triangle fan is done and another one must start
+    do {
+      // Except for the first iteration && triangle fan done
+      if (i != 0 && crosswalk_vertex[start_vertex_index] == crosswalk_vertex[i]) {
+        // Create the actual fan
+        out_mesh.AddTriangleFan(vertices);
+        vertices.clear();
+        // End the loop if i reached the end of the vertex list
+        if (i >= crosswalk_vertex.size() - 1) {
+          break;
+        }
+        start_vertex_index = ++i;
+      }
+      // Append a new Vector3D that will be added to the triangle fan
+      vertices.push_back(crosswalk_vertex[i++]);
+    } while (i < crosswalk_vertex.size());
+
+    out_mesh.EndMaterial();
+    return out_mesh;
+  }
 
 } // namespace road
 } // namespace carla
