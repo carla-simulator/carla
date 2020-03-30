@@ -1,6 +1,5 @@
 ---
 - module_name: carla
-  doc: >
   # - CLASSES ------------------------------
 
   classes:
@@ -24,31 +23,6 @@
          Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system. 
     # - METHODS ----------------------------
     methods:
-    - def_name: __eq__
-      return: bool
-      params:
-        - param_name: other
-          type: carla.WorldSnapshot
-      doc: >
-        Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are the same. 
-    # --------------------------------------
-    - def_name: __iter__
-      doc: >
-        Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value. 
-    # --------------------------------------
-    - def_name: __ne__
-      return: bool
-      params:
-        - param_name: other
-          type: carla.WorldSnapshot
-      doc: >
-        Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different. 
-    # --------------------------------------
-    - def_name: __len__
-      return: int
-      doc: >
-        Returns the amount of carla.ActorSnapshot present in this snapshot.
-    # --------------------------------------
     - def_name: find
       return: carla.ActorSnapshot
       params: 
@@ -65,7 +39,32 @@
       doc: >
         Given a certain actor ID, checks if there is a snapshot corresponding it and so, if the actor was present at that moment.
     # --------------------------------------
-    
+    - def_name: __iter__
+      doc: >
+        Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value. 
+    # --------------------------------------
+    - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of carla.ActorSnapshot present in this snapshot.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+        Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same. 
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+        Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different. 
+    # --------------------------------------
+
   - class_name: ActorSnapshot
     # - DESCRIPTION ------------------------
     doc: >
