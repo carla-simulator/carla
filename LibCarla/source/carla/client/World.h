@@ -19,7 +19,7 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 
-#include <optional>
+#include <boost/optional.hpp>
 
 namespace carla {
 namespace client {

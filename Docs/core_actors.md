@@ -206,7 +206,7 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 
 [__carla.Vehicle__](python_api.md#carla.Vehicle) are a special type of actor. They are remarkable for having better physics. This is achieved applying four types of different controls.  
 
-* __[carla.VehicleControl](python_api.md#carla.VehiclePhysicsControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
+* __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
 ```py
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
@@ -247,8 +247,8 @@ vehicle.set_light_state(current_lights)
 
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.  
 
-* [__carla.WalkerControl__](python_api.md#carla.Walker) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* [__carla.WalkerBoneControl__](python_api.md#carla.Walker) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it. 
+* [__carla.WalkerControl__](python_api.md#carla.WalkerControl) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
+* [__carla.WalkerBoneControl__](python_api.md#carla.WalkerBoneControl) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it. 
 
 Walkers can be AI controlled. They do not have an autopilot mode. The [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) actor moves around the actor it is attached to.  
 

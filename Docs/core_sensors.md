@@ -209,7 +209,7 @@ Thus concludes the introduction to CARLA. However there is yet a lot to learn.
 
 <div class="build-buttons">
 <p>
-<a href="ref_code_recipes.md" target="_blank" class="btn btn-neutral" title="Code recipes">
+<a href="../ref_code_recipes" target="_blank" class="btn btn-neutral" title="Code recipes">
 Code recipes</a>
 </p>
 </div>
@@ -218,7 +218,7 @@ Code recipes</a>
  
 <div class="build-buttons">
 <p>
-<a href="adv_synchrony_timestep.md" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
+<a href="../adv_synchrony_timestep" target="_blank" class="btn btn-neutral" title="Synchrony and time-step">
 Synchrony and time-step</a>
 </p>
 </div>
@@ -227,7 +227,7 @@ Synchrony and time-step</a>
 
 <div class="build-buttons">
 <p>
-<a href="python_api.md" target="_blank" class="btn btn-neutral" title="Python API reference">
+<a href="../python_api" target="_blank" class="btn btn-neutral" title="Python API reference">
 Python API reference</a>
 </p>
 </div>
