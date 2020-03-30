@@ -43,6 +43,9 @@ namespace geom {
   // #---#---#---#
   // 2   4   6   8
   void Mesh::AddTriangleStrip(const std::vector<Mesh::vertex_type> &vertices) {
+    if (vertices.size() == 0) {
+      return;
+    }
     DEBUG_ASSERT(vertices.size() >= 3);
     size_t i = GetVerticesNum() + 2;
     AddVertices(vertices);
