@@ -7,6 +7,7 @@
 #pragma once
 
 #include <chrono>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -18,6 +19,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/PIDController.h"
 #include "carla/trafficmanager/PipelineStage.h"
+#include "carla/trafficmanager/SimpleWaypoint.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -27,6 +29,7 @@ namespace traffic_manager {
 
   using Actor = carla::SharedPtr<cc::Actor>;
   using ActorId = carla::rpc::ActorId;
+  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 
   /// The class is responsible for aggregating information from various stages
   /// like the localization stage, traffic light stage, collision detection
@@ -68,7 +71,10 @@ namespace traffic_manager {
     uint64_t number_of_vehicles;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
-
+    /// Switch indicating hybrid physics mode.
+    bool hybrid_physics_mode {false};
+    /// Teleportation duration clock;
+    std::unordered_map<ActorId, TimePoint> teleportation_instance;
 
   public:
 

@@ -1,5 +1,6 @@
 ## Latest
 
+  * Introduced hybrid mode for Traffic Manager
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode

@@ -150,6 +150,11 @@ public:
         tm->SetKeepRightPercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
+      /// Method to set hybrid physics mode.
+      server->bind("set_hybrid_physics_mode", [=](const bool mode_switch) {
+        tm->SetHybridPhysicsMode(mode_switch);
+      });
+
       /// Method to set synchronous mode.
       server->bind("set_synchronous_mode", [=](const bool mode) {
         tm->SetSynchronousMode(mode);
