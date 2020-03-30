@@ -16,21 +16,21 @@ It is possible to modify the parameters in runtime via ROS dynamic reconfigure. 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
-Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](../ros_msgs#carlaegovehiclemsg). Speed is in __m/s__, steering angle in __radians__ and refers to driving angle, not wheel angle.  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclecontrolmsg). Speed is in __m/s__, steering angle in __radians__ and refers to driving angle, not wheel angle.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_descriptions</b></font> — [dynamic_reconfigure/ConfigDescription](http://docs.ros.org/melodic/api/dynamic_reconfigure/html/msg/ConfigDescription.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/control_info</b></font> — [carla_ackermann_control.EgoVehicleControlInfo](../ros_msgs#egovehiclecontrolinfomsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/control_info</b></font> — [carla_ackermann_control.EgoVehicleControlInfo](ros_msgs.md#egovehiclecontrolinfomsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_updates</b></font> — [dynamic_reconfigure/Config](http://wiki.ros.org/dynamic_reconfigure)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 
 ---
 ## carla_ego_vehicle.launch
@@ -46,7 +46,7 @@ Spawns an ego vehicle with sensors attached, and waits for world information.
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
 * <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
-* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 ---
 ## carla_example_ego_vehicle.launch
@@ -64,7 +64,7 @@ Spawns an ego vehicle with sensors attached and waits for world information.
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p> 
 
 * <font color="f8815c"><b>/carla/ego_vehicle/initialpose</b></font> — [geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)
-* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 ---
 ## carla_infrastructure.launch
@@ -76,7 +76,7 @@ Spawns the infrastructure sensors passed as arguments.
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
-* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 ---
 ## carla_ros_bridge.launch
@@ -92,11 +92,11 @@ Publishes the data regarding the current state of the simulation. Reads the debu
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p> 
 
-* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](../ros_msgs#carlaactorlistmsg)
+* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](ros_msgs.md#carlaactorlistmsg)
 * <font color="80ba10"><b>/carla/objects</b></font> — [derived_object_msgs.ObjectArrayring](http://wiki.ros.org/derived_object_msgs)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
-* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
-* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
+* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](ros_msgs.md#carlatrafficlightstatuslistmsg)
+* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 ---
 ## carla_ros_bridge_with_ackermann_control.launch
@@ -113,29 +113,29 @@ Publishes data regarding the current state of the simulation. Reads the debug sh
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
-* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](../ros_msgs#carlaactorlistmsg)
+* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](ros_msgs.md#carlaactorlistmsg)
 * <font color="80ba10"><b>/carla/objects</b></font> — [derived_object_msgs.ObjectArrayring](http://wiki.ros.org/derived_object_msgs)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
-* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
-* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
+* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](ros_msgs.md#carlatrafficlightstatuslistmsg)
+* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
-Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](../ros_msgs#carlaegovehiclemsg). Speed is in __m/s__, steering angle is in __radians__ and refers to driving angle, not wheel angle.  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclemsg). Speed is in __m/s__, steering angle is in __radians__ and refers to driving angle, not wheel angle.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm)  
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_descriptions</b></font> — [dynamic_reconfigure/ConfigDescription](http://docs.ros.org/melodic/api/dynamic_reconfigure/html/msg/ConfigDescription.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/control_info</b></font> — [carla_ackermann_control.EgoVehicleControlInfo](../ros_msgs#egovehiclecontrolinfomsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/control_info</b></font> — [carla_ackermann_control.EgoVehicleControlInfo](ros_msgs.md#egovehiclecontrolinfomsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/ackermann_control/parameter_updates</b></font> — [dynamic_reconfigure/Config](http://wiki.ros.org/dynamic_reconfigure)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 
 ---
 ## carla_ros_bridge_with_example_ego_vehicle.launch
@@ -150,13 +150,13 @@ In charge of the communications between CARLA and ROS. They share the current st
 * <font color="f8815c"><b>/carla/debug_marker</b></font> — [visualization_msgs.MarkerArray](http://docs.ros.org/melodic/api/visualization_msgs/html/msg/MarkerArray.html)
 * <font color="f8815c"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 * <font color="f8815c"><b>/carla/ego_vehicle/twist</b></font> — [geometry_msgs.Twist](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Twist.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
-* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](../ros_msgs#carlaactorlistmsg)
+* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](ros_msgs.md#carlaactorlistmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/front/camera_info</b></font> — [sensor_msgs.CameraInfo](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/front/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/view/camera_info</b></font> — [sensor_msgs.CameraInfo](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
@@ -167,12 +167,12 @@ In charge of the communications between CARLA and ROS. They share the current st
 * <font color="80ba10"><b>/carla/ego_vehicle/objects</b></font> — [derived_object_msgs.ObjectArray](http://docs.ros.org/kinetic/api/derived_object_msgs/html/msg/ObjectArray.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/odometry</b></font> — [nav_msgs.Odometry](http://docs.ros.org/melodic/api/nav_msgs/html/msg/Odometry.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/radar/front/radar</b></font> — [ainstein_radar_msgs.RadarTargetArray](http://wiki.ros.org/ainstein_radar_msgs)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 * <font color="80ba10"><b>/carla/objects</b></font> — [derived_object_msgs.ObjectArrayring](http://wiki.ros.org/derived_object_msgs)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
-* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
-* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
+* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](ros_msgs.md#carlatrafficlightstatuslistmsg)
+* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 
 <!---NODE-->
@@ -182,19 +182,19 @@ Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/ego_vehicle/camera/rgb/view/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](../ros_msgs#carlacollisioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](ros_msgs.md#carlacollisioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/gnss/gnss1/fix</b></font> — [sensor_msgs.NavSatFix](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/NavSatFix.html) 
-* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](../ros_msgs#carlalaneinvasioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](ros_msgs.md#carlalaneinvasioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
-* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
  
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
 * <font color="80ba10"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 <!---NODE-->
@@ -219,11 +219,11 @@ Shares information between CARLA and ROS regarding the current simulation state.
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p> 
 
-* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](../ros_msgs#carlaactorlistmsg)
+* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](ros_msgs.md#carlaactorlistmsg)
 * <font color="80ba10"><b>/carla/objects</b></font> — [derived_object_msgs.ObjectArrayring](http://wiki.ros.org/derived_object_msgs)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
-* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
-* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
+* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](ros_msgs.md#carlatrafficlightstatuslistmsg)
+* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/rviz</u> <small><i>(Node)</i></small> </h4>
@@ -253,19 +253,19 @@ Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/ego_vehicle/camera/rgb/view/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](../ros_msgs#carlacollisioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](ros_msgs.md#carlacollisioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/gnss/gnss1/fix</b></font> — [sensor_msgs.NavSatFix](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/NavSatFix.html) 
-* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](../ros_msgs#carlalaneinvasioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](ros_msgs.md#carlalaneinvasioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
-* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
  
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
 * <font color="80ba10"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 ---
@@ -300,13 +300,13 @@ In charge of most of the communications between CARLA and ROS. Both share the cu
 * <font color="f8815c"><b>/carla/debug_marker</b></font> — [visualization_msgs.MarkerArray](http://docs.ros.org/melodic/api/visualization_msgs/html/msg/MarkerArray.html)
 * <font color="f8815c"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 * <font color="f8815c"><b>/carla/ego_vehicle/twist</b></font> — [geometry_msgs.Twist](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Twist.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd</b></font> —  [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
-* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](../ros_msgs#carlaactorlistmsg)
+* <font color="80ba10"><b>/carla/actor_list</b></font> — [carla_msgs.CarlaActorList](ros_msgs.md#carlaactorlistmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/front/camera_info</b></font> — [sensor_msgs.CameraInfo](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/front/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/camera/rgb/view/camera_info</b></font> — [sensor_msgs.CameraInfo](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
@@ -316,14 +316,14 @@ In charge of most of the communications between CARLA and ROS. Both share the cu
 * <font color="80ba10"><b>/carla/ego_vehicle/lidar/lidar1/point_cloud</b></font> — [sensor_msgs.PointCloud2](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/PointCloud2.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/objects</b></font> — [derived_object_msgs.ObjectArray](http://docs.ros.org/kinetic/api/derived_object_msgs/html/msg/ObjectArray.html)
 * <font color="80ba10"><b>/carla/ego_vehicle/odometry</b></font> — [nav_msgs.Odometry](http://docs.ros.org/melodic/api/nav_msgs/html/msg/Odometry.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/radar/front/radar</b></font> — [ainstein_radar_msgs.RadarTargetArray](http://wiki.ros.org/ainstein_radar_msgs)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
 * <font color="80ba10"><b>/carla/marker</b></font> — [visualization_msgs.Marker](http://docs.ros.org/melodic/api/visualization_msgs/html/msg/Marker.html)
 * <font color="80ba10"><b>/carla/objects</b></font> — [derived_object_msgs.ObjectArrayring](http://wiki.ros.org/derived_object_msgs)
-* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
-* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](../ros_msgs#carlatrafficlightstatuslist)
-* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="80ba10"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
+* <font color="80ba10"><b>/carla/traffic_lights</b></font> — [carla_msgs.CarlaTrafficLightStatusList](ros_msgs.md#carlatrafficlightstatuslistmsg)
+* <font color="80ba10"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_manual_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>
@@ -332,19 +332,19 @@ Retrieves information from CARLA regarding the ego vehicle. Uses keyboard input 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
 * <font color="f8815c"><b>/carla/ego_vehicle/camera/rgb/view/image_color</b></font> — [sensor_msgs.Image](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](../ros_msgs#carlacollisioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/collision</b></font> — [carla_msgs.CarlaCollisionEvent](ros_msgs.md#carlacollisioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/gnss/gnss1/fix</b></font> — [sensor_msgs.NavSatFix](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/NavSatFix.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](../ros_msgs#carlalaneinvasioneventmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/lane_invasion</b></font> — [carla_msgs.CarlaLaneInvasionEvent](ros_msgs.md#carlalaneinvasioneventmsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](../ros_msgs#carlaegovehicleinfomsg)
-* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](../ros_msgs#carlaegovehiclestatusmsg)
-* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](../ros_msgs#carlastatusmsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
+* <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
+* <font color="f8815c"><b>/carla/status</b></font> — [carla_msgs.CarlaStatus](ros_msgs.md#carlastatusmsg)
  
 
 <p style="margin-top:-10px;margin-bottom:-5px"> <b>Publishes in:</b> </p>  
 
 * <font color="80ba10"><b>/carla/ego_vehicle/enable_autopilot</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
-* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](../ros_msgs#carlaegovehiclecontrolmsg)
+* <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_cmd_manual</b></font> — [carla_msgs.CarlaEgoVehicleControl](ros_msgs.md#carlaegovehiclecontrolmsg)
 * <font color="80ba10"><b>/carla/ego_vehicle/vehicle_control_manual_override</b></font> — [std_msgs.Bool](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)
 
 <!---NODE-->
@@ -389,4 +389,4 @@ Uses the current pose of the ego vehicle as starting point. If the vehicle is re
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
-* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](../ros_msgs#carlaworldinfomsg)
+* <font color="f8815c"><b>/carla/world_info</b></font> — [carla_msgs.CarlaWorldInfo](ros_msgs.md#carlaworldinfomsg)

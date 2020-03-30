@@ -2,7 +2,7 @@
 
 The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.  
 
-This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](forum.carla.org/) is there to solve them.  
+This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://forum.carla.org/) is there to solve them.  
 
 * [__The client__](#the-client)
 	* Client creation

@@ -83,6 +83,10 @@ if not exist "%BOOST_SRC_DIR%" (
         echo %FILE_N% Retrieving boost.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%BOOST_REPO%', '%BOOST_TEMP_FILE_DIR%')"
     )
+    if not exist "%BOOST_TEMP_FILE_DIR%" (
+        echo %FILE_N% Using Boost backup        
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
+    )
     if %errorlevel% neq 0 goto error_download
     echo %FILE_N% Extracting boost from "%BOOST_TEMP_FILE%", this can take a while...
     if exist "%ProgramW6432%/7-Zip/7z.exe" (
