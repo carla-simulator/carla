@@ -14,7 +14,6 @@
 
 void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
 {
-  carla::log_warning("YieldSign");
 
   const double epsilon = 0.00001;
 
@@ -25,7 +24,6 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
     auto RoadId = Reference.first;
     const auto* SignalReference = Reference.second;
     TSet<carla::road::RoadId> SignalPredecessors;
-    carla::log_warning("Yield:", RoadId);
     // Yield box
     for(auto &validity : SignalReference->GetValidities())
     {
@@ -140,7 +138,6 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
               GenerateCheckBox(Map.ComputeTransform(CurrentElement.second), UEBoxSize);
 
               float Speed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s)->GetSpeed();
-              carla::log_warning("Speed:", Speed);
               float RemainingTime = CurrentElement.first - BoxSize/Speed;
               if(RemainingTime > 0)
               {
