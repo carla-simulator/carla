@@ -72,9 +72,9 @@ void AOpenDriveGenerator::GenerateRoadMesh()
 
   static const FString ConfigFilePath =
       FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf";
-  float Resolution = 2;
-  float WallHeight = 1;
-  float AdditionalWidth = 0.6;
+  float Resolution = 2.f;
+  float WallHeight = 1.f;
+  float AdditionalWidth = .6f;
   if (FPaths::FileExists(ConfigFilePath)) {
     FString ConfigData;
     TArray<FString> Lines;

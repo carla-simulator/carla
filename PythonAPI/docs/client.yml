@@ -75,7 +75,7 @@
         type: float
         defualt: 1.0
         doc: >
-          Height of a procedurall wall that prevents cars from falling outside the map, only generated
+          Height of a procedural wall that prevents cars from falling outside the map, only generated
           in non-junction roads (in meters).
       - param_name: additional_width
         type: float
