@@ -29,6 +29,14 @@ namespace road {
     return nullptr;
   }
 
+  const Lane *LaneSection::GetLane(const LaneId id) const {
+    auto search = _lanes.find(id);
+    if (search != _lanes.end()) {
+      return &search->second;
+    }
+    return nullptr;
+  }
+
   std::map<LaneId, Lane> &LaneSection::GetLanes() {
     return _lanes;
   }

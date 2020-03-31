@@ -210,7 +210,10 @@ def main():
                     print('file could not be readed.')
                     sys.exit()
             print('load opendrive map %r.' % os.path.basename(args.xodr_path))
-            world = client.generate_opendrive_world(data)
+            resolution = 2.0 # in meters
+            wall_height = 1.0 # in meters
+            extra_width = 0.6 # in meters
+            world = client.generate_opendrive_world(data, resolution, wall_height, extra_width)
         else:
             print('file not found.')
 

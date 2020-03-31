@@ -46,7 +46,7 @@ nav:
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
 - Tutorials (assets):
   - 'Import new assets': 'tuto_A_import_assets.md'
-  - 'Map creation': 'tuto_A_map_creation.md'
+  - 'Create and import a map': 'tuto_A_map_creation.md'
   - 'Map customization': 'tuto_A_map_customization.md'
   - 'Standalone asset packages': 'tuto_A_standalone_packages.md'
   - "Use Epic's Automotive materials": 'tuto_A_epic_automotive_materials.md'

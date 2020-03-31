@@ -53,7 +53,7 @@ __4. Motion Planner Stage:__ aggregates all the information from the previous st
 
 * __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
-__5. Apply Control Stage:__ receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.Client) for the registered vehicles.  
+__5. Apply Control Stage:__ receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.VehicleControl) for the registered vehicles.  
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 

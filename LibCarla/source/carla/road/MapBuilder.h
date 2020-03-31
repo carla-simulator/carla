@@ -365,6 +365,9 @@ namespace road {
     /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
     void GenerateDefaultValiditiesForSignalReferences();
 
+    /// Checks signals overlapping driving lanes and emits a warning
+    void CheckSignalsOnRoads(Map &map);
+
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
 

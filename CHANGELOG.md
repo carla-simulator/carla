@@ -5,6 +5,7 @@
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved manual_control by adding realistic throttle and brake
+  * Added security features to the standalone OpenDRIVE mode aiming to prevent cars from falling down from the road
   * Added new Behavior agent
   * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
   * Added examples of sumo co-simulation for Town01, Town04 and Town05
