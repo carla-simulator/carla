@@ -21,8 +21,6 @@ BatchControlStage::BatchControlStage(
 
   // Initializing number of vehicles to zero in the beginning.
   number_of_vehicles = 0u;
-  // Initializing time instance for limiting throughput in asynchronous mode.
-  // previous_frame_instance = chr::system_clock::now();
 }
 
 BatchControlStage::~BatchControlStage() {}
