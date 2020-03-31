@@ -140,6 +140,12 @@ namespace traffic_manager {
     std::unordered_map<ActorId, KinematicState> kinematic_state_map;
     /// Time instance used to calculate dt in asynchronous mode.
     TimePoint previous_update_instance;
+    /// Step runner flag.
+    std::atomic<bool> run_step {false};
+    /// Mutex for progressing synchronous execution.
+    std::mutex step_execution_mutex;
+    /// Condition variables for progressing synchronous execution.
+    std::condition_variable step_execution_trigger;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
@@ -190,6 +196,8 @@ namespace traffic_manager {
 
     void DataSender() override;
 
+    /// Method to trigger initiation of pipeline in synchronous mode.
+    bool RunStep();
   };
 
 } // namespace traffic_manager
