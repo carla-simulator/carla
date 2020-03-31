@@ -83,7 +83,7 @@ cd /opt/carla/bin
 
 ### Map setting
 
-Choose a map for the simulation to run. Take a look at the [map documentation](core_map.md#carla-maps) to learn more about their specific attributes. For the sake of this tutorial, __Town01__ is chosen. 
+Choose a map for the simulation to run. Take a look at the [map documentation](core_map.md#carla-maps) to learn more about their specific attributes. For the sake of this tutorial, __Town07__ is chosen. 
 
 Open a new terminal. Change the map using the __config.py__ script. 
 
@@ -125,17 +125,45 @@ This script has many other different options that, for the sake of simplicity, a
 
 ### Weather setting
 
-Each town is loaded with a specific weather that fits it, however this can be set at will. There are two main approaches to it. The first one would set a custom weather condition, the other one would create a dynamic weather that changes conditions over time. CARLA provides a script for each approach. However, as setting a specific weather condition will be done later in this tutorial, so let's create a dynamic environment for now. 
+Each town is loaded with a specific weather that fits it, however this can be set at will. There are two scripts that offer different approaches to the matter. The first one sets custom weather condition, the other one would creates a dynamic weather that changes conditions over time. CARLA provides a script for each approach. It is possible to directly code weather conditions, but this will be covered later when [changing weather conditions](#change-conditions). 
 
-Open a new terminal and run __dynamic_weather.py__. This scripts allows to set the ratio at which the weather changes, being `1.0` the defaul setting. 
+* __To set a dynamic weather__. Open a new terminal and run __dynamic_weather.py__. This scripts allows to set the ratio at which the weather changes, being `1.0` the defaul setting. 
+
+```sh
+cd /opt/carla/PythonAPI/examples
+
+python dynamic_weather.py --speed 1.0
+```
+
+* __To set custom conditions__. Use the script __weather.py__ to set the scene conditions. There are quite a lot, so take a look at the optional arguments and the documentation for  [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
 
 ```sh
 cd /opt/carla/PythonAPI/util
-./dynamic_weather.py --speed FACTOR 1.0
-```
+python weather.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
 
-!!! Note
-    The script to set custom weather conditions is [__weather.py__](http://carla.org/2020/03/09/release-0.9.8/#weather-extension) in `PythonAPI/util/`.  
+```
+<details>
+<summary> Optional arguments in <b>weather.py</b> </summary>
+
+```sh
+  -h, --help            show this help message and exit
+  --host H              IP of the host server (default: 127.0.0.1)
+  -p P, --port P        TCP port to listen to (default: 2000)
+  --sun SUN             Sun position presets [sunset | day | night]
+  --weather WEATHER     Weather condition presets [clear | overcast | rain]
+  --altitude A, -alt A  Sun altitude [-90.0, 90.0]
+  --azimuth A, -azm A   Sun azimuth [0.0, 360.0]
+  --clouds C, -c C      Clouds amount [0.0, 100.0]
+  --rain R, -r R        Rain amount [0.0, 100.0]
+  --puddles Pd, -pd Pd  Puddles amount [0.0, 100.0]
+  --wind W, -w W        Wind intensity [0.0, 100.0]
+  --fog F, -f F         Fog intensity [0.0, 100.0]
+  --fogdist Fd, -fd Fd  Fog Distance [0.0, inf)
+  --wetness Wet, -wet Wet
+                        Wetness intensity [0.0, 100.0]
+```
+</details>
+<br>
 
 ---
 ## Set traffic
@@ -146,11 +174,11 @@ Simulate traffic is one of the best ways to bring the city to life. It is also n
 
 The CARLA traffic is managed by the [Traffic Manager](adv_traffic_manager.md) module. As for pedestrians, each of them has their own [carla.WalkerAIController](python_api.md#carla.WalkerAIController). 
 
-Open a new terminal, and run __spawn_npc.py__ to spawn vehicles and walkers. Let's just spawn 30 vehicles and the same amount of walkers. 
+Open a new terminal, and run __spawn_npc.py__ to spawn vehicles and walkers. Let's just spawn 50 vehicles and the same amount of walkers. 
 
 ```sh
 cd /opt/carla/PythonAPI/examples
-./spawn_npc.py -n 30 --safe
+python spawn_npc.py -n 50 -w 50 --safe
 ```
 
 <details>
@@ -178,6 +206,9 @@ cd /opt/carla/PythonAPI/examples
 CARLA can run a co-simulation with SUMO. This allows for creating traffic in SUMO that will be propagated to CARLA. This co-simulation is bidirectional. Spawning vehicles in CARLA will do so in SUMO.  
 
 Right now this is available for CARLA 0.9.8 and later, in __Town01__, __Town04__, and __Town05__. The first one is the most stable, and the one chosen for this tutorial.  
+
+!!! Note
+    The co-simulation will enable synchronous mode in CARLA. Read the [documentation](synchrony_and_timestep.md) to find out more about this. 
 
 * First of all, install SUMO. 
 ```sh
@@ -211,7 +242,7 @@ The script __tutorial_ego.py__ does many things.
 
 * Start recording the simulation. 
 * Spawn the ego vehicle. 
-* Spawn a RGB camera attched to it. 
+* Spawn a RGB camera attached to it. 
 * Position the spectator camera where the ego vehicle is. 
 * Let the ego vehicle roam around in autopilot mode. 
 * Stop the recorder when the script is stopped, and destroy the ego vehicle and its sensor. 
@@ -221,7 +252,7 @@ It is quite straightforward, as the intention is to keep things simple. This tut
 
 ### Spawn the ego vehicle
 
-Vehicles controlled by the user are referred as "ego". The attribute `role_name` is set to `ego` to differenciate them. Other attributes that can be set, some with recommended values. First, an ego vehicle will be spawned using any of the vehicle blueprints in the library. In this case, the color will be changed at random to one of these. 
+For vehicles controlled by the user, the attribute `role_name` is set to `ego` to differenciate them. Other attributes can be set, some with recommended values. First, an ego vehicle will be spawned using any of the vehicle blueprints in the library. In this case, the color will be changed at random to one of these. 
 
 Call the map to get a list of spawn points recommended by the developers. Choose one of them, and use it to spawn the ego vehicle. 
 
@@ -270,18 +301,18 @@ The process to spawn any sensor is quite similar.
 
 __1.__ Use the library to find sensor blueprints.  
 __2.__ Set specific attributes for the sensor. This is crucial, as the attributes will determine the data retrieved.  
-__3.__ Attach the sensor to the ego vehicle. That means that its transform is __relative to its parent__. The `AttachmentType.SpringArm` will make that the camera position updates smooth, with little eases regarding its parent.  
+__3.__ Attach the sensor to the ego vehicle. That means that its transform is __relative to its parent__. The `AttachmentType.SpringArm` will update the camera position smoothly, easing the movement.  
 __4.__ Add a `listen()` method. This is the key element. A [__lambda__](https://www.w3schools.com/python/python_lambda.asp) method that will be called each time the sensor listens for data. The argument is the sensor data retrieved.  
 
 Having this basic guideline in mind, let's set some basic sensors for the ego vehicle. 
 
 ### RGB camera
 
-This sensor generates realistic shots of the scene. It is the sensor with more settable attributes in all of them, but it is also a fundamental one. It should be understood as a real camera, with attributtes such as `focal_distance`, `shutter_speed` or `gamma` to determine how it would work internally. There is also a specific set of attributtes to define the lens distorsion, and lots of advanced attributes. For example, the `lens_circle_multiplier` can be used to achieve an effect similar to an eyefish lens. 
+This sensor generates realistic shots of the scene. It is the sensor with more settable attributes of them all, but it is also a fundamental one. It should be understood as a real camera, with attributtes such as `focal_distance`, `shutter_speed` or `gamma` to determine how it would work internally. There is also a specific set of attributtes to define the lens distorsion, and lots of advanced attributes. For example, the `lens_circle_multiplier` can be used to achieve an effect similar to an eyefish lens. 
 
 Learn all about them in the [RGB camera documentation](ref_sensors.md#rgb-camera). For the sake of simplicity, the `tutorial_ego` scripts only sets the most commonly used attributes of this sensor. 
 * `image_size_x` and `image_size_y` will change the resolution of the output image. 
-* `fov` is the horizontal field of view of the camera. This is usually changes in correlation with the resolution, to get a similar view. 
+* `fov` is the horizontal field of view of the camera.  
 
 After setting the attributes, it is time to locate the sensor. The script places the camera in the hood of the car, and pointing forward. It will capture the front view of the car. 
 
@@ -322,41 +353,44 @@ The script sets the sensor to only consider dynamic objects. The intention is to
 
 ```py
 # --------------
-# Spawn attached collision
+# Add collision sensor to ego vehicle. 
 # --------------
+
 col_bp = world.get_blueprint_library().find('sensor.other.collision')
 col_location = carla.Location(0,0,0)
 col_rotation = carla.Rotation(0,0,0)
 col_transform = carla.Transform(col_location,col_rotation)
 ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-def collision_callback(colli):
-    print(colli)
-ego_col.listen(lambda colli: collision_callback(colli))
+def col_callback(colli):
+    print("Collision detected:\n"+str(colli)+'\n')
+ego_col.listen(lambda colli: col_callback(colli))
 
 # --------------
-# Spawn attached Lane invasion
+# Add Lane invasion sensor to ego vehicle. 
 # --------------
+
 lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
 lane_location = carla.Location(0,0,0)
 lane_rotation = carla.Rotation(0,0,0)
 lane_transform = carla.Transform(lane_location,lane_rotation)
 ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-def collision_callback(lane):
-    print(lane)
-ego_lane.listen(lambda lane: collision_callback(lane))
+def lane_callback(lane):
+    print("Lane invasion detected:\n"+str(lane)+'\n')
+ego_lane.listen(lambda lane: lane_callback(lane))
 
 # --------------
-# Spawn attached Obstacle detector
+# Add Obstacle sensor to ego vehicle. 
 # --------------
+
 obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
 obs_bp.set_attribute("only_dynamics",str(True))
 obs_location = carla.Location(0,0,0)
 obs_rotation = carla.Rotation(0,0,0)
 obs_transform = carla.Transform(obs_location,obs_rotation)
 ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-def collision_callback(obs):
-    print(obs)
-ego_obs.listen(lambda obs: collision_callback(obs))
+def obs_callback(obs):
+    print("Obstacle detected:\n"+str(obs)+'\n')
+ego_obs.listen(lambda obs: obs_callback(obs))
 ```
 
 ### Other sensors
@@ -368,36 +402,38 @@ Among this category, only two sensors will be considered for the time being.
 
 To get the general measures for the vehicle object, these two sensors are spawned centered to it. 
 
-The attributes available for these sensors mostly set the mean or standard deviation parameter in the noise model of the measure. This is useful to get more realistic measures. However, the script only sets on attribute.  
+The attributes available for these sensors mostly set the mean or standard deviation parameter in the noise model of the measure. This is useful to get more realistic measures. However, in __tutorial_ego.py__ only one attribut is set.  
 
 * `sensor_tick`. As this measures are not supposed to vary significantly between steps, it is okay to retrieve the data every so often. In this case, it is set to be printed every three seconds.  
 
 ```py
 # --------------
-# Spawn attached GNSS
+# Add GNSS sensor to ego vehicle. 
 # --------------
+
 gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
 gnss_location = carla.Location(0,0,0)
 gnss_rotation = carla.Rotation(0,0,0)
 gnss_transform = carla.Transform(gnss_location,gnss_rotation)
 gnss_bp.set_attribute("sensor_tick",str(3.0))
 ego_gnss = world.spawn_actor(gnss_bp,gnss_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-def collision_callback(gnss):
-    print(gnss)
-ego_gnss.listen(lambda gnss: collision_callback(gnss))
+def gnss_callback(gnss):
+    print("GNSS measure:\n"+str(gnss)+'\n')
+ego_gnss.listen(lambda gnss: gnss_callback(gnss))
 
 # --------------
-# Spawn attached IMU
+# Add IMU sensor to ego vehicle. 
 # --------------
+
 imu_bp = world.get_blueprint_library().find('sensor.other.imu')
 imu_location = carla.Location(0,0,0)
 imu_rotation = carla.Rotation(0,0,0)
 imu_transform = carla.Transform(imu_location,imu_rotation)
 imu_bp.set_attribute("sensor_tick",str(3.0))
 ego_imu = world.spawn_actor(imu_bp,imu_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-def collision_callback(imu):
-    print(imu)
-ego_imu.listen(lambda imu: collision_callback(imu))
+def imu_callback(imu):
+    print("IMU measure:\n"+str(imu)+'\n')
+ego_imu.listen(lambda imu: imu_callback(imu))
 ```
 
 ---
@@ -461,7 +497,7 @@ optional arguments:
 
 ### Start recording
 
-The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginnning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
+The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
 
 ```py
 # --------------
@@ -495,7 +531,6 @@ while True:
 A timeout can be added to the script. Right now, use `Ctrl+C` or quit the terminal to finish it. The script will stop the recorder, destroy the sensor and the ego vehicle, and finish.  
 
 ```py
-finally:
 # --------------
 # Stop recording
 # --------------
@@ -516,7 +551,7 @@ Now that a simulation has been recorded sucessfully, it is time to play with it.
 
 ### Depth camera
 
-The [depth camera](ref_sensors.md#depth-camera) generates shot that maps every pixel in a grayscale depth map. However, the output is not directly this. It originally maps the depth buffer of the camera using a RGB color space, but this has to be translated to a grayscale to be comprehensible.  
+The [depth camera](ref_sensors.md#depth-camera) generates pictures of the scene that map every pixel in a grayscale depth map. However, the output is not directly this. It originally maps the depth buffer of the camera using a RGB color space, but this has to be translated to a grayscale to be comprehensible.  
 
 In order to do this, simply save the image as previously done with the RGB camera, but this time, apply a [carla.ColorConverter](python_api.md#carla.ColorConverter) to it. There are two conversions available for depth cameras.  
 
@@ -711,7 +746,7 @@ print(client.show_recorder_file_info("~/tutorial/recorder/recording01.log",False
 # Show actors not moving 1 meter in 10 seconds.  
 print(client.show_recorder_actors_blocked("~/tutorial/recorder/recording01.log",10,1))
 # Filter collisions between vehicles 'v' and 'a' any other type of actor.  
-print(client.show_recorder_collisions("~/tutorial/recorder/recording01.log",v,a))
+print(client.show_recorder_collisions("~/tutorial/recorder/recording01.log",'v','a'))
 ```
 
 !!! Note
@@ -783,6 +818,234 @@ Hereunder are the two scripts gathering the fragments of code for thist tutorial
 <summary><b>tutorial_ego.py</b> </summary>
 
 ```py
+
+import glob
+import os
+import sys
+import time
+
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
+import carla
+
+import argparse
+import logging
+import random
+
+
+def main():
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    args = argparser.parse_args()
+
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(10.0)
+
+    try:
+
+        world = client.get_world()
+        ego_vehicle = None
+        ego_cam = None
+        ego_col = None
+        ego_lane = None
+        ego_obs = None
+        ego_gnss = None
+        ego_imu = None
+
+        # --------------
+        # Start recording
+        # --------------
+        """
+        client.start_recorder('/home/adas/Desktop/tutorial/recorder/recording01.log')
+        """
+
+        # --------------
+        # Spawn ego vehicle
+        # --------------
+        """
+        ego_bp = world.get_blueprint_library().find('vehicle.tesla.model3')
+        ego_bp.set_attribute('role_name','ego')
+        print('\nEgo role_name is set')
+        ego_color = random.choice(ego_bp.get_attribute('color').recommended_values)
+        ego_bp.set_attribute('color',ego_color)
+        print('\nEgo color is set')
+
+        spawn_points = world.get_map().get_spawn_points()
+        number_of_spawn_points = len(spawn_points)
+
+        if 0 < number_of_spawn_points:
+            random.shuffle(spawn_points)
+            ego_transform = spawn_points[0]
+            ego_vehicle = world.spawn_actor(ego_bp,ego_transform)
+            print('\nEgo is spawned')
+        else: 
+            logging.warning('Could not found any spawn points')
+        """
+
+        # --------------
+        # Add a RGB camera sensor to ego vehicle. 
+        # --------------
+        """
+        cam_bp = None
+        cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+        cam_bp.set_attribute("image_size_x",str(1920))
+        cam_bp.set_attribute("image_size_y",str(1080))
+        cam_bp.set_attribute("fov",str(105))
+        cam_location = carla.Location(2,0,1)
+        cam_rotation = carla.Rotation(0,180,0)
+        cam_transform = carla.Transform(cam_location,cam_rotation)
+        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        ego_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/output/%.6d.png' % image.frame))
+        """
+
+        # --------------
+        # Add collision sensor to ego vehicle. 
+        # --------------
+        """
+        col_bp = world.get_blueprint_library().find('sensor.other.collision')
+        col_location = carla.Location(0,0,0)
+        col_rotation = carla.Rotation(0,0,0)
+        col_transform = carla.Transform(col_location,col_rotation)
+        ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def col_callback(colli):
+            print("Collision detected:\n"+str(colli)+'\n')
+        ego_col.listen(lambda colli: col_callback(colli))
+        """
+
+        # --------------
+        # Add Lane invasion sensor to ego vehicle. 
+        # --------------
+        """
+        lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
+        lane_location = carla.Location(0,0,0)
+        lane_rotation = carla.Rotation(0,0,0)
+        lane_transform = carla.Transform(lane_location,lane_rotation)
+        ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def lane_callback(lane):
+            print("Lane invasion detected:\n"+str(lane)+'\n')
+        ego_lane.listen(lambda lane: lane_callback(lane))
+        """
+        
+        # --------------
+        # Add Obstacle sensor to ego vehicle. 
+        # --------------
+        """
+        obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
+        obs_bp.set_attribute("only_dynamics",str(True))
+        obs_location = carla.Location(0,0,0)
+        obs_rotation = carla.Rotation(0,0,0)
+        obs_transform = carla.Transform(obs_location,obs_rotation)
+        ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def obs_callback(obs):
+            print("Obstacle detected:\n"+str(obs)+'\n')
+        ego_obs.listen(lambda obs: obs_callback(obs))
+        """
+
+        # --------------
+        # Add GNSS sensor to ego vehicle. 
+        # --------------
+        """
+        gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
+        gnss_location = carla.Location(0,0,0)
+        gnss_rotation = carla.Rotation(0,0,0)
+        gnss_transform = carla.Transform(gnss_location,gnss_rotation)
+        gnss_bp.set_attribute("sensor_tick",str(3.0))
+        ego_gnss = world.spawn_actor(gnss_bp,gnss_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def gnss_callback(gnss):
+            print("GNSS measure:\n"+str(gnss)+'\n')
+        ego_gnss.listen(lambda gnss: gnss_callback(gnss))
+        """
+
+        # --------------
+        # Add IMU sensor to ego vehicle. 
+        # --------------
+        """
+        imu_bp = world.get_blueprint_library().find('sensor.other.imu')
+        imu_location = carla.Location(0,0,0)
+        imu_rotation = carla.Rotation(0,0,0)
+        imu_transform = carla.Transform(imu_location,imu_rotation)
+        imu_bp.set_attribute("sensor_tick",str(3.0))
+        ego_imu = world.spawn_actor(imu_bp,imu_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def imu_callback(imu):
+            print("IMU measure:\n"+str(imu)+'\n')
+        ego_imu.listen(lambda imu: imu_callback(imu))
+        """
+
+        # --------------
+        # Place spectator on ego spawning
+        # --------------
+        """
+        spectator = world.get_spectator()
+        world_snapshot = world.wait_for_tick() 
+        spectator.set_transform(ego_vehicle.get_transform())
+        """
+
+        # --------------
+        # Enable autopilot for ego vehicle
+        # --------------
+        """
+        ego_vehicle.set_autopilot(True)
+        """
+
+        # --------------
+        # Game loop. Prevents the script from finishing.
+        # --------------
+        while True:
+            world_snapshot = world.wait_for_tick()
+
+    finally:
+        # --------------
+        # Stop recording and destroy actors
+        # --------------
+        client.stop_recorder()
+        if ego_vehicle is not None:
+            if ego_cam is not None:
+                ego_cam.stop()
+                ego_cam.destroy()
+            if ego_col is not None:
+                ego_col.stop()
+                ego_col.destroy()
+            if ego_lane is not None:
+                ego_lane.stop()
+                ego_lane.destroy()
+            if ego_obs is not None:
+                ego_obs.stop()
+                ego_obs.destroy()
+            if ego_gnss is not None:
+                ego_gnss.stop()
+                ego_gnss.destroy()
+            if ego_imu is not None:
+                ego_imu.stop()
+                ego_imu.destroy()
+            ego_vehicle.destroy()
+
+if __name__ == '__main__':
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print('\nDone with tutorial_ego.')
 
 ```
 </details>
