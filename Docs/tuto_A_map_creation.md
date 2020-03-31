@@ -246,7 +246,10 @@ Content
         │   └── mapname
         │       └── Static Meshes
         │
-        └── RoadLines  
+        ├── RoadLines  
+        |   └── mapname
+        |       └── Static Meshes
+        └── Sidewalks  
             └── mapname
                 └── Static Meshes
 ```
@@ -297,33 +300,23 @@ __4. Test traffic light timing and traffic trigger volumes.__ This may need tria
 ---
 ## Add pedestrian navigation
 
-The _Recast & Detour_ library is used to make a navigable mesh for pedestrians.
+In order to prepare the map for pedestrian navigation, there are some settings to be done before exporting it.  
 
-__1.__ Clone or download [_Recast & Detour_ repository](https://github.com/recastnavigation/recastnavigation).
+__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
 
-__2.__ Before building RecastDemo, change the `m_scale` variable from `1.0f` to `0.01f` in the
- _MeshLoaderObj contructor_ in `RecastDemo/Source/MeshLoaderObj.cpp`.
+![ue_skybox_no_export](img/ue_noexport.png) 
 
-```cpp
-rcMeshLoaderObj::rcMeshLoaderObj() :
-	m_scale(0.01f),
-	m_verts(0),
-	m_tris(0),
-	m_normals(0),
-	m_vertCount(0),
-	m_triCount(0)
-{
-}
-```
+__2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).
 
-__3.__ Follow he instructions to [build RecastDemo](https://github.com/recastnavigation/recastnavigation#building-recastdemo).
+![ue_meshes](img/ue_meshes.png) 
 
+__3.__ Crosswalks have to be manually created. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
 
-__4.__ In Unreal Engine, select the meshes for the pedestrians to be able to spawn and walk on.
+![ue_crosswalks](img/ue_crosswalks.png) 
 
-![ue_mesh_to_obj](img/ue_mesh_to_obj.png)
+__4.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
 
-__5.__ Export and save them as a `mapname.obj` file. `File > Export Selected...`.  
+__5.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
 __6.__ Run RecastDemo `./RecastDemo`.  
 
   * Select `Solo Mesh` from the `Sample` parameter's box.
