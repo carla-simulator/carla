@@ -47,6 +47,7 @@ void export_commands() {
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
+  namespace ctm = carla::traffic_manager;
 
   using ActorPtr = boost::shared_ptr<cc::Actor>;
 
@@ -151,8 +152,9 @@ void export_commands() {
 
   class_<cr::Command::SetAutopilot>("SetAutopilot")
     .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("enabled")))
-    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def(init<cr::ActorId, /* ctm::TrafficManager, */ bool>((arg("actor_id"), /* arg("tm"), */ arg("enabled"))))
     .def_readwrite("actor_id", &cr::Command::SetAutopilot::actor)
+    //.def_readwrite("tm", &cr::Command::SetAutopilot::tm)
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 
