@@ -100,6 +100,9 @@ public:
   /// Method to set probabilistic preference to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
 
+  /// Method to set hybrid physics mode.
+  void SetHybridPhysicsMode(const bool mode_switch);
+
   /// Method to provide synchronous tick
   bool SynchronousTick();
 

@@ -23,6 +23,7 @@ public:
     Vehicle,
     Walker,
     TrafficLight,
+    TrafficSign,
     INVALID
   };
 

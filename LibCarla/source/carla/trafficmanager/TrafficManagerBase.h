@@ -103,6 +103,9 @@ public:
   /// Method to set probabilistic preference to keep on the right lane.
   virtual void SetKeepRightPercentage(const ActorPtr &actor,const float percentage) = 0;
 
+  /// Method to set hybrid physics mode.
+  virtual void SetHybridPhysicsMode(const bool mode_switch) = 0;
+
 protected:
 
 };

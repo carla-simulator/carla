@@ -179,6 +179,12 @@ public:
     _client->call("set_percentage_keep_right_rule", actor, percentage);
   }
 
+  /// Method to set hybrid physics mode.
+  void SetHybridPhysicsMode(const bool mode_switch) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_hybrid_physics_mode", mode_switch);
+  }
+
 private:
 
   /// RPC client.
