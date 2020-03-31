@@ -41,6 +41,9 @@ static auto ApplyBatchCommandsSync(
     const carla::client::Client &self,
     const boost::python::object &commands,
     bool do_tick) {
+
+  carla::log_warning("ApplyBatchCommandsSync");
+
   using CommandType = carla::rpc::Command;
   std::vector<CommandType> cmds {
     boost::python::stl_input_iterator<CommandType>(commands),
@@ -57,6 +60,7 @@ static auto ApplyBatchCommandsSync(
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
   carla::client::World world = self.GetWorld();
+  boost::optional<carla::traffic_manager::TrafficManager> tm;
 
   std::atomic<size_t> vehicles_to_enable_index;
   std::atomic<size_t> vehicles_to_disable_index;
@@ -65,6 +69,7 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_disable_index.store(0);
 
   auto ProcessCommand = [&](size_t min_index, size_t max_index) {
+    carla::log_warning("ApplyBatchCommandsSync ProcessCommand");
     for (size_t i = min_index; i < max_index; ++i) {
       if (!responses[i].HasError()) {
 
@@ -88,6 +93,7 @@ static auto ApplyBatchCommandsSync(
         // check SetAutopilot command
         else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
           autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
+          // tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm;
           isAutopilot = true;
         }
 
@@ -141,9 +147,9 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_disable.shrink_to_fit();
 
   // check if any autopilot command was sent
-  if ((vehicles_to_enable.size() || vehicles_to_disable.size())) {
-    self.GetInstanceTM().RegisterVehicles(vehicles_to_enable);
-    self.GetInstanceTM().UnregisterVehicles(vehicles_to_disable);
+  if (tm && (vehicles_to_enable.size() || vehicles_to_disable.size())) {
+    tm->RegisterVehicles(vehicles_to_enable);
+    tm->UnregisterVehicles(vehicles_to_disable);
   }
 
   return result;
