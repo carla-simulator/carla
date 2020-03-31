@@ -70,7 +70,37 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     return;
   }
 
-  const auto MeshData = CarlaMap->GenerateMesh(2);
+  static const FString ConfigFilePath =
+      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf";
+  float Resolution = 2.f;
+  float WallHeight = 1.f;
+  float AdditionalWidth = .6f;
+  if (FPaths::FileExists(ConfigFilePath)) {
+    FString ConfigData;
+    TArray<FString> Lines;
+    FFileHelper::LoadFileToString(ConfigData, *ConfigFilePath);
+    ConfigData.ParseIntoArray(Lines, TEXT("\n"), true);
+    for (const FString &Line : Lines) {
+      FString Key, Value;
+      Line.Split(TEXT("="), &Key, &Value);
+      if (Key == "resolution")
+      {
+        Resolution = FCString::Atof(*Value);
+      }
+      else if (Key == "wall_height")
+      {
+        WallHeight = FCString::Atof(*Value);
+      }
+      else if (Key == "additional_width")
+      {
+        AdditionalWidth = FCString::Atof(*Value);
+      }
+    }
+  }
+
+  const auto MeshData =
+      CarlaMap->GenerateMesh(Resolution, AdditionalWidth) +
+      CarlaMap->GenerateWalls(Resolution, WallHeight);
 
   // Build the mesh
   TArray<FVector> Vertices;

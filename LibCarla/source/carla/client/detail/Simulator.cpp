@@ -96,12 +96,16 @@ namespace detail {
     throw_exception(std::runtime_error("failed to connect to newly created map"));
   }
 
-  EpisodeProxy Simulator::LoadOpenDriveEpisode(std::string opendrive) {
+  EpisodeProxy Simulator::LoadOpenDriveEpisode(
+      std::string opendrive,
+      double resolution,
+      double wall_height,
+      double additional_width) {
     // The "OpenDriveMap" is an ".umap" located in:
     // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
-    _client.CopyOpenDriveToServer(std::move(opendrive));
+    _client.CopyOpenDriveToServer(std::move(opendrive), resolution, wall_height, additional_width);
     return LoadEpisode(custom_opendrive_map);
   }
 
