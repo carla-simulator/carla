@@ -1,10 +1,14 @@
 ## Latest
 
+  * Introduced hybrid mode for Traffic Manager
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved manual_control by adding realistic throttle and brake
   * Added new Behavior agent
+  * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
+  * Added examples of sumo co-simulation for Town01, Town04 and Town05
+  * Added ptv vissim and carla co-simulation
 
 ## CARLA 0.9.8
 

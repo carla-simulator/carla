@@ -128,6 +128,9 @@ namespace road {
     /// Generate waypoints on each @a lane at the start of each @a road
     std::vector<Waypoint> GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type = Lane::LaneType::Driving) const;
 
+    /// Generate waypoints at the entry of each lane of the specified road
+    std::vector<Waypoint> GenerateWaypointsInRoad(RoadId road_id, Lane::LaneType lane_type = Lane::LaneType::Driving) const;
+
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
     std::vector<std::pair<Waypoint, Waypoint>> GenerateTopology() const;
@@ -138,6 +141,9 @@ namespace road {
     Junction* GetJunction(JuncId id);
 
     const Junction* GetJunction(JuncId id) const;
+
+    std::unordered_map<road::RoadId, std::unordered_set<road::RoadId>>
+        ComputeJunctionConflicts(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
     geom::Mesh GenerateMesh(double distance) const;

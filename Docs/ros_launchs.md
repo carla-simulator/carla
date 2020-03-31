@@ -16,11 +16,11 @@ It is possible to modify the parameters in runtime via ROS dynamic reconfigure. 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
-Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclecontrolmsg). Speed is in __m/s__, steering angle in __radians__ and refers to driving angle, not wheel angle.  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.html) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclecontrolmsg). Speed is in __m/s__, steering angle in __radians__ and refers to driving angle, not wheel angle.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
-* <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm)
+* <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.html)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 
@@ -50,7 +50,7 @@ Spawns an ego vehicle with sensors attached, and waits for world information.
 
 ---
 ## carla_example_ego_vehicle.launch
-Based on [carla_ego_vehicle.launch](#carla-ego-vehicle-launch), spawns an ego vehicle (`role-name="ego_vehicle"`). The file `sensors.json` describes the sensors attached. The path to it depends on the bridge installation.  
+Based on carla_ego_vehicle.launch, spawns an ego vehicle (`role-name="ego_vehicle"`). The file `sensors.json` describes the sensors attached. The path to it depends on the bridge installation.  
 
 * __Deb repository installation__,  
 `/opt/carla-ros-bridge/melodic/share/carla_ego_vehicle/config/sensors.json`.  
@@ -101,7 +101,7 @@ Publishes the data regarding the current state of the simulation. Reads the debu
 ---
 ## carla_ros_bridge_with_ackermann_control.launch
 
-Launches two basic nodes. One retrieves simulation data, the other controls a vehicle using [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm). 
+Launches two basic nodes. One retrieves simulation data, the other controls a vehicle using [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.html). 
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>carla_ros_bridge</u> <small><i>(Node)</i></small> </h4>
@@ -121,11 +121,11 @@ Publishes data regarding the current state of the simulation. Reads the debug sh
 
 <!---NODE-->
 <h4 style="margin-bottom: 5px"> <u>/carla_ackermann_control_ego_vehicle</u> <small><i>(Node)</i></small> </h4>  
-Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclemsg). Speed is in __m/s__, steering angle is in __radians__ and refers to driving angle, not wheel angle.  
+Converts [AckermannDrive messages](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.html) to [CarlaEgoVehicleControl.msg](ros_msgs.md#carlaegovehiclemsg). Speed is in __m/s__, steering angle is in __radians__ and refers to driving angle, not wheel angle.  
 
 <p style="margin-bottom:-5px"> <b>Subscribed to:</b> </p>  
 
-* <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.htm)  
+* <font color="f8815c"><b>/carla/ego_vehicle/ackermann_cmd</b></font> — [ackermann_msgs.AckermannDrive](http://docs.ros.org/jade/api/ackermann_msgs/html/msg/AckermannDrive.html)  
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_info</b></font> — [carla_msgs.CarlaEgoVehicleInfo](ros_msgs.md#carlaegovehicleinfomsg)
 * <font color="f8815c"><b>/carla/ego_vehicle/vehicle_status</b></font> — [carla_msgs.CarlaEgoVehicleStatus](ros_msgs.md#carlaegovehiclestatusmsg)
 

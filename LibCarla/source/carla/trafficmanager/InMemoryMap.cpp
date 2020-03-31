@@ -339,30 +339,14 @@ namespace MapConstants {
 
     const WaypointPtr raw_waypoint = reference_waypoint->GetWaypoint();
     const crd::element::LaneMarking::LaneChange lane_change = raw_waypoint->GetLaneChange();
-    const auto change_right = crd::element::LaneMarking::LaneChange::Right;
-    const auto change_left = crd::element::LaneMarking::LaneChange::Left;
-    const auto change_both = crd::element::LaneMarking::LaneChange::Both;
 
-    try {
-      if (lane_change == change_right || lane_change == change_both) {
-
-        const WaypointPtr right_waypoint =  raw_waypoint->GetRight();
-        if (right_waypoint != nullptr &&
-        right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
-        (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
-
-          SimpleWaypointPtr closest_simple_waypoint =
-          GetWaypointInVicinity(right_waypoint->GetTransform().location);
-          if (closest_simple_waypoint == nullptr) {
-            closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
-          }
-          reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
-        }
-      }
-
-      if (lane_change == change_left || lane_change == change_both) {
-
-        const WaypointPtr left_waypoint =  raw_waypoint->GetLeft();
+    /// Cheack for transits
+    switch(lane_change)
+    {
+      /// Left transit way point present only
+      case crd::element::LaneMarking::LaneChange::Left:
+      {
+        const WaypointPtr left_waypoint = raw_waypoint->GetLeft();
         if (left_waypoint != nullptr &&
         left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
         (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
@@ -375,13 +359,61 @@ namespace MapConstants {
           reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
         }
       }
-    } catch (const std::invalid_argument &e) {
-      cg::Location loc = reference_waypoint->GetLocation();
-      carla::log_info(
-      "Unable to link lane change connection at: " +
-      std::to_string(loc.x) + " " +
-      std::to_string(loc.y) + " " +
-      std::to_string(loc.z));
+      break;
+
+      /// Right transit way point present only
+      case crd::element::LaneMarking::LaneChange::Right:
+      {
+	    const WaypointPtr right_waypoint = raw_waypoint->GetRight();
+	    if(right_waypoint != nullptr &&
+	    right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
+	    (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
+
+	      SimpleWaypointPtr closest_simple_waypoint =
+	      GetWaypointInVicinity(right_waypoint->GetTransform().location);
+	      if (closest_simple_waypoint == nullptr) {
+		    closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
+	      }
+	      reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
+	    }
+      }
+      break;
+
+      /// Both left and right transit present
+      case crd::element::LaneMarking::LaneChange::Both:
+      {
+        /// Right transit way point
+        const WaypointPtr right_waypoint = raw_waypoint->GetRight();
+        if (right_waypoint != nullptr &&
+        right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
+        (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
+
+          SimpleWaypointPtr closest_simple_waypointR =
+          GetWaypointInVicinity(right_waypoint->GetTransform().location);
+          if (closest_simple_waypointR == nullptr) {
+            closest_simple_waypointR = GetWaypoint(right_waypoint->GetTransform().location);
+          }
+          reference_waypoint->SetRightWaypoint(closest_simple_waypointR);
+        }
+
+        /// Left transit way point
+        const WaypointPtr left_waypoint = raw_waypoint->GetLeft();
+        if (left_waypoint != nullptr &&
+        left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
+        (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
+
+          SimpleWaypointPtr closest_simple_waypointL =
+          GetWaypointInVicinity(left_waypoint->GetTransform().location);
+          if (closest_simple_waypointL == nullptr) {
+            closest_simple_waypointL = GetWaypoint(left_waypoint->GetTransform().location);
+          }
+          reference_waypoint->SetLeftWaypoint(closest_simple_waypointL);
+        }
+      }
+      break;
+
+      /// For no transit waypoint (left or right)
+      default: break;
     }
   }
 

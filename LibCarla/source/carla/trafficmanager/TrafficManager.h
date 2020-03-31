@@ -71,6 +71,14 @@ public:
 
   static void Tick();
 
+  /// This method sets the hybrid physics mode.
+  void SetHybridPhysicsMode(const bool mode_switch) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetHybridPhysicsMode(mode_switch);
+    }
+  }
+
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

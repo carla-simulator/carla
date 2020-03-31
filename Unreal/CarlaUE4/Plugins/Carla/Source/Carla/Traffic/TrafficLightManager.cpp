@@ -6,6 +6,8 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "StopSignComponent.h"
+#include "YieldSignComponent.h"
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -21,30 +23,29 @@ ATrafficLightManager::ATrafficLightManager()
   RootComponent = SceneComponent;
 
   // Hard codded default traffic light blueprint
-  static ConstructorHelpers::FObjectFinder<UBlueprint> TrafficLightFinder(
-      TEXT( "Blueprint'/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightFinder(
+      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive" ) );
   if (TrafficLightFinder.Succeeded())
   {
-    TSubclassOf<AActor> Model;
-    Model = TrafficLightFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> Model = TrafficLightFinder.Class;
     TrafficLightModel = Model;
   }
   // Default traffic signs models
-  static ConstructorHelpers::FObjectFinder<UBlueprint> StopFinder(
-      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Stop.BP_Stop'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> StopFinder(
+      TEXT( "/Game/Carla/Static/TrafficSigns/BP_Stop" ) );
   if (StopFinder.Succeeded())
   {
-    TSubclassOf<ATrafficSignBase> StopSignModel;
-    StopSignModel = StopFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> StopSignModel = StopFinder.Class;
     TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopSignModel);
+    SignComponentModels.Add(carla::road::SignalType::StopSign().c_str(), UStopSignComponent::StaticClass());
   }
-  static ConstructorHelpers::FObjectFinder<UBlueprint> YieldFinder(
-      TEXT( "Blueprint'/Game/Carla/Static/TrafficSigns/BP_Yield.BP_Yield'" ) );
+  static ConstructorHelpers::FClassFinder<AActor> YieldFinder(
+      TEXT( "/Game/Carla/Static/TrafficSigns/BP_Yield" ) );
   if (YieldFinder.Succeeded())
   {
-    TSubclassOf<ATrafficSignBase> YieldSignModel;
-    YieldSignModel = YieldFinder.Object->GeneratedClass;
+    TSubclassOf<AActor> YieldSignModel = YieldFinder.Class;
     TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
+    SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), UYieldSignComponent::StaticClass());
   }
 }
 
@@ -258,6 +259,29 @@ void ATrafficLightManager::SpawnTrafficLights()
           TrafficLight->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
 
+      auto ClosestWaypointToSignal =
+          GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+      if (ClosestWaypointToSignal)
+      {
+        auto SignalDistanceToRoad =
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+
+        if(SignalDistanceToRoad < LaneWidth * 0.5)
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
+              *TrafficLightComponent->GetSignId());
+
+          TArray<UPrimitiveComponent*> Primitives;
+          TrafficLight->GetComponents(Primitives);
+          for (auto* Primitive : Primitives)
+          {
+            Primitive->SetCollisionProfileName(TEXT("NoCollision"));
+          }
+        }
+      }
+
       RegisterLightComponent(TrafficLightComponent);
     }
   }
@@ -290,39 +314,42 @@ void ATrafficLightManager::SpawnSignals()
           SpawnParams);
 
       USignComponent *SignComponent =
-          NewObject<USignComponent>(TrafficSign);
+          NewObject<USignComponent>(TrafficSign, SignComponentModels[SignalType]);
       SignComponent->SetSignId(Signal->GetSignalId().c_str());
       SignComponent->RegisterComponent();
       SignComponent->AttachToComponent(
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
+      SignComponent->InitializeSign(GetMap().get());
+
+      auto ClosestWaypointToSignal =
+          GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+      if (ClosestWaypointToSignal)
+      {
+        auto SignalDistanceToRoad =
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+
+        if(SignalDistanceToRoad < LaneWidth * 0.5)
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
+              *SignComponent->GetSignId());
+
+          TArray<UPrimitiveComponent*> Primitives;
+          TrafficSign->GetComponents(Primitives);
+          for (auto* Primitive : Primitives)
+          {
+            Primitive->SetCollisionProfileName(TEXT("NoCollision"));
+          }
+        }
+      }
 
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
 
       TrafficSigns.Add(TrafficSign);
     }
   }
-}
-
-// Helper function to generate a vector of consecutive integers from a to b
-std::vector<int> GenerateRange(int a, int b)
-{
-  std::vector<int> result;
-  if (a < b)
-  {
-    for(int i = a; i <= b; ++i)
-    {
-      result.push_back(i);
-    }
-  }
-  else
-  {
-    for(int i = a; i >= b; --i)
-    {
-      result.push_back(i);
-    }
-  }
-  return result;
 }
 
 void ATrafficLightManager::GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
@@ -376,7 +403,7 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
         }
         for(auto &validity : SignalReference->GetValidities())
         {
-          for(auto lane : GenerateRange(validity._from_lane, validity._to_lane))
+          for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
           {
             if(lane == 0)
               continue;
@@ -384,9 +411,12 @@ void ATrafficLightManager::GenerateTriggerBoxesForTrafficLights()
             auto signal_waypoint = GetMap()->GetWaypoint(
                 waypoint.road_id, lane, SignalReference->GetS()).get();
 
+            if(GetMap()->GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
+              continue;
+
             // Get 90% of the half size of the width of the lane
             float BoxSize = static_cast<float>(
-                0.9*GetMap()->GetLaneWidth(waypoint)/2.0);
+                0.9f*GetMap()->GetLaneWidth(waypoint)*0.5);
             // Get min and max
             double LaneLength = GetMap()->GetLane(signal_waypoint).GetLength();
             double LaneDistance = GetMap()->GetLane(signal_waypoint).GetDistance();

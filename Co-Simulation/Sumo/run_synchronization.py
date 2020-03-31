@@ -44,7 +44,7 @@ else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
 # ==================================================================================================
-# -- sumo integration importants -------------------------------------------------------------------
+# -- sumo integration imports ----------------------------------------------------------------------
 # ==================================================================================================
 
 from sumo_integration.bridge_helper import BridgeHelper  # pylint: disable=wrong-import-position

@@ -135,5 +135,19 @@ namespace geom {
         -cp * sr};
   }
 
+  std::vector<int> Math::GenerateRange(int a, int b) {
+    std::vector<int> result;
+    if (a < b) {
+      for(int i = a; i <= b; ++i) {
+        result.push_back(i);
+      }
+    } else {
+      for(int i = a; i >= b; --i) {
+        result.push_back(i);
+      }
+    }
+    return result;
+  }
+
 } // namespace geom
 } // namespace carla
