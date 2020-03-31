@@ -153,7 +153,7 @@ namespace traffic_manager {
 
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
-    void PopWaypoint(Buffer& buffer, ActorId actor_id);
+    void PopWaypoint(Buffer& buffer, ActorId actor_id, bool front_or_back = true);
 
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
