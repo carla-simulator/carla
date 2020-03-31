@@ -157,7 +157,7 @@ The configuration of time-step and synchrony, leads for different settings. Here
 <td>Client is in total control over the simulation and its information.</td>
 <td>Risk of non reliable simulations.</td>
 <tr>
-<td><b>Variable time-step</b></td>
+<td><b>Asynchronous mode</b></td>
 <td>Good time references for information. Server runs as fast as possible.</td>
 <td>Non easily repeatable simulations.</td>
 </tbody>

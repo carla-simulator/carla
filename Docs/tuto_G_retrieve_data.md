@@ -1,57 +1,73 @@
 # Retrieve simulation data
 
-Learning an efficient way to retrieve simulation data is essential in CARLA. This tutorial is advised for both, newcomers and more experienced users. It starts from the very beginning, creating a simulation with custom conditions, and spawning a vehicle with a sensor. Then it gradually dives into the recorder, how to query it, manage other sensors, and much more. 
+Learning an efficient way to retrieve simulation data is essential in CARLA. This holistic tutorial is advised for both, newcomers and more experienced users. It starts from the very beginning and gradually dives into different possibilities and options in CARLA.  
+
+A simulation is created and with custom settings and traffic. An ego vehicle is set to roam around the city. The simulation is recorded, so that later it can be queried to find the highlights. Then that original simulation is played back, and exploited to the limit. Add new sensors to retrieve consistent data, change the conditions, or create different outputs.  
 
 * [__Overview__](#overview)  
 * [__Set the simulation__](#set-the-simulation)  
-	* Map setting
-	* Weather setting
+	* [Map setting](#map-setting)
+	* [Weather setting](#weather-setting)
 * [__Set traffic__](#set-traffic)  
-	* CARLA traffic
-	* SUMO co-simulation traffic
+	* [CARLA traffic](#CARLA-traffic)
+	* [SUMO co-simulation traffic](#sumo-co-simulation-traffic)
 * [__Set the ego vehicle__](#set-the-ego-vehicle)  
-	* Spawn the ego vehicle
-	* Place the spectator
+	* [Spawn the ego vehicle](#spawn-the-ego-vehicle)
+	* [Place the spectator](#place-the-spectator)
 * [__Set basic sensors__](#set-basic-sensors)  
-	* RGB camera
-	* Detectors
-	* Other sensors
-* [__No-rendering-mode](#no-rendering-mode)  
+	* [RGB camera](#rgb-camera)
+	* [Detectors](#detectors)
+	* [Other sensors](#other-sensors)
+* [__No-rendering-mode__](#no-rendering-mode)  
+	* [Simulate at fast pace](#simulate-at-fast-pace)
+	* [Manual control without rendering](#manual-control-without-rendering)
 * [__Record and retrieve data__](#record-and-retrieve-data)  
-	* Start recording
-	* Capture data
-	* Stop recording
+	* [Start recording](#start-recording)
+	* [Capture data](#capture-data)
+	* [Stop recording](#stop-recording)
 * [__Set advanced sensors__](#set-advanced-sensors)  
 	* [Depth camera](#depth-camera)
 	* [Semantic segmentation camera](#semantic-segmentation-camera)
 	* [LIDAR raycast sensor](#lidar-raycast-sensor)
 	* [Radar sensor](#radar-sensor)
 * [__Exploit the recording__](#exploit-the-recording)  
-	* Query the recording
-	* Reenact 
-    * Add new sensors
-	* Changing conditions
+	* [Query the events](#query-the-recording)
+	* [Choose a fragment](#choose-a-fragment)
+	* [Add new sensors](#add-new-sensors)
+	* [Change conditions](#change-conditions)
+	* [Reenact the simulation](#reenact-the-simulation)
+* [__Tutorial scripts__](#tutorial-scripts)  
 
 ---
 ## Overview
 
 There are some common mistakes in the process of retrieving simulation data, such as flooding the simulator with sensors, storing useless data, or trying too hard to find a specific event. However, there is a proper path to follow in order to get a simulation ready, so that data can be replicated, examined and altered at will.  
 
-This tutorial is all about making things simple and going straight to the point. Here is a list of the scripts that will be used. All of them are already provided in CARLA.  
+!!! Important
+    This tutorial uses the [__CARLA 0.9.8 deb package__](start_quickstart.md). There may be changes depending on your CARLA version and installation, specially regarding paths.
 
-* __config.py__ to choose the town map.  
+This tutorial presents a general overview of the process, while providing some alternative paths to fulfill different purposes. 
+Different scripts will be used along the tutorial. All of them are already provided in CARLA, mostly for generic purposes.  
+
+* __config.py__ used to change the simulation settings. The town map, disable rendering, set a fixed time-step...  
 	* `carla/PythonAPI/utils/config.py`
 * __dynamic_weather.py__ to create interesting weather conditions.  
 	* `carla/PythonAPI/examples/config.py`
 * __spawn_npc.py__ to spawn some AI controlled vehicles and walkers.  
 	* `carla/PythonAPI/examples/config.py`
-* __tutorial_ego.py__ to spawn an ego vehicle with a sensor attached, and let it roam around while recording.  
-	* ` `
-* __tutorial_replay.py__ to reenact the recording and play with it.  
-	* ` `
+* __manual_control.py__ spawns an ego vehicle and provides control over it.  
+	* `carla/PythonAPI/examples/config.py`
+
+However, two scripts mentioned along the tutorial that cannot be found in CARLA. They contain the fragments of code cited, and the full code can be found in the last section of the tutorial.
+
+* __tutorial_ego.py__ spawns with some basic sensors, and enables autopilot. The spectator is placed where at the spawning position. The recorder starts at the very beginning and stops when the script is finished.  
+* __tutorial_replay.py__ reenacts the simulation that __tutorial_ego.py__ recorded. There are different fragments of code to query the recording, spawn some advanced sensors, change weather conditions and reenact fragments of the recording.  
+
+This serves a twofold purpose. First of all, to encourage user to build their own scripts, making sure they gain full understanding of what the code is doing. In addition to this, the tutorial can go down different paths depending on the final intentions. The final scripts only gather the different fragments to create a possible output, but they should not be seen as a strict process. Retrieving data in CARLA is as powerful as the user wants it to be. 
 
 !!! Important
-    This tutorial uses the [__CARLA 0.9.8 deb package__](start_quickstart.md). There may be changes depending on your CARLA version and installation, specially regarding paths.
+    This tutorial requires some knowledge in Python.
+
 
 ---
 ## Set the simulation
@@ -284,7 +300,7 @@ cam_location = carla.Location(2,0,1)
 cam_rotation = carla.Rotation(0,180,0)
 cam_transform = carla.Transform(cam_location,cam_rotation)
 ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
-ego_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/output/%.6d.png' % image.frame))
+ego_cam.listen(lambda image: image.save_to_disk('tutorial/output/%.6d.png' % image.frame))
 ```
 
 ### Detectors
@@ -387,10 +403,58 @@ ego_imu.listen(lambda imu: collision_callback(imu))
 ---
 ## No-rendering mode
 
+### Simulate at fast pace 
+
 The [no-rendering mode](adv_rendering_options.md) where the intention is to run an initial simulation that will be later played again to retrieve data. 
-Update the script to go full speed. 
-Disable rendering. 
-No waits (clocks). 
+
+Disabling the rendering will save up a lot of work to the simulation. As the GPU is not used, the server can work at full speed. This could be useful to simulate complex conditions at a fast pace. The best way to do so would be by setting a fixed time-step for. Running an asynchronous server with a fixed time-step, the only limitation for the simulation would be the inner logic of the server. 
+
+This configuration can be used for example with the __tutorial_ego.py__, where an ego vehicles and some vehicles are spawned and roam around the city. The same `config.py` used to [set the map](#map-setting) disable rendering, and set a fixed time-step. 
+
+```
+cd /opt/carla/PythonAPI/utils
+./config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
+```
+
+!!! Warning
+    Read the [documentation](adv_synchrony_timestep.md) before messing around with with synchrony and time-step.
+
+### Manual control without rendering
+
+The script `PythonAPI/examples/no_rendering_mode.py` provides some sight of what is happening. It creates a minimalistic aerial view with Pygame, that will follow the ego vehicle. This could be used along with __manual_control.py__ to create a specific route with barely no cost, record it, and then play it back and exploit it to gather data. 
+
+```
+cd /opt/carla/PythonAPI/examples
+python manual_control.py
+```
+
+```
+cd /opt/carla/PythonAPI/examples
+python no_rendering_mode.py --no-rendering
+```
+
+<details>
+<summary> Optional arguments in <b>no_rendering_mode.py</b> </summary>
+
+```sh
+optional arguments:
+  -h, --help           show this help message and exit
+  -v, --verbose        print debug information
+  --host H             IP of the host server (default: 127.0.0.1)
+  -p P, --port P       TCP port to listen to (default: 2000)
+  --res WIDTHxHEIGHT   window resolution (default: 1280x720)
+  --filter PATTERN     actor filter (default: "vehicle.*")
+  --map TOWN           start a new episode at the given TOWN
+  --no-rendering       switch off server rendering
+  --show-triggers      show trigger boxes of traffic signs
+  --show-connections   show waypoint connections
+  --show-spawn-points  show recommended spawn points
+```
+</details>
+<br>
+
+!!! Note
+    In this mode, GPU-based sensors will retrieve empty data. Cameras are useless, but detectors
 
 ---
 ## Record and retrieve data
@@ -472,7 +536,7 @@ depth_rotation = carla.Rotation(0,180,0)
 depth_transform = carla.Transform(depth_location,depth_rotation)
 depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
 # This time, a color converter is applied to the image, to get the semantic segmentation view
-depth_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_depth_output/%.6d.png' % image.frame,carla.ColorConverter.LogarithmicDepth))
+depth_cam.listen(lambda image: image.save_to_disk('tutorial/new_depth_output/%.6d.png' % image.frame,carla.ColorConverter.LogarithmicDepth))
 ```
 
 ### Semantic segmentation camera
@@ -497,7 +561,7 @@ sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
 sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
 # This time, a color converter is applied to the image, to get the semantic segmentation view
-sem_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
+sem_cam.listen(lambda image: image.save_to_disk('tutorial/new_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
 ```
 
 ### LIDAR raycast sensor
@@ -531,7 +595,7 @@ lidar_location = carla.Location(0,0,2)
 lidar_rotation = carla.Rotation(0,0,0)
 lidar_transform = carla.Transform(lidar_location,lidar_rotation)
 lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
-lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('/home/adas/Desktop/tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
+lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
 ```
 
 The output can be visualized using __Meshlab__.
@@ -675,21 +739,7 @@ ego_vehicle = world.get_actor(310)
 
 The recorder will recreate in this simulation, the exact same conditions as the original. That ensures consistent data within different playbacks. Choose any other sensor and spawn it attached to the ego vehicle. 
 
-The process is exactly the same as before, it only changes depending on the specific needs of the sensor. Take a look at the [sensor reference](ref_sensors.md). The script provides as example a semantic segmentation camera. 
-
-```py
-# --------------
-# Add a new semantic sensor to my ego
-# --------------
-sem_cam = None
-sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
-sem_location = carla.Location(2,0,1)
-sem_rotation = carla.Rotation(0,180,0)
-sem_transform = carla.Transform(sem_location,sem_rotation)
-sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
-# This time, a color converter is applied to the image, to get the semantic segmentation view
-sem_cam.listen(lambda image: image.save_to_disk('~/tutorial/rec_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
-```
+The process is exactly the same as before, it only changes depending on the specific needs of the sensor. Take a look at the [sensor reference](ref_sensors.md) The script __tutorial_replay.py__ provides different examples that have been thoroughly explained in the [__Add advanced sensors__](#add-advanced-sensors) section. All of them are disabled by default. Enable the ones desired, and make sure to modify the output path when corresponding. 
 
 ### Change conditions
 
@@ -724,6 +774,27 @@ cd /opt/carla/bin
 python tuto_replay.py
 ```
 
+---
+## Tutorial scripts
+
+Hereunder are the two scripts gathering the fragments of code for thist tutorial. Most of the code is commented, as it is meant to be modified to fit specific purposes.
+
+<details>
+<summary><b>tutorial_ego.py</b> </summary>
+
+```py
+
+```
+</details>
+<br>
+<details>
+<summary><b>tutorial_replay.py</b></summary>
+
+```py
+
+```
+</details>
+<br>
 
 ---
 That is a wrap on how to properly retrieve data from the simulation. Make sure to play around, change the conditions of the simulator, experiment with sensor settings. The possibilities are endless. 
