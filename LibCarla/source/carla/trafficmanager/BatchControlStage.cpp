@@ -105,7 +105,7 @@ void BatchControlStage::DataSender() {
     }
     // Apply batch command in synchronous RPC call.
     if (commands != nullptr) {
-      episode_proxy_bcs.Lock()->ApplyBatchSync(*commands.get(), false);
+      episode_proxy_bcs.Lock()->ApplyBatchSync(*commands.get(), true);
     }
     // Set flag to false, unblock RunStep() call and release mutex lock.
     run_step.store(false);
