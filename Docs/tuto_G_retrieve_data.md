@@ -448,17 +448,18 @@ Now that a simulation has been recorded sucessfully, it is time to play with it.
 
 ### Depth camera
 
-This sensor generates shot that maps every element on sight in a grayscale depth map. However, the output is not directly this. It originally maps the depth buffer of the camera using a RGB color space, but this has to be translated to a grayscale to be comprehensible.  
+The [depth camera](ref_sensors.md#depth-camera) generates shot that maps every pixel in a grayscale depth map. However, the output is not directly this. It originally maps the depth buffer of the camera using a RGB color space, but this has to be translated to a grayscale to be comprehensible.  
 
 In order to do this, simply save the image as previously done with the RGB camera, but this time, apply a [carla.ColorConverter](python_api.md#carla.ColorConverter) to it. There are two conversions available for depth cameras.  
 
 * __carla.ColorConverter.Depth__ translates the original depth with milimetric precision.  
 * __carla.ColorConverter.LogarithmicDepth__ also has milimetric granularity, but provides better results in close distances and a little worse for further elements.  
 
+The attributes for the depth camera only set elements previously stated in the RGB camera: `fov`, `image_size_x`, `image_size_y` and `sensor_tick`. The script sets this sensor to match the previous RGB camera used. 
 
 ```py
 # --------------
-# Add a Depth sensor to ego vehicle. 
+# Add a Depth camera to ego vehicle. 
 # --------------
 depth_cam = None
 depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
@@ -473,13 +474,88 @@ depth_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/n
 
 ### Semantic segmentation camera
 
+The [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera) renders elements in scene with a different color depending on how these have been tagged. The tags are created by the simulator depending on the path of the asset used for spawning. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
 
+The output is an image, as any camera, but each pixel contains the tag information encoded in the red channel. This original image must be converted, as it happened with the depth camera, using the __ColorConverter.CityScapesPalette__. New tags can be created, read more in the [semantic segmentation camera reference](ref_sensors.md#semantic-segmentation-camera).  
+
+The attributes available for this camera are exactly the same as the depth camera. The script also sets this to match the original RGB camera. 
+
+```py
+# --------------
+# Add a new semantic segmentation camera to my ego
+# --------------
+sem_cam = None
+sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
+sem_bp.set_attribute("image_size_x",str(1920))
+sem_bp.set_attribute("image_size_y",str(1080))
+sem_bp.set_attribute("fov",str(105))
+sem_location = carla.Location(2,0,1)
+sem_forward = ego_vehicle.get_transform().get_forward_vector()
+sem_rotation = carla.Rotation(0,180,0)
+sem_transform = carla.Transform(sem_location,sem_rotation)
+sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+# This time, a color converter is applied to the image, to get the semantic segmentation view
+sem_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
+```
 
 ### LIDAR raycast sensor
 
+The [LIDAR sensor](ref_sensors.md#lidar-raycast-sensor) simulates a rotating LIDAR. It creates a cloud of points that maps the scene in 3D. The LIDAR contains a set of lasers that rotate at a certain frequency. The lasers raycast the distance to impact, and store every shot as one single point.  
+
+The way the array of lasers is disposed can be set using different sensor attributes. 
+
+* `upper_fov` and `lower_fov` the angle of the highest and the lowest laser respectively.
+* `channels` sets the amount of lasers to be used. These are distributed along the desired `fov`. 
+
+The key attributes however, are the ones that set the way this points are calculated. This can be used to calculate the amount of points that each laser calculates every step: `points_per_second / (FPS * channels)`.  
+
+* `range` determines the maximum distance to capture.  
+* `points_per_second` is the amount of points that will be obtained every second. This quantity is divided between the amount of `channels`.  
+* `rotation_frequency` is the amount of times the LIDAR will rotate every second. 
+
+The point cloud output is described as a [carla.LidarMeasurement]can be iterated as a list of [carla.Location] or saved to a _.ply_ standart file format. The script __tutorial_replay.py__ sets the LIDAR render highly-detailed static images of the scene on every step.
+
+```py
+# --------------
+# Add a new LIDAR sensor to my ego
+# --------------
+lidar_cam = None
+lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+lidar_bp.set_attribute('channels',str(50))
+lidar_bp.set_attribute('points_per_second',str(900000))
+lidar_bp.set_attribute('rotation_frequency',str(20))
+lidar_bp.set_attribute('range',str(20))
+lidar_location = carla.Location(0,0,2)
+lidar_forward = ego_vehicle.get_transform().get_forward_vector()
+lidar_rotation = carla.Rotation(0,0,0)
+lidar_transform = carla.Transform(lidar_location,lidar_rotation)
+lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
+lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('/home/adas/Desktop/tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
+```
+
+The output can be visualized using __Meshlab__.
+__1.__ Install [Meshlab](http://www.meshlab.net/#download).
+```sh
+sudo apt-get update -y
+sudo apt-get install -y meshlab
+```
+__2.__ Open Meshlab.
+```sh
+meshlab
+```
+__3.__ Open one of the _.ply_ files. `File > Import mesh...` 
 
 
 ### Radar sensor
+
+The [radar sensor](ref_sensors.md#radar-sensor) is similar to de LIDAR. It creates a conic view and shoots lasers that raycast their impacts. This time the output is a [carla.RadarMeasurement]. These contain a list of the [carla.RadarDetection] detected by the lasers instead of points in space. The detections now contain coordinates regarding the sensor, `azimuth`, `altitude`, `sensor` and `velocity`. 
+
+The attributes of this sensor can set the way the lasers are located.
+
+* `horizontal_fov` and `vertical_fov` determine the amplitude of the conic view.
+* `channels` sets the amount of lasers to be used. These are distributed along the desired `fov`. 
+
+There is only one attribute to set the the amount of points to be captured, that will be divided between the channels stated: `points_per_second`. 
 
 
 ---
