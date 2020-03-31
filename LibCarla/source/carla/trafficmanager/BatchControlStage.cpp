@@ -38,11 +38,18 @@ void BatchControlStage::Action() {
     }
     const carla::ActorId actor_id = element.actor->GetId();
 
-    vehicle_control.throttle = element.throttle;
-    vehicle_control.brake = element.brake;
-    vehicle_control.steer = element.steer;
+    // Apply actuation from controller if physics enabled.
+    if (element.physics_enabled) {
+      vehicle_control.throttle = element.throttle;
+      vehicle_control.brake = element.brake;
+      vehicle_control.steer = element.steer;
 
-    commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+      commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+    }
+    // Apply target transform for physics-less vehicles.
+    else {
+      commands->at(i) = carla::rpc::Command::ApplyTransform(actor_id, element.transform);
+    }
   }
 }
 

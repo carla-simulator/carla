@@ -154,6 +154,8 @@ void export_world() {
     .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
     .def("tick", &Tick, (arg("seconds")=10.0))
     .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
+    .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
+    .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def(self_ns::str(self_ns::self))
   ;
 

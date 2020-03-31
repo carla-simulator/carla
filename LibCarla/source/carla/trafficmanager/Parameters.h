@@ -60,6 +60,8 @@ namespace traffic_manager {
     std::atomic<bool> synchronous_mode {false};
     /// Distance Margin
     std::atomic<float> distance_margin {2.0};
+    /// Hybrid physics mode switch.
+    std::atomic<bool> hybrid_physics_mode {false};
 
   public:
     Parameters();
@@ -149,6 +151,12 @@ namespace traffic_manager {
 
     /// Set Synchronous mode time out.
     void SetSynchronousModeTimeOutInMiliSecond(const double time);
+
+    /// Method to set hybrid physics mode.
+    void SetHybridPhysicsMode(const bool mode_switch);
+
+    /// Method to retrieve hybrid physics mode.
+    bool GetHybridPhysicsMode();
 
     /// Synchronous mode time out variable.
     std::chrono::duration<double, std::milli> synchronous_time_out;

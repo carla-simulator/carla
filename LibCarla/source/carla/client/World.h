@@ -9,6 +9,7 @@
 #include "carla/Memory.h"
 #include "carla/Time.h"
 #include "carla/client/DebugHelper.h"
+#include "carla/client/Landmark.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -29,6 +30,8 @@ namespace client {
   class ActorList;
   class BlueprintLibrary;
   class Map;
+  class TrafficLight;
+  class TrafficSign;
 
   class World {
   public:
@@ -124,6 +127,10 @@ namespace client {
     /// percentage of 0.5f means 50% of all pedestrians can cross roads
     /// percentage of 1.0f means all pedestrians can cross roads if needed
     void SetPedestriansCrossFactor(float percentage);
+
+    SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
+
+    SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
 
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};

@@ -87,7 +87,7 @@ class CarlaSimulation(object):
             carla.command.SpawnActor(blueprint, transform)
             .then(carla.command.SetSimulatePhysics(carla.command.FutureActor, False))
         ]
-        response = self.client.apply_batch_sync(batch, True)[0]
+        response = self.client.apply_batch_sync(batch, False)[0]
         if response.error:
             logging.error('Spawn carla actor failed. %s', response.error)
             return INVALID_ACTOR_ID

@@ -13,6 +13,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <tuple>
 #include <unordered_map>
 
 #include "carla/StringUtil.h"
@@ -42,13 +43,22 @@
 namespace carla {
 namespace traffic_manager {
 
-  using namespace std::chrono;
   namespace cc = carla::client;
+  namespace cg = carla::geom;
+  namespace chr = std::chrono;
+  using namespace chr;
   using Actor = carla::SharedPtr<cc::Actor>;
   using Vehicle = carla::SharedPtr<cc::Vehicle>;
   using ActorId = carla::ActorId;
   using ActorIdSet = std::unordered_set<ActorId>;
   using TLS = carla::rpc::TrafficLightState;
+
+  /// Structure to hold kinematic state of actors.
+  struct KinematicState {
+    bool physics_enabled;
+    cg::Location location;
+    cg::Vector3D velocity;
+  };
 
   /// This class is responsible for maintaining a horizon of waypoints ahead
   /// of the vehicle for it to follow.
@@ -122,6 +132,14 @@ namespace traffic_manager {
     SnippetProfiler snippet_profiler;
     /// Map to keep track of last lane change location.
     std::unordered_map<ActorId, cg::Location> last_lane_change_location;
+    /// Reference of hero vehicle.
+    Actor hero_actor {nullptr};
+    /// Switch indicating hybrid physics mode.
+    bool hybrid_physics_mode {false};
+    /// Structure to hold previous state of physics-less vehicle.
+    std::unordered_map<ActorId, KinematicState> kinematic_state_map;
+    /// Time instance used to calculate dt in asynchronous mode.
+    TimePoint previous_update_instance;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
@@ -145,6 +163,11 @@ namespace traffic_manager {
     bool IsVehicleStuck(const Actor& actor);
     void CleanActor(const ActorId actor_id);
     bool TryDestroyVehicle(const Actor& actor);
+
+    /// Methods for actor state management.
+    void UpdateSwarmVelocities();
+    cg::Vector3D GetVelocity(ActorId actor_id);
+    bool IsPhysicsEnabled(ActorId actor_id);
 
   public:
 
