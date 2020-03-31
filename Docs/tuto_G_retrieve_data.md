@@ -274,7 +274,6 @@ cam_bp.set_attribute("image_size_x",str(1920))
 cam_bp.set_attribute("image_size_y",str(1080))
 cam_bp.set_attribute("fov",str(105))
 cam_location = carla.Location(2,0,1)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 cam_rotation = carla.Rotation(0,180,0)
 cam_transform = carla.Transform(cam_location,cam_rotation)
 ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
@@ -304,7 +303,6 @@ The script sets the sensor to only consider dynamic objects. The intention is to
 # --------------
 col_bp = world.get_blueprint_library().find('sensor.other.collision')
 col_location = carla.Location(0,0,0)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 col_rotation = carla.Rotation(0,0,0)
 col_transform = carla.Transform(col_location,col_rotation)
 ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
@@ -317,7 +315,6 @@ ego_col.listen(lambda colli: collision_callback(colli))
 # --------------
 lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
 lane_location = carla.Location(0,0,0)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 lane_rotation = carla.Rotation(0,0,0)
 lane_transform = carla.Transform(lane_location,lane_rotation)
 ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
@@ -331,7 +328,6 @@ ego_lane.listen(lambda lane: collision_callback(lane))
 obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
 obs_bp.set_attribute("only_dynamics",str(True))
 obs_location = carla.Location(0,0,0)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 obs_rotation = carla.Rotation(0,0,0)
 obs_transform = carla.Transform(obs_location,obs_rotation)
 ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
@@ -347,6 +343,8 @@ Among this category, only two sensors will be considered for the time being.
 * [__GNSS sensor.__](ref_sensors.md#collision-detector) Retrieves the geolocation of the sensor.
 * [__IMU sensor.__](ref_sensors.md#collision-detector) Comprises an accelerometer, a gyroscope, and a compass.
 
+To get the general measures for the vehicle object, these two sensors are spawned centered to it. 
+
 The attributes available for these sensors mostly set the mean or standard deviation parameter in the noise model of the measure. This is useful to get more realistic measures. However, the script only sets on attribute.  
 
 * `sensor_tick`. As this measures are not supposed to vary significantly between steps, it is okay to retrieve the data every so often. In this case, it is set to be printed every three seconds.  
@@ -357,7 +355,6 @@ The attributes available for these sensors mostly set the mean or standard devia
 # --------------
 gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
 gnss_location = carla.Location(0,0,0)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 gnss_rotation = carla.Rotation(0,0,0)
 gnss_transform = carla.Transform(gnss_location,gnss_rotation)
 gnss_bp.set_attribute("sensor_tick",str(3.0))
@@ -371,7 +368,6 @@ ego_gnss.listen(lambda gnss: collision_callback(gnss))
 # --------------
 imu_bp = world.get_blueprint_library().find('sensor.other.imu')
 imu_location = carla.Location(0,0,0)
-ego_forward = ego_vehicle.get_transform().get_forward_vector()
 imu_rotation = carla.Rotation(0,0,0)
 imu_transform = carla.Transform(imu_location,imu_rotation)
 imu_bp.set_attribute("sensor_tick",str(3.0))
@@ -464,7 +460,6 @@ The attributes for the depth camera only set elements previously stated in the R
 depth_cam = None
 depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
 depth_location = carla.Location(2,0,1)
-depth_forward = ego_vehicle.get_transform().get_forward_vector()
 depth_rotation = carla.Rotation(0,180,0)
 depth_transform = carla.Transform(depth_location,depth_rotation)
 depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
@@ -490,7 +485,6 @@ sem_bp.set_attribute("image_size_x",str(1920))
 sem_bp.set_attribute("image_size_y",str(1080))
 sem_bp.set_attribute("fov",str(105))
 sem_location = carla.Location(2,0,1)
-sem_forward = ego_vehicle.get_transform().get_forward_vector()
 sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
 sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
@@ -526,7 +520,6 @@ lidar_bp.set_attribute('points_per_second',str(900000))
 lidar_bp.set_attribute('rotation_frequency',str(20))
 lidar_bp.set_attribute('range',str(20))
 lidar_location = carla.Location(0,0,2)
-lidar_forward = ego_vehicle.get_transform().get_forward_vector()
 lidar_rotation = carla.Rotation(0,0,0)
 lidar_transform = carla.Transform(lidar_location,lidar_rotation)
 lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
@@ -550,13 +543,69 @@ __3.__ Open one of the _.ply_ files. `File > Import mesh...`
 
 The [radar sensor](ref_sensors.md#radar-sensor) is similar to de LIDAR. It creates a conic view and shoots lasers that raycast their impacts. This time the output is a [carla.RadarMeasurement]. These contain a list of the [carla.RadarDetection] detected by the lasers instead of points in space. The detections now contain coordinates regarding the sensor, `azimuth`, `altitude`, `sensor` and `velocity`. 
 
-The attributes of this sensor can set the way the lasers are located.
+The radar is placed on the hood, and rotated a bit upwards. That way, the output will map the front view of the car. 
+
+The attributes of this sensor mostly set the way the lasers are located.
 
 * `horizontal_fov` and `vertical_fov` determine the amplitude of the conic view.
 * `channels` sets the amount of lasers to be used. These are distributed along the desired `fov`. 
+* `range` is the maximum distance for the lasers to raycast. 
+* `points_per_second` sets the the amount of points to be captured, that will be divided between the channels stated. 
 
-There is only one attribute to set the the amount of points to be captured, that will be divided between the channels stated: `points_per_second`. 
+For the sake of this tutorial, the `horizontal_fov` is incremented, and the `vertical_fov` diminished. The area of interest is specially the height were vehicles and walkers usually move on. Not much will be going on upwards. The `range` is also changed from 100m to 10m, in order to retrieve data only right ahead of the vehicle. 
 
+The code for this sensor includes this time a more complex callback for the listen method. It will draw the points captured by the radar on the fly. The points will be colored depending on their velocity regarding the ego vehicle. 
+* __Blue__ for points approaching the vehicle.  
+* __Read__ for points moving away from it. 
+* __White__ for points static regarding the ego vehicle, meaning that both move at the same velocity. 
+
+This is an example of the real capabilities of this function. Getting 
+
+```py
+# --------------
+# Add a new radar sensor to my ego
+# --------------
+rad_cam = None
+rad_bp = world.get_blueprint_library().find('sensor.other.radar')
+rad_bp.set_attribute('horizontal_fov', str(35))
+rad_bp.set_attribute('vertical_fov', str(20))
+rad_bp.set_attribute('range', str(20))
+rad_location = carla.Location(x=2.0, z=1.0)
+rad_rotation = carla.Rotation(pitch=5)
+rad_transform = carla.Transform(rad_location,rad_rotation)
+rad_ego = world.spawn_actor(rad_bp,rad_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+def rad_callback(radar_data):
+    velocity_range = 7.5 # m/s
+    current_rot = radar_data.transform.rotation
+    for detect in radar_data:
+        azi = math.degrees(detect.azimuth)
+        alt = math.degrees(detect.altitude)
+        # The 0.25 adjusts a bit the distance so the dots can
+        # be properly seen
+        fw_vec = carla.Vector3D(x=detect.depth - 0.25)
+        carla.Transform(
+            carla.Location(),
+            carla.Rotation(
+                pitch=current_rot.pitch + alt,
+                yaw=current_rot.yaw + azi,
+                roll=current_rot.roll)).transform(fw_vec)
+
+        def clamp(min_v, max_v, value):
+            return max(min_v, min(value, max_v))
+
+        norm_velocity = detect.velocity / velocity_range # range [-1, 1]
+        r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
+        g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
+        b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
+        print("I got here")
+        world.debug.draw_point(
+            radar_data.transform.location + fw_vec,
+            size=0.075,
+            life_time=0.06,
+            persistent_lines=False,
+            color=carla.Color(r, g, b))
+rad_ego.listen(lambda radar_data: rad_callback(radar_data))
+```
 
 ---
 ## Exploit the recording
@@ -627,7 +676,6 @@ The process is exactly the same as before, it only changes depending on the spec
 sem_cam = None
 sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
 sem_location = carla.Location(2,0,1)
-sem_forward = ego_vehicle.get_transform().get_forward_vector()
 sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
 sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
