@@ -269,9 +269,9 @@ void ATrafficLightManager::SpawnTrafficLights()
 
         if(SignalDistanceToRoad < LaneWidth * 0.5)
         {
-          UE_LOG(LogCarla, Warning,
-              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
-              *TrafficLightComponent->GetSignId());
+          carla::log_warning("Traffic light",
+              TCHAR_TO_UTF8(*TrafficLightComponent->GetSignId()),
+              "overlaps a driving lane. Disabling collision...");
 
           TArray<UPrimitiveComponent*> Primitives;
           TrafficLight->GetComponents(Primitives);
@@ -332,9 +332,9 @@ void ATrafficLightManager::SpawnSignals()
 
         if(SignalDistanceToRoad < LaneWidth * 0.5)
         {
-          UE_LOG(LogCarla, Warning,
-              TEXT("Traffic light %s overlaps a driving lane. Disabling collision..."),
-              *SignComponent->GetSignId());
+          carla::log_warning("Traffic sign",
+              TCHAR_TO_UTF8(*SignComponent->GetSignId()),
+              "overlaps a driving lane. Disabling collision...");
 
           TArray<UPrimitiveComponent*> Primitives;
           TrafficSign->GetComponents(Primitives);
