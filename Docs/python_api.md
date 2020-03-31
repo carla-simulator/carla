@@ -333,7 +333,7 @@ Loads a new world with a basic 3D topology generated from the content of an Open
     - **Parameters:**
         - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
         - `resolution` (_float_) – Quality of the road mesh, increasing this value can reduce performance (in meters).  
-        - `wall_height` (_float_) – Height of a procedurall wall that prevents cars from falling outside the map, only generated in non-junction roads (in meters).  
+        - `wall_height` (_float_) – Height of a procedural wall that prevents cars from falling outside the map, only generated in non-junction roads (in meters).  
         - `additional_width` (_float_) – Additional lane width to prevent cars from falling outside the map, only generated in junctions (in meters).  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  

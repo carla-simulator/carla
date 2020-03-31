@@ -64,9 +64,9 @@ namespace client {
 
     World GenerateOpenDriveWorld(
         std::string opendrive,
-        double resolution=2.0,
-        double wall_height=0.2,
-        double additional_width=0.2) const {
+        double resolution=2.f,
+        double wall_height=1.f,
+        double additional_width=.6f) const {
       return World{_simulator->LoadOpenDriveEpisode(
           std::move(opendrive),
           resolution,
