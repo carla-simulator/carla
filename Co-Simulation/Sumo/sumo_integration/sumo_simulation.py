@@ -85,9 +85,9 @@ class SumoActorClass(enum.Enum):
 SumoActor = collections.namedtuple(
     'SumoActor', 'type_id vclass transform signals extent color')
 
-# ==============================================================================
-# -- sumo simulation -----------------------------------------------------------
-# ==============================================================================
+# ==================================================================================================
+# -- sumo simulation -------------------------------------------------------------------------------
+# ==================================================================================================
 
 
 class SumoSimulation(object):
@@ -107,6 +107,9 @@ class SumoSimulation(object):
 
         if args.sumo_host is None or args.sumo_port is None:
             logging.info('Starting new sumo server...')
+            if args.sumo_gui is True:
+                logging.info('Remember to press the play button to start the simulation')
+
             traci.start([
                 sumo_binary,
                 "-c", args.sumo_cfg_file,
@@ -115,8 +118,6 @@ class SumoSimulation(object):
                 '--collision.check-junctions'
             ])
 
-            if args.sumo_gui:
-                logging.info('Remember to press the play button to start the simulation')
         else:
             logging.info('Connection to sumo server. Host: %s Port: %s', host, port)
             traci.init(host=host, port=port)

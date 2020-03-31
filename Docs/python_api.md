@@ -1808,7 +1808,7 @@ Will return <b>None</b> if the lane does not exist.
 ---
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a>
-This class defines objects containing lightning and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
+This class defines objects containing lightning and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](ref_sensors.md#rgb-camera). They neither affect the actor's physics nor other sensors.        
   Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
 
 <h3>Instance Variables</h3>
@@ -1959,6 +1959,16 @@ Returns a list of actor blueprints available to ease the spawn of these into the
 - <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the object containing the navigation map used to describe this world.  
     - **Return:** _[carla.Map](#carla.Map)_  
+- <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Provided a landmark, returns the traffic light object it describes.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic light.  
+    - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
+- <a name="carla.World.get_traffic_sign"></a>**<font color="#7fb800">get_traffic_sign</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Provided a landmark, returns the traffic sign object it describes.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic sign.  
+    - **Return:** _[carla.TrafficSign](#carla.TrafficSign)_  
 - <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
 This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
@@ -2265,6 +2275,6 @@ Identificator of the parent actor.
 - <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
 Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
     - **Parameters:**
-        - `command` (_[carla.Command](#carla.Command)_) – CommandType.  
+        - `command` (_any carla Command_) – a Carla command.  
 
 ---

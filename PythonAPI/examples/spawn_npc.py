@@ -78,6 +78,10 @@ def main():
         '--sync',
         action='store_true',
         help='Synchronous mode execution')
+    argparser.add_argument(
+        '--hybrid',
+        action='store_true',
+        help='Enanble')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -90,9 +94,13 @@ def main():
 
     try:
 
+        world = client.get_world()
+
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.0)
-        world = client.get_world()
+        if args.hybrid:
+            traffic_manager.set_hybrid_physics_mode(True)
+
 
         synchronous_master = False
 
