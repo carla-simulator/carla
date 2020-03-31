@@ -13,6 +13,9 @@
 
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/detail/Simulator.h"
+#include "carla/geom/Math.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Transform.h"
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/Command.h"
