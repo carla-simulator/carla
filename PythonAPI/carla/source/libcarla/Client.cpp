@@ -162,7 +162,7 @@ void export_client() {
     .def("get_available_maps", &GetAvailableMaps)
     .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
     .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
-    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, GenerateOpenDriveWorld, std::string), (arg("opendrive")))
+    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_4(cc::Client, GenerateOpenDriveWorld, std::string, double, double, double), (arg("opendrive"), arg("resolution")=2.0, arg("wall_height")=1.0, arg("additional_width")=0.6))
     .def("start_recorder", CALL_WITHOUT_GIL_1(cc::Client, StartRecorder, std::string), (arg("name")))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))
