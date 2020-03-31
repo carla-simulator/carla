@@ -800,11 +800,11 @@ class RssSensor(object):
 
         if not inspect.getmembers(carla, check_rss_class):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
+        weak_self = weakref.ref(self)
+        self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
         self.sensor.visualization_mode = carla.VisualizationMode.All
         self.sensor.visualize_results = True
         self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
         self.set_default_parameters()
         self.sensor.reset_routing_targets()
         if routing_targets:
@@ -1005,6 +1005,7 @@ def game_loop(args):
         controller = KeyboardControl(world, args)
 
         clock = pygame.time.Clock()
+        carla.VehicleLightState=None
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):

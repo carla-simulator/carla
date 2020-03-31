@@ -256,7 +256,7 @@ if (LIBCARLA_BUILD_RELEASE)
       "${RECAST_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
-    target_compile_definitions(carla_client PRIVATE RSS_ENABLED)
+    target_compile_definitions(carla_client PRIVATE RSS_ENABLED RSS_USE_TBB)
     target_link_libraries(carla_client ${ADRSS_LIBS} tbb)
     target_include_directories(carla_client SYSTEM PRIVATE
       ${ADRSS_INCLUDE_DIRS})
@@ -295,7 +295,7 @@ if (LIBCARLA_BUILD_DEBUG)
       "${RECAST_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
-    target_compile_definitions(carla_client_debug PRIVATE RSS_ENABLED)
+    target_compile_definitions(carla_client_debug PRIVATE RSS_ENABLED RSS_USE_TBB)
     target_link_libraries(carla_client_debug ${ADRSS_LIBS} tbb)
     target_include_directories(carla_client_debug SYSTEM PRIVATE
       ${ADRSS_INCLUDE_DIRS})
