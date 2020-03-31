@@ -4,8 +4,8 @@
   * [__Depth camera__](#depth-camera)  
   * [__GNSS sensor__](#gnss-sensor)  
   * [__IMU sensor__](#imu-sensor)  
-  * [__Lane invasion detector__](#lane-invasion-sensor)  
-  * [__Lidar raycast sensor__](#lidar-sensor)  
+  * [__Lane invasion detector__](#lane-invasion-detector)  
+  * [__Lidar raycast sensor__](#lidar-raycast-sensor)  
   * [__Obstacle detector__](#obstacle-detector)  
   * [__Radar sensor__](#radar-sensor)  
   * [__RGB camera__](#rgb-camera)  
@@ -203,7 +203,7 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 ## GNSS sensor
 
 * __Blueprint:__ sensor.other.gnss
-* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GNSSMeasurement) per step (unless `sensor_tick` says otherwise). 
+* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise). 
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
 
@@ -910,7 +910,7 @@ Since these effects are provided by UE, please make sure to check their document
 <td><code>exposure_mode</code> </td>
 <td>str</td>
 <td><code>manual</code></td>
-<td>Can be <code>manual</code> or <code>histogram</code>. More in <a href="AutomaticExposure.gamesetting">UE4 docs</a>.</td>
+<td>Can be <code>manual</code> or <code>histogram</code>. More in <a href="https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html">UE4 docs</a>.</td>
 <tr>
 <td><code>exposure_compensation</code> </td>
 <td>float</td>

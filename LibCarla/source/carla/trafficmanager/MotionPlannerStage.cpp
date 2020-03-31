@@ -211,6 +211,7 @@ namespace PlannerConstants {
           bool teleportation_interval_found = false;
           cg::Location vehicle_location = actor->GetLocation();
 
+          /////////////////////////////////// DEBUG ////////////////////////////////////
           uint64_t buffer_size = localization_data.position_window.size();
           uint64_t step_size =  buffer_size/10u;
           for (uint64_t k = 0u; k + step_size < buffer_size; k += step_size) {
@@ -218,6 +219,7 @@ namespace PlannerConstants {
                                   localization_data.position_window.at(k + step_size)->GetLocation() + cg::Location(0.0, 0.0, 3.0),
                                   0.2f, {0u, 0u, 255u}, 0.05f);
           }
+          //////////////////////////////////////////////////////////////////////////////
 
           // Find the interval containing position to achieve target displacement.
           for (uint32_t j = 0u;
@@ -247,18 +249,22 @@ namespace PlannerConstants {
                                                   + cg::Location(target_heading * missing_displacement);
             teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
 
+            /////////////////////////////////// DEBUG ////////////////////////////////////
             debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 4),
                                    teleportation_location + cg::Location(0, 0, 4),
                                    0.2f, 0.2f, {255u, 0u, 0u}, 0.05f);
 
             debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
                                    0.15f, {255u, 255u, 0u}, 0.05f);
+            //////////////////////////////////////////////////////////////////////////////
           } else {
 
             teleportation_transform = actor->GetTransform();
 
+            /////////////////////////////////// DEBUG ////////////////////////////////////
             debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
                                    0.15f, {255u, 0u, 255u}, 0.05f);
+            //////////////////////////////////////////////////////////////////////////////
           }
 
         }
@@ -268,8 +274,10 @@ namespace PlannerConstants {
 
           teleportation_transform = actor->GetTransform();
 
+          /////////////////////////////////// DEBUG ////////////////////////////////////
           debug_helper.DrawPoint(actor->GetLocation() + cg::Location(0, 0, 6),
                                   0.15f, {0u, 255u, 255u}, 0.05f);
+          //////////////////////////////////////////////////////////////////////////////
         }
 
       }

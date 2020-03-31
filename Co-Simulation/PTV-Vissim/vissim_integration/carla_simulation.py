@@ -5,7 +5,6 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
 """ This module is responsible for the management of the carla simulation. """
 
 # ==================================================================================================
@@ -16,7 +15,7 @@ import logging
 
 import carla  # pylint: disable=import-error
 
-from .constants import INVALID_ACTOR_ID, SPAWN_OFFSET_Z
+from .constants import INVALID_ACTOR_ID, CARLA_SPAWN_OFFSET_Z
 
 # ==================================================================================================
 # -- carla simulation ------------------------------------------------------------------------------
@@ -27,7 +26,6 @@ class CarlaSimulation(object):
     """
     CarlaSimulation is responsible for the management of the carla simulation.
     """
-
     def __init__(self, args):
         self.args = args
         host = args.carla_host
@@ -56,21 +54,6 @@ class CarlaSimulation(object):
         """
         return self.world.get_actor(actor_id)
 
-    # This is a workaround to fix synchronization issues when other carla clients remove an actor in
-    # carla without waiting for tick (e.g., running sumo co-simulation and manual control at the
-    # same time)
-    def get_actor_light_state(self, actor_id):
-        """
-        Accessor for carla actor light state.
-
-        If the actor is not alive, returns None.
-        """
-        try:
-            actor = self.get_actor(actor_id)
-            return actor.get_light_state()
-        except RuntimeError:
-            return None
-
     def spawn_actor(self, blueprint, transform):
         """
         Spawns a new actor.
@@ -79,13 +62,12 @@ class CarlaSimulation(object):
             :param transform: transform where the actor will be spawned.
             :return: actor id if the actor is successfully spawned. Otherwise, INVALID_ACTOR_ID.
         """
-        transform = carla.Transform(
-            transform.location + carla.Location(0, 0, SPAWN_OFFSET_Z),
-            transform.rotation)
+        transform = carla.Transform(transform.location + carla.Location(0, 0, CARLA_SPAWN_OFFSET_Z),
+                                    transform.rotation)
 
         batch = [
-            carla.command.SpawnActor(blueprint, transform)
-            .then(carla.command.SetSimulatePhysics(carla.command.FutureActor, False))
+            carla.command.SpawnActor(blueprint, transform).then(
+                carla.command.SetSimulatePhysics(carla.command.FutureActor, False))
         ]
         response = self.client.apply_batch_sync(batch, False)[0]
         if response.error:
@@ -103,7 +85,7 @@ class CarlaSimulation(object):
             return actor.destroy()
         return False
 
-    def synchronize_vehicle(self, vehicle_id, transform, lights=None):
+    def synchronize_vehicle(self, vehicle_id, transform, velocity, lights=None):
         """
         Updates vehicle state.
 
@@ -117,7 +99,10 @@ class CarlaSimulation(object):
             return False
 
         vehicle.set_transform(transform)
-        if lights is not None and self.args.sync_vehicle_lights:
+        if velocity is not None:
+            vehicle.set_velocity(velocity)
+
+        if lights is not None:
             vehicle.set_light_state(carla.VehicleLightState(lights))
         return True
 
@@ -128,9 +113,8 @@ class CarlaSimulation(object):
         self.world.tick()
 
         # Update data structures for the current frame.
-        current_actors = set([
-            vehicle.id for vehicle in self.world.get_actors().filter('vehicle.*')
-        ])
+        current_actors = set(
+            [vehicle.id for vehicle in self.world.get_actors().filter('vehicle.*')])
         self.spawned_actors = current_actors.difference(self._active_actors)
         self.destroyed_actors = self._active_actors.difference(current_actors)
         self._active_actors = current_actors
