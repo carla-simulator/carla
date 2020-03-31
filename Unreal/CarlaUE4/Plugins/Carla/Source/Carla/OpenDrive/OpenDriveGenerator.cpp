@@ -113,9 +113,9 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   const auto Indexes = MeshData.GetIndexes();
   TArray<int32> Triangles;
   TArray<FTriIndices> TriIndices;
-  FTriIndices Triangle;
   for (auto i = 0u; i < Indexes.size(); i += 3)
   {
+    FTriIndices Triangle;
     // "-1" since mesh indexes in Unreal starts from index 0.
     Triangles.Add(Indexes[i]     - 1);
     // Since Unreal's coords are left handed, invert the last 2 indices.
@@ -128,15 +128,35 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     TriIndices.Add(Triangle);
   }
 
+  TArray<FVector> Normals;
+  Normals.Init(FVector::UpVector, Vertices.Num());
+
+  for (const auto &Triangle : TriIndices) {
+    FVector Normal;
+    const FVector U = Vertices[Triangle.v1] - Vertices[Triangle.v0];
+    const FVector V = Vertices[Triangle.v2] - Vertices[Triangle.v0];
+    Normal.X = (U.Y * V.Z) - (U.Z * V.Y);
+    Normal.Y = (U.Z * V.X) - (U.X * V.Z);
+    Normal.Z = (U.X * V.Y) - (U.Y * V.X);
+    Normal = -Normal;
+    Normal = Normal.GetSafeNormal(.0001f);
+    if (Normal != FVector::ZeroVector)
+    {
+      Normals[Triangle.v0] = Normal;
+      Normals[Triangle.v1] = Normal;
+      Normals[Triangle.v2] = Normal;
+    }
+  }
+
   RoadMesh->CreateMeshSection_LinearColor(
       0,
       Vertices,
       Triangles,
-      TArray<FVector>(),
-      TArray<FVector2D>(),
-      TArray<FLinearColor>(),
-      TArray<FProcMeshTangent>(),
-      true);
+      Normals, // Normals
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      true); // Create collision
 
   // Build collision data
   FTriMeshCollisionData CollisitonData;
