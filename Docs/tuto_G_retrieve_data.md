@@ -123,6 +123,9 @@ This script has many other different options that, for the sake of simplicity, a
 </details>
 <br>
 
+![tuto_map](img/tuto_map.png)
+<div style="text-align: right"><i>Aerial view of Town07</i></div>
+
 ### Weather setting
 
 Each town is loaded with a specific weather that fits it, however this can be set at will. There are two scripts that offer different approaches to the matter. The first one sets custom weather condition, the other one would creates a dynamic weather that changes conditions over time. CARLA provides a script for each approach. It is possible to directly code weather conditions, but this will be covered later when [changing weather conditions](#change-conditions). 
@@ -164,6 +167,9 @@ python weather.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --
 ```
 </details>
 <br>
+
+![tuto_weather](img/tuto_weather.png)
+<div style="text-align: right"><i>Weather changes applied</i></div>
 
 ---
 ## Set traffic
@@ -208,7 +214,7 @@ CARLA can run a co-simulation with SUMO. This allows for creating traffic in SUM
 Right now this is available for CARLA 0.9.8 and later, in __Town01__, __Town04__, and __Town05__. The first one is the most stable, and the one chosen for this tutorial.  
 
 !!! Note
-    The co-simulation will enable synchronous mode in CARLA. Read the [documentation](synchrony_and_timestep.md) to find out more about this. 
+    The co-simulation will enable synchronous mode in CARLA. Read the [documentation](adv_synchrony_timestep.md) to find out more about this. 
 
 * First of all, install SUMO. 
 ```sh
@@ -333,10 +339,13 @@ cam_transform = carla.Transform(cam_location,cam_rotation)
 ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
 ego_cam.listen(lambda image: image.save_to_disk('tutorial/output/%.6d.png' % image.frame))
 ```
+![tuto_rgb](img/tuto_rgb.png)
+<div style="text-align: right"><i>RGB camera output</i></div>
 
 ### Detectors
 
-These sensors retrieve data when the object they are attached to registers a specific event. There are three type of detector sensors, each one describing one type of event.
+These sensors retrieve data when the object they are attached to registers a specific event. There are three type of detector sensors, each one describing one type of event.  
+
 * [__Collision detector.__](ref_sensors.md#collision-detector) Retrieves collisions between its parent and other actors.
 * [__Lane invasion detector.__](ref_sensors.md#lane-invasion-detector) Registers when its parent crosses a lane marking.
 * [__Obstacle detector.__](ref_sensors.md#obstacle-detector) Detects possible obstacles ahead of its parent.
@@ -392,6 +401,8 @@ def obs_callback(obs):
     print("Obstacle detected:\n"+str(obs)+'\n')
 ego_obs.listen(lambda obs: obs_callback(obs))
 ```
+![tuto_detectors](img/tuto_detectors.png)
+<div style="text-align: right"><i>Output for detector sensors</i></div>
 
 ### Other sensors
 
@@ -435,6 +446,9 @@ def imu_callback(imu):
     print("IMU measure:\n"+str(imu)+'\n')
 ego_imu.listen(lambda imu: imu_callback(imu))
 ```
+
+![tuto_other](img/tuto_other.png)
+<div style="text-align: right"><i>GNSS and IMU sensors output</i></div>
 
 ---
 ## No-rendering mode
@@ -488,6 +502,9 @@ optional arguments:
 ```
 </details>
 <br>
+
+![tuto_no_rendering](img/tuto_no_rendering.png)
+<div style="text-align: right"><i>no_rendering_mode.py working in Town07</i></div>
 
 !!! Note
     In this mode, GPU-based sensors will retrieve empty data. Cameras are useless, but detectors
@@ -574,6 +591,9 @@ depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, at
 depth_cam.listen(lambda image: image.save_to_disk('tutorial/new_depth_output/%.6d.png' % image.frame,carla.ColorConverter.LogarithmicDepth))
 ```
 
+![tuto_depth](img/tuto_depth.png)
+<div style="text-align: right"><i>Depth camera output</i></div>
+
 ### Semantic segmentation camera
 
 The [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera) renders elements in scene with a different color depending on how these have been tagged. The tags are created by the simulator depending on the path of the asset used for spawning. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
@@ -598,6 +618,9 @@ sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachme
 # This time, a color converter is applied to the image, to get the semantic segmentation view
 sem_cam.listen(lambda image: image.save_to_disk('tutorial/new_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
 ```
+
+![tuto_sem](img/tuto_sem.png)
+<div style="text-align: right"><i>Semantic segmentation camera output</i></div>
 
 ### LIDAR raycast sensor
 
@@ -666,8 +689,6 @@ The code for this sensor includes this time a more complex callback for the list
 * __Read__ for points moving away from it. 
 * __White__ for points static regarding the ego vehicle, meaning that both move at the same velocity. 
 
-This is an example of the real capabilities of this function. Getting 
-
 ```py
 # --------------
 # Add a new radar sensor to my ego
@@ -714,6 +735,9 @@ def rad_callback(radar_data):
 rad_ego.listen(lambda radar_data: rad_callback(radar_data))
 ```
 
+![tuto_radar](img/tuto_radar.png)
+<div style="text-align: right"><i>Radar output. While the vehicle waits for the traffic light, the static elements in front of it appear in white.</i></div>
+
 ---
 ## Exploit the recording
 
@@ -748,6 +772,15 @@ print(client.show_recorder_actors_blocked("~/tutorial/recorder/recording01.log",
 # Filter collisions between vehicles 'v' and 'a' any other type of actor.  
 print(client.show_recorder_collisions("~/tutorial/recorder/recording01.log",'v','a'))
 ```
+
+![tuto_query_frames](img/tuto_query_frames.png)
+<div style="text-align: right"><i>Query showing important events. This is the frame where the ego vehicle was spawned.</i></div>
+
+![tuto_query_blocked](img/tuto_query_blocked.png)
+<div style="text-align: right"><i>Query showing actors blocked. In this simulation, the ego vehicle remained blocked for 100 seconds.</i></div>
+
+![tuto_query_collisions](img/tuto_query_collisions.png)
+<div style="text-align: right"><i>Query showing a collision between the ego vehicle and an object of type "other".</i></div>
 
 !!! Note
     Getting detailed file info for every frame can be overwhelming. Use it after other queries to know where to look at. 
@@ -1055,6 +1088,237 @@ if __name__ == '__main__':
 
 ```py
 
+import glob
+import os
+import sys
+import time
+import math
+import weakref
+
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
+import carla
+
+import argparse
+import logging
+import random
+
+def main():
+    client = carla.Client('127.0.0.1', 2000)
+    client.set_timeout(10.0)
+
+    try:
+        
+        world = client.get_world() 
+        ego_vehicle = None
+        ego_cam = None
+        depth_cam = None
+        sem_cam = None
+        rad_ego = None
+        lidar_sen = None
+
+        # --------------
+        # Query the recording
+        # --------------
+        """
+        # Show the most important events in the recording.  
+        print(client.show_recorder_file_info("/home/adas/Desktop/tutorial/recorder/recording05.log",False))
+        # Show actors not moving 1 meter in 10 seconds.  
+        #print(client.show_recorder_actors_blocked("/home/adas/Desktop/tutorial/recorder/recording04.log",10,1))
+        # Show collisions between any type of actor.  
+        #print(client.show_recorder_collisions("/home/adas/Desktop/tutorial/recorder/recording04.log",'v','a'))
+        """
+
+        # --------------
+        # Reenact a fragment of the recording
+        # --------------
+        """
+        client.replay_file("/home/adas/Desktop/tutorial/recorder/recording05.log",0,30,0)
+        """ 
+
+        # --------------
+        # Set playback simulation conditions
+        # --------------
+        """
+        ego_vehicle = world.get_actor(198) #Store the ID from the simulation or query the recording to find out
+        """
+
+        # --------------
+        # Place spectator on ego spawning
+        # --------------
+        """
+        spectator = world.get_spectator()
+        world_snapshot = world.wait_for_tick() 
+        spectator.set_transform(ego_vehicle.get_transform())
+        """
+
+        # --------------
+        # Change weather conditions
+        # --------------
+        """
+        weather = world.get_weather()
+        weather.sun_altitude_angle = -30
+        weather.fog_density = 65
+        weather.fog_distance = 10
+        world.set_weather(weather)
+        """
+
+        # --------------
+        # Add a RGB camera to ego vehicle.
+        # --------------
+        """
+        cam_bp = None
+        cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+        cam_location = carla.Location(2,0,1)
+        cam_rotation = carla.Rotation(0,180,0)
+        cam_transform = carla.Transform(cam_location,cam_rotation)
+        cam_bp.set_attribute("image_size_x",str(1920))
+        cam_bp.set_attribute("image_size_y",str(1080))
+        cam_bp.set_attribute("fov",str(105))
+        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        ego_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_rgb_output/%.6d.png' % image.frame))
+        """
+
+        # --------------
+        # Add a Depth camera to ego vehicle. 
+        # --------------
+        """
+        depth_cam = None
+        depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
+        depth_bp.set_attribute("image_size_x",str(1920))
+        depth_bp.set_attribute("image_size_y",str(1080))
+        depth_bp.set_attribute("fov",str(105))
+        depth_location = carla.Location(2,0,1)
+        depth_rotation = carla.Rotation(0,180,0)
+        depth_transform = carla.Transform(depth_location,depth_rotation)
+        depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        # This time, a color converter is applied to the image, to get the semantic segmentation view
+        depth_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_depth_output/%.6d.png' % image.frame,carla.ColorConverter.LogarithmicDepth))
+        """
+
+        # --------------
+        # Add a new semantic segmentation camera to ego vehicle
+        # --------------
+        """
+        sem_cam = None
+        sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
+        sem_bp.set_attribute("image_size_x",str(1920))
+        sem_bp.set_attribute("image_size_y",str(1080))
+        sem_bp.set_attribute("fov",str(105))
+        sem_location = carla.Location(2,0,1)
+        sem_rotation = carla.Rotation(0,180,0)
+        sem_transform = carla.Transform(sem_location,sem_rotation)
+        sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        # This time, a color converter is applied to the image, to get the semantic segmentation view
+        sem_cam.listen(lambda image: image.save_to_disk('/home/adas/Desktop/tutorial/new_sem_output/%.6d.png' % image.frame,carla.ColorConverter.CityScapesPalette))
+        """
+        
+        # --------------
+        # Add a new radar sensor to ego vehicle
+        # --------------
+        """
+        rad_cam = None
+        rad_bp = world.get_blueprint_library().find('sensor.other.radar')
+        rad_bp.set_attribute('horizontal_fov', str(35))
+        rad_bp.set_attribute('vertical_fov', str(20))
+        rad_bp.set_attribute('range', str(20))
+        rad_location = carla.Location(x=2.8, z=1.0)
+        rad_rotation = carla.Rotation(pitch=5)
+        rad_transform = carla.Transform(rad_location,rad_rotation)
+        rad_ego = world.spawn_actor(rad_bp,rad_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        def rad_callback(radar_data):
+            velocity_range = 7.5 # m/s
+            current_rot = radar_data.transform.rotation
+            for detect in radar_data:
+                azi = math.degrees(detect.azimuth)
+                alt = math.degrees(detect.altitude)
+                # The 0.25 adjusts a bit the distance so the dots can
+                # be properly seen
+                fw_vec = carla.Vector3D(x=detect.depth - 0.25)
+                carla.Transform(
+                    carla.Location(),
+                    carla.Rotation(
+                        pitch=current_rot.pitch + alt,
+                        yaw=current_rot.yaw + azi,
+                        roll=current_rot.roll)).transform(fw_vec)
+
+                def clamp(min_v, max_v, value):
+                    return max(min_v, min(value, max_v))
+
+                norm_velocity = detect.velocity / velocity_range # range [-1, 1]
+                r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
+                g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
+                b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
+                world.debug.draw_point(
+                    radar_data.transform.location + fw_vec,
+                    size=0.075,
+                    life_time=0.06,
+                    persistent_lines=False,
+                    color=carla.Color(r, g, b))
+        rad_ego.listen(lambda radar_data: rad_callback(radar_data))
+        """
+
+        # --------------
+        # Add a new LIDAR sensor to ego vehicle
+        # --------------
+        """
+        lidar_cam = None
+        lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+        lidar_bp.set_attribute('channels',str(50))
+        lidar_bp.set_attribute('points_per_second',str(900000))
+        lidar_bp.set_attribute('rotation_frequency',str(20))
+        lidar_bp.set_attribute('range',str(20))
+        lidar_location = carla.Location(0,0,2)
+        lidar_rotation = carla.Rotation(0,0,0)
+        lidar_transform = carla.Transform(lidar_location,lidar_rotation)
+        lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
+        lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('/home/adas/Desktop/tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
+        """
+
+        # --------------
+        # Game loop. Prevents the script from finishing.
+        # --------------
+        while True:
+            world_snapshot = world.wait_for_tick()
+
+    finally:
+        # --------------
+        # Destroy actors
+        # --------------
+        if ego_vehicle is not None:
+            if ego_cam is not None:
+                ego_cam.stop()
+                ego_cam.destroy()
+            if depth_cam is not None:
+                depth_cam.stop()
+                depth_cam.destroy()
+            if sem_cam is not None:
+                sem_cam.stop()
+                sem_cam.destroy()
+            if rad_ego is not None:
+                rad_ego.stop()
+                rad_ego.destroy()
+            if lidar_sen is not None:
+                lidar_sen.stop()
+                lidar_sen.destroy()
+            ego_vehicle.destroy()
+        print('\nNothing to be done.')
+        
+
+if __name__ == '__main__':
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print('\nDone with tutorial_replay.')
 ```
 </details>
 <br>
