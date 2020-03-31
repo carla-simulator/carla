@@ -20,6 +20,7 @@ namespace PlannerConstants {
   static const float CRITICAL_BRAKING_MARGIN = 0.25f;
   static const float HYBRID_MODE_DT = 0.05f;
   static const float EPSILON_VELOCITY = 0.001f;
+  static const float VERTICAL_OFFSET = 0.2f;
 } // namespace PlannerConstants
 
   using namespace PlannerConstants;
@@ -204,24 +205,17 @@ namespace PlannerConstants {
         if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT)) {
 
           // Target displacement magnitude to achieve target velocity.
-          float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+          const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+          const float target_displacement_square = std::pow(target_displacement, 2.0f);
 
           SimpleWaypointPtr target_interval_begin = nullptr;
           SimpleWaypointPtr target_interval_end = nullptr;
           bool teleportation_interval_found = false;
           cg::Location vehicle_location = actor->GetLocation();
 
-          /////////////////////////////////// DEBUG ////////////////////////////////////
-          uint64_t buffer_size = localization_data.position_window.size();
-          uint64_t step_size =  buffer_size/10u;
-          for (uint64_t k = 0u; k + step_size < buffer_size; k += step_size) {
-            debug_helper.DrawLine(localization_data.position_window.at(k)->GetLocation() + cg::Location(0.0, 0.0, 3.0),
-                                  localization_data.position_window.at(k + step_size)->GetLocation() + cg::Location(0.0, 0.0, 3.0),
-                                  0.2f, {0u, 0u, 255u}, 0.05f);
-          }
-          //////////////////////////////////////////////////////////////////////////////
-
           // Find the interval containing position to achieve target displacement.
+          const cg::Location vertical_offset(0, 0, VERTICAL_OFFSET);
+          const cg::Location vehicle_offset_location = vehicle_location - vertical_offset;
           for (uint32_t j = 0u;
                 j+1 < localization_data.position_window.size() && !teleportation_interval_found;
                 ++j) {
@@ -229,11 +223,11 @@ namespace PlannerConstants {
             target_interval_begin = localization_data.position_window.at(j);
             target_interval_end = localization_data.position_window.at(j+1);
 
-            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_location;
+            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_offset_location;
             if (cg::Math::Dot(relative_position, ego_heading) > 0.0f
-                && ((target_interval_begin->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2))
-                    || (target_interval_begin->DistanceSquared(vehicle_location) < std::pow(target_displacement, 2)
-                        && target_interval_end->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2)))) {
+                && ((target_interval_begin->DistanceSquared(vehicle_offset_location) > target_displacement_square)
+                    || (target_interval_begin->DistanceSquared(vehicle_offset_location) < target_displacement_square
+                        && target_interval_end->DistanceSquared(vehicle_offset_location) > target_displacement_square))) {
               teleportation_interval_found = true;
             }
           }
@@ -241,30 +235,22 @@ namespace PlannerConstants {
           if (target_interval_begin != nullptr && target_interval_end != nullptr) {
 
             // Construct target transform to accurately achieve desired velocity.
-            float missing_displacement = target_displacement - (target_interval_begin->Distance(vehicle_location));
+            float missing_displacement = 0.0f;
+            const float base_displacement = target_interval_begin->Distance(vehicle_offset_location);
+            if (base_displacement < target_displacement) {
+              missing_displacement = target_displacement - base_displacement;
+            }
             cg::Transform target_base_transform = target_interval_begin->GetTransform();
-            cg::Location target_base_location = target_base_transform.location;
+            cg::Location target_base_location = target_base_transform.location + vertical_offset;
             cg::Vector3D target_heading = target_base_transform.GetForwardVector();
             cg::Location teleportation_location = target_base_location
                                                   + cg::Location(target_heading * missing_displacement);
             teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
 
-            /////////////////////////////////// DEBUG ////////////////////////////////////
-            debug_helper.DrawArrow(vehicle_location + cg::Location(0, 0, 4),
-                                   teleportation_location + cg::Location(0, 0, 4),
-                                   0.2f, 0.2f, {255u, 0u, 0u}, 0.05f);
-
-            debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
-                                   0.15f, {255u, 255u, 0u}, 0.05f);
-            //////////////////////////////////////////////////////////////////////////////
           } else {
 
             teleportation_transform = actor->GetTransform();
 
-            /////////////////////////////////// DEBUG ////////////////////////////////////
-            debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 6),
-                                   0.15f, {255u, 0u, 255u}, 0.05f);
-            //////////////////////////////////////////////////////////////////////////////
           }
 
         }
@@ -274,10 +260,6 @@ namespace PlannerConstants {
 
           teleportation_transform = actor->GetTransform();
 
-          /////////////////////////////////// DEBUG ////////////////////////////////////
-          debug_helper.DrawPoint(actor->GetLocation() + cg::Location(0, 0, 6),
-                                  0.15f, {0u, 255u, 255u}, 0.05f);
-          //////////////////////////////////////////////////////////////////////////////
         }
 
       }

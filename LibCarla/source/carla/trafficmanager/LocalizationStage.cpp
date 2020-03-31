@@ -211,7 +211,6 @@ namespace LocalizationConstants {
         }
         PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
-      DrawBuffer(waypoint_buffer);
 
       // Begining point of the waypoint buffer;
       const SimpleWaypointPtr& updated_front_waypoint = waypoint_buffer.front();
