@@ -45,11 +45,10 @@ public:
   ///        RSS conform behavior by braking
   ///        Lateral braking is achieved by counter-steering, so is only a very
   ///        rough solution
-  carla::rpc::VehicleControl RestrictVehicleControl(
-      const carla::rpc::VehicleControl &vehicle_control,
-      const ::ad::rss::world::AccelerationRestriction &restriction,
-      const carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route,
-      const carla::rpc::VehiclePhysicsControl &vehicle_physics);
+  carla::rpc::VehicleControl RestrictVehicleControl(const carla::rpc::VehicleControl &vehicle_control,
+                                                    const ::ad::rss::world::AccelerationRestriction &restriction,
+                                                    const carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route,
+                                                    const carla::rpc::VehiclePhysicsControl &vehicle_physics);
 
 private:
   /// @brief the logger instance

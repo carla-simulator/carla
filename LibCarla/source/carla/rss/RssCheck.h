@@ -40,12 +40,12 @@ enum class VisualizationMode {
                                      /// is visualized
   DebugRouteOrientationBorders,      /// Only the route section transformed into
                                      /// borders around the object is visualized
-  DebugRouteOrientationBoth,  /// The route section around the object and the
-                              /// transformed borders are visualized
-  VehicleStateOnly,           /// Only the states of the vehicles is visualized
-  VehicleStateAndRoute,       /// The states of the vehicles and the route is
-                              /// visualized
-  All                         /// All (except debug) is visualized
+  DebugRouteOrientationBoth,         /// The route section around the object and the
+                                     /// transformed borders are visualized
+  VehicleStateOnly,                  /// Only the states of the vehicles is visualized
+  VehicleStateAndRoute,              /// The states of the vehicles and the route is
+                                     /// visualized
+  All                                /// All (except debug) is visualized
 };
 
 /// @brief struct defining the ego vehicles current dynamics in respect to the
@@ -117,40 +117,33 @@ public:
   /// This function has to be called cyclic with increasing timestamps to ensure
   /// proper RSS evaluation.
   ///
-  bool CheckObjects(
-      carla::client::Timestamp const &timestamp,
-      carla::SharedPtr<carla::client::ActorList> const &actors,
-      carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
-      ::ad::rss::state::ProperResponse &output_response,
-      ::ad::rss::world::AccelerationRestriction
-          &output_acceleration_restriction,
-      ::ad::rss::state::RssStateSnapshot &output_rss_state_snapshot,
-      EgoDynamicsOnRoute &output_rss_ego_dynamics_on_route);
+  bool CheckObjects(carla::client::Timestamp const &timestamp, carla::SharedPtr<carla::client::ActorList> const &actors,
+                    carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
+                    ::ad::rss::state::ProperResponse &output_response,
+                    ::ad::rss::world::AccelerationRestriction &output_acceleration_restriction,
+                    ::ad::rss::state::RssStateSnapshot &output_rss_state_snapshot,
+                    EgoDynamicsOnRoute &output_rss_ego_dynamics_on_route);
 
   /// @brief function to visualize the RSS check results
   ///
-  void VisualizeResults(
-      carla::client::World &world,
-      carla::SharedPtr<carla::client::Actor> const &carla_ego_actor) const;
+  void VisualizeResults(carla::client::World &world,
+                        carla::SharedPtr<carla::client::Actor> const &carla_ego_actor) const;
 
   /// @returns the used vehicle dynamics for ego vehcile
   const ::ad::rss::world::RssDynamics &GetEgoVehicleDynamics() const;
   /// @brief sets the vehicle dynamics to be used for the ego vehcile
-  void SetEgoVehicleDynamics(
-      const ::ad::rss::world::RssDynamics &ego_vehicle_dynamics);
+  void SetEgoVehicleDynamics(const ::ad::rss::world::RssDynamics &ego_vehicle_dynamics);
   /// @returns the used vehicle dynamics for other vehciles
   const ::ad::rss::world::RssDynamics &GetOtherVehicleDynamics() const;
   /// @brief sets the vehicle dynamics to be used for other vehciles
-  void SetOtherVehicleDynamics(
-      const ::ad::rss::world::RssDynamics &other_vehicle_dynamics);
+  void SetOtherVehicleDynamics(const ::ad::rss::world::RssDynamics &other_vehicle_dynamics);
 
   /// @returns the current mode for respecting the road boundaries (@see also
   /// RssSensor::GetRoadBoundariesMode())
   const ::carla::rss::RoadBoundariesMode &GetRoadBoundariesMode() const;
   /// @brief sets the current mode for respecting the road boundaries (@see also
   /// RssSensor::SetRoadBoundariesMode())
-  void SetRoadBoundariesMode(
-      const ::carla::rss::RoadBoundariesMode &road_boundaries_mode);
+  void SetRoadBoundariesMode(const ::carla::rss::RoadBoundariesMode &road_boundaries_mode);
 
   /// @returns the current routing targets (@see also
   /// RssSensor::GetRoutingTargets())
@@ -164,8 +157,7 @@ public:
 
   /// @brief sets the visualization mode (@see also
   /// ::carla::rss::VisualizationMode)
-  void SetVisualizationMode(
-      const ::carla::rss::VisualizationMode &visualization_mode);
+  void SetVisualizationMode(const ::carla::rss::VisualizationMode &visualization_mode);
   /// @returns get the current visualization mode (@see also
   /// ::carla::rss::VisualizationMode)
   const ::carla::rss::VisualizationMode &GetVisualizationMode() const;
@@ -176,6 +168,19 @@ public:
   /// possible).
   ///
   void DropRoute();
+
+  /// @returns the default vehicle dynamics
+  static ::ad::rss::world::RssDynamics GetDefaultVehicleDynamics();
+
+  /// @returns the default road boundaries mode
+  static RoadBoundariesMode GetDefaultRoadBoundariesMode() {
+    return RoadBoundariesMode::Off;
+  }
+
+  /// @returns the default visualization mode
+  static VisualizationMode GetDefaultVisualizationMode() {
+    return VisualizationMode::All;
+  }
 
 private:
   /// @brief standard logger
@@ -232,13 +237,10 @@ private:
 
   class RssObjectChecker {
   public:
-    RssObjectChecker(
-        RssCheck const &rss_check,
-        ::ad::rss::map::RssSceneCreation &scene_creation,
-        carla::client::Vehicle const &carla_ego_vehicle,
-        CarlaRssState const &carla_rss_state,
-        ::ad::map::landmark::LandmarkIdSet const &green_traffic_lights);
-    void operator()(const carla::SharedPtr<carla::client::Actor> actor) const;
+    RssObjectChecker(RssCheck const &rss_check, ::ad::rss::map::RssSceneCreation &scene_creation,
+                     carla::client::Vehicle const &carla_ego_vehicle, CarlaRssState const &carla_rss_state,
+                     ::ad::map::landmark::LandmarkIdSet const &green_traffic_lights);
+    void operator()(const carla::SharedPtr<carla::client::Vehicle> vehicle) const;
 
   private:
     RssCheck const &_rss_check;
@@ -253,40 +255,32 @@ private:
   /// @brief the current state of the ego vehicle
   CarlaRssState _carla_rss_state;
 
-  /// @returns the default vehicle dynamics
-  ::ad::rss::world::RssDynamics GetDefaultVehicleDynamics() const;
-
   /// @brief calculate the map matched object from the carla_vehicle
-  ::ad::map::match::Object GetMatchObject(
-      carla::client::Vehicle const &carla_vehicle,
-      ::ad::physics::Distance const &match_distance) const;
+  ::ad::map::match::Object GetMatchObject(carla::client::Vehicle const &carla_vehicle,
+                                          ::ad::physics::Distance const &match_distance) const;
 
   /// @brief calculate the speed from the carla_vehicle
-  ::ad::physics::Speed GetSpeed(
-      carla::client::Vehicle const &carla_vehicle) const;
+  ::ad::physics::Speed GetSpeed(carla::client::Vehicle const &carla_vehicle) const;
 
   /// @brief update the desired ego vehicle route
   void UpdateRoute(CarlaRssState &carla_rss_state);
 
   /// @brief calculate ego vehicle dynamics on the route
-  EgoDynamicsOnRoute CalculateEgoDynamicsOnRoute(
-      carla::client::Timestamp const &current_timestamp,
-      double const &time_since_epoch_check_start_ms,
-      carla::client::Vehicle const &carla_vehicle,
-      ::ad::map::match::Object match_object,
-      ::ad::map::route::FullRoute const &route,
-      EgoDynamicsOnRoute const &last_dynamics) const;
+  EgoDynamicsOnRoute CalculateEgoDynamicsOnRoute(carla::client::Timestamp const &current_timestamp,
+                                                 double const &time_since_epoch_check_start_ms,
+                                                 carla::client::Vehicle const &carla_vehicle,
+                                                 ::ad::map::match::Object match_object,
+                                                 ::ad::map::route::FullRoute const &route,
+                                                 EgoDynamicsOnRoute const &last_dynamics) const;
 
   /// @brief collect the green traffic lights on the current route
   ::ad::map::landmark::LandmarkIdSet GetGreenTrafficLightsOnRoute(
-      carla::client::ActorList const &actors,
+      std::vector<SharedPtr<carla::client::TrafficLight>> const &traffic_lights,
       ::ad::map::route::FullRoute const &route) const;
 
   /// @brief Create the RSS world model
-  void CreateWorldModel(carla::client::Timestamp const &timestamp,
-                        carla::client::ActorList const &actors,
-                        carla::client::Vehicle const &carla_ego_vehicle,
-                        CarlaRssState &carla_rss_state) const;
+  void CreateWorldModel(carla::client::Timestamp const &timestamp, carla::client::ActorList const &actors,
+                        carla::client::Vehicle const &carla_ego_vehicle, CarlaRssState &carla_rss_state) const;
 
   /// @brief Perform the actual RSS check
   void PerformCheck(CarlaRssState &carla_rss_state) const;
@@ -299,41 +293,33 @@ private:
   ///
   void StoreVisualizationResults(CarlaRssState const &carla_rss_state);
 
-  void StoreDebugVisualization(
-      ::ad::map::route::FullRoute const &debug_route,
-      std::vector<::ad::map::lane::ENUBorder> const &enu_border) const;
+  void StoreDebugVisualization(::ad::map::route::FullRoute const &debug_route,
+                               std::vector<::ad::map::lane::ENUBorder> const &enu_border) const;
 
   /// mutex to protect the visualization content
   mutable std::mutex _visualization_mutex;
   /// the RssStateSnapshot to be visualized
   ::ad::rss::state::RssStateSnapshot _visualization_state_snapshot;
-  void VisualizeRssResultsLocked(
-      carla::client::DebugHelper &dh, carla::client::World &world,
-      carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
-      ::ad::rss::state::RssStateSnapshot state_snapshot) const;
+  void VisualizeRssResultsLocked(carla::client::DebugHelper &dh, carla::client::World &world,
+                                 carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
+                                 ::ad::rss::state::RssStateSnapshot state_snapshot) const;
 
   /// the FullRoute to be visualized
   std::pair<::ad::map::route::FullRoute, bool> _visualization_route;
-  void VisualizeRouteLocked(
-      carla::client::DebugHelper &dh, ::ad::map::route::FullRoute const &route,
-      carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
-      bool dangerous) const;
+  void VisualizeRouteLocked(carla::client::DebugHelper &dh, ::ad::map::route::FullRoute const &route,
+                            carla::SharedPtr<carla::client::Actor> const &carla_ego_actor, bool dangerous) const;
 
-  void VisualizeENUEdgeLocked(carla::client::DebugHelper &dh,
-                              ::ad::map::point::ENUEdge const &edge,
-                              carla::sensor::data::Color const &color,
-                              float const z_offset) const;
+  void VisualizeENUEdgeLocked(carla::client::DebugHelper &dh, ::ad::map::point::ENUEdge const &edge,
+                              carla::sensor::data::Color const &color, float const z_offset) const;
 
   /// the EgoDynamicsOnRoute to be visualized
   EgoDynamicsOnRoute _visualization_ego_dynamics;
-  void VisualizeEgoDynamics(
-      carla::client::DebugHelper &dh,
-      carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
-      EgoDynamicsOnRoute const &ego_dynamics_on_route) const;
+  void VisualizeEgoDynamics(carla::client::DebugHelper &dh,
+                            carla::SharedPtr<carla::client::Actor> const &carla_ego_actor,
+                            EgoDynamicsOnRoute const &ego_dynamics_on_route) const;
 
   mutable ::ad::map::route::FullRoute _visualization_debug_route;
-  mutable std::vector<::ad::map::lane::ENUBorder>
-      _visualization_debug_enu_border;
+  mutable std::vector<::ad::map::lane::ENUBorder> _visualization_debug_enu_border;
 };
 
 }  // namespace rss
@@ -349,21 +335,14 @@ namespace std {
  * \returns The stream object.
  *
  */
-inline std::ostream &operator<<(
-    std::ostream &out,
-    const ::carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route) {
+inline std::ostream &operator<<(std::ostream &out, const ::carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route) {
   out << "EgoDynamicsOnRoute(timestamp=" << ego_dynamics_on_route.timestamp
-      << ", time_since_epoch_check_start_ms="
-      << ego_dynamics_on_route.time_since_epoch_check_start_ms
-      << ", time_since_epoch_check_end_ms="
-      << ego_dynamics_on_route.time_since_epoch_check_end_ms
+      << ", time_since_epoch_check_start_ms=" << ego_dynamics_on_route.time_since_epoch_check_start_ms
+      << ", time_since_epoch_check_end_ms=" << ego_dynamics_on_route.time_since_epoch_check_end_ms
       << ", ego_speed=" << ego_dynamics_on_route.ego_speed
-      << ", min_stopping_distance="
-      << ego_dynamics_on_route.min_stopping_distance
-      << ", ego_center=" << ego_dynamics_on_route.ego_center
-      << ", ego_heading=" << ego_dynamics_on_route.ego_heading
-      << ", ego_center_within_route="
-      << ego_dynamics_on_route.ego_center_within_route
+      << ", min_stopping_distance=" << ego_dynamics_on_route.min_stopping_distance
+      << ", ego_center=" << ego_dynamics_on_route.ego_center << ", ego_heading=" << ego_dynamics_on_route.ego_heading
+      << ", ego_center_within_route=" << ego_dynamics_on_route.ego_center_within_route
       << ", crossing_border=" << ego_dynamics_on_route.crossing_border
       << ", route_heading=" << ego_dynamics_on_route.route_heading
       << ", route_nominal_center=" << ego_dynamics_on_route.route_nominal_center
@@ -373,8 +352,7 @@ inline std::ostream &operator<<(
       << ", route_accel_lat=" << ego_dynamics_on_route.route_accel_lat
       << ", route_accel_lon=" << ego_dynamics_on_route.route_accel_lon
       << ", avg_route_accel_lat=" << ego_dynamics_on_route.avg_route_accel_lat
-      << ", avg_route_accel_lon=" << ego_dynamics_on_route.avg_route_accel_lon
-      << ')';
+      << ", avg_route_accel_lon=" << ego_dynamics_on_route.avg_route_accel_lon << ')';
   return out;
 }
 }  // namespace std

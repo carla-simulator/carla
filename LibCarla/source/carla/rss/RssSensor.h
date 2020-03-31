@@ -78,16 +78,14 @@ public:
   const ::ad::rss::world::RssDynamics &GetOtherVehicleDynamics() const;
   /// @brief sets the ego vehicle dynamics to be used by other vehicles (@see
   /// also RssCheck::SetOtherVehicleDynamics())
-  void SetOtherVehicleDynamics(
-      const ::ad::rss::world::RssDynamics &other_vehicle_dynamics);
+  void SetOtherVehicleDynamics(const ::ad::rss::world::RssDynamics &other_vehicle_dynamics);
 
   /// @returns the current mode for respecting the road boundaries (@see also
   /// RssCheck::GetRoadBoundariesMode())
   const ::carla::rss::RoadBoundariesMode &GetRoadBoundariesMode() const;
   /// @brief sets the current mode for respecting the road boundaries (@see also
   /// RssCheck::SetRoadBoundariesMode())
-  void SetRoadBoundariesMode(
-      const ::carla::rss::RoadBoundariesMode &road_boundaries_mode);
+  void SetRoadBoundariesMode(const ::carla::rss::RoadBoundariesMode &road_boundaries_mode);
 
   /// @returns the current routing targets (@see also
   /// RssCheck::GetRoutingTargets())
@@ -101,8 +99,7 @@ public:
 
   /// @brief sets the visualization mode (@see also
   /// RssCheck::SetVisualizationMode())
-  void SetVisualizationMode(
-      const ::carla::rss::VisualizationMode &visualization_mode);
+  void SetVisualizationMode(const ::carla::rss::VisualizationMode &visualization_mode);
   /// @returns get the current visualization mode (@see also
   /// RssCheck::GetVisualizationMode())
   const ::carla::rss::VisualizationMode &GetVisualizationMode() const;
