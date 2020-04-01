@@ -9,7 +9,7 @@ First, the simulation is initialized with custom settings and traffic. An ego ve
 	* [Map setting](#map-setting)  
 	* [Weather setting](#weather-setting)  
 * [__Set traffic__](#set-traffic)  
-	* [CARLA traffic](#CARLA-traffic)  
+	* [CARLA traffic and pedestrians](#carla-traffic-and-pedestrians)  
 	* [SUMO co-simulation traffic](#sumo-co-simulation-traffic)  
 * [__Set the ego vehicle__](#set-the-ego-vehicle)  
 	* [Spawn the ego vehicle](#spawn-the-ego-vehicle)  
@@ -19,11 +19,11 @@ First, the simulation is initialized with custom settings and traffic. An ego ve
 	* [Detectors](#detectors)  
 	* [Other sensors](#other-sensors)  
 * [__No-rendering-mode__](#no-rendering-mode)  
-	* [Simulate at fast pace](#simulate-at-fast-pace)  
+	* [Simulate at a fast pace](#simulate-at-a-fast-pace)  
 	* [Manual control without rendering](#manual-control-without-rendering)  
 * [__Record and retrieve data__](#record-and-retrieve-data)  
 	* [Start recording](#start-recording)  
-	* [Capture data](#capture-data)  
+	* [Capture and record](#capture-and-record)  
 	* [Stop recording](#stop-recording)  
 * [__Set advanced sensors__](#set-advanced-sensors)  
 	* [Depth camera](#depth-camera)  
@@ -31,7 +31,7 @@ First, the simulation is initialized with custom settings and traffic. An ego ve
 	* [LIDAR raycast sensor](#lidar-raycast-sensor)  
 	* [Radar sensor](#radar-sensor)  
 * [__Exploit the recording__](#exploit-the-recording)  
-	* [Query the events](#query-the-recording)  
+	* [Query the events](#query-the-events)  
 	* [Choose a fragment](#choose-a-fragment)  
 	* [Retrieve more data](#retrieve-more-data)  
 	* [Change the weather](#change-the-weather)  
@@ -126,7 +126,7 @@ This script can enable different settings. Some of them will be mentioned during
 
 ### Weather setting
 
-Each town is loaded with a specific weather that fits it, however this can be set at will. There are two scripts that offer different approaches to the matter. The first one sets a dynamic weather that changes conditions over time. The other sets custom weather conditions. It is also possible to code weather conditions. This will be covered later when [changing weather conditions](#change-conditions).  
+Each town is loaded with a specific weather that fits it, however this can be set at will. There are two scripts that offer different approaches to the matter. The first one sets a dynamic weather that changes conditions over time. The other sets custom weather conditions. It is also possible to code weather conditions. This will be covered later when [changing weather conditions](#change-the-weather).  
 
 * __To set a dynamic weather__. Open a new terminal and run __dynamic_weather.py__. This script allows to set the ratio at which the weather changes, being `1.0` the default setting. 
 
@@ -399,8 +399,8 @@ ego_obs.listen(lambda obs: obs_callback(obs))
 
 Only two sensors of this category will be considered for the time being.  
 
-* [__GNSS sensor.__](ref_sensors.md#collision-detector) Retrieves the geolocation of the sensor.
-* [__IMU sensor.__](ref_sensors.md#collision-detector) Comprises an accelerometer, a gyroscope, and a compass.
+* [__GNSS sensor.__](ref_sensors.md#gnss-sensor) Retrieves the geolocation of the sensor.
+* [__IMU sensor.__](ref_sensors.md#imu-sensor) Comprises an accelerometer, a gyroscope, and a compass.
 
 To get general measures for the vehicle object, these two sensors are spawned centered to it. 
 
@@ -446,7 +446,7 @@ ego_imu.listen(lambda imu: imu_callback(imu))
 
 The [no-rendering mode](adv_rendering_options.md) can be useful to run an initial simulation that will be later played again to retrieve data. Especially if this simulation has some extreme conditions, such as dense traffic.  
 
-### Simulate at fast pace 
+### Simulate at a fast pace 
 
 Disabling the rendering will save up a lot of work to the simulation. As the GPU is not used, the server can work at full speed. This could be useful to simulate complex conditions at a fast pace. The best way to do so would be by setting a fixed time-step. Running an asynchronous server with a fixed time-step and no rendering, the only limitation for the simulation would be the inner logic of the server.  
 
@@ -675,7 +675,8 @@ The attributes of this sensor mostly set the way the lasers are located.
 
 The script places the sensor on the hood of the car, and rotated a bit upwards. That way, the output will map the front view of the car. The `horizontal_fov` is incremented, and the `vertical_fov` diminished. The area of interest is specially the height were vehicles and walkers usually move on. The `range` is also changed from 100m to 10m, in order to retrieve data only right ahead of the vehicle. 
 
-The callback is a bit more complex this time, showing more of its capabilities. It will draw the points captured by the radar on the fly. The points will be colored depending on their velocity regarding the ego vehicle. 
+The callback is a bit more complex this time, showing more of its capabilities. It will draw the points captured by the radar on the fly. The points will be colored depending on their velocity regarding the ego vehicle.  
+
 * __Blue__ for points approaching the vehicle.  
 * __Read__ for points moving away from it. 
 * __White__ for points static regarding the ego vehicle. 
