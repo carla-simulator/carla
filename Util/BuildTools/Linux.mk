@@ -15,6 +15,9 @@ import: CarlaUE4Editor PythonAPI build.utils
 package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
+package.rss: CarlaUE4Editor PythonAPI.rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
+
 docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
