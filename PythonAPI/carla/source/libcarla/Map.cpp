@@ -204,7 +204,7 @@ void export_map() {
     .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance", "stop_at_junction")))
     .def("get_right_lane", &cc::Waypoint::GetRight)
     .def("get_left_lane", &cc::Waypoint::GetLeft)
-    .def("get_junction", &cc::Waypoint::GetJunction, (args("lane_type")))
+    .def("get_junction", &cc::Waypoint::GetJunction)
     .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmakrsInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
     .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmakrsOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
     .def(self_ns::str(self_ns::self))
