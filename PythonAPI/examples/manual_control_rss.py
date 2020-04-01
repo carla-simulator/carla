@@ -609,7 +609,7 @@ class HUD(object):
                                 pygame.draw.rect(display, (255, 0, 0), rect)
                                 text_color = (255, 0, 0)
                     item = item[0]
-                if len(item) > 0:   # At this point has to be a str.
+                if item and len(item) > 0:   # At this point has to be a str.
                     surface = self._font_mono.render(item, True, text_color)
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
