@@ -84,7 +84,7 @@ struct EgoDynamicsOnRoute {
   ::ad::map::point::ENUHeading route_heading;
   /// @brief the considered nominal center of the current route
   ::ad::map::point::ENUPoint route_nominal_center;
-  /// @brief the considered heading of the route
+  /// @brief the considered heading diff towards the route
   ::ad::map::point::ENUHeading heading_diff;
   /// @brief the ego speed component lat in respect to a route
   ::ad::physics::Speed route_speed_lat;
@@ -97,7 +97,7 @@ struct EgoDynamicsOnRoute {
   /// @brief the ego acceleration component lat in respect to a route
   /// smoothened by an average filter
   ::ad::physics::Acceleration avg_route_accel_lat;
-  /// @brief the ego acceleration component lat in respect to a route
+  /// @brief the ego acceleration component lon in respect to a route
   /// smoothened by an average filter
   ::ad::physics::Acceleration avg_route_accel_lon;
 };

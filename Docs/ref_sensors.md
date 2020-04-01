@@ -1,15 +1,16 @@
 # Sensors reference
 
-  * [__Collision detector__](#collision-detector)  
-  * [__Depth camera__](#depth-camera)  
-  * [__GNSS sensor__](#gnss-sensor)  
-  * [__IMU sensor__](#imu-sensor)  
-  * [__Lane invasion detector__](#lane-invasion-detector)  
-  * [__Lidar raycast sensor__](#lidar-raycast-sensor)  
-  * [__Obstacle detector__](#obstacle-detector)  
-  * [__Radar sensor__](#radar-sensor)  
-  * [__RGB camera__](#rgb-camera)  
-  * [__Semantic segmentation camera__](#semantic-segmentation-camera)  
+  * [__Collision detector__](#collision-detector)
+  * [__Depth camera__](#depth-camera)
+  * [__GNSS sensor__](#gnss-sensor)
+  * [__IMU sensor__](#imu-sensor)
+  * [__Lane invasion detector__](#lane-invasion-detector)
+  * [__Lidar raycast sensor__](#lidar-raycast-sensor)
+  * [__Obstacle detector__](#obstacle-detector)
+  * [__Radar sensor__](#radar-sensor)
+  * [__RGB camera__](#rgb-camera)
+  * [__Semantic segmentation camera__](#semantic-segmentation-camera)
+  * [__RSS sensor__](#rss-sensor)
 
 
 ---
@@ -18,7 +19,7 @@
 * __Blueprint:__ sensor.other.collision
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
 
-This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.  
+This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.
 To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 Collision detectors do not have any configurable attribute.
@@ -63,9 +64,9 @@ Collision detectors do not have any configurable attribute.
 ## Depth camera
 
 * __Blueprint:__ sensor.camera.depth
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise). 
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-The camera provides a raw data of the scene codifying the distance of each pixel to the camera (also known as **depth buffer** or **z-buffer**) to create a depth map of the elements.  
+The camera provides a raw data of the scene codifying the distance of each pixel to the camera (also known as **depth buffer** or **z-buffer**) to create a depth map of the elements.
 
 The image codifies depth value per pixel using 3 channels of the RGB color space, from less to more significant bytes: _R -> G -> B_. The actual distance in meters can be
 decoded with:
@@ -75,8 +76,8 @@ normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
 in_meters = 1000 * normalized
 ```
 
-The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.  
-There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects. 
+The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.
+There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects.
 
 ![ImageDepth](img/capture_depth.png)
 
@@ -203,7 +204,7 @@ There are two options in [carla.colorConverter](python_api.md#carla.ColorConvert
 ## GNSS sensor
 
 * __Blueprint:__ sensor.other.gnss
-* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise). 
+* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
 
@@ -416,17 +417,17 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 * __Blueprint:__ sensor.other.lane_invasion
 * __Output:__ [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) per crossing.
 
-Registers an event each time its parent crosses a lane marking.  
-The sensor uses road data provided by the OpenDRIVE description of the map to determine whether the parent vehicle is invading another lane by considering the space between wheels.  
-However there are some things to be taken into consideration:  
+Registers an event each time its parent crosses a lane marking.
+The sensor uses road data provided by the OpenDRIVE description of the map to determine whether the parent vehicle is invading another lane by considering the space between wheels.
+However there are some things to be taken into consideration:
 
-* Discrepancies between the OpenDRIVE file and the map will create irregularities such as crossing lanes that are not visible in the map. 
-* The output retrieves a list of crossed lane markings: the computation is done in OpenDRIVE and considering the whole space between the four wheels as a whole. Thus, there may be more than one lane being crossed at the same time. 
+* Discrepancies between the OpenDRIVE file and the map will create irregularities such as crossing lanes that are not visible in the map.
+* The output retrieves a list of crossed lane markings: the computation is done in OpenDRIVE and considering the whole space between the four wheels as a whole. Thus, there may be more than one lane being crossed at the same time.
 
 This sensor does not have any configurable attribute.
 
 !!! Important
-    This sensor works fully on the client-side. 
+    This sensor works fully on the client-side.
 
 #### Output attributes
 
@@ -466,11 +467,11 @@ This sensor does not have any configurable attribute.
 * __Blueprint:__ sensor.lidar.ray_cast
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
-This sensor simulates a rotating Lidar implemented using ray-casting.  
-The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:  
+This sensor simulates a rotating Lidar implemented using ray-casting.
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
-A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.  
+A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.
 
 This output contains a cloud of simulation points and thus, can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
@@ -577,10 +578,10 @@ for location in lidar_measurement:
 ## Obstacle detector
 
 * __Blueprint:__ sensor.other.obstacle
-* __Output:__ [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) per obstacle (unless `sensor_tick` says otherwise). 
+* __Output:__ [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) per obstacle (unless `sensor_tick` says otherwise).
 
-Registers an event every time the parent actor has an obstacle ahead.  
-In order to anticipate obstacles, the sensor creates a capsular shape ahead of the parent vehicle and uses it to check for collisions.  
+Registers an event every time the parent actor has an obstacle ahead.
+In order to anticipate obstacles, the sensor creates a capsular shape ahead of the parent vehicle and uses it to check for collisions.
 To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 <table class ="defTable">
@@ -660,19 +661,19 @@ To ensure that collisions with any kind of object are detected, the server creat
 ## Radar sensor
 
 * __Blueprint:__ sensor.other.radar
-* __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step (unless `sensor_tick` says otherwise).  
+* __Output:__ [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) per step (unless `sensor_tick` says otherwise).
 
-The sensor creates a conic view that is translated to a 2D point map of the elements in sight and their speed regarding the sensor. This can be used to shape elements and evaluate their movement and direction. Due to the use of polar coordinates, the points will concentrate around the center of the view.  
+The sensor creates a conic view that is translated to a 2D point map of the elements in sight and their speed regarding the sensor. This can be used to shape elements and evaluate their movement and direction. Due to the use of polar coordinates, the points will concentrate around the center of the view.
 
-Points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection), which specifies their polar coordinates, distance and velocity.  
+Points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection), which specifies their polar coordinates, distance and velocity.
 This raw data provided by the radar sensor can be easily converted to a format manageable by __numpy__:
 ```py
 # To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
 points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
 points = np.reshape(points, (len(radar_data), 4))
-``` 
+```
 
-The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away: 
+The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
 ![ImageRadar](img/sensor_radar.png)
 
@@ -762,17 +763,17 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 * __Blueprint:__ sensor.camera.rgb
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
 
-The "RGB" camera acts as a regular camera capturing images from the scene.  
+The "RGB" camera acts as a regular camera capturing images from the scene.
 [carla.colorConverter](python_api.md#carla.ColorConverter)
 
-If `enable_postprocess_effects` is enabled, a set of post-process effects is applied to the image for the sake of realism:  
+If `enable_postprocess_effects` is enabled, a set of post-process effects is applied to the image for the sake of realism:
 
-* __Vignette:__ darkens the border of the screen.  
-* __Grain jitter:__ adds some noise to the render.  
-* __Bloom:__ intense lights burn the area around them.  
-* __Auto exposure:__ modifies the image gamma to simulate the eye adaptation to darker or brighter areas.  
-* __Lens flares:__ simulates the reflection of bright objects on the lens.  
-* __Depth of field:__ blurs objects near or very far away of the camera.  
+* __Vignette:__ darkens the border of the screen.
+* __Grain jitter:__ adds some noise to the render.
+* __Bloom:__ intense lights burn the area around them.
+* __Auto exposure:__ modifies the image gamma to simulate the eye adaptation to darker or brighter areas.
+* __Lens flares:__ simulates the reflection of bright objects on the lens.
+* __Depth of field:__ blurs objects near or very far away of the camera.
 
 
 The `sensor_tick` tells how fast we want the sensor to capture the data.
@@ -1071,13 +1072,13 @@ Since these effects are provided by UE, please make sure to check their document
 ## Semantic segmentation camera
 
 * __Blueprint:__ sensor.camera.semantic_segmentation
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).  
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).  
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
- 
-The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.  
-This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.  
+This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+
+The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
+This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
 The following tags are currently available:
 
 <table class ="defTable">
@@ -1267,3 +1268,118 @@ The following tags are currently available:
 
 <br>
 
+---
+## RSS sensor
+
+* __Blueprint:__ sensor.other.rss
+* __Output:__ [carla.RssResponse](python_api.md#carla.RssResponse) per step (unless `sensor_tick` says otherwise).
+
+This sensor is disabled by default and has to be explicitly enalbed and built. Details on additional requirements and the scope of the sensor is described [here](rss_lib_integration.md).
+The RSS sensor calculates the RSS state of a vehicle and reports the current RSS Response. The output can be used in conjunction with a [RssRestrictor](rss_lib_integration.md#RssRestrictor) to adapt
+a _VehicleControl_ command before sending to a vehicle (see the _PythonAPI/examples/manual_control_rss.py_).
+
+!!! Important
+    This sensor works fully on the client-side.
+
+#### Configuration attributes
+
+!!! Important
+    The change of attributes only has an effect AFTER the sensor.listen() has been called since no actual server side blueprint is available.
+
+<table class ="defTable">
+<thead>
+<th>Configuration attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>ego_vehicle_dynamics</code> </td>
+<td>libad_rss_python.RssDynamics</td>
+<td>see <a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion">RSS Parameter discussion</a></td>
+<td>Get/set the RSS parameters to be applied for the ego vehicle </td>
+<tr>
+<td>
+<code>other_vehicle_dynamics</code> </td>
+<td>libad_rss_python.RssDynamics</td>
+<td>see <a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion">RSS Parameter discussion</a></td>
+<td>Get/set the RSS parameters to be applied for the other vehicles</td>
+<tr>
+<td><code>road_boundaries_mode</code></td>
+<td>carla.RoadBoundariesMode</td>
+<td>carla.RoadBoundariesMode.On</td>
+<td>Switch the <a href="https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries">stay on road feature</a> <i>On</i> and <i>Off</i></td>
+<tr>
+<td><code>visualization_mode</code></td>
+<td>carla.VisualizationMode</td>
+<td>carla.VisualizationMode.All</td>
+<td>The RSS Sensor makes use of the <code>DebugHelper</code> to draw RSS visulation on server side. Possible values to set are: <i>Off</i>, <i>RouteOnly</i>,
+    <i>VehicleStateOnly</i>, <i>VehicleStateAndRoute</i> and <i>All</i>. Because debug drawing takes some time, some RSS responses will
+    be delayed. Therefore, best is to disable the visualization if performing automated RSS evaluations.
+</td>
+</table>
+<br>
+
+#### Routing functionality
+
+The RSS calcuations always are based on a route of the ego vehicle throught the road network.
+Therefore, the sensor provides the possibility to control the considered route from outside by providing some key points on the way.
+These points are best selected after the intersections to force the route to take the desired turn.
+If no routing targets are defined, a random route is selected automatically.
+
+<table class ="defTable">
+<thead>
+<th>Routing functions</th>
+<th>Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>routing_targets</code></td>
+<td>vector&lt;<a href="../python_api#carlatransform">carla.Transform</a>&gt; </td>
+<td>Get the current list of routing targets used for route.</td>
+<tr>
+<td><code>append_routing_target</code></td>
+<td><a href="../python_api#carlatransform">carla.Transform</a></td>
+<td>Append an additional position to the current routing targets.</td>
+<tr>
+<td><code>reset_routing_targets</code></td>
+<td>(void)</td>
+<td>Reset the current list of routing targets.</td>
+<tr>
+<td><code>drop_route</code></td>
+<td>(void)</td>
+<td>Drop the current selected route.</td>
+</table>
+<br>
+
+#### RSS Restrictor functionality
+
+The carla.RssRestrictor object can be instanciated to caluculate restrictions based on the RSS acceleration restrictions calculated by the RSS sensor.
+Therefore, the <code>restrict_vehicle_control</code> function has to be called returning the adapted <a href="../python_api#carlavehiclecontrol">carla.VehicleControl</a>
+data with the following input parameters:
+
+<table class ="defTable">
+<thead>
+<th>Parameter Name</th>
+<th>Parameter Type</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td><code>vehicle_control</code></td>
+<td><a href="../python_api#carlavehiclecontrol">carla.VehicleControl</a></td>
+<td>The current input vehicle control data to be restricted.</td>
+<tr>
+<td><code>restriction</code></td>
+<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a></td>
+<td>Usually the RSS sensor output <code>libad_rss_python.RssResponse.acceleration_restriction</code> is passed in as a parameter.</td>
+<tr>
+<td><code>ego_dynamics_on_route</code></td>
+<td>carla.RssEgoDynamicsOnRoute</td>
+<td>Usually the RSS sensor output <code>libad_rss_python.RssResponse.ego_dynamics_on_route</code> is passed in as a parameter.</td>
+<tr>
+<td><code>vehicle_physics</code></td>
+<td><a href="../python_api#carlavehiclephysicscontrol">carla.VehcilePhysicsControl</a></td>
+<td>The physics control of the ego vehicle.</td>
+</table>
+<br>

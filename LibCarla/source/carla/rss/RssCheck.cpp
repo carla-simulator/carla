@@ -77,6 +77,9 @@ RssCheck::RssCheck()
     _other_vehicle_dynamics(GetDefaultVehicleDynamics()),
     _road_boundaries_mode(GetDefaultRoadBoundariesMode()),
     _visualization_mode(GetDefaultVisualizationMode()) {
+
+  _other_vehicle_dynamics.responseTime = ::ad::physics::Duration(2.0);
+
   _logger = getLogger();
   spdlog::set_level(spdlog::level::warn);
   _logger->set_level(spdlog::level::warn);
@@ -100,7 +103,8 @@ RssCheck::~RssCheck() {}
   default_dynamics.alphaLon.brakeMinCorrect = ::ad::physics::Acceleration(-3);
   default_dynamics.alphaLat.accelMax = ::ad::physics::Acceleration(0.2);
   default_dynamics.alphaLat.brakeMin = ::ad::physics::Acceleration(-0.8);
-  default_dynamics.responseTime = ::ad::physics::Duration(.5);
+  default_dynamics.lateralFluctuationMargin = ::ad::physics::Distance(0.1);
+  default_dynamics.responseTime = ::ad::physics::Duration(1.0);
 
   return default_dynamics;
 }

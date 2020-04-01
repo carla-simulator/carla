@@ -96,7 +96,7 @@ void export_ad_rss() {
   namespace cs = carla::sensor;
   namespace csd = carla::sensor::data;
 
-  class_<carla::rss::EgoDynamicsOnRoute>("EgoDynamicsOnRoute")
+  class_<carla::rss::EgoDynamicsOnRoute>("RssEgoDynamicsOnRoute")
       .def_readwrite("timestamp", &carla::rss::EgoDynamicsOnRoute::timestamp)
       .def_readwrite("time_since_epoch_check_start_ms",
                      &carla::rss::EgoDynamicsOnRoute::time_since_epoch_check_start_ms)
@@ -153,6 +153,6 @@ void export_ad_rss() {
                                                                                                       no_init)
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
-           (arg("restriction"), arg("vehicleControl")))
+           (arg("vehicle_control"), arg("restriction"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
       .def(self_ns::str(self_ns::self));
 }

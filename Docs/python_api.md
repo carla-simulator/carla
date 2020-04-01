@@ -1132,21 +1132,86 @@ Parses the axis' orientations to string.
 
 ---
 
+## carla.RssEgoDynamicsOnRoute<a name="carla.RssEgoDynamicsOnRoute"></a>
+Data contained inside a [carla.RssResponse.ego_dynamics_on_route](#carla.RssResponse.ego_dynamics_on_route).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssEgoDynamicsOnRoute.ego_speed"></a>**<font color="#f8805a">ego_speed</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego speed.  
+- <a name="carla.RssEgoDynamicsOnRoute.min_stopping_distance"></a>**<font color="#f8805a">min_stopping_distance</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">libad_physics_python.Distance</a>_)  
+The current minimum stopping distance.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_center"></a>**<font color="#f8805a">ego_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+The considered enu position of the ego vehicle.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_heading"></a>**<font color="#f8805a">ego_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading of the ego vehicle.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_center_within_route"></a>**<font color="#f8805a">ego_center_within_route</font>** (_bool_)  
+Indicating if the ego center is within route.  
+- <a name="carla.RssEgoDynamicsOnRoute.crossing_border"></a>**<font color="#f8805a">crossing_border</font>** (_bool_)  
+Indicating if the vehicle is already crossing one of the lane borders.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_heading"></a>**<font color="#f8805a">route_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading of the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_nominal_center"></a>**<font color="#f8805a">route_nominal_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+The considered nominal center of the current route.  
+- <a name="carla.RssEgoDynamicsOnRoute.heading_diff"></a>**<font color="#f8805a">heading_diff</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading diff towards the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lat"></a>**<font color="#f8805a">route_speed_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego speed component lat in respect to the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lon"></a>**<font color="#f8805a">route_speed_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego speed component lon in respect to the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lat"></a>**<font color="#f8805a">route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego acceleration component lat in respect to the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lon"></a>**<font color="#f8805a">route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego acceleration component lon in respect to the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lat"></a>**<font color="#f8805a">avg_route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego acceleration component lat in respect to the route smoothened by an average filter.  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lon"></a>**<font color="#f8805a">avg_route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego acceleration component lon in respect to the route smoothened by an average filter.  
+
+<h3>Methods</h3>
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssEgoDynamicsOnRoute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssResponse<a name="carla.RssResponse"></a>
+Data contained inside a [carla.RssResponse](#carla.RssResponse).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssResponse.response_valid"></a>**<font color="#f8805a">response_valid</font>** (_bool_)  
+Is the current response data valid.  
+- <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>_)  
+The proper response of the RSS calculation.  
+- <a name="carla.RssResponse.acceleration_restriction"></a>**<font color="#f8805a">acceleration_restriction</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_)  
+The acceleration restrictions of the RSS calculation.  
+- <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>_)  
+The detailed RSS states at the current point in time.  
+- <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
+The current ego vehicle dynamics in respect to the current route.  
+
+<h3>Methods</h3>
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssResponse.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.Sensor<a name="carla.Sensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).             
-     
-  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow:        
-  <b>Receive data on every tick:</b>       
-  - [Gnss sensor](ref_sensors.md#gnss-sensor).        
-  - [IMU sensor](ref_sensors.md#imu-sensor).         
-  - [Radar](ref_sensors.md#radar-sensor).        
-  - [Depth camera](ref_sensors.md#depth-camera).        
-  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).             
-  - [RGB camera](ref_sensors.md#rgb-camera).        
-  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).        
-  <b>Only receive data when triggered:</b>        
-  - [Collision detector](ref_sensors.md#collision-detector).       
-  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).      
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
+
+  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow:
+  <b>Receive data on every tick:</b>
+  - [Gnss sensor](ref_sensors.md#gnss-sensor).
+  - [IMU sensor](ref_sensors.md#imu-sensor).
+  - [Radar](ref_sensors.md#radar-sensor).
+  - [Depth camera](ref_sensors.md#depth-camera).
+  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+  - [RGB camera](ref_sensors.md#rgb-camera).
+  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
+  - [RSS sensor](ref_sensors.md#rss-sensor).
+  <b>Only receive data when triggered:</b>
+  - [Collision detector](ref_sensors.md#collision-detector).
+  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
   - [Obstacle detector](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
@@ -1167,15 +1232,16 @@ Commands the sensor to stop listening for data.
 ---
 
 ## carla.SensorData<a name="carla.SensorData"></a>
-Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. The relation between available sensors and their corresponding data goes like:        
-  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).        
-  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).        
-  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).        
-  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).      
-  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).        
-  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).        
-  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).        
-  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).  
+Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. The relation between available sensors and their corresponding data goes like:
+  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).
+  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).
+  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).
+  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).
+  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).
+  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).
+  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).
+  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).
+  - RSS response: [carla.RssResponse](#carla.RssResponse).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
