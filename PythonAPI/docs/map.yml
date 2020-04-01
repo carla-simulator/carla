@@ -232,6 +232,31 @@
           Specify the length from the road start
       return: carla.Waypoint
     # --------------------------------------
+    - def_name: get_all_landmarks
+      doc: >
+        Get all landmarks in the map. Landmarks retrieved using this method have a null waypoint.
+      return: list(carla.Landmark)
+    # --------------------------------------
+    - def_name: get_all_landmarks_from_id
+      doc: >
+        Get all landmarks with a certain OpenDRIVE id. Landmarks retrieved using this method have a null waypoint.
+      params:
+      - param_name: opendrive_id
+        type: string
+        doc: >
+          The opendrive id of the landmarks.
+      return: list(carla.Landmark)
+    # --------------------------------------
+    - def_name: get_all_landmarks_of_type
+      doc: >
+        Get all landmarks of a specific type. Landmarks retrieved using this method have a null waypoint.
+      params:
+      - param_name: type
+        type: string
+        doc: >
+          The type of the landmarks.
+      return: list(carla.Landmark)
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 

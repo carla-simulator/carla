@@ -132,5 +132,39 @@ namespace client {
     return result;
   }
 
+  std::vector<SharedPtr<Landmark>> Map::GetAllLandmarks() const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      result.emplace_back(
+          new Landmark(nullptr, signal_reference, 0));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>> Map::GetLandmarksFromId(std::string id) const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      if(signal_reference->GetSignalId() == id) {
+        result.emplace_back(
+            new Landmark(nullptr, signal_reference, 0));
+      }
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>> Map::GetAllLandmarksOfType(std::string type) const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      if(signal_reference->GetSignal()->GetType() == type) {
+        result.emplace_back(
+            new Landmark(nullptr, signal_reference, 0));
+      }
+    }
+    return result;
+  }
+
 } // namespace client
 } // namespace carla

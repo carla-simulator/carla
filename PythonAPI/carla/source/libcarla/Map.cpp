@@ -166,6 +166,9 @@ void export_map() {
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
+    .def("get_all_landmarks", CALL_RETURNING_LIST(cc::Map, GetAllLandmarks))
+    .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
+    .def("get_all_landmarks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllLandmarksOfType, std::string), (args("type")))
     .def(self_ns::str(self_ns::self))
   ;
 
