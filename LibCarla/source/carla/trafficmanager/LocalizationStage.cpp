@@ -391,7 +391,29 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
+  bool LocalizationStage::RunStep() {
+
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      // Set flag to true, notify DataReceiver initiate pipeline.
+      run_step.store(true);
+      step_execution_trigger.notify_one();
+    }
+
+    return true;
+  }
+
   void LocalizationStage::DataReceiver() {
+
+    // Wait for external trigger to initiate the pipeline in synchronous mode.
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      while (!run_step.load()) {
+        step_execution_trigger.wait_for(lock, 1ms, [this]() {return run_step.load();});
+      }
+      // Set flag to false, unblock RunStep() call and release mutex lock.
+      run_step.store(false);
+    }
 
     hybrid_physics_mode = parameters.GetHybridPhysicsMode();
 

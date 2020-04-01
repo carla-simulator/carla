@@ -273,7 +273,9 @@ void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {
 }
 
 bool TrafficManagerLocal::SynchronousTick() {
-  return control_stage->RunStep();
+  localization_stage->RunStep();
+  control_stage->RunStep();
+  return true;
 }
 
 carla::client::detail::EpisodeProxy& TrafficManagerLocal::GetEpisodeProxy() {
