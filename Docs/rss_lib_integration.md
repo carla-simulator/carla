@@ -21,7 +21,7 @@ Furthermore, there are additional prerequisites required for building RSS and it
 
 Dependencies provided by Ubunutu (>= 16.04):
 ```sh
-sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libproj-dev
+sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libproj-dev libtbb-dev
 ```
 
 As the dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html) you have to install the following:
