@@ -1796,6 +1796,9 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
     - **Parameters:**
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.  
+    - **Return:** _[carla.Junction](#carla.Junction)_  
 - <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
     - **Parameters:**
