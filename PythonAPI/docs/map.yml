@@ -384,6 +384,11 @@
       doc: >
         Returns a list of waypoints from this to the start of the lane separated by a certain `distance`.
     # --------------------------------------
+    - def_name: get_junction
+      return: carla.Junction
+      doc: >
+        If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.
+    # --------------------------------------
     - def_name: get_landmarks
       params:
       - param_name: distance
