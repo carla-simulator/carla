@@ -1033,6 +1033,19 @@ Get a waypoint if all the parameters passed are correct, otherwise return None.
         - `lane_id` (_int_) – Id of the lane to get the waypoint.  
         - `s` (_float_) – Specify the length from the road start.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
+Get all landmarks in the map. Landmarks retrieved using this method have a null waypoint.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  
+Get all landmarks with a certain OpenDRIVE id. Landmarks retrieved using this method have a null waypoint.  
+    - **Parameters:**
+        - `opendrive_id` (_string_) – The opendrive id of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_of_type"></a>**<font color="#7fb800">get_all_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**type**</font>)  
+Get all landmarks of a specific type. Landmarks retrieved using this method have a null waypoint.  
+    - **Parameters:**
+        - `type` (_string_) – The type of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 
 <h3>Dunder methods</h3>
 - <a name="carla.Map.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
