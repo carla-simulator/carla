@@ -8,6 +8,7 @@
 
 #include "Carla/Actor/ActorSpawnResult.h"
 #include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Sensor/CameraManager.h"
 
 #include "SensorFactory.generated.h"
 
@@ -17,6 +18,8 @@ UCLASS()
 class CARLA_API ASensorFactory : public ACarlaActorFactory
 {
   GENERATED_BODY()
+ 
+public:
 
   /// Retrieve the definitions of all the sensors registered in the
   /// SensorRegistry. Sensors must implement a GetSensorDefinition() static
@@ -26,4 +29,13 @@ class CARLA_API ASensorFactory : public ACarlaActorFactory
   FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) final;
+
+protected:
+
+  void BeginPlay() override;
+
+private:
+
+  // Initialized in BeginPlay().
+  ACameraManager *CameraManager = nullptr;
 };

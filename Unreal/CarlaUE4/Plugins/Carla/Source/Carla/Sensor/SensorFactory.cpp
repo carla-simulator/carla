@@ -10,6 +10,8 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/CameraManager.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
@@ -136,7 +138,19 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     Sensor->SetEpisode(*Episode);
     Sensor->Set(Description);
     Sensor->SetDataStream(GameInstance->GetServer().OpenStream());
+    // Only RGB cameras use token-passing.
+    if (auto sensor = Cast<ASceneCaptureCamera>(Sensor))
+      CameraManager->AddCamera(sensor);
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};
+}
+
+void ASensorFactory::BeginPlay()
+{
+  Super::BeginPlay();
+
+  // Get memory access error if SpawnActor is put in initilization method.
+  // This might be because SensorFactory is spawned in InitGame().
+  CameraManager = GetWorld()->SpawnActor<ACameraManager>(ACameraManager::StaticClass());
 }

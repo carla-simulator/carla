@@ -46,7 +46,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickGroup = TG_PrePhysics;
+  PrimaryActorTick.TickGroup = TG_PostPhysics; // After CameraManager's TG_PrePhysics.
 
   CaptureRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(
       FName(*FString::Printf(TEXT("CaptureRenderTarget_d%d"), SCENE_CAPTURE_COUNTER)));

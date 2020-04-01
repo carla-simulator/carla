@@ -15,10 +15,10 @@
 
 // Define how to capture the scene.
 UENUM()
-enum class CaptureMode : uint8 {
+enum class ECaptureMode : uint8 {
   Always  UMETA(DisplayName = "Always"),
-  Never   UMETA(DisplayName = "Never"),
-  Step    UMETA(DisplayName = "Step")
+  Step    UMETA(DisplayName = "Step"),
+  Never   UMETA(DisplayName = "Never")
 };
 
 /// A sensor that captures images from the scene.
@@ -40,9 +40,16 @@ protected:
 
 private:
 
-  // Whether capture in this frame.
+  friend class ACameraManager;
+
+  // Only when has token can this camera capture. Higher priority than CaptureMode.
+  UPROPERTY(EditAnywhere)
+  bool bToken = true;
+
+  // Whether to capture in this frame, only used to implement step mode.
+  UPROPERTY(EditAnywhere)
   bool bCapture = true;
 
   UPROPERTY(EditAnywhere)
-  CaptureMode captureMode = CaptureMode::Always;
+  ECaptureMode CaptureMode = ECaptureMode::Always;
 };

@@ -27,14 +27,17 @@ void ASceneCaptureCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  if (!bToken)
+    return;
+
   // Suprisingly, originally RenderThread execute FWritePixels_SendPixelsInRenderThread
   // before CaptureCommand (analyzed using Optick), which means the client always see the previous frame.
-  switch (captureMode) {
-    case CaptureMode::Always:
+  switch (CaptureMode) {
+    case ECaptureMode::Always:
       CaptureScene();
       FPixelReader::SendPixelsInRenderThread(*this);
       break;
-    case CaptureMode::Step:
+    case ECaptureMode::Step:
       if (bCapture)
       {
           CaptureScene();
@@ -42,6 +45,7 @@ void ASceneCaptureCamera::Tick(float DeltaTime)
       }
       bCapture = !bCapture;
       break;
+    case ECaptureMode::Never:
     default:
       break;
   }
