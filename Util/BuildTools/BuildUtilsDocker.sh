@@ -40,6 +40,9 @@ cmake -G "Ninja" \
     -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
     ..
 
+# copy the shared object 'libfbxsdk.so' to 'dist' folder
+cp "${FBX2OBJ_DEP_FOLDER}/lib/gcc/x64/release/libfbxsdk.so" ${FBX2OBJ_DIST}
+
 set +e
 
 ninja
