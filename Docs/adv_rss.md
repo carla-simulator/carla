@@ -1,42 +1,117 @@
-<h1>AD Responsibility Sensitive Safety model (RSS) integration</h1>
+# RSS Sensor
 
-> _This feature is a work in progress, only a Linux build variant is available._
+CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly.  
 
-This feature integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) into the CARLA Client library.
+* [__Overview__](#overview)  
+* [__Compilation__](#compilation)  
+	* [Dependencies](#dependencies)  
+	* [Build](#build)  
+* [__Current state__](#current-state)  
+	* [RssSensor](#rsssensor)  
+	* [RssRestrictor](#rssrestrictor)  
 
-**As the _ad-rss-lib_ library is licensed under LGPL-2.1-only, building the variant which includes this feature and therefor the library might have some implications to the outgoing license of the resulting binary!**
+!!! Important
+    This feature is a work in progress. Right now, it is only available for the Linux build.
 
-It provides basic implementations of both an **RssSensor**, the situation analysis and response generation by the **ad-rss-lib** and an basic **RssRestrictor** class which applies the restrictions to given vehicle commands.
+---
+## Overview
 
-The **RssSensor** results can be visualized within CARLA.
-[![RSS safety sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
+The RSS library implements a mathematical model for safety assurance. It receives sensor information, and provides restrictions to the controllers of a vehicle. To sum up, the RSS module uses the sensor data to define __situations__. A situation describes the state of the ego vehicle with an element of the environment. For each situation, safety checks are made, and a proper response is calculated. The overall response is the result of all of the combined. For specific information on the library, read the [documentation](https://intel.github.io/ad-rss-lib/), especially the [Background section](https://intel.github.io/ad-rss-lib/ad_rss/Overview/). 
 
+This is implemented in CARLA using two elements.  
 
-Please see [C++ Library for Responsibility Sensitive Safety documentation](https://intel.github.io/ad-rss-lib/) and especially the [Background documentation](https://intel.github.io/ad-rss-lib/documentation/Main.html) for further details.
+* __RssSensor__ is in charge of the situation analysis, and response generation using the _ad-rss-lib_.  
+* __RssRestrictor__ applies the response by restricting the commands of the vehicle.  
 
+The following image sketches the integration of **RSS** into the CARLA architecture.  
 
-<h2>Compilation</h2>
+![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
 
-RSS integration is a Linux-only build variant.
-Please see [Build System](dev/build_system.md) for general information.
-*LibCarla* with RSS has the be explicitly compiled by
+__1. The server.__  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a camera image to the client.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the RssSensor with world data.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a physics model of the vehicle to the RssRestrictor.  
+__2. The client.__  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the _RssSensor_ with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends to the _RssResrictor_ an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).  
+__3. The RssSensor.__  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the _ad-rsslib_ to extract situations, do safety checks, and generate a response.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the _RssRestrictor_ a response containing the proper response and aceleration restrictions to be applied.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Asks the server to do some debug drawings to visualize the results of the calculations.  
+__4. The RssRestrictor__  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Applies the response to the physics model and sends the server the result.  
+
+[![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
+<div style="text-align: right"><i>Visualization of the RssSensor results.</i></div>
+
+---
+## Compilation
+
+The RSS integration has to be built aside from the rest due to __asdf__.  As a reminder, the feature is only available for the Linux build so far.  
+
+### Dependencies
+
+There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING)) to know more about this.
+
+Dependencies provided by Ubunutu (>= 16.04).  
+```sh
+sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libproj-dev libtbb-dev
+```
+
+The dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html), so it has to be installed.  
+```sh
+pip3 install --user -U colcon-common-extensions
+```
+
+There are some additional dependencies for the Python bindings.
+```sh
+sudo apt-get install castxml
+pip install --user pygccxml
+pip install --user https://bitbucket.org/ompl/pyplusplus/get/1.8.1.zip
+```
+
+### Build
+
+Once this is done, the full set of dependencies and RSS components can be built.
+
+* Compile LibCarla to work with RSS.  
 
 ```sh
 make LibCarla.client.rss
 ```
 
-The *PythonAPI* with RSS is built by
+* Compile the PythonAPI to include the RSS feature. 
 
 ```sh
 make PythonAPI.rss
 ```
 
+---
+## Current state
 
-<h2>Current state</h2>
-<h3>RssSensor</h3>
-The RssSensor is currently only considering vehicles within the same road segment, but on all lanes within that segment. Intersections are not yet supported!
+### RssSensor
 
-<h3>RssRestrictor</h3>
-The current implementation of the RssRestrictor checks and potentially modifies a given *VehicleControl* generated by e.g. and Automated Driving stack or user imput via a *manual_control* client (see the *PythonAPI/examples/manual_control_rss.py*).
+The RssSensor supports [ad-rss-lib v3.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections and [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support.
 
-Due to the structure of *VehicleControl* (just throttle, brake, streering values for the car under control), the Restrictor modifies and sets these values to best reach the desired accelerations or decelerations by a given restriction. Due to car physics and the simple control options these might not be met.
+### RssRestrictor
+
+Due to the stucture of [carla.VehicleControl](python_api.md#carla.VehicleControl) objects, the restrictions applied have certain limitations.  
+
+These controllers include `throttle`, `brake` and `streering` values. The __RssRestrictor__ will modify these to best reach the desired accelerations or decelerations by a given response. However, due to car physics and the simple control options these might not be met. The __RssRestrictor__ intervenes in lateral direction simply by counter steering towards the parallel lane direction. The brake will be activated if deceleration requested by RSS. This depends on vehicle mass and brake torques provided by the [carla.Vehicle](python_api.md#carla.Vehicle).
+
+!!! Note
+    In an automated vehicle controller it might be possible to adapt the planned trajectory to the restrictions. A fast control loop (>1KHz) can be used to ensure these are followed.
+
+---
+
+That sets the basics regarding the RSS sensor in CARLA. Find out more about the specific attributes and parameters in the [sensor reference](ref_sensors.md#rss-sensor). 
+
+
+Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>

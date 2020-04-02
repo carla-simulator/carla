@@ -63,6 +63,8 @@ CARLA forum</a>
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
+    [__RSS sensor__](adv_rss.md)
+        — An implementation of RSS in the CARLA client library.  
     [__Synchrony and time-step__](adv_synchrony_timestep.md)
         — Client-server communication and simulation time.  
     [__Traffic Manager__](adv_traffic_manager.md)
