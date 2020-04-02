@@ -352,17 +352,17 @@ class KeyboardControl(object):
                     if self._world and self._world.rss_sensor:
                         visualization_mode = self._world.rss_sensor.sensor.visualization_mode
                         visualization_mode = visualization_mode + 1
-                        if visualization_mode > carla.VisualizationMode.All:
-                            visualization_mode = carla.VisualizationMode.Off
-                        self._world.rss_sensor.sensor.visualization_mode = carla.VisualizationMode(visualization_mode)
+                        if visualization_mode > carla.RssVisualizationMode.All:
+                            visualization_mode = carla.RssVisualizationMode.Off
+                        self._world.rss_sensor.sensor.visualization_mode = carla.RssVisualizationMode(visualization_mode)
                 elif event.key == K_b:
                     if self._world and self._world.rss_sensor:
-                        if self._world.rss_sensor.sensor.road_boundaries_mode == carla.RoadBoundariesMode.Off:
-                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
-                            print("carla.RoadBoundariesMode.On")
+                        if self._world.rss_sensor.sensor.road_boundaries_mode == carla.RssRoadBoundariesMode.Off:
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RssRoadBoundariesMode.On
+                            print("carla.RssRoadBoundariesMode.On")
                         else:
-                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RoadBoundariesMode.Off
-                            print("carla.RoadBoundariesMode.Off")
+                            self._world.rss_sensor.sensor.road_boundaries_mode = carla.RssRoadBoundariesMode.Off
+                            print("carla.RssRoadBoundariesMode.Off")
                 elif event.key == K_g:
                     if self._world and self._world.rss_sensor:
                         self._world.rss_sensor.drop_route()
@@ -802,9 +802,9 @@ class RssSensor(object):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: RssSensor._on_rss_response(weak_self, event))
-        self.sensor.visualization_mode = carla.VisualizationMode.All
+        self.sensor.visualization_mode = carla.RssVisualizationMode.All
         self.sensor.visualize_results = True
-        self.sensor.road_boundaries_mode = carla.RoadBoundariesMode.On
+        self.sensor.road_boundaries_mode = carla.RssRoadBoundariesMode.On
         self.set_default_parameters()
         self.sensor.reset_routing_targets()
         if routing_targets:
