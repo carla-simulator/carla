@@ -1012,6 +1012,24 @@ Converts a given `location`, a point in the simulation, to a [carla.GeoLocation]
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
     - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
+- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
+Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  
+Returns the landmarks with a certain OpenDRIVE ID. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Parameters:**
+        - `opendrive_id` (_string_) – The OpenDRIVE ID of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_of_type"></a>**<font color="#7fb800">get_all_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**type**</font>)  
+Returns the landmarks of a specific type. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Parameters:**
+        - `type` (_string_) – The type of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – A landmark that belongs to the group.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Transform](#carla.Transform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
@@ -1027,10 +1045,10 @@ Returns a waypoint that can be located in an exact location or translated to the
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Limits the search for nearest lane to one or various lane types that can be flagged.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
-Get a waypoint if all the parameters passed are correct, otherwise return None.  
+Returns a waypoint if all the parameters passed are correct. Otherwise, returns __None__.  
     - **Parameters:**
-        - `road_id` (_int_) – Id of the road from where getting the waypoint.  
-        - `lane_id` (_int_) – Id of the lane to get the waypoint.  
+        - `road_id` (_int_) – ID of the road to get the waypoint.  
+        - `lane_id` (_int_) – ID of the lane to get the waypoint.  
         - `s` (_float_) – Specify the length from the road start.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
@@ -1783,6 +1801,9 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
     - **Parameters:**
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.  
+    - **Return:** _[carla.Junction](#carla.Junction)_  
 - <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
     - **Parameters:**
