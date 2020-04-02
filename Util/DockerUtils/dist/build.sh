@@ -1,3 +1,6 @@
+# prepare to load .SO from current folder
+export LD_LIBRARY_PATH="./"
+
 # convert FBX to OBJ
 chmod +x FBX2OBJ
 ./FBX2OBJ "$1.fbx" "$1.obj"
