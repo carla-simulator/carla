@@ -118,11 +118,11 @@ void export_ad_rss() {
       .def_readwrite("avg_route_accel_lon", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lon)
       .def(self_ns::str(self_ns::self));
 
-  enum_<carla::rss::RoadBoundariesMode>("RoadBoundariesMode")
+  enum_<carla::rss::RoadBoundariesMode>("RssRoadBoundariesMode")
       .value("Off", carla::rss::RoadBoundariesMode::Off)
       .value("On", carla::rss::RoadBoundariesMode::On);
 
-  enum_<carla::rss::VisualizationMode>("VisualizationMode")
+  enum_<carla::rss::VisualizationMode>("RssVisualizationMode")
       .value("Off", carla::rss::VisualizationMode::Off)
       .value("RouteOnly", carla::rss::VisualizationMode::RouteOnly)
       .value("VehicleStateOnly", carla::rss::VisualizationMode::VehicleStateOnly)
@@ -144,7 +144,7 @@ void export_ad_rss() {
       .add_property("road_boundaries_mode", &GetRoadBoundariesMode, &cc::RssSensor::SetRoadBoundariesMode)
       .add_property("visualization_mode", &GetVisualizationMode, &cc::RssSensor::SetVisualizationMode)
       .add_property("routing_targets", &GetRoutingTargets)
-      .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget)
+      .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget, (arg("routing_target")))
       .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets)
       .def("drop_route", &cc::RssSensor::DropRoute)
       .def(self_ns::str(self_ns::self));
