@@ -346,6 +346,7 @@
     # --------------------------------------
 
   - class_name: RssResponse
+    parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
       Class that contains the output of a carla.RssSensor. This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
@@ -357,7 +358,7 @@
     - var_name: response_valid
       type: bool
       doc: >
-        States if the current response data is valid.
+        States if the response is valid. It is __False__ if calculations failed or an exception occured. 
     # --------------------------------------
     - var_name: proper_response
       type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>
@@ -372,7 +373,7 @@
     - var_name: rss_state_snapshot
       type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>
       doc: >
-        Detailed RSS states at the current point in time.
+        Detailed RSS states at the current moment in time.
     # --------------------------------------
     - var_name: ego_dynamics_on_route
       type: carla.RssEgoDynamicsOnRoute
@@ -386,7 +387,7 @@
   - class_name: RssEgoDynamicsOnRoute
     # - DESCRIPTION ------------------------
     doc: >
-      Part of the data contained inside a carla.RssResponse describing the state of the vehicle. The parameters include its current dynamics, and how do these relate with the target route. 
+      Part of the data contained inside a carla.RssResponse describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: ego_speed

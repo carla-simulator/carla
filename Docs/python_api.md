@@ -1097,17 +1097,6 @@ Retrieves the number of entries generated, same as **<font color="#7fb800">\__st
 
 ---
 
-## carla.RoadBoundariesMode<a name="carla.RoadBoundariesMode"></a>
-Enum declarations used in [carla.RssSensor](#carla.RssSensor) to enable or disable the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. In summary, this feature considers the road boundaries as virtual objects. The minimum safety distance check is applied to these virtual walls, in order to make sure the vehicle does not drive off the road.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.RoadBoundariesMode.On"></a>**<font color="#f8805a">On</font>**  
-Enables the _stay on road_ feature.  
-- <a name="carla.RoadBoundariesMode.Off"></a>**<font color="#f8805a">Off</font>**  
-Disables the _stay on road_ feature.  
-
----
-
 ## carla.Rotation<a name="carla.Rotation"></a>
 Class that represents a 3D rotation and therefore, an orientation in space.
 
@@ -1144,7 +1133,7 @@ Parses the axis' orientations to string.
 ---
 
 ## carla.RssEgoDynamicsOnRoute<a name="carla.RssEgoDynamicsOnRoute"></a>
-Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how do these relate with the target route.  
+Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RssEgoDynamicsOnRoute.ego_speed"></a>**<font color="#f8805a">ego_speed</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
@@ -1186,19 +1175,19 @@ The ego acceleration component _lon_ regarding the route smoothened by an averag
 ---
 
 ## carla.RssResponse<a name="carla.RssResponse"></a>
-Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
 
 A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [carla.VehicleControl](#carla.VehicleControl) of the vehicle.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RssResponse.response_valid"></a>**<font color="#f8805a">response_valid</font>** (_bool_)  
-States if the current response data is valid.  
+States if the response is valid. It is __False__ if calculations failed or an exception occured.  
 - <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>_)  
 The proper response that the RSS calculated for the vehicle.  
 - <a name="carla.RssResponse.acceleration_restriction"></a>**<font color="#f8805a">acceleration_restriction</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_)  
 Acceleration restrictions to be applied, according to the RSS calculation.  
 - <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>_)  
-Detailed RSS states at the current point in time.  
+Detailed RSS states at the current moment in time.  
 - <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
 Current ego vehicle dynamics regarding the route.  
 
@@ -1214,54 +1203,68 @@ These objects apply restrictions to a [carla.VehicleControl](#carla.VehicleContr
 
 <h3>Methods</h3>
 - <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**restriction**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  
-Applies the safety restrictions given by a [rss sensor] to a [carla.VehicleControl](#carla.VehicleControl).  
+Applies the safety restrictions given by a [carla.RssSensor](#carla.RssSensor) to a [carla.VehicleControl](#carla.VehicleControl).  
     - **Parameters:**
         - `vehicle_control` (_[carla.VehicleControl](#carla.VehicleControl)_) – The input vehicle control to be restricted.  
-        - `restriction` (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_) – Part of the data provided by the RssSensor. Contains restrictions to be applied to the acceleration of the vehicle.  
-        - `ego_dynamics_on_route` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – Part of the data provided by the RssSensor.  
+        - `restriction` (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_) – Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.  
+        - `ego_dynamics_on_route` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – Part of the response generated by the sensor. Contains dynamics and heading of the vehicle regarding its route.  
         - `vehicle_physics` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – The current physics of the vehicle. Used to apply the restrictions properly.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
 
 ---
 
+## carla.RssRoadBoundariesMode<a name="carla.RssRoadBoundariesMode"></a>
+Enum declaration used in [carla.RssSensor](#carla.RssSensor) to enable or disable the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. In summary, this feature considers the road boundaries as virtual objects. The minimum safety distance check is applied to these virtual walls, in order to make sure the vehicle does not drive off the road.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssRoadBoundariesMode.On"></a>**<font color="#f8805a">On</font>**  
+Enables the _stay on road_ feature.  
+- <a name="carla.RssRoadBoundariesMode.Off"></a>**<font color="#f8805a">Off</font>**  
+Disables the _stay on road_ feature.  
+
+---
+
 ## carla.RssSensor<a name="carla.RssSensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of how it works.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.  
 
 The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_libad_rss_python.RssDynamicsoolean_)  
+- <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
 States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle.  
-- <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_libad_rss_python.RssDynamicsoolean_)  
+- <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
 States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles.  
-- <a name="carla.RssSensor.road_boundaries_mode"></a>**<font color="#f8805a">road_boundaries_mode</font>** (_[carla.RoadBoundariesMode](#carla.RoadBoundariesMode)_)  
+- <a name="carla.RssSensor.road_boundaries_mode"></a>**<font color="#f8805a">road_boundaries_mode</font>** (_[carla.RssRoadBoundariesMode](#carla.RssRoadBoundariesMode)_)  
 Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __On__.  
-- <a name="carla.RssSensor.visualization_mode"></a>**<font color="#f8805a">visualization_mode</font>** (_[carla.VisualizationMode](#carla.VisualizationMode)_)  
-Sets the visualization of the RSS on the server side. By default is All. These drawings may delay de RSS so it is best to set this to __Off__ when evaluation RSS performance.  
+- <a name="carla.RssSensor.visualization_mode"></a>**<font color="#f8805a">visualization_mode</font>** (_[carla.RssVisualizationMode](#carla.RssVisualizationMode)_)  
+Sets the visualization of the RSS on the server side. By default is __All__. These drawings may delay de RSS so it is best to set this to __Off__ when evaluating RSS performance.  
 - <a name="carla.RssSensor.routing_targets"></a>**<font color="#f8805a">routing_targets</font>** (_vector<[carla.Transform](#carla.Transform)>_)  
-The current list of targets considered to route the vehicle. If no routing targets are defined, a random route is selected automatically.  
-- <a name="carla.RssSensor.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_[carla.Timestamp](#carla.Timestamp)_)  
-???  
-- <a name="carla.RssSensor.response_valid"></a>**<font color="#f8805a">response_valid</font>**  
-???  
-- <a name="carla.RssSensor.proper_response"></a>**<font color="#f8805a">proper_response</font>**  
-???  
-- <a name="carla.RssSensor.acceleration_restriction"></a>**<font color="#f8805a">acceleration_restriction</font>**  
-???  
-- <a name="carla.RssSensor.assertive_parameters"></a>**<font color="#f8805a">assertive_parameters</font>**  
-???  
-- <a name="carla.RssSensor.current_display_parameters"></a>**<font color="#f8805a">current_display_parameters</font>**  
-???  
+The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.  
 
 <h3>Methods</h3>
-- <a name="carla.RssSensor.append_routing_target"></a>**<font color="#7fb800">append_routing_target</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**???**</font>)  
+- <a name="carla.RssSensor.append_routing_target"></a>**<font color="#7fb800">append_routing_target</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**routing_target**</font>)  
 Appends a new target position to the current route of the vehicle.  
     - **Parameters:**
-        - `???` (_[carla.Transform](#carla.Transform)_) – New target point for the route. These points are best selected after the intersections to force the route to take the desired turn.  
+        - `routing_target` (_[carla.Transform](#carla.Transform)_) – New target point for the route. Choose these after the intersections to force the route to take the desired turn.  
 - <a name="carla.RssSensor.reset_routing_targets"></a>**<font color="#7fb800">reset_routing_targets</font>**(<font color="#00a6ed">**self**</font>)  
-Resets the current list of routing targets.  
+Erases the targets that have been appended to the route.  
 - <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
-Drop the current selected route.  
+Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssVisualizationMode<a name="carla.RssVisualizationMode"></a>
+Enum declaration used to state the visualization RSS calculations server side. Depending on these, the [carla.RssSensor](#carla.RssSensor) will use a [carla.DebugHelper](#carla.DebugHelper) to draw different elements. These drawings take some time and might delay the RSS responses. It is best to disable them when evaluating RSS performance.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssVisualizationMode.Off"></a>**<font color="#f8805a">Off</font>**  
+- <a name="carla.RssVisualizationMode.RouteOnly"></a>**<font color="#f8805a">RouteOnly</font>**  
+- <a name="carla.RssVisualizationMode.VehicleStateOnly"></a>**<font color="#f8805a">VehicleStateOnly</font>**  
+- <a name="carla.RssVisualizationMode.VehicleStateAndRoute"></a>**<font color="#f8805a">VehicleStateAndRoute</font>**  
+- <a name="carla.RssVisualizationMode.All"></a>**<font color="#f8805a">All</font>**  
 
 ---
 
@@ -1769,18 +1772,6 @@ VehiclePhysicsControl constructor.
 - <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
 - <a name="carla.VehiclePhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
 - <a name="carla.VehiclePhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
-## carla.VisualizationMode<a name="carla.VisualizationMode"></a>
-Enum declaration used to state the visualization RSS calculations server side. Depending on these, the [carla.RssSensor](#carla.RssSensor) will use a [carla.DebugHelper](#carla.DebugHelper) to draw different elements. These drawings take some time and might delay the RSS responses. It is best to disable them when evaluating RSS performance.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.VisualizationMode.Off"></a>**<font color="#f8805a">Off</font>**  
-- <a name="carla.VisualizationMode.RouteOnly"></a>**<font color="#f8805a">RouteOnly</font>**  
-- <a name="carla.VisualizationMode.VehicleStateOnly"></a>**<font color="#f8805a">VehicleStateOnly</font>**  
-- <a name="carla.VisualizationMode.VehicleStateAndRoute"></a>**<font color="#f8805a">VehicleStateAndRoute</font>**  
-- <a name="carla.VisualizationMode.All"></a>**<font color="#f8805a">All</font>**  
 
 ---
 

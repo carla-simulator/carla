@@ -28,18 +28,21 @@ The following image sketches the integration of **RSS** into the CARLA architect
 ![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
 
 __1. The server.__  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a camera image to the client.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a camera image to the client. <small>(Only if the client needs visualization).</small>  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the RssSensor with world data.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a physics model of the vehicle to the RssRestrictor.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a physics model of the vehicle to the RssRestrictor. <small>(Only if the default values are overwritten).</small>  
 __2. The client.__  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the _RssSensor_ with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends to the _RssResrictor_ an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).  
 __3. The RssSensor.__  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the _ad-rsslib_ to extract situations, do safety checks, and generate a response.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the _ad-rss-lib_ to extract situations, do safety checks, and generate a response.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the _RssRestrictor_ a response containing the proper response and aceleration restrictions to be applied.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Asks the server to do some debug drawings to visualize the results of the calculations.  
 __4. The RssRestrictor__  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Applies the response to the physics model and sends the server the result.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.  
+
+!!! Important
+    Debug drawings can delay the RSS response, so they should be disabled during automated RSS evaluations. Use [carla.RssVisualizationMode](python_api.md#carla.RssVisualizationMode) to change the visualization settings.
 
 [![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
 <div style="text-align: right"><i>Visualization of the RssSensor results.</i></div>
@@ -47,7 +50,9 @@ __4. The RssRestrictor__
 ---
 ## Compilation
 
-The RSS integration has to be built aside from the rest due to __asdf__.  As a reminder, the feature is only available for the Linux build so far.  
+The RSS integration has to be built aside from the rest of CARLA. The __ad-rss-lib__ comes with an LGPL-2.1 open-source license that creates conflict. It has to be linked statically into _libCarla_.  
+
+As a reminder, the feature is only available for the Linux build so far.  
 
 ### Dependencies
 
@@ -86,18 +91,25 @@ make LibCarla.client.rss
 make PythonAPI.rss
 ```
 
+* As an alternative, a package can be built directly.  
+```sh
+make package.rss
+```
+
 ---
 ## Current state
 
 ### RssSensor
 
-The RssSensor supports [ad-rss-lib v3.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections and [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support.
+[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v3.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections and [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support.
+
+So far, the server provides the sensor with ground truth data of the surroundings that includes the state of other vehicles and traffic lights. Future improvements of this feature will add to the equation pedestrians, and more information of the OpenDRIVE map among others.  
 
 ### RssRestrictor
 
-Due to the stucture of [carla.VehicleControl](python_api.md#carla.VehicleControl) objects, the restrictions applied have certain limitations.  
+When the client calls for it, the [__carla.RssRestrictor__](python_api.md#carla.RssRestrictor) will modify the vehicle controller to best reach the desired accelerations or decelerations by a given response.  
 
-These controllers include `throttle`, `brake` and `streering` values. The __RssRestrictor__ will modify these to best reach the desired accelerations or decelerations by a given response. However, due to car physics and the simple control options these might not be met. The __RssRestrictor__ intervenes in lateral direction simply by counter steering towards the parallel lane direction. The brake will be activated if deceleration requested by RSS. This depends on vehicle mass and brake torques provided by the [carla.Vehicle](python_api.md#carla.Vehicle).
+Due to the stucture of [carla.VehicleControl](python_api.md#carla.VehicleControl) objects, the restrictions applied have certain limitations. These controllers include `throttle`, `brake` and `streering` values. However, due to car physics and the simple control options these might not be met. The restriction intervenes in lateral direction simply by counter steering towards the parallel lane direction. The brake will be activated if deceleration requested by RSS. This depends on vehicle mass and brake torques provided by the [carla.Vehicle](python_api.md#carla.Vehicle).
 
 !!! Note
     In an automated vehicle controller it might be possible to adapt the planned trajectory to the restrictions. A fast control loop (>1KHz) can be used to ensure these are followed.
