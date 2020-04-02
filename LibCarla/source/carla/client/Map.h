@@ -91,6 +91,9 @@ namespace client {
     /// Returns all the landmarks in the map of a specific type
     std::vector<SharedPtr<Landmark>> GetAllLandmarksOfType(std::string type) const;
 
+    /// Returns all the landmarks in the same group including this one
+    std::vector<SharedPtr<Landmark>> GetLandmarkGroup(const Landmark &landmark) const;
+
   private:
 
     const rpc::MapInfo _description;

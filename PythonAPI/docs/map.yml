@@ -208,6 +208,16 @@
           The type of the landmarks.
       return: list(carla.Landmark)
     # --------------------------------------
+    - def_name: get_landmark_group
+      doc: >
+        Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          A landmark that belongs to the group.
+      return: list(carla.Landmark)
+    # --------------------------------------
     - def_name: get_spawn_points
       return: list(carla.Transform)
       doc: >
