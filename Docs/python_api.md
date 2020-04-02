@@ -1025,6 +1025,11 @@ Returns the landmarks of a specific type. Landmarks retrieved using this method 
     - **Parameters:**
         - `type` (_string_) – The type of the landmarks.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – A landmark that belongs to the group.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Transform](#carla.Transform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
