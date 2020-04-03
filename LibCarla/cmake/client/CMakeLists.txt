@@ -3,7 +3,9 @@ project(libcarla-client)
 
 # Enable/Install RSS VARIANT
 option (BUILD_RSS_VARIANT "Enables ad-rss-lib based RSS components" OFF)
+set(carla_target_postfix "")
 if (BUILD_RSS_VARIANT)
+  set(carla_target_postfix "_rss")
   set(ADRSS_INCLUDE_DIRS)
   set(ADRSS_LIBS)
   find_package(spdlog CONFIG REQUIRED
@@ -246,40 +248,40 @@ install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
+
 if (LIBCARLA_BUILD_RELEASE)
+  add_library(carla_client${carla_target_postfix} STATIC ${libcarla_sources})
 
-  add_library(carla_client STATIC ${libcarla_sources})
-
-  target_include_directories(carla_client SYSTEM PRIVATE
+  target_include_directories(carla_client${carla_target_postfix} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
-    target_compile_definitions(carla_client PRIVATE RSS_ENABLED RSS_USE_TBB)
-    target_link_libraries(carla_client ${ADRSS_LIBS} tbb)
-    target_include_directories(carla_client SYSTEM PRIVATE
+    target_compile_definitions(carla_client${carla_target_postfix} PRIVATE RSS_ENABLED RSS_USE_TBB)
+    target_link_libraries(carla_client${carla_target_postfix} ${ADRSS_LIBS} tbb)
+    target_include_directories(carla_client${carla_target_postfix} SYSTEM PRIVATE
       ${ADRSS_INCLUDE_DIRS})
   endif()
 
-  install(TARGETS carla_client DESTINATION lib)
+  install(TARGETS carla_client${carla_target_postfix} DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+    set_target_properties(carla_client${carla_target_postfix} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Recast.lib")
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Detour.lib")
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/DetourCrowd.lib")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/DetourCrowd.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
     endif()
 
-    set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
+    set_target_properties(carla_client${carla_target_postfix} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
 
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
-    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
   endif (WIN32)
 
@@ -287,41 +289,41 @@ endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
-  add_library(carla_client_debug STATIC ${libcarla_sources})
+  add_library(carla_client${carla_target_postfix}_debug STATIC ${libcarla_sources})
 
-  target_include_directories(carla_client_debug SYSTEM PRIVATE
+  target_include_directories(carla_client${carla_target_postfix}_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
-    target_compile_definitions(carla_client_debug PRIVATE RSS_ENABLED RSS_USE_TBB)
-    target_link_libraries(carla_client_debug ${ADRSS_LIBS} tbb)
-    target_include_directories(carla_client_debug SYSTEM PRIVATE
+    target_compile_definitions(carla_client${carla_target_postfix}_debug PRIVATE RSS_ENABLED RSS_USE_TBB)
+    target_link_libraries(carla_client${carla_target_postfix}_debug ${ADRSS_LIBS} tbb)
+    target_include_directories(carla_client${carla_target_postfix}_debug SYSTEM PRIVATE
       ${ADRSS_INCLUDE_DIRS})
   endif()
 
-  install(TARGETS carla_client_debug DESTINATION lib)
+  install(TARGETS carla_client${carla_target_postfix}_debug DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
-    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+    set_target_properties(carla_client${carla_target_postfix}_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
 
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Recast.lib")
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Detour.lib")
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/DetourCrowd.lib")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/DetourCrowd.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_CLIENT)
       set(CMAKE_CXX_FLAGS_DEBUG_CLIENT ${CMAKE_CXX_FLAGS_DEBUG})
     endif()
 
-    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG_CLIENT}")
+    set_target_properties(carla_client${carla_target_postfix}_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG_CLIENT}")
 
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
-    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
 
   endif (WIN32)
 
-  target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  target_compile_definitions(carla_client${carla_target_postfix}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()
