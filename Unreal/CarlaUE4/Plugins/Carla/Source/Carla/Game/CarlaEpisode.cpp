@@ -130,9 +130,17 @@ static FString BuildRecastBuilderFile()
 
 bool UCarlaEpisode::LoadNewOpendriveEpisode(
     const FString &OpenDriveString,
-    float Resolution,
+    float VertexDistance,
     float WallHeight,
     float AdditionalWidth)
+{
+  return LoadNewOpendriveEpisode(OpenDriveString,
+      carla::rpc::OpendriveGenerationParameters(VertexDistance, WallHeight, AdditionalWidth, true));
+}
+
+bool UCarlaEpisode::LoadNewOpendriveEpisode(
+    const FString &OpenDriveString,
+    const carla::rpc::OpendriveGenerationParameters &Params)
 {
   if (OpenDriveString.IsEmpty())
   {
@@ -152,7 +160,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   }
 
   // Generate the OBJ (as string)
-  const auto RoadMesh = CarlaMap->GenerateMesh(Resolution);
+  const auto RoadMesh = CarlaMap->GenerateMesh(Params.vertex_distance);
   const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
   const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
@@ -185,12 +193,22 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   const FString AbsoluteCONFPath = FPaths::ConvertRelativePathToFull(
       FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf");
 
+  FString MeshVisibilityStr = "true";
+  if(Params.enable_mesh_visibility)
+  {
+    MeshVisibilityStr = "true";
+  }
+  else
+  {
+    MeshVisibilityStr = "false";
+  }
   // Build the mesh generation config file
   const FString ConfigData = FString::Printf(
-      TEXT("resolution=%s\nwall_height=%s\nadditional_width=%s\n"),
-      *FString::SanitizeFloat(Resolution),
-      *FString::SanitizeFloat(WallHeight),
-      *FString::SanitizeFloat(AdditionalWidth));
+      TEXT("resolution=%s\nwall_height=%s\nadditional_width=%s\nmesh_visibility=%s"),
+      *FString::SanitizeFloat(Params.vertex_distance),
+      *FString::SanitizeFloat(Params.wall_height),
+      *FString::SanitizeFloat(Params.additional_width),
+      *MeshVisibilityStr);
 
   // Save the config file
   FFileHelper::SaveStringToFile(
