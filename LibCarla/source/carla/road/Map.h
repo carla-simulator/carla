@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
-#include "carla/geom/Transform.h"
-#include "carla/road/MapData.h"
 #include "carla/geom/Mesh.h"
-#include "carla/road/RoadTypes.h"
+#include "carla/geom/Rtree.h"
+#include "carla/geom/Transform.h"
+#include "carla/NonCopyable.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
-#include "carla/geom/Rtree.h"
+#include "carla/road/MapData.h"
+#include "carla/road/RoadTypes.h"
 
 #include <boost/optional.hpp>
 

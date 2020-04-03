@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -7,15 +7,16 @@
 #include "carla/road/Map.h"
 
 #include "carla/Exception.h"
+#include "carla/geom/Math.h"
+#include "carla/geom/MeshFactory.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
-#include "carla/road/element/RoadInfoGeometry.h"
-#include "carla/road/element/RoadInfoLaneWidth.h"
-#include "carla/road/element/RoadInfoMarkRecord.h"
-#include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
+#include "carla/road/element/RoadInfoGeometry.h"
+#include "carla/road/element/RoadInfoLaneOffset.h"
+#include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSignal.h"
-#include "carla/geom/Math.h"
 
 #include <stdexcept>
 
@@ -141,39 +142,6 @@ namespace road {
     }
   }
 
-  /// Returns a pair containing first = width, second = tangent,
-  /// for an specific Lane given an s and a iterator over lanes
-  template <typename T>
-  static std::pair<double, double> ComputeTotalLaneWidth(
-      const T container,
-      const double s,
-      const LaneId lane_id) {
-
-    // lane_id can't be 0
-    RELEASE_ASSERT(lane_id != 0);
-
-    const bool negative_lane_id = lane_id < 0;
-    double dist = 0.0;
-    double tangent = 0.0;
-    for (const auto &lane : container) {
-      auto info = lane.second.template GetInfo<RoadInfoLaneWidth>(s);
-      RELEASE_ASSERT(info != nullptr);
-      const auto current_polynomial = info->GetPolynomial();
-      auto current_dist = current_polynomial.Evaluate(s);
-      auto current_tang = current_polynomial.Tangent(s);
-      if (lane.first != lane_id) {
-        dist += negative_lane_id ? current_dist : -current_dist;
-        tangent += current_tang;
-      } else if (lane.first == lane_id) {
-        current_dist *= 0.5;
-        dist += negative_lane_id ? current_dist : -current_dist;
-        tangent += current_tang * 0.5;
-        break;
-      }
-    }
-    return std::make_pair(dist, tangent);
-  }
-
   /// Assumes road_id and section_id are valid.
   static bool IsLanePresent(const MapData &data, Waypoint waypoint) {
     const auto &section = data.GetRoad(waypoint.road_id).GetLaneSectionById(waypoint.section_id);
@@ -294,70 +262,7 @@ namespace road {
   }
 
   geom::Transform Map::ComputeTransform(Waypoint waypoint) const {
-    const auto &road = _data.GetRoad(waypoint.road_id);
-
-    // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
-    RELEASE_ASSERT(waypoint.s <= road.GetLength());
-    RELEASE_ASSERT(waypoint.s >= 0.0);
-
-    const auto &lane_section = road.GetLaneSectionById(waypoint.section_id);
-    const std::map<LaneId, Lane> &lanes = lane_section.GetLanes();
-
-    // check that lane_id exists on the current s
-    RELEASE_ASSERT(!lanes.empty());
-    RELEASE_ASSERT(waypoint.lane_id >= lanes.begin()->first);
-    RELEASE_ASSERT(waypoint.lane_id <= lanes.rbegin()->first);
-
-    float lane_width = 0.0f;
-    float lane_tangent = 0.0f;
-
-    if (waypoint.lane_id < 0) {
-      // right lane
-      const auto side_lanes = MakeListView(
-          std::make_reverse_iterator(lanes.lower_bound(0)), lanes.rend());
-      const auto computed_width =
-          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = static_cast<float>(computed_width.first);
-      lane_tangent = static_cast<float>(computed_width.second);
-    } else if (waypoint.lane_id > 0) {
-      // left lane
-      const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
-      const auto computed_width =
-          ComputeTotalLaneWidth(side_lanes, waypoint.s, waypoint.lane_id);
-      lane_width = static_cast<float>(computed_width.first);
-      lane_tangent = static_cast<float>(computed_width.second);
-    }
-
-    // get a directed point in s and apply the computed lateral offet
-    DirectedPoint dp = road.GetDirectedPointIn(waypoint.s);
-
-    // compute the tangent of the laneOffset
-    const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
-
-    lane_tangent -= lane_offset_tangent;
-
-    // Unreal's Y axis hack
-    lane_tangent *= -1;
-
-    geom::Rotation rot(
-        geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
-        geom::Math::ToDegrees(-static_cast<float>(dp.tangent)), // Unreal's Y axis hack
-        0.0f);
-
-    dp.ApplyLateralOffset(lane_width);
-
-    if (waypoint.lane_id > 0) {
-      rot.yaw += 180.0f + geom::Math::ToDegrees(lane_tangent);
-      rot.pitch = 360.0f - rot.pitch;
-    } else {
-      rot.yaw -= geom::Math::ToDegrees(lane_tangent);
-    }
-
-    // Unreal's Y axis hack
-    dp.location.y *= -1;
-
-    return geom::Transform(dp.location, rot);
+    return GetLane(waypoint).ComputeTransform(waypoint.s);
   }
 
   // ===========================================================================
@@ -865,40 +770,8 @@ namespace road {
   // -- Map: Private functions -------------------------------------------------
   // ===========================================================================
 
-  // Checks whether the geometry is straight or not
-  bool IsLaneStraight(const Lane &lane) {
-    Road *road = lane.GetRoad();
-    auto *geometry = road->GetInfo<RoadInfoGeometry>(lane.GetDistance());
-    DEBUG_ASSERT(geometry != nullptr);
-    auto geometry_type = geometry->GetGeometry().GetType();
-    if (geometry_type != element::GeometryType::LINE) {
-      return false;
-    }
-    if(lane.GetDistance() < geometry->GetDistance() ||
-        lane.GetDistance() + lane.GetLength() >
-        geometry->GetDistance() + geometry->GetGeometry().GetLength()) {
-      return false;
-    }
-    auto lane_offsets = lane.GetInfos<element::RoadInfoLaneOffset>();
-    for (auto *lane_offset : lane_offsets) {
-      if (std::abs(lane_offset->GetPolynomial().GetC()) > 0 ||
-          std::abs(lane_offset->GetPolynomial().GetD()) > 0) {
-        return false;
-      }
-    }
-    auto elevations = road->GetInfos<element::RoadInfoElevation>();
-    for (auto *elevation : elevations) {
-      if (std::abs(elevation->GetPolynomial().GetC()) > 0 ||
-          std::abs(elevation->GetPolynomial().GetD()) > 0) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   // Adds a new element to the rtree element list using the position of the
-  // waypoints
-  // both ends of the segment
+  // waypoints both ends of the segment
   void Map::AddElementToRtree(
       std::vector<Rtree::TreeElement> &rtree_elements,
       geom::Transform &current_transform,
@@ -961,8 +834,8 @@ namespace road {
       });
     }
 
-    std::vector<Rtree::TreeElement> rtree_elements; // container of segments and
-                                                    // waypoints
+    // Container of segments and waypoints
+    std::vector<Rtree::TreeElement> rtree_elements;
     // Loop through all lanes
     for (auto &waypoint : topology) {
       auto &lane_start_waypoint = waypoint;
@@ -974,7 +847,7 @@ namespace road {
       geom::Transform current_transform = ComputeTransform(current_waypoint);
 
       // Save computation time in straight lines
-      if (IsLaneStraight(lane)) {
+      if (lane.IsStraight()) {
         double delta_s = min_delta_s;
         double remaining_length =
             GetRemainingLength(lane, current_waypoint.s);
@@ -1091,60 +964,15 @@ namespace road {
 
   geom::Mesh Map::GenerateMesh(const double distance, const float extra_width) const {
     RELEASE_ASSERT(distance > 0.0);
+    geom::MeshFactory mesh_factory;
     geom::Mesh out_mesh;
-    // Iterate each lane in each lane_section in each road
-    for (const auto &pair : _data.GetRoads()) {
+
+    mesh_factory.road_param.resolution = static_cast<float>(distance);
+    mesh_factory.road_param.extra_lane_width = extra_width;
+
+    for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      for (const auto &lane_section : road.GetLaneSections()) {
-        for (const auto &lane_pair : lane_section.GetLanes()) {
-          // Get the lane reference
-          const auto &lane = lane_pair.second;
-          // The lane with lane_id 0 have no physical representation in OpenDRIVE
-          if (lane.GetId() == 0) {
-            continue;
-          }
-          const auto end_distance = lane.GetDistance() + lane.GetLength() - EPSILON;
-          Waypoint current_wp {
-              road.GetId(),
-              lane_section.GetId(),
-              lane.GetId(),
-              lane_section.GetDistance() + EPSILON };
-
-          std::vector<geom::Vector3D> vertices;
-          if (IsLaneStraight(lane)) {
-            // Mesh optimization: If the lane is straight just add vertices at the
-            // begining and at the end of it
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
-            vertices.push_back(edges.first);
-            vertices.push_back(edges.second);
-          } else {
-            // Iterate over the lane's 's' and store the vertices based on it's width
-            do {
-              // Get the location of the edges of the current lane at the current waypoint
-              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
-              vertices.push_back(edges.first);
-              vertices.push_back(edges.second);
-
-              // Update the current waypoint's "s"
-              current_wp.s += distance;
-            } while(current_wp.s < end_distance);
-          }
-
-          // This ensures the mesh is constant and have no gaps between roads,
-          // adding geometry at the very end of the lane
-          if (end_distance - (current_wp.s - distance) > EPSILON) {
-            current_wp.s = end_distance;
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane, extra_width);
-            vertices.push_back(edges.first);
-            vertices.push_back(edges.second);
-          }
-          // Add the adient material, create the strip and close the material
-          out_mesh.AddMaterial(
-              lane.GetType() == Lane::LaneType::Sidewalk ? "sidewalk" : "road");
-          out_mesh.AddTriangleStrip(vertices);
-          out_mesh.EndMaterial();
-        }
-      }
+      out_mesh += *mesh_factory.Generate(road);
     }
 
     return out_mesh;
@@ -1221,7 +1049,7 @@ namespace road {
 
           std::vector<geom::Vector3D> r_vertices;
           std::vector<geom::Vector3D> l_vertices;
-          if (IsLaneStraight(lane)) {
+          if (lane.IsStraight()) {
             // Mesh optimization: If the lane is straight just add vertices at the
             // begining and at the end of it
             const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
