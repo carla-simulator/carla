@@ -2,13 +2,13 @@
 
 CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly.  
 
-* [__Overview__](#overview)  
-* [__Compilation__](#compilation)  
-	* [Dependencies](#dependencies)  
-	* [Build](#build)  
-* [__Current state__](#current-state)  
-	* [RssSensor](#rsssensor)  
-	* [RssRestrictor](#rssrestrictor)  
+*	[__Overview__](#overview)  
+*	[__Compilation__](#compilation)  
+	*	[Dependencies](#dependencies)  
+	*	[Build](#build)  
+*	[__Current state__](#current-state)  
+	*	[RssSensor](#rsssensor)  
+	*	[RssRestrictor](#rssrestrictor)  
 
 !!! Important
     This feature is a work in progress. Right now, it is only available for the Linux build.
@@ -20,10 +20,10 @@ The RSS library implements a mathematical model for safety assurance. It receive
 
 This is implemented in CARLA using two elements.  
 
-* __RssSensor__ is in charge of the situation analysis, and response generation using the _ad-rss-lib_.  
-* __RssRestrictor__ applies the response by restricting the commands of the vehicle.  
+*	__RssSensor__ is in charge of the situation analysis, and response generation using the *ad-rss-lib*.  
+*	__RssRestrictor__ applies the response by restricting the commands of the vehicle.  
 
-The following image sketches the integration of **RSS** into the CARLA architecture.  
+The following image sketches the integration of __RSS__ into the CARLA architecture.  
 
 ![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
 
@@ -32,11 +32,11 @@ __1. The server.__
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the RssSensor with world data.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a physics model of the vehicle to the RssRestrictor. <small>(Only if the default values are overwritten).</small>  
 __2. The client.__  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the _RssSensor_ with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends to the _RssResrictor_ an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the *RssSensor* with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends to the *RssResrictor* an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).  
 __3. The RssSensor.__  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the _ad-rss-lib_ to extract situations, do safety checks, and generate a response.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the _RssRestrictor_ a response containing the proper response and aceleration restrictions to be applied.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the *ad-rss-lib* to extract situations, do safety checks, and generate a response.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the *RssRestrictor* a response containing the proper response and aceleration restrictions to be applied.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Asks the server to do some debug drawings to visualize the results of the calculations.  
 __4. The RssRestrictor__  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.  
@@ -50,7 +50,7 @@ __4. The RssRestrictor__
 ---
 ## Compilation
 
-The RSS integration has to be built aside from the rest of CARLA. The __ad-rss-lib__ comes with an LGPL-2.1 open-source license that creates conflict. It has to be linked statically into _libCarla_.  
+The RSS integration has to be built aside from the rest of CARLA. The __ad-rss-lib__ comes with an LGPL-2.1 open-source license that creates conflict. It has to be linked statically into *libCarla*.  
 
 As a reminder, the feature is only available for the Linux build so far.  
 
@@ -79,19 +79,19 @@ pip install --user https://bitbucket.org/ompl/pyplusplus/get/1.8.1.zip
 
 Once this is done, the full set of dependencies and RSS components can be built.
 
-* Compile LibCarla to work with RSS.  
+*	Compile LibCarla to work with RSS.  
 
 ```sh
 make LibCarla.client.rss
 ```
 
-* Compile the PythonAPI to include the RSS feature. 
+*	Compile the PythonAPI to include the RSS feature.  
 
 ```sh
 make PythonAPI.rss
 ```
 
-* As an alternative, a package can be built directly.  
+*	As an alternative, a package can be built directly.  
 ```sh
 make package.rss
 ```
@@ -117,7 +117,6 @@ Due to the stucture of [carla.VehicleControl](python_api.md#carla.VehicleControl
 ---
 
 That sets the basics regarding the RSS sensor in CARLA. Find out more about the specific attributes and parameters in the [sensor reference](ref_sensors.md#rss-sensor). 
-
 
 Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 
