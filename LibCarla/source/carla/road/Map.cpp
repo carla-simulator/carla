@@ -475,6 +475,19 @@ namespace road {
     return result;
   }
 
+  std::vector<const element::RoadInfoSignal*>
+      Map::GetAllSignalReferences() const {
+    std::vector<const element::RoadInfoSignal*> result;
+    for (const auto& road_pair : _data.GetRoads()) {
+      const auto &road = road_pair.second;
+      auto road_infos = road.GetInfos<element::RoadInfoSignal>();
+      for(const auto* road_info : road_infos) {
+        result.push_back(road_info);
+      }
+    }
+    return result;
+  }
+
   std::vector<LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {

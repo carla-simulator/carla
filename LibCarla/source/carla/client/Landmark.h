@@ -31,7 +31,7 @@ namespace client {
     }
 
     road::RoadId GetRoadId() const {
-      return _signal->GetSignal()->GetRoadId();
+      return _signal->GetRoadId();
     }
 
     double GetDistance() const {
@@ -117,6 +117,7 @@ namespace client {
   private:
 
     friend Waypoint;
+    friend Map;
 
     Landmark(
         SharedPtr<Waypoint> waypoint,

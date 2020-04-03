@@ -99,6 +99,10 @@ namespace road {
     std::vector<SignalSearchData> GetSignalsInDistance(
         Waypoint waypoint, double distance, bool stop_at_junction = false) const;
 
+    /// Return all RoadInfoSignal in the map
+    std::vector<const element::RoadInfoSignal*>
+        GetAllSignalReferences() const;
+
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================
