@@ -152,6 +152,15 @@ static auto ApplyBatchCommandsSync(
 void export_client() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace rpc = carla::rpc;
+
+  class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
+      init<double, double, double, bool>((arg("vertex_distance")=2.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("enable_mesh_visibility")=true)))
+    .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
+    .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
+    .def_readwrite("additional_width", &rpc::OpendriveGenerationParameters::additional_width)
+    .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)
+  ;
 
   class_<cc::Client>("Client",
       init<std::string, uint16_t, size_t>((arg("host"), arg("port"), arg("worker_threads")=0u)))
@@ -162,7 +171,8 @@ void export_client() {
     .def("get_available_maps", &GetAvailableMaps)
     .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
     .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
-    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_4(cc::Client, GenerateOpenDriveWorld, std::string, double, double, double), (arg("opendrive"), arg("resolution")=2.0, arg("wall_height")=1.0, arg("additional_width")=0.6))
+    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_2(cc::Client, GenerateOpenDriveWorld, std::string,
+        rpc::OpendriveGenerationParameters), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters()))
     .def("start_recorder", CALL_WITHOUT_GIL_1(cc::Client, StartRecorder, std::string), (arg("name")))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))

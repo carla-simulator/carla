@@ -98,14 +98,12 @@ namespace detail {
 
   EpisodeProxy Simulator::LoadOpenDriveEpisode(
       std::string opendrive,
-      double resolution,
-      double wall_height,
-      double additional_width) {
+      const rpc::OpendriveGenerationParameters & params) {
     // The "OpenDriveMap" is an ".umap" located in:
     // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
-    _client.CopyOpenDriveToServer(std::move(opendrive), resolution, wall_height, additional_width);
+    _client.CopyOpenDriveToServer(std::move(opendrive), params);
     return LoadEpisode(custom_opendrive_map);
   }
 

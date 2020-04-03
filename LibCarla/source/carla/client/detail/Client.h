@@ -22,6 +22,7 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/OpendriveGenerationParameters.h"
 
 #include <functional>
 #include <memory>
@@ -86,7 +87,8 @@ namespace detail {
 
     void LoadEpisode(std::string map_name);
 
-    void CopyOpenDriveToServer(std::string opendrive, double resolution, double wall_height, double additional_width);
+    void CopyOpenDriveToServer(
+        std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 
     rpc::EpisodeInfo GetEpisodeInfo();
 
