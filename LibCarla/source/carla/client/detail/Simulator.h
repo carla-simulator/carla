@@ -70,9 +70,7 @@ namespace detail {
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
-        double resolution,
-        double wall_height,
-        double additional_width);
+        const rpc::OpendriveGenerationParameters & params);
 
     /// @}
     // =========================================================================
