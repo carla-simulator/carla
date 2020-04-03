@@ -143,5 +143,5 @@ deploy:
 pretty:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Prettify.sh $(ARGS)
 
-build.utils: setup
+build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
