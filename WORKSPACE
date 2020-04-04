@@ -33,6 +33,22 @@ http_archive(
 )
 
 http_archive(
+    name = "libjpeg-turbo",
+    build_file = "@//:third_party/libjpeg-turbo.BUILD",
+    strip_prefix = "libjpeg-turbo-2.0.4",
+    sha256 = "7777c3c19762940cff42b3ba4d7cd5c52d1671b39a79532050c85efb99079064",
+    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.4.tar.gz",
+)
+
+http_archive(
+    name = "libpng",
+    build_file = "@//:third_party/libpng.BUILD",
+    strip_prefix = "libpng-1.6.35",
+    sha256 = "6d59d6a154ccbb772ec11772cb8f8beb0d382b61e7ccc62435bf7311c9f4b210",
+    url = "https://github.com/glennrp/libpng/archive/v1.6.35.tar.gz",
+)
+
+http_archive(
     name = "recast",
     build_file = "@//:third_party/recast.BUILD",
     strip_prefix = "recastnavigation-cdce4e1a270fdf1f3942d4485954cc5e136df1df",
@@ -61,6 +77,14 @@ http_archive(
     strip_prefix = "opendrive-test-files-0.1.4",
     sha256 = "7de92865a9d945e802e54850302fc797148e24536f3d6410b0032bd608ca24b8",
     url = "https://github.com/carla-simulator/opendrive-test-files/archive/0.1.4.tar.gz",
+)
+
+http_archive(
+    name = "zlib",
+    build_file = "@//:third_party/zlib.BUILD",
+    strip_prefix = "zlib-1.2.11",
+    sha256 = "629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff",
+    url = "https://github.com/madler/zlib/archive/v1.2.11.tar.gz",
 )
 
 load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")

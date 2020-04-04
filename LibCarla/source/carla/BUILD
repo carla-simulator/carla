@@ -39,7 +39,7 @@ cc_library(
 )
 
 # Separating this target we allow people to compile the client-side without
-# the extra dependencies: boost_filesystem, png, tiff, and jpeg.
+# the extra dependencies: boost_filesystem, png, and jpeg.
 cc_library(
     name = "client_io",
     visibility = ["//visibility:public"],

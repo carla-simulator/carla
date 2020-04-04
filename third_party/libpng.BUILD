@@ -1,0 +1,41 @@
+genrule(
+    name = "pnglibconf_genrule",
+    srcs = ["scripts/pnglibconf.h.prebuilt"],
+    outs = ["pnglibconf.h"],
+    cmd = "cp $< $@",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "libpng",
+    hdrs = [
+        "png.h",
+        "pngconf.h",
+        "pnglibconf.h",
+    ],
+    srcs = [
+        "png.c",
+        "pngdebug.h",
+        "pngerror.c",
+        "pngget.c",
+        "pnginfo.h",
+        "pngmem.c",
+        "pngpread.c",
+        "pngpriv.h",
+        "pngread.c",
+        "pngrio.c",
+        "pngrtran.c",
+        "pngrutil.c",
+        "pngset.c",
+        "pngstruct.h",
+        "pngtrans.c",
+        "pngwio.c",
+        "pngwrite.c",
+        "pngwtran.c",
+        "pngwutil.c",
+    ],
+    data = [":pnglibconf_genrule"],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["@zlib"],
+)

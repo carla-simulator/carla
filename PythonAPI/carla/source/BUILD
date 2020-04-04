@@ -31,11 +31,8 @@ for_each_py_version(
     ],
     linkstatic = True,
     linkshared = True,
-    defines = ["LIBCARLA_PYTHON_MODULE_NAME=carla"],
-    linkopts = [
-        "-ljpeg",
-        "-lpng",
-        "-ltiff",
+    defines = [
+        "LIBCARLA_PYTHON_MODULE_NAME=carla",
     ],
     visibility = ["//visibility:public"],
     deps = [
