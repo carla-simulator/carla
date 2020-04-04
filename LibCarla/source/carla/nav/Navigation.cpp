@@ -28,7 +28,7 @@ namespace nav {
     DT_CROWD_OPTIMIZE_TOPO      = 16
   };
 
-  // these settings are the same than in RecastBuilder, so if you change the height of the agent, 
+  // these settings are the same than in RecastBuilder, so if you change the height of the agent,
   // you should do the same in RecastBuilder
   static const int   MAX_POLYS = 256;
   static const int   MAX_AGENTS = 500;
@@ -477,7 +477,7 @@ namespace nav {
     params.collisionQueryRange = 10;
     params.obstacleAvoidanceType = 3;
     params.separationWeight = 0.5f;
-    
+
     // set if the agent can cross roads or not
     if (frand() <= _probability_crossing) {
       params.queryFilterType = 1;
@@ -819,7 +819,7 @@ namespace nav {
   }
 
   // update all walkers in crowd
-  void Navigation::UpdateCrowd(const client::detail::EpisodeState &state) {
+  void Navigation::UpdateCrowd(double delta_seconds) {
 
     // check if all is ready
     if (!_ready) {
@@ -829,7 +829,7 @@ namespace nav {
     DEBUG_ASSERT(_crowd != nullptr);
 
     // update crowd agents
-    _delta_seconds = state.GetTimestamp().delta_seconds;
+    _delta_seconds = delta_seconds;
     {
       // critical section, force single thread running this
       std::lock_guard<std::mutex> lock(_mutex);

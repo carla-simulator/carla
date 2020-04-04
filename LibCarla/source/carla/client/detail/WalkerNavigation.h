@@ -7,11 +7,13 @@
 #pragma once
 
 #include "carla/AtomicList.h"
-#include "carla/nav/Navigation.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/nav/Navigation.h"
 #include "carla/rpc/ActorId.h"
+
+#include <boost/optional.hpp>
 
 #include <memory>
 

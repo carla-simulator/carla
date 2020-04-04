@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy; see <https://opensource.org/licenses/MIT>.
 
-#include "SignalType.h"
+#include "carla/road/SignalType.h"
 
 #include <vector>
 #include <algorithm>

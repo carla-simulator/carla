@@ -10,7 +10,7 @@ cmake_external(
     generate_crosstool_file = True,
     lib_source = ":all",
     cache_entries = {
-        "CMAKE_CXX_FLAGS": "-Wno-error",
+        "CMAKE_CXX_FLAGS": "-Wno-error -fPIC",
     },
     cmake_options = [
         "-GNinja"
@@ -19,7 +19,6 @@ cmake_external(
         "ninja",
         "ninja install",
     ],
-    # postfix_script = "tree ; exit 1",
     static_libraries = [
         "libRecast.a",
         "libDetour.a",
@@ -33,12 +32,12 @@ cc_library(
         "Recast/Include/**/*.h",
     ]),
     strip_include_prefix = "Recast/Include",
-    include_prefix = "recast/",
     includes = [
         "Recast/Include",
     ],
-    deps = [":lib"],
+    include_prefix = "recast/",
     visibility = ["//visibility:public"],
+    deps = [":lib"],
 )
 
 cc_library(
@@ -47,12 +46,12 @@ cc_library(
         "Detour/Include/**/*.h",
     ]),
     strip_include_prefix = "Detour/Include",
-    include_prefix = "recast/",
     includes = [
         "Detour/Include",
     ],
-    deps = [":lib"],
+    include_prefix = "recast/",
     visibility = ["//visibility:public"],
+    deps = [":lib"],
 )
 
 cc_library(
@@ -61,20 +60,20 @@ cc_library(
         "DetourCrowd/Include/**/*.h",
     ]),
     strip_include_prefix = "DetourCrowd/Include",
-    include_prefix = "recast/",
     includes = [
         "DetourCrowd/Include",
     ],
-    deps = [":lib"],
+    include_prefix = "recast/",
     visibility = ["//visibility:public"],
+    deps = [":lib"],
 )
 
 cc_library(
     name = "recast",
+    visibility = ["//visibility:public"],
     deps = [
       ":Recast",
       ":Detour",
       ":DetourCrowd",
     ],
-    visibility = ["//visibility:public"],
 )

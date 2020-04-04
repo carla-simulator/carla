@@ -14,8 +14,6 @@
 namespace carla {
 namespace client {
 
-  using namespace carla::traffic_manager;
-
   class Client {
   public:
 
@@ -75,8 +73,8 @@ namespace client {
     }
 
     /// Return an instance of the TrafficManager currently active in the simulator.
-    TrafficManager GetInstanceTM(uint16_t port = TM_DEFAULT_PORT) const {
-      return TrafficManager(_simulator->GetCurrentEpisode(), port);
+    traffic_manager::TrafficManager GetInstanceTM(uint16_t port = TM_DEFAULT_PORT) const {
+      return traffic_manager::TrafficManager(_simulator->GetCurrentEpisode(), port);
     }
 
     /// Return an instance of the Episode currently active in the simulator.

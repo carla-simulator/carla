@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CollisionStage.h"
+#include "carla/trafficmanager/CollisionStage.h"
 
 #define MAX(__a, __b) ((__a) > (__b) ? (__a) : (__b))
 

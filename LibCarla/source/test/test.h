@@ -10,7 +10,7 @@
 #  define LIBCARLA_LOG_LEVEL LIBCARLA_LOG_LEVEL_INFO
 #endif // NDEBUG
 
-#include "test/Buffer.h"
+#include "Buffer.h"
 
 #include <carla/Logging.h>
 #include <carla/profiler/Profiler.h>

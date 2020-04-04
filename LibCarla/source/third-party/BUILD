@@ -1,8 +1,9 @@
+package(default_visibility = ["//LibCarla/source:__subpackages__"])
+
 cc_library(
     name = "moodycamel",
     hdrs = glob(["moodycamel/*.h"]),
     includes = ["."],
-    visibility = ["//visibility:public"],
 )
 
 cc_library(
@@ -10,7 +11,6 @@ cc_library(
     hdrs = glob(["odrSpiral/*.h"]),
     srcs = glob(["odrSpiral/*.cpp"]),
     includes = ["."],
-    visibility = ["//visibility:public"],
 )
 
 cc_library(
@@ -18,5 +18,4 @@ cc_library(
     hdrs = glob(["pugixml/*.hpp"]),
     srcs = glob(["pugixml/*.cpp"]),
     includes = ["."],
-    visibility = ["//visibility:public"],
 )

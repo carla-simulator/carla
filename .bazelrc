@@ -1,6 +1,6 @@
 build --config=libcxx -c opt
 
-build --stamp --workspace_status_command="python ./Util/repo_status.py"
+build --stamp --workspace_status_command="python ./Util/Bazel/repo_status.py"
 
 test --test_output=errors
 test --test_verbose_timeout_warnings

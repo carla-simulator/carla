@@ -10,7 +10,7 @@ cmake_external(
     generate_crosstool_file = True,
     lib_source = ":all",
     cache_entries = {
-        "CMAKE_CXX_FLAGS": "-Wno-error",
+        "CMAKE_CXX_FLAGS": "-Wno-error -fPIC",
     },
     cmake_options = [
         "-GNinja"

@@ -194,7 +194,7 @@ def py_wheels_and_eggs(name, **kwargs):
         )
     native.filegroup(
         name = name,
-        srcs = [":{}-py{}".format(name, v) for v in PYTHON_VERSIONS.keys()]
+        srcs = [":{}-py{}".format(name, v) for v in PYTHON_VERSIONS.keys()],
     )
 
 

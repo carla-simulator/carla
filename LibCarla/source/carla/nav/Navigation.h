@@ -7,18 +7,12 @@
 #pragma once
 
 #include "carla/AtomicList.h"
-#include "carla/client/detail/EpisodeState.h"
 #include "carla/geom/BoundingBox.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
+#include "carla/nav/Recast.h"
 #include "carla/nav/WalkerManager.h"
 #include "carla/rpc/ActorId.h"
-#include <recast/Recast.h>
-#include <recast/DetourCrowd.h>
-#include <recast/DetourNavMesh.h>
-#include <recast/DetourNavMeshBuilder.h>
-#include <recast/DetourNavMeshQuery.h>
-#include <recast/DetourCommon.h>
 
 namespace carla {
 namespace nav {
@@ -95,7 +89,7 @@ namespace nav {
     /// get the walker current transform
     float GetWalkerSpeed(ActorId id);
     /// update all walkers in crowd
-    void UpdateCrowd(const client::detail::EpisodeState &state);
+    void UpdateCrowd(double delta_seconds);
     /// get a random location for navigation
     bool GetRandomLocation(carla::geom::Location &location, dtQueryFilter * filter = nullptr) const;
     /// set the probability that an agent could cross the roads in its path following

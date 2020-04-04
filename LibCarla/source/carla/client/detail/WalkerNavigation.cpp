@@ -41,7 +41,7 @@ namespace detail {
     UpdateVehiclesInCrowd(episode, false);
 
     // update crowd in navigation module
-    _nav.UpdateCrowd(*state);
+    _nav.UpdateCrowd(state->GetTimestamp().delta_seconds);
 
     carla::geom::Transform trans;
     using Cmd = rpc::Command;
@@ -102,7 +102,7 @@ namespace detail {
     // optional debug info
     if (show_debug) {
       if (_nav.GetCrowd() == nullptr) return;
-      
+
       // draw bounding boxes for debug
       for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
         // get the agent

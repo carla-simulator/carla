@@ -1,17 +1,3 @@
-# Copyright 2018 The Bazel Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 load(
     "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
     "feature",
@@ -21,6 +7,7 @@ load(
     "tool_path",
     "with_feature_set",
 )
+
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
 def _impl(ctx):
@@ -210,7 +197,7 @@ def _impl(ctx):
                 flag_groups = [flag_group(flags = cxx_flags_default)],
             ),
             flag_set(
-                actions = all_compile_actions,
+                actions = all_cpp_compile_actions,
                 with_features = [with_feature_set(features = ["extra-warnings"])],
                 flag_groups = [flag_group(flags = cxx_flags_extra_warnings)],
             ),
@@ -225,12 +212,12 @@ def _impl(ctx):
                 flag_groups = [flag_group(flags = cxx_flags_opt)],
             ),
             flag_set(
-                actions = all_compile_actions,
+                actions = all_cpp_compile_actions,
                 with_features = [with_feature_set(features = ["no-exceptions"])],
                 flag_groups = [flag_group(flags = cxx_flags_no_exceptions)],
             ),
             flag_set(
-                actions = all_compile_actions,
+                actions = all_cpp_compile_actions,
                 with_features = [with_feature_set(features = ["no-rtti"])],
                 flag_groups = [flag_group(flags = cxx_flags_no_rtti)],
             ),
@@ -347,6 +334,10 @@ def _impl(ctx):
         tool_path(
             name = "gcc",
             path = "%{llvm_tools_path_prefix}/bin/clang",
+        ),
+        tool_path(
+            name = "g++",
+            path = "%{llvm_tools_path_prefix}/bin/clang++",
         ),
         tool_path(
             name = "ar",

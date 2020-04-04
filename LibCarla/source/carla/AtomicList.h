@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/AtomicSharedPtr.h"
+#include "carla/Debug.h"
 #include "carla/NonCopyable.h"
 
 #include <algorithm>
@@ -40,7 +41,8 @@ namespace detail {
       std::lock_guard<std::mutex> lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
       auto begin = new_list->begin();
-      std::advance(begin, index);
+      DEBUG_ASSERT(index < new_list->size());
+      std::advance(begin, static_cast<int>(index));
       new_list->erase(begin);
       _list = new_list;
     }
