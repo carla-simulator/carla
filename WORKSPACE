@@ -6,7 +6,7 @@ load("@//toolchain/python:config.bzl", "find_local_python_repositories")
 # Determines the location based on UE4_ROOT environment variable.
 unreal_engine_repository(
     name = "local_unreal_engine",
-    branch = "4.22",
+    branch = "4.24",
 )
 
 # Adds a new local repository for each python-dev version installed.

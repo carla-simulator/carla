@@ -12,9 +12,9 @@ def _ensure_branch(rctx, branch, path):
 
 
 def _configure_llvm_toolchain(rctx, ue4_root):
-    llvm_root = "llvm-7.0.1"
-    version = "v13_clang-7.0.1-centos7"
-    version_number = "7.0.1"
+    llvm_root = "llvm-8.0.1"
+    version = "v15_clang-8.0.1-centos7"
+    version_number = "8.0.1"
     host = "Linux_x64"
     target = "x86_64-unknown-linux-gnu"
 
