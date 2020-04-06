@@ -301,6 +301,9 @@ class GlobalRoutePlanner(object):
                 else:
                     decision = next_edge['type']
 
+        else:
+            decision = next_edge['type']
+
         self._previous_decision = decision
         return decision
 
