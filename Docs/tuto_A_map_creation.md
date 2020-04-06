@@ -6,7 +6,6 @@ Users can create their own maps, and run CARLA using these. The software used fo
 *   [__Create a map with RoadRunner__](#map-creation-with-roadrunner)  
 	*   [Export from RoadRunner](#export-from-roadrunner)  
 *   [__Import the map__](#import-the-map)  
-*   [__Final tips__](#final-tips)  
 *   [__Previous ways to import a map__](#previous-ways-to-import-a-map)  
 
 ---
@@ -63,27 +62,6 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
 There are different ways to import a map. Read the specific documentation to learn how to [import assets into CARLA](#tuto_A_import_assets.md).  
 
 As far as importing maps, the [Docker import](tuto_A_import_assets.md#via-docker) is the recommended method. It makes the ingestion of a new map an out-of-the-box process. A Docker image of Unreal Engine is used so that everything is generated automatically. The other option is to do it via terminal, but that will need to generate collisions and pedestrian navigation manually.  
-
----
-## Final tips
-
-After the map has been imported into CARLA, there are a few settings to be done. 
-
-*   __Add and test traffic light timing.__ This are not set automatically, and will need trial and error to fit perfectly with the city.
-
-![ue_tlsigns_example](img/ue_tlsigns_example.png)
-
-> _Example: Traffic Signs, Traffic lights and Turn based stop._
-
-
-*   __Place vehicle spawn points__ 2 to 3 meters above a Route Planner's trigger box, and oriented in the same direction. When the vehicle falls into the trigger box, the autopilot takes control of it.
-
-  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
-
-*   __Add the map to the Unreal packaging system.__ Go to the following path and add the level. 
-`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
-
-  ![ue_maps_to_include](img/ue_maps_to_include.png)
 
 ---
 ## Deprecated ways to import a map

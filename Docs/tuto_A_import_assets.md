@@ -9,6 +9,10 @@ Assets in CARLA is an umbrella term that includes both maps, and props. The simu
 * [__Import into CARLA__](#import-into-carla)  
 	*   [Via Docker](#via-docker)  
 	*   [Via terminal](#via-terminal)  
+* [__Additional steps to import a map__](#additional-steps-to-import-a-map)  
+	*   [Generate pedestrian navigation](#generate-pedestrian-navigation)  
+	*   [Generate collisions](#generate-collisions)  
+	*   [Final tips](#final-tips)  
 
 ---
 ## Prepare the package
@@ -17,7 +21,7 @@ Assets in CARLA is an umbrella term that includes both maps, and props. The simu
 
 __1. Create a folder inside `carla/Import`.__ The name of the folder is not relevant.  
 
-__2. Create different subfolders__ for each maps to import, and one subfolder for the rest of props.  
+__2. Create different subfolders__ for each map to import, and one subfolder for the rest of props.  
 &nbsp;&nbsp;&nbsp;__2.1__ Inside the props subfolder, create as many subfolders as props to import. 
 
 __3. Move the files of each asset to the corresponding subfolder.__ A subfolder will contain a specific set of elements.  
@@ -46,14 +50,14 @@ Import
 │   │   ├── LaneMarking1_Spec.png
 │   │   ├── Map01.fbx
 │   │   └── Map01.xodr
-│   ├── MapToImport02
-│   │   ├── MapToImport02.fbx
-│   │   └── MapToImport02.xodr
+│   ├── Map02
+│   │   ├── Map02.fbx
+│   │   └── Map02.xodr
 │   └── Props
 │       ├── Prop01
-│       │   ├── PropToImport01_Diff.png
-│       │   ├── PropToImport01_Norm.png
-│       │   ├── PropToImport01_Spec.png
+│       │   ├── Prop01_Diff.png
+│       │   ├── Prop01_Norm.png
+│       │   ├── Prop01_Spec.png
 │       │   └── Prop01.fbx
 │       └── Prop02
 │           └── Prop02.fbx
@@ -61,7 +65,7 @@ Import
     ├── Packag02.json
     └── Props
         └── Prop03
-            └── PropToImport03.fbx
+            └── Prop03.fbx
 ```
 
 ### Create the JSON description
@@ -106,29 +110,29 @@ In the end, the `.json` should look similar to the one below.
 {
   "maps": [
     {
-      "name": "MyTown01",
-      "source": "./MapToImport01/MyTown01.fbx",
+      "name": "Map01",
+      "source": "./Map01/Map01.fbx",
       "use_carla_materials": true,
-      "xodr": "./MapToImport01/MyTown01.xodr"
+      "xodr": "./Map01/Map01.xodr"
     },
     {
-      "name": "MyTown02",
-      "source": "./MapToImport02/MyTown02.fbx",
+      "name": "Map02",
+      "source": "./Map02/Map02.fbx",
       "use_carla_materials": false,
-      "xodr": "./MapToImport02/MyTown02.xodr"
+      "xodr": "./Map02/Map02.xodr"
     }
   ],
   "props": [
     {
       "name": "MyProp01",
       "size": "medium",
-      "source": "./AssetsToImport/PropToImport01/MyProp01.fbx",
+      "source": "./Props/Prop01/Prop01.fbx",
       "tag": "SemanticSegmentationTag01"
     },
     {
       "name": "MyProp02",
       "size": "small",
-      "source": "./AssetsToImport/PropToImport02/MyProp02.fbx",
+      "source": "./Props/Prop02/Prop02.fbx",
       "tag": "SemanticSegmentationTag02"
     }
   ]
@@ -143,10 +147,7 @@ In the end, the `.json` should look similar to the one below.
 ### Via Docker
 
 This is the recommended option. The package will be ingested from start to finish. That means that not only will the package be imported the same way the terminal method would do. 
-A [standalone package](tuto_A_standalone_packages.md) will be exported, to facilitate distribution. Besides that, this method presents remarkable advantages for new maps.  
-
-* __Pedestrian navigation__ will be generated automatically.  
-* __Traffic lights and traffic lights__ will be created when running the simulation using the information in the `.xodr`.  
+A [standalone package](tuto_A_standalone_packages.md) will be exported, to facilitate distribution. Besides that, __pedestrian navigation will be generated automatically__.  
 
 That means that importing assets, specially maps, will become and out-of-the-box process.  
 
@@ -176,7 +177,44 @@ make import
 
 Not using the Docker has some disadvantages when importing maps. There will be a few things to do after the import.  
 
-#### Generate map collisions
+---
+## Additional steps to import a map
+
+The process to import a new map into CARLA is more straightforward than ever. Traffic lights and traffic lights will be created by the simulator when running the simulation using the information in the `.xodr`, so now users don't have to create and set these manually. However, there are still some additional steps to make sure that everything is set properly.  
+
+
+### Generate pedestrian navigation
+
+!!! Important
+    __After a Docker import, only step 3 is needed__, to generate the meshes of the crosswalks. The pedestrian navigation is automatically generated.  
+
+In order to prepare the map for pedestrian navigation, a `.bin` file must be generated. This needs. some settings to be done.  
+
+__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
+
+![ue_skybox_no_export](img/ue_noexport.png) 
+
+__2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
+
+*   Sidewalk = `Road_Sidewalk`.  
+*   Grass = `Road_Grass`.  
+
+![ue_meshes](img/ue_meshes.png) 
+
+__3.__ Crosswalks defined inside the `.xodr` remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
+
+![ue_crosswalks](img/ue_crosswalks.png) 
+
+!!! Note
+    To generate new crosswalks, change the name of the mesh to `Road_Crosswalk`. Avoid doing so if the crosswalk is in the `.xodr`. Otherwise, it will be duplicated. 
+
+__4.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
+
+__5.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
+__6.__ Run RecastDemo `./RecastDemo`.  
+__7.__ Change the name of the `.bin` file to be the same as the `mapname.fbx`. Move it into `Content/Carla/Maps/Nav`.  
+
+### Generate map collisions
 
 This is mandatory, otherwise, pedestrians and vehicles will fall into the abyss.
 
@@ -192,32 +230,25 @@ This is mandatory, otherwise, pedestrians and vehicles will fall into the abyss.
 
 * Go to `File > Save All`.
 
-#### Generate pedestrian navigation
 
-In order to prepare the map for pedestrian navigation, a `.bin` file must be generated. This needs. some settings to be done.  
+### Final tips
 
-__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
+There are a few settings to be done. 
 
-![ue_skybox_no_export](img/ue_noexport.png) 
+*   __Add and test traffic light timing.__ This are not set automatically, and will need trial and error to fit perfectly with the city.
 
-__2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).
+![ue_tlsigns_example](img/ue_tlsigns_example.png)
 
-![ue_meshes](img/ue_meshes.png) 
+> _Example: Traffic Signs, Traffic lights and Turn based stop._
 
-__3.__ Crosswalks have to be manually created. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
 
-![ue_crosswalks](img/ue_crosswalks.png) 
+*   __Place vehicle spawn points__ 2 to 3 meters above a Route Planner's trigger box, and oriented in the same direction. When the vehicle falls into the trigger box, the autopilot takes control of it.
 
-__4.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
+  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
 
-__5.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
-__6.__ Run RecastDemo `./RecastDemo`.  
+*   __Add the map to the Unreal packaging system.__ Go to the following path and add the level. 
+`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
 
-  * Select `Solo Mesh` from the `Sample` parameter's box.
-  * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
-![recast_example](img/recast_example.png)
+  ![ue_maps_to_include](img/ue_maps_to_include.png)
 
-__7.__ Click on the `Build` button.  
-__8.__ Once the build has finished, click on the `Save` button.  
-__9.__ Change the **filename** of the binary file generated at `RecastDemo/Bin` to `mapname.bin`.  
-__10.__ Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/Maps`.  
+
