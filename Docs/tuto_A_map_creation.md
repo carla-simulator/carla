@@ -307,3 +307,14 @@ __10.__ Drag the _mapname.bin_ file into the `Nav` folder under `Content/Carla/M
 
 </details>
 <br>
+
+---
+
+That comprises the process to create and import a new map into CARLA. If during the process any doubts arise, feel free to post these in the forum. 
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>

@@ -16,8 +16,11 @@ make package ARGS="--packages=Package1,Package2"
 
 This will create a distribution package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `PythonAPI/dist` folder. 
 
+!!! Note
+    After using the Docker import method, the distribution package will be generated automatically.  
+
 ---
-## Import a standalone package
+## Import a distribution package
 
 To get the package into a CARLA distribution, move the compressed file to the `Import` folder and run the following script.  
 
@@ -25,3 +28,14 @@ To get the package into a CARLA distribution, move the compressed file to the `I
 cd Import
 ./ImportAssets.sh
 ```
+
+---
+
+That sumps up the management of asset packages in CARLA. If there is any unexpected issue, feel free to post in the forum. 
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>
