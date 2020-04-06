@@ -93,12 +93,14 @@ __Props__ need the following parameters.
 	*   `None`
 	*   `Buildings`
 	*   `Fences`
-	*   `Other`
 	*   `Pedestrians`
-	*   `Poles`
+	*   `Pole`
+	*   `Props`
+	*   `RailTrack`
+	*   `Road`
 	*   `RoadLines`
-	*   `Roads`
-	*   `Sidewalks`
+	*   `Sidewalk`
+	*   `Terrain`
 	*   `TrafficSigns`
 	*   `Vegetation`
 	*   `Vehicles`

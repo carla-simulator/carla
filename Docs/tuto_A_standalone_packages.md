@@ -14,7 +14,7 @@ To export packages, simply run the command below.
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This will create a distribution package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `PythonAPI/dist` folder. 
+This will create a distribution package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
 !!! Note
     After using the Docker import method, the distribution package will be generated automatically.  
