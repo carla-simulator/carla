@@ -161,7 +161,7 @@ __2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there
 python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets
 ```
 
-__3. Check the output files__. They should be in `Content/Carla/type_of_asset`. Move them in case they are not already there. 
+__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the distribution package for the assets. Extract it in the main root CARLA folder.  
 
 !!! Note
     The Docker image takes 4h and 400GB to be built. However, this is only needed the first time. 

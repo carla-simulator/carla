@@ -20,7 +20,11 @@ This will create a distribution package compressed in a `.tar.gz` file for each 
     After using the Docker import method, the distribution package will be generated automatically.  
 
 ---
-## Import a distribution package
+## Import a distribution packages
+
+Distribution packages are contained in `.tar.gz` files. In order to import these into CARLA, just extract these into the main root CARLA folder. The assets will be automatically storage in the corresponding path.  
+
+
 
 To get the package into a CARLA distribution, move the compressed file to the `Import` folder and run the following script.  
 
