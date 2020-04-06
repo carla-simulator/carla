@@ -17,7 +17,7 @@ This section deals with two fundamental concepts in CARLA. Their configuration d
 
 There is a difference between real time, and simulation time. The simulated world has its own clock and time, conducted by the server. Computing two simulation steps takes some real time. However, there is also the time span that went by between those two simulation moments, the time-step.  
 
-To clarify, the server can take a few miliseconds to compute two steps of a simulation. However, the time-step between those two simulation moments can be configured to be, for instance, always a second.  
+To clarify, the server can take a few milliseconds to compute two steps of a simulation. However, the time-step between those two simulation moments can be configured to be, for instance, always a second.  
 
 Time-step can be fixed or variable depending on user preferences.  
 
@@ -107,7 +107,7 @@ Synchronous mode cannot be enabled using the script, only disabled. Enabling the
 
 ### Using synchronous mode
 
-The synchronous mode becomes specially relevant with slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait, there will be an overflow of information. The client will not be able to mange everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
+The synchronous mode becomes specially relevant with slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait, there will be an overflow of information. The client will not be able to manage everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
 
 The following fragment of code extends the previous one. The client creates a camera sensor, stores the image data of the current step in a queue, and ticks the server after retrieving it from the queue. A more complex example regarding several sensors can be found [here][syncmodelink].
 
@@ -157,7 +157,7 @@ The configuration of time-step and synchrony, leads for different settings. Here
 <td>Client is in total control over the simulation and its information.</td>
 <td>Risk of non reliable simulations.</td>
 <tr>
-<td><b>Variable time-step</b></td>
+<td><b>Asynchronous mode</b></td>
 <td>Good time references for information. Server runs as fast as possible.</td>
 <td>Non easily repeatable simulations.</td>
 </tbody>
@@ -166,7 +166,7 @@ The configuration of time-step and synchrony, leads for different settings. Here
 
 * __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and. If the server has to wait for the client to compute the steps, this is likely to happen. Simulation time and physics will not be in synchrony. The simulation will not be reliable.  
 
-* __Aynchronous mode + variable time-step.__ This is the default CARLA state. Client and server are asynchronous. The simulation time flows according to the real time. Reenacting the simulation needs to take into account float-arithmetic error, and possible differences in time steps between servers.  
+* __Asynchronous mode + variable time-step.__ This is the default CARLA state. Client and server are asynchronous. The simulation time flows according to the real time. Reenacting the simulation needs to take into account float-arithmetic error, and possible differences in time steps between servers.  
 
 * __Asynchronous mode + fixed time-step.__ The server will run as fast as possible. The information retrieved will be easily related with an exact moment in the simulation. This configuration makes possible to simulate long periods of time in much less real time, if the server is fast enough. 
 
