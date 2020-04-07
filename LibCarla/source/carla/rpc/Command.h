@@ -143,12 +143,13 @@ namespace rpc {
       using TM = traffic_manager::TrafficManager;
 
       SetAutopilot() = default;
-      SetAutopilot(ActorId id, /* TM tm, */ bool value)
+      SetAutopilot(ActorId id, TM* tm, bool value)
         : actor(id),
-          // tm(tm),
+          tm(tm),
           enabled(value) {}
       ActorId actor;
-      // boost::optional<TM> tm;
+      //boost::optional<TM> tm;
+      TM* tm;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
