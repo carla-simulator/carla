@@ -104,6 +104,8 @@ CARLA forum</a>
         — Set runtime changes on a vehicle physics.  
     [__Control walker skeletons__](tuto_G_control_walker_skeletons.md)
         — Animate walkers using skeletons.  
+    [__Retrieve simulation data__](tuto_G_retrieve_data.md)
+        — A step by step guide to properly gather data using the recorder.  
     </p>
 
 ## Tutorials — Assets
