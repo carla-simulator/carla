@@ -78,6 +78,8 @@ namespace geom {
     std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
         const road::Road &road) const;
 
+    std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
+
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================
