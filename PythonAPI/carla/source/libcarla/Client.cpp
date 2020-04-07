@@ -60,7 +60,8 @@ static auto ApplyBatchCommandsSync(
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
   carla::client::World world = self.GetWorld();
-  boost::optional<carla::traffic_manager::TrafficManager> tm;
+  //boost::optional<carla::traffic_manager::TrafficManager> tm;
+  carla::traffic_manager::TrafficManager* tm = nullptr;
 
   std::atomic<size_t> vehicles_to_enable_index;
   std::atomic<size_t> vehicles_to_disable_index;
@@ -85,6 +86,8 @@ static auto ApplyBatchCommandsSync(
           auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmd_type);
           for (auto &cmd : spawn.do_after) {
             if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
+              carla::log_warning("ApplyBatchCommandsSync SetAutopilot do after");
+              tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm;
               autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
               isAutopilot = true;
             }
@@ -92,8 +95,10 @@ static auto ApplyBatchCommandsSync(
         }
         // check SetAutopilot command
         else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
+          //tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm;
+          carla::log_warning("ApplyBatchCommandsSync SetAutopilot");
+          tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm;
           autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
-          // tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm;
           isAutopilot = true;
         }
 
@@ -147,10 +152,13 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_disable.shrink_to_fit();
 
   // check if any autopilot command was sent
+  carla::log_warning("ApplyBatchCommandsSync ending");
   if (tm && (vehicles_to_enable.size() || vehicles_to_disable.size())) {
+    carla::log_warning("ApplyBatchCommandsSync ending tm", vehicles_to_enable.size(), vehicles_to_disable.size());
     tm->RegisterVehicles(vehicles_to_enable);
     tm->UnregisterVehicles(vehicles_to_disable);
   }
+  carla::log_warning("ApplyBatchCommandsSync end ======");
 
   return result;
 }
