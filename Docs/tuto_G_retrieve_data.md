@@ -18,6 +18,11 @@ First, the simulation is initialized with custom settings and traffic. An ego ve
 	* [RGB camera](#rgb-camera)  
 	* [Detectors](#detectors)  
 	* [Other sensors](#other-sensors)  
+* [__Set advanced sensors__](#set-advanced-sensors)  
+	* [Depth camera](#depth-camera)  
+	* [Semantic segmentation camera](#semantic-segmentation-camera)  
+	* [LIDAR raycast sensor](#lidar-raycast-sensor)  
+	* [Radar sensor](#radar-sensor)  
 * [__No-rendering-mode__](#no-rendering-mode)  
 	* [Simulate at a fast pace](#simulate-at-a-fast-pace)  
 	* [Manual control without rendering](#manual-control-without-rendering)  
@@ -25,11 +30,6 @@ First, the simulation is initialized with custom settings and traffic. An ego ve
 	* [Start recording](#start-recording)  
 	* [Capture and record](#capture-and-record)  
 	* [Stop recording](#stop-recording)  
-* [__Set advanced sensors__](#set-advanced-sensors)  
-	* [Depth camera](#depth-camera)  
-	* [Semantic segmentation camera](#semantic-segmentation-camera)  
-	* [LIDAR raycast sensor](#lidar-raycast-sensor)  
-	* [Radar sensor](#radar-sensor)  
 * [__Exploit the recording__](#exploit-the-recording)  
 	* [Query the events](#query-the-events)  
 	* [Choose a fragment](#choose-a-fragment)  
@@ -349,7 +349,7 @@ Only the obstacle detector blueprint has attributes to be set. Here are some imp
 * __`distance` and `hit-radius`__ shape the debug line used to detect obstacles ahead. 
 * __`only_dynamics`__ determines if static objects should be taken into account or not. By default, any object is considered. 
 
-The script sets the obstacle detector to only consider dynamic objects. The intention is to avoid unnecessary data. If the vehicle collides with any static object, it will be detected by the collision sensor.  
+The script sets the obstacle detector to only consider dynamic objects. If the vehicle collides with any static object, it will be detected by the collision sensor.  
 
 ```py
 # --------------
@@ -442,119 +442,9 @@ ego_imu.listen(lambda imu: imu_callback(imu))
 <div style="text-align: right"><i>GNSS and IMU sensors output</i></div>
 
 ---
-## No-rendering mode
-
-The [no-rendering mode](adv_rendering_options.md) can be useful to run an initial simulation that will be later played again to retrieve data. Especially if this simulation has some extreme conditions, such as dense traffic.  
-
-### Simulate at a fast pace 
-
-Disabling the rendering will save up a lot of work to the simulation. As the GPU is not used, the server can work at full speed. This could be useful to simulate complex conditions at a fast pace. The best way to do so would be by setting a fixed time-step. Running an asynchronous server with a fixed time-step and no rendering, the only limitation for the simulation would be the inner logic of the server.  
-
-The same `config.py` used to [set the map](#map-setting) can disable rendering, and set a fixed time-step. 
-
-```
-cd /opt/carla/PythonAPI/utils
-./config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
-```
-
-!!! Warning
-    Read the [documentation](adv_synchrony_timestep.md) before messing around with with synchrony and time-step.
-
-### Manual control without rendering
-
-The script `PythonAPI/examples/no_rendering_mode.py` provides an overview of the simulation. It creates a minimalistic aerial view with Pygame, that will follow the ego vehicle. This could be used along with __manual_control.py__ to generate a route with barely no cost, record it, and then play it back and exploit it to gather data. 
-
-```
-cd /opt/carla/PythonAPI/examples
-python manual_control.py
-```
-
-```
-cd /opt/carla/PythonAPI/examples
-python no_rendering_mode.py --no-rendering
-```
-
-<details>
-<summary> Optional arguments in <b>no_rendering_mode.py</b> </summary>
-
-```sh
-  -h, --help           show this help message and exit
-  -v, --verbose        print debug information
-  --host H             IP of the host server (default: 127.0.0.1)
-  -p P, --port P       TCP port to listen to (default: 2000)
-  --res WIDTHxHEIGHT   window resolution (default: 1280x720)
-  --filter PATTERN     actor filter (default: "vehicle.*")
-  --map TOWN           start a new episode at the given TOWN
-  --no-rendering       switch off server rendering
-  --show-triggers      show trigger boxes of traffic signs
-  --show-connections   show waypoint connections
-  --show-spawn-points  show recommended spawn points
-```
-</details>
-<br>
-
-![tuto_no_rendering](img/tuto_no_rendering.png)
-<div style="text-align: right"><i>no_rendering_mode.py working in Town07</i></div>
-
-!!! Note
-    In this mode, GPU-based sensors will retrieve empty data. Cameras are useless, but other sensors such as detectors will work properly. 
-
----
-## Record and retrieve data
-
-### Start recording
-
-The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
-
-```py
-# --------------
-# Start recording
-# --------------
-client.start_recorder('~/tutorial/recorder/recording01.log')
-```
-
-### Capture and record
-
-There are many different ways to do this. Mostly it goes down as either let it roam around or control it manually. The data for the sensors spawned will be retrieved on the fly. Make sure to check it while recording, to make sure everything is set properly.  
-
-* __Enable the autopilot.__ This will register the vehicle to the [Traffic Manager](adv_traffic_manager.md). It will roam around the city endlessly. The script does this, and creates a loop to prevent the script from finishing. The recording will go on until the user finishes the script. Alternatively, a timer could be set to finish the script after a certain time.  
-
-```py
-# --------------
-# Capture data
-# --------------
-ego_vehicle.set_autopilot(True)
-print('\nEgo autopilot enabled')
-
-while True:
-    world_snapshot = world.wait_for_tick()
-```
-
-* __Manual control.__ Run the script `PythonAPI/examples/manual_control.py` in a client, and the recorder in another one. Drive the ego vehicle around to create the desired route, and stop the recorder when finished. The __tutorial_ego.py__ script can be used to manage the recorder, but make sure to comment other fragments of code.  
-
-```
-cd /opt/carla/PythonAPI/examples
-python manual_control.py
-```
-
-!!! Note
-    To avoid rendering and save up computational cost, enable [__no rendering mode__](adv_rendering_options.md#no-rendering-mode). The script `/PythonAPI/examples/no_rendering_mode.py` does this while creating a simple aerial view.  
-
-### Stop recording 
-
-The stop call is even simpler than the start call was. When the recorder is done, the recording will be saved in the path stated previously. 
-
-```py
-# --------------
-# Stop recording
-# --------------
-client.stop_recorder()
-```
-
----
 ## Set advanced sensors
 
-Now that a simulation has been recorded sucessfully, it is time to exploit it. One of the best ways to do so is adding new sensors to gather new data. The script __tutorial_replay.py__, among other things, contains definitions for more sensors. They work in the same way as the basic ones, but their comprehension may be a bit harder.
+The script __tutorial_replay.py__, among other things, contains definitions for more sensors. They work in the same way as the basic ones, but their comprehension may be a bit harder.
 
 ### Depth camera
 
@@ -729,6 +619,116 @@ rad_ego.listen(lambda radar_data: rad_callback(radar_data))
 
 ![tuto_radar](img/tuto_radar.png)
 <div style="text-align: right"><i>Radar output. The vehicle is stopped at a traffic light, so the static elements in front of it appear in white.</i></div>
+
+---
+## No-rendering mode
+
+The [no-rendering mode](adv_rendering_options.md) can be useful to run an initial simulation that will be later played again to retrieve data. Especially if this simulation has some extreme conditions, such as dense traffic.  
+
+### Simulate at a fast pace 
+
+Disabling the rendering will save up a lot of work to the simulation. As the GPU is not used, the server can work at full speed. This could be useful to simulate complex conditions at a fast pace. The best way to do so would be by setting a fixed time-step. Running an asynchronous server with a fixed time-step and no rendering, the only limitation for the simulation would be the inner logic of the server.  
+
+The same `config.py` used to [set the map](#map-setting) can disable rendering, and set a fixed time-step. 
+
+```
+cd /opt/carla/PythonAPI/utils
+./config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
+```
+
+!!! Warning
+    Read the [documentation](adv_synchrony_timestep.md) before messing around with with synchrony and time-step.
+
+### Manual control without rendering
+
+The script `PythonAPI/examples/no_rendering_mode.py` provides an overview of the simulation. It creates a minimalistic aerial view with Pygame, that will follow the ego vehicle. This could be used along with __manual_control.py__ to generate a route with barely no cost, record it, and then play it back and exploit it to gather data. 
+
+```
+cd /opt/carla/PythonAPI/examples
+python manual_control.py
+```
+
+```
+cd /opt/carla/PythonAPI/examples
+python no_rendering_mode.py --no-rendering
+```
+
+<details>
+<summary> Optional arguments in <b>no_rendering_mode.py</b> </summary>
+
+```sh
+  -h, --help           show this help message and exit
+  -v, --verbose        print debug information
+  --host H             IP of the host server (default: 127.0.0.1)
+  -p P, --port P       TCP port to listen to (default: 2000)
+  --res WIDTHxHEIGHT   window resolution (default: 1280x720)
+  --filter PATTERN     actor filter (default: "vehicle.*")
+  --map TOWN           start a new episode at the given TOWN
+  --no-rendering       switch off server rendering
+  --show-triggers      show trigger boxes of traffic signs
+  --show-connections   show waypoint connections
+  --show-spawn-points  show recommended spawn points
+```
+</details>
+<br>
+
+![tuto_no_rendering](img/tuto_no_rendering.png)
+<div style="text-align: right"><i>no_rendering_mode.py working in Town07</i></div>
+
+!!! Note
+    In this mode, GPU-based sensors will retrieve empty data. Cameras are useless, but other sensors such as detectors will work properly. 
+
+---
+## Record and retrieve data
+
+### Start recording
+
+The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
+
+```py
+# --------------
+# Start recording
+# --------------
+client.start_recorder('~/tutorial/recorder/recording01.log')
+```
+
+### Capture and record
+
+There are many different ways to do this. Mostly it goes down as either let it roam around or control it manually. The data for the sensors spawned will be retrieved on the fly. Make sure to check it while recording, to make sure everything is set properly.  
+
+* __Enable the autopilot.__ This will register the vehicle to the [Traffic Manager](adv_traffic_manager.md). It will roam around the city endlessly. The script does this, and creates a loop to prevent the script from finishing. The recording will go on until the user finishes the script. Alternatively, a timer could be set to finish the script after a certain time.  
+
+```py
+# --------------
+# Capture data
+# --------------
+ego_vehicle.set_autopilot(True)
+print('\nEgo autopilot enabled')
+
+while True:
+    world_snapshot = world.wait_for_tick()
+```
+
+* __Manual control.__ Run the script `PythonAPI/examples/manual_control.py` in a client, and the recorder in another one. Drive the ego vehicle around to create the desired route, and stop the recorder when finished. The __tutorial_ego.py__ script can be used to manage the recorder, but make sure to comment other fragments of code.  
+
+```
+cd /opt/carla/PythonAPI/examples
+python manual_control.py
+```
+
+!!! Note
+    To avoid rendering and save up computational cost, enable [__no rendering mode__](adv_rendering_options.md#no-rendering-mode). The script `/PythonAPI/examples/no_rendering_mode.py` does this while creating a simple aerial view.  
+
+### Stop recording 
+
+The stop call is even simpler than the start call was. When the recorder is done, the recording will be saved in the path stated previously. 
+
+```py
+# --------------
+# Stop recording
+# --------------
+client.stop_recorder()
+```
 
 ---
 ## Exploit the recording
