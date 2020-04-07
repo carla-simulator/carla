@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Rtree.h>
 
 namespace carla {
 namespace geom {
@@ -341,6 +342,121 @@ namespace geom {
     }
 
     return mesh_uptr_list;
+  }
+
+  struct VertexWeight {
+    Mesh::vertex_type* vertex;
+    double weight;
+  };
+  struct VertexNeighbors {
+    Mesh::vertex_type* vertex;
+    std::vector<VertexWeight> neighbors;
+  };
+  // Helper function to compute neighborhoord of vertices and their weights
+  std::vector<VertexNeighbors> GetVertexNeighborhoodAndWeights(std::vector<std::unique_ptr<Mesh>> &lane_meshes) {
+    struct VertexInfo {
+      Mesh::vertex_type * vertex;
+      size_t lane_mesh_idx;
+      bool is_static;
+    };
+    // Build rtree for neighborhood queries
+    using Rtree = geom::PointCloudRtree<VertexInfo>;
+    using Point = Rtree::BPoint;
+    Rtree rtree;
+    for (size_t lane_mesh_idx = 0; lane_mesh_idx < lane_meshes.size(); ++lane_mesh_idx) {
+      auto& mesh = lane_meshes[lane_mesh_idx];
+      for(size_t i = 0; i < mesh->GetVerticesNum(); ++i) {
+        auto& vertex = mesh->GetVertices()[i];
+        Point point(vertex.x, vertex.y, vertex.z);
+        if (i < 2 || i >= mesh->GetVerticesNum() - 2) {
+          rtree.InsertElement({point, {&vertex, lane_mesh_idx, true}});
+        } else {
+          rtree.InsertElement({point, {&vertex, lane_mesh_idx, false}});
+        }
+      }
+    }
+
+    double MaxWeightDistance = 5;
+    double SameLaneWeightMultiplier = 3;
+    double LaneEndsMultiplier = 3;
+    // Find neighbors for each vertex and compute their weight
+    std::vector<VertexNeighbors> vertices_neighborhoods;
+    for (size_t lane_mesh_idx = 0; lane_mesh_idx < lane_meshes.size(); ++lane_mesh_idx) {
+      auto& mesh = lane_meshes[lane_mesh_idx];
+      for(size_t i = 0; i < mesh->GetVerticesNum(); ++i) {
+        if (i > 2 && i < mesh->GetVerticesNum() - 2) {
+          auto& vertex = mesh->GetVertices()[i];
+          Point point(vertex.x, vertex.y, vertex.z);
+          auto closest_vertices = rtree.GetNearestNeighbours(point, 20);
+          VertexNeighbors vertex_neighborhood;
+          vertex_neighborhood.vertex = &vertex;
+          for(auto& close_vertex : closest_vertices) {
+            auto &vertex_info = close_vertex.second;
+            if(&vertex == vertex_info.vertex) {
+              continue;
+            }
+
+            // compute weight
+            double distance3D = geom::Math::Distance(vertex, *vertex_info.vertex);
+            // Ignore vertices beyond a certain distance
+            if(distance3D > MaxWeightDistance) {
+              continue;
+            }
+            if(abs(distance3D) < std::numeric_limits<double>::epsilon()) {
+              continue;
+            }
+            double weight = geom::Math::Clamp(1.0 / (distance3D), 0.0, 100000.0);
+
+            // Additional weight to vertices in the same lane
+            if(lane_mesh_idx == vertex_info.lane_mesh_idx) {
+              weight *= SameLaneWeightMultiplier;
+              // Further additional weight for fixed verices
+              if(vertex_info.is_static) {
+                weight *= LaneEndsMultiplier;
+              }
+            }
+            vertex_neighborhood.neighbors.push_back({vertex_info.vertex, weight});
+          }
+          vertices_neighborhoods.push_back(vertex_neighborhood);
+        }
+      }
+    }
+    return vertices_neighborhoods;
+  }
+
+  std::unique_ptr<Mesh> MeshFactory::MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const {
+    geom::Mesh out_mesh;
+
+    auto vertices_neighborhoods = GetVertexNeighborhoodAndWeights(lane_meshes);
+
+    // Laplacian function
+    auto Laplacian = [&](const Mesh::vertex_type* vertex, const std::vector<VertexWeight> &neighbors) -> double {
+      double sum = 0;
+      double sum_weight = 0;
+      for(auto &element : neighbors) {
+        sum += (element.vertex->z - vertex->z)*element.weight;
+        sum_weight += element.weight;
+      }
+      if(sum_weight > 0)
+        return sum / sum_weight;
+      else
+        return 0;
+    };
+    // Run iterative algorithm
+    double lambda = 0.5;
+    int iterations = 100;
+    for(int iter = 0; iter < iterations; ++iter) {
+      for (auto& vertex_neighborhood : vertices_neighborhoods) {
+        auto * vertex = vertex_neighborhood.vertex;
+        vertex->z += static_cast<float>(lambda*Laplacian(vertex, vertex_neighborhood.neighbors));
+      }
+    }
+
+    for(auto &mesh : lane_meshes) {
+      out_mesh += *mesh;
+    }
+
+    return std::make_unique<Mesh>(out_mesh);
   }
 
 } // namespace geom

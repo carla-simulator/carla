@@ -250,6 +250,10 @@ namespace geom {
     return _vertices;
   }
 
+  std::vector<Mesh::vertex_type> &Mesh::GetVertices() {
+    return _vertices;
+  }
+
   size_t Mesh::GetVerticesNum() const {
     return _vertices.size();
   }

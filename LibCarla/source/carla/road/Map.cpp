@@ -940,9 +940,30 @@ namespace road {
     mesh_factory.road_param.resolution = static_cast<float>(distance);
     mesh_factory.road_param.extra_lane_width = extra_width;
 
+    // Generate roads outside junctions
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
+      if (road.IsJunction()) {
+        continue;
+      }
       out_mesh += *mesh_factory.Generate(road);
+    }
+
+    // Generate roads within junctions and smooth them
+    for (const auto &junc_pair : _data.GetJunctions()) {
+      const auto &junction = junc_pair.second;
+      std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+      for(const auto &connection_pair : junction.GetConnections()) {
+        const auto &connection = connection_pair.second;
+        DEBUG_ASSERT(_data.GetRoads().contains(connection.connecting_road));
+        const auto &road = _data.GetRoads().at(connection.connecting_road);
+        for (auto &&lane_section : road.GetLaneSections()) {
+          for (auto &&lane_pair : lane_section.GetLanes()) {
+            lane_meshes.push_back(mesh_factory.Generate(lane_pair.second));
+          }
+        }
+      }
+      out_mesh += *mesh_factory.MergeAndSmooth(lane_meshes);
     }
 
     return out_mesh;
