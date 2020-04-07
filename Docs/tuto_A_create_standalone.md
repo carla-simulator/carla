@@ -19,7 +19,7 @@ make package ARGS="--packages=Package1,Package2"
 This will create a distribution package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
 !!! Note
-    If the assets have been imported [using Docker](tuto_A_add_map.md#via-docker), the distribution package be generated automatically.  
+    If the assets have been imported [using Docker](tuto_A_add_map.md#via-docker), the distribution package will be generated automatically.  
 
 ---
 ## Import a distribution package

@@ -3,17 +3,17 @@
 Users can create their own maps, and run CARLA using these. The creation of the map object is quite independent from CARLA. Nonetheless, the process to ingest it has been refined to be automatic. Thus, the new map can be used in CARLA almost out-of-the-box.  
 
 *   [__Introduction__](#introduction)  
-*   [__Create a map with RoadRunner__](#map-creation-with-roadrunner)  
+*   [__Create a map with RoadRunner__](#create-a-map-with-roadrunner)  
 	*   [Export from RoadRunner](#export-from-roadrunner)  
-* [__Prepare the files__](#prepare-the-files)  
+* [__Prepare the package__](#prepare-the-package)  
 	*   [Create the folder structure](#create-the-folder-structure)  
 	*   [Create the JSON description](#create-the-json-description)  
-*   [__Map ingestion__](#import-the-map)  
+*   [__Map ingestion__](#map-ingestion)  
 	*   [Via Docker](#via-docker)  
 	*   [Via terminal](#via-terminal)  
 *   [Final tips](#final-tips)  
 	*   [Modify pedestrian navigation](#modify-pedestrian-navigation)  
-*   [__Previous ways to import a map__](#previous-ways-to-import-a-map)  
+*   [__Deprecated ways to import a map__](#deprecated-ways-to-import-a-map)  
 
 ---
 ## Introduction
@@ -37,7 +37,7 @@ There are two different ways to import the map into CARLA. Both grant the previo
 
 After that, it is almost ready. There are some [final tips](#final-tips) to make sure that everything fits perfectly. 
 
-There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#previous-ways-to-import-a-map) of this tutorial.  
+There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#deprecated-ways-to-import-a-map) of this tutorial.  
 
 ---
 ## Create a map with RoadRunner
@@ -151,7 +151,7 @@ In the end, the `.json` should look similar to the one below.
 }
 ```
 ---
-## Import into CARLA
+## Map ingestion
 
 !!! Warning
     Packages with the same name will produce an error.  
@@ -248,7 +248,7 @@ This software provides specific plugins for CARLA. Get those and follow some sim
     </h4></summary>
 
 !!! Warning
-    These importing tutorials are deprecated. [Docker import](tuto_A_import_assets.md#via-docker) is the recommended way to import a map.  
+    These importing tutorials are deprecated. There are new ways to [ingest a map](#map-ingestion) to simplify the process.  
 
 ### Plugin installation
 
@@ -307,7 +307,7 @@ This process requires to go through all the process manually. From importing _.f
     </summary>
 
 !!! Warning
-    These importing tutorials are deprecated. [Docker import](tuto_A_import_assets.md#via-docker) is the recommended way to import a map.  
+    These importing tutorials are deprecated. There are new ways to [ingest a map](#map-ingestion) to simplify the process.  
 
 This is the generic way to import maps into Unreal Engine using any _.fbx_ and _.xodr_ files. As there is no plugin to ease the process, there are many settings to be done before the map is available in CARLA.  
 
@@ -410,7 +410,7 @@ This software provides specific plugins for CARLA. Get those and follow some sim
     <summary>Read traffic and pedestrian setting guide</summary>
 
 !!! Warning
-    These importing tutorials are deprecated. [Docker import](tuto_A_import_assets.md#via-docker) is the recommended way to import a map.  
+    These importing tutorials are deprecated. There are new ways to [ingest a map](#map-ingestion) to simplify the process.  
 
 ### Set traffic behavior
 
