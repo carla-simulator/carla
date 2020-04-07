@@ -46,9 +46,11 @@ namespace geom {
     std::vector<TreeElement> GetNearestNeighboursWithFilter(const BPoint &point, Filter filter,
         size_t number_neighbours = 1) const {
       std::vector<TreeElement> query_result;
-      _rtree.query(boost::geometry::index::nearest(point,
-          static_cast<unsigned int>(number_neighbours)) && boost::geometry::index::satisfies(filter),
-      std::back_inserter(query_result));
+      auto nearest = boost::geometry::index::nearest(point, static_cast<unsigned int>(number_neighbours));
+      auto satisfies = boost::geometry::index::satisfies(filter);
+      // Using explicit operator&& to workaround Bullseye coverage issue
+      // https://www.bullseye.com/help/trouble-logicalOverload.html.
+      _rtree.query(operator&&(nearest, satisfies), std::back_inserter(query_result));
       return query_result;
     }
 
