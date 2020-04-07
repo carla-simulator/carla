@@ -955,7 +955,6 @@ namespace road {
       std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
       for(const auto &connection_pair : junction.GetConnections()) {
         const auto &connection = connection_pair.second;
-        DEBUG_ASSERT(_data.GetRoads().contains(connection.connecting_road));
         const auto &road = _data.GetRoads().at(connection.connecting_road);
         for (auto &&lane_section : road.GetLaneSections()) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
