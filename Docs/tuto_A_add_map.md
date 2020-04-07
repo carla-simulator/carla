@@ -231,9 +231,12 @@ __2.__ Check the name of the meshes. By default, pedestrians will be able to wal
 __3.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
 
 __4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
-__5.__ A `.obj` file has been created in `Unreal/CarlaUE4/Saved`. Run the executable `Util/DockerUtils/dist/RecastBuilder` uwing the `.obj` as input.  
-__6.__ The `.bin` should have been generated in the file where the executable is running. Change its name to be the same as the `mapname.fbx`. 
-__7.__ Move it into `Content/Carla/Maps/Nav`.  
+
+__5.__ A `.obj` file has been created in `Unreal/CarlaUE4/Saved`. Run the executable `Util/DockerUtils/dist/RecastBuilder` using the `.obj` as input.  
+
+__6.__ The `.bin` should have been generated in the file where the executable is running. Change its name to be the same as the `mapname.fbx`.  
+
+__7.__ Move it into `Content/Carla/Maps/Nav`.   
 
 ---
 ## Deprecated ways to import a map
