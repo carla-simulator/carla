@@ -1,7 +1,7 @@
 
 # Import new assets
 
-Assets in CARLA is an umbrella term that includes both maps, and props. The simulator can ingest new assets anytime in a simple process. This not only includes different distribution packages, but also assets developed by the users. 
+Asset in CARLA is an umbrella term that includes both maps, and props. The simulator can ingest new assets anytime in a simple process. This makes it easier to use assets developed by the users in CARLA. 
 
 * [__Prepare the package__](#prepare-the-package)  
 	*   [Create the folder structure](#create-the-folder-structure)  
@@ -180,9 +180,9 @@ make import
 Not using the Docker has some disadvantages when importing maps. There will be a few things to do after the import.  
 
 ---
-## Additional steps to import a map
+## Additional steps to ingest a map
 
-The process to import a new map into CARLA is more straightforward than ever. Traffic lights and traffic lights will be created by the simulator when running the simulation using the information in the `.xodr`, so now users don't have to create and set these manually. However, there are still some additional steps to make sure that everything is set properly.  
+The process to ingest a new map is more straightforward than ever. Traffic lights and traffic lights are directly managed using OpenDRIVE definitions. The simulator will generate the necessary traffic lights, stops and yields without the need of human intervention.  will be created by the simulator when running the simulation using the information in the `.xodr`, so now users don't have to create and set these manually. However, there are still some additional steps to make sure that everything is set properly.  
 
 
 ### Generate pedestrian navigation

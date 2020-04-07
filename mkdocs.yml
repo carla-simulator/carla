@@ -46,7 +46,7 @@ nav:
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
 - Tutorials (assets):
-  - 'Add vehicles manually': 'tuto_A_import_assets.md'
+  - 'Add vehicles manually': 'tuto_A_add_vehicles.md'
   - 'Import new assets': 'tuto_A_import_assets.md'
   - 'Map creation': 'tuto_A_map_creation.md'
   - 'Map customization': 'tuto_A_map_customization.md'
