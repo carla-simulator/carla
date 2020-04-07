@@ -62,6 +62,10 @@ private:
     UTrafficLightComponent* TrafficLightComponent,
     float BoxSize);
 
+  void RemoveRoadrunnerProps() const;
+
+  void RemoveAttachedProps(TArray<AActor*> Actors) const;
+
   // Cached Carla Game Mode
   UPROPERTY()
   ACarlaGameModeBase *GameMode = 0;
