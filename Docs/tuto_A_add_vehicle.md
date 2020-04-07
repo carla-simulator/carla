@@ -1,4 +1,4 @@
-# Add vehicles manually
+# Add a new vehicle
 
 ---
 ## Add a 4 wheeled vehicle

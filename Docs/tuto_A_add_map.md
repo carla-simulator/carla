@@ -1,26 +1,46 @@
-# Map creation
+# Add a new map
 
-Users can create their own maps, and run CARLA using these. The software used for the creation is irrelevant, as long as it meets the minimum requirements. 
+Users can create their own maps, and run CARLA using these. The creation of the map object is quite independent from CARLA. Nonetheless, the process to ingest it has been refined to be automatic. Thus, the new map can be used in CARLA almost out-of-the-box.  
 
 *   [__Introduction__](#introduction)  
 *   [__Create a map with RoadRunner__](#map-creation-with-roadrunner)  
 	*   [Export from RoadRunner](#export-from-roadrunner)  
-*   [__Import the map__](#import-the-map)  
+* [__Prepare the files__](#prepare-the-files)  
+	*   [Create the folder structure](#create-the-folder-structure)  
+	*   [Create the JSON description](#create-the-json-description)  
+*   [__Map ingestion__](#import-the-map)  
+	*   [Via Docker](#via-docker)  
+	*   [Via terminal](#via-terminal)  
+*   [Final tips](#final-tips)  
+	*   [Modify pedestrian navigation](#modify-pedestrian-navigation)  
 *   [__Previous ways to import a map__](#previous-ways-to-import-a-map)  
 
 ---
 ## Introduction
 
-In order to create a CARLA map, two elements are needed. In order to create them, RoadRunner is the recommended software due to its simplicity. Some basic steps on how to do it are provided in the next section.  
+RoadRunner is the recommended software to create a map due to its simplicity. Some basic steps on how to do it are provided in [the next section](#create-a-map-with-roadrunner). The resulting map should consist of at least two elements.  
 
 * __`.fbx` binaries.__ The meshes needed to build the map, such as roads, lanemarkings, sidewalks, ect.
 * __`.xodr` OpenDRIVE file.__ Contains the road network information necessary for vehicles to navigate the map.
 
-!!! Note
-    This tutorial creates a new map from scratch. There is another tutorial to [customize a town](tuto_A_map_customization.md).
+These files must be prepared to be imported. The files of the map have to be stored in a certain [folder structure](#create-the-folder-structure), with a [`.json` file](#create-the-json-description) describing them.  
+
+The process of the map ingestion has been simplified to minimize the users' intervention. For said reason, there are certains steps have been automatized.  
+
+*   __Traffic signs are created when running the simulator.__ It will generate the traffic lights, stops, and yields according to their `.xodr` definition. The rest of landmarks present in the road map will not be physically on scene, but they can be queried using the API.  
+*   __Pedestrian navigation will be generated automatically.__ The user can modify it if desired, but a `.bin` file describing the basic navigation of the map will be created during the process. 
+
+There are two different ways to import the map into CARLA. Both grant the previously mentioned automatization, but there are some differences between them.  
+
+*   [__Via Docker.__](#via-docker) The output will be a distribution package containing the map ready to be used. However, as the map is packaged, pedestrian navigation cannot be modified. 
+*   [__Via terminal.__](#via-terminal) This will import the map into CARLA. The pedestrian navigation can be modified if needed. The map can be distributed using a standalone package. Take a look [this tutorial](tuto_A_create_standalone.md) to learn how to create it. 
+
+After that, it is almost ready. There are some [final tips](#final-tips) to make sure that everything fits perfectly. 
+
+There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#previous-ways-to-import-a-map) of this tutorial.  
 
 ---
-## Map creation with RoadRunner
+## Create a map with RoadRunner
 
 RoadRunner is an accessible and powerful software from Vector Zero to create 3D scenes. There is a trial version available at their [site](https://www.vectorzero.io/), and an [installation guide][rr_docs].
 
@@ -28,9 +48,9 @@ RoadRunner is an accessible and powerful software from Vector Zero to create 3D 
 
 The process is quite straightforward, but there are some things to take into account.  
 
-*   Center the map in (0,0).  
-*   Create the map definition. Take a look at the [official tutorials](https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists).
-*   Check the map validation. Take a close look at all connections and geometries.
+*   __Center the map__ in (0,0).  
+*   __Create the map definition.__ Take a look at the [official tutorials](https://www.youtube.com/channel/UCAIXf4TT8zFbzcFdozuFEDg/playlists).  
+*   __Check the map validation.__ Take a close look at all connections and geometries.  
 
 ![CheckGeometry](img/check_geometry.jpg)
 
@@ -57,11 +77,162 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
     Make sure that the .xodr and the .fbx files have the same name.  
 
 ---
-## Import the map
+## Prepare the package
 
-There are different ways to import a map. Read the specific documentation to learn how to [import assets into CARLA](#tuto_A_import_assets.md).  
+### Create the folder structure
 
-As far as importing maps, the [Docker import](tuto_A_import_assets.md#via-docker) is the recommended method. It makes the ingestion of a new map an out-of-the-box process. A Docker image of Unreal Engine is used so that everything is generated automatically. The other option is to do it via terminal, but that will need to generate collisions and pedestrian navigation manually.  
+__1. Create a folder inside `carla/Import`.__ The name of the folder is not relevant.  
+
+__2. Create different subfolders__ for each map to import.
+
+__3. Move the files of each map to the corresponding subfolder.__ A subfolder will contain a specific set of elements.  
+
+*   The mesh of the map in a `.fbx`.  
+*   The OpenDRIVE definition in a `.xodr`.  
+*   Optionally, the textures required by the asset.  
+
+
+For instance, an `Import` folder with one package containing two maps should have a structure similar to the one below.
+
+```sh
+Import
+│
+└── Package01
+  ├── Package01.json
+  ├── Map01
+  │   ├── Asphalt1_Diff.png
+  │   ├── Asphalt1_Norm.png
+  │   ├── Asphalt1_Spec.png
+  │   ├── Grass1_Diff.png
+  │   ├── Grass1_Norm.png
+  │   ├── Grass1_Spec.png
+  │   ├── LaneMarking1_Diff.png
+  │   ├── LaneMarking1_Norm.png
+  │   ├── LaneMarking1_Spec.png
+  │   ├── Map01.fbx
+  │   └── Map01.xodr
+  └── Map02
+      └── Map02.fbx
+```
+
+### Create the JSON description
+
+Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
+
+__Maps__ need the following parameters.  
+
+* __name__ of the map. This must be the same as the `.fbx` and `.xodr` files.  
+* __source__ path to the `.fbx`.  
+* __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.  
+* __xodr__ Path to the `.xodr`.  
+
+__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](tuto_A_add_props.md).  
+
+In the end, the `.json` should look similar to the one below.
+
+```json
+{
+  "maps": [
+    {
+      "name": "Map01",
+      "source": "./Map01/Map01.fbx",
+      "use_carla_materials": true,
+      "xodr": "./Map01/Map01.xodr"
+    },
+    {
+      "name": "Map02",
+      "source": "./Map02/Map02.fbx",
+      "use_carla_materials": false,
+      "xodr": "./Map02/Map02.xodr"
+    }
+  ],
+  "props": [
+  ]
+}
+```
+---
+## Import into CARLA
+
+!!! Warning
+    Packages with the same name will produce an error.  
+
+### Via Docker
+
+This option will run a Docker image of Unreal Engine to import the package, and export it as a distribution package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time.
+
+__1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). 
+
+__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files.  
+
+```sh
+python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets
+```
+
+__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the distribution package for the assets. Extract it in the main root CARLA folder.  
+
+!!! Note
+    There is an alternative on Linux. Move the package to the `Import` folder and run the script `Util/ImportAssets.sh` to extract the package.
+
+### Via terminal 
+
+This option will read the JSON file, and place the assets inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
+`Config` folder. This file describes the content, and is especially useful for props.  
+
+When everything is ready, run the command. 
+
+```sh
+make import
+```
+
+---
+## Final tips
+
+Now the map is ready to be used in CARLA. However, there are some additional settings to be done. These are recommended steps, but mostly optional besides pedestrian navigation.  
+
+*   __Test traffic light timing.__ The traffic lights are generated when the simulator runs. Their state changes using a default time that may be inaccurate for the new map. If there is need to change it, the custom time will have to be set on every run using the API.  
+<br>
+*   __Place vehicle spawn points.__ These will be used in scripts such as `spawn_npc.py`. They have to be created manually. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
+
+  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
+
+*   __Add the map to the Unreal packaging system.__ This will include the map along with the rest if a CARLA package is created.  
+`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
+
+  ![ue_maps_to_include](img/ue_maps_to_include.png)
+
+### Modify pedestrian navigation
+
+The pedestrian navigation is managed using a `.bin` file. This is generated when the map is imported. However, this navigation is made using the road definition, and it should be modified.  
+
+*   __Crosswalk meshes are not created during the import.__ Crosswalks defined inside the `.xodr` remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
+
+!!! Note
+    To generate new crosswalks, change the name of the mesh to `Road_Crosswalk`. Avoid doing so if the crosswalk is in the `.xodr`. Otherwise, it will be duplicated. 
+
+![ue_crosswalks](img/ue_crosswalks.png)  
+
+*   __If additional props are added, change the navigation accordingly.__ These may interfere with the navigation. This is the case for streetlights, trees and other elements on the navigation areas. Follow the steps below to create a new navigation file. 
+
+!!! Warning
+    The Docker import does not allow additional modifications. The navigation file has already been packaged and cannot be edited. 
+
+
+__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
+
+![ue_skybox_no_export](img/ue_noexport.png) 
+
+__2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
+
+*   Sidewalk = `Road_Sidewalk`.  
+*   Grass = `Road_Grass`.  
+
+![ue_meshes](img/ue_meshes.png) 
+
+__3.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
+
+__4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
+__5.__ Run RecastDemo `./RecastDemo`.  
+__6.__ Change the name of the `.bin` file to be the same as the `mapname.fbx`. Move it into `Content/Carla/Maps/Nav`.  
 
 ---
 ## Deprecated ways to import a map
