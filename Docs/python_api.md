@@ -328,10 +328,13 @@ Executes a list of commands on a single simulation step, blocks until the comman
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
-- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>)  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**resolution**</font>, <font color="#00a6ed">**wall_height**</font>, <font color="#00a6ed">**additional_width**</font>)  
 Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
     - **Parameters:**
         - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
+        - `resolution` (_float_) – Quality of the road mesh, increasing this value can reduce performance (in meters).  
+        - `wall_height` (_float_) – Height of a procedural wall that prevents cars from falling outside the map, only generated in non-junction roads (in meters).  
+        - `additional_width` (_float_) – Additional lane width to prevent cars from falling outside the map, only generated in junctions (in meters).  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
@@ -1009,6 +1012,24 @@ Converts a given `location`, a point in the simulation, to a [carla.GeoLocation]
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
     - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
+- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
+Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  
+Returns the landmarks with a certain OpenDRIVE ID. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Parameters:**
+        - `opendrive_id` (_string_) – The OpenDRIVE ID of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_all_landmarks_of_type"></a>**<font color="#7fb800">get_all_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**type**</font>)  
+Returns the landmarks of a specific type. Landmarks retrieved using this method have a __null__ waypoint.  
+    - **Parameters:**
+        - `type` (_string_) – The type of the landmarks.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – A landmark that belongs to the group.  
+    - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Transform](#carla.Transform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
@@ -1024,10 +1045,10 @@ Returns a waypoint that can be located in an exact location or translated to the
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Limits the search for nearest lane to one or various lane types that can be flagged.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 - <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
-Get a waypoint if all the parameters passed are correct, otherwise return None.  
+Returns a waypoint if all the parameters passed are correct. Otherwise, returns __None__.  
     - **Parameters:**
-        - `road_id` (_int_) – Id of the road from where getting the waypoint.  
-        - `lane_id` (_int_) – Id of the lane to get the waypoint.  
+        - `road_id` (_int_) – ID of the road to get the waypoint.  
+        - `lane_id` (_int_) – ID of the lane to get the waypoint.  
         - `s` (_float_) – Specify the length from the road start.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
@@ -1129,21 +1150,158 @@ Parses the axis' orientations to string.
 
 ---
 
+## carla.RssEgoDynamicsOnRoute<a name="carla.RssEgoDynamicsOnRoute"></a>
+Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssEgoDynamicsOnRoute.ego_speed"></a>**<font color="#f8805a">ego_speed</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego vehicle's speed.  
+- <a name="carla.RssEgoDynamicsOnRoute.min_stopping_distance"></a>**<font color="#f8805a">min_stopping_distance</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">libad_physics_python.Distance</a>_)  
+The current minimum stopping distance.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_center"></a>**<font color="#f8805a">ego_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+The considered enu position of the ego vehicle.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_heading"></a>**<font color="#f8805a">ego_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading of the ego vehicle.  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_center_within_route"></a>**<font color="#f8805a">ego_center_within_route</font>** (_bool_)  
+States if the ego vehicle's center is within the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.crossing_border"></a>**<font color="#f8805a">crossing_border</font>** (_bool_)  
+States if the vehicle is already crossing one of the lane borders.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_heading"></a>**<font color="#f8805a">route_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading of the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_nominal_center"></a>**<font color="#f8805a">route_nominal_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+The considered nominal center of the current route.  
+- <a name="carla.RssEgoDynamicsOnRoute.heading_diff"></a>**<font color="#f8805a">heading_diff</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+The considered heading diff towards the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lat"></a>**<font color="#f8805a">route_speed_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego vehicle's speed component _lat_ regarding the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lon"></a>**<font color="#f8805a">route_speed_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+The ego vehicle's speed component _lon_ regarding the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lat"></a>**<font color="#f8805a">route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego vehicle's acceleration component _lat_ regarding the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lon"></a>**<font color="#f8805a">route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego vehicle's acceleration component _lon_ regarding the route.  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lat"></a>**<font color="#f8805a">avg_route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego vehicle's acceleration component _lat_ regarding the route smoothened by an average filter.  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lon"></a>**<font color="#f8805a">avg_route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+The ego acceleration component _lon_ regarding the route smoothened by an average filter.  
+
+<h3>Methods</h3>
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssEgoDynamicsOnRoute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssResponse<a name="carla.RssResponse"></a>
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
+
+A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [carla.VehicleControl](#carla.VehicleControl) of the vehicle.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssResponse.response_valid"></a>**<font color="#f8805a">response_valid</font>** (_bool_)  
+States if the response is valid. It is __False__ if calculations failed or an exception occured.  
+- <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>_)  
+The proper response that the RSS calculated for the vehicle.  
+- <a name="carla.RssResponse.acceleration_restriction"></a>**<font color="#f8805a">acceleration_restriction</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_)  
+Acceleration restrictions to be applied, according to the RSS calculation.  
+- <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>_)  
+Detailed RSS states at the current moment in time.  
+- <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
+Current ego vehicle dynamics regarding the route.  
+
+<h3>Methods</h3>
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssResponse.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssRestrictor<a name="carla.RssRestrictor"></a>
+These objects apply restrictions to a [carla.VehicleControl](#carla.VehicleControl). It is part of the CARLA implementation of the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib). This class works hand in hand with a [rss sensor](ref_sensors.md#rss-sensor), which provides the data of the restrictions to be applied.  
+
+<h3>Methods</h3>
+- <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**restriction**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  
+Applies the safety restrictions given by a [carla.RssSensor](#carla.RssSensor) to a [carla.VehicleControl](#carla.VehicleControl).  
+    - **Parameters:**
+        - `vehicle_control` (_[carla.VehicleControl](#carla.VehicleControl)_) – The input vehicle control to be restricted.  
+        - `restriction` (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_) – Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.  
+        - `ego_dynamics_on_route` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – Part of the response generated by the sensor. Contains dynamics and heading of the vehicle regarding its route.  
+        - `vehicle_physics` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – The current physics of the vehicle. Used to apply the restrictions properly.  
+    - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
+
+---
+
+## carla.RssRoadBoundariesMode<a name="carla.RssRoadBoundariesMode"></a>
+Enum declaration used in [carla.RssSensor](#carla.RssSensor) to enable or disable the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. In summary, this feature considers the road boundaries as virtual objects. The minimum safety distance check is applied to these virtual walls, in order to make sure the vehicle does not drive off the road.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssRoadBoundariesMode.On"></a>**<font color="#f8805a">On</font>**  
+Enables the _stay on road_ feature.  
+- <a name="carla.RssRoadBoundariesMode.Off"></a>**<font color="#f8805a">Off</font>**  
+Disables the _stay on road_ feature.  
+
+---
+
+## carla.RssSensor<a name="carla.RssSensor"></a>
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.  
+
+The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle.  
+- <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles.  
+- <a name="carla.RssSensor.road_boundaries_mode"></a>**<font color="#f8805a">road_boundaries_mode</font>** (_[carla.RssRoadBoundariesMode](#carla.RssRoadBoundariesMode)_)  
+Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __On__.  
+- <a name="carla.RssSensor.visualization_mode"></a>**<font color="#f8805a">visualization_mode</font>** (_[carla.RssVisualizationMode](#carla.RssVisualizationMode)_)  
+Sets the visualization of the RSS on the server side. By default is __All__. These drawings may delay de RSS so it is best to set this to __Off__ when evaluating RSS performance.  
+- <a name="carla.RssSensor.routing_targets"></a>**<font color="#f8805a">routing_targets</font>** (_vector<[carla.Transform](#carla.Transform)>_)  
+The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.  
+
+<h3>Methods</h3>
+- <a name="carla.RssSensor.append_routing_target"></a>**<font color="#7fb800">append_routing_target</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**routing_target**</font>)  
+Appends a new target position to the current route of the vehicle.  
+    - **Parameters:**
+        - `routing_target` (_[carla.Transform](#carla.Transform)_) – New target point for the route. Choose these after the intersections to force the route to take the desired turn.  
+- <a name="carla.RssSensor.reset_routing_targets"></a>**<font color="#7fb800">reset_routing_targets</font>**(<font color="#00a6ed">**self**</font>)  
+Erases the targets that have been appended to the route.  
+- <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
+Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
+
+<h3>Dunder methods</h3>
+- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssVisualizationMode<a name="carla.RssVisualizationMode"></a>
+Enum declaration used to state the visualization RSS calculations server side. Depending on these, the [carla.RssSensor](#carla.RssSensor) will use a [carla.DebugHelper](#carla.DebugHelper) to draw different elements. These drawings take some time and might delay the RSS responses. It is best to disable them when evaluating RSS performance.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssVisualizationMode.Off"></a>**<font color="#f8805a">Off</font>**  
+- <a name="carla.RssVisualizationMode.RouteOnly"></a>**<font color="#f8805a">RouteOnly</font>**  
+- <a name="carla.RssVisualizationMode.VehicleStateOnly"></a>**<font color="#f8805a">VehicleStateOnly</font>**  
+- <a name="carla.RssVisualizationMode.VehicleStateAndRoute"></a>**<font color="#f8805a">VehicleStateAndRoute</font>**  
+- <a name="carla.RssVisualizationMode.All"></a>**<font color="#f8805a">All</font>**  
+
+---
+
 ## carla.Sensor<a name="carla.Sensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).             
-     
-  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow:        
-  <b>Receive data on every tick:</b>       
-  - [Gnss sensor](ref_sensors.md#gnss-sensor).        
-  - [IMU sensor](ref_sensors.md#imu-sensor).         
-  - [Radar](ref_sensors.md#radar-sensor).        
-  - [Depth camera](ref_sensors.md#depth-camera).        
-  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).             
-  - [RGB camera](ref_sensors.md#rgb-camera).        
-  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).        
-  <b>Only receive data when triggered:</b>        
-  - [Collision detector](ref_sensors.md#collision-detector).       
-  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).      
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
+
+  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.  
+  <b>Receive data on every tick.</b>  
+  - [Depth camera](ref_sensors.md#depth-camera).  
+  - [Gnss sensor](ref_sensors.md#gnss-sensor).  
+  - [IMU sensor](ref_sensors.md#imu-sensor).  
+  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).  
+  - [Radar](ref_sensors.md#radar-sensor).  
+  - [RGB camera](ref_sensors.md#rgb-camera).  
+  - [RSS sensor](ref_sensors.md#rss-sensor).  
+  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).  
+  <b>Only receive data when triggered.</b>  
+  - [Collision detector](ref_sensors.md#collision-detector).  
+  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).  
   - [Obstacle detector](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
@@ -1164,15 +1322,16 @@ Commands the sensor to stop listening for data.
 ---
 
 ## carla.SensorData<a name="carla.SensorData"></a>
-Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. The relation between available sensors and their corresponding data goes like:        
-  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).        
-  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).        
-  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).        
-  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).      
-  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).        
-  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).        
-  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).        
+Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. Hereunder is a list of the sensors and their corresponding data.  
+  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).  
+  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).  
+  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).  
+  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).  
+  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).  
+  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).  
+  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).  
   - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).  
+  - RSS sensor: [carla.RssResponse](#carla.RssResponse).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
@@ -1780,6 +1939,9 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
     - **Parameters:**
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.  
+    - **Return:** _[carla.Junction](#carla.Junction)_  
 - <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
     - **Parameters:**
@@ -1808,7 +1970,7 @@ Will return <b>None</b> if the lane does not exist.
 ---
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a>
-This class defines objects containing lightning and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](/bp_library/). They neither affect the actor's physics nor other sensors.        
+This class defines objects containing lightning and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](ref_sensors.md#rgb-camera). They neither affect the actor's physics nor other sensors.        
   Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
 
 <h3>Instance Variables</h3>
@@ -1959,6 +2121,16 @@ Returns a list of actor blueprints available to ease the spawn of these into the
 - <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the object containing the navigation map used to describe this world.  
     - **Return:** _[carla.Map](#carla.Map)_  
+- <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Provided a landmark, returns the traffic light object it describes.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic light.  
+    - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
+- <a name="carla.World.get_traffic_sign"></a>**<font color="#7fb800">get_traffic_sign</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+Provided a landmark, returns the traffic sign object it describes.  
+    - **Parameters:**
+        - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic sign.  
+    - **Return:** _[carla.TrafficSign](#carla.TrafficSign)_  
 - <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
 This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
@@ -2265,6 +2437,6 @@ Identificator of the parent actor.
 - <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
 Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
     - **Parameters:**
-        - `command` (_[carla.Command](#carla.Command)_) – CommandType.  
+        - `command` (_any carla Command_) – a Carla command.  
 
 ---
