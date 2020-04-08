@@ -261,8 +261,8 @@ namespace CollisionStageConstants {
       // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
       if (geodesic_path_bbox_touching
           && ((!vehicle_bbox_touching
-           && (!ego_path_clear || (ego_path_clear && other_path_clear && !ego_path_priority)))
-              || (vehicle_bbox_touching && !ego_angular_priority))) {
+           && (!ego_path_clear || (ego_path_clear && other_path_clear && !ego_angular_priority && !ego_path_priority)))
+              || (vehicle_bbox_touching && !ego_angular_priority && !ego_path_priority))) {
         hazard = true;
 
         const float specific_distance_margin = MAX(parameters.GetDistanceToLeadingVehicle(reference_vehicle),
