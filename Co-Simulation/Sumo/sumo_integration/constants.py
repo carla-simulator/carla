@@ -5,7 +5,6 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
 """ This module defines constants used for the sumo-carla co-simulation. """
 
 # ==================================================================================================
