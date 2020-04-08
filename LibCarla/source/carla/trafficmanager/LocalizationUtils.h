@@ -50,7 +50,8 @@ namespace traffic_manager {
     ActorIdSet GetPassingVehicles(uint64_t waypoint_id);
 
     void UpdateGridPosition(const ActorId actor_id, const Buffer& buffer);
-    void UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint);
+    void UpdateUnregisteredGridPosition(const ActorId actor_id,
+                                        const std::vector<SimpleWaypointPtr> waypoints);
     /// Method to return the wayPoints from the waypoint Buffer by using target point distance
     std::pair<SimpleWaypointPtr,uint64_t> GetTargetWaypoint(const Buffer& waypoint_buffer, const float& target_point_distance);
 
