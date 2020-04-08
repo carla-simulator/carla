@@ -136,6 +136,8 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
       return;
     }
 
+    RemoveRoadrunnerProps();
+
     SpawnTrafficLights();
     GenerateTriggerBoxesForTrafficLights();
 
@@ -464,4 +466,41 @@ USignComponent* ATrafficLightManager::GetTrafficSign(FString SignId)
     return nullptr;
   }
   return TrafficSignComponents[SignId];
+}
+
+void ATrafficLightManager::RemoveRoadrunnerProps() const
+{
+    TArray<AActor*> Actors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Actors);
+
+    // Detect PropsNode Actor which is the father of all the Props imported from Roadrunner
+    AActor* PropsNode = nullptr;
+    for(AActor* Actor : Actors)
+    {
+      const FString Name = UKismetSystemLibrary::GetDisplayName(Actor);
+      if(Name.Equals("PropsNode"))
+      {
+        PropsNode = Actor;
+        break;
+      }
+    }
+
+    if(PropsNode)
+    {
+      PropsNode->GetAttachedActors(Actors, true);
+      RemoveAttachedProps(Actors);
+      PropsNode->Destroy();
+    }
+
+}
+
+void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
+{
+  for(AActor* Actor : Actors)
+  {
+    TArray<AActor*> AttachedActors;
+    Actor->GetAttachedActors(AttachedActors, true);
+    RemoveAttachedProps(AttachedActors);
+    Actor->Destroy();
+  }
 }
