@@ -18,6 +18,8 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
+#include <vector>
+#include <unordered_map>
 #include <stdexcept>
 
 namespace carla {
@@ -976,6 +978,53 @@ namespace road {
     }
 
     return out_mesh;
+  }
+
+  std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
+      const double distance, const float max_road_len, const float extra_width) const {
+    RELEASE_ASSERT(distance > 0.0);
+    RELEASE_ASSERT(extra_width >= 0.0);
+    RELEASE_ASSERT(max_road_len > 0.0);
+    geom::MeshFactory mesh_factory;
+    mesh_factory.road_param.resolution = static_cast<float>(distance);
+    mesh_factory.road_param.extra_lane_width = extra_width;
+    std::vector<std::unique_ptr<geom::Mesh>> out_mesh_list;
+
+    std::unordered_map<JuncId, geom::Mesh> junction_map;
+    for (auto &&pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
+          mesh_factory.GenerateWithMaxLen(road, max_road_len);
+
+      // If the road in in a junction, add the road to the junction mesh instead of
+      // doing it separately, this is needed for the road mesh smooth algorithm
+      if (road.IsJunction()) {
+        const auto junction_id = road.GetJunctionId();
+        geom::Mesh junction_mesh;
+        for (auto &&i : road_mesh_list) {
+          junction_mesh += *i;
+        }
+        // If the junction id already exists on the map
+        if (junction_map.count(junction_id)) {
+          junction_map[junction_id] += junction_mesh;
+        } else {
+          // Otherwise create it
+          junction_map[junction_id] = std::move(junction_mesh);
+        }
+      } else {
+        out_mesh_list.insert(
+            out_mesh_list.end(),
+            std::make_move_iterator(road_mesh_list.begin()),
+            std::make_move_iterator(road_mesh_list.end()));
+      }
+    }
+
+    // Merge the map meshes with out_mesh_list
+    for (auto &&pair : junction_map) {
+      out_mesh_list.push_back(std::make_unique<geom::Mesh>(pair.second));
+    }
+
+    return out_mesh_list;
   }
 
   geom::Mesh Map::GetAllCrosswalkMesh() const {

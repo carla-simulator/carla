@@ -28,7 +28,9 @@ namespace road {
 
     double GetDistance() const;
 
-    Road *GetRoad();
+    double GetLength() const;
+
+    Road *GetRoad() const;
 
     Lane *GetLane(const LaneId id);
 
