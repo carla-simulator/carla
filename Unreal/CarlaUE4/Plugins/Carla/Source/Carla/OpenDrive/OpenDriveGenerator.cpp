@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "OpenDriveGenerator.h"
 #include "Traffic/TrafficLightManager.h"
+#include "Util/ProceduralCustomMesh.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -15,20 +16,14 @@
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
 #include "PhysicsEngine/BodySetupEnums.h"
-#include "ProceduralMeshComponent.h"
 
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = false;
   RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+  SetRootComponent(RootComponent);
   RootComponent->Mobility = EComponentMobility::Static;
-
-  RoadMesh = CreateDefaultSubobject<UProceduralMeshComponent>("RoadMesh");
-  SetRootComponent(RoadMesh);
-  RoadMesh->bUseAsyncCooking = true;
-  RoadMesh->bUseComplexAsSimpleCollision = true;
-  RoadMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
@@ -72,9 +67,9 @@ void AOpenDriveGenerator::GenerateRoadMesh()
 
   static const FString ConfigFilePath =
       FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf";
-  float Resolution = 2.f;
-  float WallHeight = 1.f;
-  float AdditionalWidth = .6f;
+  float Resolution      = 2.0f;
+  float WallHeight      = 1.0f;
+  float AdditionalWidth = 0.6f;
   if (FPaths::FileExists(ConfigFilePath)) {
     FString ConfigData;
     TArray<FString> Lines;
@@ -98,81 +93,50 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     }
   }
 
-  const auto MeshData =
-      CarlaMap->GenerateMesh(Resolution, AdditionalWidth) +
-      CarlaMap->GenerateWalls(Resolution, WallHeight);
+  // const FProceduralCustomMesh MeshData =
+  //     CarlaMap->GenerateMesh(Resolution, AdditionalWidth) +
+  //     CarlaMap->GenerateWalls(Resolution, WallHeight);
 
-  // Build the mesh
-  TArray<FVector> Vertices;
-  for (const auto vertex : MeshData.GetVertices())
-  {
-    // From meters to centimeters
-    Vertices.Add(FVector(vertex.x, vertex.y, vertex.z) * 1e2f);
+  const auto Meshes = CarlaMap->GenerateChunkedMesh(Resolution, 50.0f, AdditionalWidth);
+  for (const auto &Mesh : Meshes) {
+    AActor *TempActor = GetWorld()->SpawnActor<AActor>();
+    UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
+    TempPMC->RegisterComponent();
+    TempPMC->AttachToComponent(
+        TempActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    const FProceduralCustomMesh MeshData = *Mesh;
+    TempPMC->CreateMeshSection_LinearColor(
+        0,
+        MeshData.Vertices,
+        MeshData.Triangles,
+        MeshData.Normals,
+        TArray<FVector2D>(), // UV0
+        TArray<FLinearColor>(), // VertexColor
+        TArray<FProcMeshTangent>(), // Tangents
+        true); // Create collision
+
+    ActorMeshList.Add(TempActor);
   }
 
-  const auto Indexes = MeshData.GetIndexes();
-  TArray<int32> Triangles;
-  TArray<FTriIndices> TriIndices;
-  for (auto i = 0u; i < Indexes.size(); i += 3)
-  {
-    FTriIndices Triangle;
-    // "-1" since mesh indexes in Unreal starts from index 0.
-    Triangles.Add(Indexes[i]     - 1);
-    // Since Unreal's coords are left handed, invert the last 2 indices.
-    Triangles.Add(Indexes[i + 2] - 1);
-    Triangles.Add(Indexes[i + 1] - 1);
+  // // Build collision data
+  // FTriMeshCollisionData CollisitonData;
+  // CollisitonData.bDeformableMesh = false;
+  // CollisitonData.bDisableActiveEdgePrecompute = false;
+  // CollisitonData.bFastCook = false;
+  // CollisitonData.bFlipNormals = false;
+  // CollisitonData.Indices = TriIndices;
+  // CollisitonData.Vertices = Vertices;
 
-    Triangle.v0 = Indexes[i]     - 1;
-    Triangle.v1 = Indexes[i + 2] - 1;
-    Triangle.v2 = Indexes[i + 1] - 1;
-    TriIndices.Add(Triangle);
-  }
-
-  TArray<FVector> Normals;
-  Normals.Init(FVector::UpVector, Vertices.Num());
-
-  for (const auto &Triangle : TriIndices) {
-    FVector Normal;
-    const FVector U = Vertices[Triangle.v1] - Vertices[Triangle.v0];
-    const FVector V = Vertices[Triangle.v2] - Vertices[Triangle.v0];
-    Normal.X = (U.Y * V.Z) - (U.Z * V.Y);
-    Normal.Y = (U.Z * V.X) - (U.X * V.Z);
-    Normal.Z = (U.X * V.Y) - (U.Y * V.X);
-    Normal = -Normal;
-    Normal = Normal.GetSafeNormal(.0001f);
-    if (Normal != FVector::ZeroVector)
-    {
-      Normals[Triangle.v0] = Normal;
-      Normals[Triangle.v1] = Normal;
-      Normals[Triangle.v2] = Normal;
-    }
-  }
-
-  RoadMesh->CreateMeshSection_LinearColor(
-      0,
-      Vertices,
-      Triangles,
-      Normals, // Normals
-      TArray<FVector2D>(), // UV0
-      TArray<FLinearColor>(), // VertexColor
-      TArray<FProcMeshTangent>(), // Tangents
-      true); // Create collision
-
-  // Build collision data
-  FTriMeshCollisionData CollisitonData;
-  CollisitonData.bDeformableMesh = false;
-  CollisitonData.bDisableActiveEdgePrecompute = false;
-  CollisitonData.bFastCook = false;
-  CollisitonData.bFlipNormals = false;
-  CollisitonData.Indices = TriIndices;
-  CollisitonData.Vertices = Vertices;
-
-  RoadMesh->ContainsPhysicsTriMeshData(true);
-  bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
-  if (!Success)
-  {
-    UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
-  }
+  // RoadMesh->ContainsPhysicsTriMeshData(true);
+  // bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
+  // if (!Success)
+  // {
+  //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
+  // }
 }
 
 void AOpenDriveGenerator::GeneratePoles()
