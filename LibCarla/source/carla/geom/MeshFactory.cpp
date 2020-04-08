@@ -352,13 +352,40 @@ namespace geom {
     Mesh::vertex_type* vertex;
     std::vector<VertexWeight> neighbors;
   };
+  struct VertexInfo {
+    Mesh::vertex_type * vertex;
+    size_t lane_mesh_idx;
+    bool is_static;
+  };
+  constexpr double MaxWeightDistance = 5;
+  constexpr double SameLaneWeightMultiplier = 3;
+  constexpr double LaneEndsMultiplier = 3;
+
+  // Helper gunction to compute the weight of neighboring vertices
+  VertexWeight ComputeVertexWeight(const VertexInfo& vertex_info, const VertexInfo& neighbor_info) {
+    double distance3D = geom::Math::Distance(*vertex_info.vertex, *neighbor_info.vertex);
+    // Ignore vertices beyond a certain distance
+    if(distance3D > MaxWeightDistance) {
+      return {neighbor_info.vertex, 0};
+    }
+    if(abs(distance3D) < std::numeric_limits<double>::epsilon()) {
+      return {neighbor_info.vertex, 0};
+    }
+    double weight = geom::Math::Clamp(1.0 / (distance3D), 0.0, 100000.0);
+
+    // Additional weight to vertices in the same lane
+    if(vertex_info.lane_mesh_idx == neighbor_info.lane_mesh_idx) {
+      weight *= SameLaneWeightMultiplier;
+      // Further additional weight for fixed verices
+      if(neighbor_info.is_static) {
+        weight *= LaneEndsMultiplier;
+      }
+    }
+    return {neighbor_info.vertex, weight};
+  }
+
   // Helper function to compute neighborhoord of vertices and their weights
   std::vector<VertexNeighbors> GetVertexNeighborhoodAndWeights(std::vector<std::unique_ptr<Mesh>> &lane_meshes) {
-    struct VertexInfo {
-      Mesh::vertex_type * vertex;
-      size_t lane_mesh_idx;
-      bool is_static;
-    };
     // Build rtree for neighborhood queries
     using Rtree = geom::PointCloudRtree<VertexInfo>;
     using Point = Rtree::BPoint;
@@ -376,9 +403,6 @@ namespace geom {
       }
     }
 
-    double MaxWeightDistance = 5;
-    double SameLaneWeightMultiplier = 3;
-    double LaneEndsMultiplier = 3;
     // Find neighbors for each vertex and compute their weight
     std::vector<VertexNeighbors> vertices_neighborhoods;
     for (size_t lane_mesh_idx = 0; lane_mesh_idx < lane_meshes.size(); ++lane_mesh_idx) {
@@ -395,27 +419,9 @@ namespace geom {
             if(&vertex == vertex_info.vertex) {
               continue;
             }
-
-            // compute weight
-            double distance3D = geom::Math::Distance(vertex, *vertex_info.vertex);
-            // Ignore vertices beyond a certain distance
-            if(distance3D > MaxWeightDistance) {
-              continue;
-            }
-            if(abs(distance3D) < std::numeric_limits<double>::epsilon()) {
-              continue;
-            }
-            double weight = geom::Math::Clamp(1.0 / (distance3D), 0.0, 100000.0);
-
-            // Additional weight to vertices in the same lane
-            if(lane_mesh_idx == vertex_info.lane_mesh_idx) {
-              weight *= SameLaneWeightMultiplier;
-              // Further additional weight for fixed verices
-              if(vertex_info.is_static) {
-                weight *= LaneEndsMultiplier;
-              }
-            }
-            vertex_neighborhood.neighbors.push_back({vertex_info.vertex, weight});
+            auto vertex_weight = ComputeVertexWeight({&vertex, lane_mesh_idx, false}, vertex_info);
+            if(vertex_weight.weight > 0)
+              vertex_neighborhood.neighbors.push_back(vertex_weight);
           }
           vertices_neighborhoods.push_back(vertex_neighborhood);
         }
