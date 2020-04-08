@@ -35,7 +35,8 @@ namespace client {
     using ActorState::GetBoundingBox;
 
     /// Switch on/off this vehicle's autopilot.
-    void SetAutopilot(TM& tm, bool enabled = true);
+    void SetAutopilot(bool enabled = true);
+    void SetAutopilotTM(bool enabled = true, TM* tm = nullptr);
 
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);

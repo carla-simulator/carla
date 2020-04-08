@@ -155,7 +155,7 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, tm, hud, args):
+    def __init__(self, carla_world, hud, args):
         self.world = carla_world
         self.actor_role_name = args.rolename
         try:
@@ -165,7 +165,6 @@ class World(object):
             print('  The server could not send the OpenDRIVE (.xodr) file:')
             print('  Make sure it exists, has the same name of your town, and is correct.')
             sys.exit(1)
-        self.tm = tm
         self.hud = hud
         self.player = None
         self.collision_sensor = None
@@ -286,7 +285,7 @@ class KeyboardControl(object):
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             self._lights = carla.VehicleLightState.NONE
-            world.player.set_autopilot(world.tm, self._autopilot_enabled)
+            world.player.set_autopilot(self._autopilot_enabled)
             world.player.set_light_state(self._lights)
         elif isinstance(world.player, carla.Walker):
             self._control = carla.WalkerControl()
@@ -308,9 +307,9 @@ class KeyboardControl(object):
                     return True
                 elif event.key == K_BACKSPACE:
                     if self._autopilot_enabled:
-                        world.player.set_autopilot(world.tm, False)
+                        world.player.set_autopilot(False)
                         world.restart()
-                        world.player.set_autopilot(world.tm, True)
+                        world.player.set_autopilot(True)
                     else:
                         world.restart()
                 elif event.key == K_F1:
@@ -351,7 +350,7 @@ class KeyboardControl(object):
                     world.destroy_sensors()
                     # disable autopilot
                     self._autopilot_enabled = False
-                    world.player.set_autopilot(world.tm, self._autopilot_enabled)
+                    world.player.set_autopilot(self._autopilot_enabled)
                     world.hud.notification("Replaying file 'manual_recording.rec'")
                     # replayer
                     client.replay_file("manual_recording.rec", world.recording_start, 0, 0)
@@ -382,7 +381,7 @@ class KeyboardControl(object):
                         self._control.gear = self._control.gear + 1
                     elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
                         self._autopilot_enabled = not self._autopilot_enabled
-                        world.player.set_autopilot(world.tm, self._autopilot_enabled)
+                        world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
@@ -1012,10 +1011,8 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-        # TODO: args.tm_port
-        tm = client.get_trafficmanager(8000)
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), tm, hud, args)
+        world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
