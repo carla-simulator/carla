@@ -11,7 +11,6 @@
 #include <ios>
 
 #include <carla/geom/Math.h>
-#include <carla/geom/Location.h>
 
 namespace carla {
 namespace geom {
