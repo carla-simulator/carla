@@ -56,12 +56,6 @@ private:
 
   void SpawnSignals();
 
-  void GenerateTriggerBoxesForTrafficLights();
-
-  void GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
-    UTrafficLightComponent* TrafficLightComponent,
-    float BoxSize);
-
   void RemoveRoadrunnerProps() const;
 
   void RemoveAttachedProps(TArray<AActor*> Actors) const;
@@ -102,5 +96,8 @@ private:
 
   UPROPERTY()
   bool TrafficLightsGenerated = false;
+
+  UPROPERTY()
+  int LoneTrafficLightsGroupControllerId = -1;
 
 };
