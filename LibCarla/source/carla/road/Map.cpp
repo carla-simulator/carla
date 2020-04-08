@@ -982,25 +982,10 @@ namespace road {
     std::unordered_map<JuncId, geom::Mesh> junction_map;
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
-          mesh_factory.GenerateAllWithMaxLen(road);
+      if (!road.IsJunction()) {
+        std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
+            mesh_factory.GenerateAllWithMaxLen(road);
 
-      // If the road in in a junction, add the road to the junction mesh instead of
-      // doing it separately, this is needed for the road mesh smooth algorithm
-      if (road.IsJunction()) {
-        const auto junction_id = road.GetJunctionId();
-        geom::Mesh junction_mesh;
-        for (auto &&i : road_mesh_list) {
-          junction_mesh += *i;
-        }
-        // If the junction id already exists on the map
-        if (junction_map.count(junction_id)) {
-          junction_map[junction_id] += junction_mesh;
-        } else {
-          // Otherwise create it
-          junction_map[junction_id] = std::move(junction_mesh);
-        }
-      } else {
         out_mesh_list.insert(
             out_mesh_list.end(),
             std::make_move_iterator(road_mesh_list.begin()),
@@ -1008,9 +993,20 @@ namespace road {
       }
     }
 
-    // Merge the map meshes with out_mesh_list
-    for (auto &&pair : junction_map) {
-      out_mesh_list.push_back(std::make_unique<geom::Mesh>(pair.second));
+    // Generate roads within junctions and smooth them
+    for (const auto &junc_pair : _data.GetJunctions()) {
+      const auto &junction = junc_pair.second;
+      std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+      for(const auto &connection_pair : junction.GetConnections()) {
+        const auto &connection = connection_pair.second;
+        const auto &road = _data.GetRoads().at(connection.connecting_road);
+        for (auto &&lane_section : road.GetLaneSections()) {
+          for (auto &&lane_pair : lane_section.GetLanes()) {
+            lane_meshes.push_back(mesh_factory.Generate(lane_pair.second));
+          }
+        }
+      }
+      out_mesh_list.push_back(mesh_factory.MergeAndSmooth(lane_meshes));
     }
 
     return out_mesh_list;
