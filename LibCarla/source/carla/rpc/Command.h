@@ -148,7 +148,7 @@ namespace rpc {
           tm(tm),
           enabled(value) {}
       ActorId actor;
-      //boost::optional<TM> tm;
+      // The TM pointer is temporal. A workaround to solve compiler issues
       TM* tm;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
