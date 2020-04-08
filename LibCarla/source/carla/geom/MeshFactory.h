@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <carla/geom/Mesh.h>
 #include <carla/road/Road.h>
@@ -32,8 +33,20 @@ namespace geom {
     /// Generates a mesh that defines a lane section
     std::unique_ptr<Mesh> Generate(const road::LaneSection &lane_section) const;
 
-    /// Generates a mesh that defines a lane
+    /// Generates a mesh that defines a lane from a given s start and end
+    std::unique_ptr<Mesh> Generate(
+        const road::Lane &lane, const double s_start, const double s_end) const;
+
+    /// Generates a mesh that defines the whole lane
     std::unique_ptr<Mesh> Generate(const road::Lane &lane) const;
+
+    /// Generates a mesh that defines a lane
+    std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
+        const road::Road &road, const double max_len) const;
+
+    /// Generates a mesh that defines a lane
+    std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
+        const road::LaneSection &lane_section, const double max_len) const;
 
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
