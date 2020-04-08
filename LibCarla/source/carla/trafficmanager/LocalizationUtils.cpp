@@ -62,7 +62,8 @@ namespace LocalizationConstants {
 
   TrackTraffic::TrackTraffic() {}
 
-  void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id, const SimpleWaypointPtr& waypoint) {
+  void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
+                                                    const std::vector<SimpleWaypointPtr> waypoints) {
 
     // Add actor entry, if not present.
     if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
@@ -85,7 +86,7 @@ namespace LocalizationConstants {
     current_grids.clear();
 
     // Step through buffer and update grid list for actor and actor list for grids.
-    if (waypoint != nullptr) {
+    for (auto &waypoint: waypoints) {
 
       GeoGridId ggid = waypoint->GetGeodesicGridId();
       current_grids.insert(ggid);

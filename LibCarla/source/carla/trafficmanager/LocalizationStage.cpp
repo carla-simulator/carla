@@ -607,17 +607,29 @@ namespace LocalizationConstants {
         cg::Location location = it->second->GetLocation();
         const auto type = it->second->GetTypeId();
 
-        SimpleWaypointPtr nearest_waypoint = nullptr;
+        std::vector<SimpleWaypointPtr> nearest_waypoints;
         if (type[0] == 'v') {
-          nearest_waypoint = local_map.GetWaypointInVicinity(location);
+          auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(it->second);
+          cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
+          float bx = extent.x;
+          float by = extent.y;
+          std::vector<cg::Location> corners = {location + cg::Location(bx, by, 0.0f),
+                                               location + cg::Location(-bx, by, 0.0f),
+                                               location + cg::Location(bx, -by, 0.0f),
+                                               location + cg::Location(-bx, -by, 0.0f)};
+          for (cg::Location &vertex: corners) {
+            SimpleWaypointPtr nearest_waypoint = local_map.GetWaypointInVicinity(vertex);
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetPedWaypoint(vertex);};
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+            nearest_waypoints.push_back(nearest_waypoint);
+          }
         } else if (type[0] == 'w') {
-          nearest_waypoint = local_map.GetPedWaypoint(location);
-        }
-        if (nearest_waypoint == nullptr) {
-          nearest_waypoint = local_map.GetWaypoint(location);
+          SimpleWaypointPtr nearest_waypoint = local_map.GetPedWaypoint(location);
+          if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+          nearest_waypoints.push_back(nearest_waypoint);
         }
 
-        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoint);
+        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoints);
 
         ++it;
       }
