@@ -5,7 +5,6 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
 """
 Script to integrate CARLA and SUMO simulations
 """
@@ -27,10 +26,10 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
+                  (sys.version_info.major, sys.version_info.minor,
+                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
 
@@ -62,12 +61,16 @@ class SimulationSynchronization(object):
     SimulationSynchronization class is responsible for the synchronization of sumo and carla
     simulations.
     """
-
     def __init__(self, args):
         self.args = args
 
         self.sumo = SumoSimulation(args)
         self.carla = CarlaSimulation(args)
+
+        if args.tls_manager == 'carla':
+            self.sumo.switch_off_traffic_lights()
+        elif args.tls_manager == 'sumo':
+            self.carla.switch_off_traffic_lights()
 
         # Mapped actor ids.
         self.sumo2carla_ids = {}  # Contains only actors controlled by sumo.
@@ -94,8 +97,8 @@ class SimulationSynchronization(object):
             carla_blueprint = BridgeHelper.get_carla_blueprint(sumo_actor,
                                                                self.args.sync_vehicle_color)
             if carla_blueprint is not None:
-                carla_transform = BridgeHelper.get_carla_transform(
-                    sumo_actor.transform, sumo_actor.extent)
+                carla_transform = BridgeHelper.get_carla_transform(sumo_actor.transform,
+                                                                   sumo_actor.extent)
 
                 carla_actor_id = self.carla.spawn_actor(carla_blueprint, carla_transform)
                 if carla_actor_id != INVALID_ACTOR_ID:
@@ -118,12 +121,21 @@ class SimulationSynchronization(object):
             carla_transform = BridgeHelper.get_carla_transform(sumo_actor.transform,
                                                                sumo_actor.extent)
             if self.args.sync_vehicle_lights:
-                carla_lights = BridgeHelper.get_carla_lights_state(
-                    carla_actor.get_light_state(), sumo_actor.signals)
+                carla_lights = BridgeHelper.get_carla_lights_state(carla_actor.get_light_state(),
+                                                                   sumo_actor.signals)
             else:
                 carla_lights = None
 
             self.carla.synchronize_vehicle(carla_actor_id, carla_transform, carla_lights)
+
+        # Updates traffic lights in carla based on sumo information.
+        if self.args.tls_manager == 'sumo':
+            common_landmarks = self.sumo.traffic_light_ids & self.carla.traffic_light_ids
+            for landmark_id in common_landmarks:
+                sumo_tl_state = self.sumo.get_traffic_light_state(landmark_id)
+                carla_tl_state = BridgeHelper.get_carla_traffic_light_state(sumo_tl_state)
+
+                self.carla.synchronize_traffic_light(landmark_id, carla_tl_state)
 
         # -----------------
         # carla-->sumo sync
@@ -159,14 +171,24 @@ class SimulationSynchronization(object):
             if self.args.sync_vehicle_lights:
                 carla_lights = self.carla.get_actor_light_state(carla_actor_id)
                 if carla_lights is not None:
-                    sumo_lights = BridgeHelper.get_sumo_lights_state(
-                        sumo_actor.signals, carla_lights)
+                    sumo_lights = BridgeHelper.get_sumo_lights_state(sumo_actor.signals,
+                                                                     carla_lights)
                 else:
                     sumo_lights = None
             else:
                 sumo_lights = None
 
             self.sumo.synchronize_vehicle(sumo_actor_id, sumo_transform, sumo_lights)
+
+        # Updates traffic lights in sumo based on carla information.
+        if self.args.tls_manager == 'carla':
+            common_landmarks = self.sumo.traffic_light_ids & self.carla.traffic_light_ids
+            for landmark_id in common_landmarks:
+                carla_tl_state = self.carla.get_traffic_light_state(landmark_id)
+                sumo_tl_state = BridgeHelper.get_sumo_traffic_light_state(carla_tl_state)
+
+                # Updates all the sumo links related to this landmark.
+                self.sumo.synchronize_traffic_light(landmark_id, sumo_tl_state)
 
     def close(self):
         """
@@ -185,7 +207,8 @@ class SimulationSynchronization(object):
         for sumo_actor_id in self.carla2sumo_ids.values():
             self.sumo.destroy_actor(sumo_actor_id)
 
-        # Closing sumo client.
+        # Closing sumo and carla client.
+        self.carla.close()
         self.sumo.close()
 
 
@@ -252,13 +275,18 @@ if __name__ == '__main__':
     argparser.add_argument('--sync-vehicle-color',
                            action='store_true',
                            help='synchronize vehicle color (default: False)')
-    argparser.add_argument('--sync-all',
+    argparser.add_argument('--sync-vehicle-all',
                            action='store_true',
                            help='synchronize all vehicle properties (default: False)')
+    argparser.add_argument('--tls-manager',
+                           type=str,
+                           choices=['none', 'sumo', 'carla'],
+                           help="select traffic light manager (default: none)",
+                           default='none')
     argparser.add_argument('--debug', action='store_true', help='enable debug messages')
     arguments = argparser.parse_args()
 
-    if arguments.sync_all is True:
+    if arguments.sync_vehicle_all is True:
         arguments.sync_vehicle_lights = True
         arguments.sync_vehicle_color = True
 
