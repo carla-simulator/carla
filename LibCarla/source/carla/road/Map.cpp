@@ -932,38 +932,6 @@ namespace road {
     return _data.GetJunction(id);
   }
 
-  /// Computes the location of the edges of the current lane at the current waypoint
-  static std::pair<geom::Vector3D, geom::Vector3D> GetWaypointCornerPositions(
-      const Map &map, const Waypoint &waypoint, const Lane &lane, const float extra_width=0.f) {
-    float lane_width = static_cast<float>(map.GetLaneWidth(waypoint)) / 2.0f;
-
-    DEBUG_ASSERT(lane.GetRoad() != nullptr);
-    if (extra_width != 0.f && lane.GetRoad()->IsJunction() && lane.GetType() == Lane::LaneType::Driving) {
-      lane_width += extra_width;
-    }
-    lane_width = waypoint.lane_id > 0 ? -lane_width : lane_width;
-
-    const geom::Transform wp_trnasf = map.ComputeTransform(waypoint);
-    auto loc_r = static_cast<geom::Vector3D>(wp_trnasf.location) +
-        (wp_trnasf.GetRightVector() *  lane_width);
-    auto loc_l = static_cast<geom::Vector3D>(wp_trnasf.location) +
-        (wp_trnasf.GetRightVector() * -lane_width);
-
-    if (lane.GetType() == Lane::LaneType::Driving) {
-
-    }
-    // Apply an offset to the Sidewalks
-    else if (lane.GetType() == Lane::LaneType::Sidewalk) {
-      // RoadRunner doesn't export it right now and as a workarround where 15.24 cm
-      // is the exact height that match with most of the RoadRunner sidewalks
-      loc_r.z += 0.1524f;
-      loc_l.z += 0.1524f;
-      /// TODO: use the OpenDRIVE 5.3.7.2.1.1.9 Lane Height Record
-    }
-
-    return std::make_pair(loc_r, loc_l);
-  }
-
   geom::Mesh Map::GenerateMesh(const double distance, const float extra_width) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::MeshFactory mesh_factory;
@@ -994,7 +962,7 @@ namespace road {
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
       std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
-          mesh_factory.GenerateWithMaxLen(road, max_road_len);
+          mesh_factory.GenerateAllWithMaxLen(road, max_road_len);
 
       // If the road in in a junction, add the road to the junction mesh instead of
       // doing it separately, this is needed for the road mesh smooth algorithm
@@ -1060,104 +1028,6 @@ namespace road {
     } while (i < crosswalk_vertex.size());
 
     out_mesh.EndMaterial();
-    return out_mesh;
-  }
-
-  geom::Mesh Map::GenerateWalls(
-      const double distance, const float wall_height) const {
-    RELEASE_ASSERT(distance > 0.0);
-    geom::Mesh out_mesh;
-    if (wall_height == 0.0f) {
-      return out_mesh;
-    }
-    // Iterate each lane in each lane_section in each road
-    for (const auto &pair : _data.GetRoads()) {
-      const auto &road = pair.second;
-      if (road.IsJunction()) {
-        continue;
-      }
-      for (const auto &lane_section : road.GetLaneSections()) {
-        const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
-            1 : lane_section.GetLanes().begin()->first;
-        const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
-            -1 : lane_section.GetLanes().rbegin()->first;
-        for (const auto &lane_pair : lane_section.GetLanes()) {
-          // Get the lane reference
-          const auto &lane = lane_pair.second;
-          // The lane with lane_id 0 have no physical representation in OpenDRIVE
-          if (lane.GetId() == 0) {
-            continue;
-          }
-
-          const auto end_distance = lane.GetDistance() + lane.GetLength() - EPSILON;
-          Waypoint current_wp {
-              road.GetId(),
-              lane_section.GetId(),
-              lane.GetId(),
-              lane_section.GetDistance() + EPSILON };
-
-          std::vector<geom::Vector3D> r_vertices;
-          std::vector<geom::Vector3D> l_vertices;
-          if (lane.IsStraight()) {
-            // Mesh optimization: If the lane is straight just add vertices at the
-            // begining and at the end of it
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
-            // vertices.push_back(edges.first);
-            // vertices.push_back(edges.second);
-            if (lane.GetId() == min_lane) {
-              r_vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
-              r_vertices.push_back(edges.first);
-            }
-            if (lane.GetId() == max_lane) {
-              l_vertices.push_back(edges.second);
-              l_vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
-            }
-          } else {
-            // Iterate over the lane's 's' and store the vertices based on it's width
-            do {
-              // Get the location of the edges of the current lane at the current waypoint
-              const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
-              // vertices.push_back(edges.first);
-              // vertices.push_back(edges.second);
-              if (lane.GetId() == min_lane) {
-                r_vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
-                r_vertices.push_back(edges.first);
-              }
-              if (lane.GetId() == max_lane) {
-                l_vertices.push_back(edges.second);
-                l_vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
-              }
-              // Update the current waypoint's "s"
-              current_wp.s += distance;
-            } while(current_wp.s < end_distance);
-          }
-
-          // This ensures the mesh is constant and have no gaps between roads,
-          // adding geometry at the very end of the lane
-          if (end_distance - (current_wp.s - distance) > EPSILON) {
-            current_wp.s = end_distance;
-            const auto edges = GetWaypointCornerPositions(*this, current_wp, lane);
-            // vertices.push_back(edges.first);
-            // vertices.push_back(edges.second);
-            if (lane.GetId() == min_lane) {
-              r_vertices.push_back(edges.first + geom::Vector3D(0.f, 0.f, wall_height));
-              r_vertices.push_back(edges.first);
-            }
-            if (lane.GetId() == max_lane) {
-              l_vertices.push_back(edges.second);
-              l_vertices.push_back(edges.second + geom::Vector3D(0.f, 0.f, wall_height));
-            }
-          }
-          // Add the adient material, create the strip and close the material
-          out_mesh.AddMaterial(
-              lane.GetType() == Lane::LaneType::Sidewalk ? "sidewalk" : "road");
-          out_mesh.AddTriangleStrip(r_vertices);
-          out_mesh.AddTriangleStrip(l_vertices);
-          out_mesh.EndMaterial();
-        }
-      }
-    }
-
     return out_mesh;
   }
 

@@ -27,6 +27,8 @@ namespace geom {
     // -- Map Related ----------------------------------------------------------
     // =========================================================================
 
+    // -- Basic --
+
     /// Generates a mesh that defines a road
     std::unique_ptr<Mesh> Generate(const road::Road &road) const;
 
@@ -40,19 +42,47 @@ namespace geom {
     /// Generates a mesh that defines the whole lane
     std::unique_ptr<Mesh> Generate(const road::Lane &lane) const;
 
-    /// Generates a mesh that defines a lane
+    // -- Walls --
+
+    /// Genrates a mesh representing a wall on the road corners to avoid
+    /// cars falling down
+    std::unique_ptr<Mesh> GenerateWalls(const road::LaneSection &lane_section) const;
+
+    /// Generates a wall-like mesh at the right side of the lane
+    std::unique_ptr<Mesh> GenerateRightWall(
+        const road::Lane &lane, const double s_start, const double s_end) const;
+
+    /// Generates a wall-like mesh at the left side of the lane
+    std::unique_ptr<Mesh> GenerateLeftWall(
+        const road::Lane &lane, const double s_start, const double s_end) const;
+
+    // -- Chunked --
+
+    /// Generates list of meshes that defines a single road with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
         const road::Road &road, const double max_len) const;
 
-    /// Generates a mesh that defines a lane
+    /// Generates list of meshes that defines a single lane_section with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
         const road::LaneSection &lane_section, const double max_len) const;
+
+    std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
+        const road::Road &road, const double max_len) const;
+
+    std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
+        const road::LaneSection &lane_section, const double max_len) const;
+
+    // -- Util --
+
+    /// Generates a chunked road with all the features needed for simulation
+    std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
+        const road::Road &road, const double max_len) const;
 
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================
 
-    /// Generates a mesh that defines a lane
+    /// Parameters for the road generation
     struct RoadParameters {
       float resolution       = 2.0f;
       float extra_lane_width = 1.0f;

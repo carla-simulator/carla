@@ -129,7 +129,7 @@ namespace road {
     const Road *road = GetRoad();
     DEBUG_ASSERT(road != nullptr);
 
-    // must s be smaller (or eq) than road lenght and bigger (or eq) than 0?
+    // must s be smaller (or eq) than road length and bigger (or eq) than 0?
     RELEASE_ASSERT(s <= road->GetLength());
     RELEASE_ASSERT(s >= 0.0);
 
