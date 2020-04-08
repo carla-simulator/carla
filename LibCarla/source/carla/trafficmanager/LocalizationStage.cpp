@@ -29,7 +29,6 @@ namespace LocalizationConstants {
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
-  static const float MIN_PHYSICS_RADIUS = 70.0f;
   static const float POSITION_WINDOW_SIZE = 2.1f;
   static const float HYBRID_MODE_DT = 0.05f;
 } // namespace LocalizationConstants
@@ -416,6 +415,7 @@ namespace LocalizationConstants {
     }
 
     hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    hybrid_physics_radius = parameters.GetHybridPhysicsRadius();
 
     bool is_deleted_actors_present = false;
     std::set<uint32_t> world_actor_id;
@@ -949,9 +949,8 @@ namespace LocalizationConstants {
       // Check if current actor is in range of hero actor and enable physics in hybrid mode.
       bool in_range_of_hero_actor = false;
       if (hero_actor != nullptr) {
-        auto hero_radius = std::max(MIN_PHYSICS_RADIUS, hero_actor->GetVelocity().Length()*4.0f);
         if (hybrid_physics_mode
-            && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(hero_radius, 2))) {
+            && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(hybrid_physics_radius, 2))) {
           in_range_of_hero_actor = true;
         }
       }
