@@ -12,12 +12,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
+  static const float MAXIMUM_HORIZON_LENGTH = 60.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
+  static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+  static const float HORIZON_RATE = (MAXIMUM_HORIZON_LENGTH - MINIMUM_HORIZON_LENGTH) / ARBITRARY_MAX_SPEED;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
@@ -103,9 +105,9 @@ namespace LocalizationConstants {
         idle_time[actor_id] = current_timestamp.elapsed_seconds;
       }
 
-      const float horizon_size = std::max(
-          WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
-          MINIMUM_HORIZON_LENGTH);
+      // Speed dependent waypoint horizon length.
+      const float horizon_square = std::min(std::pow(vehicle_velocity * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, 2.0f),
+                                            std::pow(MAXIMUM_HORIZON_LENGTH, 2.0f));
 
       if (buffer_list->find(actor_id) == buffer_list->end()) {
         buffer_list->insert({actor_id, Buffer()});
@@ -123,16 +125,21 @@ namespace LocalizationConstants {
         }
       }
 
-      // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
-
+        // Purge passed waypoints.
+        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
         while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
+            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
           }
+        }
+
+        // Purge waypoints too far from the front of the buffer.
+        while (!waypoint_buffer.empty()
+               && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square) {
+          PopWaypoint(waypoint_buffer, actor_id, false);
         }
       }
 
@@ -183,9 +190,9 @@ namespace LocalizationConstants {
           PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
+
       // Populating the buffer.
-      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-          <= std::pow(horizon_size, 2)) {
+      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint64_t selection_index = 0u;
@@ -384,7 +391,29 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
+  bool LocalizationStage::RunStep() {
+
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      // Set flag to true, notify DataReceiver initiate pipeline.
+      run_step.store(true);
+      step_execution_trigger.notify_one();
+    }
+
+    return true;
+  }
+
   void LocalizationStage::DataReceiver() {
+
+    // Wait for external trigger to initiate the pipeline in synchronous mode.
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      while (!run_step.load()) {
+        step_execution_trigger.wait_for(lock, 1ms, [this]() {return run_step.load();});
+      }
+      // Set flag to false, unblock RunStep() call and release mutex lock.
+      run_step.store(false);
+    }
 
     hybrid_physics_mode = parameters.GetHybridPhysicsMode();
 
@@ -497,13 +526,12 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
-
-    for (uint64_t i = 0u; i < buffer.size(); ++i) {
-      if(buffer.at(i)->GetWaypoint()->IsJunction()){
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 0.05f);
-      } else {
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 0.05f);
-      }
+    uint64_t buffer_size = buffer.size();
+    uint64_t step_size =  buffer_size/10u;
+    for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
+        debug_helper.DrawLine(buffer.at(i)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              buffer.at(i + step_size)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              0.2f, {0u, 255u, 0u}, 0.05f);
     }
   }
 
@@ -514,12 +542,15 @@ namespace LocalizationConstants {
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
   }
 
-  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
+  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id, bool front_or_back) {
 
-    SimpleWaypointPtr removed_waypoint = buffer.front();
-    SimpleWaypointPtr remaining_waypoint = nullptr;
+    SimpleWaypointPtr removed_waypoint = front_or_back? buffer.front(): buffer.back();
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
-    buffer.pop_front();
+    if (front_or_back) {
+      buffer.pop_front();
+    } else {
+      buffer.pop_back();
+    }
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
   }
 

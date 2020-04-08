@@ -66,6 +66,23 @@
         type: str
         doc: >
           Content of an OpenDRIVE file as `string`.
+      - param_name: resolution
+        type: float
+        defualt: 2.0
+        doc: >
+          Quality of the road mesh, increasing this value can reduce performance (in meters).
+      - param_name: wall_height
+        type: float
+        defualt: 1.0
+        doc: >
+          Height of a procedural wall that prevents cars from falling outside the map, only generated
+          in non-junction roads (in meters).
+      - param_name: additional_width
+        type: float
+        defualt: 0.6
+        doc: >
+          Additional lane width to prevent cars from falling outside the map, only generated in
+          junctions (in meters).
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
