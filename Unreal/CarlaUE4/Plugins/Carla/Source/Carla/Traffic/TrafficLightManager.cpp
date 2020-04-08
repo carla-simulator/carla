@@ -230,13 +230,13 @@ void ATrafficLightManager::ResetTrafficLightObjects()
 
 void ATrafficLightManager::SpawnTrafficLights()
 {
-  TArray<std::string> SignalsToSpawn;
+  std::unordered_set<std::string> SignalsToSpawn;
   for(const auto& ControllerPair : GetMap()->GetControllers())
   {
     const auto& Controller = ControllerPair.second;
     for(const auto& SignalId : Controller->GetSignals())
     {
-      SignalsToSpawn.Add(SignalId);
+      SignalsToSpawn.insert(SignalId);
     }
   }
   const auto& Signals = GetMap()->GetSignals();
@@ -246,9 +246,10 @@ void ATrafficLightManager::SpawnTrafficLights()
     const auto& Signal = SignalPair.second;
     if(!Signal->GetControllers().size() &&
        !GetMap()->IsJunction(Signal->GetRoadId()) &&
-       carla::road::SignalType::IsTrafficLight(Signal->GetType()))
+       carla::road::SignalType::IsTrafficLight(Signal->GetType()) &&
+       !SignalsToSpawn.count(SignalId))
     {
-      SignalsToSpawn.Add(SignalId);
+      SignalsToSpawn.insert(SignalId);
     }
   }
   for(auto &SignalId : SignalsToSpawn)
