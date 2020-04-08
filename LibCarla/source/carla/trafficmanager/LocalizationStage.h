@@ -132,8 +132,8 @@ namespace traffic_manager {
     SnippetProfiler snippet_profiler;
     /// Map to keep track of last lane change location.
     std::unordered_map<ActorId, cg::Location> last_lane_change_location;
-    /// Reference of hero vehicle.
-    Actor hero_actor {nullptr};
+    /// Records of all vehicles with hero attribute.
+    std::unordered_map<ActorId, Actor> hero_actors;
     /// Switch indicating hybrid physics mode.
     bool hybrid_physics_mode {false};
     /// Structure to hold previous state of physics-less vehicle.
