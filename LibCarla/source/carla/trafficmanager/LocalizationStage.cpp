@@ -443,23 +443,31 @@ namespace LocalizationConstants {
     for (const auto &actor : vehicles) {
       world_actor_id.insert(actor.GetId());
 
-      // Identify hero vehicle if currently not present
-      // and system is in hybrid physics mode.
-      if (hybrid_physics_mode && hero_actor == nullptr) {
+      // Identify hero vehicles if system is in hybrid physics mode.
+      if (hybrid_physics_mode) {
         Actor actor_ptr = actor.Get(episode_proxy_ls);
-        for (auto&& attribute: actor_ptr->GetAttributes()) {
-          if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
-            hero_actor = actor_ptr;
-            break;
+        ActorId hero_actor_id = actor_ptr->GetId();
+        if (hero_actors.find(hero_actor_id) == hero_actors.end()) {
+          for (auto&& attribute: actor_ptr->GetAttributes()) {
+            if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+              hero_actors.insert({hero_actor_id, actor_ptr});
+            }
           }
         }
       }
     }
 
     // Invalidate hero actor pointer if it is not alive anymore.
-    if (hybrid_physics_mode && hero_actor != nullptr
-        && world_actor_id.find(hero_actor->GetId()) == world_actor_id.end()) {
-      hero_actor = nullptr;
+    ActorIdSet hero_actors_to_delete;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        if(world_actor_id.find(hero_actor_info.first) == world_actor_id.end()) {
+          hero_actors_to_delete.insert(hero_actor_info.first);
+        }
+      }
+    }
+    for (auto &deletion_id: hero_actors_to_delete) {
+      hero_actors.erase(deletion_id);
     }
 
     // Search for invalid/destroyed vehicles.
@@ -929,9 +937,11 @@ namespace LocalizationConstants {
   void LocalizationStage::UpdateSwarmVelocities() {
 
     // Location of hero vehicle if present.
-    cg::Location hero_location;
-    if (hybrid_physics_mode && hero_actor != nullptr) {
-      hero_location = hero_actor->GetLocation();
+    std::vector<cg::Location> hero_locations;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        hero_locations.push_back(hero_actor_info.second->GetLocation());
+      }
     }
 
     // Using (1/20)s time delta for computing velocity.
@@ -961,9 +971,13 @@ namespace LocalizationConstants {
       // Check if current actor is in range of hero actor and enable physics in hybrid mode.
       bool in_range_of_hero_actor = false;
       if (hybrid_physics_mode
-          && hero_actor != nullptr
-          && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(PHYSICS_RADIUS, 2))) {
-        in_range_of_hero_actor = true;
+          && hero_actors.size() != 0u){
+        for (auto &hero_location: hero_locations) {
+          if (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(PHYSICS_RADIUS, 2)) {
+            in_range_of_hero_actor = true;
+            break;
+          }
+        }
       }
       bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
       kinematic_state_map.at(actor_id).physics_enabled = enable_physics;
