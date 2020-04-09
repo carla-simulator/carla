@@ -41,7 +41,7 @@ cmake -G "Ninja" \
     ..
 
 # copy the shared object 'libfbxsdk.so' to 'dist' folder
-cp "${FBX2OBJ_DEP_FOLDER}/lib/gcc/x64/release/libfbxsdk.so" ${FBX2OBJ_DIST}
+cp "${FBX2OBJ_DEP_FOLDER}/lib/gcc/x64/release/libfbxsdk.so" "${FBX2OBJ_DIST}"
 
 set +e
 
