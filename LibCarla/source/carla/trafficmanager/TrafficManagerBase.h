@@ -106,6 +106,9 @@ public:
   /// Method to set hybrid physics mode.
   virtual void SetHybridPhysicsMode(const bool mode_switch) = 0;
 
+  /// Method to set hybrid physics radius.
+  virtual void SetHybridPhysicsRadius(const float radius) = 0;
+
 protected:
 
 };
