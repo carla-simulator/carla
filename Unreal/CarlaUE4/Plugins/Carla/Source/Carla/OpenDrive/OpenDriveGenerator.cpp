@@ -65,46 +65,22 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     return;
   }
 
-  static const FString ConfigFilePath =
-      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf";
-  float Resolution = 2.f;
-  float MaxRoadLength = 50.0f;
-  float WallHeight = 1.f;
-  float AdditionalWidth = .6f;
-  bool MeshVisibility = true;
-  if (FPaths::FileExists(ConfigFilePath)) {
-    FString ConfigData;
-    TArray<FString> Lines;
-    FFileHelper::LoadFileToString(ConfigData, *ConfigFilePath);
-    ConfigData.ParseIntoArray(Lines, TEXT("\n"), true);
-    for (const FString &Line : Lines) {
-      FString Key, Value;
-      Line.Split(TEXT("="), &Key, &Value);
-      if (Key == "resolution")
-      {
-        Resolution = FCString::Atof(*Value);
-      }
-      else if (Key == "wall_height")
-      {
-        WallHeight = FCString::Atof(*Value);
-      }
-      else if (Key == "max_road_length")
-      {
-        MaxRoadLength = FCString::Atof(*Value);
-      }
-      else if (Key == "additional_width")
-      {
-        AdditionalWidth = FCString::Atof(*Value);
-      }
-      else if (Key == "mesh_visibility")
-      {
-        MeshVisibility = Value.ToBool();
-      }
-    }
+  carla::rpc::OpendriveGenerationParameters Parameters;
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if(GameInstance)
+  {
+    Parameters = GameInstance->GetOpendriveGenerationParameters();
+  }
+  else
+  {
+    carla::log_warning("Missing game instance");
   }
 
   const auto Meshes = CarlaMap->GenerateChunkedMesh(
-      Resolution, MaxRoadLength, AdditionalWidth);
+      Parameters.vertex_distance,
+      Parameters.max_road_length,
+      Parameters.additional_width,
+      Parameters.smooth_junctions);
   for (const auto &Mesh : Meshes) {
     AActor *TempActor = GetWorld()->SpawnActor<AActor>();
     UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
@@ -127,6 +103,14 @@ void AOpenDriveGenerator::GenerateRoadMesh()
         true); // Create collision
 
     ActorMeshList.Add(TempActor);
+  }
+
+  if(!Parameters.enable_mesh_visibility)
+  {
+    for(AActor * actor : ActorMeshList)
+    {
+      actor->SetActorHiddenInGame(true);
+    }
   }
 
   // // Build collision data
