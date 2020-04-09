@@ -418,3 +418,13 @@
       doc: >
         Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported. 
     # --------------------------------------
+    - def_name: set_hybrid_mode_radius
+      params:
+      - param_name: r
+        type: float
+        default: 70.0
+        doc: >
+          New radius where physics are enabled. 
+      doc: >
+        With hybrid physics on, changes the radius of the area of influence where physics are enabled. 
+    # --------------------------------------
