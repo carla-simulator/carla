@@ -1075,6 +1075,25 @@ Distance between `actor` and `other`.
 
 ---
 
+## carla.OpendriveGenerationParameters<a name="carla.OpendriveGenerationParameters"></a>
+This class defines the parameters used when generating a world using an OpenDRIVE file.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.OpendriveGenerationParameters.vertex_distance"></a>**<font color="#f8805a">vertex_distance</font>**  
+The distance between vertices when generating the world mesh from OpenDRIVE.  
+- <a name="carla.OpendriveGenerationParameters.max_road_length"></a>**<font color="#f8805a">max_road_length</font>**  
+Max road length for a single mesh portion.  
+- <a name="carla.OpendriveGenerationParameters.wall_height"></a>**<font color="#f8805a">wall_height</font>**  
+Defines the height of walls added to roads to prevent vehicles from falling.  
+- <a name="carla.OpendriveGenerationParameters.additional_width"></a>**<font color="#f8805a">additional_width</font>**  
+Additional with to junction lanes to prevent vehicles from falling.  
+- <a name="carla.OpendriveGenerationParameters.smooth_junctions"></a>**<font color="#f8805a">smooth_junctions</font>**  
+When this variable is `True` the generated junctions will be smoothed to prevent roads from blocking other roads.  
+- <a name="carla.OpendriveGenerationParameters.enable_mesh_visibility"></a>**<font color="#f8805a">enable_mesh_visibility</font>**  
+This variable indicates whether the mesh should be rendered to reduce the rendering overhead.  
+
+---
+
 ## carla.RadarDetection<a name="carla.RadarDetection"></a>
 Data contained inside a [carla.RadarMeasurement](#carla.RadarMeasurement). Each of these represents one of the points in the cloud that a <b>sensor.other.radar</b> registers and contains the distance, angle and velocity in relation to the radar.  
 
@@ -1445,7 +1464,7 @@ All possible states for traffic lights. These can either change at a specific ti
 ---
 
 ## carla.TrafficManager<a name="carla.TrafficManager"></a>
-The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a [carla.VehicleControl](#carla.VehicleControl) is applied to every vehicle registered in a traffic manager.  
+The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a [carla.VehicleControl](#carla.VehicleControl) is applied to every vehicle registered in a traffic manager.
 In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.  
 
 <h3>Methods</h3>
@@ -1475,7 +1494,7 @@ Sets the minimum distance in meters that vehicles have to keep with the rest. Th
     - **Parameters:**
         - `distance` (_float_) – Meters between vehicles.  
 - <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
-Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
@@ -1497,7 +1516,7 @@ During the collision detection stage, which runs every frame, this method sets a
 - <a name="carla.TrafficManager.reset_traffic_lights"></a>**<font color="#7fb800">reset_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
 Resets every traffic light in the map to its initial state.  
 - <a name="carla.TrafficManager.vehicle_percentage_speed_difference"></a>**<font color="#7fb800">vehicle_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
-Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
