@@ -206,20 +206,15 @@ namespace CollisionStageConstants {
     // Ego and other vehicle heading.
     const cg::Vector3D reference_heading = reference_vehicle->GetTransform().GetForwardVector();
     // Vector from ego position to position of the other vehicle.
+    const float vector_magnitude_epsilon = 2 * std::numeric_limits<float>::epsilon();
     cg::Vector3D reference_to_other = other_location - reference_location;
-    float reference_to_other_length = reference_to_other.Length();
-    if (reference_to_other_length > 2.0f * std::numeric_limits<float>::epsilon()) {
-      reference_to_other = reference_to_other/reference_to_other_length;
-    }
+    reference_to_other = reference_to_other.MakeSafeUnitVector(vector_magnitude_epsilon);
 
     // Other vehicle heading.
     const cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
     // Vector from other vehicle position to ego position.
     cg::Vector3D other_to_reference = reference_location - other_location;
-    float other_to_reference_length = other_to_reference.Length();
-    if (other_to_reference_length > 2.0f * std::numeric_limits<float>::epsilon()) {
-      other_to_reference = other_to_reference/other_to_reference_length;
-    }
+    other_to_reference = other_to_reference.MakeSafeUnitVector(vector_magnitude_epsilon);
 
     // Obtain cc::Vehicle pointers and calculate half diagonal length of vehicle bounding box.
     const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
