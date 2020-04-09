@@ -48,33 +48,17 @@ class CarlaSimulation(object):
         self.spawned_actors = set()
         self.destroyed_actors = set()
 
-        # This is a temporal workaround to avoid the issue of retrieving traffic lights from
-        # landmarks.
         # Set traffic lights.
         self._tls = {}  # {landmark_id: traffic_ligth_actor}
 
-        self._location = {
-            '121': carla.Location(42.02934082, 101.56253906, 0.0),
-            '123': carla.Location(46.10708984, 92.04954102, 0.15238953),
-
-            '130': carla.Location(101.69419922, 61.59494141, 0.0),
-            '129': carla.Location(92.17053711, 57.36221191, 0.0),
-
-            '136': carla.Location(61.48416016, 50.7382666, 0.0),
-            '135': carla.Location(57.23968262, 59.23875977, 0.15238953)
-        }
-        for carla_actor in self.world.get_actors():
-            for landmark_id, landmark_location in self._location.items():
-                if carla_actor.get_location().distance(landmark_location) < 0.1:
-                    self._tls[landmark_id] = carla_actor
-
-        # for landmark in self.world.get_map().get_all_landmarks_of_type('1000001'):
-        #     if landmark.id != '':
-        #         traffic_ligth = self.world.get_traffic_light(landmark)
-        #         if traffic_ligth is not None:
-        #             self._tls[landmark.id] = traffic_ligth
-        #         else:
-        #             logging.warning('Landmark %s is not linked to any traffic light', landmark.id)
+        map = self.world.get_map()
+        for landmark in map.get_all_landmarks_of_type('1000001'):
+            if landmark.id != '':
+                traffic_ligth = self.world.get_traffic_light(landmark)
+                if traffic_ligth is not None:
+                    self._tls[landmark.id] = traffic_ligth
+                else:
+                    logging.warning('Landmark %s is not linked to any traffic light', landmark.id)
 
     def get_actor(self, actor_id):
         """
