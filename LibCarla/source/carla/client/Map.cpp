@@ -137,7 +137,7 @@ namespace client {
     auto signal_references = _map.GetAllSignalReferences();
     for(auto* signal_reference : signal_references) {
       result.emplace_back(
-          new Landmark(nullptr, signal_reference, 0));
+          new Landmark(nullptr, shared_from_this(), signal_reference, 0));
     }
     return result;
   }
@@ -148,7 +148,7 @@ namespace client {
     for(auto* signal_reference : signal_references) {
       if(signal_reference->GetSignalId() == id) {
         result.emplace_back(
-            new Landmark(nullptr, signal_reference, 0));
+            new Landmark(nullptr, shared_from_this(), signal_reference, 0));
       }
     }
     return result;
@@ -160,7 +160,7 @@ namespace client {
     for(auto* signal_reference : signal_references) {
       if(signal_reference->GetSignal()->GetType() == type) {
         result.emplace_back(
-            new Landmark(nullptr, signal_reference, 0));
+            new Landmark(nullptr, shared_from_this(), signal_reference, 0));
       }
     }
     return result;
