@@ -68,6 +68,7 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   static const FString ConfigFilePath =
       FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf";
   float Resolution = 2.f;
+  float MaxRoadLength = 50.0f;
   float WallHeight = 1.f;
   float AdditionalWidth = .6f;
   bool MeshVisibility = true;
@@ -87,6 +88,10 @@ void AOpenDriveGenerator::GenerateRoadMesh()
       {
         WallHeight = FCString::Atof(*Value);
       }
+      else if (Key == "max_road_length")
+      {
+        MaxRoadLength = FCString::Atof(*Value);
+      }
       else if (Key == "additional_width")
       {
         AdditionalWidth = FCString::Atof(*Value);
@@ -98,11 +103,8 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     }
   }
 
-  // const FProceduralCustomMesh MeshData =
-  //     CarlaMap->GenerateMesh(Resolution, AdditionalWidth) +
-  //     CarlaMap->GenerateWalls(Resolution, WallHeight);
-
-  const auto Meshes = CarlaMap->GenerateChunkedMesh(Resolution, 50.0f, AdditionalWidth);
+  const auto Meshes = CarlaMap->GenerateChunkedMesh(
+      Resolution, MaxRoadLength, AdditionalWidth);
   for (const auto &Mesh : Meshes) {
     AActor *TempActor = GetWorld()->SpawnActor<AActor>();
     UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);

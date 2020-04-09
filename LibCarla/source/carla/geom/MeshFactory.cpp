@@ -214,10 +214,10 @@ namespace geom {
   }
 
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWithMaxLen(
-      const road::Road &road, const double max_len) const {
+      const road::Road &road) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
     for (auto &&lane_section : road.GetLaneSections()) {
-      auto section_uptr_list = GenerateWithMaxLen(lane_section, max_len);
+      auto section_uptr_list = GenerateWithMaxLen(lane_section);
       mesh_uptr_list.insert(
           mesh_uptr_list.end(),
           std::make_move_iterator(section_uptr_list.begin()),
@@ -227,15 +227,15 @@ namespace geom {
   }
 
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWithMaxLen(
-      const road::LaneSection &lane_section, const double max_len) const {
+      const road::LaneSection &lane_section) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
-    if (lane_section.GetLength() < max_len) {
+    if (lane_section.GetLength() < road_param.max_road_len) {
       mesh_uptr_list.emplace_back(Generate(lane_section));
     } else {
       double s_current = lane_section.GetDistance() + EPSILON;
       const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
-      while(s_current + max_len < s_end) {
-        const auto s_until = s_current + max_len;
+      while(s_current + road_param.max_road_len < s_end) {
+        const auto s_until = s_current + road_param.max_road_len;
         Mesh lane_section_mesh;
         for (auto &&lane_pair : lane_section.GetLanes()) {
           lane_section_mesh += *Generate(lane_pair.second, s_current, s_until);
@@ -255,10 +255,10 @@ namespace geom {
   }
 
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWallsWithMaxLen(
-      const road::Road &road, const double max_len) const {
+      const road::Road &road) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
     for (auto &&lane_section : road.GetLaneSections()) {
-      auto section_uptr_list = GenerateWallsWithMaxLen(lane_section, max_len);
+      auto section_uptr_list = GenerateWallsWithMaxLen(lane_section);
       mesh_uptr_list.insert(
           mesh_uptr_list.end(),
           std::make_move_iterator(section_uptr_list.begin()),
@@ -268,7 +268,7 @@ namespace geom {
   }
 
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWallsWithMaxLen(
-      const road::LaneSection &lane_section, const double max_len) const {
+      const road::LaneSection &lane_section) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
 
     const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
@@ -276,13 +276,13 @@ namespace geom {
     const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
         -1 : lane_section.GetLanes().rbegin()->first;
 
-    if (lane_section.GetLength() < max_len) {
+    if (lane_section.GetLength() < road_param.max_road_len) {
       mesh_uptr_list.emplace_back(GenerateWalls(lane_section));
     } else {
       double s_current = lane_section.GetDistance() + EPSILON;
       const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
-      while(s_current + max_len < s_end) {
-        const auto s_until = s_current + max_len;
+      while(s_current + road_param.max_road_len < s_end) {
+        const auto s_until = s_current + road_param.max_road_len;
         Mesh lane_section_mesh;
         for (auto &&lane_pair : lane_section.GetLanes()) {
           const auto &lane = lane_pair.second;
@@ -314,11 +314,11 @@ namespace geom {
   }
 
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateAllWithMaxLen(
-      const road::Road &road, const double max_len) const {
+      const road::Road &road) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
 
     // Get road meshes
-    auto roads = GenerateWithMaxLen(road, max_len);
+    auto roads = GenerateWithMaxLen(road);
     mesh_uptr_list.insert(
         mesh_uptr_list.end(),
         std::make_move_iterator(roads.begin()),
@@ -326,7 +326,7 @@ namespace geom {
 
     // Get wall meshes only if is not a junction
     if (!road.IsJunction()) {
-      auto walls = GenerateWallsWithMaxLen(road, max_len);
+      auto walls = GenerateWallsWithMaxLen(road);
 
       if (roads.size() == walls.size()) {
         for (size_t i = 0; i < walls.size(); ++i) {
