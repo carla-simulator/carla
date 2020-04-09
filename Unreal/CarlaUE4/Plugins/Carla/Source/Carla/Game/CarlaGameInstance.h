@@ -73,10 +73,22 @@ public:
     return CarlaEngine.GetServer();
   }
 
+  void SetOpendriveGenerationParameters(
+      const carla::rpc::OpendriveGenerationParameters & Parameters) {
+    GenerationParameters = Parameters;
+  }
+
+  const carla::rpc::OpendriveGenerationParameters&
+      GetOpendriveGenerationParameters() const {
+    return GenerationParameters;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
 
   FCarlaEngine CarlaEngine;
+
+  carla::rpc::OpendriveGenerationParameters GenerationParameters;
 };
