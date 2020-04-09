@@ -1506,6 +1506,10 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
 Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.  
     - **Parameters:**
         - `enabled` (_bool_) – If __True__, enables the hybrid physics.  
+- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  
+With hybrid physics on, changes the radius of the area of influence where physics are enabled.  
+    - **Parameters:**
+        - `r` (_float_) – New radius where physics are enabled.  
 
 ---
 
