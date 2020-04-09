@@ -150,10 +150,10 @@ namespace road {
         ComputeJunctionConflicts(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
-    geom::Mesh GenerateMesh(const double distance, const float extra_width = 0.f) const;
+    geom::Mesh GenerateMesh(const double distance, const float extra_width = 0.6f) const;
 
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
-      const double distance, const float max_road_len, const float extra_width = 0.f) const;
+      const double distance, const float max_road_len = 50.0f, const float extra_width = 0.6f) const;
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;

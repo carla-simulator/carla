@@ -130,16 +130,6 @@ static FString BuildRecastBuilderFile()
 
 bool UCarlaEpisode::LoadNewOpendriveEpisode(
     const FString &OpenDriveString,
-    float VertexDistance,
-    float WallHeight,
-    float AdditionalWidth)
-{
-  return LoadNewOpendriveEpisode(OpenDriveString,
-      carla::rpc::OpendriveGenerationParameters(VertexDistance, WallHeight, AdditionalWidth, true));
-}
-
-bool UCarlaEpisode::LoadNewOpendriveEpisode(
-    const FString &OpenDriveString,
     const carla::rpc::OpendriveGenerationParameters &Params)
 {
   if (OpenDriveString.IsEmpty())
@@ -204,8 +194,9 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   }
   // Build the mesh generation config file
   const FString ConfigData = FString::Printf(
-      TEXT("resolution=%s\nwall_height=%s\nadditional_width=%s\nmesh_visibility=%s"),
+      TEXT("resolution=%s\nmax_road_length=%s\nwall_height=%s\nadditional_width=%s\nmesh_visibility=%s\n"),
       *FString::SanitizeFloat(Params.vertex_distance),
+      *FString::SanitizeFloat(Params.max_road_length),
       *FString::SanitizeFloat(Params.wall_height),
       *FString::SanitizeFloat(Params.additional_width),
       *MeshVisibilityStr);

@@ -155,8 +155,9 @@ void export_client() {
   namespace rpc = carla::rpc;
 
   class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
-      init<double, double, double, bool>((arg("vertex_distance")=2.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("enable_mesh_visibility")=true)))
+      init<double, double, double, double, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("enable_mesh_visibility")=true)))
     .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
+    .def_readwrite("max_road_length", &rpc::OpendriveGenerationParameters::max_road_length)
     .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
     .def_readwrite("additional_width", &rpc::OpendriveGenerationParameters::additional_width)
     .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)

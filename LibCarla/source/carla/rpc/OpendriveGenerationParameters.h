@@ -14,21 +14,29 @@ namespace rpc {
     OpendriveGenerationParameters(){}
     OpendriveGenerationParameters(
         double v_distance,
+        double max_road_len,
         double w_height,
         double a_width,
         bool e_visibility)
       : vertex_distance(v_distance),
+        max_road_length(max_road_len),
         wall_height(w_height),
         additional_width(a_width),
         enable_mesh_visibility(e_visibility)
         {}
 
-    double vertex_distance = 2.f;
-    double wall_height = 1.f;
-    double additional_width = 0.6f;
+    double vertex_distance = 2.0;
+    double max_road_length = 50.0;
+    double wall_height = 1.0;
+    double additional_width = 0.6;
     bool enable_mesh_visibility = true;
 
-    MSGPACK_DEFINE_ARRAY(vertex_distance, wall_height, additional_width, enable_mesh_visibility);
+    MSGPACK_DEFINE_ARRAY(
+        vertex_distance,
+        max_road_length,
+        wall_height,
+        additional_width,
+        enable_mesh_visibility);
   };
 
 }

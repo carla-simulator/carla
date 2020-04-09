@@ -955,6 +955,7 @@ namespace road {
     RELEASE_ASSERT(max_road_len > 0.0);
     geom::MeshFactory mesh_factory;
     mesh_factory.road_param.resolution = static_cast<float>(distance);
+    mesh_factory.road_param.max_road_len = max_road_len;
     mesh_factory.road_param.extra_lane_width = extra_width;
     std::vector<std::unique_ptr<geom::Mesh>> out_mesh_list;
 
@@ -962,7 +963,7 @@ namespace road {
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
       std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
-          mesh_factory.GenerateAllWithMaxLen(road, max_road_len);
+          mesh_factory.GenerateAllWithMaxLen(road);
 
       // If the road in in a junction, add the road to the junction mesh instead of
       // doing it separately, this is needed for the road mesh smooth algorithm

@@ -60,23 +60,23 @@ namespace geom {
 
     /// Generates list of meshes that defines a single road with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
-        const road::Road &road, const double max_len) const;
+        const road::Road &road) const;
 
     /// Generates list of meshes that defines a single lane_section with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
-        const road::LaneSection &lane_section, const double max_len) const;
+        const road::LaneSection &lane_section) const;
 
     std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
-        const road::Road &road, const double max_len) const;
+        const road::Road &road) const;
 
     std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
-        const road::LaneSection &lane_section, const double max_len) const;
+        const road::LaneSection &lane_section) const;
 
     // -- Util --
 
     /// Generates a chunked road with all the features needed for simulation
     std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
-        const road::Road &road, const double max_len) const;
+        const road::Road &road) const;
 
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
@@ -85,6 +85,7 @@ namespace geom {
     /// Parameters for the road generation
     struct RoadParameters {
       float resolution       = 2.0f;
+      float max_road_len     = 50.0f;
       float extra_lane_width = 1.0f;
       float wall_height      = 0.6f;
     };
