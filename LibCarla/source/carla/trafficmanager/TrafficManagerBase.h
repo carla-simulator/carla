@@ -8,8 +8,6 @@
 
 #include <memory>
 #include "carla/client/Actor.h"
-#include "carla/client/detail/Simulator.h"
-#include "carla/client/detail/EpisodeProxy.h"
 
 #define MIN_TRY_COUNT       20
 #define TM_DEFAULT_PORT     8000
