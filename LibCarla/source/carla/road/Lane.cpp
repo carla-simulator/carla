@@ -115,7 +115,7 @@ namespace road {
       if (lane.first != lane_id) {
         dist += negative_lane_id ? current_dist : -current_dist;
         tangent += current_tang;
-      } else if (lane.first == lane_id) {
+      } else {
         current_dist *= 0.5;
         dist += negative_lane_id ? current_dist : -current_dist;
         tangent += current_tang * 0.5;
