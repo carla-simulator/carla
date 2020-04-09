@@ -61,15 +61,23 @@ class SimulationSynchronization(object):
     SimulationSynchronization class is responsible for the synchronization of sumo and carla
     simulations.
     """
-    def __init__(self, args):
-        self.args = args
+    def __init__(self,
+                 sumo_simulation,
+                 carla_simulation,
+                 tls_manager='none',
+                 sync_vehicle_color=False,
+                 sync_vehicle_lights=False):
 
-        self.sumo = SumoSimulation(args)
-        self.carla = CarlaSimulation(args)
+        self.sumo = sumo_simulation
+        self.carla = carla_simulation
 
-        if args.tls_manager == 'carla':
+        self.tls_manager = tls_manager
+        self.sync_vehicle_color = sync_vehicle_color
+        self.sync_vehicle_lights = sync_vehicle_lights
+
+        if tls_manager == 'carla':
             self.sumo.switch_off_traffic_lights()
-        elif args.tls_manager == 'sumo':
+        elif tls_manager == 'sumo':
             self.carla.switch_off_traffic_lights()
 
         # Mapped actor ids.
@@ -94,8 +102,7 @@ class SimulationSynchronization(object):
             self.sumo.subscribe(sumo_actor_id)
             sumo_actor = self.sumo.get_actor(sumo_actor_id)
 
-            carla_blueprint = BridgeHelper.get_carla_blueprint(sumo_actor,
-                                                               self.args.sync_vehicle_color)
+            carla_blueprint = BridgeHelper.get_carla_blueprint(sumo_actor, self.sync_vehicle_color)
             if carla_blueprint is not None:
                 carla_transform = BridgeHelper.get_carla_transform(sumo_actor.transform,
                                                                    sumo_actor.extent)
@@ -120,7 +127,7 @@ class SimulationSynchronization(object):
 
             carla_transform = BridgeHelper.get_carla_transform(sumo_actor.transform,
                                                                sumo_actor.extent)
-            if self.args.sync_vehicle_lights:
+            if self.sync_vehicle_lights:
                 carla_lights = BridgeHelper.get_carla_lights_state(carla_actor.get_light_state(),
                                                                    sumo_actor.signals)
             else:
@@ -129,7 +136,7 @@ class SimulationSynchronization(object):
             self.carla.synchronize_vehicle(carla_actor_id, carla_transform, carla_lights)
 
         # Updates traffic lights in carla based on sumo information.
-        if self.args.tls_manager == 'sumo':
+        if self.tls_manager == 'sumo':
             common_landmarks = self.sumo.traffic_light_ids & self.carla.traffic_light_ids
             for landmark_id in common_landmarks:
                 sumo_tl_state = self.sumo.get_traffic_light_state(landmark_id)
@@ -148,8 +155,9 @@ class SimulationSynchronization(object):
             carla_actor = self.carla.get_actor(carla_actor_id)
 
             type_id = BridgeHelper.get_sumo_vtype(carla_actor)
+            color = carla_actor.attributes.get('color', None) if self.sync_vehicle_color else None
             if type_id is not None:
-                sumo_actor_id = self.sumo.spawn_actor(type_id, carla_actor.attributes)
+                sumo_actor_id = self.sumo.spawn_actor(type_id, color)
                 if sumo_actor_id != INVALID_ACTOR_ID:
                     self.carla2sumo_ids[carla_actor_id] = sumo_actor_id
                     self.sumo.subscribe(sumo_actor_id)
@@ -168,7 +176,7 @@ class SimulationSynchronization(object):
 
             sumo_transform = BridgeHelper.get_sumo_transform(carla_actor.get_transform(),
                                                              carla_actor.bounding_box.extent)
-            if self.args.sync_vehicle_lights:
+            if self.sync_vehicle_lights:
                 carla_lights = self.carla.get_actor_light_state(carla_actor_id)
                 if carla_lights is not None:
                     sumo_lights = BridgeHelper.get_sumo_lights_state(sumo_actor.signals,
@@ -181,7 +189,7 @@ class SimulationSynchronization(object):
             self.sumo.synchronize_vehicle(sumo_actor_id, sumo_transform, sumo_lights)
 
         # Updates traffic lights in sumo based on carla information.
-        if self.args.tls_manager == 'carla':
+        if self.tls_manager == 'carla':
             common_landmarks = self.sumo.traffic_light_ids & self.carla.traffic_light_ids
             for landmark_id in common_landmarks:
                 carla_tl_state = self.carla.get_traffic_light_state(landmark_id)
@@ -192,7 +200,7 @@ class SimulationSynchronization(object):
 
     def close(self):
         """
-        Cleans up synchronization.
+        Cleans synchronization.
         """
         # Configuring carla simulation in async mode.
         settings = self.carla.world.get_settings()
@@ -216,8 +224,15 @@ def synchronization_loop(args):
     """
     Entry point for sumo-carla co-simulation.
     """
-    synchronization = SimulationSynchronization(args)
     try:
+        sumo_simulation = SumoSimulation(args.sumo_host, args.sumo_port, args.step_length,
+                                         args.sumo_cfg_file, args.sumo_gui)
+        carla_simulation = CarlaSimulation(args.carla_host, args.carla_port, args.step_length)
+
+        synchronization = SimulationSynchronization(sumo_simulation, carla_simulation,
+                                                    args.tls_manager, args.sync_vehicle_color,
+                                                    args.sync_vehicle_lights)
+
         while True:
             start = time.time()
 
@@ -232,7 +247,7 @@ def synchronization_loop(args):
         logging.info('Cancelled by user.')
 
     finally:
-        logging.info('Cleaning up synchronization')
+        logging.info('Cleaning synchronization')
 
         synchronization.close()
 
@@ -263,8 +278,8 @@ if __name__ == '__main__':
                            type=str,
                            help='sumo configuration file')
     argparser.add_argument('--sumo-gui',
-                           default=True,
-                           help='run the gui version of sumo (default: True)')
+                           action='store_true',
+                           help='run the gui version of sumo')
     argparser.add_argument('--step-length',
                            default=0.05,
                            type=float,
