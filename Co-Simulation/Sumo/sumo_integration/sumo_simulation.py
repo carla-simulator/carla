@@ -281,24 +281,20 @@ class SumoSimulation(object):
     """
     SumoSimulation is responsible for the management of the sumo simulation.
     """
-    def __init__(self, args):
-        self.args = args
-        host = args.sumo_host
-        port = args.sumo_port
-
-        if args.sumo_gui is True:
+    def __init__(self, host, port, step_length, cfg_file, sumo_gui=False):
+        if sumo_gui is True:
             sumo_binary = sumolib.checkBinary('sumo-gui')
         else:
             sumo_binary = sumolib.checkBinary('sumo')
 
-        if args.sumo_host is None or args.sumo_port is None:
+        if host is None or port is None:
             logging.info('Starting new sumo server...')
-            if args.sumo_gui is True:
+            if sumo_gui is True:
                 logging.info('Remember to press the play button to start the simulation')
 
             traci.start([sumo_binary,
-                '--configuration-file', args.sumo_cfg_file,
-                '--step-length', str(args.step_length),
+                '--configuration-file', cfg_file,
+                '--step-length', str(step_length),
                 '--lateral-resolution', '0.25',
                 '--collision.check-junctions'
             ])
@@ -393,12 +389,12 @@ class SumoSimulation(object):
 
         return SumoActor(type_id, vclass, transform, signals, extent, color)
 
-    def spawn_actor(self, type_id, attrs=None):
+    def spawn_actor(self, type_id, color=None):
         """
         Spawns a new actor.
 
             :param type_id: vtype to be spawned.
-            :param attrs: dictionary with additional attributes for this specific actor.
+            :param color: color attribute for this specific actor.
             :return: actor id if the actor is successfully spawned. Otherwise, INVALID_ACTOR_ID.
         """
         actor_id = 'carla' + str(self._sequential_id)
@@ -408,10 +404,9 @@ class SumoSimulation(object):
             logging.error('Spawn sumo actor failed: %s', error)
             return INVALID_ACTOR_ID
 
-        if attrs is not None:
-            if self.args.sync_vehicle_color and 'color' in attrs:
-                color = attrs['color'].split(',')
-                traci.vehicle.setColor(actor_id, color)
+        if color is not None:
+            color = color.split(',')
+            traci.vehicle.setColor(actor_id, color)
 
         self._sequential_id += 1
 
@@ -451,7 +446,7 @@ class SumoSimulation(object):
         yaw = transform.rotation.yaw
 
         traci.vehicle.moveToXY(vehicle_id, "", 0, loc_x, loc_y, angle=yaw, keepRoute=2)
-        if signals is not None and self.args.sync_vehicle_lights:
+        if signals is not None:
             traci.vehicle.setSignals(vehicle_id, signals)
         return True
 

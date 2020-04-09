@@ -26,11 +26,7 @@ class CarlaSimulation(object):
     """
     CarlaSimulation is responsible for the management of the carla simulation.
     """
-    def __init__(self, args):
-        self.args = args
-        host = args.carla_host
-        port = args.carla_port
-
+    def __init__(self, host, port, step_length):
         self.client = carla.Client(host, port)
         self.client.set_timeout(2.0)
 
@@ -40,7 +36,7 @@ class CarlaSimulation(object):
         # Configuring carla simulation in sync mode.
         settings = self.world.get_settings()
         settings.synchronous_mode = True
-        settings.fixed_delta_seconds = args.step_length
+        settings.fixed_delta_seconds = step_length
         self.world.apply_settings(settings)
 
         # The following sets contain updated information for the current frame.
@@ -151,7 +147,7 @@ class CarlaSimulation(object):
             return False
 
         vehicle.set_transform(transform)
-        if lights is not None and self.args.sync_vehicle_lights:
+        if lights is not None:
             vehicle.set_light_state(carla.VehicleLightState(lights))
         return True
 
