@@ -79,6 +79,14 @@ public:
     }
   }
 
+  /// This method sets the hybrid physics radius.
+  void SetHybridPhysicsRadius(const float radius) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetHybridPhysicsRadius(radius);
+    }
+  }
+
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
