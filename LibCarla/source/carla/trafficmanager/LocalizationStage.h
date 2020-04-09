@@ -136,6 +136,8 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> hero_actors;
     /// Switch indicating hybrid physics mode.
     bool hybrid_physics_mode {false};
+    /// Switch indicating hybrid physics mode.
+    float hybrid_physics_radius {70.0f};
     /// Structure to hold previous state of physics-less vehicle.
     std::unordered_map<ActorId, KinematicState> kinematic_state_map;
     /// Time instance used to calculate dt in asynchronous mode.
