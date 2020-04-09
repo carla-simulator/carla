@@ -22,6 +22,8 @@ namespace traffic_manager {
   class TrafficManager;
 }
 
+namespace ctm = carla::traffic_manager;
+
 namespace rpc {
 
   class Command {
@@ -143,14 +145,16 @@ namespace rpc {
       using TM = traffic_manager::TrafficManager;
 
       SetAutopilot() = default;
-      SetAutopilot(ActorId id, TM* tm, bool value)
+      SetAutopilot(
+          ActorId id,
+          bool value,
+          SharedPtr<ctm::TrafficManager> tm = nullptr)
         : actor(id),
-          tm(tm),
-          enabled(value) {}
+          enabled(value),
+          tm(tm) {}
       ActorId actor;
-      // The TM pointer is temporal. A workaround to solve compiler issues
-      TM* tm;
       bool enabled;
+      SharedPtr<ctm::TrafficManager> tm;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
