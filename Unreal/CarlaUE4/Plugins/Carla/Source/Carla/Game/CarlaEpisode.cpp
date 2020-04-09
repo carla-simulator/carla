@@ -16,6 +16,7 @@
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
@@ -180,33 +181,15 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
     return false;
   }
 
-  const FString AbsoluteCONFPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf");
-
-  FString MeshVisibilityStr = "true";
-  if(Params.enable_mesh_visibility)
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if(GameInstance)
   {
-    MeshVisibilityStr = "true";
+    GameInstance->SetOpendriveGenerationParameters(Params);
   }
   else
   {
-    MeshVisibilityStr = "false";
+    carla::log_warning("Missing game instance");
   }
-  // Build the mesh generation config file
-  const FString ConfigData = FString::Printf(
-      TEXT("resolution=%s\nmax_road_length=%s\nwall_height=%s\nadditional_width=%s\nmesh_visibility=%s\n"),
-      *FString::SanitizeFloat(Params.vertex_distance),
-      *FString::SanitizeFloat(Params.max_road_length),
-      *FString::SanitizeFloat(Params.wall_height),
-      *FString::SanitizeFloat(Params.additional_width),
-      *MeshVisibilityStr);
-
-  // Save the config file
-  FFileHelper::SaveStringToFile(
-      ConfigData,
-      *AbsoluteCONFPath,
-      FFileHelper::EEncodingOptions::ForceUTF8,
-      &IFileManager::Get());
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 

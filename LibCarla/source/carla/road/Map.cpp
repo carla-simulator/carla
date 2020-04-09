@@ -932,7 +932,10 @@ namespace road {
     return _data.GetJunction(id);
   }
 
-  geom::Mesh Map::GenerateMesh(const double distance, const float extra_width) const {
+  geom::Mesh Map::GenerateMesh(
+      const double distance,
+      const float extra_width,
+      const  bool smooth_junctions) const {
     RELEASE_ASSERT(distance > 0.0);
     geom::MeshFactory mesh_factory;
     geom::Mesh out_mesh;
@@ -962,14 +965,25 @@ namespace road {
           }
         }
       }
-      out_mesh += *mesh_factory.MergeAndSmooth(lane_meshes);
+      if(smooth_junctions) {
+        out_mesh += *mesh_factory.MergeAndSmooth(lane_meshes);
+      } else {
+        geom::Mesh junction_mesh;
+        for(auto& lane : lane_meshes) {
+          junction_mesh += *lane;
+        }
+        out_mesh += junction_mesh;
+      }
     }
 
     return out_mesh;
   }
 
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
-      const double distance, const float max_road_len, const float extra_width) const {
+      const double distance,
+      const float max_road_len,
+      const float extra_width,
+      const  bool smooth_junctions) const {
     RELEASE_ASSERT(distance > 0.0);
     RELEASE_ASSERT(extra_width >= 0.0);
     RELEASE_ASSERT(max_road_len > 0.0);
@@ -1006,7 +1020,15 @@ namespace road {
           }
         }
       }
-      out_mesh_list.push_back(mesh_factory.MergeAndSmooth(lane_meshes));
+      if(smooth_junctions) {
+        out_mesh_list.push_back(mesh_factory.MergeAndSmooth(lane_meshes));
+      } else {
+        std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
+        for(auto& lane : lane_meshes) {
+          *junction_mesh += *lane;
+        }
+        out_mesh_list.push_back(std::move(junction_mesh));
+      }
     }
 
     return out_mesh_list;

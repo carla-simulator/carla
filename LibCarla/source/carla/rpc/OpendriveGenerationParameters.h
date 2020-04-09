@@ -17,11 +17,13 @@ namespace rpc {
         double max_road_len,
         double w_height,
         double a_width,
+        bool smooth_junc,
         bool e_visibility)
       : vertex_distance(v_distance),
         max_road_length(max_road_len),
         wall_height(w_height),
         additional_width(a_width),
+        smooth_junctions(smooth_junc),
         enable_mesh_visibility(e_visibility)
         {}
 
@@ -29,6 +31,7 @@ namespace rpc {
     double max_road_length = 50.0;
     double wall_height = 1.0;
     double additional_width = 0.6;
+    bool smooth_junctions = true;
     bool enable_mesh_visibility = true;
 
     MSGPACK_DEFINE_ARRAY(
@@ -36,6 +39,7 @@ namespace rpc {
         max_road_length,
         wall_height,
         additional_width,
+        smooth_junctions,
         enable_mesh_visibility);
   };
 

@@ -220,6 +220,7 @@ def main():
                     max_road_length=max_road_length,
                     wall_height=wall_height,
                     additional_width=extra_width,
+                    smooth_junctions=True,
                     enable_mesh_visibility=True))
         else:
             print('file not found.')

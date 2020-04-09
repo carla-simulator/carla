@@ -236,7 +236,6 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>
   {
-    carla::log_warning("Hello", Params.vertex_distance);
     REQUIRE_CARLA_EPISODE();
     if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive), Params))
     {
