@@ -17,6 +17,59 @@ UTrafficLightComponent::UTrafficLightComponent()
 {
 }
 
+void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
+{
+  const double epsilon = 0.00001;
+
+  auto References = GetAllReferencesToThisSignal(Map);
+
+  for (auto& Reference : References)
+  {
+    auto RoadId = Reference.first;
+    const auto* SignalReference = Reference.second;
+    for(auto &validity : SignalReference->GetValidities())
+    {
+      for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
+      {
+        if(lane == 0)
+          continue;
+
+        auto signal_waypoint = Map.GetWaypoint(
+            RoadId, lane, SignalReference->GetS()).get();
+
+        if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
+          continue;
+
+        // Get 90% of the half size of the width of the lane
+        float BoxSize = static_cast<float>(
+            0.9f*Map.GetLaneWidth(signal_waypoint)*0.5);
+        // Get min and max
+        double LaneLength = Map.GetLane(signal_waypoint).GetLength();
+        double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
+        if(lane < 0)
+        {
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - BoxSize,
+              LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
+        }
+        else
+        {
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxSize,
+              LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
+        }
+        float UnrealBoxSize = 100*BoxSize;
+        GenerateTrafficLightBox(Map.ComputeTransform(signal_waypoint), UnrealBoxSize);
+      }
+    }
+  }
+}
+
+void UTrafficLightComponent::GenerateTrafficLightBox(const FTransform BoxTransform,
+    float BoxSize)
+{
+  UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnOverlapTriggerBox);
+}
+
 void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
 {
   LightState = NewState;
