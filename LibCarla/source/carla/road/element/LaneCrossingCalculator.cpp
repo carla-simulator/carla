@@ -92,7 +92,11 @@ namespace element {
 
     const auto transform = map.ComputeTransform(*w0);
     geom::Vector3D orig_vec = transform.GetForwardVector();
-    geom::Vector3D dest_vec = (destination - origin).MakeUnitVector();
+    geom::Vector3D dest_vec = (destination - origin);
+    float dest_vec_length = dest_vec.Length();
+    if (dest_vec_length > 2 * std::numeric_limits<float>::epsilon()) {
+      dest_vec = dest_vec/dest_vec_length;
+    }
 
     // cross product
     const auto dest_is_at_right =
