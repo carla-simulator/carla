@@ -11,6 +11,7 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
 
@@ -35,8 +36,7 @@ namespace client {
     using ActorState::GetBoundingBox;
 
     /// Switch on/off this vehicle's autopilot.
-    void SetAutopilot(bool enabled = true);
-    void SetAutopilotTM(bool enabled = true, TM* tm = nullptr);
+    void SetAutopilot(bool enabled = true, SharedPtr<TM> tm = nullptr);
 
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
