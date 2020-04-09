@@ -89,9 +89,10 @@ def get_libcarla_extensions():
                 extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
-            include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
-            library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
-            extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+            # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
+            # library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
+            # extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+            extra_link_args += ['-lstdc++']
         else:
             raise NotImplementedError
     elif os.name == "nt":
