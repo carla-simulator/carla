@@ -7,6 +7,7 @@
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved mesh generation with a chunk system for better performance and bigger maps in the future
   * Added security features to the standalone OpenDRIVE mode aiming to prevent cars from falling down from the road
+  * Added junction smoothing algorithm to prevent roads from blocking other roads with level differences
   * Added new Behavior agent
   * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
   * Upgraded to AD RSS v3.0.0 supporting complex road layouts and i.e. intersections
