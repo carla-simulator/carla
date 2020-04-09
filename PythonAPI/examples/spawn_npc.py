@@ -101,7 +101,6 @@ def main():
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
 
-
         synchronous_master = False
 
         if args.sync:
