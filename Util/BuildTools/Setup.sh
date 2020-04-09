@@ -111,7 +111,7 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python,filesystem \
+      --with-libraries=python,filesystem,system,program_options \
       --with-python=${py2} --with-python-root=${py2_root}
 
   if ${TRAVIS} ; then

@@ -18,14 +18,6 @@ namespace client {
     return PrintList(out, actors);
   }
 
-  std::ostream &operator<<(std::ostream &out, const Timestamp &timestamp) {
-    out << "Timestamp(frame=" << std::to_string(timestamp.frame)
-        << ",elapsed_seconds=" << std::to_string(timestamp.elapsed_seconds)
-        << ",delta_seconds=" << std::to_string(timestamp.delta_seconds)
-        << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
-    return out;
-  }
-
   std::ostream &operator<<(std::ostream &out, const World &world) {
     out << "World(id=" << world.GetId() << ')';
     return out;

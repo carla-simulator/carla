@@ -176,6 +176,11 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cg::Transform>>("vector_of_transform")
+      .def(boost::python::vector_indexing_suite<std::vector<cg::Transform>>())
+      .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::BoundingBox>("BoundingBox")
     .def(init<cg::Location, cg::Vector3D>(
         (arg("location")=cg::Location(), arg("extent")=cg::Vector3D())))
