@@ -20,13 +20,9 @@ namespace LocalizationConstants {
 
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
     cg::Location next_vector = target_location - vehicle_location;
+    next_vector = next_vector.MakeSafeUnitVector(2 * std::numeric_limits<float>::epsilon());
 
-    float next_vector_length = next_vector.Length();
-    float cross_z = 0.0f;
-    if (next_vector_length > 2.0f * std::numeric_limits<float>::epsilon()) {
-      next_vector = next_vector/next_vector_length;
-      cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
-    }
+    const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
 
     return cross_z;
   }
@@ -44,13 +40,9 @@ namespace LocalizationConstants {
       next_vector = target_location - (cg::Location(-1* vehicle_half_length * heading_vector)
                                         + vehicle_location);
     }
+    next_vector = next_vector.MakeSafeUnitVector(2 * std::numeric_limits<float>::epsilon());
 
-    float next_vector_length = next_vector.Length();
-    float dot_product = 0.0f;
-    if (next_vector_length > 2.0f * std::numeric_limits<float>::epsilon()) {
-      next_vector = next_vector/next_vector_length;
-      dot_product = cg::Math::Dot(next_vector, heading_vector);
-    }
+    const float dot_product = cg::Math::Dot(next_vector, heading_vector);
 
     return dot_product;
   }
