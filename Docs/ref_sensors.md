@@ -1122,7 +1122,7 @@ The blueprint for this sensor has no modifiable attributes. However, the [carla.
 <tr>
 <td><code>road_boundaries_mode</code></td>
 <td><a href="../python_api#carlarssroadboundariesmode">carla.RssRoadBoundariesMode</a></td>
-<td>Enables/Disables the <a href="https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries">stay on road</a> feature. Default is <b>On</b>.</td>
+<td>Enables/Disables the <a href="https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries">stay on road</a> feature. Default is <b>Off</b>.</td>
 <tr>
 <td><code>visualization_mode</code></td>
 <td><a href="../python_api#carlarssvisualizationmode">carla.RssVisualizationMode</a></td>

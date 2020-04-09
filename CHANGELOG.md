@@ -8,6 +8,7 @@
   * Added security features to the standalone OpenDRIVE mode aiming to prevent cars from falling down from the road
   * Added new Behavior agent
   * Added automatic generation of traffic lights, stop signal and yield signal from OpenDRIVE file
+  * Upgraded to AD RSS v3.0.0 supporting complex road layouts and i.e. intersections
   * Added examples of sumo co-simulation for Town01, Town04 and Town05
   * Added ptv vissim and carla co-simulation
   * API extensions:
