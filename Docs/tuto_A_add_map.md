@@ -11,7 +11,7 @@ Users can create their own maps, and run CARLA using these. The creation of the 
 *   [__Map ingestion__](#map-ingestion)  
 	*   [Via Docker](#via-docker)  
 	*   [Via terminal](#via-terminal)  
-*   [Final tips](#final-tips)  
+*   [__Finishing touches in the UE4 Editor__](#finishing-touches-in-the-ue4-editor)  
 	*   [Modify pedestrian navigation](#modify-pedestrian-navigation)  
 *   [__Deprecated ways to import a map__](#deprecated-ways-to-import-a-map)  
 
@@ -30,12 +30,15 @@ The process of the map ingestion has been simplified to minimize the users' inte
 *   __Traffic signs are created when running the simulator.__ It will generate the traffic lights, stops, and yields according to their `.xodr` definition. The rest of landmarks present in the road map will not be physically on scene, but they can be queried using the API.  
 *   __Pedestrian navigation will be generated automatically.__ The user can modify it if desired, but a `.bin` file describing the basic navigation of the map will be created during the process. 
 
+!!! note
+    The traffic light timing can only be customized [using the API](python_api.md#carla.TrafficLight.set_green_time), as these are created by the simulator.
+
 There are two different ways to import the map into CARLA. Both grant the previously mentioned automatization, but there are some differences between them.  
 
-*   [__Via Docker.__](#via-docker) The output will be a distribution package containing the map ready to be used. However, as the map is packaged, pedestrian navigation cannot be modified. 
-*   [__Via terminal.__](#via-terminal) This will import the map into CARLA. The pedestrian navigation can be modified if needed. The map can be distributed using a standalone package. Take a look [this tutorial](tuto_A_create_standalone.md) to learn how to create it. 
+*   [__Via Docker.__](#via-docker) Recommended method when working with a CARLA package. The output will be a standalone package containing the map ready to be used. However, as the map is packaged, no modifications can be made.  
+*   [__Via terminal.__](#via-terminal) This will import the map into CARLA. The pedestrian navigation among others can be modified if needed. The map can be distributed using a standalone package. Take a look [this tutorial](tuto_A_create_standalone.md) to learn how to create it.  
 
-After that, it is almost ready. There are some [final tips](#final-tips) to make sure that everything fits perfectly. 
+After that, it is almost ready. If working in the build, there are some [finishing touches](#finishing-touches) that can be done, to make sure that everything fits perfectly. 
 
 There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#deprecated-ways-to-import-a-map) of this tutorial.  
 
@@ -158,24 +161,24 @@ In the end, the `.json` should look similar to the one below.
 
 ### Via Docker
 
-This option will run a Docker image of Unreal Engine to import the package, and export it as a distribution package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time.
+This is the recommended method to import a map into a CARLA package. It will run a Docker image of Unreal Engine to import the files, and export them as a standalone package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time.
 
 __1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). 
 
-__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files.  
+__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
 
 ```sh
-python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets
+python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets --package=Package01
 ```
 
-__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the distribution package for the assets. Extract it in the main root CARLA folder.  
+__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the standalone package for the assets. Extract it in the root folder of the CARLA package to add the content.
 
 !!! Note
     There is an alternative on Linux. Move the package to the `Import` folder and run the script `Util/ImportAssets.sh` to extract the package.
 
 ### Via terminal 
 
-This option will read the JSON file, and place the assets inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
+This is the recommended method to import a map into a CARLA build. The JSON file will be read to place the assets inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
 `Config` folder. This file describes the content, and is especially useful for props.  
 
 When everything is ready, run the command. 
@@ -184,14 +187,15 @@ When everything is ready, run the command.
 make import
 ```
 
+!!! Warning
+    Make sure that the package is inside the `Import` folder in CARLA. 
+
 ---
-## Final tips
+## Finishing touches in the UE4 Editor
 
-Now the map is ready to be used in CARLA. However, there are some additional settings to be done. These are recommended steps, but mostly optional besides pedestrian navigation.  
+After the ingestion, map is ready to be used in CARLA. However, __if working in a CARLA build, the map can be opened in the UE4 Editor in order to refine it.__ These are recommended steps, but mostly optional besides pedestrian navigation.  
 
-*   __Test traffic light timing.__ The traffic lights are generated when the simulator runs. Their state changes using a default time that may be inaccurate for the new map. If there is need to change it, the custom time will have to be set on every run using the API.  
-<br>
-*   __Place vehicle spawn points.__ These will be used in scripts such as `spawn_npc.py`. They have to be created manually. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
+*   __Create new spawning points.__ These will be used in scripts such as `spawn_npc.py`. They have to be created manually. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
 
   ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
 
@@ -232,11 +236,11 @@ __3.__ Name these planes following the common format `Road_Crosswalk_mapname`.
 
 __4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
 
-__5.__ A `.obj` file has been created in `Unreal/CarlaUE4/Saved`. Run the executable `Util/DockerUtils/dist/RecastBuilder` using the `.obj` as input.  
+__5.__ A `.obj` file has been created in `Unreal/CarlaUE4/Saved`. Run the executable `Util/DockerUtils/Dist/RecastBuilder` using the `.obj` as input.  
 
-__6.__ The `.bin` should have been generated in the file where the executable is running. Change its name to be the same as the `mapname.fbx`.  
+__6.__ The `.bin` should have been generated in `Util/DockerUtils/Dist`. Change its name to be the same as the `mapname.fbx`.  
 
-__7.__ Move it into `Content/Carla/Maps/Nav`.   
+__7.__ Move the `.bin` into `Content/Carla/Maps/Nav`.   
 
 ---
 ## Deprecated ways to import a map

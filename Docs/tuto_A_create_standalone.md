@@ -1,14 +1,14 @@
-# Create standalone packages 
+# Create distribution packages for assets 
 
-It is a common practice in CARLA to manage assets with independent packages. Keeping them aside from the main CARLA build allows to reduce the size of the build itself. These packages can be easily imported into CARLA anytime. They also become really useful to easily distribute assets in an organized way. 
+It is a common practice in CARLA to manage assets with standalone packages. Keeping them aside allows to reduce the size of the build. These asset packages can be easily imported into a CARLA package anytime. They also become really useful to easily distribute assets in an organized way. 
 
-* [__Export a package__](#export-a-package)  
-* [__Import a distribution package__](#import-a-distribution-package)  
+* [__Export a package from the UE4 Editor__](#export-a-package-from-the-ue4-editor)  
+* [__Import assets into a CARLA package__](#import-assets-into-a-carla-package)  
 
 ---
-## Export a package
+## Export a package from the UE4 Editor
 
-Once a package is imported into Unreal, users can  generate a __coocked packge__ for it. This is what will be used to distribute the content.
+Once assets are imported into Unreal, users can generate a __standalone package__ for them. This will be used to distribute the content to CARLA packages such as 0.9.8.
 
 To export packages, simply run the command below.
 
@@ -16,26 +16,30 @@ To export packages, simply run the command below.
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This will create a distribution package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
+This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
 !!! Note
-    If the assets have been imported [using Docker](tuto_A_add_map.md#via-docker), the distribution package will be generated automatically.  
+    As an alternative, the [Docker method](tuto_A_add_map.md#via-docker) will create the standalone package without the need of having Unreal Engine in the system.  
 
 ---
-## Import a distribution package
+## Import assets into a CARLA package
 
-Distribution packages are contained in `.tar.gz` files. In order to import these into CARLA, just extract these into the main root CARLA folder. The assets will be automatically storage in the corresponding path.  
+A standalone package is contained in a `.tar.gz` file. The way this is extracted depends on the platform.  
 
-To get the package into a CARLA distribution, move the compressed file to the `Import` folder and run the following script.  
+*   __On Windows__ extract the compressed file in the main root CARLA folder.  
+*   __On Linux__ move the compressed file to the `Import` folder and run the following script.  
 
 ```sh
 cd Import
 ./ImportAssets.sh
 ```
 
+!!! Note
+    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_A_add_map.md) or [vehicles](tuto_A_add_vehicle.md).
+
 ---
 
-That sumps up the management of asset packages in CARLA. If there is any unexpected issue, feel free to post in the forum. 
+That sumps up how to create and use standalone packages in CARLA. If there is any unexpected issue, feel free to post in the forum. 
 
 <div class="build-buttons">
 <p>

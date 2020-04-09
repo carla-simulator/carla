@@ -117,7 +117,7 @@ CARLA forum</a>
     [__Add new props__](tuto_A_add_props.md)
         — Import additional props into CARLA.  
     [__Create standalone packages__](tuto_A_create_standalone.md)
-        — Generate and handle distribution packages.  
+        — Generate and handle standalone packages for assets.  
     [__Map customization__](tuto_A_map_customization.md)
         — Edit an existing map.  
     [__Use Epic's Automotive materials__](tuto_A_epic_automotive_materials.md)

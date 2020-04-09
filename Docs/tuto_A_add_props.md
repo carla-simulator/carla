@@ -105,36 +105,38 @@ In the end, the `.json` should look similar to the one below.
 
 There are two different ways to import props into CARLA.  
 
-* __Via Docker.__ This option will generate a distribution package of the assets. This can easily be used in CARLA by extracting it in the root folder. 
-* __Via terminal.__ This option will import the assets directly into CARLA.
+* __Via Docker.__ This option will generate a standalone package for the props. This can be loaded in a CARLA package, for instance, CARLA 0.9.8.
+* __Via terminal.__ This option will import the props into a CARLA build.
 
 ### Via Docker
 
-A Docker image of Unreal Engine will be created. It acts as a black box that automatically imports the package into the CARLA image, and generates a ditribution package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time. 
+This is the method used to import the props into a CARLA package such as CARLA 0.9.8. A Docker image of Unreal Engine will be created. It acts as a black box that automatically imports the package into the CARLA image, and generates a ditribution package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time. 
 
 __1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). 
 
-__2. Run the script to cook the props.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files.  
+__2. Run the script to cook the props.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
 
 ```sh
-python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets
+python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets  --package=Package01
 ```
 
-__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the distribution package for the assets. Extract it in the main root CARLA folder.  
+__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the standalone package for the assets. Extract it in the root folder of the CARLA package to add the content.  
 
 !!! Note
     There is an alternative on Linux. Move the package to the `Import` folder and run the script `Util/ImportAssets.sh` to extract the package.
 
 ### Via terminal 
 
-This option will read the JSON file, and place the props inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
-`Config` folder. This will be used to define the props in the blueprint library, and expose them in the Python API. It will also be used if the package is exported as a [standalone package](tuto_A_create_standalone.md).
+This is the method to import the props into a CARLA build. The JSON file will be read to place the props inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's `Config` folder. This will be used to define the props in the blueprint library, and expose them in the Python API. It will also be used if the package is exported as a [standalone package](tuto_A_create_standalone.md).
 
 When everything is ready, run the command. 
 
 ```sh
 make import
 ```
+
+!!! Warning
+    Make sure that the package is inside the `Import` folder in CARLA. 
 
 ---
 
