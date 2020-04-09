@@ -132,14 +132,22 @@ namespace traffic_manager {
     SnippetProfiler snippet_profiler;
     /// Map to keep track of last lane change location.
     std::unordered_map<ActorId, cg::Location> last_lane_change_location;
-    /// Reference of hero vehicle.
-    Actor hero_actor {nullptr};
+    /// Records of all vehicles with hero attribute.
+    std::unordered_map<ActorId, Actor> hero_actors;
     /// Switch indicating hybrid physics mode.
     bool hybrid_physics_mode {false};
+    /// Switch indicating hybrid physics mode.
+    float hybrid_physics_radius {70.0f};
     /// Structure to hold previous state of physics-less vehicle.
     std::unordered_map<ActorId, KinematicState> kinematic_state_map;
     /// Time instance used to calculate dt in asynchronous mode.
     TimePoint previous_update_instance;
+    /// Step runner flag.
+    std::atomic<bool> run_step {false};
+    /// Mutex for progressing synchronous execution.
+    std::mutex step_execution_mutex;
+    /// Condition variables for progressing synchronous execution.
+    std::condition_variable step_execution_trigger;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
@@ -153,7 +161,7 @@ namespace traffic_manager {
 
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
-    void PopWaypoint(Buffer& buffer, ActorId actor_id);
+    void PopWaypoint(Buffer& buffer, ActorId actor_id, bool front_or_back = true);
 
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
@@ -190,6 +198,8 @@ namespace traffic_manager {
 
     void DataSender() override;
 
+    /// Method to trigger initiation of pipeline in synchronous mode.
+    bool RunStep();
   };
 
 } // namespace traffic_manager

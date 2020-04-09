@@ -63,6 +63,8 @@ CARLA forum</a>
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
+    [__RSS sensor__](adv_rss.md)
+        — An implementation of RSS in the CARLA client library.  
     [__Synchrony and time-step__](adv_synchrony_timestep.md)
         — Client-server communication and simulation time.  
     [__Traffic Manager__](adv_traffic_manager.md)
@@ -102,6 +104,8 @@ CARLA forum</a>
         — Set runtime changes on a vehicle physics.  
     [__Control walker skeletons__](tuto_G_control_walker_skeletons.md)
         — Animate walkers using skeletons.  
+    [__Retrieve simulation data__](tuto_G_retrieve_data.md)
+        — A step by step guide to properly gather data using the recorder.  
     </p>
 
 ## Tutorials — Assets

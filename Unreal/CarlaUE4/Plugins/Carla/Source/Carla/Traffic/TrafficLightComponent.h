@@ -44,6 +44,8 @@ public:
   UFUNCTION(Category = "Traffic Light", BlueprintPure)
   UTrafficLightController* GetController();
 
+  virtual void InitializeSign(const carla::road::Map &Map) override;
+
 protected:
 
   UFUNCTION(BlueprintCallable)
@@ -57,6 +59,11 @@ protected:
 private:
 
   friend ATrafficLightManager;
+
+  void GenerateTrafficLightBox(
+      const FTransform BoxTransform,
+      float BoxSize);
+
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
   ETrafficLightState LightState;
 

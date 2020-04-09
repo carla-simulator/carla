@@ -183,6 +183,41 @@
       doc: >
         Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
     # --------------------------------------
+    - def_name: get_all_landmarks
+      doc: >
+        Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.
+      return: list(carla.Landmark)
+    # --------------------------------------
+    - def_name: get_all_landmarks_from_id
+      doc: >
+        Returns the landmarks with a certain OpenDRIVE ID. Landmarks retrieved using this method have a __null__ waypoint.
+      params:
+      - param_name: opendrive_id
+        type: string
+        doc: >
+          The OpenDRIVE ID of the landmarks.
+      return: list(carla.Landmark)
+    # --------------------------------------
+    - def_name: get_all_landmarks_of_type
+      doc: >
+        Returns the landmarks of a specific type. Landmarks retrieved using this method have a __null__ waypoint.
+      params:
+      - param_name: type
+        type: string
+        doc: >
+          The type of the landmarks.
+      return: list(carla.Landmark)
+    # --------------------------------------
+    - def_name: get_landmark_group
+      doc: >
+        Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          A landmark that belongs to the group.
+      return: list(carla.Landmark)
+    # --------------------------------------
     - def_name: get_spawn_points
       return: list(carla.Transform)
       doc: >
@@ -216,20 +251,20 @@
     # --------------------------------------
     - def_name: get_waypoint_xodr
       doc: >
-        Get a waypoint if all the parameters passed are correct, otherwise return None
+        Returns a waypoint if all the parameters passed are correct. Otherwise, returns __None__.
       params:
       - param_name: road_id
         type: int
         doc: >
-          Id of the road from where getting the waypoint
+          ID of the road to get the waypoint.
       - param_name: lane_id
         type: int
         doc: >
-          Id of the lane to get the waypoint.
+          ID of the lane to get the waypoint.
       - param_name: s
         type: float
         doc: >
-          Specify the length from the road start
+          Specify the length from the road start.
       return: carla.Waypoint
     # --------------------------------------
     - def_name: __str__
@@ -358,6 +393,11 @@
       return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints from this to the start of the lane separated by a certain `distance`.
+    # --------------------------------------
+    - def_name: get_junction
+      return: carla.Junction
+      doc: >
+        If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.
     # --------------------------------------
     - def_name: get_landmarks
       params:

@@ -99,6 +99,10 @@ namespace road {
     std::vector<SignalSearchData> GetSignalsInDistance(
         Waypoint waypoint, double distance, bool stop_at_junction = false) const;
 
+    /// Return all RoadInfoSignal in the map
+    std::vector<const element::RoadInfoSignal*>
+        GetAllSignalReferences() const;
+
     /// ========================================================================
     /// -- Waypoint generation -------------------------------------------------
     /// ========================================================================
@@ -146,10 +150,12 @@ namespace road {
         ComputeJunctionConflicts(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
-    geom::Mesh GenerateMesh(double distance) const;
+    geom::Mesh GenerateMesh(const double distance, const float extra_width = 0.f) const;
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
+
+    geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
       return _data.GetSignals();

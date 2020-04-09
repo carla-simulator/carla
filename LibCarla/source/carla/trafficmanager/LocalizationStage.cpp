@@ -12,12 +12,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
+  static const float MAXIMUM_HORIZON_LENGTH = 60.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
+  static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+  static const float HORIZON_RATE = (MAXIMUM_HORIZON_LENGTH - MINIMUM_HORIZON_LENGTH) / ARBITRARY_MAX_SPEED;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
@@ -27,7 +29,6 @@ namespace LocalizationConstants {
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAX_COLLISION_RADIUS = 100.0f;
-  static const float PHYSICS_RADIUS = 50.0f;
   static const float POSITION_WINDOW_SIZE = 2.1f;
   static const float HYBRID_MODE_DT = 0.05f;
 } // namespace LocalizationConstants
@@ -103,9 +104,9 @@ namespace LocalizationConstants {
         idle_time[actor_id] = current_timestamp.elapsed_seconds;
       }
 
-      const float horizon_size = std::max(
-          WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
-          MINIMUM_HORIZON_LENGTH);
+      // Speed dependent waypoint horizon length.
+      const float horizon_square = std::min(std::pow(vehicle_velocity * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, 2.0f),
+                                            std::pow(MAXIMUM_HORIZON_LENGTH, 2.0f));
 
       if (buffer_list->find(actor_id) == buffer_list->end()) {
         buffer_list->insert({actor_id, Buffer()});
@@ -123,16 +124,21 @@ namespace LocalizationConstants {
         }
       }
 
-      // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
-
+        // Purge passed waypoints.
+        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
         while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
+            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
           }
+        }
+
+        // Purge waypoints too far from the front of the buffer.
+        while (!waypoint_buffer.empty()
+               && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square) {
+          PopWaypoint(waypoint_buffer, actor_id, false);
         }
       }
 
@@ -183,9 +189,9 @@ namespace LocalizationConstants {
           PushWaypoint(waypoint_buffer, actor_id, change_over_point);
         }
       }
+
       // Populating the buffer.
-      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-          <= std::pow(horizon_size, 2)) {
+      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint64_t selection_index = 0u;
@@ -384,9 +390,32 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
+  bool LocalizationStage::RunStep() {
+
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      // Set flag to true, notify DataReceiver initiate pipeline.
+      run_step.store(true);
+      step_execution_trigger.notify_one();
+    }
+
+    return true;
+  }
+
   void LocalizationStage::DataReceiver() {
 
+    // Wait for external trigger to initiate the pipeline in synchronous mode.
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      while (!run_step.load()) {
+        step_execution_trigger.wait_for(lock, 1ms, [this]() {return run_step.load();});
+      }
+      // Set flag to false, unblock RunStep() call and release mutex lock.
+      run_step.store(false);
+    }
+
     hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    hybrid_physics_radius = parameters.GetHybridPhysicsRadius();
 
     bool is_deleted_actors_present = false;
     std::set<uint32_t> world_actor_id;
@@ -414,23 +443,31 @@ namespace LocalizationConstants {
     for (const auto &actor : vehicles) {
       world_actor_id.insert(actor.GetId());
 
-      // Identify hero vehicle if currently not present
-      // and system is in hybrid physics mode.
-      if (hybrid_physics_mode && hero_actor == nullptr) {
+      // Identify hero vehicles if system is in hybrid physics mode.
+      if (hybrid_physics_mode) {
         Actor actor_ptr = actor.Get(episode_proxy_ls);
-        for (auto&& attribute: actor_ptr->GetAttributes()) {
-          if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
-            hero_actor = actor_ptr;
-            break;
+        ActorId hero_actor_id = actor_ptr->GetId();
+        if (hero_actors.find(hero_actor_id) == hero_actors.end()) {
+          for (auto&& attribute: actor_ptr->GetAttributes()) {
+            if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+              hero_actors.insert({hero_actor_id, actor_ptr});
+            }
           }
         }
       }
     }
 
     // Invalidate hero actor pointer if it is not alive anymore.
-    if (hybrid_physics_mode && hero_actor != nullptr
-        && world_actor_id.find(hero_actor->GetId()) == world_actor_id.end()) {
-      hero_actor = nullptr;
+    ActorIdSet hero_actors_to_delete;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        if(world_actor_id.find(hero_actor_info.first) == world_actor_id.end()) {
+          hero_actors_to_delete.insert(hero_actor_info.first);
+        }
+      }
+    }
+    for (auto &deletion_id: hero_actors_to_delete) {
+      hero_actors.erase(deletion_id);
     }
 
     // Search for invalid/destroyed vehicles.
@@ -497,13 +534,12 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
-
-    for (uint64_t i = 0u; i < buffer.size(); ++i) {
-      if(buffer.at(i)->GetWaypoint()->IsJunction()){
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 0.05f);
-      } else {
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 0.05f);
-      }
+    uint64_t buffer_size = buffer.size();
+    uint64_t step_size =  buffer_size/10u;
+    for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
+        debug_helper.DrawLine(buffer.at(i)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              buffer.at(i + step_size)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              0.2f, {0u, 255u, 0u}, 0.05f);
     }
   }
 
@@ -514,12 +550,15 @@ namespace LocalizationConstants {
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
   }
 
-  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
+  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id, bool front_or_back) {
 
-    SimpleWaypointPtr removed_waypoint = buffer.front();
-    SimpleWaypointPtr remaining_waypoint = nullptr;
+    SimpleWaypointPtr removed_waypoint = front_or_back? buffer.front(): buffer.back();
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
-    buffer.pop_front();
+    if (front_or_back) {
+      buffer.pop_front();
+    } else {
+      buffer.pop_back();
+    }
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
   }
 
@@ -576,17 +615,29 @@ namespace LocalizationConstants {
         cg::Location location = it->second->GetLocation();
         const auto type = it->second->GetTypeId();
 
-        SimpleWaypointPtr nearest_waypoint = nullptr;
+        std::vector<SimpleWaypointPtr> nearest_waypoints;
         if (type[0] == 'v') {
-          nearest_waypoint = local_map.GetWaypointInVicinity(location);
+          auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(it->second);
+          cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
+          float bx = extent.x;
+          float by = extent.y;
+          std::vector<cg::Location> corners = {location + cg::Location(bx, by, 0.0f),
+                                               location + cg::Location(-bx, by, 0.0f),
+                                               location + cg::Location(bx, -by, 0.0f),
+                                               location + cg::Location(-bx, -by, 0.0f)};
+          for (cg::Location &vertex: corners) {
+            SimpleWaypointPtr nearest_waypoint = local_map.GetWaypointInVicinity(vertex);
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetPedWaypoint(vertex);};
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+            nearest_waypoints.push_back(nearest_waypoint);
+          }
         } else if (type[0] == 'w') {
-          nearest_waypoint = local_map.GetPedWaypoint(location);
-        }
-        if (nearest_waypoint == nullptr) {
-          nearest_waypoint = local_map.GetWaypoint(location);
+          SimpleWaypointPtr nearest_waypoint = local_map.GetPedWaypoint(location);
+          if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+          nearest_waypoints.push_back(nearest_waypoint);
         }
 
-        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoint);
+        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoints);
 
         ++it;
       }
@@ -886,9 +937,11 @@ namespace LocalizationConstants {
   void LocalizationStage::UpdateSwarmVelocities() {
 
     // Location of hero vehicle if present.
-    cg::Location hero_location;
-    if (hybrid_physics_mode && hero_actor != nullptr) {
-      hero_location = hero_actor->GetLocation();
+    std::vector<cg::Location> hero_locations;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        hero_locations.push_back(hero_actor_info.second->GetLocation());
+      }
     }
 
     // Using (1/20)s time delta for computing velocity.
@@ -917,10 +970,13 @@ namespace LocalizationConstants {
 
       // Check if current actor is in range of hero actor and enable physics in hybrid mode.
       bool in_range_of_hero_actor = false;
-      if (hybrid_physics_mode
-          && hero_actor != nullptr
-          && (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(PHYSICS_RADIUS, 2))) {
-        in_range_of_hero_actor = true;
+      if (hybrid_physics_mode && hero_actors.size() != 0u){
+        for (auto &hero_location: hero_locations) {
+          if (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(hybrid_physics_radius, 2)) {
+            in_range_of_hero_actor = true;
+            break;
+          }
+        }
       }
       bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
       kinematic_state_map.at(actor_id).physics_enabled = enable_physics;

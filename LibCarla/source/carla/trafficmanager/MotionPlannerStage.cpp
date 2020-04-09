@@ -80,12 +80,12 @@ namespace PlannerConstants {
       const Actor actor = localization_data.actor;
       const float current_deviation = localization_data.deviation;
       const float current_distance = localization_data.distance;
-
-      const ActorId actor_id = actor->GetId();
-
-      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
       const cg::Vector3D current_velocity_vector = localization_data.velocity;
       const float current_velocity = current_velocity_vector.Length();
+
+      const ActorId actor_id = actor->GetId();
+      const cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
+      const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
 
       const auto current_time = chr::system_clock::now();
 
@@ -116,8 +116,6 @@ namespace PlannerConstants {
       if (collision_data.hazard) {
         cg::Vector3D other_vehicle_velocity = collision_data.other_vehicle_velocity;
         float ego_relative_velocity =  (current_velocity_vector - other_vehicle_velocity).Length();
-
-        cg::Vector3D ego_heading = actor->GetTransform().GetForwardVector();
         float other_velocity_along_heading = cg::Math::Dot(other_vehicle_velocity, ego_heading);
 
         // Consider collision avoidance decisions only if there is positive relative velocity
@@ -203,10 +201,11 @@ namespace PlannerConstants {
         chr::duration<float> elapsed_time = current_time - teleportation_instance.at(actor_id);
 
         // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-        if (!emergency_stop && !(!parameters.GetSynchronousMode() && elapsed_time.count() < HYBRID_MODE_DT)) {
+        if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT)) {
 
           // Target displacement magnitude to achieve target velocity.
-          float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+          const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+          const float target_displacement_square = std::pow(target_displacement, 2.0f);
 
           SimpleWaypointPtr target_interval_begin = nullptr;
           SimpleWaypointPtr target_interval_end = nullptr;
@@ -221,10 +220,11 @@ namespace PlannerConstants {
             target_interval_begin = localization_data.position_window.at(j);
             target_interval_end = localization_data.position_window.at(j+1);
 
-            if (target_interval_begin->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2)
-                || (target_interval_begin->DistanceSquared(vehicle_location) < std::pow(target_displacement, 2)
-                    && target_interval_end->DistanceSquared(vehicle_location) > std::pow(target_displacement, 2))
-            ) {
+            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_location;
+            if (cg::Math::Dot(relative_position, ego_heading) > 0.0f
+                && ((target_interval_begin->DistanceSquared(vehicle_location) > target_displacement_square)
+                    || (target_interval_begin->DistanceSquared(vehicle_location) < target_displacement_square
+                        && target_interval_end->DistanceSquared(vehicle_location) > target_displacement_square))) {
               teleportation_interval_found = true;
             }
           }
@@ -232,7 +232,11 @@ namespace PlannerConstants {
           if (target_interval_begin != nullptr && target_interval_end != nullptr) {
 
             // Construct target transform to accurately achieve desired velocity.
-            float missing_displacement = target_displacement - (target_interval_begin->Distance(vehicle_location));
+            float missing_displacement = 0.0f;
+            const float base_displacement = target_interval_begin->Distance(vehicle_location);
+            if (base_displacement < target_displacement) {
+              missing_displacement = target_displacement - base_displacement;
+            }
             cg::Transform target_base_transform = target_interval_begin->GetTransform();
             cg::Location target_base_location = target_base_transform.location;
             cg::Vector3D target_heading = target_base_transform.GetForwardVector();
