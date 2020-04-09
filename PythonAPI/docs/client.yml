@@ -408,3 +408,13 @@
         
         Default is 30. Exceeding a speed limit can be done using negative percentages. 
     # --------------------------------------
+    - def_name: set_hybrid_physics_mode
+      params:
+      - param_name: enabled
+        type: bool
+        default: False
+        doc: >
+          If __True__, enables the hybrid physics. 
+      doc: >
+        Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported. 
+    # --------------------------------------
