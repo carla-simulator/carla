@@ -189,6 +189,16 @@ void Parameters::SetGlobalDistanceToLeadingVehicle(const float dist) {
   distance_margin.store(dist);
 }
 
+float Parameters::GetHybridPhysicsRadius() {
+
+  return hybrid_physics_radius.load();
+}
+
+void Parameters::SetHybridPhysicsRadius(const float radius) {
+  float new_radius = std::max(radius, 0.0f);
+  hybrid_physics_radius.store(new_radius);
+}
+
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
 
   float new_perc = cg::Math::Clamp(perc, 0.0f, 100.0f);

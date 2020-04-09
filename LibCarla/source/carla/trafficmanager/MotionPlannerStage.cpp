@@ -20,7 +20,6 @@ namespace PlannerConstants {
   static const float CRITICAL_BRAKING_MARGIN = 0.25f;
   static const float HYBRID_MODE_DT = 0.05f;
   static const float EPSILON_VELOCITY = 0.001f;
-  static const float VERTICAL_OFFSET = 0.2f;
 } // namespace PlannerConstants
 
   using namespace PlannerConstants;
@@ -214,8 +213,6 @@ namespace PlannerConstants {
           cg::Location vehicle_location = actor->GetLocation();
 
           // Find the interval containing position to achieve target displacement.
-          const cg::Location vertical_offset(0, 0, VERTICAL_OFFSET);
-          const cg::Location vehicle_offset_location = vehicle_location - vertical_offset;
           for (uint32_t j = 0u;
                 j+1 < localization_data.position_window.size() && !teleportation_interval_found;
                 ++j) {
@@ -223,11 +220,11 @@ namespace PlannerConstants {
             target_interval_begin = localization_data.position_window.at(j);
             target_interval_end = localization_data.position_window.at(j+1);
 
-            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_offset_location;
+            cg::Vector3D relative_position = target_interval_begin->GetLocation() - vehicle_location;
             if (cg::Math::Dot(relative_position, ego_heading) > 0.0f
-                && ((target_interval_begin->DistanceSquared(vehicle_offset_location) > target_displacement_square)
-                    || (target_interval_begin->DistanceSquared(vehicle_offset_location) < target_displacement_square
-                        && target_interval_end->DistanceSquared(vehicle_offset_location) > target_displacement_square))) {
+                && ((target_interval_begin->DistanceSquared(vehicle_location) > target_displacement_square)
+                    || (target_interval_begin->DistanceSquared(vehicle_location) < target_displacement_square
+                        && target_interval_end->DistanceSquared(vehicle_location) > target_displacement_square))) {
               teleportation_interval_found = true;
             }
           }
@@ -236,12 +233,12 @@ namespace PlannerConstants {
 
             // Construct target transform to accurately achieve desired velocity.
             float missing_displacement = 0.0f;
-            const float base_displacement = target_interval_begin->Distance(vehicle_offset_location);
+            const float base_displacement = target_interval_begin->Distance(vehicle_location);
             if (base_displacement < target_displacement) {
               missing_displacement = target_displacement - base_displacement;
             }
             cg::Transform target_base_transform = target_interval_begin->GetTransform();
-            cg::Location target_base_location = target_base_transform.location + vertical_offset;
+            cg::Location target_base_location = target_base_transform.location;
             cg::Vector3D target_heading = target_base_transform.GetForwardVector();
             cg::Location teleportation_location = target_base_location
                                                   + cg::Location(target_heading * missing_displacement);
