@@ -4,13 +4,17 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/client/Client.h"
-#include "carla/client/World.h"
+//#include "carla/client/Client.h"
+
+
+#include "carla/Sockets.h"
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
-#include "carla/Exception.h"
+#include "carla/trafficmanager/TrafficManagerLocal.h"
+#include "carla/trafficmanager/TrafficManagerRemote.h"
 
 #define DEBUG_PRINT_TM  0
+#define IP_DATA_BUFFER_SIZE     80
 
 namespace carla {
 namespace traffic_manager {
@@ -64,7 +68,7 @@ void TrafficManager::CreateTrafficManagerServer(
   auto GetLocalIP = [=](const uint16_t sport)-> std::pair<std::string, uint16_t> {
     std::pair<std::string, uint16_t> localIP;
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if(sock == INVALID_INDEX) {
+    if(sock == SOCK_INVALID_INDEX) {
       #if DEBUG_PRINT_TM
       std::cout << "Error number 1: " << errno << std::endl;
       std::cout << "Error message: " << strerror(errno) << std::endl;
@@ -77,7 +81,7 @@ void TrafficManager::CreateTrafficManagerServer(
       loopback.sin_addr.s_addr = INADDR_LOOPBACK;
       loopback.sin_port = htons(9);
       err = connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
-      if(err == INVALID_INDEX) {
+      if(err == SOCK_INVALID_INDEX) {
         #if DEBUG_PRINT_TM
         std::cout << "Error number 2: " << errno << std::endl;
         std::cout << "Error message: " << strerror(errno) << std::endl;
@@ -85,7 +89,7 @@ void TrafficManager::CreateTrafficManagerServer(
       } else {
         socklen_t addrlen = sizeof(loopback);
         err = getsockname(sock, reinterpret_cast<struct sockaddr*> (&loopback), &addrlen);
-        if(err == INVALID_INDEX) {
+        if(err == SOCK_INVALID_INDEX) {
           #if DEBUG_PRINT_TM
           std::cout << "Error number 3: " << errno << std::endl;
           std::cout << "Error message: " << strerror(errno) << std::endl;
