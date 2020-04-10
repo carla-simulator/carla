@@ -10,15 +10,15 @@
 namespace carla {
 namespace client {
 
-std::vector<Light> LightManager::GetAllLights(LightGroup /* type */) {
+std::vector<Light> LightManager::GetAllLights(LightGroup type) {
   std::vector<Light> result;
-  /* for(auto lights_state : _lights_state) {
+  for(auto lights_state : _lights_state) {
     LightGroup group = lights_state.second._group;
     if((type == LightGroup::None) || (group == type)) {
-      auto it_light = _lights[lights_state.first];
-      result.push_back(it_light);
+      auto it_light = _lights.find(lights_state.first);
+      result.push_back(it_light->second);
     }
-  } */
+  }
   return result;
 }
 

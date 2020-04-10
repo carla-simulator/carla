@@ -67,7 +67,7 @@ private:
   void UpdateServerLightsState() const;
 
   std::unordered_map<LightId, LightState> _lights_state;
-  //std::unordered_map<LightId, Light> _lights;
+  std::unordered_map<LightId, Light> _lights;
 
   LightState _state;
 };
