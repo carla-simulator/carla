@@ -10,15 +10,15 @@
 namespace carla {
 namespace client {
 
-std::vector<Light> GetAllLights(LightGroup type = LightGroup::None) {
+std::vector<Light> LightManager::GetAllLights(LightGroup /* type */) {
   std::vector<Light> result;
-  for(auto lights_state : _lights_state) {
-    LightGroup group = lights_state->second._group;
+  /* for(auto lights_state : _lights_state) {
+    LightGroup group = lights_state.second._group;
     if((type == LightGroup::None) || (group == type)) {
-      auto it_light = _lights[lights_state->first];
-      result.push_back(it_light->second);
+      auto it_light = _lights[lights_state.first];
+      result.push_back(it_light);
     }
-  }
+  } */
   return result;
 }
 
@@ -65,6 +65,26 @@ std::vector<float> LightManager::GetIntensity(std::vector<Light> lights) {
   return result;
 }
 
+void LightManager::SetLightGroup(std::vector<Light> lights, LightGroup group) {
+  for(Light& light : lights) {
+    SetLightGroup(light.GetId(), group);
+  }
+}
+
+void LightManager::SetLightGroup(std::vector<Light> lights, std::vector<LightGroup> groups) {
+  size_t lights_to_update = (lights.size() < groups.size()) ? lights.size() : groups.size();
+  for(size_t i = 0; i < lights_to_update; i++) {
+    SetLightGroup(lights[i].GetId(), groups[i]);
+  }
+}
+
+std::vector<LightGroup> LightManager::GetLightGroup(std::vector<Light> lights) {
+  std::vector<LightGroup> result;
+  for(Light& light : lights) {
+    result.push_back( GetLightGroup(light.GetId()) );
+  }
+  return result;
+}
 
 void LightManager::SetState(std::vector<Light> lights, LightState state) {
   for(Light& light : lights) {
@@ -87,27 +107,6 @@ std::vector<LightState> LightManager::GetState(std::vector<Light> lights) {
   return result;
 }
 
-
-void LightManager::SetLightGroup(std::vector<Light> lights, LightGroup group) {
-  for(Light& light : lights) {
-    SetLightGroup(light.GetId(), group);
-  }
-}
-
-void LightManager::SetLightGroup(std::vector<Light> lights, std::vector<LightGroup> groups) {
-  size_t lights_to_update = (lights.size() < groups.size()) ? lights.size() : groups.size();
-  for(size_t i = 0; i < lights_to_update; i++) {
-    SetLightGroup(lights[i].GetId(), groups[i]);
-  }
-}
-
-std::vector<LightGroup> LightManager::GetState(std::vector<Light> lights) {
-  std::vector<LightState> result;
-  for(Light& light : lights) {
-    result.push_back( GetState(light.GetId()) );
-  }
-  return result;
-}
 
 inline Color LightManager::GetColor(LightId id) {
   return RetrieveLightState(id)._color;
