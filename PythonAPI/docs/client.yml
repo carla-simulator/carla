@@ -267,7 +267,7 @@
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------
     doc: >
-      The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.
+      The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.  
 
       In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
@@ -346,7 +346,7 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
@@ -404,7 +404,7 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
