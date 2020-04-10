@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -48,10 +48,8 @@ else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
 # ==================================================================================================
-# -- carla -----------------------------------------------------------------------------------------
+# -- imports ---------------------------------------------------------------------------------------
 # ==================================================================================================
-
-import carla  # pylint: disable=wrong-import-position
 
 import sumolib  # pylint: disable=wrong-import-position
 import traci  # pylint: disable=wrong-import-position
@@ -170,7 +168,7 @@ def main(args):
             type_id = random.choice(blueprints)
 
             traci.route.add('route_{}'.format(i), [edge.getID()])
-            result = traci.vehicle.add('sumo_{}'.format(i), 'route_{}'.format(i), typeID=type_id)
+            traci.vehicle.add('sumo_{}'.format(i), 'route_{}'.format(i), typeID=type_id)
 
         while True:
             start = time.time()
