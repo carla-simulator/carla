@@ -357,35 +357,37 @@ namespace geom {
     size_t lane_mesh_idx;
     bool is_static;
   };
-  constexpr double MaxWeightDistance = 5;
-  constexpr double SameLaneWeightMultiplier = 3;
-  constexpr double LaneEndsMultiplier = 3;
 
-  // Helper gunction to compute the weight of neighboring vertices
-  VertexWeight ComputeVertexWeight(const VertexInfo& vertex_info, const VertexInfo& neighbor_info) {
-    double distance3D = geom::Math::Distance(*vertex_info.vertex, *neighbor_info.vertex);
+  // Helper function to compute the weight of neighboring vertices
+  static VertexWeight ComputeVertexWeight(
+      const MeshFactory::RoadParameters &road_param,
+      const VertexInfo &vertex_info,
+      const VertexInfo &neighbor_info) {
+    const float distance3D = geom::Math::Distance(*vertex_info.vertex, *neighbor_info.vertex);
     // Ignore vertices beyond a certain distance
-    if(distance3D > MaxWeightDistance) {
+    if(distance3D > road_param.max_weight_distance) {
       return {neighbor_info.vertex, 0};
     }
-    if(abs(distance3D) < std::numeric_limits<double>::epsilon()) {
+    if(abs(distance3D) < EPSILON) {
       return {neighbor_info.vertex, 0};
     }
-    double weight = geom::Math::Clamp(1.0 / (distance3D), 0.0, 100000.0);
+    float weight = geom::Math::Clamp<float>(1.0f / distance3D, 0.0f, 100000.0f);
 
     // Additional weight to vertices in the same lane
     if(vertex_info.lane_mesh_idx == neighbor_info.lane_mesh_idx) {
-      weight *= SameLaneWeightMultiplier;
+      weight *= road_param.same_lane_weight_multiplier;
       // Further additional weight for fixed verices
       if(neighbor_info.is_static) {
-        weight *= LaneEndsMultiplier;
+        weight *= road_param.lane_ends_multiplier;
       }
     }
     return {neighbor_info.vertex, weight};
   }
 
   // Helper function to compute neighborhoord of vertices and their weights
-  std::vector<VertexNeighbors> GetVertexNeighborhoodAndWeights(std::vector<std::unique_ptr<Mesh>> &lane_meshes) {
+  std::vector<VertexNeighbors> GetVertexNeighborhoodAndWeights(
+      const MeshFactory::RoadParameters &road_param,
+      std::vector<std::unique_ptr<Mesh>> &lane_meshes) {
     // Build rtree for neighborhood queries
     using Rtree = geom::PointCloudRtree<VertexInfo>;
     using Point = Rtree::BPoint;
@@ -419,7 +421,8 @@ namespace geom {
             if(&vertex == vertex_info.vertex) {
               continue;
             }
-            auto vertex_weight = ComputeVertexWeight({&vertex, lane_mesh_idx, false}, vertex_info);
+            auto vertex_weight = ComputeVertexWeight(
+                road_param, {&vertex, lane_mesh_idx, false}, vertex_info);
             if(vertex_weight.weight > 0)
               vertex_neighborhood.neighbors.push_back(vertex_weight);
           }
@@ -433,7 +436,7 @@ namespace geom {
   std::unique_ptr<Mesh> MeshFactory::MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const {
     geom::Mesh out_mesh;
 
-    auto vertices_neighborhoods = GetVertexNeighborhoodAndWeights(lane_meshes);
+    auto vertices_neighborhoods = GetVertexNeighborhoodAndWeights(road_param, lane_meshes);
 
     // Laplacian function
     auto Laplacian = [&](const Mesh::vertex_type* vertex, const std::vector<VertexWeight> &neighbors) -> double {
