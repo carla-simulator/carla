@@ -47,8 +47,8 @@ class CarlaSimulation(object):
         # Set traffic lights.
         self._tls = {}  # {landmark_id: traffic_ligth_actor}
 
-        map = self.world.get_map()
-        for landmark in map.get_all_landmarks_of_type('1000001'):
+        tmp_map = self.world.get_map()
+        for landmark in tmp_map.get_all_landmarks_of_type('1000001'):
             if landmark.id != '':
                 traffic_ligth = self.world.get_traffic_light(landmark)
                 if traffic_ligth is not None:
