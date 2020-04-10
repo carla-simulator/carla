@@ -9,6 +9,7 @@
 #include <limits>
 
 #include "carla/Debug.h"
+#include "carla/geom/Math.h"
 #include "carla/road/element/Geometry.h"
 #include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoGeometry.h"
@@ -114,11 +115,11 @@ namespace road {
       auto current_tang = current_polynomial.Tangent(s);
       if (lane.first != lane_id) {
         dist += negative_lane_id ? current_dist : -current_dist;
-        tangent += current_tang;
+        tangent += negative_lane_id ? current_tang : -current_tang;
       } else {
         current_dist *= 0.5;
         dist += negative_lane_id ? current_dist : -current_dist;
-        tangent += current_tang * 0.5;
+        tangent += (negative_lane_id ? current_tang : -current_tang) * 0.5;
         break;
       }
     }
@@ -183,7 +184,7 @@ namespace road {
     dp.ApplyLateralOffset(lane_width);
 
     if (GetId() > 0) {
-      rot.yaw += 180.0f;
+      rot.yaw += 180.0f - geom::Math::ToDegrees(lane_tangent);
       rot.pitch = 360.0f - rot.pitch;
     } else {
       rot.yaw -= geom::Math::ToDegrees(lane_tangent);
