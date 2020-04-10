@@ -12,7 +12,8 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 
-#include "LightState.h"
+#include "carla/client/Light.h"
+#include "carla/client/LightState.h"
 
 // TODO: on/off
 // TODO: setters for groups, ie, setOn(LightType::Street)
@@ -40,13 +41,13 @@ public:
   void SetIntensity(std::vector<Light> lights, std::vector<float> intensities);
   std::vector<float> GetIntensity(std::vector<Light> lights);
 
+  void SetLightGroup(std::vector<Light> lights, LightGroup group);
+  void SetLightGroup(std::vector<Light> lights, std::vector<LightGroup> groups);
+  std::vector<LightGroup> GetLightGroup(std::vector<Light> lights);
+
   void SetState(std::vector<Light> lights, LightState state);
   void SetState(std::vector<Light> lights, std::vector<LightState> states);
   std::vector<LightState> GetState(std::vector<Light> lights);
-
-  void SetLightGroup(std::vector<Light> lights, LightGroup group);
-  void SetLightGroup(std::vector<Light> lights, std::vector<LightGroup> groups);
-  std::vector<LightGroup> GetState(std::vector<Light> lights);
 
   Color GetColor(LightId id);
   float GetIntensity(LightId id);
@@ -66,7 +67,7 @@ private:
   void UpdateServerLightsState() const;
 
   std::unordered_map<LightId, LightState> _lights_state;
-  std::unordered_map<LightId, Light> _lights;
+  //std::unordered_map<LightId, Light> _lights;
 
   LightState _state;
 };

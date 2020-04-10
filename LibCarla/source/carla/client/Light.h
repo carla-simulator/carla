@@ -9,12 +9,13 @@
 #include "carla/Memory.h"
 
 #include "carla/client/LightState.h"
-#include "carla/client/LightManager.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Rotation.h"
 
 namespace carla {
 namespace client {
+
+class LightManager;
 
 class Light {
 
@@ -29,49 +30,27 @@ public:
     _rotation (rotation),
     _id (id) {}
 
-  Color GetColor() const {
-    return _light_manager->GetColor(_id);
-  }
+  Color GetColor() const;
 
-  LightId GetId() const {
-    return _id;
-  }
+  LightId GetId() const;
 
-  float GetIntensity() const {
-    return _light_manager->GetIntensity(_id);
-  }
+  float GetIntensity() const;
 
-  geom::Location GetLocation const {
-    return _location;
-  }
+  const geom::Location GetLocation() const;
 
-  geom::Rotation GetRotation {
-    return _location;
-  }
+  const geom::Rotation GetRotation() const;
 
-  LightState GetState() const {
-    return _light_manager->GetState(_id);
-  }
+  LightState GetState() const;
 
-  LightGroup GetLightGroup() const {
-    return _light_manager->GetLightGroup(_id);
-  }
+  LightGroup GetLightGroup() const;
 
-  void SetColor(Color color) {
-    _light_manager->SetColor(_id, color);
-  }
+  void SetColor(Color color);
 
-  void SetIntensity(float intensity) {
-    _light_manager->SetIntensity(_id, intensity);
-  }
+  void SetIntensity(float intensity);
 
-  void SetState(const LightState& state) {
-    _light_manager->SetState(_id, state);
-  }
+  void SetState(const LightState& state);
 
-  void SetLightGroup(LightGroup group) {
-    _light_manager->SetLightGroup(_id, group);
-  }
+  void SetLightGroup(LightGroup group);
 
 private:
 
