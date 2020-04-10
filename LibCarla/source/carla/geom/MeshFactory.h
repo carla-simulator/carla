@@ -17,7 +17,7 @@
 namespace carla {
 namespace geom {
 
-  /// Mesh helper generator static
+  /// Mesh helper generator
   class MeshFactory {
   public:
 
@@ -58,17 +58,19 @@ namespace geom {
 
     // -- Chunked --
 
-    /// Generates list of meshes that defines a single road with a maximum length
+    /// Generates a list of meshes that defines a road with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
         const road::Road &road) const;
 
-    /// Generates list of meshes that defines a single lane_section with a maximum length
+    /// Generates a list of meshes that defines a lane_section with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
         const road::LaneSection &lane_section) const;
 
+    /// Generates a list of meshes that defines a road safety wall with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
         const road::Road &road) const;
 
+    /// Generates a list of meshes that defines a lane_section safety wall with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWallsWithMaxLen(
         const road::LaneSection &lane_section) const;
 
@@ -86,10 +88,14 @@ namespace geom {
 
     /// Parameters for the road generation
     struct RoadParameters {
-      float resolution       = 2.0f;
-      float max_road_len     = 50.0f;
-      float extra_lane_width = 1.0f;
-      float wall_height      = 0.6f;
+      float resolution                  =  2.0f;
+      float max_road_len                = 50.0f;
+      float extra_lane_width            =  1.0f;
+      float wall_height                 =  0.6f;
+      // Road mesh smoothness:
+      float max_weight_distance         =  5.0f;
+      float same_lane_weight_multiplier =  2.0f;
+      float lane_ends_multiplier        =  2.0f;
     };
 
     RoadParameters road_param;
