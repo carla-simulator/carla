@@ -49,6 +49,12 @@ public:
   UFUNCTION(BlueprintPure, Category = "Carla Light")
   bool GetLightOn();
 
+  UFUNCTION(BlueprintCallable, Category = "Carla Light")
+  void SetLightType(ELightType Type);
+
+  UFUNCTION(BlueprintPure, Category = "Carla Light")
+  ELightType GetLightType();
+
 protected:
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
