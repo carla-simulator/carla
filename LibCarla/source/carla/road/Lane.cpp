@@ -167,7 +167,8 @@ namespace road {
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road->GetInfo<element::RoadInfoLaneOffset>(s);
-    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(s));
+    const auto lane_offset_tangent =
+        static_cast<float>(lane_offset_info->GetPolynomial().Tangent(s));
 
     lane_tangent -= lane_offset_tangent;
 
@@ -182,7 +183,7 @@ namespace road {
     dp.ApplyLateralOffset(lane_width);
 
     if (GetId() > 0) {
-      rot.yaw += 180.0f + geom::Math::ToDegrees(lane_tangent);
+      rot.yaw += 180.0f;
       rot.pitch = 360.0f - rot.pitch;
     } else {
       rot.yaw -= geom::Math::ToDegrees(lane_tangent);
