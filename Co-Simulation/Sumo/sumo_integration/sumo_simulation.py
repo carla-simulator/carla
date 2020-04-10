@@ -14,12 +14,15 @@
 import collections
 import enum
 import logging
+import os
 
 import carla  # pylint: disable=import-error
 import sumolib  # pylint: disable=import-error
 import traci  # pylint: disable=import-error
 
 from .constants import INVALID_ACTOR_ID
+
+import lxml.etree as ET  # pylint: disable=import-error
 
 # ==================================================================================================
 # -- sumo definitions ------------------------------------------------------------------------------
@@ -99,7 +102,7 @@ class SumoActorClass(enum.Enum):
 SumoActor = collections.namedtuple('SumoActor', 'type_id vclass transform signals extent color')
 
 # ==================================================================================================
-# -- sumo simulation -------------------------------------------------------------------------------
+# -- sumo traffic lights ---------------------------------------------------------------------------
 # ==================================================================================================
 
 
@@ -277,11 +280,35 @@ class SumoTLManager(object):
                     self._current_phase[tl_id] = current_phase
 
 
+# ==================================================================================================
+# -- sumo simulation -------------------------------------------------------------------------------
+# ==================================================================================================
+
+def _get_sumo_net(cfg_file):
+    """
+    Returns sumo net.
+
+    This method reads the sumo configuration file and retrieve the sumo net filename to create the
+    net.
+    """
+    cfg_file = os.path.join(os.getcwd(), cfg_file)
+
+    tree = ET.parse(cfg_file)
+    tag = tree.find('//net-file')
+    if tag is None:
+        return None
+
+    net_file = os.path.join(os.path.dirname(cfg_file), tag.get('value'))
+    logging.debug('Reading net file: %s', net_file)
+
+    sumo_net = traci.sumolib.net.readNet(net_file)
+    return sumo_net
+
 class SumoSimulation(object):
     """
     SumoSimulation is responsible for the management of the sumo simulation.
     """
-    def __init__(self, host, port, step_length, cfg_file, sumo_gui=False):
+    def __init__(self, cfg_file, step_length, host=None, port=None, sumo_gui=False):
         if sumo_gui is True:
             sumo_binary = sumolib.checkBinary('sumo-gui')
         else:
@@ -302,6 +329,9 @@ class SumoSimulation(object):
         else:
             logging.info('Connection to sumo server. Host: %s Port: %s', host, port)
             traci.init(host=host, port=port)
+
+        # Retrieving net from configuration file.
+        self.net = _get_sumo_net(cfg_file)
 
         # Creating a random route to be able to spawn carla actors.
         traci.route.add("carla_route", [traci.edge.getIDList()[0]])
@@ -349,20 +379,11 @@ class SumoSimulation(object):
         """
         traci.vehicle.unsubscribe(actor_id)
 
-    @staticmethod
-    def get_net_offset():
+    def get_net_offset(self):
         """
         Accessor for sumo net offset.
         """
-        offset = traci.simulation.convertGeo(0, 0)
-        return (-offset[0], -offset[1])
-
-    @staticmethod
-    def get_step_length():
-        """
-        Accessor for sumo simulation step length.
-        """
-        return traci.simulation.getDeltaT()
+        return self.net.getLocationOffset()
 
     @staticmethod
     def get_actor(actor_id):
