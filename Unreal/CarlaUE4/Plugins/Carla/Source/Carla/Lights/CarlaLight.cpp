@@ -43,3 +43,13 @@ bool UCarlaLight::GetLightOn()
 {
   return bLightOn;
 }
+
+void UCarlaLight::SetLightType(ELightType Type)
+{
+  LightType = Type;
+}
+
+ELightType UCarlaLight::GetLightType()
+{
+  return LightType;
+}
