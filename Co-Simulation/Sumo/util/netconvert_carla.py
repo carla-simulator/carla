@@ -250,11 +250,11 @@ class SumoTrafficLight(object):
     Connection = collections.namedtuple('Connection',
                                         'tlid from_road to_road from_lane to_lane link_index')
 
-    def __init__(self, id, program_id='0', offset=0, type='static'):
-        self.id = id
+    def __init__(self, tlid, program_id='0', offset=0, tltype='static'):
+        self.id = tlid
         self.program_id = program_id
         self.offset = offset
-        self.type = type
+        self.type = tltype
 
         self.phases = []
         self.parameters = set()
@@ -287,11 +287,12 @@ class SumoTrafficLight(object):
             tl.add_phase(SumoTrafficLight.DEFAULT_DURATION_YELLOW_PHASE, ''.join(phase_yellow))
             tl.add_phase(SumoTrafficLight.DEFAULT_DURATION_RED_PHASE, ''.join(phase_red))
 
-    def add_phase(self, duration, state, min_dur=-1, max_dur=-1, next=None, name=''):
+    def add_phase(self, duration, state, min_dur=-1, max_dur=-1, next_phase=None, name=''):
         """
         Adds a new phase.
         """
-        self.phases.append(SumoTrafficLight.Phase(duration, state, min_dur, max_dur, next, name))
+        self.phases.append(
+            SumoTrafficLight.Phase(duration, state, min_dur, max_dur, next_phase, name))
 
     def add_parameter(self, key, value):
         """
@@ -424,8 +425,8 @@ def netconvert_carla(args, tmp_path):
                 wp = carla_map.get_waypoint_xodr(landmark.road_id, lane_id, landmark.s)
                 if wp is None:
                     logging.warning(
-                        'Could not find waypoint for landmark {} (road_id: {}, lane_id: {}, s:{}'
-                        .format(landmark.id, landmark.road_id, lane_id, landmark.s))
+                        'Could not find waypoint for landmark {} (road_id: {}, lane_id: {}, s:{}'.
+                        format(landmark.id, landmark.road_id, lane_id, landmark.s))
                     continue
 
                 # When the landmark belongs to a junction, we place te traffic light at the
