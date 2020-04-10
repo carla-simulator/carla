@@ -14,8 +14,10 @@ import errno
 import fnmatch
 import json
 import os
+import sys
 import shutil
 import subprocess
+import argparse
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
@@ -34,6 +36,52 @@ def get_packages_json_list(folder):
     for root, _, filenames in os.walk(folder):
         for filename in fnmatch.filter(filenames, "*.json"):
             json_files.append([root, filename])
+
+    return json_files
+
+def generate_json_package(folder, package_name, use_carla_materials):
+    """Generate a .json file with all the maps it founds on the folder
+    and subfolders. A map is a .fbx and a .xodr with the same name.
+    """
+    json_files = []
+
+    # search for all .fbx and .xodr pair of files
+    maps = []
+    for root, _, filenames in os.walk(folder):
+        files = fnmatch.filter(filenames, "*.fbx")
+        for i in range(len(files)):
+            fbx = files[i][:-4]
+            # check if exist the .xodr file
+            if os.path.exists("%s/%s.xodr" % (root, fbx)):
+                maps.append([os.path.relpath(root, folder), fbx])
+
+    # write the json
+    if (len(maps) > 0):
+        # write the json
+        f = open("%s/%s.json" % (folder, package_name), "w")
+        f.write("{\n")
+        f.write("    \"props\": [],\n")
+        f.write("    \"maps\": [\n")
+        for i in range(len(maps)):
+            path = maps[i][0].replace('\\', '/')
+            name = maps[i][1]
+            f.write("         {\n")
+            f.write("             \"name\": \"%s\",\n" % name)
+            f.write("             \"source\": \"%s/%s.fbx\",\n" % (path, name))
+            f.write("             \"xodr\": \"%s/%s.xodr\",\n" % (path, name))
+            if (use_carla_materials):
+                f.write("             \"use_carla_materials\": true\n")
+            else:
+                f.write("             \"use_carla_materials\": false\n")
+            if (i == len(maps) - 1):
+                f.write("         }\n")
+            else:
+                f.write("         },\n")
+        f.write("    ]\n")
+        f.write("}\n")
+        f.close()
+        # add 
+        json_files.append([folder, "%s.json" % package_name])
 
     return json_files
 
@@ -322,8 +370,22 @@ def build_binary_for_navigation(package_name, dirname, maps):
         os.remove(xodr_path_target)
 
 def main():
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '--package',
+        metavar='P',
+        default='map_package',
+        help='Name of the imported package')
+    argparser.add_argument(
+        '--no-carla-materials',
+        action='store_false',
+        help='user Carla materials')
+    args, unknown = argparser.parse_known_args()
+
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
+    if (len(json_list) == 0):
+        json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
     import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':

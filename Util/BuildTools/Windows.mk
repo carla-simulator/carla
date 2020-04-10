@@ -14,7 +14,7 @@ help:
 # use PHONY to force next line as command and avoid conflict with folders of the same name
 .PHONY: import
 import: server
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Import.py"
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Import.py" $(ARGS)
 
 CarlaUE4Editor: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build
