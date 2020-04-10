@@ -87,6 +87,12 @@ class SimulationSynchronization(object):
         BridgeHelper.blueprint_library = self.carla.world.get_blueprint_library()
         BridgeHelper.offset = self.sumo.get_net_offset()
 
+        # Configuring carla simulation in sync mode.
+        settings = self.carla.world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = self.carla.step_length
+        self.carla.world.apply_settings(settings)
+
     def tick(self):
         """
         Tick to simulation synchronization
@@ -225,8 +231,8 @@ def synchronization_loop(args):
     Entry point for sumo-carla co-simulation.
     """
     try:
-        sumo_simulation = SumoSimulation(args.sumo_host, args.sumo_port, args.step_length,
-                                         args.sumo_cfg_file, args.sumo_gui)
+        sumo_simulation = SumoSimulation(args.sumo_cfg_file, args.step_length, args.sumo_host,
+                                         args.sumo_port, args.sumo_gui)
         carla_simulation = CarlaSimulation(args.carla_host, args.carla_port, args.step_length)
 
         synchronization = SimulationSynchronization(sumo_simulation, carla_simulation,
@@ -254,6 +260,7 @@ def synchronization_loop(args):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument('sumo_cfg_file', type=str, help='sumo configuration file')
     argparser.add_argument('--carla-host',
                            metavar='H',
                            default='127.0.0.1',
@@ -272,14 +279,7 @@ if __name__ == '__main__':
                            default=None,
                            type=int,
                            help='TCP port to liston to (default: 8813)')
-    argparser.add_argument('-c',
-                           '--sumo-cfg-file',
-                           default=None,
-                           type=str,
-                           help='sumo configuration file')
-    argparser.add_argument('--sumo-gui',
-                           action='store_true',
-                           help='run the gui version of sumo')
+    argparser.add_argument('--sumo-gui', action='store_true', help='run the gui version of sumo')
     argparser.add_argument('--step-length',
                            default=0.05,
                            type=float,

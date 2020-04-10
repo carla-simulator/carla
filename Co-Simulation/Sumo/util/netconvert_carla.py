@@ -17,10 +17,10 @@ the net and inserts, manually, the traffic light landmarks retrieved from the op
 import argparse
 import bisect
 import collections
-import datetime
 import logging
 import shutil
 import subprocess
+import tempfile
 
 import lxml.etree as ET  # pylint: disable=import-error
 
@@ -362,29 +362,30 @@ class SumoTrafficLight(object):
 # ==================================================================================================
 
 
-def netconvert_carla(args, tmp_path):
+def _netconvert_carla_impl(xodr_file, output, tmpdir, guess_tls=False):
     """
-    Generates sumo net.
+    Implements netconvert carla.
     """
     # ----------
     # netconvert
     # ----------
-    tmp_file = os.path.splitext(os.path.basename(args.xodr_file))[0]
-    tmp_sumo_net = os.path.join(tmp_path, tmp_file + '.net.xml')
+    basename = os.path.splitext(os.path.basename(xodr_file))[0]
+    tmp_sumo_net = os.path.join(tmpdir, basename + '.net.xml')
 
     try:
+        basedir = os.path.dirname(os.path.realpath(__file__))
         result = subprocess.call(['netconvert',
-            '--opendrive', args.xodr_file,
+            '--opendrive', xodr_file,
             '--output-file', tmp_sumo_net,
             '--geometry.min-radius.fix',
             '--geometry.remove',
             '--opendrive.curve-resolution', '1',
             '--opendrive.import-all-lanes',
-            '--type-files', 'data/opendrive_netconvert.typ.xml',
+            '--type-files', os.path.join(basedir, 'data/opendrive_netconvert.typ.xml'),
             # Necessary to link odr and sumo ids.
             '--output.original-names',
             # Discard loading traffic lights as them will be inserted manually afterwards.
-            '--tls.discard-loaded', 'true'
+            '--tls.discard-loaded', 'true',
         ])
     except subprocess.CalledProcessError:
         raise RuntimeError('There was an error when executing netconvert.')
@@ -401,7 +402,7 @@ def netconvert_carla(args, tmp_path):
     # ---------
     # Carla map
     # ---------
-    with open(args.xodr_file, 'r') as f:
+    with open(xodr_file, 'r') as f:
         carla_map = carla.Map('netconvert', str(f.read()))
 
     # ---------
@@ -437,7 +438,7 @@ def netconvert_carla(args, tmp_path):
                         tls[tlid] = SumoTrafficLight(tlid)
                     tl = tls[tlid]
 
-                    if args.guess_tls:
+                    if guess_tls:
                         for from_edge, from_lane in sumo_topology.get_incoming(road_id, lane_id):
                             successors = sumo_topology.get_successors(from_edge, from_lane)
                             for to_edge, to_lane in successors:
@@ -503,25 +504,33 @@ def netconvert_carla(args, tmp_path):
                     connection.from_road, connection.to_road, connection.from_lane,
                     connection.to_lane))
 
-    tree.write(args.output, pretty_print=True, encoding='UTF-8', xml_declaration=True)
+    tree.write(output, pretty_print=True, encoding='UTF-8', xml_declaration=True)
+
+def netconvert_carla(xodr_file, output, guess_tls=False):
+    """
+    Generates sumo net.
+
+        :param xodr_file: opendrive file (*.xodr)
+        :param output: output file (*.net.xml)
+        :param guess_tls: guess traffic lights at intersections.
+        :returns: path to the generated sumo net.
+    """
+    try:
+        tmpdir = tempfile.mkdtemp()
+        _netconvert_carla_impl(xodr_file, output, tmpdir, guess_tls)
+
+    finally:
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description=__doc__)
-    argparser.add_argument('xodr_file', help='open drive file (*.xodr')
+    argparser.add_argument('xodr_file', help='opendrive file (*.xodr')
     argparser.add_argument('--output', '-o', type=str, help='output file (*.net.xml)')
     argparser.add_argument('--guess-tls',
                            action='store_true',
                            help='guess traffic lights at intersections (default: False)')
     args = argparser.parse_args()
 
-    try:
-        tmp_path = 'tmp-{date:%Y-%m-%d_%H-%M-%S-%f}'.format(date=datetime.datetime.now())
-        if not os.path.exists(tmp_path):
-            os.mkdir(tmp_path)
-
-        netconvert_carla(args, tmp_path)
-
-    finally:
-        if os.path.exists(tmp_path):
-            shutil.rmtree(tmp_path)
+    netconvert_carla(args.xodr_file, args.output, args.guess_tls)

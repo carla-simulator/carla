@@ -12,13 +12,13 @@
 # ==================================================================================================
 
 import argparse
-import datetime
 import json
 import logging
-import time
 import random
 import re
 import shutil
+import tempfile
+import time
 
 import lxml.etree as ET  # pylint: disable=wrong-import-position
 
@@ -59,16 +59,17 @@ from sumo_integration.sumo_simulation import SumoSimulation  # pylint: disable=w
 
 from run_synchronization import SimulationSynchronization  # pylint: disable=wrong-import-position
 
+from util.netconvert_carla import netconvert_carla
+
 # ==================================================================================================
 # -- main ------------------------------------------------------------------------------------------
 # ==================================================================================================
 
 
-def write_sumocfg_xml(town_name, tmp_path, net_file, vtypes_file, viewsettings_file):
+def write_sumocfg_xml(cfg_file, net_file, vtypes_file, viewsettings_file):
     """
     Writes sumo configuration xml file.
     """
-
     root = ET.Element('configuration')
 
     input_tag = ET.SubElement(root, 'input')
@@ -79,58 +80,51 @@ def write_sumocfg_xml(town_name, tmp_path, net_file, vtypes_file, viewsettings_f
     ET.SubElement(gui_tag, 'gui-settings-file', {'value': viewsettings_file})
 
     tree = ET.ElementTree(root)
-    filename = os.path.join(tmp_path, town_name + '.sumocfg')
-    tree.write(filename, pretty_print=True, encoding='UTF-8', xml_declaration=True)
-
-    return filename
-
-
-def get_sumo_files(town_name, tmp_path):
-    """
-    Returns sumo configuration file and sumo net.
-    """
-    base_path = os.path.dirname(os.path.realpath(__file__))
-    net_file = os.path.join(base_path, 'examples', 'net', town_name + '.net.xml')
-    vtypes_file = os.path.join(base_path, 'examples', 'carlavtypes.rou.xml')
-    viewsettings_file = os.path.join(base_path, 'examples', 'viewsettings.xml')
-
-    cfg_file = write_sumocfg_xml(town_name, tmp_path, net_file, vtypes_file, viewsettings_file)
-    return cfg_file, net_file
+    tree.write(cfg_file, pretty_print=True, encoding='UTF-8', xml_declaration=True)
 
 
 def main(args):
 
-    # Creating temporal folder to save configuration file.
-    tmp_path = 'spawn_npc_sumo-{date:%Y-%m-%d_%H-%M-%S-%f}'.format(date=datetime.datetime.now())
-    if not os.path.exists(tmp_path):
-        os.mkdir(tmp_path)
+    # Temporal folder to save intermediate files.
+    tmpdir = tempfile.mkdtemp()
+
+    # ----------------
+    # carla simulation
+    # ----------------
+    carla_simulation = CarlaSimulation(args.host, args.port, args.step_length)
+
+    world = carla_simulation.client.get_world()
+    current_map = carla_simulation.client.get_world().get_map()
+
+    xodr_file = os.path.join(tmpdir, current_map.name + '.xodr')
+    current_map.save_to_disk(xodr_file)
+
+    # ---------------
+    # sumo simulation
+    # ---------------
+    net_file = os.path.join(tmpdir, current_map.name + '.net.xml')
+    netconvert_carla(xodr_file, net_file, guess_tls=True)
+
+    basedir = os.path.dirname(os.path.realpath(__file__))
+    cfg_file = os.path.join(tmpdir, current_map.name + '.sumocfg')
+    vtypes_file = os.path.join(basedir, 'examples', 'carlavtypes.rou.xml')
+    viewsettings_file = os.path.join(basedir, 'examples', 'viewsettings.xml')
+    write_sumocfg_xml(cfg_file, net_file, vtypes_file, viewsettings_file)
+
+    sumo_net = sumolib.net.readNet(net_file)
+    sumo_simulation = SumoSimulation(cfg_file,
+                                     args.step_length,
+                                     host=None,
+                                     port=None,
+                                     sumo_gui=args.sumo_gui)
+
+    # ---------------
+    # synchronization
+    # ---------------
+    synchronization = SimulationSynchronization(sumo_simulation, carla_simulation, args.tls_manager,
+                                                args.sync_vehicle_color, args.sync_vehicle_lights)
 
     try:
-        # ----------------
-        # carla simulation
-        # ----------------
-        carla_simulation = CarlaSimulation(args.host, args.port, args.step_length)
-
-        world = carla_simulation.client.get_world()
-        current_map = world.get_map().name
-        if current_map not in ('Town01', 'Town04', 'Town05'):
-            raise RuntimeError('This script does not support {} yet.'.format(current_map))
-
-        # ---------------
-        # sumo simulation
-        # ---------------
-        cfg_file, net_file = get_sumo_files(current_map, tmp_path)
-
-        sumo_net = sumolib.net.readNet(net_file)
-        sumo_simulation = SumoSimulation(None, None, args.step_length, cfg_file, args.sumo_gui)
-
-        # ---------------
-        # synchronization
-        # ---------------
-        synchronization = SimulationSynchronization(sumo_simulation, carla_simulation,
-                                                    args.tls_manager, args.sync_vehicle_color,
-                                                    args.sync_vehicle_lights)
-
         # ----------
         # Blueprints
         # ----------
@@ -183,10 +177,12 @@ def main(args):
 
                 if index == (len(route) - 1):
                     current_edge = sumo_net.getEdge(route[index])
-                    next_edge = random.choice(list(current_edge.getAllowedOutgoing(vclass).keys()))
+                    available_edges = list(current_edge.getAllowedOutgoing(vclass).keys())
+                    if available_edges:
+                        next_edge = random.choice(available_edges)
 
-                    new_route = [current_edge.getID(), next_edge.getID()]
-                    traci.vehicle.setRoute(vehicle_id, new_route)
+                        new_route = [current_edge.getID(), next_edge.getID()]
+                        traci.vehicle.setRoute(vehicle_id, new_route)
 
             end = time.time()
             elapsed = end - start
@@ -197,10 +193,9 @@ def main(args):
         logging.info('Cancelled by user.')
 
     finally:
-        if os.path.exists(tmp_path):
-            shutil.rmtree(tmp_path)
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
 
-        logging.info('Destroying %d sumo vehicles.', traci.vehicle.getIDCount())
         synchronization.close()
 
 
@@ -239,9 +234,7 @@ if __name__ == '__main__':
                            metavar='PATTERN',
                            default='walker.pedestrian.*',
                            help='pedestrians filter (default: "walker.pedestrian.*")')
-    argparser.add_argument('--sumo-gui',
-                           action='store_true',
-                           help='run the gui version of sumo')
+    argparser.add_argument('--sumo-gui', action='store_true', help='run the gui version of sumo')
     argparser.add_argument('--step-length',
                            default=0.05,
                            type=float,
