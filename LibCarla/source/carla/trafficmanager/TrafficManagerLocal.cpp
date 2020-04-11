@@ -6,10 +6,6 @@
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
 
-#include "carla/client/TrafficLight.h"
-#include "carla/client/ActorList.h"
-#include "carla/client/DebugHelper.h"
-
 namespace carla {
 namespace traffic_manager {
 
