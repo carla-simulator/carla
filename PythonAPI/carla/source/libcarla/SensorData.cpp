@@ -9,6 +9,7 @@
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
 #include <carla/pointcloud/PointCloudIO.h>
+#include <carla/eventarray/EventArrayIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/IMUMeasurement.h>
@@ -206,6 +207,12 @@ static std::string SavePointCloudToDisk(T &self, std::string path) {
   return carla::pointcloud::PointCloudIO::SaveToDisk(std::move(path), self.begin(), self.end());
 }
 
+template <typename T>
+static std::string SaveEventToDisk(T &self, std::string path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return carla::eventarray::EventArrayIO::SaveToDisk(std::move(path), self.begin(), self.end());
+}
+
 void export_sensor_data() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -332,6 +339,7 @@ void export_sensor_data() {
     .add_property("height", &csd::DVSEventArray::GetHeight)
     .add_property("fov", &csd::DVSEventArray::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::DVSEventArray>)
+    .def("save_to_disk", &SaveEventToDisk<csd::DVSEventArray>, (arg("path")))
     .def("__len__", &csd::DVSEventArray::size)
     .def("__iter__", iterator<csd::DVSEventArray>())
     .def("__getitem__", +[](const csd::DVSEventArray &self, size_t pos) -> csd::DVSEvent {

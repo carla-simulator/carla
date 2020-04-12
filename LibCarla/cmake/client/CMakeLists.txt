@@ -130,6 +130,12 @@ file(GLOB libcarla_carla_pointcloud_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_pointcloud_sources}")
 install(FILES ${libcarla_carla_pointcloud_sources} DESTINATION include/carla/pointcloud)
 
+file(GLOB libcarla_carla_eventarray_sources
+    "${libcarla_source_path}/carla/eventarray/*.cpp"
+    "${libcarla_source_path}/carla/eventarray/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_eventarray_sources}")
+install(FILES ${libcarla_carla_eventarray_sources} DESTINATION include/carla/eventarray)
+
 file(GLOB libcarla_carla_profiler_headers
     "${libcarla_source_path}/carla/profiler/*.h")
 install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
