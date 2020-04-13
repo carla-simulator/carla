@@ -210,10 +210,18 @@ def main():
                     print('file could not be readed.')
                     sys.exit()
             print('load opendrive map %r.' % os.path.basename(args.xodr_path))
-            resolution = 2.0 # in meters
-            wall_height = 1.0 # in meters
-            extra_width = 0.6 # in meters
-            world = client.generate_opendrive_world(data, resolution, wall_height, extra_width)
+            vertex_distance = 2.0  # in meters
+            max_road_length = 50.0 # in meters
+            wall_height = 1.0      # in meters
+            extra_width = 0.6      # in meters
+            world = client.generate_opendrive_world(
+                data, carla.OpendriveGenerationParameters(
+                    vertex_distance=vertex_distance,
+                    max_road_length=max_road_length,
+                    wall_height=wall_height,
+                    additional_width=extra_width,
+                    smooth_junctions=True,
+                    enable_mesh_visibility=True))
         else:
             print('file not found.')
 

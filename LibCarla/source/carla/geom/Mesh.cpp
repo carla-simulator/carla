@@ -11,7 +11,6 @@
 #include <ios>
 
 #include <carla/geom/Math.h>
-#include <carla/geom/Location.h>
 
 namespace carla {
 namespace geom {
@@ -37,6 +36,7 @@ namespace geom {
     return true;
   }
 
+  // e.g:
   // 1   3   5   7
   // #---#---#---#
   // | / | / | / |
@@ -65,13 +65,12 @@ namespace geom {
     }
   }
 
-  //   6   5
-  //   #---#
-  //   | / |
-  // 1 #---# 4
-  //   | \ |
-  //   #---#
-  //   2   3
+  // e.g:
+  // 2   1   6
+  // #---#---#
+  // | / | \ |
+  // #---#---#
+  // 3   4   5
   void Mesh::AddTriangleFan(const std::vector<Mesh::vertex_type> &vertices) {
     DEBUG_ASSERT(vertices.size() >= 3);
     const size_t initial_index = GetVerticesNum() + 1;
@@ -248,6 +247,10 @@ namespace geom {
   }
 
   const std::vector<Mesh::vertex_type> &Mesh::GetVertices() const {
+    return _vertices;
+  }
+
+  std::vector<Mesh::vertex_type> &Mesh::GetVertices() {
     return _vertices;
   }
 

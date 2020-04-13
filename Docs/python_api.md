@@ -1075,6 +1075,25 @@ Distance between `actor` and `other`.
 
 ---
 
+## carla.OpendriveGenerationParameters<a name="carla.OpendriveGenerationParameters"></a>
+This class defines the parameters used when generating a world using an OpenDRIVE file.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.OpendriveGenerationParameters.vertex_distance"></a>**<font color="#f8805a">vertex_distance</font>**  
+The distance between vertices when generating the world mesh from OpenDRIVE.  
+- <a name="carla.OpendriveGenerationParameters.max_road_length"></a>**<font color="#f8805a">max_road_length</font>**  
+Max road length for a single mesh portion.  
+- <a name="carla.OpendriveGenerationParameters.wall_height"></a>**<font color="#f8805a">wall_height</font>**  
+Defines the height of walls added to roads to prevent vehicles from falling.  
+- <a name="carla.OpendriveGenerationParameters.additional_width"></a>**<font color="#f8805a">additional_width</font>**  
+Additional with to junction lanes to prevent vehicles from falling.  
+- <a name="carla.OpendriveGenerationParameters.smooth_junctions"></a>**<font color="#f8805a">smooth_junctions</font>**  
+When this variable is `True` the generated junctions will be smoothed to prevent roads from blocking other roads.  
+- <a name="carla.OpendriveGenerationParameters.enable_mesh_visibility"></a>**<font color="#f8805a">enable_mesh_visibility</font>**  
+This variable indicates whether the mesh should be rendered to reduce the rendering overhead.  
+
+---
+
 ## carla.RadarDetection<a name="carla.RadarDetection"></a>
 Data contained inside a [carla.RadarMeasurement](#carla.RadarMeasurement). Each of these represents one of the points in the cloud that a <b>sensor.other.radar</b> registers and contains the distance, angle and velocity in relation to the radar.  
 

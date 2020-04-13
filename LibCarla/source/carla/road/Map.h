@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
-#include "carla/geom/Transform.h"
-#include "carla/road/MapData.h"
 #include "carla/geom/Mesh.h"
-#include "carla/road/RoadTypes.h"
+#include "carla/geom/Rtree.h"
+#include "carla/geom/Transform.h"
+#include "carla/NonCopyable.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/Waypoint.h"
-#include "carla/geom/Rtree.h"
+#include "carla/road/MapData.h"
+#include "carla/road/RoadTypes.h"
 
 #include <boost/optional.hpp>
 
@@ -150,7 +150,16 @@ namespace road {
         ComputeJunctionConflicts(JuncId id) const;
 
     /// Buids a mesh based on the OpenDRIVE
-    geom::Mesh GenerateMesh(const double distance, const float extra_width = 0.f) const;
+    geom::Mesh GenerateMesh(
+        const double distance,
+        const float extra_width = 0.6f,
+        const  bool smooth_junctions = true) const;
+
+    std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
+        const double distance,
+        const float max_road_len = 50.0f,
+        const float extra_width = 0.6f,
+        const  bool smooth_junctions = true) const;
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
