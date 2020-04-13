@@ -283,8 +283,12 @@ namespace road {
         const double t_position,
         const std::string signal_reference_orientation) {
 
+      const double epsilon = 0.00001;
+      RELEASE_ASSERT(s_position >= 0.0);
+      // Prevent s_position from being equal to the road length
+      double fixed_s = geom::Math::Clamp(s_position, 0.0, road->GetLength() - epsilon);
       _temp_road_info_container[road].emplace_back(std::make_unique<element::RoadInfoSignal>(
-          signal_id, road->GetId(), s_position, t_position, signal_reference_orientation));
+          signal_id, road->GetId(), fixed_s, t_position, signal_reference_orientation));
       auto road_info_signal = static_cast<element::RoadInfoSignal*>(
           _temp_road_info_container[road].back().get());
       _temp_signal_reference_container.emplace_back(road_info_signal);
