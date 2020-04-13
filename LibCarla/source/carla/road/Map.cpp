@@ -240,8 +240,7 @@ namespace road {
     const Road &road = _data.GetRoad(waypoint.road_id);
 
     // check the 's' distance
-    if (s < 0.0f || s >= road.GetLength())
-    {
+    if (s < 0.0f || s >= road.GetLength()) {
       return boost::optional<Waypoint>{};
     }
 
