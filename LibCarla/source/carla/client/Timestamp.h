@@ -50,3 +50,23 @@ namespace client {
 
 } // namespace client
 } // namespace carla
+
+
+namespace std {
+/**
+ * \brief standard ostream operator
+ *
+ * \param[in/out] out The output stream to write to
+ * \param[in] timestamp the timestamp to stream out
+ *
+ * \returns The stream object.
+ *
+ */
+inline std::ostream &operator<<(std::ostream &out, const ::carla::client::Timestamp &timestamp) {
+  out << "Timestamp(frame=" << std::to_string(timestamp.frame)
+      << ",elapsed_seconds=" << std::to_string(timestamp.elapsed_seconds)
+      << ",delta_seconds=" << std::to_string(timestamp.delta_seconds)
+      << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
+  return out;
+}
+} // namespace std

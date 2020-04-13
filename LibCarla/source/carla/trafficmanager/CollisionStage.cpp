@@ -206,14 +206,15 @@ namespace CollisionStageConstants {
     // Ego and other vehicle heading.
     const cg::Vector3D reference_heading = reference_vehicle->GetTransform().GetForwardVector();
     // Vector from ego position to position of the other vehicle.
+    const float vector_magnitude_epsilon = 2 * std::numeric_limits<float>::epsilon();
     cg::Vector3D reference_to_other = other_location - reference_location;
-    reference_to_other = reference_to_other.MakeUnitVector();
+    reference_to_other = reference_to_other.MakeSafeUnitVector(vector_magnitude_epsilon);
 
     // Other vehicle heading.
     const cg::Vector3D other_heading = other_vehicle->GetTransform().GetForwardVector();
     // Vector from other vehicle position to ego position.
     cg::Vector3D other_to_reference = reference_location - other_location;
-    other_to_reference = other_to_reference.MakeUnitVector();
+    other_to_reference = other_to_reference.MakeSafeUnitVector(vector_magnitude_epsilon);
 
     // Obtain cc::Vehicle pointers and calculate half diagonal length of vehicle bounding box.
     const auto reference_vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(reference_vehicle);
@@ -375,8 +376,7 @@ namespace CollisionStageConstants {
 
           const cg::Vector3D heading_vector = current_point->GetForwardVector();
           const cg::Location location = current_point->GetLocation();
-          cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
-          perpendicular_vector = perpendicular_vector.MakeUnitVector();
+          cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, heading_vector.z);
           // Direction determined for the left-handed system.
           const cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
           left_boundary.push_back(location + cg::Location(scaled_perpendicular));
@@ -444,8 +444,6 @@ namespace CollisionStageConstants {
 
     const auto actor_type = actor->GetTypeId();
     cg::Vector3D heading_vector = actor->GetTransform().GetForwardVector();
-    heading_vector.z = 0.0f;
-    heading_vector = heading_vector.MakeUnitVector();
 
     cg::BoundingBox bbox;
     float forward_extension = 0.0f;
@@ -460,7 +458,7 @@ namespace CollisionStageConstants {
     }
 
     const cg::Vector3D extent = bbox.extent;
-    const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
+    const cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, heading_vector.z);
 
     const cg::Vector3D x_boundary_vector = heading_vector * (extent.x + forward_extension);
     const cg::Vector3D y_boundary_vector = perpendicular_vector * (extent.y + forward_extension);
@@ -489,8 +487,6 @@ namespace CollisionStageConstants {
 
       cg::Location safe_location = safe_point->GetLocation();
       cg::Vector3D heading_vector = safe_point->GetForwardVector();
-      heading_vector.z = 0.0f;
-      heading_vector = heading_vector.MakeUnitVector();
 
       cg::BoundingBox bbox;
       const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(ego_actor);

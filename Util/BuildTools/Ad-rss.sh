@@ -4,53 +4,93 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-export CC=/usr/bin/clang-8
-export CXX=/usr/bin/clang++-8
+#export CC=/usr/bin/clang-8
+#export CXX=/usr/bin/clang++-8
 
 source $(dirname "$0")/Environment.sh
 
-mkdir -p ${CARLA_BUILD_FOLDER}
-pushd ${CARLA_BUILD_FOLDER} >/dev/null
-
 # ==============================================================================
-# -- Get and compile ad-rss ----------------------------------------------------
+# -- Get and compile ad-rss -------------------------------------------
 # ==============================================================================
 
-AD_RSS_BASENAME=ad-rss
+ADRSS_BASENAME=ad-rss-3.0.0
+ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 
-if [[ -d "${AD_RSS_BASENAME}-install" ]] ; then
-  log "${AD_RSS_BASENAME} already installed."
+
+
+if [[ -d "${ADRSS_INSTALL_DIR}" ]]; then
+  log "${ADRSS_BASENAME} already installed."
 else
-  rm -Rf ${AD_RSS_BASENAME}-source ${AD_RSS_BASENAME}-build
+  # ad-rss is built inside a colcon workspace, therefore we have to setup the workspace first
+  if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" ]]; then
+    rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
+  fi
+  if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build" ]]; then
+    rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build"
+  fi
 
-  log "Retrieving ad-rss."
+  mkdir -p "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
 
-  git clone --depth=1 -b v1.5.0 https://github.com/intel/ad-rss-lib.git ${AD_RSS_BASENAME}-source
+  log "Retrieving ${ADRSS_BASENAME}."
 
-  log "Compiling ad-rss."
+  pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" >/dev/null
+  git clone --depth=1 -b v1.x https://github.com/gabime/spdlog.git
+  git clone --depth=1 -b v2.0.1 https://github.com/carla-simulator/map
+  git clone --depth=1 -b v3.0.0 https://github.com/intel/ad-rss-lib
+  popd
 
-  mkdir -p ${AD_RSS_BASENAME}-build
+  cat >"${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/colcon.meta" <<EOL
+{
+    "names": {
+        "ad_physics": {
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        },
+        "ad_map_access": {
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        },
+        "ad_map_opendrive_reader": {
+            "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        },
+        "ad_rss": {
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        },
+        "ad_rss_map_integration": {
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        },
+        "spdlog": {
+            "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
+        }
+    }
+}
 
-  pushd ${AD_RSS_BASENAME}-build >/dev/null
+EOL
 
-  cmake -G "Ninja" \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="../${AD_RSS_BASENAME}-install" \
-      ../${AD_RSS_BASENAME}-source
+  log "Compiling ${ADRSS_BASENAME}."
 
-  ninja install
+  pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}" >/dev/null
+
+  if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
+    export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+  else
+    export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+  fi
+
+  #after a fixing clang compile warnings and errors in components
+  # -DCMAKE_TOOLCHAIN_FILE=${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake
+  colcon build --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+  COLCON_RESULT=$?
+  if (( COLCON_RESULT )); then
+    rm -rf "${ADRSS_INSTALL_DIR}"
+    log "Failed !"
+  else
+    log "Success!"
+  fi
+
+  # ==============================================================================
+  # -- ...and we are done --------------------------------------------------------
+  # ==============================================================================
 
   popd >/dev/null
 
-  rm -Rf ${AD_RSS_BASENAME}-source ${AD_RSS_BASENAME}-build
-
 fi
-
-unset AD_RSS_BASENAME
-
-# ==============================================================================
-# -- ...and we are done --------------------------------------------------------
-# ==============================================================================
-
-popd >/dev/null
-
-log "Success!"
