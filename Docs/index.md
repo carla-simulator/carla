@@ -59,12 +59,16 @@ CARLA forum</a>
 
 ## Advanced steps
   <p style="padding-left:30px;line-height:1.8">
+    [__OpenDRIVE standalone mode__](adv_opendrive.md)
+        — Use any OpenDRIVE file as a CARLA map.
     [__Recorder__](adv_recorder.md)
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
     [__RSS sensor__](adv_rss.md)
         — An implementation of RSS in the CARLA client library.  
+    [__SUMO co-simulation__](adv_sumo.md)
+        — Run a synchronous simulation between CARLA and SUMO.  
     [__Synchrony and time-step__](adv_synchrony_timestep.md)
         — Client-server communication and simulation time.  
     [__Traffic Manager__](adv_traffic_manager.md)
