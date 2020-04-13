@@ -5,12 +5,9 @@ Users can create their own maps, and run CARLA using these. The creation of the 
 *   [__Introduction__](#introduction)  
 *   [__Create a map with RoadRunner__](#create-a-map-with-roadrunner)  
 	*   [Export from RoadRunner](#export-from-roadrunner)  
-* [__Prepare the package__](#prepare-the-package)  
-	*   [Create the folder structure](#create-the-folder-structure)  
-	*   [Create the JSON description](#create-the-json-description)  
 *   [__Map ingestion__](#map-ingestion)  
-	*   [Via Docker](#via-docker)  
 	*   [Via terminal](#via-terminal)  
+	*   [Via Docker](#via-docker)  
 *   [__Finishing touches in the UE4 Editor__](#finishing-touches-in-the-ue4-editor)  
 	*   [Modify pedestrian navigation](#modify-pedestrian-navigation)  
 *   [__Deprecated ways to import a map__](#deprecated-ways-to-import-a-map)  
@@ -18,27 +15,23 @@ Users can create their own maps, and run CARLA using these. The creation of the 
 ---
 ## Introduction
 
-RoadRunner is the recommended software to create a map due to its simplicity. Some basic steps on how to do it are provided in [the next section](#create-a-map-with-roadrunner). The resulting map should consist of at least two elements.  
-
-* __`.fbx` binaries.__ The meshes needed to build the map, such as roads, lanemarkings, sidewalks, ect.
-* __`.xodr` OpenDRIVE file.__ Contains the road network information necessary for vehicles to navigate the map.
-
-These files must be prepared to be imported. The files of the map have to be stored in a certain [folder structure](#create-the-folder-structure), with a [`.json` file](#create-the-json-description) describing them.  
+RoadRunner is the recommended software to create a map due to its simplicity. Some basic steps on how to do it are provided in [the next section](#create-a-map-with-roadrunner). The resulting map should consist of a `.fbx` and a `.xodr` with the mesh and road network informtion respectively.  
 
 The process of the map ingestion has been simplified to minimize the users' intervention. For said reason, there are certains steps have been automatized.  
 
+*   __Creation of the `.json` file and folder structure__. As for the maps, users do not have to create this manually. The ingestion process itself will do everything necessary.
 *   __Traffic signs are created when running the simulator.__ It will generate the traffic lights, stops, and yields according to their `.xodr` definition. The rest of landmarks present in the road map will not be physically on scene, but they can be queried using the API.  
 *   __Pedestrian navigation will be generated automatically.__ The user can modify it if desired, but a `.bin` file describing the basic navigation of the map will be created during the process. 
 
 !!! note
-    The traffic light timing can only be customized [using the API](python_api.md#carla.TrafficLight.set_green_time), as these are created by the simulator.
+    The automatic ingestion will only consider maps as an `.fbx` and `.xodr`. To ingest additional files, [prepare the package manually](#prepare-the-package-manually).
 
 There are two different ways to import the map into CARLA. Both grant the previously mentioned automatization, but there are some differences between them.  
 
 *   [__Via Docker.__](#via-docker) Recommended method when working with a CARLA package. The output will be a standalone package containing the map ready to be used. However, as the map is packaged, no modifications can be made.  
 *   [__Via terminal.__](#via-terminal) This will import the map into CARLA. The pedestrian navigation among others can be modified if needed. The map can be distributed using a standalone package. Take a look [this tutorial](tuto_A_create_standalone.md) to learn how to create it.  
 
-After that, it is almost ready. If working in the build, there are some [finishing touches](#finishing-touches) that can be done, to make sure that everything fits perfectly. 
+If working in the build, there are some [finishing touches](#finishing-touches) that can be done, to make sure that everything fits perfectly. 
 
 There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#deprecated-ways-to-import-a-map) of this tutorial.  
 
@@ -79,85 +72,32 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
 !!! Warning
     Make sure that the .xodr and the .fbx files have the same name.  
 
----
-## Prepare the package
 
-### Create the folder structure
-
-__1. Create a folder inside `carla/Import`.__ The name of the folder is not relevant.  
-
-__2. Create different subfolders__ for each map to import.
-
-__3. Move the files of each map to the corresponding subfolder.__ A subfolder will contain a specific set of elements.  
-
-*   The mesh of the map in a `.fbx`.  
-*   The OpenDRIVE definition in a `.xodr`.  
-*   Optionally, the textures required by the asset.  
-
-
-For instance, an `Import` folder with one package containing two maps should have a structure similar to the one below.
-
-```sh
-Import
-│
-└── Package01
-  ├── Package01.json
-  ├── Map01
-  │   ├── Asphalt1_Diff.png
-  │   ├── Asphalt1_Norm.png
-  │   ├── Asphalt1_Spec.png
-  │   ├── Grass1_Diff.png
-  │   ├── Grass1_Norm.png
-  │   ├── Grass1_Spec.png
-  │   ├── LaneMarking1_Diff.png
-  │   ├── LaneMarking1_Norm.png
-  │   ├── LaneMarking1_Spec.png
-  │   ├── Map01.fbx
-  │   └── Map01.xodr
-  └── Map02
-      └── Map02.fbx
-```
-
-### Create the JSON description
-
-Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
-
-__Maps__ need the following parameters.  
-
-* __name__ of the map. This must be the same as the `.fbx` and `.xodr` files.  
-* __source__ path to the `.fbx`.  
-* __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.  
-* __xodr__ Path to the `.xodr`.  
-
-__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](tuto_A_add_props.md).  
-
-In the end, the `.json` should look similar to the one below.
-
-```json
-{
-  "maps": [
-    {
-      "name": "Map01",
-      "source": "./Map01/Map01.fbx",
-      "use_carla_materials": true,
-      "xodr": "./Map01/Map01.xodr"
-    },
-    {
-      "name": "Map02",
-      "source": "./Map02/Map02.fbx",
-      "use_carla_materials": false,
-      "xodr": "./Map02/Map02.xodr"
-    }
-  ],
-  "props": [
-  ]
-}
-```
 ---
 ## Map ingestion
 
-!!! Warning
-    Packages with the same name will produce an error.  
+### Via terminal 
+
+This is the recommended method to import a map into a CARLA build. Place the maps to be imported in the `Import` folder. The script will automatically generate the necessary to ingest the maps. Make sure that the name of the `.xodr` and `.fbx` files are the same for each of the maps being imported. Otherwise, the script will not recognize them as a map. 
+
+There are two parameters to be set. 
+
+*   __Name of the package.__ By default, the script ingest the map or maps in a package named `map_package`. This could lead to error the second time an ingestion is made, as two packages cannot have the same name. __It is highly recommended to change the name of the package__. 
+```sh
+#Change the name of the package to my_package
+make import ARGS="--package my_package"
+```
+*   __Usage of CARLA materials.__ By default, the maps imported will use CARLA materials, but this can be changed using a flag. 
+```sh
+#Import my_package without CARLA materials
+make import ARGS="--package pepis --no-carla-materials"
+```
+
+Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder. Make the ingestion. 
+
+```sh
+make import
+```
 
 ### Via Docker
 
@@ -171,31 +111,26 @@ __2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there
 python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets --package=Package01
 ```
 
-__3. Extract the output package__. The Docker should have generated a `.tar.gz` in the output path. This is the standalone package for the assets. Extract it in the root folder of the CARLA package to add the content.
+__3. Locate the package__. The Docker should have generated the package `map_package.tar.gz` in the output path. This is the standalone package for the assets. 
 
-!!! Note
-    There is an alternative on Linux. Move the package to the `Import` folder and run the script `Util/ImportAssets.sh` to extract the package.
+__4. Change the name of the package__ to one that identifies it.
 
-### Via terminal 
-
-This is the recommended method to import a map into a CARLA build. The JSON file will be read to place the assets inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's
-`Config` folder. This file describes the content, and is especially useful for props.  
-
-When everything is ready, run the command. 
-
+__5. Extract the package.__ Move the package to the `Import` folder and run the script to import it. 
 ```sh
-make import
+cd Util
+./ImportAssets.sh
 ```
 
-!!! Warning
-    Make sure that the package is inside the `Import` folder in CARLA. 
+!!! Note
+    On Windows, extract the package on the root CARLA folder. 
+
 
 ---
 ## Finishing touches in the UE4 Editor
 
 After the ingestion, map is ready to be used in CARLA. However, __if working in a CARLA build, the map can be opened in the UE4 Editor in order to refine it.__ These are recommended steps, but mostly optional besides pedestrian navigation.  
 
-*   __Create new spawning points.__ These will be used in scripts such as `spawn_npc.py`. They have to be created manually. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
+*   __Create new spawning points.__ These will be used in scripts such as `spawn_npc.py`. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
 
   ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
 
@@ -246,6 +181,88 @@ __7.__ Move the `.bin` into `Content/Carla/Maps/Nav`.
 ## Deprecated ways to import a map
 
 There are other ways to import a map used in previous CARLA releases. These required to manually cook the map and prepare everything, so they are now deprecated. However, they are explained below in case they are needed.  
+
+### Prepare the package manually
+
+The folder structure and `.json` file necessaries to import maps are created automatically when doing the ingestion. However, this can be done manually if necessary. Here are the steps to do so.
+
+  <details>
+    <summary> Read how to prepare the folder structure and .json file
+    </h4></summary>
+
+#### Create the folder structure
+
+__1. Create a folder inside `carla/Import`.__ The name of the folder is not relevant.  
+
+__2. Create different subfolders__ for each map to import.
+
+__3. Move the files of each map to the corresponding subfolder.__ A subfolder will contain a specific set of elements.  
+
+*   The mesh of the map in a `.fbx`.  
+*   The OpenDRIVE definition in a `.xodr`.  
+*   Optionally, the textures required by the asset.  
+
+
+For instance, an `Import` folder with one package containing two maps should have a structure similar to the one below.
+
+```sh
+Import
+│
+└── Package01
+  ├── Package01.json
+  ├── Map01
+  │   ├── Asphalt1_Diff.png
+  │   ├── Asphalt1_Norm.png
+  │   ├── Asphalt1_Spec.png
+  │   ├── Grass1_Diff.png
+  │   ├── Grass1_Norm.png
+  │   ├── Grass1_Spec.png
+  │   ├── LaneMarking1_Diff.png
+  │   ├── LaneMarking1_Norm.png
+  │   ├── LaneMarking1_Spec.png
+  │   ├── Map01.fbx
+  │   └── Map01.xodr
+  └── Map02
+      └── Map02.fbx
+```
+
+#### Create the JSON description
+
+Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
+
+__Maps__ need the following parameters.  
+
+* __name__ of the map. This must be the same as the `.fbx` and `.xodr` files.  
+* __source__ path to the `.fbx`.  
+* __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.  
+* __xodr__ Path to the `.xodr`.  
+
+__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](tuto_A_add_props.md).  
+
+In the end, the `.json` should look similar to the one below.
+
+```json
+{
+  "maps": [
+    {
+      "name": "Map01",
+      "source": "./Map01/Map01.fbx",
+      "use_carla_materials": true,
+      "xodr": "./Map01/Map01.xodr"
+    },
+    {
+      "name": "Map02",
+      "source": "./Map02/Map02.fbx",
+      "use_carla_materials": false,
+      "xodr": "./Map02/Map02.xodr"
+    }
+  ],
+  "props": [
+  ]
+}
+```
+</details>
+<br>
 
 ### RoadRunner plugin import
 
