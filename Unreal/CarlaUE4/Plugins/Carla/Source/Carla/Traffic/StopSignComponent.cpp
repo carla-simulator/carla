@@ -136,7 +136,12 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
               WaypointQueue.pop();
               GenerateCheckBox(Map.ComputeTransform(CurrentElement.second), UEBoxSize);
 
-              float Speed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s)->GetSpeed();
+              float Speed = 40;
+              auto* InfoSpeed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s);
+              if(InfoSpeed)
+              {
+                Speed = InfoSpeed->GetSpeed();
+              }
               float RemainingTime = CurrentElement.first - BoxSize/Speed;
               if(RemainingTime > 0)
               {
