@@ -307,7 +307,7 @@
   - class_name: SetAutopilot
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in carla.Vehicle. Turns on/off the vehicle's server-side autopilot. 
+      Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in carla.Vehicle. Turns on/off the vehicle's autopilot mode.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -318,6 +318,10 @@
       type: bool
       doc: >
         If autopilot should be activated or not.
+    - var_name: tm
+      type: carla.TrafficManager
+      doc: >
+        The Traffic Manager where the vehicle is registered or unlisted. 
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -328,5 +332,10 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: enabled
         type: bool
+      - param_name: tm
+        type: carla.TrafficManager
+        default: None
+        doc: >
+          The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
     # --------------------------------------
 ...

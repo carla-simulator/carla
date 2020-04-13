@@ -216,16 +216,20 @@
       - param_name: enabled
         type: bool
         default: True
+      - param_name: tm
+        type: carla.TrafficManager
+        default: None
+        doc: >
+          The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
       doc: >
-        Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side. 
+        Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.
     # --------------------------------------
     - def_name: set_light_state
       params:
       - param_name: light_state
         type: carla.VehicleLightState
       doc: >
-        Sets the light state of a vehicle using a VehicleLightState flag,
-        this represents which lights are active or not
+        Sets the light state of a vehicle using a flag that represents the lights that are on and off.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

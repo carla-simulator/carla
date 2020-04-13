@@ -6,27 +6,12 @@
 
 #pragma once
 
-#include <algorithm>
-#include <memory>
-#include <random>
-#include <unordered_set>
 #include <vector>
-
-#include "carla/StringUtil.h"
-#include "carla/geom/Transform.h"
-#include "carla/Logging.h"
-#include "carla/Memory.h"
-
-#include "carla/client/Actor.h"
-#include "carla/client/BlueprintLibrary.h"
-#include "carla/client/Map.h"
-#include "carla/client/World.h"
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/detail/EpisodeProxy.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/AtomicMap.h"
 #include "carla/trafficmanager/BatchControlStage.h"
 #include "carla/trafficmanager/CollisionStage.h"
 #include "carla/trafficmanager/InMemoryMap.h"
@@ -42,7 +27,6 @@ namespace carla {
 namespace traffic_manager {
 
   using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-  using TLS = carla::rpc::TrafficLightState;
   using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 
   /// The function of this class is to integrate all the various stages of

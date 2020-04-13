@@ -6,40 +6,12 @@
 
 #pragma once
 
-#include <algorithm>
-#include <memory>
+#include <map>
 #include <mutex>
-#include <random>
-#include <unordered_set>
 #include <vector>
 
 #include "carla/client/Actor.h"
-#include "carla/client/BlueprintLibrary.h"
-#include "carla/client/Map.h"
-#include "carla/client/World.h"
-#include "carla/client/TimeoutException.h"
-
-#include "carla/geom/Transform.h"
-#include "carla/Logging.h"
-#include "carla/Memory.h"
-#include "carla/Sockets.h"
-
-#include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/AtomicMap.h"
-#include "carla/trafficmanager/BatchControlStage.h"
-#include "carla/trafficmanager/CollisionStage.h"
-#include "carla/trafficmanager/InMemoryMap.h"
-#include "carla/trafficmanager/LocalizationStage.h"
-#include "carla/trafficmanager/MotionPlannerStage.h"
-#include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/TrafficLightStage.h"
-
 #include "carla/trafficmanager/TrafficManagerBase.h"
-#include "carla/trafficmanager/TrafficManagerLocal.h"
-#include "carla/trafficmanager/TrafficManagerRemote.h"
-
-#define INVALID_INDEX           -1
-#define IP_DATA_BUFFER_SIZE     80
 
 namespace carla {
 namespace traffic_manager {
@@ -60,6 +32,8 @@ public:
     _port = other._port;
   }
 
+  TrafficManager() {};
+
   TrafficManager(TrafficManager &&) = default;
 
   TrafficManager &operator=(const TrafficManager &) = default;
@@ -70,6 +44,15 @@ public:
   static void Reset();
 
   static void Tick();
+
+  uint16_t Port() const {
+    return _port;
+  }
+
+  bool IsValidPort() const {
+    // The first 1024 ports are reserved by the OS
+    return (_port > 1023);
+  }
 
   /// This method sets the hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch) {
@@ -260,7 +243,7 @@ private:
   static std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> _tm_map;
   static std::mutex _mutex;
 
-  uint16_t _port = TM_DEFAULT_PORT;
+  uint16_t _port = 0;
 
 };
 
