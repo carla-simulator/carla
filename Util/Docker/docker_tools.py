@@ -99,7 +99,7 @@ def main():
 
     if args.packages:
         container_args["volumes"] = {
-            args.input: {'bind': inbox_assets_path, 'mode': 'ro'}}
+            args.input: {'bind': inbox_assets_path, 'mode': 'rw'}}
 
     print(bold("- ") + bold_underline("Docker arguments:"))
     print_formated_dict(container_args)
