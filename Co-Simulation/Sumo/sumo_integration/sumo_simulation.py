@@ -135,7 +135,7 @@ class SumoTLLogic(object):
 
     def get_all_signals(self):
         """
-        Returns all the signals of the traffic ligth.
+        Returns all the signals of the traffic light.
             :returns list: [(tlid, link_index), (tlid, link_index), ...]
         """
         return [(self.tlid, i) for i in range(self.get_number_signals())]
@@ -149,7 +149,7 @@ class SumoTLLogic(object):
     def get_associated_signals(self, landmark_id):
         """
         Returns all the signals associated with the given landmark.
-            :returns list: [(tlid, link_index), (tlid), (link_index), ...]
+            :returns list: [(tlid, link_index), (tlid, link_index), ...]
         """
         return self._landmark2link.get(landmark_id, [])
 
@@ -221,7 +221,7 @@ class SumoTLManager(object):
     def get_all_associated_signals(self, landmark_id):
         """
         Returns all the signals associated with the given landmark.
-            :returns list: [(tlid, link_index), (tlid), (link_index), ...]
+            :returns list: [(tlid, link_index), (tlid, link_index), ...]
         """
         signals = set()
         for tlid, program_id in self._current_program.items():
@@ -383,6 +383,8 @@ class SumoSimulation(object):
         """
         Accessor for sumo net offset.
         """
+        if self.net is None:
+            return (0, 0)
         return self.net.getLocationOffset()
 
     @staticmethod
