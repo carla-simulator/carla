@@ -153,7 +153,7 @@ info_map = map.to_opendrive()
 So far there are seven different maps available. Each one has unique features and is useful for different purposes. Hereunder is a brief sum up on them.  
 
 !!! Note
-    Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_map_creation.md) to be used in CARLA.  
+    Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map.md) to be used in CARLA.  
 
 <table class ="defTable">
 <thead>
