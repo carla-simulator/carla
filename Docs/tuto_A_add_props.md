@@ -118,7 +118,7 @@ __3. Locate the package__. The Docker should have generated the package `Package
 
 __4. Import the package into CARLA.__  
 
-*   __On Windows__ extract the package on the root CARLA folder. 
+*   __On Windows__ extract the package in the `WindowsNoEditor` folder. 
 
 *   __On Linux__ move the package to the `Import` folder, and run the script to import it. 
 

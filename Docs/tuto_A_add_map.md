@@ -82,19 +82,19 @@ chmod 777 input_folder
 !!! Note
     This is not necessary if the package is [prepared manually](#prepare-the-package-manually), and contains a `.json` file. 
 
-__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
+__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested. If no `.json` is provided, the name must be `map_package`.
 
 ```sh
 python docker_tools.py --input ~/path_to_input_folder --output ~/path_to_output_folder --packages map_package
 ```
+!!! Warning
+    If the argument `--package <package_name>` is not provided, the Docker will make a package of CARLA. 
 
 __3. Locate the package__. The Docker should have generated the package `map_package.tar.gz` in the output path. This is the standalone package for the assets. 
 
-__4. Change the name of the package__. Two packages cannot have the same name. Make sure to use one that identifies it.
+__4. Import the package into CARLA.__  
 
-__5. Import the package into CARLA.__  
-
-*   __On Windows__ extract the package on the root CARLA folder. 
+*   __On Windows__ extract the package in the `WindowsNoEditor` folder. 
 
 *   __On Linux__ move the package to the `Import` folder, and run the script to import it. 
 
@@ -103,34 +103,32 @@ cd Util
 ./ImportAssets.sh
 ```
 
-!!! Warning
-    The argument `--packages map_package` is the default when no `.json` is provided. When the package is prepared manually, with s proper `.json` and folder structure, this should be the name of the package.  
+__5. Change the name of the package folder__. Two packages cannot have the same name in CARLA. Go to `Content` and find the package. Change the name if necessary, to use one that identifies it.
 
 ---
 ## Map ingestion in a build from source 
 
-This is method is meant to be used if working with the source version of CARLA. Place the maps to be imported in the `Import` folder. The script will automatically generate the necessary to ingest the maps. Make sure that the name of the `.xodr` and `.fbx` files are the same for each of the maps being imported. Otherwise, the script will not recognize them as a map. 
+This is method is meant to be used if working with the source version of CARLA. Place the maps to be imported in the `Import` folder. The script will make the ingestion, but the pedestrian navigation will have to be generated after that. Make sure that the name of the `.xodr` and `.fbx` files are the same for each of the maps being imported. Otherwise, the script will not recognize them as a map. 
 
 There are two parameters to be set. 
 
 *   __Name of the package.__ By default, the script ingest the map or maps in a package named `map_package`. This could lead to error the second time an ingestion is made, as two packages cannot have the same name. __It is highly recommended to change the name of the package__. 
 ```sh
-#Change the name of the package to my_package
-make import ARGS="--package my_package"
+ARGS="--package package_name"
 ```
-*   __Usage of CARLA materials.__ By default, the maps imported will use CARLA materials, but this can be changed using a flag. 
+
+*   __Usage of CARLA materials.__ By default, the maps imported will use CARLA materials, but this can be changed using a flag.  
 ```sh
-#Import my_package without CARLA materials
-make import ARGS="--package my_package --no-carla-materials"
+ARGS="--no-carla-materials"
 ```
 
-Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder. Make the ingestion. 
+Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder, and make the ingestion. 
 
 ```sh
-make import
+make import ARGS="--package package_name --no-carla-materials"
 ```
 
-After the ingestion, map is ready to be used in CARLA. However, __if working in a CARLA build, the map can be opened in the UE4 Editor in order to refine it.__ These are recommended steps, but mostly optional besides pedestrian navigation.  
+After the ingestion, only the pedestrian navigation is yet to be generated. However there are some optional steps that can be done before that. 
 
 *   __Create new spawning points.__ These will be used in scripts such as `spawn_npc.py`. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
 
@@ -141,9 +139,9 @@ After the ingestion, map is ready to be used in CARLA. However, __if working in 
 
   ![ue_maps_to_include](img/ue_maps_to_include.png)
 
-### Modify pedestrian navigation
+### Generate pedestrian navigation
 
-The pedestrian navigation is managed using a `.bin` file, generated when the map is ingested. However, this navigation only considers the OpenDRIVE road definition.  
+The pedestrian navigation is managed using a `.bin`. However, before generating it, there are two things to be done.  
 
 *   __Add crosswalk meshes.__ Crosswalks defined inside the `.xodr` remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
 
@@ -152,11 +150,9 @@ The pedestrian navigation is managed using a `.bin` file, generated when the map
 
 ![ue_crosswalks](img/ue_crosswalks.png)  
 
-*   __Change the navigation file.__ In a build from source is common to modify the map after the ingestion. Props such as trees, streetlights or grass zones are added, probably interfering with the pedestrian navigation. If that is the case, this should be modified accordingly. Follow the steps below to create a new navigation file. 
+*   __Customize the map.__ In is common to modify the map after the ingestion. Props such as trees, streetlights or grass zones are added, probably interfering with the pedestrian navigation. Make sure to have the desired result before generating the pedestrian navigation. Otherwise, it will have to be generated again.  
 
-!!! Warning
-    The Docker import does not allow additional modifications. The navigation file has already been packaged and cannot be edited. 
-
+Now that the version of the map is final, it is time to generate the pedestrian navigation file.  
 
 __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
 
@@ -171,13 +167,24 @@ __2.__ Check the name of the meshes. By default, pedestrians will be able to wal
 
 __3.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
 
-__4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`.  
+__4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`. A `map_file.obj` file will be created in `Unreal/CarlaUE4/Saved`.
 
-__5.__ A `.obj` file has been created in `Unreal/CarlaUE4/Saved`. Run the executable `Util/DockerUtils/Dist/RecastBuilder` using the `.obj` as input.  
+__5.__ Move the `map_file.obj` and the `map_file.xodr` to `Util/DockerUtils/dist`. There are several scripts there that are going to be used.  
 
-__6.__ The `.bin` should have been generated in `Util/DockerUtils/Dist`. Change its name to be the same as the `mapname.fbx`.  
+__6.__ Run the following script to extract the crosswalks from the OpenDRIVE. This will create a `crosswalks.obj`.  
 
-__7.__ Move the `.bin` into `Content/Carla/Maps/Nav`.   
+``` sh
+python get_xodr_crosswalks.py -f map_file.xodr
+```
+__7.__ Combine `map_file.obj` and `crosswalks.obj` running the following script. After that, the `map_file.obj` should contain both.  
+```sh
+python addOBJ.py map_file.obj crosswalks.obj
+```
+__8.__ Create the file describing the pedestrian navigation. A `.bin` will be generated in `Util/DockerUtils/Dist`.  
+```sh
+./RecastBuilderbuild.sh map_file.obj
+```
+__9.__ Move the `.bin` into the `Nav` folder of the package that contains the map.  
 
 ---
 ## Deprecated ways to import a map
