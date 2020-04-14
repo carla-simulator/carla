@@ -353,6 +353,8 @@ namespace road {
     /// Create the bounding boxes of each junction
     void CreateJunctionBoundingBoxes(Map &map);
 
+    geom::Transform ComputeSignalTransform(std::unique_ptr<Signal> &signal,  MapData &data);
+
     /// Solves the signal references in the road
     void SolveSignalReferencesAndTransforms();
 
