@@ -14,7 +14,6 @@ import errno
 import fnmatch
 import json
 import os
-import sys
 import shutil
 import subprocess
 import argparse
@@ -380,7 +379,7 @@ def main():
         '--no-carla-materials',
         action='store_false',
         help='user Carla materials')
-    args, unknown = argparser.parse_known_args()
+    args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
