@@ -160,6 +160,10 @@ __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, t
 
 __2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
 
+
+    If no `.json` is provided, the name must be `map_package`
+
+If you don't have a .json then you don't need to specify a name unless you want to change the default map_package name. That is what I was intending to say, sorry.
 *   Sidewalk = `Road_Sidewalk`.  
 *   Grass = `Road_Grass`.  
 
@@ -182,7 +186,7 @@ python addOBJ.py map_file.obj crosswalks.obj
 ```
 __8.__ Create the file describing the pedestrian navigation. A `.bin` will be generated in `Util/DockerUtils/Dist`.  
 ```sh
-./RecastBuilderbuild.sh map_file.obj
+./RecastBuilder.sh map_file.obj
 ```
 __9.__ Move the `.bin` into the `Nav` folder of the package that contains the map.  
 
@@ -484,7 +488,7 @@ __4. Test traffic light timing and traffic trigger volumes.__ This may need tria
 
 In order to prepare the map for pedestrian navigation, there are some settings to be done before exporting it.  
 
-__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
+__1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. Any geometry that is not involved or interfering in the pedestrian navigation can be tagged also as `NoExport`.
 
 ![ue_skybox_no_export](img/ue_noexport.png) 
 
