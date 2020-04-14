@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/Map.h"
-
 #include "carla/Exception.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/MeshFactory.h"
@@ -506,7 +505,7 @@ namespace road {
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
-    const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
+    const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
     DEBUG_ASSERT(remaining_lane_length >= 0.0);
 
@@ -539,7 +538,7 @@ namespace road {
     const auto &lane = GetLane(waypoint);
     const bool forward = !(waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
-    const double relative_s = waypoint.s - lane.GetDistance() + EPSILON;
+    const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
     DEBUG_ASSERT(remaining_lane_length >= 0.0);
 
