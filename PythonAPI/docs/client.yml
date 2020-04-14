@@ -65,11 +65,12 @@
       - param_name: opendrive
         type: str
         doc: >
-          Content of an OpenDRIVE file as `string` (**NOT** the path of the `.xodr` file!).
+          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
       - param_name: parameters
         type: carla.OpendriveGenerationParameters
+        default: (2.0, 50.0, 1.0, 0.6, true, true)
         doc: >
-           Parameters used when generating a world using an OpenDRIVE file.
+           Additional settings for the mesh generation. If none are provided, default values will be used. 
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
@@ -425,24 +426,24 @@
     - var_name: vertex_distance
       type: float
       doc: >
-        The distance between vertices when generating the world mesh from OpenDRIVE.
+        Distance between vertices of the mesh generated. __Default is `2.0`__.
     - var_name: max_road_length
       type: float
       doc: >
-        Max road length for a single mesh portion.
+        Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. __Default is `50.0`__.
     - var_name: wall_height
       type: float
       doc: >
-        Defines the height of walls added to roads to prevent vehicles from falling.
+        Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. __Default is `1.0`__.
     - var_name: additional_width
       type: float
       doc: >
-        Additional with to junction lanes to prevent vehicles from falling.
+        Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road.  __Default is `0.6`__.
     - var_name: smooth_junctions
       type: bool
       doc: >
-        When this variable is `True` the generated junctions will be smoothed to prevent roads from blocking other roads.
+        If __True__, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. __Default is `True`__.
     - var_name: enable_mesh_visibility
       type: bool
       doc: >
-        This variable indicates whether the mesh should be rendered to reduce the rendering overhead.
+        If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.
