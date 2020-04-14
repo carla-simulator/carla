@@ -2,11 +2,11 @@
 
 CARLA has developed a co-simulation feature with SUMO. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.  
 
-*	[__Requisites__](#requisites)  
-	*	[Prepare a SUMO environment](#prepare-a-sumo-environment)
-*	[__Run the co-simulation__](#run-the-co-simulation)  
-	*	[Spawn vehicles](#spawn-vehicles)
-*	[__Spawn NPCs with SUMO__](#spawn-npcs-with-sumo)  
+*   [__Requisites__](#requisites)  
+	*   [Prepare a SUMO environment](#prepare-a-sumo-environment)
+*   [__Run the co-simulation__](#run-the-co-simulation)  
+	*   [Spawn vehicles](#spawn-vehicles)
+*   [__Spawn NPCs with SUMO__](#spawn-npcs-with-sumo)  
 
 ---
 ## Requisites
@@ -35,12 +35,12 @@ Everything related with this feature can be found in `Co-Simulation/Sumo`. Sever
 
 Use one of this examples, or any other SUMO file, to start the co-simulation. There are some optional arguments that can be set.  
 
-*	__`--tls-manager <string>`__ chooses which simulator will change the state of the traffic lights. The other will update them accordingly.  
-	*	`carla` to put CARLA in charge of the traffic lights.  
-	*	`sumo` to put SUMO in charge of the traffic lights. 
-	*	`none` to disable the synchronization of traffic lights. Vehicles do not take them into consideration --> None of them, or only one? 
+*   __`--tls-manager <string>`__ chooses which simulator will change the state of the traffic lights. The other will update them accordingly.  
+	*   `carla` to put CARLA in charge of the traffic lights.  
+	*   `sumo` to put SUMO in charge of the traffic lights. 
+	*   `none` to disable the synchronization of traffic lights. Vehicles do not take them into consideration --> None of them, or only one? 
 
-*	__`--sumo-gui`__ will create a window to visualize the SUMO simulation. By default SUMO runs off-screen. 
+*   __`--sumo-gui`__ will create a window to visualize the SUMO simulation. By default SUMO runs off-screen. 
 
 ```sh
 python run_synchronization.py examples/TestTLS.sumocfg --tls-manager carla --sumo-gui
