@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "carla/rpc/Color.h"
+#include "carla/sensor/data/Color.h"
 
 namespace carla {
 namespace client {
 
-using Color = rpc::Color;
+using Color = sensor::data::Color;
 using LightId = uint32_t;
 
 enum class LightGroup : uint8_t {
@@ -24,17 +24,31 @@ enum class LightGroup : uint8_t {
 
 struct LightState {
 
+  LightState() {}
+
+  LightState(
+      float intensity,
+      Color color,
+      LightGroup group,
+      bool active)
+  : _intensity(intensity),
+    _color(color),
+    _group(group),
+    _active(active){}
+
   void Reset () {
     _intensity = 0.0f;
     _color.r = 0;
     _color.g = 0;
     _color.b = 0;
     _group = LightGroup::None;
+    _active = false;
   }
 
   float _intensity = 0.0f;
   Color _color;
   LightGroup _group = LightGroup::None;
+  bool _active = false;
 };
 
 } // namespace client

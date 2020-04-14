@@ -133,9 +133,7 @@ namespace client {
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
 
-    LightManager& GetLightManager() {
-      return _light_manager;
-    }
+    SharedPtr<LightManager> GetLightManager() const;
 
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};
@@ -148,8 +146,6 @@ namespace client {
   private:
 
     detail::EpisodeProxy _episode;
-    LightManager _light_manager;
-
   };
 
 } // namespace client

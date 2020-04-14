@@ -146,5 +146,9 @@ namespace client {
     return nullptr;
   }
 
+  SharedPtr<LightManager> World::GetLightManager() const {
+    return _episode.Lock()->GetLightManager();
+  }
+
 } // namespace client
 } // namespace carla
