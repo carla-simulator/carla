@@ -48,8 +48,8 @@ def generate_json_package(folder, package_name, use_carla_materials):
     maps = []
     for root, _, filenames in os.walk(folder):
         files = fnmatch.filter(filenames, "*.fbx")
-        for i in range(len(files)):
-            fbx = files[i][:-4]
+        for file_name in files:
+            fbx = file_name[:-4]
             # check if exist the .xodr file
             if os.path.exists("%s/%s.xodr" % (root, fbx)):
                 maps.append([os.path.relpath(root, folder), fbx])
@@ -61,9 +61,9 @@ def generate_json_package(folder, package_name, use_carla_materials):
         f.write("{\n")
         f.write("    \"props\": [],\n")
         f.write("    \"maps\": [\n")
-        for i in range(len(maps)):
-            path = maps[i][0].replace('\\', '/')
-            name = maps[i][1]
+        for i, map_name in enumerate(maps):
+            path = map_name[0].replace('\\', '/')
+            name = map_name[1]
             f.write("         {\n")
             f.write("             \"name\": \"%s\",\n" % name)
             f.write("             \"source\": \"%s/%s.fbx\",\n" % (path, name))
@@ -79,7 +79,7 @@ def generate_json_package(folder, package_name, use_carla_materials):
         f.write("    ]\n")
         f.write("}\n")
         f.close()
-        # add 
+        # add
         json_files.append([folder, "%s.json" % package_name])
 
     return json_files
@@ -385,7 +385,7 @@ def main():
     json_list = get_packages_json_list(import_folder)
     if (len(json_list) == 0):
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
-    import_assets_from_json_list(json_list)
+    # import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':
     main()
