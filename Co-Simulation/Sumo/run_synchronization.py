@@ -230,15 +230,13 @@ def synchronization_loop(args):
     """
     Entry point for sumo-carla co-simulation.
     """
+    sumo_simulation = SumoSimulation(args.sumo_cfg_file, args.step_length, args.sumo_host,
+                                     args.sumo_port, args.sumo_gui)
+    carla_simulation = CarlaSimulation(args.carla_host, args.carla_port, args.step_length)
+
+    synchronization = SimulationSynchronization(sumo_simulation, carla_simulation, args.tls_manager,
+                                                args.sync_vehicle_color, args.sync_vehicle_lights)
     try:
-        sumo_simulation = SumoSimulation(args.sumo_cfg_file, args.step_length, args.sumo_host,
-                                         args.sumo_port, args.sumo_gui)
-        carla_simulation = CarlaSimulation(args.carla_host, args.carla_port, args.step_length)
-
-        synchronization = SimulationSynchronization(sumo_simulation, carla_simulation,
-                                                    args.tls_manager, args.sync_vehicle_color,
-                                                    args.sync_vehicle_lights)
-
         while True:
             start = time.time()
 
