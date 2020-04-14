@@ -5,10 +5,8 @@ Users can create their own maps, and run CARLA using these. The creation of the 
 *   [__Introduction__](#introduction)  
 *   [__Create a map with RoadRunner__](#create-a-map-with-roadrunner)  
 	*   [Export from RoadRunner](#export-from-roadrunner)  
-*   [__Map ingestion__](#map-ingestion)  
-	*   [Via terminal](#via-terminal)  
-	*   [Via Docker](#via-docker)  
-*   [__Finishing touches in the UE4 Editor__](#finishing-touches-in-the-ue4-editor)  
+*   [__Map ingestion in a CARLA package__](#map-ingestion-in-a-carla-package)  
+*   [__Map ingestion in a build from source__](#map-ingestion-in-a-build-from-source)  
 	*   [Modify pedestrian navigation](#modify-pedestrian-navigation)  
 *   [__Deprecated ways to import a map__](#deprecated-ways-to-import-a-map)  
 
@@ -19,19 +17,14 @@ RoadRunner is the recommended software to create a map due to its simplicity. So
 
 The process of the map ingestion has been simplified to minimize the users' intervention. For said reason, there are certains steps have been automatized.  
 
-*   __Creation of the `.json` file and folder structure__. As for the maps, users do not have to create this manually. The ingestion process itself will do everything necessary.
-*   __Traffic signs are created when running the simulator.__ It will generate the traffic lights, stops, and yields according to their `.xodr` definition. The rest of landmarks present in the road map will not be physically on scene, but they can be queried using the API.  
-*   __Pedestrian navigation will be generated automatically.__ The user can modify it if desired, but a `.bin` file describing the basic navigation of the map will be created during the process. 
+*   __Package `.json` file and folder structure__. Normally packages need a certain folder structure and a `.json` file describing them to be imported. However, as regards the map ingestion, this can be created automatically during the process. 
+*   __Traffic signs and traffic lights.__ The simulator will generate the traffic lights, stops, and yields automatically when running. These will be creatd according to their `.xodr` definition. The rest of landmarks present in the road map will not be physically on scene, but they can be queried using the API.  
+*   __Pedestrian navigation.__ The ingestion will generate a `.bin` file describing the pedestrian navigation. It is based on the sidewalks and crosswalks that appear in the OpenDRIVE map. This can only be modified if working in a build from source.  
 
-!!! note
-    The automatic ingestion will only consider maps as an `.fbx` and `.xodr`. To ingest additional files, [prepare the package manually](#prepare-the-package-manually).
+!!! Important
+    If a map contains additional elements besides the `.fbx` and `.xodr`, the package has to be [prepared manually](#prepare-the-package-manually).
 
-There are two different ways to import the map into CARLA. Both grant the previously mentioned automatization, but there are some differences between them.  
-
-*   [__Via Docker.__](#via-docker) Recommended method when working with a CARLA package. The output will be a standalone package containing the map ready to be used. However, as the map is packaged, no modifications can be made.  
-*   [__Via terminal.__](#via-terminal) This will import the map into CARLA. The pedestrian navigation among others can be modified if needed. The map can be distributed using a standalone package. Take a look [this tutorial](tuto_A_create_standalone.md) to learn how to create it.  
-
-If working in the build, there are some [finishing touches](#finishing-touches) that can be done, to make sure that everything fits perfectly. 
+The map ingestion process differs, depending if the package is destined to be in a CARLA package (e.g., 0.9.9) or a build from source. 
 
 There are other ways to import a map into CARLA, which are now deprecated. They require the user to manually set the map ready. Nonetheless, as they may be useful for specific cases when the user wants to customize a specific setting, they are listed in the [last section](#deprecated-ways-to-import-a-map) of this tutorial.  
 
@@ -72,13 +65,51 @@ This will generate a `mapname.fbx` and `mapname.xodr` files within others. There
 !!! Warning
     Make sure that the .xodr and the .fbx files have the same name.  
 
+---
+## Map ingestion in a CARLA package
+
+This is the recommended method to import a map into a CARLA package. It will run a Docker image of Unreal Engine to import the files, and export them as a standalone package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time.
+
+__1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker) to build the image. 
+
+__2. Change permissions on the input folder.__ If no `.json` file is provided, the Docker will try to create it on the input folder. To be successful, said folder must have all permissions enabled for others.
+
+```sh
+#Go to the parent folder, where the input folder is contained
+chmod 777 input_folder
+```
+
+!!! Note
+    This is not necessary if the package is [prepared manually](#prepare-the-package-manually), and contains a `.json` file. 
+
+__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
+
+```sh
+python docker_tools.py --input ~/path_to_input_folder --output ~/path_to_output_folder --packages map_package
+```
+
+__3. Locate the package__. The Docker should have generated the package `map_package.tar.gz` in the output path. This is the standalone package for the assets. 
+
+__4. Change the name of the package__. Two packages cannot have the same name. Make sure to use one that identifies it.
+
+__5. Import the package into CARLA.__  
+
+*   __On Windows__ extract the package on the root CARLA folder. 
+
+*   __On Linux__ move the package to the `Import` folder, and run the script to import it. 
+
+```sh
+cd Util
+./ImportAssets.sh
+```
+
+!!! Warning
+    The argument `--packages map_package` is the default when no `.json` is provided. When the package is prepared manually, with s proper `.json` and folder structure, this should be the name of the package.  
 
 ---
-## Map ingestion
+## Map ingestion in a build from source 
 
-### Via terminal 
-
-This is the recommended method to import a map into a CARLA build. Place the maps to be imported in the `Import` folder. The script will automatically generate the necessary to ingest the maps. Make sure that the name of the `.xodr` and `.fbx` files are the same for each of the maps being imported. Otherwise, the script will not recognize them as a map. 
+This is method is meant to be used if working with the source version of CARLA. Place the maps to be imported in the `Import` folder. The script will automatically generate the necessary to ingest the maps. Make sure that the name of the `.xodr` and `.fbx` files are the same for each of the maps being imported. Otherwise, the script will not recognize them as a map. 
 
 There are two parameters to be set. 
 
@@ -90,7 +121,7 @@ make import ARGS="--package my_package"
 *   __Usage of CARLA materials.__ By default, the maps imported will use CARLA materials, but this can be changed using a flag. 
 ```sh
 #Import my_package without CARLA materials
-make import ARGS="--package pepis --no-carla-materials"
+make import ARGS="--package my_package --no-carla-materials"
 ```
 
 Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder. Make the ingestion. 
@@ -98,35 +129,6 @@ Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder.
 ```sh
 make import
 ```
-
-### Via Docker
-
-This is the recommended method to import a map into a CARLA package. It will run a Docker image of Unreal Engine to import the files, and export them as a standalone package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time.
-
-__1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). 
-
-__2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
-
-```sh
-python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets --package=Package01
-```
-
-__3. Locate the package__. The Docker should have generated the package `map_package.tar.gz` in the output path. This is the standalone package for the assets. 
-
-__4. Change the name of the package__ to one that identifies it.
-
-__5. Extract the package.__ Move the package to the `Import` folder and run the script to import it. 
-```sh
-cd Util
-./ImportAssets.sh
-```
-
-!!! Note
-    On Windows, extract the package on the root CARLA folder. 
-
-
----
-## Finishing touches in the UE4 Editor
 
 After the ingestion, map is ready to be used in CARLA. However, __if working in a CARLA build, the map can be opened in the UE4 Editor in order to refine it.__ These are recommended steps, but mostly optional besides pedestrian navigation.  
 
@@ -141,16 +143,16 @@ After the ingestion, map is ready to be used in CARLA. However, __if working in 
 
 ### Modify pedestrian navigation
 
-The pedestrian navigation is managed using a `.bin` file. This is generated when the map is imported. However, this navigation is made using the road definition, and it should be modified.  
+The pedestrian navigation is managed using a `.bin` file, generated when the map is ingested. However, this navigation only considers the OpenDRIVE road definition.  
 
-*   __Crosswalk meshes are not created during the import.__ Crosswalks defined inside the `.xodr` remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
+*   __Add crosswalk meshes.__ Crosswalks defined inside the `.xodr` remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
 
 !!! Note
     To generate new crosswalks, change the name of the mesh to `Road_Crosswalk`. Avoid doing so if the crosswalk is in the `.xodr`. Otherwise, it will be duplicated. 
 
 ![ue_crosswalks](img/ue_crosswalks.png)  
 
-*   __If additional props are added, change the navigation accordingly.__ These may interfere with the navigation. This is the case for streetlights, trees and other elements on the navigation areas. Follow the steps below to create a new navigation file. 
+*   __Change the navigation file.__ In a build from source is common to modify the map after the ingestion. Props such as trees, streetlights or grass zones are added, probably interfering with the pedestrian navigation. If that is the case, this should be modified accordingly. Follow the steps below to create a new navigation file. 
 
 !!! Warning
     The Docker import does not allow additional modifications. The navigation file has already been packaged and cannot be edited. 
@@ -184,7 +186,7 @@ There are other ways to import a map used in previous CARLA releases. These requ
 
 ### Prepare the package manually
 
-The folder structure and `.json` file necessaries to import maps are created automatically when doing the ingestion. However, this can be done manually if necessary. Here are the steps to do so.
+A package needs to follow a certain folder structure and contain a `.json` file describing it. This steps can be saved under certains circumstances, but doing it manually will always work. 
 
   <details>
     <summary> Read how to prepare the folder structure and .json file
