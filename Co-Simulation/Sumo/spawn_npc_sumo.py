@@ -94,7 +94,7 @@ def main(args):
     carla_simulation = CarlaSimulation(args.host, args.port, args.step_length)
 
     world = carla_simulation.client.get_world()
-    current_map = carla_simulation.client.get_world().get_map()
+    current_map = world.get_map()
 
     xodr_file = os.path.join(tmpdir, current_map.name + '.xodr')
     current_map.save_to_disk(xodr_file)
@@ -193,10 +193,11 @@ def main(args):
         logging.info('Cancelled by user.')
 
     finally:
+        synchronization.close()
+
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
 
-        synchronization.close()
 
 
 if __name__ == '__main__':
