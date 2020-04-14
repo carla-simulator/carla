@@ -480,10 +480,22 @@ namespace detail {
     }
 
     /// @}
+    // =========================================================================
+    /// @name Operations lights
+    // =========================================================================
+    /// @{
+
+    SharedPtr<LightManager> GetLightManager() const {
+      return _light_manager;
+    }
+
+    /// @}
 
   private:
 
     Client _client;
+
+    SharedPtr<LightManager> _light_manager;
 
     std::shared_ptr<Episode> _episode;
 

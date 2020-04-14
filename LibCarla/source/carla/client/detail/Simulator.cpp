@@ -74,8 +74,12 @@ namespace detail {
       const bool enable_garbage_collection)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER("SimulatorClient("s + host + ":" + std::to_string(port) + ")"),
       _client(host, port, worker_threads),
+      _light_manager(new LightManager()),
       _gc_policy(enable_garbage_collection ?
-        GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
+        GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {
+          // TODO: remove
+          _light_manager->DebugFill();
+        }
 
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
