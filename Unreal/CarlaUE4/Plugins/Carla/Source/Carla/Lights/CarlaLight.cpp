@@ -28,7 +28,10 @@ void UCarlaLight::BeginPlay()
 void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
   Super::OnComponentDestroyed(bDestroyingHierarchy);
+}
 
+void UCarlaLight::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
   UWorld *World = GetWorld();
   if(World)
   {
