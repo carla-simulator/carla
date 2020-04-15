@@ -112,7 +112,10 @@ namespace geom {
 
     /// Compute the unit vector pointing towards the Y-axis of @a rotation.
     static Vector3D GetRightVector(const Rotation &rotation);
-  };
 
+    // Helper function to generate a vector of consecutive integers from a to b
+    static std::vector<int> GenerateRange(int a, int b);
+
+  };
 } // namespace geom
 } // namespace carla

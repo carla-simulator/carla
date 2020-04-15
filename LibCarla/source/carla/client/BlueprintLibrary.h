@@ -23,7 +23,7 @@ namespace client {
   /// cases and reconsider this implementation.
   class BlueprintLibrary
     : public EnableSharedFromThis<BlueprintLibrary>,
-      private NonCopyable {
+      private MovableNonCopyable {
     using map_type = std::unordered_map<std::string, ActorBlueprint>;
   public:
 

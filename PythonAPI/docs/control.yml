@@ -1,6 +1,6 @@
 ---
 - module_name: carla
-  doc: >
+
   # - CLASSES ------------------------------
   classes:
   - class_name: VehicleControl
@@ -59,13 +59,13 @@
         default: 0.0
       - param_name: hand_brake
         type: bool
-        default: True
+        default: False
       - param_name: reverse
         type: bool
-        default: True
+        default: False
       - param_name: manual_gear_shift
         type: bool
-        default: True
+        default: False
       - param_name: gear
         type: int
         default: 0
@@ -74,6 +74,7 @@
       params:
       - param_name: other
         type: carla.VehicleControl
+    # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other

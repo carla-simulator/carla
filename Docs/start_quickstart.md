@@ -5,6 +5,7 @@
 * __[CARLA installation](#carla-installation)__  
 	* a) deb CARLA installation  
 	* b) GitHub repository installation  
+* __[Import additional assets](#import-addditional-assets)__  
 * __[Running CARLA](#running-carla)__  
 	* Command-line options  
 * __[Updating CARLA](#updating-carla)__  
@@ -63,7 +64,7 @@ The requirements are simpler than those for the build installation.
 * __Server side.__ A 4GB minimum GPU will be needed to run a highly realistic environment. A dedicated GPU is highly advised for machine learning.  
 * __Client side.__ [Python](https://www.python.org/downloads/) is necessary to access the API via command line. Also, a good internet connection and two TCP ports (2000 and 2001 by default).  
 * __System requirements.__ Any 64-bits OS should run CARLA.  
-* __Other requirements.__  Two Python modules: [Pygame](https://www.pygame.org/download.shtml) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
+* __Other requirements.__  Two Python modules: [Pygame](https://pypi.org/project/pygame/) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
 
 To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), run the following commands. 
 ```sh
@@ -110,15 +111,22 @@ cd /opt/carla/bin
 
 The repository contains the different versions of the simulator available. _Development_ and _stable_ sections list the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable.  
 
-There may be many files per release. The package is a compressed file named as __CARLA_version.number__. Other elements such as __Town06_0.9.5.tar.gz__ are additional assets.
+There may be many files per release. The package is a compressed file named as __CARLA_version.number__. Other elements such as __Town06_0.9.5.tar.gz__ are additional maps.
 
-Download and extract the release file. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples.  
-Move any additional assets to the _Import_ folder in the release and extract them. The script _ImportAssets_ in the main CARLA folder should extract these automatically.  
+Download and extract the release file. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples. 
+
+---
+## Import additional assets 
+
+Additional assets are distributed in CARLA under a compressed package file. For instance, some releases come with [__additional maps__](https://github.com/carla-simulator/carla/blob/master/Docs/download.md) as mentioned previously. In order to use them in CARLA, download and move the package to the _Import_ folder, and run the following script to extract them.  
 
 ```sh
 > cd ~/carla
 > ./ImportAssets.sh
 ```
+
+!!! Note
+    On Windows, directly extract the package on the root folder. 
 
 ---
 ## Running CARLA

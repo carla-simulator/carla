@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/LaneSection.h"
+#include "carla/road/Road.h"
 
 namespace carla {
 namespace road {
@@ -13,7 +14,13 @@ namespace road {
     return _s;
   }
 
-  Road *LaneSection::GetRoad() {
+  double LaneSection::GetLength() const {
+    const auto *road = GetRoad();
+    DEBUG_ASSERT(road != nullptr);
+    return road->UpperBound(_s) - _s;
+  }
+
+  Road *LaneSection::GetRoad() const {
     return _road;
   }
 
@@ -22,6 +29,14 @@ namespace road {
   }
 
   Lane *LaneSection::GetLane(const LaneId id) {
+    auto search = _lanes.find(id);
+    if (search != _lanes.end()) {
+      return &search->second;
+    }
+    return nullptr;
+  }
+
+  const Lane *LaneSection::GetLane(const LaneId id) const {
     auto search = _lanes.find(id);
     if (search != _lanes.end()) {
       return &search->second;

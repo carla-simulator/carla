@@ -17,6 +17,13 @@
 #include <boost/variant.hpp>
 
 namespace carla {
+
+namespace traffic_manager {
+  class TrafficManager;
+}
+
+namespace ctm = carla::traffic_manager;
+
 namespace rpc {
 
   class Command {
@@ -135,12 +142,19 @@ namespace rpc {
     };
 
     struct SetAutopilot : CommandBase<SetAutopilot> {
+      using TM = traffic_manager::TrafficManager;
+
       SetAutopilot() = default;
-      SetAutopilot(ActorId id, bool value)
+      SetAutopilot(
+          ActorId id,
+          bool value,
+          SharedPtr<ctm::TrafficManager> tm = nullptr)
         : actor(id),
-          enabled(value) {}
+          enabled(value),
+          tm(tm) {}
       ActorId actor;
       bool enabled;
+      SharedPtr<ctm::TrafficManager> tm;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 

@@ -13,7 +13,7 @@ The goal is to be able to call Unreal Engine's functions from a separate Python 
 
 ![modules](img/modules.png)
 
-In Linux, we compile CARLA and all the dependencies with clang-7.0 and C++14 standard. We however link against different runtime C++ libraries depending on where the code going to be used, since all the code that is going to be linked with Unreal Engine needs to be compiled using `libc++`.
+In Linux, we compile CARLA and all the dependencies with clang-8.0 and C++14 standard. We however link against different runtime C++ libraries depending on where the code going to be used, since all the code that is going to be linked with Unreal Engine needs to be compiled using `libc++`.
 
 ---
 ## Setup
@@ -26,7 +26,7 @@ make setup
 
 Get and compile dependencies
 
-  * llvm-7.1 (libc++ and libc++abi)
+  * llvm-8 (libc++ and libc++abi)
   * rpclib-2.2.1 (twice, with libstdc++ and libc++)
   * boost-1.72.0 (headers and boost_python for libstdc++)
   * googletest-1.8.1 (with libc++)
@@ -107,7 +107,7 @@ make PythonAPI
 It creates two "egg" packages
 
   * `PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg`
-  * `PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg`
+  * `PythonAPI/dist/carla-X.X.X-py3.7-linux-x86_64.egg`
 
 This package can be directly imported into a Python script by adding it to the system path.
 
@@ -129,5 +129,5 @@ Alternatively, it can be installed with `easy_install`
 
 ```sh
 easy_install2 --user --no-deps PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg
-easy_install3 --user --no-deps PythonAPI/dist/carla-X.X.X-py3.5-linux-x86_64.egg
+easy_install3 --user --no-deps PythonAPI/dist/carla-X.X.X-py3.7-linux-x86_64.egg
 ```

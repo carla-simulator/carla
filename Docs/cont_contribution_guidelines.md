@@ -18,7 +18,7 @@ issue is not already reported, and make sure you have read our
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
 [docslink]: http://carla.readthedocs.io
-[faqlink]: http://carla.readthedocs.io/en/latest/faq/
+[faqlink]: build_faq.md
 
 ---
 ## Feature requests

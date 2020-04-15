@@ -186,7 +186,7 @@ Static information regarding a vehicle, mostly the attributes used to define the
 <td>Role assigned to the vehicle.</td>
 <tr>
 <td><code>wheels</code> </td>
-<td><a href="#carlaegovehicleinfowheel">CarlaEgoVehicleInfoWheel</a></td>
+<td><a href="#carlaegovehicleinfowheelmsg">CarlaEgoVehicleInfoWheel</a></td>
 <td>List of messages with information regarding wheels.</td>
 <tr>
 <td><code>max_rpm</code> </td>
@@ -240,7 +240,7 @@ Static information regarding a vehicle, mostly the attributes used to define the
 ---
 ## CarlaEgoVehicleInfoWheel.msg
 
-Static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfo) message.
+Static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfomsg) message.
 
 <table class ="defTable">
 <thead>
@@ -293,7 +293,7 @@ Current status of the vehicle as an object in the world.
 </thead>
 <tbody>
 <td><code>header</code> </td>
-<td><a hre="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">header</a></td>
+<td><a href="http://docs.ros.org/melodic/api/std_msgs/html/msg/Header.html">Header</a></td>
 <td>Time stamp and frame ID when the message is published.</td>
 <tr>
 <td><code>velocity</code> </td>
@@ -309,7 +309,7 @@ Current status of the vehicle as an object in the world.
 <td>Current orientation of the vehicle.</td>
 <tr>
 <td><code>control</code> </td>
-<td><a href="#carlaegovehiclecontrol">CarlaEgoVehicleControl</a></td>
+<td><a href="#carlaegovehiclecontrolmsg">CarlaEgoVehicleControl</a></td>
 <td>Current control values as reported by CARLA.</td>
 </tbody>
 </table>
@@ -475,7 +475,7 @@ List of traffic lights with their status.
 </thead>
 <tbody>
 <td><code>scenarios</code> </td>
-<td><a href="#carlatrafficlightstatus">CarlaTrafficLightStatus`[]</a></td>
+<td><a href="#carlatrafficlightstatusmsg">CarlaTrafficLightStatus[]</a></td>
 <td>A list of messages summarizing traffic light states.</td>
 </tbody>
 </table>

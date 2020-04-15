@@ -5,9 +5,9 @@ These changes are applied **only** on runtime, and values are set back to defaul
 the execution ends.
 
 These properties are controlled through a
-[carla.VehiclePhysicsControl](/python_api/#carla.VehiclePhysicsControl) object,
+[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl) object,
 which also provides the control of each wheel's physics through a
-[carla.WheelPhysicsControl](/python_api/#carla.WheelPhysicsControl) object.
+[carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) object.
 
 ---
 ## Example

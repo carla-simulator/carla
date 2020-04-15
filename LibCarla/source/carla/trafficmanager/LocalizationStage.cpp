@@ -12,12 +12,14 @@ namespace traffic_manager {
 
 namespace LocalizationConstants {
 
-  static const float WAYPOINT_TIME_HORIZON = 5.0f;
   static const float MINIMUM_HORIZON_LENGTH = 30.0f;
+  static const float MAXIMUM_HORIZON_LENGTH = 60.0f;
   static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
   static const float TARGET_WAYPOINT_HORIZON_LENGTH = 5.0f;
   static const float MINIMUM_JUNCTION_LOOK_AHEAD = 10.0f;
   static const float HIGHWAY_SPEED = 50.0f / 3.6f;
+  static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+  static const float HORIZON_RATE = (MAXIMUM_HORIZON_LENGTH - MINIMUM_HORIZON_LENGTH) / ARBITRARY_MAX_SPEED;
   static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
   static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
   static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
@@ -26,7 +28,9 @@ namespace LocalizationConstants {
   static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
   static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;  // meters per second.
   static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
-
+  static const float MAX_COLLISION_RADIUS = 100.0f;
+  static const float POSITION_WINDOW_SIZE = 2.1f;
+  static const float HYBRID_MODE_DT = 0.05f;
 } // namespace LocalizationConstants
 
   using namespace LocalizationConstants;
@@ -65,7 +69,8 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, 0.0);
     // Initializing srand.
     srand(static_cast<unsigned>(time(NULL)));
-
+    // Initializing kinematic update clock.
+    previous_update_instance = chr::system_clock::now();
   }
 
   LocalizationStage::~LocalizationStage() {}
@@ -73,6 +78,8 @@ namespace LocalizationConstants {
   void LocalizationStage::Action() {
 
     ScanUnregisteredVehicles();
+
+    UpdateSwarmVelocities();
 
     // Selecting output frames based on selector keys.
     const auto current_planner_frame = planner_frame_selector ? planner_frame_a : planner_frame_b;
@@ -89,16 +96,17 @@ namespace LocalizationConstants {
       const Actor vehicle = actor_list.at(i);
       const ActorId actor_id = vehicle->GetId();
       const cg::Location vehicle_location = vehicle->GetLocation();
-      const float vehicle_velocity = vehicle->GetVelocity().Length();
+      const cg::Vector3D vehicle_velocity_vector = GetVelocity(actor_id);
+      const float vehicle_velocity = vehicle_velocity_vector.Length();
 
       // Initializing idle times.
       if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0) {
         idle_time[actor_id] = current_timestamp.elapsed_seconds;
       }
 
-      const float horizon_size = std::max(
-          WAYPOINT_TIME_HORIZON * std::sqrt(vehicle_velocity * 10.0f),
-          MINIMUM_HORIZON_LENGTH);
+      // Speed dependent waypoint horizon length.
+      const float horizon_square = std::min(std::pow(vehicle_velocity * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, 2.0f),
+                                            std::pow(MAXIMUM_HORIZON_LENGTH, 2.0f));
 
       if (buffer_list->find(actor_id) == buffer_list->end()) {
         buffer_list->insert({actor_id, Buffer()});
@@ -116,16 +124,21 @@ namespace LocalizationConstants {
         }
       }
 
-      // Purge passed waypoints.
       if (!waypoint_buffer.empty()) {
-        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
-
+        // Purge passed waypoints.
+        float dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
         while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
           PopWaypoint(waypoint_buffer, actor_id);
           if (!waypoint_buffer.empty()) {
-            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation(), true);
+            dot_product = DeviationDotProduct(vehicle, vehicle_location, waypoint_buffer.front()->GetLocation());
           }
+        }
+
+        // Purge waypoints too far from the front of the buffer.
+        while (!waypoint_buffer.empty()
+               && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square) {
+          PopWaypoint(waypoint_buffer, actor_id, false);
         }
       }
 
@@ -178,8 +191,7 @@ namespace LocalizationConstants {
       }
 
       // Populating the buffer.
-      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front())
-          <= std::pow(horizon_size, 2)) {
+      while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
         std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
         uint64_t selection_index = 0u;
@@ -199,20 +211,18 @@ namespace LocalizationConstants {
         PushWaypoint(waypoint_buffer, actor_id, next_wp);
       }
 
+      // Begining point of the waypoint buffer;
+      const SimpleWaypointPtr& updated_front_waypoint = waypoint_buffer.front();
+
       // Updating geodesic grid position for actor.
       track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-
+      // WayPoint Binning Changes
       // Generating output.
       const float target_point_distance = std::max(std::ceil(vehicle_velocity * TARGET_WAYPOINT_TIME_HORIZON),
           TARGET_WAYPOINT_HORIZON_LENGTH);
-      SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
-      for (uint64_t j = 0u;
-          (j < waypoint_buffer.size()) &&
-          (waypoint_buffer.front()->DistanceSquared(target_waypoint)
-          < std::pow(target_point_distance, 2));
-          ++j) {
-        target_waypoint = waypoint_buffer.at(j);
-      }
+
+      std::pair<SimpleWaypointPtr,uint64_t> target_waypoint_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, target_point_distance);
+      SimpleWaypointPtr &target_waypoint = target_waypoint_index_pair.first;
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle, vehicle_location, target_location);
       float cross_product = DeviationCrossProduct(vehicle, vehicle_location, target_location);
@@ -230,19 +240,11 @@ namespace LocalizationConstants {
       const float speed_limit = vehicle_reference->GetSpeedLimit();
       const float look_ahead_distance = std::max(2.0f * vehicle_velocity, MINIMUM_JUNCTION_LOOK_AHEAD);
 
-      SimpleWaypointPtr look_ahead_point = waypoint_buffer.front();
-      uint64_t look_ahead_index = 0u;
-      for (uint64_t j = 0u;
-          (waypoint_buffer.front()->DistanceSquared(look_ahead_point)
-          < std::pow(look_ahead_distance, 2)) &&
-          (j < waypoint_buffer.size());
-          ++j) {
-        look_ahead_point = waypoint_buffer.at(j);
-        look_ahead_index = j;
-      }
-
+      std::pair<SimpleWaypointPtr,uint64_t> look_ahead_point_index_pair = track_traffic.GetTargetWaypoint(waypoint_buffer, look_ahead_distance);
+      SimpleWaypointPtr &look_ahead_point = look_ahead_point_index_pair.first;
+      uint64_t &look_ahead_index = look_ahead_point_index_pair.second;
       bool approaching_junction = false;
-      if (look_ahead_point->CheckJunction() && !(waypoint_buffer.front()->CheckJunction())) {
+      if (look_ahead_point->CheckJunction() && !(updated_front_waypoint->CheckJunction())) {
         if (speed_limit*3.6f > HIGHWAY_SPEED) {
           for (uint64_t j = 0u; (j < look_ahead_index) && !approaching_junction; ++j) {
             SimpleWaypointPtr swp = waypoint_buffer.at(j);
@@ -273,36 +275,107 @@ namespace LocalizationConstants {
         }
       }
 
+      // Determining possible collision candidates around the ego vehicle.
+      ActorIdSet overlapping_actor_set = track_traffic.GetOverlappingVehicles(actor_id);
+      using ActorInfoMap = std::unordered_map<ActorId, std::pair<Actor, cg::Location>>;
+      ActorInfoMap overlapping_actor_info;
+      std::vector<ActorId> collision_candidate_ids;
+
+      // Run through vehicles with overlapping paths, obtain actor reference,
+      // and filter them based on distance to ego vehicle.
+      Actor overlapping_actor_ptr = nullptr;
+      for (ActorId overlapping_actor_id: overlapping_actor_set) {
+
+        // If actor is part of the registered actors.
+        if (vehicle_id_to_index.find(overlapping_actor_id) != vehicle_id_to_index.end()) {
+          overlapping_actor_ptr = actor_list.at(vehicle_id_to_index.at(overlapping_actor_id));
+        }
+        // If actor is part of the unregistered actors.
+        else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
+          overlapping_actor_ptr = unregistered_actors.at(overlapping_actor_id);
+        }
+        // If actor is within maximum collision avoidance range.
+        if (overlapping_actor_ptr!=nullptr && overlapping_actor_ptr->IsAlive()
+            && cg::Math::DistanceSquared(overlapping_actor_ptr->GetLocation(),
+                                         vehicle_location) < std::pow(MAX_COLLISION_RADIUS, 2))
+        {
+          overlapping_actor_info.insert({overlapping_actor_id,
+                                         {overlapping_actor_ptr, overlapping_actor_ptr->GetLocation()}});
+          collision_candidate_ids.push_back(overlapping_actor_id);
+        }
+      }
+
+      // Sorting collision candidates in accending order of distance to current vehicle.
+      std::sort(collision_candidate_ids.begin(), collision_candidate_ids.end(),
+                [&overlapping_actor_info, &vehicle_location] (const ActorId& a_id_1, const ActorId& a_id_2) {
+                  const cg::Location& e_loc = vehicle_location;
+                  const cg::Location& loc_1 = overlapping_actor_info.at(a_id_1).second;
+                  const cg::Location& loc_2 = overlapping_actor_info.at(a_id_2).second;
+                  return (cg::Math::DistanceSquared(e_loc, loc_1) < cg::Math::DistanceSquared(e_loc, loc_2));
+                });
+
+      // Constructing output vector.
+      std::vector<std::tuple<ActorId, Actor, cg::Vector3D>> collision_candidates;
+      std::for_each(collision_candidate_ids.begin(), collision_candidate_ids.end(),
+                    [&overlapping_actor_info, &collision_candidates, this] (const ActorId& a_id) {
+                      collision_candidates.push_back({a_id,
+                                                      overlapping_actor_info.at(a_id).first,
+                                                      this->GetVelocity(a_id)});
+                    });
+
+      // Sampling waypoint window for teleportation in hybrid physics mode.
+      std::vector<SimpleWaypointPtr> position_window;
+      if (hybrid_physics_mode) {
+
+        cg::Vector3D heading = vehicle->GetTransform().GetForwardVector();
+        bool window_begin = false;
+        SimpleWaypointPtr begining_wp;
+        bool window_complete = false;
+
+        for (uint32_t j = 0u; j < waypoint_buffer.size() && !window_complete; ++j) {
+
+          SimpleWaypointPtr &swp = waypoint_buffer.at(j);
+          cg::Vector3D relative_position = swp->GetLocation() - vehicle_location;
+
+          // Sample waypoints in front of the vehicle;
+          if (!window_begin && cg::Math::Dot(relative_position, heading) > 0.0f) {
+            window_begin = true;
+            begining_wp = swp;
+          }
+
+          if (window_begin && !window_complete) {
+            if (swp->DistanceSquared(begining_wp) > std::pow(POSITION_WINDOW_SIZE, 2)) {
+              // Stop when maximum size is reached.
+              window_complete = true;
+            } else {
+              position_window.push_back(swp);
+            }
+          }
+        }
+      }
+
       // Editing output frames.
       LocalizationToPlannerData &planner_message = current_planner_frame->at(i);
       planner_message.actor = vehicle;
       planner_message.deviation = dot_product;
       planner_message.distance = distance;
       planner_message.approaching_true_junction = approaching_junction;
+      planner_message.velocity = vehicle_velocity_vector;
+      planner_message.position_window = std::move(position_window);
+      planner_message.physics_enabled = IsPhysicsEnabled(actor_id);
 
       LocalizationToCollisionData &collision_message = current_collision_frame->at(i);
       collision_message.actor = vehicle;
       collision_message.buffer = waypoint_buffer;
-      collision_message.overlapping_actors.clear();
-      ActorIdSet overlapping_actor_set = track_traffic.GetOverlappingVehicles(actor_id);
-      for (ActorId overlapping_actor_id: overlapping_actor_set) {
-        Actor actor_ptr = nullptr;
-        if (vehicle_id_to_index.find(overlapping_actor_id) != vehicle_id_to_index.end()) {
-          actor_ptr = actor_list.at(vehicle_id_to_index.at(overlapping_actor_id));
-        } else if (unregistered_actors.find(overlapping_actor_id) != unregistered_actors.end()) {
-          actor_ptr = unregistered_actors.at(overlapping_actor_id);
-        }
-        if (actor_ptr!=nullptr) {
-          collision_message.overlapping_actors.insert({overlapping_actor_id, actor_ptr});
-        }
-        collision_message.safe_point_after_junction = final_safe_points[actor_id];
-      }
-      collision_message.closest_waypoint = waypoint_buffer.front();
+      collision_message.overlapping_actors = std::move(collision_candidates);
+      collision_message.closest_waypoint = updated_front_waypoint;
       collision_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
+      collision_message.safe_point_after_junction = final_safe_points[actor_id];
+      collision_message.velocity = vehicle_velocity_vector;
 
       LocalizationToTrafficLightData &traffic_light_message = current_traffic_light_frame->at(i);
       traffic_light_message.actor = vehicle;
-      traffic_light_message.closest_waypoint = waypoint_buffer.front();
+      traffic_light_message.closest_waypoint = updated_front_waypoint;
       traffic_light_message.junction_look_ahead_waypoint = waypoint_buffer.at(look_ahead_index);
 
       // Updating idle time when necessary.
@@ -317,7 +390,33 @@ namespace LocalizationConstants {
     maximum_idle_time = std::make_pair(nullptr, current_timestamp.elapsed_seconds);
   }
 
+  bool LocalizationStage::RunStep() {
+
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      // Set flag to true, notify DataReceiver initiate pipeline.
+      run_step.store(true);
+      step_execution_trigger.notify_one();
+    }
+
+    return true;
+  }
+
   void LocalizationStage::DataReceiver() {
+
+    // Wait for external trigger to initiate the pipeline in synchronous mode.
+    if (parameters.GetSynchronousMode()) {
+      std::unique_lock<std::mutex> lock(step_execution_mutex);
+      while (!run_step.load()) {
+        step_execution_trigger.wait_for(lock, 1ms, [this]() {return run_step.load();});
+      }
+      // Set flag to false, unblock RunStep() call and release mutex lock.
+      run_step.store(false);
+    }
+
+    hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    hybrid_physics_radius = parameters.GetHybridPhysicsRadius();
+
     bool is_deleted_actors_present = false;
     std::set<uint32_t> world_actor_id;
     std::vector<ActorPtr> actor_list_to_be_deleted;
@@ -333,6 +432,7 @@ namespace LocalizationConstants {
       return filtered;
     };
 
+    // TODO: Combine this actor scanning logic with ScanUnregisteredActors()
     // Get all the actors.
     auto world_actors_list = episode_proxy_ls.Lock()->GetAllTheActorsInTheEpisode();
 
@@ -342,14 +442,42 @@ namespace LocalizationConstants {
     // Building a set of vehicle ids in the world.
     for (const auto &actor : vehicles) {
       world_actor_id.insert(actor.GetId());
+
+      // Identify hero vehicles if system is in hybrid physics mode.
+      if (hybrid_physics_mode) {
+        Actor actor_ptr = actor.Get(episode_proxy_ls);
+        ActorId hero_actor_id = actor_ptr->GetId();
+        if (hero_actors.find(hero_actor_id) == hero_actors.end()) {
+          for (auto&& attribute: actor_ptr->GetAttributes()) {
+            if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+              hero_actors.insert({hero_actor_id, actor_ptr});
+            }
+          }
+        }
+      }
+    }
+
+    // Invalidate hero actor pointer if it is not alive anymore.
+    ActorIdSet hero_actors_to_delete;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        if(world_actor_id.find(hero_actor_info.first) == world_actor_id.end()) {
+          hero_actors_to_delete.insert(hero_actor_info.first);
+        }
+      }
+    }
+    for (auto &deletion_id: hero_actors_to_delete) {
+      hero_actors.erase(deletion_id);
     }
 
     // Search for invalid/destroyed vehicles.
     for (auto &actor : actor_list) {
-      if (world_actor_id.find(actor->GetId()) == world_actor_id.end()) {
+      ActorId deletion_id = actor->GetId();
+      if (world_actor_id.find(deletion_id) == world_actor_id.end()) {
         actor_list_to_be_deleted.emplace_back(actor);
-        track_traffic.DeleteActor(actor->GetId());
-        last_lane_change_location.erase(actor->GetId());
+        track_traffic.DeleteActor(deletion_id);
+        last_lane_change_location.erase(deletion_id);
+        kinematic_state_map.erase(deletion_id);
       }
     }
 
@@ -406,13 +534,12 @@ namespace LocalizationConstants {
   }
 
   void LocalizationStage::DrawBuffer(Buffer &buffer) {
-
-    for (uint64_t i = 0u; i < buffer.size(); ++i) {
-      if(buffer.at(i)->GetWaypoint()->IsJunction()){
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 0u, 255u}, 0.05f);
-      } else {
-        debug_helper.DrawPoint(buffer.at(i)->GetLocation() + cg::Location(0.0f,0.0f,2.0f), 0.3f, {0u, 255u, 255u}, 0.05f);
-      }
+    uint64_t buffer_size = buffer.size();
+    uint64_t step_size =  buffer_size/10u;
+    for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
+        debug_helper.DrawLine(buffer.at(i)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              buffer.at(i + step_size)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                              0.2f, {0u, 255u, 0u}, 0.05f);
     }
   }
 
@@ -423,12 +550,15 @@ namespace LocalizationConstants {
     track_traffic.UpdatePassingVehicle(waypoint_id, actor_id);
   }
 
-  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id) {
+  void LocalizationStage::PopWaypoint(Buffer& buffer, ActorId actor_id, bool front_or_back) {
 
-    SimpleWaypointPtr removed_waypoint = buffer.front();
-    SimpleWaypointPtr remaining_waypoint = nullptr;
+    SimpleWaypointPtr removed_waypoint = front_or_back? buffer.front(): buffer.back();
     const uint64_t removed_waypoint_id = removed_waypoint->GetId();
-    buffer.pop_front();
+    if (front_or_back) {
+      buffer.pop_front();
+    } else {
+      buffer.pop_back();
+    }
     track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
   }
 
@@ -485,17 +615,29 @@ namespace LocalizationConstants {
         cg::Location location = it->second->GetLocation();
         const auto type = it->second->GetTypeId();
 
-        SimpleWaypointPtr nearest_waypoint = nullptr;
+        std::vector<SimpleWaypointPtr> nearest_waypoints;
         if (type[0] == 'v') {
-          nearest_waypoint = local_map.GetWaypointInVicinity(location);
+          auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(it->second);
+          cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
+          float bx = extent.x;
+          float by = extent.y;
+          std::vector<cg::Location> corners = {location + cg::Location(bx, by, 0.0f),
+                                               location + cg::Location(-bx, by, 0.0f),
+                                               location + cg::Location(bx, -by, 0.0f),
+                                               location + cg::Location(-bx, -by, 0.0f)};
+          for (cg::Location &vertex: corners) {
+            SimpleWaypointPtr nearest_waypoint = local_map.GetWaypointInVicinity(vertex);
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetPedWaypoint(vertex);};
+            if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+            nearest_waypoints.push_back(nearest_waypoint);
+          }
         } else if (type[0] == 'w') {
-          nearest_waypoint = local_map.GetPedWaypoint(location);
-        }
-        if (nearest_waypoint == nullptr) {
-          nearest_waypoint = local_map.GetWaypoint(location);
+          SimpleWaypointPtr nearest_waypoint = local_map.GetPedWaypoint(location);
+          if (nearest_waypoint == nullptr) {nearest_waypoint = local_map.GetWaypoint(location);};
+          nearest_waypoints.push_back(nearest_waypoint);
         }
 
-        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoint);
+        track_traffic.UpdateUnregisteredGridPosition(it->first, nearest_waypoints);
 
         ++it;
       }
@@ -507,7 +649,7 @@ namespace LocalizationConstants {
   {
 
     const ActorId actor_id = vehicle->GetId();
-    const float vehicle_velocity = vehicle->GetVelocity().Length();
+    const float vehicle_velocity = GetVelocity(actor_id).Length();
 
     // Waypoint representing the new starting point for the waypoint buffer
     // due to lane change. Remains nullptr if lane change not viable.
@@ -736,7 +878,8 @@ namespace LocalizationConstants {
     }
 
     const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-    if (actor->GetVelocity().Length() > STOPPED_VELOCITY_THRESHOLD || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
+    if (GetVelocity(actor->GetId()).Length() > STOPPED_VELOCITY_THRESHOLD
+        || (vehicle->IsAtTrafficLight() && vehicle->GetTrafficLightState() != TLS::Green)) {
       idle_time[actor->GetId()] = current_timestamp.elapsed_seconds;
     }
 
@@ -789,6 +932,92 @@ namespace LocalizationConstants {
       return true;
     }
     return false;
+  }
+
+  void LocalizationStage::UpdateSwarmVelocities() {
+
+    // Location of hero vehicle if present.
+    std::vector<cg::Location> hero_locations;
+    if (hybrid_physics_mode && hero_actors.size() != 0u) {
+      for (auto &hero_actor_info: hero_actors) {
+        hero_locations.push_back(hero_actor_info.second->GetLocation());
+      }
+    }
+
+    // Using (1/20)s time delta for computing velocity.
+    float dt = HYBRID_MODE_DT;
+    // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
+    if (!parameters.GetSynchronousMode()) {
+      TimePoint current_instance = chr::system_clock::now();
+      chr::duration<float> elapsed_time = current_instance - previous_update_instance;
+      if (elapsed_time.count() > dt) {
+        previous_update_instance = current_instance;
+      } else if (hybrid_physics_mode) {
+        return;
+      }
+    }
+
+    // Update velocity for all registered vehicles.
+    for (const Actor &actor: actor_list) {
+
+      ActorId actor_id = actor->GetId();
+      cg::Location vehicle_location = actor->GetLocation();
+
+      // Adding entry if not present.
+      if (kinematic_state_map.find(actor_id) == kinematic_state_map.end()) {
+        kinematic_state_map.insert({actor_id, KinematicState{true, vehicle_location, cg::Vector3D()}});
+      }
+
+      // Check if current actor is in range of hero actor and enable physics in hybrid mode.
+      bool in_range_of_hero_actor = false;
+      if (hybrid_physics_mode && hero_actors.size() != 0u){
+        for (auto &hero_location: hero_locations) {
+          if (cg::Math::DistanceSquared(vehicle_location, hero_location) < std::pow(hybrid_physics_radius, 2)) {
+            in_range_of_hero_actor = true;
+            break;
+          }
+        }
+      }
+      bool enable_physics = hybrid_physics_mode? in_range_of_hero_actor: true;
+      kinematic_state_map.at(actor_id).physics_enabled = enable_physics;
+      actor->SetSimulatePhysics(enable_physics);
+
+      // When we say velocity, we usually mean velocity for a vehicle along it's heading.
+      // Velocity component due to rotation can be removed by taking dot product with heading vector.
+      cg::Vector3D heading = actor->GetTransform().GetForwardVector();
+      if (enable_physics) {
+
+        kinematic_state_map.at(actor_id).velocity = cg::Math::Dot(actor->GetVelocity(), heading) * heading;
+
+      } else {
+
+        cg::Vector3D displacement = (vehicle_location - kinematic_state_map.at(actor_id).location);
+        cg::Vector3D displacement_along_heading = cg::Math::Dot(displacement, heading) * heading;
+        cg::Vector3D velocity = displacement_along_heading/dt;
+        kinematic_state_map.at(actor_id).velocity = velocity;
+      }
+
+      // Updating location after velocity is computed.
+      kinematic_state_map.at(actor_id).location = vehicle_location;
+    }
+  }
+
+  cg::Vector3D LocalizationStage::GetVelocity(ActorId actor_id) {
+    cg::Vector3D vel;
+    if (kinematic_state_map.find(actor_id) != kinematic_state_map.end()) {
+      vel = kinematic_state_map.at(actor_id).velocity;
+    } else if (unregistered_actors.find(actor_id) != unregistered_actors.end()) {
+      vel = unregistered_actors.at(actor_id)->GetVelocity();
+    }
+    return vel;
+  }
+
+  bool LocalizationStage::IsPhysicsEnabled(ActorId actor_id) {
+    bool enabled = true;
+    if (kinematic_state_map.find(actor_id) != kinematic_state_map.end()) {
+      enabled = kinematic_state_map.at(actor_id).physics_enabled;
+    }
+    return enabled;
   }
 
 } // namespace traffic_manager

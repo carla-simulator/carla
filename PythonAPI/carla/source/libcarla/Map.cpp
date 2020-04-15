@@ -166,6 +166,10 @@ void export_map() {
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
+    .def("get_all_landmarks", CALL_RETURNING_LIST(cc::Map, GetAllLandmarks))
+    .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
+    .def("get_all_landmarks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllLandmarksOfType, std::string), (args("type")))
+    .def("get_landmark_group", CALL_RETURNING_LIST_1(cc::Map, GetLandmarkGroup, cc::Landmark), args("landmark"))
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -201,7 +205,7 @@ void export_map() {
     .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance", "stop_at_junction")))
     .def("get_right_lane", &cc::Waypoint::GetRight)
     .def("get_left_lane", &cc::Waypoint::GetLeft)
-    .def("get_junction", &cc::Waypoint::GetJunction, (args("lane_type")))
+    .def("get_junction", &cc::Waypoint::GetJunction)
     .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmakrsInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
     .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmakrsOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
     .def(self_ns::str(self_ns::self))

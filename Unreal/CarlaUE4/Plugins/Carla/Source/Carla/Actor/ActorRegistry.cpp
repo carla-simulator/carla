@@ -31,6 +31,10 @@ static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
   {
     return FActorView::ActorType::TrafficLight;
   }
+  else if (nullptr != Cast<ATrafficSignBase>(View.GetActor()))
+  {
+    return FActorView::ActorType::TrafficSign;
+  }
   else
   {
     return FActorView::ActorType::Other;

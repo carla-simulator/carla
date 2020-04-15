@@ -47,8 +47,10 @@ void export_commands() {
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
+  namespace ctm = carla::traffic_manager;
 
-  using ActorPtr = boost::shared_ptr<cc::Actor>;
+  using ActorPtr = carla::SharedPtr<cc::Actor>;
+  using TMPtr = carla::SharedPtr<ctm::TrafficManager>;
 
   object command_module(handle<>(borrowed(PyImport_AddModule("libcarla.command"))));
   scope().attr("command") = command_module;
@@ -150,9 +152,10 @@ void export_commands() {
   ;
 
   class_<cr::Command::SetAutopilot>("SetAutopilot")
-    .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("enabled")))
-    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool, TMPtr>, (arg("actor"), arg("enabled"), arg("tm") = boost::python::object() ))
+    .def(init<cr::ActorId, bool, TMPtr>((arg("actor_id"), arg("enabled"), arg("tm") = boost::python::object() )))
     .def_readwrite("actor_id", &cr::Command::SetAutopilot::actor)
+    .def_readwrite("tm", &cr::Command::SetAutopilot::tm)
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 

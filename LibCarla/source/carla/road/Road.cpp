@@ -1,22 +1,22 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/Exception.h"
-#include "carla/ListView.h"
-#include "carla/Logging.h"
 #include "carla/geom/CubicPolynomial.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
-#include "carla/road/Lane.h"
-#include "carla/road/MapData.h"
-#include "carla/road/Road.h"
+#include "carla/ListView.h"
+#include "carla/Logging.h"
 #include "carla/road/element/RoadInfoElevation.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
+#include "carla/road/Lane.h"
+#include "carla/road/MapData.h"
+#include "carla/road/Road.h"
 
 #include <stdexcept>
 
@@ -83,6 +83,28 @@ namespace road {
 
   const Lane &Road::GetLaneByDistance(double s, LaneId lane_id) const {
     return const_cast<Road *>(this)->GetLaneByDistance(s, lane_id);
+  }
+
+  std::vector<Lane*> Road::GetLanesByDistance(double s) {
+    std::vector<Lane*> result;
+    auto lane_sections = GetLaneSectionsAt(s);
+    for (auto &lane_section : lane_sections) {
+      for (auto & lane_pair : lane_section.GetLanes()) {
+        result.emplace_back(&lane_pair.second);
+      }
+    }
+    return result;
+  }
+
+  std::vector<const Lane*> Road::GetLanesByDistance(double s) const {
+    std::vector<const Lane*> result;
+    const auto lane_sections = GetLaneSectionsAt(s);
+    for (const auto &lane_section : lane_sections) {
+      for (const auto & lane_pair : lane_section.GetLanes()) {
+        result.emplace_back(&lane_pair.second);
+      }
+    }
+    return result;
   }
 
   Lane &Road::GetLaneById(SectionId section_id, LaneId lane_id) {

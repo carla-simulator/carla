@@ -220,7 +220,7 @@ namespace client {
       added_signals.insert(signal_data.signal);
       auto waypoint = SharedPtr<Waypoint>(new Waypoint(_parent, signal_data.waypoint));
       result.emplace_back(
-          new Landmark(waypoint, signal_data.signal, signal_data.accumulated_s));
+          new Landmark(waypoint, _parent, signal_data.signal, signal_data.accumulated_s));
     }
     return result;
   }
@@ -238,7 +238,7 @@ namespace client {
         }
         auto waypoint = SharedPtr<Waypoint>(new Waypoint(_parent, signal_data.waypoint));
         result.emplace_back(
-            new Landmark(waypoint, signal_data.signal, signal_data.accumulated_s));
+            new Landmark(waypoint, _parent, signal_data.signal, signal_data.accumulated_s));
       }
     }
     return result;

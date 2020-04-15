@@ -56,11 +56,9 @@ private:
 
   void SpawnSignals();
 
-  void GenerateTriggerBoxesForTrafficLights();
+  void RemoveRoadrunnerProps() const;
 
-  void GenerateTriggerBox(const carla::road::element::Waypoint &waypoint,
-    UTrafficLightComponent* TrafficLightComponent,
-    float BoxSize);
+  void RemoveAttachedProps(TArray<AActor*> Actors) const;
 
   // Cached Carla Game Mode
   UPROPERTY()
@@ -82,11 +80,14 @@ private:
   TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<ATrafficSignBase> TrafficLightModel;
+  TSubclassOf<AActor> TrafficLightModel;
 
   // Relates an OpenDRIVE type to a traffic sign blueprint
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TMap<FString, TSubclassOf<ATrafficSignBase>> TrafficSignsModels;
+  TMap<FString, TSubclassOf<AActor>> TrafficSignsModels;
+
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TMap<FString, TSubclassOf<USignComponent>> SignComponentModels;
 
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
@@ -95,5 +96,8 @@ private:
 
   UPROPERTY()
   bool TrafficLightsGenerated = false;
+
+  UPROPERTY()
+  int LoneTrafficLightsGroupControllerId = -1;
 
 };

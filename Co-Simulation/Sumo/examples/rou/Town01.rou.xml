@@ -1,0 +1,303 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="0" type="vehicle.diamondback.century" depart="0.00">
+        <route edges="-16.0.00 -17.0.00 4.0.00 22.0.00"/>
+    </vehicle>
+    <vehicle id="1" type="vehicle.yamaha.yzf" depart="1.00">
+        <route edges="-4.0.00 17.0.00 10.0.00 25.0.00 1.0.00 -16.0.00 -17.0.00 4.0.00"/>
+    </vehicle>
+    <vehicle id="2" type="vehicle.bh.crossbike" depart="2.00">
+        <route edges="-24.0.00 -6.0.00 19.0.00 18.0.00 17.0.00 16.0.00 0.0.00 -14.0.00 7.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="3" type="vehicle.mustang.mustang" depart="3.00">
+        <route edges="-8.0.00 -1.0.00 -2.0.00 -21.0.00 -22.0.00 -23.0.00 -12.0.00 18.0.00"/>
+    </vehicle>
+    <vehicle id="4" type="vehicle.harley-davidson.low_rider" depart="4.00">
+        <route edges="22.0.00 21.0.00 2.0.00 1.0.00 0.0.00"/>
+    </vehicle>
+    <vehicle id="5" type="vehicle.mini.cooperst" depart="5.00">
+        <route edges="22.0.00 -9.0.00"/>
+    </vehicle>
+    <vehicle id="6" type="vehicle.jeep.wrangler_rubicon" depart="6.00">
+        <route edges="-25.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00 14.0.00 -8.0.00"/>
+    </vehicle>
+    <vehicle id="7" type="vehicle.audi.tt" depart="7.00">
+        <route edges="-18.0.00 12.0.00 23.0.00 22.0.00 21.0.00 -3.0.00"/>
+    </vehicle>
+    <vehicle id="8" type="vehicle.toyota.prius" depart="8.00">
+        <route edges="-14.0.00 7.0.00 19.0.00 18.0.00 17.0.00 16.0.00 0.0.00"/>
+    </vehicle>
+    <vehicle id="9" type="vehicle.citroen.c3" depart="9.00">
+        <route edges="-3.0.00 -6.0.00 19.0.00 12.0.00 -24.0.00"/>
+    </vehicle>
+    <vehicle id="10" type="vehicle.harley-davidson.low_rider" depart="10.00">
+        <route edges="-24.0.00 -6.0.00 19.0.00 12.0.00 23.0.00"/>
+    </vehicle>
+    <vehicle id="11" type="vehicle.bmw.isetta" depart="11.00">
+        <route edges="18.0.00 4.0.00 -23.0.00 -24.0.00"/>
+    </vehicle>
+    <vehicle id="12" type="vehicle.bmw.isetta" depart="12.00">
+        <route edges="-16.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00 14.0.00 -8.0.00"/>
+    </vehicle>
+    <vehicle id="13" type="vehicle.seat.leon" depart="13.00">
+        <route edges="-21.0.00 -9.0.00 -10.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="14" type="vehicle.bmw.grandtourer" depart="14.00">
+        <route edges="17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+    </vehicle>
+    <vehicle id="15" type="vehicle.bmw.grandtourer" depart="15.00">
+        <route edges="7.0.00 6.0.00 24.0.00 23.0.00"/>
+    </vehicle>
+    <vehicle id="16" type="vehicle.bmw.grandtourer" depart="16.00">
+        <route edges="23.0.00 22.0.00 -9.0.00 -10.0.00 16.0.00"/>
+    </vehicle>
+    <vehicle id="17" type="vehicle.toyota.prius" depart="17.00">
+        <route edges="4.0.00 22.0.00 -9.0.00 -10.0.00 16.0.00"/>
+    </vehicle>
+    <vehicle id="18" type="vehicle.dodge_charger.police" depart="18.00">
+        <route edges="21.0.00 -3.0.00 -6.0.00"/>
+    </vehicle>
+    <vehicle id="19" type="vehicle.mercedes-benz.coupe" depart="19.00">
+        <route edges="-22.0.00 -4.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00"/>
+    </vehicle>
+    <vehicle id="20" type="vehicle.bmw.isetta" depart="20.00">
+        <route edges="-1.0.00"/>
+    </vehicle>
+    <vehicle id="21" type="vehicle.bmw.grandtourer" depart="21.00">
+        <route edges="-17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="22" type="vehicle.dodge_charger.police" depart="22.00">
+        <route edges="-25.0.00 9.0.00"/>
+    </vehicle>
+    <vehicle id="23" type="vehicle.diamondback.century" depart="23.00">
+        <route edges="12.0.00 23.0.00 22.0.00 21.0.00 2.0.00 1.0.00 -16.0.00"/>
+    </vehicle>
+    <vehicle id="24" type="vehicle.kawasaki.ninja" depart="24.00">
+        <route edges="22.0.00 21.0.00 2.0.00 -25.0.00 9.0.00 -22.0.00 -23.0.00 -24.0.00"/>
+    </vehicle>
+    <vehicle id="25" type="vehicle.tesla.cybertruck" depart="25.00">
+        <route edges="-8.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="26" type="vehicle.mustang.mustang" depart="26.00">
+        <route edges="-4.0.00 17.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="27" type="vehicle.seat.leon" depart="27.00">
+        <route edges="25.0.00 -2.0.00 -21.0.00 -22.0.00 -23.0.00 -12.0.00 18.0.00"/>
+    </vehicle>
+    <vehicle id="28" type="vehicle.jeep.wrangler_rubicon" depart="28.00">
+        <route edges="9.0.00 -22.0.00"/>
+    </vehicle>
+    <vehicle id="29" type="vehicle.kawasaki.ninja" depart="29.00">
+        <route edges="-2.0.00 -21.0.00 -9.0.00 25.0.00 1.0.00"/>
+    </vehicle>
+    <vehicle id="30" type="vehicle.mustang.mustang" depart="30.00">
+        <route edges="-4.0.00 17.0.00 16.0.00 -1.0.00 -2.0.00 -21.0.00"/>
+    </vehicle>
+    <vehicle id="31" type="vehicle.citroen.c3" depart="31.00">
+        <route edges="17.0.00 16.0.00 0.0.00 -14.0.00 7.0.00 6.0.00 24.0.00 23.0.00"/>
+    </vehicle>
+    <vehicle id="32" type="vehicle.citroen.c3" depart="32.00">
+        <route edges="-3.0.00 -6.0.00 19.0.00"/>
+    </vehicle>
+    <vehicle id="33" type="vehicle.diamondback.century" depart="33.00">
+        <route edges="-4.0.00 17.0.00 16.0.00 0.0.00"/>
+    </vehicle>
+    <vehicle id="34" type="vehicle.dodge_charger.police" depart="34.00">
+        <route edges="14.0.00 -8.0.00 -16.0.00 10.0.00 25.0.00 1.0.00 0.0.00 -14.0.00 7.0.00"/>
+    </vehicle>
+    <vehicle id="35" type="vehicle.carlamotors.carlacola" depart="35.00">
+        <route edges="6.0.00 24.0.00 23.0.00 22.0.00 21.0.00 2.0.00"/>
+    </vehicle>
+    <vehicle id="36" type="vehicle.audi.tt" depart="36.00">
+        <route edges="-19.0.00 -7.0.00 14.0.00 -8.0.00"/>
+    </vehicle>
+    <vehicle id="37" type="vehicle.nissan.patrol" depart="37.00">
+        <route edges="-19.0.00 6.0.00 5.0.00"/>
+    </vehicle>
+    <vehicle id="38" type="vehicle.diamondback.century" depart="38.00">
+        <route edges="22.0.00 -9.0.00 -10.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="39" type="vehicle.tesla.cybertruck" depart="39.00">
+        <route edges="-21.0.00 -9.0.00 -10.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="40" type="vehicle.mercedes-benz.coupe" depart="40.00">
+        <route edges="17.0.00 10.0.00 25.0.00 1.0.00"/>
+    </vehicle>
+    <vehicle id="41" type="vehicle.audi.tt" depart="41.00">
+        <route edges="-3.0.00 24.0.00 -12.0.00 -19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="42" type="vehicle.dodge_charger.police" depart="42.00">
+        <route edges="-8.0.00 -16.0.00 10.0.00 25.0.00 1.0.00"/>
+    </vehicle>
+    <vehicle id="43" type="vehicle.bmw.isetta" depart="43.00">
+        <route edges="9.0.00 -22.0.00 -23.0.00"/>
+    </vehicle>
+    <vehicle id="44" type="vehicle.seat.leon" depart="44.00">
+        <route edges="-25.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="45" type="vehicle.mini.cooperst" depart="45.00">
+        <route edges="-12.0.00 18.0.00 4.0.00 22.0.00 21.0.00"/>
+    </vehicle>
+    <vehicle id="46" type="vehicle.mini.cooperst" depart="46.00">
+        <route edges="2.0.00 -25.0.00 9.0.00 21.0.00"/>
+    </vehicle>
+    <vehicle id="47" type="vehicle.chevrolet.impala" depart="47.00">
+        <route edges="-24.0.00 5.0.00 2.0.00 -25.0.00 -10.0.00"/>
+    </vehicle>
+    <vehicle id="48" type="vehicle.carlamotors.carlacola" depart="48.00">
+        <route edges="14.0.00 -8.0.00 -16.0.00 -17.0.00 4.0.00 22.0.00"/>
+    </vehicle>
+    <vehicle id="49" type="vehicle.citroen.c3" depart="49.00">
+        <route edges="-10.0.00 -17.0.00 -18.0.00 -19.0.00 6.0.00 5.0.00"/>
+    </vehicle>
+    <vehicle id="50" type="vehicle.mustang.mustang" depart="50.00">
+        <route edges="18.0.00 4.0.00 22.0.00 -9.0.00"/>
+    </vehicle>
+    <vehicle id="51" type="vehicle.dodge_charger.police" depart="51.00">
+        <route edges="25.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00 14.0.00 -8.0.00"/>
+    </vehicle>
+    <vehicle id="52" type="vehicle.bmw.grandtourer" depart="52.00">
+        <route edges="21.0.00 2.0.00 1.0.00 0.0.00"/>
+    </vehicle>
+    <vehicle id="53" type="vehicle.audi.etron" depart="53.00">
+        <route edges="-16.0.00 -17.0.00 -18.0.00 -19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="54" type="vehicle.chevrolet.impala" depart="54.00">
+        <route edges="24.0.00 23.0.00 22.0.00 -9.0.00 -10.0.00"/>
+    </vehicle>
+    <vehicle id="55" type="vehicle.volkswagen.t2" depart="55.00">
+        <route edges="-12.0.00 18.0.00 17.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="56" type="vehicle.bmw.isetta" depart="56.00">
+        <route edges="14.0.00 -8.0.00 -1.0.00 -25.0.00 -10.0.00"/>
+    </vehicle>
+    <vehicle id="57" type="vehicle.mustang.mustang" depart="57.00">
+        <route edges="-22.0.00 -23.0.00 -24.0.00 5.0.00 2.0.00"/>
+    </vehicle>
+    <vehicle id="58" type="vehicle.tesla.cybertruck" depart="58.00">
+        <route edges="19.0.00 18.0.00 4.0.00 22.0.00"/>
+    </vehicle>
+    <vehicle id="59" type="vehicle.mini.cooperst" depart="59.00">
+        <route edges="6.0.00 24.0.00 -12.0.00 18.0.00"/>
+    </vehicle>
+    <vehicle id="60" type="vehicle.mustang.mustang" depart="60.00">
+        <route edges="-1.0.00 -25.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="61" type="vehicle.gazelle.omafiets" depart="61.00">
+        <route edges="4.0.00 -23.0.00 -24.0.00 -6.0.00 -7.0.00 14.0.00"/>
+    </vehicle>
+    <vehicle id="62" type="vehicle.audi.a2" depart="62.00">
+        <route edges="-2.0.00 -21.0.00 -22.0.00 -4.0.00 -18.0.00 12.0.00"/>
+    </vehicle>
+    <vehicle id="63" type="vehicle.nissan.micra" depart="63.00">
+        <route edges="-14.0.00 7.0.00 6.0.00 5.0.00"/>
+    </vehicle>
+    <vehicle id="64" type="vehicle.nissan.micra" depart="64.00">
+        <route edges="-25.0.00 -10.0.00 16.0.00"/>
+    </vehicle>
+    <vehicle id="65" type="vehicle.toyota.prius" depart="65.00">
+        <route edges="-21.0.00 -22.0.00 -4.0.00 -18.0.00 12.0.00"/>
+    </vehicle>
+    <vehicle id="66" type="vehicle.chevrolet.impala" depart="66.00">
+        <route edges="10.0.00 25.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="67" type="vehicle.audi.a2" depart="67.00">
+        <route edges="22.0.00 -9.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00 14.0.00"/>
+    </vehicle>
+    <vehicle id="68" type="vehicle.mini.cooperst" depart="68.00">
+        <route edges="-23.0.00 -12.0.00 18.0.00 17.0.00 16.0.00 -1.0.00"/>
+    </vehicle>
+    <vehicle id="69" type="vehicle.mini.cooperst" depart="69.00">
+        <route edges="24.0.00 23.0.00 22.0.00 21.0.00 2.0.00 1.0.00 0.0.00 -14.0.00 7.0.00 19.0.00"/>
+    </vehicle>
+    <vehicle id="70" type="vehicle.dodge_charger.police" depart="70.00">
+        <route edges="14.0.00 -8.0.00 -1.0.00 -2.0.00 -21.0.00 -22.0.00 -23.0.00 -24.0.00 -6.0.00"/>
+    </vehicle>
+    <vehicle id="71" type="vehicle.bmw.grandtourer" depart="71.00">
+        <route edges="7.0.00 19.0.00 18.0.00 4.0.00 -23.0.00"/>
+    </vehicle>
+    <vehicle id="72" type="vehicle.volkswagen.t2" depart="72.00">
+        <route edges="6.0.00 24.0.00 23.0.00 22.0.00 21.0.00 2.0.00 1.0.00 0.0.00 -14.0.00"/>
+    </vehicle>
+    <vehicle id="73" type="vehicle.tesla.model3" depart="73.00">
+        <route edges="-14.0.00 7.0.00 6.0.00 24.0.00 -12.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="74" type="vehicle.mercedes-benz.coupe" depart="74.00">
+        <route edges="-22.0.00 -4.0.00 -18.0.00 -19.0.00"/>
+    </vehicle>
+    <vehicle id="75" type="vehicle.jeep.wrangler_rubicon" depart="75.00">
+        <route edges="-25.0.00 -10.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="76" type="vehicle.kawasaki.ninja" depart="76.00">
+        <route edges="6.0.00 24.0.00 23.0.00 22.0.00 -9.0.00"/>
+    </vehicle>
+    <vehicle id="77" type="vehicle.diamondback.century" depart="77.00">
+        <route edges="-4.0.00 -18.0.00 -19.0.00 6.0.00 24.0.00"/>
+    </vehicle>
+    <vehicle id="78" type="vehicle.mercedes-benz.coupe" depart="78.00">
+        <route edges="9.0.00 -22.0.00 -4.0.00 -18.0.00 -19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="79" type="vehicle.mercedes-benz.coupe" depart="79.00">
+        <route edges="-24.0.00 -6.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="80" type="vehicle.citroen.c3" depart="80.00">
+        <route edges="-14.0.00 7.0.00 19.0.00 18.0.00 17.0.00 16.0.00"/>
+    </vehicle>
+    <vehicle id="81" type="vehicle.seat.leon" depart="81.00">
+        <route edges="-8.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00"/>
+    </vehicle>
+    <vehicle id="82" type="vehicle.audi.a2" depart="82.00">
+        <route edges="2.0.00 1.0.00 -16.0.00 -17.0.00 -18.0.00 -19.0.00 -7.0.00"/>
+    </vehicle>
+    <vehicle id="83" type="vehicle.audi.tt" depart="83.00">
+        <route edges="-19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="84" type="vehicle.lincoln.mkz2017" depart="84.00">
+        <route edges="-6.0.00 19.0.00 18.0.00 4.0.00 -23.0.00"/>
+    </vehicle>
+    <vehicle id="85" type="vehicle.mini.cooperst" depart="85.00">
+        <route edges="-19.0.00 6.0.00 24.0.00 23.0.00 22.0.00 21.0.00 2.0.00 1.0.00"/>
+    </vehicle>
+    <vehicle id="86" type="vehicle.tesla.model3" depart="86.00">
+        <route edges="-4.0.00 17.0.00 16.0.00"/>
+    </vehicle>
+    <vehicle id="87" type="vehicle.bmw.isetta" depart="87.00">
+        <route edges="-10.0.00 -17.0.00 4.0.00 22.0.00 -9.0.00 25.0.00"/>
+    </vehicle>
+    <vehicle id="88" type="vehicle.diamondback.century" depart="88.00">
+        <route edges="-7.0.00 14.0.00 -8.0.00 -16.0.00 10.0.00 25.0.00 1.0.00"/>
+    </vehicle>
+    <vehicle id="89" type="vehicle.mercedes-benz.coupe" depart="89.00">
+        <route edges="-1.0.00 -25.0.00 -10.0.00 16.0.00 0.0.00 -14.0.00"/>
+    </vehicle>
+    <vehicle id="90" type="vehicle.volkswagen.t2" depart="90.00">
+        <route edges="-12.0.00 -19.0.00"/>
+    </vehicle>
+    <vehicle id="91" type="vehicle.mini.cooperst" depart="91.00">
+        <route edges="-24.0.00 5.0.00 2.0.00 -25.0.00"/>
+    </vehicle>
+    <vehicle id="92" type="vehicle.gazelle.omafiets" depart="92.00">
+        <route edges="4.0.00 22.0.00 21.0.00"/>
+    </vehicle>
+    <vehicle id="93" type="vehicle.nissan.micra" depart="93.00">
+        <route edges="4.0.00 22.0.00 21.0.00 2.0.00 1.0.00 0.0.00 -14.0.00"/>
+    </vehicle>
+    <vehicle id="94" type="vehicle.chevrolet.impala" depart="94.00">
+        <route edges="-19.0.00 6.0.00 24.0.00 23.0.00"/>
+    </vehicle>
+    <vehicle id="95" type="vehicle.diamondback.century" depart="95.00">
+        <route edges="-10.0.00 -17.0.00 -18.0.00 12.0.00 -24.0.00 -6.0.00"/>
+    </vehicle>
+    <vehicle id="96" type="vehicle.bh.crossbike" depart="96.00">
+        <route edges="-17.0.00 -18.0.00 -19.0.00"/>
+    </vehicle>
+    <vehicle id="97" type="vehicle.toyota.prius" depart="97.00">
+        <route edges="-14.0.00 7.0.00 19.0.00 18.0.00 17.0.00 10.0.00 25.0.00"/>
+    </vehicle>
+    <vehicle id="98" type="vehicle.nissan.micra" depart="98.00">
+        <route edges="9.0.00 -22.0.00 -4.0.00 -18.0.00 -19.0.00 6.0.00"/>
+    </vehicle>
+    <vehicle id="99" type="vehicle.kawasaki.ninja" depart="99.00">
+        <route edges="-9.0.00 -10.0.00 -17.0.00 -18.0.00"/>
+    </vehicle>
+</routes>

@@ -132,5 +132,54 @@ namespace client {
     return result;
   }
 
+  std::vector<SharedPtr<Landmark>> Map::GetAllLandmarks() const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      result.emplace_back(
+          new Landmark(nullptr, shared_from_this(), signal_reference, 0));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>> Map::GetLandmarksFromId(std::string id) const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      if(signal_reference->GetSignalId() == id) {
+        result.emplace_back(
+            new Landmark(nullptr, shared_from_this(), signal_reference, 0));
+      }
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>> Map::GetAllLandmarksOfType(std::string type) const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto signal_references = _map.GetAllSignalReferences();
+    for(auto* signal_reference : signal_references) {
+      if(signal_reference->GetSignal()->GetType() == type) {
+        result.emplace_back(
+            new Landmark(nullptr, shared_from_this(), signal_reference, 0));
+      }
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Landmark>>
+      Map::GetLandmarkGroup(const Landmark &landmark) const {
+    std::vector<SharedPtr<Landmark>> result;
+    auto &controllers = landmark._signal->GetSignal()->GetControllers();
+    for (auto& controller_id : controllers) {
+      const auto &controller = _map.GetControllers().at(controller_id);
+      for(auto& signal_id : controller->GetSignals()) {
+        auto& signal = _map.GetSignals().at(signal_id);
+        auto new_landmarks = GetLandmarksFromId(signal->GetSignalId());
+        result.insert(result.end(), new_landmarks.begin(), new_landmarks.end());
+      }
+    }
+    return result;
+  }
+
 } // namespace client
 } // namespace carla

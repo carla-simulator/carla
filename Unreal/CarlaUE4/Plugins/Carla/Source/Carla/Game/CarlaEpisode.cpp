@@ -16,6 +16,7 @@
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
@@ -128,7 +129,9 @@ static FString BuildRecastBuilderFile()
   return AbsoluteRecastBuilderPath;
 }
 
-bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
+bool UCarlaEpisode::LoadNewOpendriveEpisode(
+    const FString &OpenDriveString,
+    const carla::rpc::OpendriveGenerationParameters &Params)
 {
   if (OpenDriveString.IsEmpty())
   {
@@ -148,7 +151,9 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
   }
 
   // Generate the OBJ (as string)
-  const auto RecastOBJ = CarlaMap->GenerateGeometry(2).GenerateOBJForRecast();
+  const auto RoadMesh = CarlaMap->GenerateMesh(Params.vertex_distance);
+  const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
+  const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
   const FString AbsoluteOBJPath = FPaths::ConvertRelativePathToFull(
       FPaths::ProjectContentDir() + "Carla/Maps/Nav/OpenDriveMap.obj");
@@ -174,6 +179,16 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(const FString &OpenDriveString)
   {
     UE_LOG(LogCarla, Error, TEXT("ERROR: XODR not copied!"));
     return false;
+  }
+
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if(GameInstance)
+  {
+    GameInstance->SetOpendriveGenerationParameters(Params);
+  }
+  else
+  {
+    carla::log_warning("Missing game instance");
   }
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();

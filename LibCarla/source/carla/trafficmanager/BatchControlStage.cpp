@@ -32,17 +32,39 @@ void BatchControlStage::Action() {
 
     carla::rpc::VehicleControl vehicle_control;
 
-      const PlannerToControlData &element = data_frame->at(i);
-      if (!element.actor || !element.actor->IsAlive()) {
-        continue;
-      }
-      const carla::ActorId actor_id = element.actor->GetId();
+    const PlannerToControlData &element = data_frame->at(i);
+    if (!element.actor || !element.actor->IsAlive()) {
+      continue;
+    }
+    const carla::ActorId actor_id = element.actor->GetId();
 
+    // Apply actuation from controller if physics enabled.
+    if (element.physics_enabled) {
       vehicle_control.throttle = element.throttle;
       vehicle_control.brake = element.brake;
       vehicle_control.steer = element.steer;
 
-    commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+      commands->at(i) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+    }
+    // Apply target transform for physics-less vehicles.
+    else {
+
+      const cg::Transform vehicle_transform = element.actor->GetTransform();
+      const cg::Location vehicle_location = vehicle_transform.location;
+      const cg::Vector3D vehicle_heading = vehicle_transform.GetForwardVector();
+      const cg::Transform &teleportation_transform = element.transform;
+      const cg::Location &teleportation_location_candidate = teleportation_transform.location;
+      const cg::Vector3D teleprotation_relative_position = teleportation_location_candidate - vehicle_location;
+
+      cg::Transform corrected_teleportation_transform = teleportation_transform;
+      // Validate if teleportation transform is ahead of the vehicle's current position.
+      // If not, then teleport to vehicle's current position.
+      if (cg::Math::Dot(teleprotation_relative_position, vehicle_heading) < 0.0f) {
+        corrected_teleportation_transform = vehicle_transform;
+      }
+
+      commands->at(i) = carla::rpc::Command::ApplyTransform(actor_id, corrected_teleportation_transform);
+    }
   }
 }
 
@@ -71,8 +93,8 @@ void BatchControlStage::DataSender() {
     if (commands != nullptr) {
       episode_proxy_bcs.Lock()->ApplyBatch(*commands.get(), false);
     }
-    // Limiting updates to 100 frames per second.
-    std::this_thread::sleep_for(10ms);
+    // Applying an infinitesimal sleep statement for providing a system cancellation point.
+    std::this_thread::sleep_for(1us);
   }
   // Synchronous mode.
   else {
@@ -83,7 +105,7 @@ void BatchControlStage::DataSender() {
     }
     // Apply batch command in synchronous RPC call.
     if (commands != nullptr) {
-      episode_proxy_bcs.Lock()->ApplyBatchSync(*commands.get(), false);
+      episode_proxy_bcs.Lock()->ApplyBatchSync(*commands.get(), true);
     }
     // Set flag to false, unblock RunStep() call and release mutex lock.
     run_step.store(false);

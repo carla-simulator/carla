@@ -24,7 +24,7 @@ namespace detail {
 
   /// Represents the state of all the actors of an episode at a given frame.
   class EpisodeState
-    : std::enable_shared_from_this<EpisodeState>,
+    : public std::enable_shared_from_this<EpisodeState>,
       private NonCopyable {
   public:
 

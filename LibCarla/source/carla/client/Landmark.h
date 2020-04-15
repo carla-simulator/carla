@@ -19,7 +19,7 @@ namespace carla {
 namespace client {
 
   /// Class containing a reference to RoadInfoSignal
-  class Landmark : private MovableNonCopyable {
+  class Landmark {
   public:
 
     SharedPtr<Waypoint> GetWaypoint() const {
@@ -31,7 +31,7 @@ namespace client {
     }
 
     road::RoadId GetRoadId() const {
-      return _signal->GetSignal()->GetRoadId();
+      return _signal->GetRoadId();
     }
 
     double GetDistance() const {
@@ -117,17 +117,22 @@ namespace client {
   private:
 
     friend Waypoint;
+    friend Map;
 
     Landmark(
         SharedPtr<Waypoint> waypoint,
+        SharedPtr<const Map> parent,
         const road::element::RoadInfoSignal* signal,
         double distance_from_search = 0)
       : _waypoint(waypoint),
+        _parent(parent),
         _signal(signal),
         _distance_from_search(distance_from_search) {}
 
     /// waypoint where the signal is affecting
     SharedPtr<Waypoint> _waypoint;
+
+    SharedPtr<const Map> _parent;
 
     const road::element::RoadInfoSignal* _signal;
 

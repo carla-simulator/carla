@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#define CLAMP(__v, __hi, __lo) (__v > __hi? __hi : (__v < __lo? __lo: __v))
+
 namespace carla {
 namespace traffic_manager {
 
@@ -15,7 +17,8 @@ namespace PIDControllerConstants {
 
   const float MAX_THROTTLE = 0.7f;
   const float MAX_BRAKE = 1.0f;
-
+  const float VELOCITY_INTEGRAL_MAX = 5.0f;
+  const float VELOCITY_INTEGRAL_MIN = -5.0f;
   // PID will be stable only over 20 FPS.
   const float dt = 1/20.0f;
 
@@ -47,6 +50,11 @@ namespace PIDControllerConstants {
     current_state.deviation_integral = angular_deviation * dt + previous_state.deviation_integral;
     current_state.distance_integral = distance * dt + previous_state.distance_integral;
     current_state.velocity_integral = dt * current_state.velocity + previous_state.velocity_integral;
+
+    // Clamp velocity integral to avoid accumulating over-compensation
+    // with time for vehicles that take a long time to reach target velocity.
+    current_state.velocity_integral = CLAMP(current_state.velocity_integral,
+                                            VELOCITY_INTEGRAL_MAX, VELOCITY_INTEGRAL_MIN);
 
     return current_state;
   }

@@ -25,7 +25,7 @@ add_executable(FBX2OBJ ${SOURCES})
 install(TARGETS FBX2OBJ DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../dist")
 
 # libraries to link
-target_link_libraries(FBX2OBJ libfbxsdk.so)
+target_link_libraries(FBX2OBJ fbxsdk)
 target_link_libraries(FBX2OBJ dl)
 target_link_libraries(FBX2OBJ z)
 target_link_libraries(FBX2OBJ xml2)

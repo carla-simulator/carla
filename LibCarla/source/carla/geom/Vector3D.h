@@ -57,6 +57,12 @@ namespace geom {
       return Vector3D(x * k, y * k, z * k);
     }
 
+    Vector3D MakeSafeUnitVector(const float epsilon) const  {
+      const float length = Length();
+      const float k = (length > std::max(epsilon, 0.0f)) ? (1.0f / length) : 1.0f;
+      return Vector3D(x * k, y * k, z * k);
+    }
+
     // =========================================================================
     // -- Arithmetic operators -------------------------------------------------
     // =========================================================================

@@ -5,7 +5,6 @@
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
 """ This module provides a helper for the co-simulation between sumo and carla ."""
 
 # ==================================================================================================
@@ -20,7 +19,7 @@ import random
 import carla  # pylint: disable=import-error
 import traci  # pylint: disable=import-error
 
-from .sumo_simulation import SumoVehSignal
+from .sumo_simulation import SumoSignalState, SumoVehSignal
 
 # ==================================================================================================
 # -- Bridge helper (SUMO <=> CARLA) ----------------------------------------------------------------
@@ -126,11 +125,11 @@ class BridgeHelper(object):
             blueprint = BridgeHelper._get_recommended_carla_blueprint(sumo_actor)
             if blueprint is not None:
                 logging.warning(
-                    'sumo vtype %s not found in carla. The following blueprint will be used: %s'
-                    , type_id, blueprint.id)
+                    'sumo vtype %s not found in carla. The following blueprint will be used: %s',
+                    type_id, blueprint.id)
             else:
-                logging.error(
-                    'sumo vtype %s not supported. No vehicle will be spawned in carla', type_id)
+                logging.error('sumo vtype %s not supported. No vehicle will be spawned in carla',
+                              type_id)
                 return None
 
         if blueprint.has_attribute('color'):
@@ -327,3 +326,41 @@ class BridgeHelper(object):
             current_lights ^= SumoVehSignal.BACKDRIVE
 
         return current_lights
+
+    @staticmethod
+    def get_carla_traffic_light_state(sumo_tl_state):
+        """
+        Returns carla traffic light state based on sumo traffic light state.
+        """
+        if sumo_tl_state == SumoSignalState.RED or sumo_tl_state == SumoSignalState.RED_YELLOW:
+            return carla.TrafficLightState.Red
+
+        elif sumo_tl_state == SumoSignalState.YELLOW:
+            return carla.TrafficLightState.Yellow
+
+        elif sumo_tl_state == SumoSignalState.GREEN or \
+             sumo_tl_state == SumoSignalState.GREEN_WITHOUT_PRIORITY:
+            return carla.TrafficLightState.Green
+
+        elif sumo_tl_state == SumoSignalState.OFF:
+            return carla.TrafficLightState.Off
+
+        else:  # SumoSignalState.GREEN_RIGHT_TURN and SumoSignalState.OFF_BLINKING
+            return carla.TrafficLightState.Unknown
+
+    @staticmethod
+    def get_sumo_traffic_light_state(carla_tl_state):
+        """
+        Returns sumo traffic light state based on carla traffic light state.
+        """
+        if carla_tl_state == carla.TrafficLightState.Red:
+            return SumoSignalState.RED
+
+        elif carla_tl_state == carla.TrafficLightState.Yellow:
+            return SumoSignalState.YELLOW
+
+        elif carla_tl_state == carla.TrafficLightState.Green:
+            return SumoSignalState.GREEN
+
+        else:  # carla.TrafficLightState.Off and carla.TrafficLightState.Unknown
+            return SumoSignalState.OFF

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="net/Town01.net.xml"/>
+        <route-files value="carlavtypes.rou.xml,rou/Town01.rou.xml"/>
+    </input>
+
+    <gui_only>
+        <gui-settings-file value="viewsettings.xml"/>
+    </gui_only>
+
+</configuration>

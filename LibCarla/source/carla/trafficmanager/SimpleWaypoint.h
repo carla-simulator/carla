@@ -12,6 +12,7 @@
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
 #include "carla/road/RoadTypes.h"
@@ -77,10 +78,10 @@ namespace traffic_manager {
     uint64_t SetPreviousWaypoint(const std::vector<SimpleWaypointPtr> &next_waypoints);
 
     /// This method is used to set the closest left waypoint for a lane change.
-    void SetLeftWaypoint(SimpleWaypointPtr waypoint);
+    void SetLeftWaypoint(SimpleWaypointPtr &waypoint);
 
     /// This method is used to set the closest right waypoint for a lane change.
-    void SetRightWaypoint(SimpleWaypointPtr waypoint);
+    void SetRightWaypoint(SimpleWaypointPtr &waypoint);
 
     /// This method is used to get the closest left waypoint for a lane change.
     SimpleWaypointPtr GetLeftWaypoint();
@@ -117,6 +118,8 @@ namespace traffic_manager {
     /// Returns true if the object's waypoint belongs to an intersection (Doesn't use OpenDrive).
     bool CheckIntersection() const;
 
+    /// Return transform object for the current waypoint.
+    cg::Transform GetTransform() const;
   };
 
 } // namespace traffic_manager

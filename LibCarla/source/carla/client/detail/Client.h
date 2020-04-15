@@ -22,6 +22,7 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/OpendriveGenerationParameters.h"
 
 #include <functional>
 #include <memory>
@@ -86,7 +87,8 @@ namespace detail {
 
     void LoadEpisode(std::string map_name);
 
-    void CopyOpenDriveToServer(std::string opendrive);
+    void CopyOpenDriveToServer(
+        std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 
     rpc::EpisodeInfo GetEpisodeInfo();
 
@@ -110,18 +112,16 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
-    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(
-        const rpc::ActorId &vehicle) const;
+    rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
 
-    rpc::VehicleLightState GetVehicleLightState(
-        const rpc::ActorId &vehicle) const;
+    rpc::VehicleLightState GetVehicleLightState(rpc::ActorId vehicle) const;
 
     void ApplyPhysicsControlToVehicle(
-        const rpc::ActorId &vehicle,
+        rpc::ActorId vehicle,
         const rpc::VehiclePhysicsControl &physics_control);
 
     void SetLightStateToVehicle(
-        const rpc::ActorId &vehicle,
+        rpc::ActorId vehicle,
         const rpc::VehicleLightState &light_state);
 
     rpc::Actor SpawnActor(
@@ -197,7 +197,7 @@ namespace detail {
         bool freeze);
 
     std::vector<ActorId> GetGroupTrafficLights(
-        const rpc::ActorId &traffic_light);
+        rpc::ActorId traffic_light);
 
     std::string StartRecorder(std::string name);
 

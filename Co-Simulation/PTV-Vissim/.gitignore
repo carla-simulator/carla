@@ -1,0 +1,7 @@
+venv
+
+# Vissim files
+*.results
+*.inp0
+*.layx
+*.err

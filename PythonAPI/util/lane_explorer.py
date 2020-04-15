@@ -21,7 +21,6 @@ except IndexError:
 import carla
 
 import argparse
-import math
 import random
 import time
 
@@ -38,13 +37,9 @@ waypoint_separation = 4
 
 
 def draw_transform(debug, trans, col=carla.Color(255, 0, 0), lt=-1):
-    yaw_in_rad = math.radians(trans.rotation.yaw)
-    pitch_in_rad = math.radians(trans.rotation.pitch)
-    p1 = carla.Location(
-        x=trans.location.x + math.cos(pitch_in_rad) * math.cos(yaw_in_rad),
-        y=trans.location.y + math.cos(pitch_in_rad) * math.sin(yaw_in_rad),
-        z=trans.location.z + math.sin(pitch_in_rad))
-    debug.draw_arrow(trans.location, p1, thickness=0.05, arrow_size=0.1, color=col, life_time=lt)
+    debug.draw_arrow(
+        trans.location, trans.location + trans.get_forward_vector(),
+        thickness=0.05, arrow_size=0.1, color=col, life_time=lt)
 
 
 def draw_waypoint_union(debug, w0, w1, color=carla.Color(255, 0, 0), lt=5):

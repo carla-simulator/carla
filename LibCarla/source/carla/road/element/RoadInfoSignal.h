@@ -19,23 +19,27 @@ namespace element {
     RoadInfoSignal(
         SignId signal_id,
         Signal* signal,
+        RoadId road_id,
         double s,
         double t,
         std::string orientation)
       : RoadInfo(s),
         _signal_id(signal_id),
         _signal(signal),
+        _road_id(road_id),
         _s(s),
         _t(t),
         _orientation(orientation) {}
 
     RoadInfoSignal(
         SignId signal_id,
+        RoadId road_id,
         double s,
         double t,
         std::string orientation)
       : RoadInfo(s),
         _signal_id(signal_id),
+        _road_id(road_id),
         _s(s),
         _t(t),
         _orientation(orientation) {}
@@ -50,6 +54,10 @@ namespace element {
 
     const Signal* GetSignal() const {
       return _signal;
+    }
+
+    RoadId GetRoadId() const {
+      return _road_id;
     }
 
     bool IsDynamic() const {
@@ -84,6 +92,8 @@ namespace element {
     SignId _signal_id;
 
     Signal* _signal;
+
+    RoadId _road_id;
 
     double _s;
 

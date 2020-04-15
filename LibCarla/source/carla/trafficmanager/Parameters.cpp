@@ -19,6 +19,11 @@ Parameters::Parameters() {
 
 Parameters::~Parameters() {}
 
+void Parameters::SetHybridPhysicsMode(const bool mode_switch) {
+
+  hybrid_physics_mode.store(mode_switch);
+}
+
 void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
 
   float new_percentage = std::min(100.0f, percentage);
@@ -184,6 +189,16 @@ void Parameters::SetGlobalDistanceToLeadingVehicle(const float dist) {
   distance_margin.store(dist);
 }
 
+float Parameters::GetHybridPhysicsRadius() {
+
+  return hybrid_physics_radius.load();
+}
+
+void Parameters::SetHybridPhysicsRadius(const float radius) {
+  float new_radius = std::max(radius, 0.0f);
+  hybrid_physics_radius.store(new_radius);
+}
+
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
 
   float new_perc = cg::Math::Clamp(perc, 0.0f, 100.0f);
@@ -258,6 +273,11 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorPtr &actor) {
   }
 
   return percentage;
+}
+
+bool Parameters::GetHybridPhysicsMode() {
+
+  return hybrid_physics_mode.load();
 }
 
 } // namespace traffic_manager

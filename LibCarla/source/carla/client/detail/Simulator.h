@@ -23,8 +23,9 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 
+#include <boost/optional.hpp>
+
 #include <memory>
-#include <optional>
 
 namespace carla {
 namespace client {
@@ -67,7 +68,9 @@ namespace detail {
 
     EpisodeProxy LoadEpisode(std::string map_name);
 
-    EpisodeProxy LoadOpenDriveEpisode(std::string opendrive);
+    EpisodeProxy LoadOpenDriveEpisode(
+        std::string opendrive,
+        const rpc::OpendriveGenerationParameters & params);
 
     /// @}
     // =========================================================================

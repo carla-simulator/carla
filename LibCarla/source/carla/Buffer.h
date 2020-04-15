@@ -196,7 +196,7 @@ namespace carla {
     }
 
     static constexpr size_type max_size() noexcept {
-      return std::numeric_limits<size_type>::max();
+      return (std::numeric_limits<size_type>::max)();
     }
 
     size_type capacity() const noexcept {
