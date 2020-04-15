@@ -491,6 +491,26 @@ namespace detail {
       return _light_manager;
     }
 
+    std::vector<rpc::LightState> QueryLightsStateToServer() const {
+      return _client.QueryLightsStateToServer();
+    }
+
+    void UpdateServerLightsState(
+        std::vector<rpc::LightState>& lights,
+        bool discard_client = false) const {
+      _client.UpdateServerLightsState(lights, discard_client);
+    }
+
+    size_t RegisterLightUpdateChangeEvent(std::function<void(WorldSnapshot)> callback) {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->RegisterLightUpdateChangeEvent(std::move(callback));
+    }
+
+    void RemoveLightUpdateChangeEvent(size_t id) {
+      DEBUG_ASSERT(_episode != nullptr);
+      _episode->RemoveLightUpdateChangeEvent(id);
+    }
+
     /// @}
 
   private:

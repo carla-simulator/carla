@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/sensor/data/Color.h"
+#include "carla/rpc/LightState.h"
 
 namespace carla {
 namespace client {
@@ -14,15 +15,9 @@ namespace client {
 using Color = sensor::data::Color;
 using LightId = uint32_t;
 
-enum class LightGroup : uint8_t {
-  None = 0,
-  Vehicle,
-  Street,
-  Building,
-  Other
-};
-
 struct LightState {
+
+  using LightGroup = rpc::LightState::LightGroup;
 
   LightState() {}
 

@@ -13,6 +13,8 @@
 namespace carla {
 namespace client {
 
+  using LightGroup = rpc::LightState::LightGroup;
+
 Color Light::GetColor() const {
   assert(_light_manager && "No light_manager");
   return _light_manager->GetColor(_id);

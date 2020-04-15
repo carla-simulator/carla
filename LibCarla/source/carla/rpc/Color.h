@@ -37,8 +37,19 @@ namespace rpc {
     Color(const FColor &color)
       : Color(color.R, color.G, color.B) {}
 
+    Color(const FLinearColor &color)
+      : Color(color.R, color.G, color.B) {}
+
     operator FColor() const {
       return FColor{r, g, b};
+    }
+
+    operator FLinearColor() const {
+      return FLinearColor{
+        static_cast<float>(r/255),
+        static_cast<float>(g/255),
+        static_cast<float>(b/255)
+      };
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4

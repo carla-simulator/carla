@@ -16,6 +16,7 @@
 #include "carla/client/detail/Episode.h"
 #include "carla/client/Light.h"
 #include "carla/client/LightState.h"
+#include "carla/rpc/LightState.h"
 
 namespace carla {
 namespace client {
@@ -23,26 +24,17 @@ namespace client {
 class LightManager
   : public EnableSharedFromThis<LightManager> {
 
+  using LightGroup = rpc::LightState::LightGroup;
+
 public:
 
-  LightManager();
+  LightManager() {}
 
   ~LightManager();
 
   LightManager(const LightManager&) = default;
 
-  // TODO: remove
-  void DebugFill() {
-    SharedPtr<LightManager> lm = SharedPtr<LightManager>(this);
-    geom::Location loc(0.0f,0.0f,0.0f);
-    geom::Rotation rot;
-    _lights_state.insert({66, LightState()});
-    _lights_state.insert({67, LightState()});
-    _lights.insert({66, Light(lm, loc, rot, 66)});
-    _lights.insert({67, Light(lm, loc, rot, 67)});
-  }
-
-  void SetEpisode(detail::EpisodeProxy& episode);
+  void SetEpisode(detail::EpisodeProxy episode);
 
   std::vector<Light> GetAllLights(LightGroup type = LightGroup::None) const;
   // TODO: std::vector<Light> GetAllLightsInRoad(RoadId id, LightGroup type = LightGroup::None);
@@ -88,7 +80,8 @@ private:
   const LightState& RetrieveLightState(LightId id) const;
 
   void QueryLightsStateToServer();
-  void UpdateServerLightsState();
+  void UpdateServerLightsState(bool discard_client = false);
+  void ApplyChanges();
 
   std::unordered_map<LightId, LightState> _lights_state;
   std::unordered_map<LightId, LightState> _lights_changes;
@@ -97,7 +90,8 @@ private:
   detail::EpisodeProxy _episode;
 
   LightState _state;
-  size_t _on_tick_register_id = 0;
+  size_t on_tick_register_id = 0;
+  size_t _on_light_update_register_id = 0;
   bool _dirty = false;
 };
 

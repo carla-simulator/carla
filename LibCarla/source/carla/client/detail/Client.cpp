@@ -373,6 +373,15 @@ namespace detail {
     return _pimpl->CallAndWait<uint64_t>("tick_cue");
   }
 
+  std::vector<rpc::LightState> Client::QueryLightsStateToServer() const {
+    using return_t = std::vector<rpc::LightState>;
+    return _pimpl->CallAndWait<return_t>("query_lights_state", _pimpl->endpoint);
+  }
+
+  void Client::UpdateServerLightsState(std::vector<rpc::LightState>& lights, bool discard_client) const {
+    _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

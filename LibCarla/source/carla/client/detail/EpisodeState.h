@@ -26,6 +26,9 @@ namespace detail {
   class EpisodeState
     : public std::enable_shared_from_this<EpisodeState>,
       private NonCopyable {
+
+      using SimulationState = sensor::s11n::EpisodeStateSerializer::SimulationState;
+
   public:
 
     explicit EpisodeState(uint64_t episode_id) : _episode_id(episode_id) {}
@@ -42,6 +45,18 @@ namespace detail {
 
     const auto &GetTimestamp() const {
       return _timestamp;
+    }
+
+    SimulationState GetsimulationState() const {
+      return _simulation_state;
+    }
+
+    bool HasMapChanged() const {
+      return (_simulation_state & SimulationState::MapChange) != SimulationState::None;
+    }
+
+    bool IsLightUpdatePending() const {
+      return (_simulation_state & SimulationState::PendingLightUpdate)  != 0;
     }
 
     bool ContainsActorSnapshot(ActorId actor_id) const {
@@ -91,6 +106,8 @@ namespace detail {
     const uint64_t _episode_id;
 
     const Timestamp _timestamp;
+
+    SimulationState _simulation_state;
 
     std::unordered_map<ActorId, ActorSnapshot> _actors;
   };

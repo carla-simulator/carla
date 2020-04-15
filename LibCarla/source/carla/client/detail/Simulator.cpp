@@ -76,10 +76,7 @@ namespace detail {
       _client(host, port, worker_threads),
       _light_manager(new LightManager()),
       _gc_policy(enable_garbage_collection ?
-        GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {
-          // TODO: remove
-          _light_manager->DebugFill();
-        }
+        GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
@@ -125,6 +122,7 @@ namespace detail {
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
       }
+      _light_manager->SetEpisode(EpisodeProxy{shared_from_this()});
     }
     return EpisodeProxy{shared_from_this()};
   }

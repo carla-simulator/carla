@@ -11,6 +11,7 @@
 #include "carla/client/LightState.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Rotation.h"
+#include "carla/rpc/LightState.h"
 
 namespace carla {
 namespace client {
@@ -19,7 +20,11 @@ class LightManager;
 
 class Light {
 
+  using LightGroup = rpc::LightState::LightGroup;
+
 public:
+
+  Light() {}
 
   Color GetColor() const;
 
@@ -31,10 +36,6 @@ public:
 
   const geom::Location GetLocation() const {
     return _location;
-  }
-
-  const geom::Rotation GetRotation() const {
-    return _rotation;
   }
 
   LightGroup GetLightGroup() const;
@@ -63,16 +64,13 @@ private:
 
   Light(SharedPtr<LightManager> light_manager,
     geom::Location location,
-    geom::Rotation rotation,
     LightId id)
   : _light_manager(light_manager),
     _location (location),
-    _rotation (rotation),
     _id (id) {}
 
   SharedPtr<LightManager> _light_manager;
   geom::Location _location;
-  geom::Rotation _rotation;
 
   LightId _id;
 
