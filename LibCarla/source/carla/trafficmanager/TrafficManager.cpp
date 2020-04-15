@@ -19,7 +19,7 @@
 namespace carla {
 namespace traffic_manager {
 
-std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> TrafficManager::_tm_map;
+std::map<uint16_t, TrafficManagerBase*> TrafficManager::_tm_map;
 std::mutex TrafficManager::_mutex;
 
 TrafficManager::TrafficManager(
@@ -40,7 +40,7 @@ void TrafficManager::Release() {
   std::lock_guard<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
     tm.second->Release();
-    TrafficManagerBase *base_ptr = tm.second.release();
+    TrafficManagerBase *base_ptr = tm.second;
     delete base_ptr;
   }
   _tm_map.clear();
@@ -150,7 +150,7 @@ void TrafficManager::CreateTrafficManagerServer(
   #endif
 
   /// Set the pointer of the instance
-  _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
+  _tm_map.insert(std::make_pair(port, tm_ptr));
 
 }
 
@@ -187,7 +187,7 @@ bool TrafficManager::CreateTrafficManagerClient(
         tm_ptr->HealthCheckRemoteTM();
 
         /// Set the pointer of the instance
-        _tm_map.insert(std::make_pair(port, std::unique_ptr<TrafficManagerBase>(tm_ptr)));
+        _tm_map.insert(std::make_pair(port, tm_ptr));
 
         result = true;
       }
