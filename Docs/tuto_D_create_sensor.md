@@ -141,7 +141,7 @@ private:
 In the cpp file, first we'll need some includes
 
 ```cpp
-#include "Carla.h"
+#include "Carla/Carla.h"
 #include "Carla/Sensor/SafeDistanceSensor.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"

@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CarlaUE4.h"
 #include "CarlaMapGenerator.h"
+#include "CarlaUE4.h"
 
 ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)

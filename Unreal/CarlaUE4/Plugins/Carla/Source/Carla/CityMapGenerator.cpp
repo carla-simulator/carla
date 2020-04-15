@@ -4,16 +4,16 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "CityMapGenerator.h"
+#include "Carla/Carla.h"
 
 #include "MapGen/GraphGenerator.h"
-#include "MapGen/RoadMap.h"
-#include "Game/Tagger.h"
+#include "Carla/MapGen/RoadMap.h"
+#include "Carla/Game/Tagger.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/World.h"
-#include "Paths.h"
+#include "Misc/Paths.h"
 
 #include <algorithm>
 #include <unordered_set>

@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Carla.h"
 
 #include "Components/PoseableMeshComponent.h"
 #include "Components/PrimitiveComponent.h"

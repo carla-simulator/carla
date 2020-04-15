@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Carla.h"
 #include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Carla.h"
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"

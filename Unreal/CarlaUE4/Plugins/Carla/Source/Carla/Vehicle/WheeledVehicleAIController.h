@@ -10,8 +10,8 @@
 
 #include "GameFramework/Controller.h"
 
-#include "Traffic/TrafficLightState.h"
-#include "Vehicle/VehicleControl.h"
+#include "Carla/Traffic/TrafficLightState.h"
+#include "Carla/Vehicle/VehicleControl.h"
 
 #include "WheeledVehicleAIController.generated.h"
 

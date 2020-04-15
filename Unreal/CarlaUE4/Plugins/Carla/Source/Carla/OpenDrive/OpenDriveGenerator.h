@@ -14,7 +14,7 @@
 #include "carla/road/Map.h"
 #include <compiler/enable-ue4-macros.h>
 
-#include "Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "OpenDriveGenerator.generated.h"
 

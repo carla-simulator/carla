@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "TrafficLightManager.h"
-#include "Game/CarlaStatics.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
 #include "Components/BoxComponent.h"

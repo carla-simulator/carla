@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 
-#include "Traffic/TrafficLightState.h"
+#include "Carla/Traffic/TrafficLightState.h"
 
 #include "TrafficLightBase.generated.h"
 

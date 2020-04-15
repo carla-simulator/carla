@@ -9,5 +9,7 @@ public class CarlaUE4EditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		ExtraModuleNames.Add("CarlaUE4");
+    DefaultBuildSettings = BuildSettingsVersion.V2;
+    ShadowVariableWarningLevel = WarningLevel.Warning;
 	}
 }

@@ -4,14 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "CityMapMeshHolder.h"
+#include "Carla/Carla.h"
 #include "Engine/StaticMeshActor.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include <vector>
-#include "Settings/CarlaSettings.h"
-#include "Game/CarlaGameInstance.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Game/CarlaGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 

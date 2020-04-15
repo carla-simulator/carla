@@ -9,7 +9,7 @@
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
 #include "TrafficSignBase.h"
-#include "Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
 

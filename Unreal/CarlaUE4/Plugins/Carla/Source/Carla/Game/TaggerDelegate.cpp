@@ -4,10 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "TaggerDelegate.h"
+#include "Carla/Carla.h"
 
-#include "Game/Tagger.h"
+#include "Carla/Game/Tagger.h"
 
 #include "Engine/World.h"
 

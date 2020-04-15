@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "CityMapGenerator.h"
+#include "Carla/CityMapGenerator.h"
 #include "CarlaMapGenerator.generated.h"
 
 /// Generates the city map using CARLA assets.

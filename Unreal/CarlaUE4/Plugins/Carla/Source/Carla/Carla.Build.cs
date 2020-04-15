@@ -13,6 +13,8 @@ public class Carla : ModuleRules
 
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
+    // Necessary for compiling with boost
+    ShadowVariableWarningLevel = WarningLevel.Warning;
     PrivatePCHHeaderFile = "Carla.h";
 
     if (IsWindows(Target))

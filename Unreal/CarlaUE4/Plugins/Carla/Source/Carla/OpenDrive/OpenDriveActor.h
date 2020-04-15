@@ -8,8 +8,8 @@
 
 #include "GameFramework/Actor.h"
 
-#include "Traffic/RoutePlanner.h"
-#include "Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Traffic/RoutePlanner.h"
+#include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/SceneComponent.h"

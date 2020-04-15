@@ -5,7 +5,7 @@
 #pragma once
 
 
-#include "Util/NonCopyable.h"
+#include "Carla/Util/NonCopyable.h"
 #include "Logging/LogMacros.h"
 #include "Modules/ModuleInterface.h"
 

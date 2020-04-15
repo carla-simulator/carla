@@ -4,12 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/MapGen/RoadMap.h"
+#include "Carla/Carla.h"
 
 #include "Carla/Sensor/PixelReader.h"
 
-#include "FileHelper.h"
+#include "Misc/FileHelper.h"
 #include "HighResScreenshot.h"
 
 #if WITH_EDITOR

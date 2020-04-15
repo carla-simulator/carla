@@ -9,7 +9,7 @@
 #include <string>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "UnrealString.h"
+#  include "Containers/UnrealString.h"
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
