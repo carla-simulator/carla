@@ -42,6 +42,7 @@ public:
 
   UFUNCTION(BlueprintCallable)
   bool IsUpdatePending() const {
+    // TODO
     return false;
   }
 

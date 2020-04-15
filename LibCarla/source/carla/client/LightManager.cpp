@@ -28,7 +28,7 @@ void LightManager::SetEpisode(detail::EpisodeProxy episode) {
 
   auto self = boost::static_pointer_cast<LightManager>(shared_from_this());
 
-  on_tick_register_id = _episode.Lock()->RegisterOnTickEvent(
+  _on_tick_register_id = _episode.Lock()->RegisterOnTickEvent(
     [&](const WorldSnapshot&) {
       UpdateServerLightsState();
     });
@@ -220,6 +220,7 @@ bool LightManager::IsActive(LightId id) const {
 }
 
 void LightManager::SetActive(LightId id, bool active) {
+  std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._active = active;
   _lights_changes[id] = state;
@@ -227,6 +228,7 @@ void LightManager::SetActive(LightId id, bool active) {
 }
 
 void LightManager::SetColor(LightId id, Color color) {
+  std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._color = color;
   _lights_changes[id] = state;
@@ -234,6 +236,7 @@ void LightManager::SetColor(LightId id, Color color) {
 }
 
 void LightManager::SetIntensity(LightId id, float intensity) {
+  std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._intensity = intensity;
   _lights_changes[id] = state;
@@ -241,6 +244,7 @@ void LightManager::SetIntensity(LightId id, float intensity) {
 }
 
 void LightManager::SetLightState(LightId id, const LightState& new_state) {
+  std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state = new_state;
   _lights_changes[id] = state;
@@ -248,6 +252,7 @@ void LightManager::SetLightState(LightId id, const LightState& new_state) {
 }
 
 void LightManager::SetLightGroup(LightId id, LightGroup group) {
+  std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._group = group;
   _lights_changes[id] = state;
@@ -264,6 +269,7 @@ const LightState& LightManager::RetrieveLightState(LightId id) const {
 }
 
 void LightManager::QueryLightsStateToServer() {
+  std::lock_guard<std::mutex> lock(_mutex);
   // Send blocking query
   std::vector<rpc::LightState> lights_snapshot = _episode.Lock()->QueryLightsStateToServer();
   // Update lights
@@ -283,20 +289,25 @@ void LightManager::QueryLightsStateToServer() {
 }
 
 void LightManager::UpdateServerLightsState(bool discard_client) {
+
+  std::lock_guard<std::mutex> lock(_mutex);
+
   if(_dirty) {
     std::vector<rpc::LightState> message;
-    for(const auto& it : _lights_changes) {
+    for(auto it : _lights_changes) {
       auto it_light = _lights.find(it.first);
-      rpc::LightState state(
-        it_light->second.GetLocation(),
-        it.second._intensity,
-        it.second._group,
-        rpc::Color(it.second._color.r, it.second._color.g, it.second._color.b),
-        it.second._active
-      );
-      state._id = it.first;
-      // Add to command
-      message.push_back(state);
+      if(it_light != _lights.end()) {
+        rpc::LightState state(
+          it_light->second.GetLocation(),
+          it.second._intensity,
+          it.second._group,
+          rpc::Color(it.second._color.r, it.second._color.g, it.second._color.b),
+          it.second._active
+        );
+        state._id = it.first;
+        // Add to command
+        message.push_back(state);
+      }
     }
     _episode.Lock()->UpdateServerLightsState(message, discard_client);
 
@@ -306,6 +317,7 @@ void LightManager::UpdateServerLightsState(bool discard_client) {
 }
 
 void LightManager::ApplyChanges() {
+  std::lock_guard<std::mutex> lock(_mutex);
   for(const auto& it : _lights_changes) {
     SetLightState(it.first, it.second);
   }

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,7 +33,15 @@ public:
 
   ~LightManager();
 
-  LightManager(const LightManager&) = default;
+  LightManager(const LightManager& other) {
+    _lights_state = other._lights_state;
+    _lights_changes = other._lights_changes;
+    _lights = other._lights;
+    _episode = other._episode;
+    _on_tick_register_id = other._on_tick_register_id;
+    _on_light_update_register_id = other._on_light_update_register_id;
+    _dirty = other._dirty;
+  }
 
   void SetEpisode(detail::EpisodeProxy episode);
 
@@ -89,8 +98,10 @@ private:
 
   detail::EpisodeProxy _episode;
 
+  std::mutex _mutex;
+
   LightState _state;
-  size_t on_tick_register_id = 0;
+  size_t _on_tick_register_id = 0;
   size_t _on_light_update_register_id = 0;
   bool _dirty = false;
 };
