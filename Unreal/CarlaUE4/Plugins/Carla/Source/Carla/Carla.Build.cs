@@ -15,6 +15,7 @@ public class Carla : ModuleRules
   {
     // Necessary for compiling with boost
     ShadowVariableWarningLevel = WarningLevel.Warning;
+    PCHUsage = PCHUsageMode.UseSharedPCHs;
     PrivatePCHHeaderFile = "Carla.h";
 
     if (IsWindows(Target))

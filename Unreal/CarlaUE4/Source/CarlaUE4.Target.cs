@@ -9,6 +9,7 @@ public class CarlaUE4Target : TargetRules
 	{
 		Type = TargetType.Game;
 		ExtraModuleNames.Add("CarlaUE4");
+    DefaultBuildSettings = BuildSettingsVersion.V2;
     ShadowVariableWarningLevel = WarningLevel.Warning;
 	}
 }

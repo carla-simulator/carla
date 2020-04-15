@@ -6,8 +6,8 @@
 
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "StopSignComponent.h"
-#include "YieldSignComponent.h"
+#include "Carla/Traffic/StopSignComponent.h"
+#include "Carla/Traffic/YieldSignComponent.h"
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>

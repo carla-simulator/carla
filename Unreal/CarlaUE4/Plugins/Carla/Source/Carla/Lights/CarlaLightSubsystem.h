@@ -12,7 +12,7 @@
 #include <carla/rpc/LightState.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include "Carla.h"
+#include "Carla/Carla.h"
 #include "CoreMinimal.h"
 #include "CarlaLight.h"
 #include "Subsystems/WorldSubsystem.h"

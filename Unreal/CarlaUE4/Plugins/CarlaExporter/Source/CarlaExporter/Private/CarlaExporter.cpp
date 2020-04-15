@@ -150,7 +150,8 @@ void FCarlaExporterModule::PluginButtonClicked()
 
       f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
 
-      TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+      TArray<UStaticMeshComponent*> Components;
+      TempActor->GetComponents(Components);
       for (auto *Component : Components)
       {
 

@@ -24,9 +24,10 @@
 #include "CarlaRecorderState.h"
 #include "CarlaReplayer.h"
 
+#include "GameFramework/Actor.h"
+
 #include "CarlaRecorder.generated.h"
 
-class AActor;
 class UCarlaEpisode;
 
 enum class CarlaRecorderPacketId : uint8_t
