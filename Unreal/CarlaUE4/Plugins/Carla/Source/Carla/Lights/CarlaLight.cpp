@@ -5,10 +5,36 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaLight.h"
+#include "CarlaLightSubsystem.h"
+
 
 UCarlaLight::UCarlaLight()
 {
   PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UCarlaLight::BeginPlay()
+{
+  Super::BeginPlay();
+
+  UWorld *World = GetWorld();
+  if(World)
+  {
+    UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+    CarlaLightSubsystem->RegisterLight(this);
+  }
+}
+
+void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+  Super::OnComponentDestroyed(bDestroyingHierarchy);
+
+  UWorld *World = GetWorld();
+  if(World)
+  {
+    UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+    CarlaLightSubsystem->UnregisterLight(this);
+  }
 }
 
 void UCarlaLight::SetLightIntensity(float Intensity)
@@ -52,4 +78,38 @@ void UCarlaLight::SetLightType(ELightType Type)
 ELightType UCarlaLight::GetLightType()
 {
   return LightType;
+}
+
+carla::rpc::LightState UCarlaLight::GetLightState()
+{
+  carla::rpc::LightState state(
+    GetLocation(),
+    LightIntensity,
+    static_cast<carla::rpc::LightState::LightGroup>(LightType),
+    LightColor,
+    bLightOn
+  );
+
+  state._id = GetId();
+
+  return state;
+}
+
+void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
+{
+  LightIntensity = LightState._intensity;
+  LightColor = LightState._color;
+  LightType = static_cast<ELightType>(LightState._group);
+  bLightOn = LightState._active;
+  UpdateLights();
+}
+
+FVector UCarlaLight::GetLocation() const
+{
+  return GetOwner()->GetActorLocation();
+}
+
+uint32 UCarlaLight::GetId() const
+{
+  return GetUniqueID();
 }

@@ -6,18 +6,29 @@
 
 #pragma once
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/LightState.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CarlaLight.generated.h"
 
 
+
+#define CARLA_ENUM_FROM_RPC(e) static_cast<uint8>(carla::rpc::LightState::LightGroup:: e)
+
 UENUM(BlueprintType)
 enum class ELightType : uint8
 {
-  Null = 0, // Workarround for UE4.24 issue with enums
-  Street      UMETA(DisplayName = "Street"),
-  Building    UMETA(DisplayName = "Building"),
+  Null      = 0, // Workarround for UE4.24 issue with enums
+  Vehicle   = CARLA_ENUM_FROM_RPC(Vehicle)    UMETA(DisplayName = "Vehicle"),
+  Street    = CARLA_ENUM_FROM_RPC(Street)     UMETA(DisplayName = "Street"),
+  Building  = CARLA_ENUM_FROM_RPC(Building)   UMETA(DisplayName = "Building"),
+  Other     = CARLA_ENUM_FROM_RPC(Other)      UMETA(DisplayName = "Other"),
 };
+
+#undef CARLA_ENUM_FROM_RPC
 
 // Class representing a light in the scene
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -27,6 +38,10 @@ class CARLA_API UCarlaLight : public UActorComponent
 
 public:
   UCarlaLight();
+
+  void BeginPlay() override;
+
+  void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
   void UpdateLights();
@@ -54,6 +69,14 @@ public:
 
   UFUNCTION(BlueprintPure, Category = "Carla Light")
   ELightType GetLightType();
+
+  carla::rpc::LightState GetLightState();
+
+  void SetLightState(carla::rpc::LightState LightState);
+
+  FVector GetLocation() const;
+
+  uint32 GetId() const;
 
 protected:
 

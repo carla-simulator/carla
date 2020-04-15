@@ -13,6 +13,7 @@
 #include "carla/client/LightManager.h"
 
 namespace cc = carla::client;
+namespace cr = carla::rpc;
 namespace csd = carla::sensor::data;
 
 /****** ACTIVE ******/
@@ -189,7 +190,7 @@ static boost::python::list LightManagerGetIntensity(
 static void LightManagerSetLightGroup(
   cc::LightManager& self,
   const boost::python::object& py_lights,
-  const cc::LightGroup light_group) {
+  const cr::LightState::LightGroup light_group) {
 
   std::vector<cc::Light> lights {
     boost::python::stl_input_iterator<cc::Light>(py_lights),
@@ -209,9 +210,9 @@ static void LightManagerSetVectorLightGroup(
     boost::python::stl_input_iterator<cc::Light>()
   };
 
-  std::vector<cc::LightGroup> light_groups {
-    boost::python::stl_input_iterator<cc::LightGroup>(py_light_group),
-    boost::python::stl_input_iterator<cc::LightGroup>()
+  std::vector<cr::LightState::LightGroup> light_groups {
+    boost::python::stl_input_iterator<cr::LightState::LightGroup>(py_light_group),
+    boost::python::stl_input_iterator<cr::LightState::LightGroup>()
   };
 
   self.SetLightGroup(lights, light_groups);
@@ -292,16 +293,16 @@ static boost::python::list LightManagerGetLightState(
 void export_lightmanager() {
     using namespace boost::python;
 
-    enum_<cc::LightGroup>("LightGroup")
-      .value("None", cc::LightGroup::None)
-      .value("Vehicle", cc::LightGroup::Vehicle)
-      .value("Street", cc::LightGroup::Street)
-      .value("Building", cc::LightGroup::Building)
-      .value("Other", cc::LightGroup::Other)
+    enum_<cr::LightState::LightGroup>("LightGroup")
+      .value("None", cr::LightState::LightGroup::None)
+      .value("Vehicle", cr::LightState::LightGroup::Vehicle)
+      .value("Street", cr::LightState::LightGroup::Street)
+      .value("Building", cr::LightState::LightGroup::Building)
+      .value("Other", cr::LightState::LightGroup::Other)
     ;
 
     class_<cc::LightState>("LightState")
-      .def(init<float, csd::Color, cc::LightGroup, bool>((arg("intensity")=0.0f, arg("color")=csd::Color(), arg("group")=cc::LightGroup::None, arg("active")=false )))
+      .def(init<float, csd::Color, cr::LightState::LightGroup, bool>((arg("intensity")=0.0f, arg("color")=csd::Color(), arg("group")=cr::LightState::LightGroup::None, arg("active")=false )))
       .def_readwrite("intensity", &cc::LightState::_intensity)
       .def_readwrite("color", &cc::LightState::_color)
       .def_readwrite("group", &cc::LightState::_group)
@@ -316,7 +317,6 @@ void export_lightmanager() {
       .add_property("is_on", &cc::Light::IsOn)
       .add_property("is_off", &cc::Light::IsOff)
       .add_property("location", &cc::Light::GetLocation)
-      .add_property("rotation", &cc::Light::GetRotation)
       .add_property("light_group", &cc::Light::GetLightGroup)
       .add_property("light_state", &cc::Light::GetLightState)
       .def("set_color", &cc::Light::SetColor, (arg("color")))
@@ -328,24 +328,25 @@ void export_lightmanager() {
     ;
 
     class_<cc::LightManager, boost::shared_ptr<cc::LightManager>>("LightManager", no_init)
-      .def("get_all_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetAllLights, cc::LightGroup), (args("light_group") = cc::LightGroup::None ))
+      .def("get_all_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetAllLights, cr::LightState::LightGroup), (args("light_group") = cr::LightState::LightGroup::None ))
       .def("turn_on", &LightManagerTurnOn, (arg("lights")))
       .def("turn_off", &LightManagerTurnOff, (arg("lights")))
       .def("set_active", &LightManagerSetActive, (arg("lights"), arg("active")))
       .def("is_active", &LightManagerIsActive, (arg("lights")))
-      .def("get_turned_on_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetTurnedOnLights, cc::LightGroup), (args("light_group") = cc::LightGroup::None ))
-      .def("get_turned_off_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetTurnedOffLights, cc::LightGroup), (args("light_group") = cc::LightGroup::None ))
+      .def("get_turned_on_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetTurnedOnLights, cr::LightState::LightGroup), (args("light_group") = cr::LightState::LightGroup::None ))
+      .def("get_turned_off_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetTurnedOffLights, cr::LightState::LightGroup), (args("light_group") = cr::LightState::LightGroup::None ))
       .def("set_color", &LightManagerSetColor, (arg("lights"), arg("color")))
-      .def("set_color", &LightManagerSetVectorColor, (arg("lights"), arg("color")))
+      .def("set_colors", &LightManagerSetVectorColor, (arg("lights"), arg("colors")))
       .def("get_color", &LightManagerGetColor, (arg("lights")))
       .def("set_intensity", &LightManagerSetIntensity, (arg("lights"), arg("intensity")))
-      .def("set_intensity", &LightManagerSetVectorIntensity, (arg("lights"), arg("intensity")))
+      .def("set_intensities", &LightManagerSetVectorIntensity, (arg("lights"), arg("intensities")))
       .def("get_intensity", &LightManagerGetIntensity, (arg("lights")))
       .def("set_light_group", &LightManagerSetLightGroup, (arg("lights"), arg("light_group")))
-      .def("set_light_group", &LightManagerSetVectorLightGroup, (arg("lights"), arg("light_group")))
+      .def("set_light_groups", &LightManagerSetVectorLightGroup, (arg("lights"), arg("light_groups")))
       .def("get_light_group", &LightManagerGetLightGroup, (arg("lights")))
       .def("set_light_state", &LightManagerSetLightState, (arg("lights"), arg("light_state")))
-      .def("set_light_state", &LightManagerSetVectorLightState, (arg("lights"), arg("light_state")))
+      .def("set_light_states", &LightManagerSetVectorLightState, (arg("lights"), arg("light_states")))
       .def("get_light_state", &LightManagerGetLightState, (arg("lights")))
     ;
+
 }

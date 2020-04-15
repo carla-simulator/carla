@@ -12,28 +12,34 @@
 namespace carla {
 namespace client {
 
-LightManager::LightManager() {
-  // QueryLightsStateToServer();
-}
+  using LightGroup = rpc::LightState::LightGroup;
 
 LightManager::~LightManager(){
   if(_episode.IsValid()) {
-    _episode.Lock()->RemoveOnTickEvent(_on_tick_register_id);
+    _episode.Lock()->RemoveOnTickEvent(_on_light_update_register_id);
+    _episode.Lock()->RemoveLightUpdateChangeEvent(_on_light_update_register_id);
   }
-  // TODO: send pending changes
+  UpdateServerLightsState(true);
 }
 
-void LightManager::SetEpisode(detail::EpisodeProxy& episode) {
+void LightManager::SetEpisode(detail::EpisodeProxy episode) {
+
   _episode = episode;
 
   auto self = boost::static_pointer_cast<LightManager>(shared_from_this());
 
-  _on_tick_register_id = _episode.Lock()->RegisterOnTickEvent(
-    [&](const WorldSnapshot& /* snapshot */) {
-      // if (snapshot.lights_dirty)
-      //  QueryLightsStateToServer();
+  on_tick_register_id = _episode.Lock()->RegisterOnTickEvent(
+    [&](const WorldSnapshot&) {
       UpdateServerLightsState();
     });
+
+  _on_light_update_register_id = _episode.Lock()->RegisterLightUpdateChangeEvent(
+    [&](const WorldSnapshot& ) {
+      QueryLightsStateToServer();
+      ApplyChanges();
+    });
+
+    QueryLightsStateToServer();
 }
 
 std::vector<Light> LightManager::GetAllLights(LightGroup type) const {
@@ -217,30 +223,35 @@ void LightManager::SetActive(LightId id, bool active) {
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._active = active;
   _lights_changes[id] = state;
+  _dirty = true;
 }
 
 void LightManager::SetColor(LightId id, Color color) {
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._color = color;
   _lights_changes[id] = state;
+  _dirty = true;
 }
 
 void LightManager::SetIntensity(LightId id, float intensity) {
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._intensity = intensity;
   _lights_changes[id] = state;
+  _dirty = true;
 }
 
 void LightManager::SetLightState(LightId id, const LightState& new_state) {
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state = new_state;
   _lights_changes[id] = state;
+  _dirty = true;
 }
 
 void LightManager::SetLightGroup(LightId id, LightGroup group) {
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._group = group;
   _lights_changes[id] = state;
+  _dirty = true;
 }
 
 const LightState& LightManager::RetrieveLightState(LightId id) const {
@@ -253,28 +264,51 @@ const LightState& LightManager::RetrieveLightState(LightId id) const {
 }
 
 void LightManager::QueryLightsStateToServer() {
-  carla::log_warning("LightManager::QueryLightsStateToServer");
   // Send blocking query
+  std::vector<rpc::LightState> lights_snapshot = _episode.Lock()->QueryLightsStateToServer();
   // Update lights
-  // _lights_state = new_lights_state
+  SharedPtr<LightManager> lm = SharedPtr<LightManager>(this);
+
+  for(const auto& it : lights_snapshot) {
+
+    _lights_state[it._id] = LightState(
+        it._intensity,
+        Color(it._color.r, it._color.g, it._color.b),
+        static_cast<LightState::LightGroup>(it._group),
+        it._active
+    );
+
+    _lights[it._id] = Light(lm, it._location, it._id);
+  }
 }
 
-void LightManager::UpdateServerLightsState() {
+void LightManager::UpdateServerLightsState(bool discard_client) {
   if(_dirty) {
-    // std::vector<LightChangeCmd> message;
-    carla::log_warning("LightManager::UpdateServerLightsState is dirty");
-    // for(const auto& it : _lights_changes) {
+    std::vector<rpc::LightState> message;
+    for(const auto& it : _lights_changes) {
+      auto it_light = _lights.find(it.first);
+      rpc::LightState state(
+        it_light->second.GetLocation(),
+        it.second._intensity,
+        it.second._group,
+        rpc::Color(it.second._color.r, it.second._color.g, it.second._color.b),
+        it.second._active
+      );
+      state._id = it.first;
       // Add to command
-      // message.push_back();
-      // Reapply change to local snapshot, in case other client has set the light state first we need to reapply our local change
-      // SetState(it.first, it.second);
-    // }
+      message.push_back(state);
+    }
+    _episode.Lock()->UpdateServerLightsState(message, discard_client);
+
     _lights_changes.clear();
     _dirty = false;
-  } else {
-    carla::log_warning("LightManager::UpdateServerLightsState ignore");
   }
+}
 
+void LightManager::ApplyChanges() {
+  for(const auto& it : _lights_changes) {
+    SetLightState(it.first, it.second);
+  }
 }
 
 } // namespace client
