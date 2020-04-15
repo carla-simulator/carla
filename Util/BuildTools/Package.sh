@@ -142,6 +142,7 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./PythonAPI/examples/requirements.txt" "${DESTINATION}/PythonAPI/examples/"
 
   copy_if_changed "./PythonAPI/util/*.py" "${DESTINATION}/PythonAPI/util/"
+  copy_if_changed "./PythonAPI/util/opendrive/" "${DESTINATION}/PythonAPI/util/opendrive/"
   copy_if_changed "./PythonAPI/util/requirements.txt" "${DESTINATION}/PythonAPI/util/"
 
   copy_if_changed "./Co-Simulation/" "${DESTINATION}/Co-Simulation/"
