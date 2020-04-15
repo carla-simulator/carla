@@ -41,10 +41,7 @@ public:
   void UnregisterLight(UCarlaLight* CarlaLight);
 
   UFUNCTION(BlueprintCallable)
-  bool IsUpdatePending() const {
-    // TODO
-    return false;
-  }
+  bool IsUpdatePending() const;
 
   UFUNCTION(BlueprintCallable)
   int32 NumLights() const {

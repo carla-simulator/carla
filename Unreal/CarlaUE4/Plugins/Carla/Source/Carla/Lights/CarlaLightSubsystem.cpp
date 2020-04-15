@@ -34,6 +34,18 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   }
 }
 
+bool UCarlaLightSubsystem::IsUpdatePending() const
+{
+  for (auto& ClientPair : ClientStates)
+  {
+    if(ClientPair.Value)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::vector<carla::rpc::LightState> UCarlaLightSubsystem::GetLights(FString Client)
 {
   std::vector<carla::rpc::LightState> result;
