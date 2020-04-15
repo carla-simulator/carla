@@ -1,68 +1,72 @@
-# SUMO co-simulation
 
-CARLA has developed a co-simulation feature with SUMO. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.  
+# SUMO co-simulation 
+CARLA has developed a co-simulation feature with SUMO. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.
 
-*   [__Requisites__](#requisites)  
+*   [__Requisites__](#requisites)
 	*   [Prepare a SUMO environment](#prepare-a-sumo-environment)
-*   [__Run the co-simulation__](#run-the-co-simulation)  
+*   [__Run the co-simulation__](#run-the-co-simulation)
 	*   [Spawn vehicles](#spawn-vehicles)
-*   [__Spawn NPCs with SUMO__](#spawn-npcs-with-sumo)  
+*   [__Spawn NPCs with SUMO__](#spawn-npcs-with-sumo)
 
 ---
 ## Requisites
 
-First and foremost, it is necessary to [__install SUMO__](https://sumo.dlr.de/docs/Installing.html) to run the co-simulation. 
+First and foremost, it is necessary to [__install SUMO__](https://sumo.dlr.de/docs/Installing.html) to run the co-simulation.
 
-Once that is done, the SUMO environment has to be set to run the co-simulation. 
+Once that is done, the SUMO environment has to be set to run the co-simulation.
 
-### Prepare a SUMO environment 
+WARNING: The sync is using traci and sumolib. SUMO_HOME variable must be set!!!!!!!!
 
-The script `util/netconvert_carla.py` generates a SUMO network from an OpenDRIVE file. This script runs the *netconvert* tool to generate the main road network without traffic lights. These are then created one by one, using the OpenDRIVE definition. That way, inaccuracies are avoided.  
-
-```sh
-python netconvert_carla.py <PATH_TO_XODR> --output Test.net.xml
-```
-
-Once the net file has been generated, this can be opened in SUMO. Use it to prepare the SUMO environment for the co-simulation.  
-> What to know. Tips.  
-> Can this be done without that?  
-> How to store the environment.  
-
----
 ## Run the co-simulation
 
-Everything related with this feature can be found in `Co-Simulation/Sumo`. Several examples are provided for some CARLA maps, specifically __Town01__, __Town04__, and __Town05__. These contain some basic SUMO environments that will ease the usage of the feature.  
+### Run your own SUMO simulation
 
-Use one of this examples, or any other SUMO file, to start the co-simulation. There are some optional arguments that can be set.  
+#### Create carla vtypes
 
-*   __`--tls-manager <string>`__ chooses which simulator will change the state of the traffic lights. The other will update them accordingly.  
-	*   `carla` to put CARLA in charge of the traffic lights.  
-	*   `sumo` to put SUMO in charge of the traffic lights. 
-	*   `none` to disable the synchronization of traffic lights. Vehicles do not take them into consideration --> None of them, or only one? 
+With the script util/create_sumo_vtypes.py the user can create sumo vtypes based on carla blueprints.
 
-*   __`--sumo-gui`__ will create a window to visualize the SUMO simulation. By default SUMO runs off-screen. 
+Argument of the script:
 
-```sh
-python run_synchronization.py examples/TestTLS.sumocfg --tls-manager carla --sumo-gui
-```
+--carla-host
+--carla-port
+--output-file --> the generated vtypes will be written to this (default: carlavtypes.rou.xml)
 
-Both simulations will run in synchrony. The actions or events happening in one simulator will propagate to the other, e.g. positions, spawning, vehicle lights, etc.
+This script uses the information stored in data/vtypes.json to create the sumo vtype. If the user wants to add custom properties to the sumo vtype it should be added in this file.
 
-Traffic lights As long as they are defined in the OpenDRIVE road map, they will be generated in SUMO. Now the synchronization script has some additional arguments.
-> Landmarks? 
-> Pedestrians? 
+WARNING: A carla server must be running to execute the script!
 
-!!! Important
-    SUMO Traffic lights will not be generated in the released CARLA maps. They were added manually and cannot be retrieved from the OpenDRIVE.
+#### Create sumo net
 
+The recommended way to create a sumo net to synchronize with carla is with the script util/netconvert_carla.py. Internally it uses the netconvert tool provided by SUMO.
 
-### Spawn vehicles
+Arguments of the script:
 
-There are some helper scripts that translate CARLA blueprints to SUMO vehicle types so that the vehicles’ specifications are the same in both simulators. If these are not used, CARLA will spawn a random vehicle based on the given SUMO vehicle type.
+xodr_file --> opendrive file (*.xodr')
+--output', -o --> output file (*.net.xml)
+--guess-tls --> guess traffic lights at intersections (default: False)')
 
+At this point, the user can create their own routes for the different vehicles. At the end they have to generate the .sumocfg file. Some examples of complete sumo simulations are found in the examples folder. There are examples for Town01, Town04, Town05
 
----
-## SUMO Vs Traffic Manager
+#### Run the synchronization
+
+To run the gerenated simulation run the following script:
+
+python run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
+
+Arguments:
+sumo_cfg_file --> help='sumo configuration file
+--carla-host--> help='IP of the carla host server (default: 127.0.0.1)
+--carla-port --> TCP port to listen to (default: 2000)
+--sumo-host --> IP of the sumo host server (default: 127.0.0.1)
+--sumo-port --> TCP port to liston to (default: 8813)
+--sumo-gui --> run the gui version of sumo
+--step-length --> set fixed delta seconds (default: 0.05s)
+--sync-vehicle-lights --> synchronize vehicle lights state (default: False)
+--sync-vehicle-color --> synchronize vehicle color (default: False)
+--sync-vehicle-all --> synchronize all vehicle properties (default: False)
+--tls-manager --> choices=['none', 'sumo', 'carla'], help="select traffic light manager (default: none)
+                           
+### Run spawn_npc_sumo.py
 
 The script `spawn_npc_sumo.py` is almost equivalent to the already-known `spawn_npc.py`. The difference is that vehicles will be managed using SUMO instead of the Traffic Manager. This script automatically generates a SUMO network in a temporal folder, based on the active town in CARLA. The script will create random routes and let the vehicles roam around.
 
@@ -74,6 +78,22 @@ As the script runs a synchronous simulation, and spawns vehicles in it, the argu
 # Open a window for SUMO visualization.
 python spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
 ```
+
+Arguments:
+
+    --host --> IP of the host server (default: 127.0.0.1)
+    --port --> TCP port to listen to (default: 2000)
+    -n,--number-of-vehicles-->number of vehicles (default: 10)
+    -w,--number-of-walkers, --> number of walkers (default: 0)
+    --safe --> avoid spawning vehicles prone to accidents
+    --filterv --> vehicles filter (default: "vehicle.*")
+    --filterw --> pedestrians filter (default: "walker.pedestrian.*")
+    --sumo-gui --> run the gui version of sumo
+    --step-length --> set fixed delta seconds (default: 0.05s)
+    --sync-vehicle-lights --> synchronize vehicle lights state (default: False)
+    --sync-vehicle-color --> synchronize vehicle color (default: False)
+    --sync-vehicle-all --> synchronize all vehicle properties (default: False)
+    --tls-manager --> choices=['none', 'sumo', 'carla'], "select traffic light manager (default: none)"
 
 ---
 
