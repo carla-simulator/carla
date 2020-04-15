@@ -506,6 +506,7 @@ def _netconvert_carla_impl(xodr_file, output, tmpdir, guess_tls=False):
 
     tree.write(output, pretty_print=True, encoding='UTF-8', xml_declaration=True)
 
+
 def netconvert_carla(xodr_file, output, guess_tls=False):
     """
     Generates sumo net.
@@ -527,7 +528,11 @@ def netconvert_carla(xodr_file, output, guess_tls=False):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('xodr_file', help='opendrive file (*.xodr')
-    argparser.add_argument('--output', '-o', type=str, help='output file (*.net.xml)')
+    argparser.add_argument('--output',
+                           '-o',
+                           default='net.net.xml',
+                           type=str,
+                           help='output file (default: net.net.xml)')
     argparser.add_argument('--guess-tls',
                            action='store_true',
                            help='guess traffic lights at intersections (default: False)')
