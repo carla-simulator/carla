@@ -56,28 +56,22 @@ def generate_json_package(folder, package_name, use_carla_materials):
 
     # write the json
     if (len(maps) > 0):
-        # write the json
-        f = open("%s/%s.json" % (folder, package_name), "w")
-        f.write("{\n")
-        f.write("    \"props\": [],\n")
-        f.write("    \"maps\": [\n")
-        for i, map_name in enumerate(maps):
+        # build all the maps in .json format
+        json_maps = []
+        for map_name in maps:
             path = map_name[0].replace('\\', '/')
             name = map_name[1]
-            f.write("         {\n")
-            f.write("             \"name\": \"%s\",\n" % name)
-            f.write("             \"source\": \"%s/%s.fbx\",\n" % (path, name))
-            f.write("             \"xodr\": \"%s/%s.xodr\",\n" % (path, name))
-            if (use_carla_materials):
-                f.write("             \"use_carla_materials\": true\n")
-            else:
-                f.write("             \"use_carla_materials\": false\n")
-            if (i == len(maps) - 1):
-                f.write("         }\n")
-            else:
-                f.write("         },\n")
-        f.write("    ]\n")
-        f.write("}\n")
+            json_maps.append({
+                'name': name, 
+                'source': '%s/%s.fbx'  % (path, name), 
+                'xodr':   '%s/%s.xodr' % (path, name), 
+                'use_carla_materials': use_carla_materials
+                })
+        # build and write the .json
+        f = open("%s/%s.json" % (folder, package_name), "w")
+        my_json = {'maps': json_maps, 'props': []}
+        serialized = json.dumps(my_json, sort_keys=False, indent=3)
+        f.write(serialized)
         f.close()
         # add
         json_files.append([folder, "%s.json" % package_name])
@@ -385,7 +379,7 @@ def main():
     json_list = get_packages_json_list(import_folder)
     if (len(json_list) == 0):
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
-    # import_assets_from_json_list(json_list)
+    import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':
     main()
