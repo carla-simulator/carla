@@ -46,9 +46,10 @@ namespace rpc {
 
     operator FLinearColor() const {
       return FLinearColor{
-        static_cast<float>(r/255),
-        static_cast<float>(g/255),
-        static_cast<float>(b/255)
+        static_cast<float>(r)/255.0f,
+        static_cast<float>(g)/255.0f,
+        static_cast<float>(b)/255.0f,
+        1.0f
       };
     }
 
