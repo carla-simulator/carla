@@ -77,7 +77,7 @@ python spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
 
 ---
 
-That sets the basics regarding the RSS sensor in CARLA. Find out more about the specific attributes and parameters in the [sensor reference](ref_sensors.md#rss-sensor). 
+That is all there is so far, regarding for the SUMO co-simulation with CARLA. 
 
 Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 

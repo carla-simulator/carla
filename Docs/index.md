@@ -60,7 +60,9 @@ CARLA forum</a>
 ## Advanced steps
   <p style="padding-left:30px;line-height:1.8">
     [__OpenDRIVE standalone mode__](adv_opendrive.md)
-        — Use any OpenDRIVE file as a CARLA map.
+        — Use any OpenDRIVE file as a CARLA map.  
+    [__PTV-Vissim co-simulation__](adv_ptv.md)
+        — Run a synchronous simulation between CARLA and PTV-Vissim.  
     [__Recorder__](adv_recorder.md)
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
