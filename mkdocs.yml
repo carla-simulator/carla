@@ -25,6 +25,7 @@ nav:
   - '4th. Sensors and data': 'core_sensors.md'
 - Advanced steps:
   - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
+  - 'PTV-Vissim co-simulation': 'adv_ptv.md'
   - 'Recorder': 'adv_recorder.md'
   - 'Rendering options': 'adv_rendering_options.md'
   - 'RSS sensor': 'adv_rss.md'
