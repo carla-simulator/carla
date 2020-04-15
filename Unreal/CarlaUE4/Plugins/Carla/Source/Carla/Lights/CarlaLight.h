@@ -41,6 +41,8 @@ public:
 
   void BeginPlay() override;
 
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
   void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
