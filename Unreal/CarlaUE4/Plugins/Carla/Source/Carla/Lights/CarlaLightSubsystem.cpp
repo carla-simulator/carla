@@ -20,12 +20,18 @@ void UCarlaLightSubsystem::Deinitialize()
 
 void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
 {
-  Lights.Add(CarlaLight->GetId(), CarlaLight);
+  if(CarlaLight)
+  {
+    Lights.Add(CarlaLight->GetId(), CarlaLight);
+  }
 }
 
 void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
 {
-  Lights.Remove(CarlaLight->GetId());
+  if(CarlaLight)
+  {
+    Lights.Remove(CarlaLight->GetId());
+  }
 }
 
 std::vector<carla::rpc::LightState> UCarlaLightSubsystem::GetLights(FString Client)
