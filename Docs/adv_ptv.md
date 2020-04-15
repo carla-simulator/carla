@@ -35,7 +35,7 @@ python3 run_synchronization.py examples/Town03/Town03.inpx
     To stop the co-simulation, press `Ctrl+C` in the terminal that run the script.  
 
 Both simulations will run in synchrony. The actions or events happening in one simulator will propagate to the other. So far, the feature only includes vehicle movement, and spawning. The spawning is limited due to PTV-Vissim types.  
-*   If a vehicle is spawned in CARLA, and in PTV-Vissim the setting is `Vehicle type: car`, the vehicle spawned will be a car. No matter if it as a motorbike in CARLA. In the examples provided, the vehicle type is set to `car`.  
+*   If a vehicle is spawned in CARLA, and the *Vehicle Type* in PTV-Vissim is set to `car`, it will spawn a car. No matter if it as a motorbike in CARLA. In the examples provided, the vehicle type is set to `car`.  
 *   If a vehicle is spawned in PTV-Vissim, CARLA will use a vehicle of the same type. The dimensions and characteristics will be similar, but not exactly the same.  
 
 ### Create a new network 

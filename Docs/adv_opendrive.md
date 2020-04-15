@@ -44,7 +44,7 @@ In order to easily test this feature, the `config.py` script in `PythonAPI/util/
 This feature can be tested with the new __TownBig__ provided by CARLA.  
 
 ```sh
-python3 config.py -x PythonAPI/util/opendrive/TownBig.xodr
+python3 config.py -x opendrive/TownBig.xodr
 ```
 
 !!! Important

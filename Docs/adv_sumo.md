@@ -20,12 +20,23 @@ Once that is done, set the SUMO environment variable.
 echo "export SUMO_HOME=/usr/share/sumo" >> ~/.bashrc && source ~/.bashrc
 ```
 
-SUMO is ready to run the co-simulations. There are some examples in `Co-Simulation/Sumo/examples` for __Town01__, __Town04__, and __Town05__. These  `.sumocfg` files that describe SUMO routes. Use one of these to test the co-simulation. The script has different options that are detailed [below](#run-the-synchronization). For the time being, let's run a simple example for __Town04__.  
+SUMO is ready to run the co-simulations. There are some examples in `Co-Simulation/Sumo/examples` for __Town01__, __Town04__, and __Town05__. These `.sumocfg` files describe the configuration of the simulation (e.g., net, routes, vehicle types...). Use one of these to test the co-simulation. The script has different options that are detailed [below](#run-the-synchronization). For the time being, let's run a simple example for __Town04__.  
 
+Run a CARLA simulation with __Town04__.  
+```sh
+cd ~/carla
+./CarlaUE4.sh
+cd PythonAPI/util
+python config.py --map Town04
+```
+
+Then, run the SUMO co-simulation example.  
 ```sh
 cd ~/carla/Co-Simulation/Sumo
 python run_synchronization.py examples/Town04.sumocfg  --sumo-gui
 ```
+!!! Important
+    
 
 ---
 ## Run a custom co-simulation
@@ -49,9 +60,9 @@ The recommended way to create a SUMO net that synchronizes with CARLA is using t
 
 *   __`xodr_file`__ — OpenDRIVE file `.xodr`.
 *   __`--output'`__ *(default:`net.net.xml`)* — output file `.net.xml`.
-*   __`--guess-tls`__ *(default:false)* — Pone traffic lights en todas las direcciones.
+*   __`--guess-tls`__ *(default:false)* — SUMO can set traffic lights only for specific lanes in a road, but CARLA can't. For said reason, by default SUMO is forced to make every street light effective in all the lanes of the road that it is affecting. If set to __True__, SUMO will differenciate traffic lights for specific lanes, but CARLA will not.  
 
-The output of the script will be a `.net.xml` that can be edited using __NETEDIT__. Use it to edit the routes, add demand, and eventually, prepare a simulation that can be saved as `.sumocfg`.  
+The output of the script will be a `.net.xml` that can be edited using __[NETEDIT](https://sumo.dlr.de/docs/NETEDIT.html)__. Use it to edit the routes, add demand, and eventually, prepare a simulation that can be saved as `.sumocfg`.  
 
 The examples provided may be helpful during this process. Take a look at `Co-Simulation/Sumo/examples`. For every `example.sumocfg` there are several related files under the same name. All of them comprise a co-simulation example.  
 
@@ -69,7 +80,7 @@ Once a simulation is ready and saved as a `.sumocfg`, it is ready to run. There 
 *   __`--sync-vehicle-lights`__ *(default: False)* — Synchronize vehicle lights. 
 *   __`--sync-vehicle-color`__ *(default: False)* — Synchronize vehicle color. 
 *   __`--sync-vehicle-all`__ *(default: False)* — Synchronize all vehicle properties.  
-*   __`--tls-manager`__ *(default: none)* — choices=['none', 'sumo', 'carla'], help=" Choose which simulator should manage the traffic lights. The other will update those accordingly. The options are `carla`, `sumo`, and `none`. If `none` is chosen, traffic lights will not be synchronized. Each vehicle would only obey the traffic lights in the simulator that spawn it. 
+*   __`--tls-manager`__ *(default: none)* — Choose which simulator should manage the traffic lights. The other will update those accordingly. The options are `carla`, `sumo`, and `none`. If `none` is chosen, traffic lights will not be synchronized. Each vehicle would only obey the traffic lights in the simulator that spawn it. 
 
 ```sh
 python run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
