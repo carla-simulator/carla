@@ -37,12 +37,6 @@ class CarlaSimulation(object):
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
 
-        # Configuring carla simulation in sync mode.
-        settings = self.world.get_settings()
-        settings.synchronous_mode = True
-        settings.fixed_delta_seconds = args.step_length
-        self.world.apply_settings(settings)
-
         # The following sets contain updated information for the current frame.
         self._active_actors = set()
         self.spawned_actors = set()
