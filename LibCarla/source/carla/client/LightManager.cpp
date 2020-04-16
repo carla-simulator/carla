@@ -26,8 +26,6 @@ void LightManager::SetEpisode(detail::EpisodeProxy episode) {
 
   _episode = episode;
 
-  auto self = boost::static_pointer_cast<LightManager>(shared_from_this());
-
   _on_tick_register_id = _episode.Lock()->RegisterOnTickEvent(
     [&](const WorldSnapshot&) {
       UpdateServerLightsState();
@@ -134,7 +132,6 @@ std::vector<Color> LightManager::GetColor(std::vector<Light>& lights) const {
   return result;
 }
 
-
 void LightManager::SetIntensity(std::vector<Light>& lights, float intensity) {
   for(Light& light : lights) {
     SetIntensity(light._id, intensity);
@@ -176,7 +173,6 @@ std::vector<LightGroup> LightManager::GetLightGroup(std::vector<Light>& lights) 
   }
   return result;
 }
-
 
 void LightManager::SetLightState(std::vector<Light>& lights, LightState state) {
   for(Light& light : lights) {
@@ -272,11 +268,11 @@ void LightManager::QueryLightsStateToServer() {
   std::lock_guard<std::mutex> lock(_mutex);
   // Send blocking query
   std::vector<rpc::LightState> lights_snapshot = _episode.Lock()->QueryLightsStateToServer();
+
   // Update lights
-  SharedPtr<LightManager> lm = SharedPtr<LightManager>(this);
+  SharedPtr<LightManager> lm = _episode.Lock()->GetLightManager();
 
   for(const auto& it : lights_snapshot) {
-
     _lights_state[it._id] = LightState(
         it._intensity,
         Color(it._color.r, it._color.g, it._color.b),
@@ -284,12 +280,14 @@ void LightManager::QueryLightsStateToServer() {
         it._active
     );
 
-    _lights[it._id] = Light(lm, it._location, it._id);
+    if(_lights.find(it._id) == _lights.end())
+    {
+      _lights[it._id] = Light(lm, it._location, it._id);
+    }
   }
 }
 
 void LightManager::UpdateServerLightsState(bool discard_client) {
-
   std::lock_guard<std::mutex> lock(_mutex);
 
   if(_dirty) {

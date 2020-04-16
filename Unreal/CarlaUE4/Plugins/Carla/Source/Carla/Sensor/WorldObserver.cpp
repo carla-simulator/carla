@@ -204,10 +204,11 @@ static carla::Buffer FWorldObserver_Serialize(
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
 
-  uint8_t simulation_state = (SimulationState::MapChange & MapChange);
-  simulation_state |= (SimulationState::PendingLightUpdate & PendingLightUpdates);
+  uint8_t simulation_state = (SimulationState::MapChange * MapChange);
+  simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
 
   header.simulation_state = static_cast<SimulationState>(simulation_state);
+
   write_data(header);
 
   // Write every actor.

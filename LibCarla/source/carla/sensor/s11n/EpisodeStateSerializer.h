@@ -30,7 +30,7 @@ namespace s11n {
     enum SimulationState {
       None               = (0x0 << 0),
       MapChange          = (0x1 << 0),
-      PendingLightUpdate = (0x1 << 1),
+      PendingLightUpdate = (0x1 << 1)
     };
 
 #pragma pack(push, 1)
