@@ -75,6 +75,7 @@ void UCarlaLightSubsystem::SetLights(
         CarlaLight->SetLightState(LightState);
       }
     }
+    *ClientState = true;
 
     if(DiscardClient)
     {

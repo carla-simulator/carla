@@ -100,7 +100,7 @@ void FCarlaEngine::OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeco
     if(World)
     {
       UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
-      CarlaLightSubsystem->IsUpdatePending();
+      LightUpdatePending = CarlaLightSubsystem->IsUpdatePending();
     }
 
     CurrentEpisode->TickTimers(DeltaSeconds);

@@ -38,7 +38,7 @@ namespace rpc {
       : Color(color.R, color.G, color.B) {}
 
     Color(const FLinearColor &color)
-      : Color(color.R, color.G, color.B) {}
+      : Color(color.R * 255.0f, color.G  * 255.0f, color.B  * 255.0f) {}
 
     operator FColor() const {
       return FColor{r, g, b};
