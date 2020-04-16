@@ -60,7 +60,7 @@ The recommended way to create a SUMO net that synchronizes with CARLA is using t
 
 *   __`xodr_file`__ — OpenDRIVE file `.xodr`.
 *   __`--output'`__ *(default:`net.net.xml`)* — output file `.net.xml`.
-*   __`--guess-tls`__ *(default:false)* — SUMO can set traffic lights only for specific lanes in a road, but CARLA can't. For said reason, by default SUMO is forced to make every street light effective in all the lanes of the road that it is affecting. If set to __True__, SUMO will differenciate traffic lights for specific lanes, but CARLA will not.  
+*   __`--guess-tls`__ *(default:false)* — SUMO can set traffic lights only for specific lanes in a road, but CARLA can't. If set to __True__, SUMO will not differenciate traffic lights for specific lanes, and these will be in sync with CARLA.  
 
 The output of the script will be a `.net.xml` that can be edited using __[NETEDIT](https://sumo.dlr.de/docs/NETEDIT.html)__. Use it to edit the routes, add demand, and eventually, prepare a simulation that can be saved as `.sumocfg`.  
 
