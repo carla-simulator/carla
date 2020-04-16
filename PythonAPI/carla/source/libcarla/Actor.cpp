@@ -116,7 +116,7 @@ void export_actor() {
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
-      .def("set_autopilot", CALL_WITHOUT_GIL_2(cc::Vehicle, SetAutopilot, bool, carla::SharedPtr<ctm::TrafficManager>), (arg("enabled") = true, arg("tm") = boost::python::object() ))
+      .def("set_autopilot", CALL_WITHOUT_GIL_2(cc::Vehicle, SetAutopilot, bool, uint16_t), (arg("enabled") = true, arg("tm_port") = TM_DEFAULT_PORT))
       .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
       .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
