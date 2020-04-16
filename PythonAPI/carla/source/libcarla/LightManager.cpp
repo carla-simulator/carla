@@ -307,7 +307,6 @@ void export_lightmanager() {
       .def_readwrite("color", &cc::LightState::_color)
       .def_readwrite("group", &cc::LightState::_group)
       .def_readwrite("active", &cc::LightState::_active)
-      .def("Reset", &cc::LightState::Reset)
     ;
 
     class_<cc::Light, boost::shared_ptr<cc::Light>>("Light", no_init)
@@ -315,7 +314,6 @@ void export_lightmanager() {
       .add_property("id", &cc::Light::GetId)
       .add_property("intensity", &cc::Light::GetIntensity)
       .add_property("is_on", &cc::Light::IsOn)
-      .add_property("is_off", &cc::Light::IsOff)
       .add_property("location", &cc::Light::GetLocation)
       .add_property("light_group", &cc::Light::GetLightGroup)
       .add_property("light_state", &cc::Light::GetLightState)
