@@ -23,8 +23,7 @@ namespace carla {
 namespace client {
 
 class LightManager
-  : public EnableSharedFromThis<LightManager>,
-    private NonCopyable {
+  : public EnableSharedFromThis<LightManager> {
 
   using LightGroup = rpc::LightState::LightGroup;
 
