@@ -1,16 +1,21 @@
 # Traffic Manager
-* [__What is it?__](#what-is-it)  
-* [__How does it work?__](#how-does-it-work)  
-	* Architecture  
-	* Stages  
-* [__Using the Traffic Manager__](#using-the-traffic-manager)  
-	* Parameters  
-	* Creating a Traffic Manager  
-	* Setting the Traffic Manager  
-* [__Other considerations__](#other-considerations)  
-	* FPS limitations  
-	* Multiclient management  
-* [__Summary__](#summary)  
+*   [__What is it?__](#what-is-it)  
+*   [__How does it work?__](#how-does-it-work)  
+	*   [Architecture](#architecture)  
+	*   [Stages](#stages)  
+*   [__Using the Traffic Manager__](#using-the-traffic-manager)  
+	*   [General considerations](#general-considerations)  
+	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
+	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
+	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
+*   [__Hybrid physics mode__](#hybrid_physics_mode)  
+*   [__Multiclient and multiTM management__](#multiclient-and-multitm-management)  
+	*   [Different Traffic Manager definitions](#different-traffic-manager-definitions)  
+	*   [Multiclient VS MultiTM](#multiclient-vs-multitm)  
+*   [__Other considerations__](#other-considerations)  
+	*   [FPS limitations](#fps-limitations)  
+	*   [Synchronous mode](#synchronous-mode)  
+*   [__Summary__](#summary)  
 
 ---
 ## What is it?
@@ -82,9 +87,10 @@ The TM provides a set of possibilities so the user can establish specific behavi
 
 <table class ="defTable">
 <tbody>
-<td><b>TM creation:</b> </td>
+<td><b>General:</b> </td>
 <td><br>
-    <b>1.</b> Get a TM instance for a client.</td>
+    <b>1.</b> Use a carla.Client to create a TM instance connected to a port.<br>
+    <b>2.</b> Retrieve the port where a TM is connected.</td>
 <tr>
 <td><b>Safety conditions:</b> </td>
 <td><br>
@@ -105,7 +111,13 @@ The TM provides a set of possibilities so the user can establish specific behavi
 <td><br>
     <b>1.</b> Force a lane change disregarding possible collisions. <br>
     <b>2.</b> Enable/Disable lane changes for a vehicle.
-    </td>
+</td>
+<tr>
+<td><b>Hybrid physics mode:</b> </td>
+<td><br>
+    <b>1.</b> Enable/Disable the hybrid physics mode.  <br>
+    <b>2.</b> Change the radius where physics are enabled.  
+</td>
 </tbody>
 </table>
 <br>
@@ -118,20 +130,23 @@ A TM instance can be created by any [carla.Client](python_api.md#carla.Client) s
 tm = client.get_trafficmanager(port)
 ```
 
-Now the TM needs some vehicles to be in charge of. In order to do so, enable the autopilot mode for the set of vehicles to be managed. In case the client is not connected to any TM, an instance will be created with default presets.
+Now the TM needs some vehicles to be in charge of. In order to do so, enable the autopilot mode for the set of vehicles to be managed. Retrieve the port of the TM object that has been created. If no port is provided, it will try to connect to a TM in the default port, `8000`. If the TM does not exist, it will create it.  
 
 ```python
+tm_port = tm.get_port()
  for v in vehicles_list:
-     v.set_autopilot(True)
+     v.set_autopilot(True,tm_port)
 ```
 !!! Note 
     In multiclient situations, creating or connecting to a TM is not that straightforward. Take a look into the [other considerations](#other-considerations) section to learn more about this. 
 
 The script `spawn_npc.py` in `/PythonAPI/examples` creates a TM instance in the port passed as argument and registers every vehicle spawned to it by setting the autopilot to True on a batch.
+
 ```py
-traffic_manager = client.get_trafficmanager(args.tm_port)
+traffic_manager = client.get_trafficmanager(args.tm-port)
+tm_port = traffic_manager.get_port()
 ...
-batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
+batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True,tm_port)))
 ...
 traffic_manager.global_percentage_speed_difference(30.0)
 ```
@@ -142,8 +157,9 @@ The following example creates an instance of the TM and sets a dangerous behavio
 
 ```python
 tm = client.get_trafficmanager(port)
+tm_port = tm.get_port()
 for v in my_vehicles:
-  v.set_autopilot(True)
+  v.set_autopilot(True,tm_port)
 danger_car = my_vehicles[0]
 tm.ignore_lights_percentage(danger_car,100)
 tm.distance_to_leading_vehicle(danger_car,0)
@@ -153,8 +169,9 @@ tm.vehicle_percentage_speed_difference(danger_car,-20)
 Now, here is an example that registers that same list of vehicles but instead is set to conduct them with a moderate behaviour. The vehicles will drive at 80% their current speed limit, leaving at least 5 meters between them and never perform a lane change.
 ```python
 tm = client.get_trafficmanager(port)
+tm_port = tm.get_port()
 for v in my_vehicles:
-  v.set_autopilot(True)
+  v.set_autopilot(True,tm_port)
 danger_car = my_vehicles[0]
 tm.global_distance_to_leading_vehicle(5)
 tm.global_percentage_speed_difference(80)
@@ -162,17 +179,35 @@ for v in my_vehicles:
   tm.auto_lane_change(v,False)
 ``` 
 
-!!! Important 
-    Lane changes are currently disabled in the TM due to unintended collisions causing jams. As long as this issues are not fixed, vehicles will remain in the lane they are spawned and the methods to set lane changes will be disabled. 
-
-
 ### Stopping a Traffic Manager
 
 The TM is not an actor that needs to be destroyed, it will stop when the corresponding client does so. This is automatically managed by the API so the user does not have to take care of it.  
 However, it is important that when shutting down a TM, the vehicles registered to it are destroyed. Otherwise, they will stop at place, as no one will be conducting them. The script `spawn_npc.py` does this automatically. 
 
 !!! Warning 
-    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read the following section. 
+    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read about [multiclient and multiTM](#multiclient-and-multitm-management). 
+
+---
+## Hybrid physics mode
+
+In hybrid mode, either all vehicle physics can be disabled, or enabled only in a radius around an ego vehicle with the tag `hero`. This feature removes the vehicle physics bottleneck from the simulator. Since vehicle physics are not active, all cars move by teleportation. This feature relies on [Actor.set_simulate_physics()](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics). However, not all the physics are disregarded. Basic calculations for a linear acceleration are maintained. By doing so, the position update, and vehicle speed still look realistic. That guarantees that when a vehicle enables or disables its physics, the transition is fluid.  
+
+The hybrid mode is disabled by default. There are two ways to enable it.  
+
+*   [__TrafficManager.set_hybrid_phisics_mode(True)__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — This method will enable the hybrid mode for the Traffic Manager object calling it.  
+*   __Running `spawn_npc.py` with the flag `--hybrid`__ — The vehicles spawned will be registered to a Traffic Manager stated inside the script, and this will run with the hybrid physics on.  
+
+The are two parameters ruling the hybrid mode. One is the __radius__ that states the proximity area around any ego vehicle where physics are enabled. The other is the __vehicle__ with , that will act as center of this radius.  
+
+*   __Radius__ *(default = 70 meters)* — States the proximity area around the ego vehicle where physics are enabled. The value be changed with [traffic_manager.set_hybrid_mode_radius(r)](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_mode_radius).  
+*   __Ego vehicle__ — A vehicle tagged with `role_name='hero'` that will act of the radius.
+	*   __If there is none,__ all the vehicles will disable physics.
+	*   __If there are many,__ the radius will be considered for all of them. That will create different areas of influence with physics enabled.  
+
+Hereunder there is an example of the hybrid mode running. The __ego vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the area of influence stated by the radius, __physics are enabled and the tag becomes green__.
+
+![Welcome to CARLA](img/tm_hybrid.gif)
+
 
 ---
 ## Multiclient and multiTM management
@@ -239,6 +274,9 @@ The TM stops working properly in asynchronous mode when the simulation is under 
 
 TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
 If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
+
+!!! Warning
+    Disable the synchronous mode in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
 
 ---
 ## Summary

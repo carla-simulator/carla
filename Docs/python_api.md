@@ -1703,6 +1703,9 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
+- <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
+    - **Return:** _uint16_  
 - <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  
 Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.  
     - **Parameters:**
@@ -1863,11 +1866,11 @@ Retrieves the traffic light actor affecting this vehicle (if any) according to l
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
-- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**tm**=None</font>)  
+- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  
 Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
-        - `tm` (_[carla.TrafficManager](#carla.TrafficManager)_) – The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
+        - `port` (_uint16_) – The port of the TM-Server where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
 - <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
 Sets the light state of a vehicle using a flag that represents the lights that are on and off.  
     - **Parameters:**
@@ -2601,15 +2604,15 @@ Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in [carla
 Actor that is affected by the command.  
 - <a name="command.SetAutopilot.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
 If autopilot should be activated or not.  
-- <a name="command.SetAutopilot.tm"></a>**<font color="#f8805a">tm</font>** (_[carla.TrafficManager](#carla.TrafficManager)_)  
-The Traffic Manager where the vehicle is registered or unlisted.  
+- <a name="command.SetAutopilot.port"></a>**<font color="#f8805a">port</font>** (_uint16_)  
+Port of the Traffic Manager where the vehicle is to be registered or unlisted.  
 
 <h3>Methods</h3>
-- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>, <font color="#00a6ed">**tm**=None</font>)  
+- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>, <font color="#00a6ed">**port**=8000</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `enabled` (_bool_)  
-        - `tm` (_[carla.TrafficManager](#carla.TrafficManager)_) – The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
+        - `port` (_uint16_) – The Traffic Manager port where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
 
 ---
 
