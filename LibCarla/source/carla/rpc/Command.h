@@ -148,13 +148,13 @@ namespace rpc {
       SetAutopilot(
           ActorId id,
           bool value,
-          SharedPtr<ctm::TrafficManager> tm = nullptr)
+          uint16_t tm_port)
         : actor(id),
           enabled(value),
-          tm(tm) {}
+          tm_port(tm_port) {}
       ActorId actor;
       bool enabled;
-      SharedPtr<ctm::TrafficManager> tm;
+      uint16_t tm_port;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
