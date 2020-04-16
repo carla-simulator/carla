@@ -33,7 +33,7 @@ public:
 
   ~LightManager();
 
-  LightManager(const LightManager& other) {
+  LightManager(const LightManager& other) : EnableSharedFromThis<LightManager>() {
     _lights_state = other._lights_state;
     _lights_changes = other._lights_changes;
     _lights = other._lights;
