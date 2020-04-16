@@ -69,7 +69,7 @@ def main():
         default='walker.pedestrian.*',
         help='pedestrians filter (default: "walker.pedestrian.*")')
     argparser.add_argument(
-        '-tm_p', '--tm_port',
+        '--tm-port',
         metavar='P',
         default=8000,
         type=int,
