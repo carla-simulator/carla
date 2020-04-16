@@ -353,17 +353,30 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
         // check for hero
         if (!(bIgnoreHero && IsHero[ActorView.GetActorId()]))
         {
+            // stop all vehicles
             SetActorSimulatePhysics(ActorView, true);
-            // autopilot
-            if (bApplyAutopilot)
-              SetActorAutopilot(ActorView, true, true);
+            SetActorVelocity(ActorView, FVector(0, 0, 0));
+            // reset any control assigned
+            auto Veh = Cast<ACarlaWheeledVehicle>(const_cast<AActor *>(ActorView.GetActor()));
+            if (Veh != nullptr)
+            {
+              FVehicleControl Control;
+              Control.Throttle = 0.0f;
+              Control.Steer = 0.0f;
+              Control.Brake = 0.0f;
+              Control.bHandBrake = false;
+              Control.bReverse = false;
+              Control.Gear = 1;
+              Control.bManualGearShift = false;
+              Veh->ApplyVehicleControl(Control, EVehicleInputPriority::User);
+            }
+
         }
         break;
 
       // walkers
       case FActorView::ActorType::Walker:
         // stop walker
-        SetActorVelocity(ActorView, FVector(0, 0, 0));
         SetWalkerSpeed(ActorView.GetActorId(), 0.0f);
         break;
     }
