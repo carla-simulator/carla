@@ -260,7 +260,11 @@ void ATrafficLightManager::SpawnTrafficLights()
 
     FVector SpawnLocation = SpawnTransform.GetLocation();
     FRotator SpawnRotation(SpawnTransform.GetRotation());
+    // Blueprints are all rotated by 90 degrees
     SpawnRotation.Yaw += 90;
+    // Remove road inclination
+    SpawnRotation.Roll = 0;
+    SpawnRotation.Pitch = 0;
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
@@ -328,6 +332,9 @@ void ATrafficLightManager::SpawnSignals()
       FVector SpawnLocation = SpawnTransform.GetLocation();
       FRotator SpawnRotation(SpawnTransform.GetRotation());
       SpawnRotation.Yaw += 90;
+      // Remove road inclination
+      SpawnRotation.Roll = 0;
+      SpawnRotation.Pitch = 0;
 
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;

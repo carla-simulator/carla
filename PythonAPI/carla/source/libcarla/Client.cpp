@@ -11,6 +11,8 @@
 #include "carla/rpc/ActorId.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
+#include <thread>
+
 #include <boost/python/stl_iterator.hpp>
 
 static void SetTimeout(carla::client::Client &client, double seconds) {
@@ -41,6 +43,7 @@ static auto ApplyBatchCommandsSync(
     const carla::client::Client &self,
     const boost::python::object &commands,
     bool do_tick) {
+
   using CommandType = carla::rpc::Command;
   std::vector<CommandType> cmds {
     boost::python::stl_input_iterator<CommandType>(commands),
@@ -57,6 +60,7 @@ static auto ApplyBatchCommandsSync(
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
   carla::client::World world = self.GetWorld();
+  uint16_t tm_port = 8000;
 
   std::atomic<size_t> vehicles_to_enable_index;
   std::atomic<size_t> vehicles_to_disable_index;
@@ -80,6 +84,7 @@ static auto ApplyBatchCommandsSync(
           auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmd_type);
           for (auto &cmd : spawn.do_after) {
             if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
+              tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm_port;
               autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
               isAutopilot = true;
             }
@@ -87,6 +92,7 @@ static auto ApplyBatchCommandsSync(
         }
         // check SetAutopilot command
         else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
+          tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm_port;
           autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
           isAutopilot = true;
         }
@@ -141,9 +147,9 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_disable.shrink_to_fit();
 
   // check if any autopilot command was sent
-  if ((vehicles_to_enable.size() || vehicles_to_disable.size())) {
-    self.GetInstanceTM().RegisterVehicles(vehicles_to_enable);
-    self.GetInstanceTM().UnregisterVehicles(vehicles_to_disable);
+  if (vehicles_to_enable.size() || vehicles_to_disable.size()) {
+    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
   }
 
   return result;
@@ -152,6 +158,17 @@ static auto ApplyBatchCommandsSync(
 void export_client() {
   using namespace boost::python;
   namespace cc = carla::client;
+  namespace rpc = carla::rpc;
+
+  class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
+      init<double, double, double, double, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true)))
+    .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
+    .def_readwrite("max_road_length", &rpc::OpendriveGenerationParameters::max_road_length)
+    .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
+    .def_readwrite("additional_width", &rpc::OpendriveGenerationParameters::additional_width)
+    .def_readwrite("smooth_junctions", &rpc::OpendriveGenerationParameters::smooth_junctions)
+    .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)
+  ;
 
   class_<cc::Client>("Client",
       init<std::string, uint16_t, size_t>((arg("host"), arg("port"), arg("worker_threads")=0u)))
@@ -162,7 +179,8 @@ void export_client() {
     .def("get_available_maps", &GetAvailableMaps)
     .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
     .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
-    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_4(cc::Client, GenerateOpenDriveWorld, std::string, double, double, double), (arg("opendrive"), arg("resolution")=2.0, arg("wall_height")=1.0, arg("additional_width")=0.6))
+    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_2(cc::Client, GenerateOpenDriveWorld, std::string,
+        rpc::OpendriveGenerationParameters), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters()))
     .def("start_recorder", CALL_WITHOUT_GIL_1(cc::Client, StartRecorder, std::string), (arg("name")))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,17 +6,18 @@
 
 #pragma once
 
+#include "carla/geom/Mesh.h"
 #include "carla/Iterator.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
+#include "carla/road/element/Geometry.h"
+#include "carla/road/element/RoadInfo.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/Junction.h"
 #include "carla/road/LaneSection.h"
 #include "carla/road/LaneSectionMap.h"
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/RoadTypes.h"
-#include "carla/road/element/Geometry.h"
-#include "carla/road/element/RoadInfo.h"
 
 #include <unordered_map>
 #include <vector>
@@ -161,8 +162,6 @@ namespace road {
     const LaneSection &GetLaneSectionById(SectionId id) const {
       return _lane_sections.GetById(id);
     }
-
-
 
     /// Return the upper bound "s", i.e., the end distance of the lane section
     /// at @a s (clamped at road's length).

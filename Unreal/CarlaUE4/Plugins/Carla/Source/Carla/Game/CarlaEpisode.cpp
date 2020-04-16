@@ -16,6 +16,7 @@
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
@@ -130,9 +131,7 @@ static FString BuildRecastBuilderFile()
 
 bool UCarlaEpisode::LoadNewOpendriveEpisode(
     const FString &OpenDriveString,
-    float Resolution,
-    float WallHeight,
-    float AdditionalWidth)
+    const carla::rpc::OpendriveGenerationParameters &Params)
 {
   if (OpenDriveString.IsEmpty())
   {
@@ -152,7 +151,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   }
 
   // Generate the OBJ (as string)
-  const auto RoadMesh = CarlaMap->GenerateMesh(Resolution);
+  const auto RoadMesh = CarlaMap->GenerateMesh(Params.vertex_distance);
   const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
   const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
@@ -182,22 +181,15 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
     return false;
   }
 
-  const FString AbsoluteCONFPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.conf");
-
-  // Build the mesh generation config file
-  const FString ConfigData = FString::Printf(
-      TEXT("resolution=%s\nwall_height=%s\nadditional_width=%s\n"),
-      *FString::SanitizeFloat(Resolution),
-      *FString::SanitizeFloat(WallHeight),
-      *FString::SanitizeFloat(AdditionalWidth));
-
-  // Save the config file
-  FFileHelper::SaveStringToFile(
-      ConfigData,
-      *AbsoluteCONFPath,
-      FFileHelper::EEncodingOptions::ForceUTF8,
-      &IFileManager::Get());
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if(GameInstance)
+  {
+    GameInstance->SetOpendriveGenerationParameters(Params);
+  }
+  else
+  {
+    carla::log_warning("Missing game instance");
+  }
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 

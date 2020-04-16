@@ -11,8 +11,14 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
+
+namespace traffic_manager {
+  class TrafficManager;
+}
+
 namespace client {
 
   class TrafficLight;
@@ -23,13 +29,14 @@ namespace client {
     using Control = rpc::VehicleControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
     using LightState = rpc::VehicleLightState::LightState;
+    using TM = traffic_manager::TrafficManager;
 
     explicit Vehicle(ActorInitializer init);
 
     using ActorState::GetBoundingBox;
 
     /// Switch on/off this vehicle's autopilot.
-    void SetAutopilot(bool enabled = true);
+    void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
 
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);

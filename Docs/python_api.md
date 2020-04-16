@@ -328,13 +328,11 @@ Executes a list of commands on a single simulation step, blocks until the comman
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
-- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**resolution**</font>, <font color="#00a6ed">**wall_height**</font>, <font color="#00a6ed">**additional_width**</font>)  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)  
 Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
     - **Parameters:**
-        - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`.  
-        - `resolution` (_float_) – Quality of the road mesh, increasing this value can reduce performance (in meters).  
-        - `wall_height` (_float_) – Height of a procedural wall that prevents cars from falling outside the map, only generated in non-junction roads (in meters).  
-        - `additional_width` (_float_) – Additional lane width to prevent cars from falling outside the map, only generated in junctions (in meters).  
+        - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.  
+        - `parameters` (_[carla.OpendriveGenerationParameters](#carla.OpendriveGenerationParameters)_) – Additional settings for the mesh generation. If none are provided, default values will be used.  
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
@@ -1254,6 +1252,25 @@ Distance between `actor` and `other`.
 
 ---
 
+## carla.OpendriveGenerationParameters<a name="carla.OpendriveGenerationParameters"></a>
+This class defines the parameters used when generating a world using an OpenDRIVE file.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.OpendriveGenerationParameters.vertex_distance"></a>**<font color="#f8805a">vertex_distance</font>** (_float_)  
+Distance between vertices of the mesh generated. __Default is `2.0`__.  
+- <a name="carla.OpendriveGenerationParameters.max_road_length"></a>**<font color="#f8805a">max_road_length</font>** (_float_)  
+Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. __Default is `50.0`__.  
+- <a name="carla.OpendriveGenerationParameters.wall_height"></a>**<font color="#f8805a">wall_height</font>** (_float_)  
+Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. __Default is `1.0`__.  
+- <a name="carla.OpendriveGenerationParameters.additional_width"></a>**<font color="#f8805a">additional_width</font>** (_float_)  
+Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road.  __Default is `0.6`__.  
+- <a name="carla.OpendriveGenerationParameters.smooth_junctions"></a>**<font color="#f8805a">smooth_junctions</font>** (_bool_)  
+If __True__, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. __Default is `True`__.  
+- <a name="carla.OpendriveGenerationParameters.enable_mesh_visibility"></a>**<font color="#f8805a">enable_mesh_visibility</font>** (_bool_)  
+If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.  
+
+---
+
 ## carla.RadarDetection<a name="carla.RadarDetection"></a>
 Data contained inside a [carla.RadarMeasurement](#carla.RadarMeasurement). Each of these represents one of the points in the cloud that a <b>sensor.other.radar</b> registers and contains the distance, angle and velocity in relation to the radar.  
 
@@ -1681,6 +1698,14 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
+- <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  
+Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.  
+    - **Parameters:**
+        - `enabled` (_bool_) – If __True__, enables the hybrid physics.  
+- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  
+With hybrid physics on, changes the radius of the area of influence where physics are enabled.  
+    - **Parameters:**
+        - `r` (_float_) – New radius where physics are enabled.  
 
 ---
 
@@ -1833,12 +1858,13 @@ Retrieves the traffic light actor affecting this vehicle (if any) according to l
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
-- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
-Turns on/off this vehicle's server-side autopilot. When autopilot mode is on, the vehicle will be conducted by the traffic manager client-side.  
+- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**tm**=None</font>)  
+Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
+        - `tm` (_[carla.TrafficManager](#carla.TrafficManager)_) – The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
 - <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
-Sets the light state of a vehicle using a VehicleLightState flag, this represents which lights are active or not.  
+Sets the light state of a vehicle using a flag that represents the lights that are on and off.  
     - **Parameters:**
         - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
 
@@ -2560,19 +2586,22 @@ Returns <b>True</b> if the command represents a successful execution and <b>Fals
 ---
 
 ## command.SetAutopilot<a name="command.SetAutopilot"></a>
-Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in [carla.Vehicle](#carla.Vehicle). Turns on/off the vehicle's server-side autopilot.  
+Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in [carla.Vehicle](#carla.Vehicle). Turns on/off the vehicle's autopilot mode.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetAutopilot.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor that is affected by the command.  
 - <a name="command.SetAutopilot.enabled"></a>**<font color="#f8805a">enabled</font>** (_bool_)  
 If autopilot should be activated or not.  
+- <a name="command.SetAutopilot.tm"></a>**<font color="#f8805a">tm</font>** (_[carla.TrafficManager](#carla.TrafficManager)_)  
+The Traffic Manager where the vehicle is registered or unlisted.  
 
 <h3>Methods</h3>
-- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
+- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>, <font color="#00a6ed">**tm**=None</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `enabled` (_bool_)  
+        - `tm` (_[carla.TrafficManager](#carla.TrafficManager)_) – The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
 
 ---
 

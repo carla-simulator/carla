@@ -137,7 +137,12 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
               WaypointQueue.pop();
               GenerateCheckBox(Map.ComputeTransform(CurrentElement.second), UEBoxSize);
 
-              float Speed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s)->GetSpeed();
+              float Speed = 40;
+              auto* InfoSpeed = Map.GetLane(CurrentElement.second).GetRoad()->GetInfo<carla::road::element::RoadInfoSpeed>(CurrentElement.second.s);
+              if(InfoSpeed)
+              {
+                Speed = InfoSpeed->GetSpeed();
+              }
               float RemainingTime = CurrentElement.first - BoxSize/Speed;
               if(RemainingTime > 0)
               {
@@ -192,12 +197,17 @@ void UYieldSignComponent::GiveWayIfPossible()
           Cast<AWheeledVehicleAIController>(Vehicle->GetController());
         VehicleController->SetTrafficLightState(ETrafficLightState::Red);
       }
-
-      FTimerHandle TimerHandler;
       // 0.5 second delay
-      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UYieldSignComponent::GiveWayIfPossible, 0.5f);
+      DelayedGiveWay(0.5f);
     }
   }
+}
+
+void UYieldSignComponent::DelayedGiveWay(float Delay)
+{
+  FTimerHandle TimerHandler;
+  GetWorld()->GetTimerManager().
+      SetTimer(TimerHandler, this, &UYieldSignComponent::GiveWayIfPossible, Delay);
 }
 
 void UYieldSignComponent::OnOverlapBeginYieldEffectBox(UPrimitiveComponent *OverlappedComp,
@@ -271,7 +281,8 @@ void UYieldSignComponent::OnOverlapEndYieldCheckBox(UPrimitiveComponent *Overlap
         VehiclesToCheck.Remove(Vehicle);
       }
     }
-    GiveWayIfPossible();
+    // 0.5 second delay
+    DelayedGiveWay(0.5);
   }
 }
 void UYieldSignComponent::RemoveSameVehicleInBothLists()

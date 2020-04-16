@@ -8,6 +8,8 @@
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 
+#define TM_DEFAULT_PORT     8000
+
 namespace command_impl {
 
   template <typename T>
@@ -48,7 +50,7 @@ void export_commands() {
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
 
-  using ActorPtr = boost::shared_ptr<cc::Actor>;
+  using ActorPtr = carla::SharedPtr<cc::Actor>;
 
   object command_module(handle<>(borrowed(PyImport_AddModule("libcarla.command"))));
   scope().attr("command") = command_module;
@@ -150,9 +152,10 @@ void export_commands() {
   ;
 
   class_<cr::Command::SetAutopilot>("SetAutopilot")
-    .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("enabled")))
-    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool, uint16_t>, (arg("actor"), arg("enabled"), arg("tm_port") = TM_DEFAULT_PORT ))
+    .def(init<cr::ActorId, bool, uint16_t>((arg("actor_id"), arg("enabled"), arg("tm_port") = TM_DEFAULT_PORT )))
     .def_readwrite("actor_id", &cr::Command::SetAutopilot::actor)
+    .def_readwrite("tm_port", &cr::Command::SetAutopilot::tm_port)
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 

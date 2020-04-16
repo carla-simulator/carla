@@ -41,6 +41,10 @@ namespace road {
 
     std::unordered_map<JuncId, Junction> &GetJunctions();
 
+    const std::unordered_map<JuncId, Junction> &GetJunctions() const {
+      return _junctions;
+    }
+
     bool ContainsRoad(RoadId id) const {
       return (_roads.find(id) != _roads.end());
     }

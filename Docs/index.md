@@ -59,12 +59,18 @@ CARLA forum</a>
 
 ## Advanced steps
   <p style="padding-left:30px;line-height:1.8">
+    [__OpenDRIVE standalone mode__](adv_opendrive.md)
+        — Use any OpenDRIVE file as a CARLA map.  
+    [__PTV-Vissim co-simulation__](adv_ptv.md)
+        — Run a synchronous simulation between CARLA and PTV-Vissim.  
     [__Recorder__](adv_recorder.md)
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
     [__RSS sensor__](adv_rss.md)
         — An implementation of RSS in the CARLA client library.  
+    [__SUMO co-simulation__](adv_sumo.md)
+        — Run a synchronous simulation between CARLA and SUMO.  
     [__Synchrony and time-step__](adv_synchrony_timestep.md)
         — Client-server communication and simulation time.  
     [__Traffic Manager__](adv_traffic_manager.md)
@@ -110,14 +116,16 @@ CARLA forum</a>
 
 ## Tutorials — Assets
   <p style="padding-left:30px;line-height:1.8">
-    [__Import new assets__](tuto_A_import_assets.md)
-        — Use personal assets in CARLA.  
-    [__Map creation__](tuto_A_map_creation.md)
-        — Create a new map following simple guidelines.  
+    [__Add a new map__](tuto_A_add_map.md)
+        — Create and ingest a new map.  
+    [__Add a new vehicle__](tuto_A_add_vehicle.md)
+        — Prepare a vehicle to be used in CARLA.  
+    [__Add new props__](tuto_A_add_props.md)
+        — Import additional props into CARLA.  
+    [__Create standalone packages__](tuto_A_create_standalone.md)
+        — Generate and handle standalone packages for assets.  
     [__Map customization__](tuto_A_map_customization.md)
         — Edit an existing map.  
-    [__Standalone asset packages__](tuto_A_standalone_packages.md)
-        — Import assets into UE and set them for package distribution.  
     [__Use Epic's Automotive materials__](tuto_A_epic_automotive_materials.md)
         — Apply Epic's set of Automotive materials to vehicles.  
     [__Vehicle modelling__](tuto_A_vehicle_modelling.md)

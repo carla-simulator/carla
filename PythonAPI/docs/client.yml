@@ -40,7 +40,7 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page. 
+          A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.
         [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
@@ -55,7 +55,7 @@
         type: bool
         default: false
         doc: >
-          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default. 
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
       return: list(command.Response)
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
@@ -65,24 +65,12 @@
       - param_name: opendrive
         type: str
         doc: >
-          Content of an OpenDRIVE file as `string`.
-      - param_name: resolution
-        type: float
-        defualt: 2.0
+          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
+      - param_name: parameters
+        type: carla.OpendriveGenerationParameters
+        default: (2.0, 50.0, 1.0, 0.6, true, true)
         doc: >
-          Quality of the road mesh, increasing this value can reduce performance (in meters).
-      - param_name: wall_height
-        type: float
-        defualt: 1.0
-        doc: >
-          Height of a procedural wall that prevents cars from falling outside the map, only generated
-          in non-junction roads (in meters).
-      - param_name: additional_width
-        type: float
-        defualt: 0.6
-        doc: >
-          Additional lane width to prevent cars from falling outside the map, only generated in
-          junctions (in meters).
+           Additional settings for the mesh generation. If none are provided, default values will be used. 
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
@@ -233,10 +221,10 @@
         type: int
         default: 8000
         doc: >
-          Port that will be used by the traffic manager. Default is `8000`. 
+          Port that will be used by the traffic manager. Default is `8000`.
       return: carla.TrafficManager
       doc: >
-        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created. 
+        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.
     # --------------------------------------
     - def_name: get_world
       params:
@@ -268,7 +256,7 @@
     # - DESCRIPTION ------------------------
     doc: >
       The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.  
-      
+
       In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
     instance_variables:
@@ -283,16 +271,16 @@
       - param_name: enable
         type: bool
         doc: >
-          __True__ is default and enables lane changes. __False__ will disable them. 
+          __True__ is default and enables lane changes. __False__ will disable them.
       doc: >
-        Turns on or off lane changing behaviour for a vehicle. 
+        Turns on or off lane changing behaviour for a vehicle.
     # --------------------------------------
     - def_name: collision_detection
       params:
       - param_name: reference_actor
         type: carla.Actor
         doc: >
-          Vehicle that is going to ignore collisions. 
+          Vehicle that is going to ignore collisions.
       - param_name: other_actor
         type: carla.Actor
         doc: >
@@ -300,7 +288,7 @@
       - param_name: detect_collision
         type: bool
         doc: >
-          __True__ is default and enables collisions. __False will disable them. 
+          __True__ is default and enables collisions. __False will disable them.
       doc: >
         Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
     # --------------------------------------
@@ -309,11 +297,11 @@
       - param_name: actor
         type: carla.Actor
         doc: >
-          Vehicle whose minimum distance is being changed. 
+          Vehicle whose minimum distance is being changed.
       - param_name: distance
         type: float
         doc: >
-          Meters between both vehicles. 
+          Meters between both vehicles.
       doc: >
         Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.
     # --------------------------------------
@@ -322,20 +310,20 @@
       - param_name: actor
         type: carla.Actor
         doc: >
-          Vehicle being forced to change lanes. 
+          Vehicle being forced to change lanes.
       - param_name: direction
         type: bool
-        doc: > 
-          Destination lane. __True__ is the one on the left and __False__ is the right one. 
+        doc: >
+          Destination lane. __True__ is the one on the left and __False__ is the right one.
       doc: >
-        Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions. 
+        Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.
     # --------------------------------------
     - def_name: global_distance_to_leading_vehicle
       params:
       - param_name: distance
         type: float
         doc: >
-          Meters between vehicles. 
+          Meters between vehicles.
       doc: >
         Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
     # --------------------------------------
@@ -347,8 +335,8 @@
           Percentage difference between intended speed and the current limit.
       doc: >
         Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
-        
-        Default is 30. Exceeding a speed limit can be done using negative percentages. 
+
+        Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
     - def_name: ignore_lights_percentage
       params:
@@ -361,7 +349,7 @@
         doc: >
           Between 0 and 100. Amount of times traffic lights will be ignored.
       doc: >
-        During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle. 
+        During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.
     # --------------------------------------
     - def_name: ignore_vehicles_percentage
       params:
@@ -372,7 +360,7 @@
       - param_name: perc
         type: float
         doc: >
-          Between 0 and 100. Amount of times collisions will be ignored. 
+          Between 0 and 100. Amount of times collisions will be ignored.
       doc: >
         During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with another vehicle will be ignored for a vehicle.
     # --------------------------------------
@@ -385,26 +373,77 @@
       - param_name: perc
         type: float
         doc: >
-          Between 0 and 100. Amount of times collisions will be ignored. 
+          Between 0 and 100. Amount of times collisions will be ignored.
       doc: >
         During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
     # --------------------------------------
     - def_name: reset_traffic_lights
       doc: >
-        Resets every traffic light in the map to its initial state. 
+        Resets every traffic light in the map to its initial state.
     # --------------------------------------
     - def_name: vehicle_percentage_speed_difference
       params:
       - param_name: actor
         type: carla.Actor
         doc: >
-          Vehicle whose speed behaviour is being changed. 
+          Vehicle whose speed behaviour is being changed.
       - param_name: percentage
         type: float
         doc: >
-          Percentage difference between intended speed and the current limit.  
+          Percentage difference between intended speed and the current limit.
       doc: >
         Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
-        
-        Default is 30. Exceeding a speed limit can be done using negative percentages. 
+
+        Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
+    - def_name: set_hybrid_physics_mode
+      params:
+      - param_name: enabled
+        type: bool
+        default: False
+        doc: >
+          If __True__, enables the hybrid physics. 
+      doc: >
+        Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported. 
+    # --------------------------------------
+    - def_name: set_hybrid_mode_radius
+      params:
+      - param_name: r
+        type: float
+        default: 70.0
+        doc: >
+          New radius where physics are enabled. 
+      doc: >
+        With hybrid physics on, changes the radius of the area of influence where physics are enabled. 
+    # --------------------------------------
+
+  - class_name: OpendriveGenerationParameters
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class defines the parameters used when generating a world using an OpenDRIVE file.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: vertex_distance
+      type: float
+      doc: >
+        Distance between vertices of the mesh generated. __Default is `2.0`__.
+    - var_name: max_road_length
+      type: float
+      doc: >
+        Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. __Default is `50.0`__.
+    - var_name: wall_height
+      type: float
+      doc: >
+        Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. __Default is `1.0`__.
+    - var_name: additional_width
+      type: float
+      doc: >
+        Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road.  __Default is `0.6`__.
+    - var_name: smooth_junctions
+      type: bool
+      doc: >
+        If __True__, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. __Default is `True`__.
+    - var_name: enable_mesh_visibility
+      type: bool
+      doc: >
+        If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.

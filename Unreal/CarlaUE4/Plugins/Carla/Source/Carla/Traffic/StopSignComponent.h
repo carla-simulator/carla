@@ -33,6 +33,8 @@ private:
   UFUNCTION(BlueprintCallable)
   void GiveWayIfPossible();
 
+  void DelayedGiveWay(float Delay);
+
   UFUNCTION(BlueprintCallable)
   void OnOverlapBeginStopEffectBox(UPrimitiveComponent *OverlappedComp,
       AActor *OtherActor,

@@ -69,7 +69,7 @@ def main():
         default='walker.pedestrian.*',
         help='pedestrians filter (default: "walker.pedestrian.*")')
     argparser.add_argument(
-        '-tm_p', '--tm_port',
+        '--tm-port',
         metavar='P',
         default=8000,
         type=int,
@@ -91,17 +91,15 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
+    synchronous_master = False
 
     try:
-
         world = client.get_world()
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.0)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
-
-        synchronous_master = False
 
         if args.sync:
             settings = world.get_settings()
@@ -154,7 +152,7 @@ def main():
                 driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
                 blueprint.set_attribute('driver_id', driver_id)
             blueprint.set_attribute('role_name', 'autopilot')
-            batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
+            batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
 
         for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:

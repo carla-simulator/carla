@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include "carla/geom/CubicPolynomial.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/Lane.h"
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/RoadTypes.h"
-#include "carla/geom/CubicPolynomial.h"
 
 #include <map>
 #include <vector>
@@ -28,7 +28,9 @@ namespace road {
 
     double GetDistance() const;
 
-    Road *GetRoad();
+    double GetLength() const;
+
+    Road *GetRoad() const;
 
     Lane *GetLane(const LaneId id);
 

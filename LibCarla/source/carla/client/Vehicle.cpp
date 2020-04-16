@@ -15,9 +15,11 @@
 #include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
+
+using TM = traffic_manager::TrafficManager;
+
 namespace client {
 
-  using TM = traffic_manager::TrafficManager;
 
   template <typename AttributesT>
   static bool GetControlIsSticky(const AttributesT &attributes) {
@@ -33,8 +35,8 @@ namespace client {
     : Actor(std::move(init)),
       _is_control_sticky(GetControlIsSticky(GetAttributes())) {}
 
-  void Vehicle::SetAutopilot(bool enabled) {
-    TM tm(GetEpisode());
+  void Vehicle::SetAutopilot(bool enabled, uint16_t tm_port) {
+    TM tm(GetEpisode(), tm_port);
     if (enabled) {
       tm.RegisterVehicles({shared_from_this()});
     } else {
