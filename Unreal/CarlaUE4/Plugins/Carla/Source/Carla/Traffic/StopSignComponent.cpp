@@ -196,12 +196,17 @@ void UStopSignComponent::GiveWayIfPossible()
           Cast<AWheeledVehicleAIController>(Vehicle->GetController());
         VehicleController->SetTrafficLightState(ETrafficLightState::Red);
       }
-
-      FTimerHandle TimerHandler;
       // 1 second delay
-      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UStopSignComponent::GiveWayIfPossible, 1.0f);
+      DelayedGiveWay(1.0f);
     }
   }
+}
+
+void UStopSignComponent::DelayedGiveWay(float Delay)
+{
+  FTimerHandle TimerHandler;
+  GetWorld()->GetTimerManager().
+      SetTimer(TimerHandler, this, &UStopSignComponent::GiveWayIfPossible, Delay);
 }
 
 void UStopSignComponent::OnOverlapBeginStopEffectBox(UPrimitiveComponent *OverlappedComp,
@@ -221,9 +226,8 @@ void UStopSignComponent::OnOverlapBeginStopEffectBox(UPrimitiveComponent *Overla
       VehicleController->SetTrafficLightState(ETrafficLightState::Red);
       VehiclesInStop.Add(Vehicle);
 
-      FTimerHandle TimerHandler;
       // 2 second delay for stop
-      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &UStopSignComponent::GiveWayIfPossible, 2.0f);
+      DelayedGiveWay(2.0f);
     }
   }
   RemoveSameVehicleInBothLists();
@@ -279,7 +283,8 @@ void UStopSignComponent::OnOverlapEndStopCheckBox(UPrimitiveComponent *Overlappe
         VehiclesToCheck.Remove(Vehicle);
       }
     }
-    GiveWayIfPossible();
+    // 0.5s delay
+    DelayedGiveWay(0.5f);
   }
 }
 void UStopSignComponent::RemoveSameVehicleInBothLists()

@@ -53,11 +53,11 @@ class SimulationSynchronization(object):
     SimulationSynchronization class is responsible for the synchronization of ptv-vissim and carla
     simulations.
     """
-    def __init__(self, args):
+    def __init__(self, vissim_simulation, carla_simulation, args):
         self.args = args
 
-        self.vissim = PTVVissimSimulation(args)
-        self.carla = CarlaSimulation(args)
+        self.vissim = vissim_simulation
+        self.carla = carla_simulation
 
         # Mapped actor ids.
         self.vissim2carla_ids = {}  # Contains only actors controlled by vissim.
@@ -67,6 +67,12 @@ class SimulationSynchronization(object):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dir_path, 'data', 'vtypes.json')) as f:
             BridgeHelper.vtypes = json.load(f)
+
+        # Configuring carla simulation in sync mode.
+        settings = self.carla.world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = args.step_length
+        self.carla.world.apply_settings(settings)
 
     def tick(self):
         """
@@ -165,8 +171,11 @@ def synchronization_loop(args):
     """
     Entry point for vissim-carla co-simulation.
     """
+    carla_simulation = CarlaSimulation(args)
+    vissim_simulation = PTVVissimSimulation(args)
+
     try:
-        synchronization = SimulationSynchronization(args)
+        synchronization = SimulationSynchronization(vissim_simulation, carla_simulation, args)
 
         while True:
             start = time.time()

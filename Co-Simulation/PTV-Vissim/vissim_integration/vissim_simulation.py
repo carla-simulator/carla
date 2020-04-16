@@ -14,6 +14,7 @@
 import enum
 import logging
 import math
+import os
 
 import carla  # pylint: disable=import-error
 from ctypes import *
@@ -143,15 +144,19 @@ class PTVVissimSimulation(object):
 
         # Connection to vissim simulator.
         logging.info('Establishing a connection with a GUI version of PTV-Vissim')
-        self.ds_proxy.VISSIM_Connect(args.vissim_version, args.vissim_network,
-                                     int(1. / args.step_length),
-                                     c_double(constants.VISSIM_VISIBILITY_RADIUS),
-                                     c_ushort(constants.VISSIM_MAX_SIMULATOR_VEH),
-                                     c_ushort(constants.VISSIM_MAX_SIMULATOR_PED),
-                                     c_ushort(constants.VISSIM_MAX_SIMULATOR_DET),
-                                     c_ushort(constants.VISSIM_MAX_VISSIM_VEH),
-                                     c_ushort(constants.VISSIM_MAX_VISSIM_PED),
-                                     c_ushort(constants.VISSIM_MAX_VISSIM_SIGGRP))
+        result = self.ds_proxy.VISSIM_Connect(args.vissim_version,
+                                              os.path.abspath(args.vissim_network),
+                                              int(1. / args.step_length),
+                                              c_double(constants.VISSIM_VISIBILITY_RADIUS),
+                                              c_ushort(constants.VISSIM_MAX_SIMULATOR_VEH),
+                                              c_ushort(constants.VISSIM_MAX_SIMULATOR_PED),
+                                              c_ushort(constants.VISSIM_MAX_SIMULATOR_DET),
+                                              c_ushort(constants.VISSIM_MAX_VISSIM_VEH),
+                                              c_ushort(constants.VISSIM_MAX_VISSIM_PED),
+                                              c_ushort(constants.VISSIM_MAX_VISSIM_SIGGRP))
+
+        if not result:
+            raise RuntimeError('There was an error when establishing a connection with PTV-Vissim')
 
         # Structures to keep track of the simulation state at each time step.
         self._vissim_vehicles = {}  # vissim_actor_id: VissimVehicle (only vissim traffic)
