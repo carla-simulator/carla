@@ -23,6 +23,8 @@ QUERY = re.compile(r'([cC]arla(\.[a-zA-Z0-9_]+)+)')
 def create_hyperlinks(text):
     return re.sub(QUERY, r'[\1](#\1)', text)
 
+def create_getter_setter_hyperlinks(text):
+    return re.sub(QUERY, r'[\1](#\1)', text)
 
 def join(elem, separator=''):
     return separator.join(elem)
@@ -72,16 +74,25 @@ class MarkdownFile:
 
     def first_title(self):
         self._data = join([
-            self._data, '#Python API reference'])
+            self._data, '#Python API reference\n'])
+
+    def button_apis(self):
+        self._data = join([
+            self._data, 
+            ''])
 
     def title(self, strongness, buf):
         self._data = join([
             self._data, '\n', self.list_depth(), '#' * strongness, ' ', buf, '\n'])
 
     def title_html(self, strongness, buf):
-        self._data = join([
-            self._data, '\n', self.list_depth(), '<h', str(strongness), '>', buf, '</h', str(strongness), '>\n'])
-    
+        if strongness == 5:
+            self._data = join([
+                self._data, '\n', self.list_depth(), '<h', str(strongness), ' style="margin-top: -20px">', buf, '</h', str(strongness),'>\n','<div style="padding-left:30px;margin-top:-25px"></div>'])
+        else:
+            self._data = join([
+                self._data, '\n', self.list_depth(), '<h', str(strongness), '>', buf, '</h', str(strongness), '>\n'])
+
     def inherit_join(self, inh):
         self._data = join([
             self._data,'<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
@@ -383,6 +394,68 @@ def add_doc_method(md, method, class_key):
 
     md.list_pop()
 
+def add_doc_getter_setter(md, method, class_key,is_getter,other_list):
+    method_name = method['def_name']
+    method_key = join([class_key, method_name], '.')
+    method_def = gen_doc_method_def(method, False)
+    md.list_pushn(join([html_key(method_key), method_def]))
+
+    # Method doc
+    if valid_dic_val(method, 'doc'):
+        md.textn(create_hyperlinks(md.prettify_doc(method['doc'])))
+
+    printed_title = False
+    if valid_dic_val(method, 'params'):
+        for param in method['params']:
+            # is_self = valid_dic_val(param, 'param_name') and param['param_name'] == 'self'
+            have_doc = valid_dic_val(param, 'doc')
+            have_type = valid_dic_val(param, 'type')
+            if not have_doc and not have_type:
+                continue
+            # Print the 'Parameters' title once
+            if not printed_title:
+                printed_title = True
+                md.list_push(bold('Parameters:') + '\n')
+            add_doc_method_param(md, param)
+    if printed_title:
+        md.list_pop()
+
+    # Return doc
+    if valid_dic_val(method, 'return'):
+        md.list_push(bold('Return:') + ' ')
+        md.textn(italic(create_hyperlinks(method['return'])))
+        md.list_pop()
+
+    # If setter/getter
+    for element in other_list:
+        el_name = element['def_name']
+        if el_name[4:] == method_name[4:]:
+            if is_getter:
+                md.list_push(bold('Setter:') + ' ')
+            else:
+                md.list_push(bold('Getter:') + ' ')
+            md.textn(italic(create_hyperlinks(class_key+'.'+el_name)))
+            md.list_pop()
+
+    # Note doc
+    if valid_dic_val(method, 'note'):
+        md.list_push(bold('Note:') + ' ')
+        md.textn(color(COLOR_NOTE, italic(create_hyperlinks(method['note']))))
+        md.list_pop()
+
+    # Warning doc
+    if valid_dic_val(method, 'warning'):
+        md.list_push(bold('Warning:') + ' ')
+        md.textn(color(COLOR_WARNING, italic(create_hyperlinks(method['warning']))))
+        md.list_pop()
+
+    # Raises error doc
+    if valid_dic_val(method, 'raises'):
+        md.list_pushn(bold('Raises:') + ' ' + method['raises'])
+        md.list_pop()
+
+    md.list_pop()
+
 def add_doc_dunder(md, dunder, class_key):
     dunder_name = dunder['def_name']
     dunder_key = join([class_key, dunder_name], '.')
@@ -510,6 +583,19 @@ class Documentation:
         """Generates the documentation body"""
         md = MarkdownFile()
         md.first_title()
+        md.textn(
+        "This reference contains all the details about latest version of the Python API. To consult a valid reference for a specific CARLA release, please select it from the list hereunder.<br>"
+        +"<details><summary><b>Previous references</b></summary><br><ul>"
++"<li><a href="+"../APIs/python_api_098"+"><b>CARLA 0.9.8</b></a></li>"
++"<li><a href="+"../APIs/python_api_097"+"><b>CARLA 0.9.7</b></a></li>"
++"<li><a href="+"../APIs/python_api_096"+"><b>CARLA 0.9.6</b></a></li>"
++"<li><a href="+"../APIs/python_api_095"+"><b>CARLA 0.9.5</b></a></li>"
++"<li><a href="+"../APIs/python_api_094"+"><b>CARLA 0.9.4</b></a></li>"
++"<li><a href="+"../APIs/python_api_093"+"><b>CARLA 0.9.3</b></a></li>"
++"<li><a href="+"../APIs/python_api_092"+"><b>CARLA 0.9.2</b></a></li>"
++"<li><a href="+"../APIs/python_api_091"+"><b>CARLA 0.9.1</b></a></li>"
++"<li><a href="+"../APIs/python_api_090"+"><b>CARLA 0.9.0</b></a></li>"
++"</ul></details><br><hr>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name
@@ -536,17 +622,31 @@ class Documentation:
                     if valid_dic_val(cl, 'methods'):
                         method_list = list()
                         dunder_list = list()
+                        get_list = list()
+                        set_list = list()
                         for method in cl['methods']:
                             method_name = method['def_name']
                             if method_name[0] == '_' and method_name != '__init__':
                                 dunder_list.append(method)
+                            elif method_name[:4] == 'get_':
+                                get_list.append(method)
+                            elif method_name[:4] == 'set_':
+                                set_list.append(method)
                             else:
                                 method_list.append(method)
                         md.title_html(3, 'Methods')
                         for method in method_list:
                             add_doc_method(md, method, class_key)
+                        if len(get_list)>0:
+                            md.title_html(5, 'Getters')
+                        for method in get_list:
+                            add_doc_getter_setter(md, method, class_key,True,set_list)
+                        if len(set_list)>0:
+                            md.title_html(5, 'Setters')
+                        for method in set_list:
+                            add_doc_getter_setter(md, method, class_key,False,get_list)
                         if len(dunder_list)>0:
-                            md.title_html(3, 'Dunder methods')
+                            md.title_html(5, 'Dunder methods')
                         for method in dunder_list:
                             add_doc_dunder(md, method, class_key)
                     md.separator()
