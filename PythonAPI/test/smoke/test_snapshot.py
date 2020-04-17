@@ -24,6 +24,9 @@ class TestSnapshot(SyncSmokeTest):
 
         spawn_points = self.world.get_map().get_spawn_points()[:20]
         vehicles = self.world.get_blueprint_library().filter('vehicle.*')
+        # move spawn points a bit higher, they are too close to the floor
+        for t in spawn_points:
+            t.location.z += 0.30
         batch = [(random.choice(vehicles), t) for t in spawn_points]
         batch = [carla.command.SpawnActor(*args) for args in batch]
         response = self.client.apply_batch_sync(batch, True)
