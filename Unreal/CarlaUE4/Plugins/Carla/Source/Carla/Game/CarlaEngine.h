@@ -45,9 +45,13 @@ private:
 
   void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
+  void ResetSimulationState();
+
   bool bIsRunning = false;
 
   bool bSynchronousMode = false;
+
+  bool bMapChanged = false;
 
   FCarlaServer Server;
 

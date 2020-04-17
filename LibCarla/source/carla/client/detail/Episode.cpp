@@ -61,6 +61,10 @@ using namespace std::chrono_literals;
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
 
+        // TODO: Update how the map change is detected
+        // bool HasMapChanged = next->HasMapChanged();
+        bool UpdateLights = next->IsLightUpdatePending();
+
         /// Check for pending exceptions (Mainly TM server closed)
         if(self->_pending_exceptions) {
 
@@ -82,6 +86,10 @@ using namespace std::chrono_literals;
               return;
             }
           } while (!self->_state.compare_exchange(&prev, next));
+
+          if(UpdateLights) {
+            self->_on_light_update_callbacks.Call(next);
+          }
 
           /// Episode change
           if(episode_changed) {

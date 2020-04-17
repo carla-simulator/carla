@@ -79,6 +79,22 @@ namespace detail {
       _on_tick_callbacks.Remove(id);
     }
 
+    size_t RegisterOnMapChangeEvent(std::function<void(WorldSnapshot)> callback) {
+      return _on_map_change_callbacks.Push(std::move(callback));
+    }
+
+    void RemoveOnMapChangeEvent(size_t id) {
+      _on_map_change_callbacks.Remove(id);
+    }
+
+    size_t RegisterLightUpdateChangeEvent(std::function<void(WorldSnapshot)> callback) {
+      return _on_light_update_callbacks.Push(std::move(callback));
+    }
+
+    void RemoveLightUpdateChangeEvent(size_t id) {
+      _on_light_update_callbacks.Remove(id);
+    }
+
     void SetPedestriansCrossFactor(float percentage) {
       auto nav = _navigation.load();
       DEBUG_ASSERT(nav != nullptr);
@@ -109,6 +125,10 @@ namespace detail {
     CachedActorList _actors;
 
     CallbackList<WorldSnapshot> _on_tick_callbacks;
+
+    CallbackList<WorldSnapshot> _on_map_change_callbacks;
+
+    CallbackList<WorldSnapshot> _on_light_update_callbacks;
 
     RecurrentSharedFuture<WorldSnapshot> _snapshot;
 
