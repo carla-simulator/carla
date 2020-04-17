@@ -197,6 +197,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "World.cpp"
 #include "Commands.cpp"
 #include "TrafficManager.cpp"
+#include "LightManager.cpp"
 
 #ifdef LIBCARLA_RSS_ENABLED
 #include "AdRss.cpp"
@@ -220,6 +221,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_exception();
   export_commands();
   export_trafficmanager();
+  export_lightmanager();
   #ifdef LIBCARLA_RSS_ENABLED
   export_ad_rss();
   #endif

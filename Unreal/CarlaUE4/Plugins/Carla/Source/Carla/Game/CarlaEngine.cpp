@@ -9,6 +9,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
 
@@ -72,6 +73,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
     bIsRunning = true;
   }
+
+  bMapChanged = true;
+
 }
 
 void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
@@ -87,12 +91,22 @@ void FCarlaEngine::NotifyEndEpisode()
   CurrentEpisode = nullptr;
 }
 
-void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
+void FCarlaEngine::OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   if ((TickType == ELevelTick::LEVELTICK_All) && (CurrentEpisode != nullptr))
   {
+    // Look for lightsubsystem
+    bool LightUpdatePending = false;
+    if(World)
+    {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      LightUpdatePending = CarlaLightSubsystem->IsUpdatePending();
+    }
+
     CurrentEpisode->TickTimers(DeltaSeconds);
-    WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds);
+    WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
+
+    ResetSimulationState();
   }
 }
 
@@ -115,4 +129,9 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   }
 
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
+}
+
+void FCarlaEngine::ResetSimulationState()
+{
+  bMapChanged = false;
 }

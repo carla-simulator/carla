@@ -175,11 +175,15 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
-    float DeltaSeconds)
+    float DeltaSeconds,
+    bool MapChange,
+    bool PendingLightUpdates)
 {
 
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
+  using SimulationState = carla::sensor::s11n::EpisodeStateSerializer::SimulationState;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
+
 
   const auto &Registry = Episode.GetActorRegistry();
 
@@ -199,6 +203,12 @@ static carla::Buffer FWorldObserver_Serialize(
   header.episode_id = Episode.GetId();
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
+
+  uint8_t simulation_state = (SimulationState::MapChange * MapChange);
+  simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
+
+  header.simulation_state = static_cast<SimulationState>(simulation_state);
+
   write_data(header);
 
   // Write every actor.
@@ -227,14 +237,20 @@ static carla::Buffer FWorldObserver_Serialize(
   return std::move(buffer);
 }
 
-void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode, float DeltaSeconds)
+void FWorldObserver::BroadcastTick(
+    const UCarlaEpisode &Episode,
+    float DeltaSecond,
+    bool MapChange,
+    bool PendingLightUpdates)
 {
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
-      DeltaSeconds);
+      DeltaSecond,
+      MapChange,
+      PendingLightUpdates);
 
   AsyncStream.Send(*this, std::move(buffer));
 }
