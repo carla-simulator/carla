@@ -207,7 +207,7 @@ So far there are seven different maps available. Each one has unique features an
 <td>A rural environment with narrow roads, barely non traffic lights and barns.</td>
 <tr>
 <td><b>Town10</b></td>
-<td>A city environment with two with an avenue, a promenade and different environments.</td>
+<td>A city environment with two with an avenue, a promenade and different environments with more realistic textures.</td>
 </tbody>
 </table>
 <br>
