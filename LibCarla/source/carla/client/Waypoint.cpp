@@ -145,7 +145,7 @@ namespace client {
   }
 
   boost::optional<road::element::LaneMarking> Waypoint::GetLeftLaneMarking() const {
-    if (_mark_record.first != nullptr) {
+    if (_mark_record.second != nullptr) {
       return road::element::LaneMarking(*_mark_record.second);
     }
     return boost::optional<road::element::LaneMarking>{};
