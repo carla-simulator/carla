@@ -1006,7 +1006,9 @@ State of the light. Summarizes its attributes, group, and if it is on/off.
 Switches off the light.  
 - <a name="carla.Light.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>)  
 Switches on the light.  
-- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
 Changes the color of the light to `color`.  
     - **Parameters:**
         - `color` (_[carla.Color](#carla.Color)_)  
@@ -1059,7 +1061,9 @@ Switches off all the lights in `lights`.
 Switches on all the lights in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on.  
-- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
 Returns a list containing the lights in a certain group. By default, the group is `None`.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to filter the lights returned. Default is `None`.  
@@ -1069,21 +1073,25 @@ Returns a list with the colors of every element in `lights`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.Color](#carla.Color))_  
+    - **Setter:** _[carla.LightManager.set_color](#carla.LightManager.set_color)_  
 - <a name="carla.LightManager.get_intensity"></a>**<font color="#7fb800">get_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the intensity of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list(float)_  
+    - **Setter:** _[carla.LightManager.set_intensity](#carla.LightManager.set_intensity)_  
 - <a name="carla.LightManager.get_light_group"></a>**<font color="#7fb800">get_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the group of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightGroup](#carla.LightGroup))_  
+    - **Setter:** _[carla.LightManager.set_light_group](#carla.LightManager.set_light_group)_  
 - <a name="carla.LightManager.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the state of all the attributes of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightState](#carla.LightState))_  
+    - **Setter:** _[carla.LightManager.set_light_state](#carla.LightManager.set_light_state)_  
 - <a name="carla.LightManager.get_turned_off_lights"></a>**<font color="#7fb800">get_turned_off_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
 Returns a list containing lights switched off in the scene, filtered by group.  
     - **Parameters:**
@@ -1094,7 +1102,9 @@ Returns a list containing lights switched on in the scene, filtered by group.
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – List of lights to be queried.  
     - **Return:** _list([carla.Light](#carla.Light))_  
-- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
 Switches on/off the elements in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on/off.  
@@ -1104,6 +1114,7 @@ Changes the color of the elements in `lights` to `color`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `color` (_[carla.Color](#carla.Color)_) – Color to be applied.  
+    - **Getter:** _[carla.LightManager.get_color](#carla.LightManager.get_color)_  
 - <a name="carla.LightManager.set_colors"></a>**<font color="#7fb800">set_colors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**colors**</font>)  
 Changes the color of each element in `lights` to the corresponding in `colors`.  
     - **Parameters:**
@@ -1114,6 +1125,7 @@ Changes the intensity of every element in `lights` to `intensity`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `intensity` (_float_) – Intensity to be applied.  
+    - **Getter:** _[carla.LightManager.get_intensity](#carla.LightManager.get_intensity)_  
 - <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
 Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
     - **Parameters:**
@@ -1124,6 +1136,7 @@ Changes the group of every element in `lights` to `light_group`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_group](#carla.LightManager.get_light_group)_  
 - <a name="carla.LightManager.set_light_groups"></a>**<font color="#7fb800">set_light_groups</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_groups**</font>)  
 Changes the group of each element in `lights` to the corresponding in `light_groups`.  
     - **Parameters:**
@@ -1134,6 +1147,7 @@ Changes the state of the attributes of every element in `lights` to `light_state
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_state` (_[carla.LightState](#carla.LightState)_) – State of the attributes to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_state](#carla.LightManager.get_light_state)_  
 - <a name="carla.LightManager.set_light_states"></a>**<font color="#7fb800">set_light_states</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_states**</font>)  
 Changes the state of the attributes of each element in `lights` to the corresponding in `light_states`.  
     - **Parameters:**
