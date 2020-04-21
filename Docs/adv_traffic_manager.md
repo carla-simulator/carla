@@ -9,10 +9,12 @@
 	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
 	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
 *   [__Hybrid physics mode__](#hybrid-physics-mode)  
-*   [__Multiclient and multiTM management__](#multiclient-and-multitm-management)  
-	*   [Different Traffic Manager definitions](#different-traffic-manager-definitions)  
-	*   [Multiclient VS MultiTM](#multiclient-vs-multitm)  
+*   [__Running multiple Traffic Managers__](#running-multiple-traffic-managers)  
+	*   [Definitions](#definitions)  
+	*   [Multiclient](#multiclient)  
+	*   [MultiTM](#multitm)  
 	*   [Multisimulation](#multisimulation)  
+	*   [Comparisons](#comparisons)  
 *   [__Other considerations__](#other-considerations)  
 	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  
@@ -211,13 +213,16 @@ The following example shows how the physics are enabled and disabled when hybrid
 
 
 ---
-## Multiclient and multiTM management
+## Running multiple Traffic Managers
 
-### Different Traffic Manager definitions 
+### Definitions
 
 When working with different clients containing different TM, understanding inner implementation of the TM in the client-server architecture becomes specially relevant. There is one ruling these scenarios: __the port is the key__.  
 
 A client creates a TM by communicating with the server and passing the intended port to be used for said purpose. The port can either be stated or not, using the default as `8000`.  
+
+
+* __TM-Server__ — The port is free. This type of TM is in charge of its own logic, managed in `TrafficManagerLocal.cpp`. The following code creates two TM-Servers. Each one connects to a different port, not previously used. 
 
 ```py 
 tm01 = client01.get_trafficmanager() # tm01 --> tm01 (p=8000)
@@ -226,9 +231,7 @@ tm01 = client01.get_trafficmanager() # tm01 --> tm01 (p=8000)
 tm02 = client02.get_trafficmanager(5000) # tm02(p=5000) --> tm02 (p=5000)
 ```
 
-The previous code creates two different TM, as both have different ports and none of them was previously occupied by another TM. These are __TM-Servers__: instances of the TM created on free ports.  
-
-However, if a client tries to create a TM using a port that is already assigned to another TM, __it will not create its own but connect to the one already existing__. These are __TM-Clients__: instances of the TM created in an occupied port, which connect to the previous existing one.  
+* __TM-Client__ — The port is occupied by another TM. This instances are not in charge of their own logic. Instead, they ask for changes in the parameters of the __TM-Server__ they are connected to in  `TrafficManagerRemote.cpp`. The following code creates two TM-Clients, that connect with the TM-Servers previously created. 
 
 ```py 
 tm03 = client03.get_trafficmanager() # tm03 --> tm01 (p=8000). 
@@ -242,54 +245,41 @@ tm04 = client04.get_trafficmanager(5000) # tm04(p=5000) --> tm02 (p=5000)
 
 The CARLA server keeps register of all the TM instances internally by storing the port and also the client IP (hidden to the user) that link to them. Right now there is no way to check the TM instances that have been created so far. A connection will always be attempted when trying to create an instance and it will either create a new __TM-Server__ or a __TM-Client__.  
 
-### Multiclient VS MultiTM
-
-Based on the different definitions for a TM, successfully creating a TM can lead to two different results:  
-
-* __TM-Server:__ when the port is free. This type of TM is in charge of its own logic, managed in `TrafficManagerLocal.cpp`.  
-
-* __TM-Client:__ when the port is occupied. It is not in charge of its own logic. Instead, it asks for changes in the parameters of the __TM-Server__ it is connected to in  `TrafficManagerRemote.cpp`.
-
-That creates a clear distinction between having multiple clients and multiple Traffic Managers running: 
-
-* __Multiclient scenario:__ when there is only one TM-Server, but there are other TM-Clients created with the same port definition that are actually connecting to said TM-Server.  
-
-* __MultiTM scenario:__ when there are different TM-Server, created with different port definitions.  
-
 !!! Note 
     The class `TrafficManager.cpp` acts as a central hub managing all the different TM instances.  
 
-### Multisimulation 
+### Multiclient 
 
-A multisimulation scenario is one where there is more than one CARLA server running at the same time. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems.  
-
-For the sake of clarity, here is a distinction between all the different scenarios explained so far.  
-
-*   __Multiclient__ — More than one TM instances created with the same port. The first will be a TM-Server. The rest will be TM-Clients connecting to it.  
+More than one TM instances created with the same port. The first will be a TM-Server. The rest will be TM-Clients connecting to it.  
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
 terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server
 terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Client
 ```
 
-*   __MultiTM__ — Different TM instances with different ports assigned.  
+### MultiTM
+
+Different TM instances with different ports assigned.  
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
 terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server A
 terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4550 # TM-Server B
 ```
 
-*   __Multisimulation__ — __More than one simulation running at the same time__. The TM declaration is not relevant.  
+### Multisimulation 
+
+Multisimulation is when there are more than one CARLA server running at the same time. The TM declaration is not relevant. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems.  
+
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
 terminal 2: ./CarlaUE4.sh -carla-rpc-port=5000 # simulation B
-terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM connected to simulation A
-terminal 4: python3 spawn_npc.py --port 5000 --tm_port 5050 # TM connected to simulation B
+terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server A connected to simulation A
+terminal 4: python3 spawn_npc.py --port 5000 --tm_port 5050 # TM-Server B connected to simulation B
 ```
 
-The concept of multisimulation is independent from the Traffic Manager itself. The example above runs a multisimulation with two simulations, A and B. Each of them runs a simple Traffic Manager, but they are completely independent from each other. Simulation A could run a Multiclient TM while simulation B is running a MultiTM, or no TM at all.  
+The concept of multisimulation is independent from the Traffic Manager itself. The example above runs two CARLA simulations in parallel, A and B. In each of them, a TM-Server is created independently from the other. Simulation A could run a Multiclient TM while simulation B is running a MultiTM, or no TM at all.  
 
-The only possible issue arising from this is a simulation trying to connect to the TM running in another simulation. In case this happens, an error message will appear and the connection will be aborted, to prevent interferences between simulations.  
+The only possible issue arising from this is a client trying to connect to an already existing TM which is not running on the selected simulation. In case this happens, an error message will appear and the connection will be aborted, to prevent interferences between simulations.  
 
 
 ---
