@@ -586,16 +586,17 @@ class Documentation:
         md.textn(
         "This reference contains all the details about latest version of the Python API. To consult a valid reference for a specific CARLA release, please select it from the list hereunder.<br>"
         +"<details><summary><b>Previous references</b></summary><br><ul>"
-+"<li><a href="+"../APIs/python_api_098"+"><b>CARLA 0.9.8</b></a></li>"
-+"<li><a href="+"../APIs/python_api_097"+"><b>CARLA 0.9.7</b></a></li>"
-+"<li><a href="+"../APIs/python_api_096"+"><b>CARLA 0.9.6</b></a></li>"
-+"<li><a href="+"../APIs/python_api_095"+"><b>CARLA 0.9.5</b></a></li>"
-+"<li><a href="+"../APIs/python_api_094"+"><b>CARLA 0.9.4</b></a></li>"
-+"<li><a href="+"../APIs/python_api_093"+"><b>CARLA 0.9.3</b></a></li>"
-+"<li><a href="+"../APIs/python_api_092"+"><b>CARLA 0.9.2</b></a></li>"
-+"<li><a href="+"../APIs/python_api_091"+"><b>CARLA 0.9.1</b></a></li>"
-+"<li><a href="+"../APIs/python_api_090"+"><b>CARLA 0.9.0</b></a></li>"
-+"</ul></details><br><hr>")
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.8/python_api/"+"><b>CARLA 0.9.8</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.7/python_api/"+"><b>CARLA 0.9.7</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.6/python_api/"+"><b>CARLA 0.9.6</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.5/python_api/"+"><b>CARLA 0.9.5</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.4/python_api/"+"><b>CARLA 0.9.4</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.3/python_api/"+"><b>CARLA 0.9.3</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.2/python_api/"+"><b>CARLA 0.9.2</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.1/python_api/"+"><b>CARLA 0.9.1</b></a></li>"
++"<li><a href="+"https://carla.readthedocs.io/en/0.9.0/python_api/"+"><b>CARLA 0.9.0</b></a></li>"
++"</ul></details><br><hr>"
++"<div class='alert alert-warning'><strong>Warning!</strong> These links change the version of the documentation to a previous state. Make sure to go back to the latest to get the updated version of the docs.</div>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name
