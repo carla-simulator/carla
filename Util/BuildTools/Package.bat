@@ -323,7 +323,7 @@ for %%i in (%PACKAGES%) do (
             if errorlevel 1 goto bad_exit
             echo ZIP created at !DST_ZIP!
         )
-        
+
         popd
 
         if %DO_CLEAN%==true (
