@@ -12,6 +12,7 @@
 *   [__Multiclient and multiTM management__](#multiclient-and-multitm-management)  
 	*   [Different Traffic Manager definitions](#different-traffic-manager-definitions)  
 	*   [Multiclient VS MultiTM](#multiclient-vs-multitm)  
+	*   [Multisimulation](#multisimulation)  
 *   [__Other considerations__](#other-considerations)  
 	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  
@@ -256,7 +257,40 @@ That creates a clear distinction between having multiple clients and multiple Tr
 * __MultiTM scenario:__ when there are different TM-Server, created with different port definitions.  
 
 !!! Note 
-    The class `TrafficManager.cpp` acts as a central hub managing all the different TM instances. 
+    The class `TrafficManager.cpp` acts as a central hub managing all the different TM instances.  
+
+### Multisimulation 
+
+A multisimulation scenario is one where there is more than one CARLA server running at the same time. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems.  
+
+For the sake of clarity, here is a distinction between all the different scenarios explained so far.  
+
+*   __Multiclient__ — More than one TM instances created with the same port. The first will be a TM-Server. The rest will be TM-Clients connecting to it.  
+```py
+terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server
+terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Client
+```
+
+*   __MultiTM__ — Different TM instances with different ports assigned.  
+```py
+terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server A
+terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4550 # TM-Server B
+```
+
+*   __Multisimulation__ — __More than one simulation running at the same time__. The TM declaration is not relevant.  
+```py
+terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
+terminal 2: ./CarlaUE4.sh -carla-rpc-port=5000 # simulation B
+terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM connected to simulation A
+terminal 4: python3 spawn_npc.py --port 5000 --tm_port 5050 # TM connected to simulation B
+```
+
+The concept of multisimulation is independent from the Traffic Manager itself. The example above runs a multisimulation with two simulations, A and B. Each of them runs a simple Traffic Manager, but they are completely independent from each other. Simulation A could run a Multiclient TM while simulation B is running a MultiTM, or no TM at all.  
+
+The only possible issue arising from this is a simulation trying to connect to the TM running in another simulation. In case this happens, an error message will appear and the connection will be aborted, to prevent interferences between simulations.  
+
 
 ---
 ## Other considerations
