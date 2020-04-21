@@ -8,7 +8,7 @@
 	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
 	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
 	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
-*   [__Hybrid physics mode__](#hybrid_physics_mode)  
+*   [__Hybrid physics mode__](#hybrid-physics-mode)  
 *   [__Multiclient and multiTM management__](#multiclient-and-multitm-management)  
 	*   [Different Traffic Manager definitions](#different-traffic-manager-definitions)  
 	*   [Multiclient VS MultiTM](#multiclient-vs-multitm)  
@@ -204,7 +204,7 @@ The are two parameters ruling the hybrid mode. One is the __radius__ that states
 	*   __If there is none,__ all the vehicles will disable physics.
 	*   __If there are many,__ the radius will be considered for all of them. That will create different areas of influence with physics enabled.  
 
-Hereunder there is an example of the hybrid mode running. The __ego vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the area of influence stated by the radius, __physics are enabled and the tag becomes green__.
+The following example shows how the physics are enabled and disabled when hybrid mode is on. The __ego vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the area of influence stated by the radius, __physics are enabled and the tag becomes green__.
 
 ![Welcome to CARLA](img/tm_hybrid.gif)
 
