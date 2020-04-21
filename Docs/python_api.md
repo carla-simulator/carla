@@ -2214,8 +2214,8 @@ Method to initialize an object defining weather conditions. This class has some 
         - `precipitation` (_float_) – 0 is no rain at all, 100 a heavy rain.  
         - `precipitation_deposits` (_float_) – 0 means no puddles on the road, 100 means roads completely capped by rain.  
         - `wind_intensity` (_float_) – 0 is calm, 100 a strong wind.  
-        - `sun_azimuth_angle` (_float_) – 90 is midday, -90 is midnight.  
-        - `sun_altitude_angle` (_float_) – 0 is an arbitrary North, 180 its corresponding South.  
+        - `sun_azimuth_angle` (_float_) – 0 is an arbitrary North, 180 its corresponding South.  
+        - `sun_altitude_angle` (_float_) – 90 is midday, -90 is midnight.  
         - `fog_density` (_float_) – Density of the fog, from 0 to 100.  
         - `fog_distance` (_float_) – Distance where the fog starts in meters.  
         - `wetness` (_float_) – Humidity percentages of the road, from 0 to 100.  
