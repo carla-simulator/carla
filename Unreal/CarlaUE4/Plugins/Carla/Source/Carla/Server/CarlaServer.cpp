@@ -228,7 +228,8 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    UCarlaStatics::GetGameInstance(Episode->GetWorld())->SetMapToLoad(cr::ToFString(map_name));
+    if (!Episode->LoadNewEpisode(cr::ToFString("OpendriveMap")))
     {
       RESPOND_ERROR("map not found");
     }

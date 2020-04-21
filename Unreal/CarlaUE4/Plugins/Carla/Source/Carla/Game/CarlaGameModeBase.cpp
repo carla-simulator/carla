@@ -133,6 +133,8 @@ void ACarlaGameModeBase::BeginPlay()
   {
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
+
+  UCarlaStatics::GetGameInstance(GetWorld())->CheckAndLoadMap(GetWorld(), *Episode);
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
