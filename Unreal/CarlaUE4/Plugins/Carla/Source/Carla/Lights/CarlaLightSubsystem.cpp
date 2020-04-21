@@ -36,7 +36,7 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
 
 bool UCarlaLightSubsystem::IsUpdatePending() const
 {
-  for (auto& ClientPair : ClientStates)
+  for (auto ClientPair : ClientStates)
   {
     if(ClientPair.Value)
     {
