@@ -5,14 +5,14 @@ Sensors are actors that retrieve data from their surroundings. They are crucial 
 This page summarizes everything necessary to start handling sensors. It introduces the types available and a step-by-step guide of their life cycle. The specifics for every sensor can be found in the [sensors reference](ref_sensors.md).
 
 * [__Sensors step-by-step__](#sensors-step-by-step)  
-	* Setting  
-	* Spawning  
-	* Listening  
-	* Data  
+	*   [Setting](#setting)  
+	*   [Spawning](#spawning)  
+	*   [Listening](#listening)  
+	*   [Data](#data)  
 * [__Types of sensors__](#types-of-sensors)  
-	* Cameras  
-	* Detectors  
-	* Other  
+	*   [Cameras](#cameras)  
+	*   [Detectors](#detectors)  
+	*   [Other](#other)  
 
 ---
 ## Sensors step-by-step  
@@ -196,6 +196,10 @@ Different functionalities such as navigation, measurement of physical properties
 <td>Radar</td>
 <td><a href="../python_api#carlaradarmeasurement">carla.RadarMeasurement</a></td>
 <td>2D point map modelling elements in sight and their movement regarding the sensor. </td>
+<tr>
+<td>RSS</td>
+<td><a href="../python_api#carlarssresponse">carla.RssResponse</a></td>
+<td>Modifies the controller applied to a vehicle according to safety checks. This sensor works in a different manner than the rest, and there is specific <a href="../adv_rss">RSS documentation</a> for it. </td>
 </tbody>
 </table>
 <br>
