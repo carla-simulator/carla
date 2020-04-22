@@ -53,7 +53,7 @@ nav:
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
-  - 'Map customization': 'tuto_A_map_customization.md'
+  - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Use Epic's Automotive materials": 'tuto_A_epic_automotive_materials.md'
   - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
 - Tutorials (developers):
