@@ -229,6 +229,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     FString MapName = cr::ToFString(map_name);
+    MapName = MapName.IsEmpty() ? Episode->GetMapName() : MapName;
     auto Maps = UCarlaStatics::GetAllMapNames();
     bool bMissingMap = true;
     for (auto & Map : Maps)
