@@ -109,7 +109,7 @@ if %DO_PACKAGE%==true (
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4^
         Win64^
-        Development^
+        Shipping^
         -WaitMutex^
         -FromMsBuild^
         "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
@@ -130,7 +130,7 @@ if %DO_PACKAGE%==true (
         -archive^
         -archivedirectory="!BUILD_FOLDER!"^
         -package^
-        -clientconfig=Development
+        -clientconfig=Shipping
 
     if errorlevel 1 goto error_runUAT
 )
