@@ -242,7 +242,6 @@ pipeline
                                     call ../setEnv64.bat
                                     make CarlaUE4Editor
                                 """
-                                // make examples
                             }
                             post
                             {
@@ -253,10 +252,6 @@ pipeline
                                 }
                             }
                         }
-                        // stage('windows unit tests')
-                        // {
-                        //     steps { bat 'rem Not Implemented'}
-                        // }
                         stage('windows retrieve content')
                         {
                             steps
@@ -277,22 +272,15 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps --clean"
+                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate"
                                 """
-                                // make examples ARGS="localhost 3654"
                             }
                             post {
                                 always {
                                     archiveArtifacts 'Build/UE4Carla/*.zip'
-                                    // stash includes: 'Build/UE4Carla/CARLA*.zip', name: 'windows_package'
-                                    // stash includes: 'Examples/', name: 'windows_examples'
                                 }
                             }
                         }
-                        // stage('windows smoke test')
-                        // {
-                        //     steps { bat 'rem Not Implemented'}
-                        // }
                         stage('windows deploy')
                         {
                             when { anyOf { branch "master"; buildingTag() } }
