@@ -252,8 +252,8 @@ The CARLA server keeps register of all the TM instances internally by storing th
 More than one TM instances created with the same port. The first will be a TM-Server. The rest will be TM-Clients connecting to it.  
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
-terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server
-terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Client
+terminal 2: python3 spawn_npc.py --port 4000 --tm-port 4050 # TM-Server
+terminal 3: python3 spawn_npc.py --port 4000 --tm-port 4050 # TM-Client
 ```
 
 ### MultiTM
@@ -261,8 +261,8 @@ terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Client
 Different TM instances with different ports assigned.  
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
-terminal 2: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server A
-terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4550 # TM-Server B
+terminal 2: python3 spawn_npc.py --port 4000 --tm-port 4050 # TM-Server A
+terminal 3: python3 spawn_npc.py --port 4000 --tm-port 4550 # TM-Server B
 ```
 
 ### Multisimulation 
@@ -272,8 +272,8 @@ Multisimulation is when there are more than one CARLA server running at the same
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
 terminal 2: ./CarlaUE4.sh -carla-rpc-port=5000 # simulation B
-terminal 3: python3 spawn_npc.py --port 4000 --tm_port 4050 # TM-Server A connected to simulation A
-terminal 4: python3 spawn_npc.py --port 5000 --tm_port 5050 # TM-Server B connected to simulation B
+terminal 3: python3 spawn_npc.py --port 4000 --tm-port 4050 # TM-Server A connected to simulation A
+terminal 4: python3 spawn_npc.py --port 5000 --tm-port 5050 # TM-Server B connected to simulation B
 ```
 
 The concept of multisimulation is independent from the Traffic Manager itself. The example above runs two CARLA simulations in parallel, A and B. In each of them, a TM-Server is created independently from the other. Simulation A could run a Multiclient TM while simulation B is running a MultiTM, or no TM at all.  
@@ -284,7 +284,7 @@ The only possible issue arising from this is a client trying to connect to an al
 ---
 ## Other considerations
 
-The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time CARLA 0.9.8 is released: 
+The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time of writing.  
 
 ### FPS limitations
 
