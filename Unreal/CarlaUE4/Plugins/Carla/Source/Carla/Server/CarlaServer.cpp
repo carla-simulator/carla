@@ -231,6 +231,7 @@ void FCarlaServer::FPimpl::BindActions()
     FString MapName = cr::ToFString(map_name);
     MapName = MapName.IsEmpty() ? Episode->GetMapName() : MapName;
     auto Maps = UCarlaStatics::GetAllMapNames();
+    Maps.Add("OpenDriveMap");
     bool bMissingMap = true;
     for (auto & Map : Maps)
     {
