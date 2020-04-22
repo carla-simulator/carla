@@ -75,9 +75,6 @@ client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
 
 All the commands available are listed in the [latest section](python_api.md#command.ApplyAngularVelocity) of the Python API reference.  
 
-!!! Note
-    `apply_batch_sync()` is only available in [synchronous mode](adv_synchrony_timestep.md). It returns a [command.Response](python_api.md#command.Response) per command applied.
-
 ### Other client utilities
 
 The main purpose of the client object is to get or change the world, and apply commands. However, it also provides access to some additional features.  

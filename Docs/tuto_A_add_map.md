@@ -128,14 +128,9 @@ Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder,
 make import ARGS="--package package_name --no-carla-materials"
 ```
 
-After the ingestion, only the pedestrian navigation is yet to be generated. However there are some optional steps that can be done before that. 
+After the ingestion, only the pedestrian navigation is yet to be generated. However there is an optional step that can be done before that.  
 
 *   __Create new spawning points.__ Place them a over the road, around 0.5/1m so the wheels do not collide with the ground. These will be used in scripts such as `spawn_npc.py`.  
-
-*   __Add the map to the Unreal packaging system.__ This will include the map along with the rest if a CARLA package is created.  
-`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
-
-  ![ue_maps_to_include](img/ue_maps_to_include.png)
 
 ### Generate pedestrian navigation
 
@@ -159,6 +154,7 @@ __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, t
 __2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
 
 *   Sidewalk = `Road_Sidewalk`.  
+*   Crosswalk = `Road_Crosswalk`.  
 *   Grass = `Road_Grass`.  
 
 ![ue_meshes](img/ue_meshes.png) 
@@ -170,9 +166,16 @@ __4.__ Press `G` to deselect everything, and export the map. `File > Export CARL
 __5.__ Move the `map_file.obj` and the `map_file.xodr` to `Util/DockerUtils/dist`.  
 
 __6.__ Run the following command to generate the navigation file.  
+
+*   __Windows__ 
 ```sh
-./build.bat map_file
+build.bat map_file # map_file has no extension
 ```
+*   __Linux__
+```sh
+./build.sh map_file # map_file has no extension
+```
+
 __7.__ Move the `.bin` into the `Nav` folder of the package that contains the map.  
 
 ---

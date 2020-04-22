@@ -14,7 +14,6 @@
 	*   [Multiclient](#multiclient)  
 	*   [MultiTM](#multitm)  
 	*   [Multisimulation](#multisimulation)  
-	*   [Comparisons](#comparisons)  
 *   [__Other considerations__](#other-considerations)  
 	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  

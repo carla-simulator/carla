@@ -24,7 +24,7 @@ __The client__ is the module the user runs to ask for information or changes in 
 
 __The world__ is an object representing the simulation. It acts as an abstract layer containing the main methods to spawn actors, change the weather, get the current state of the world, etc. There is only one world per simulation. It will be destroyed and substituted for a new one when the map is changed.  
 
-### 2nd. Actors and blueprints
+### 2nd- Actors and blueprints
 An actor is anything that plays a role in the simulation.  
 
 *   Vehicles.
@@ -35,7 +35,7 @@ An actor is anything that plays a role in the simulation.
 
 __Blueprints__ are already-made actor layouts necessary to spawn an actor. Basically, models with animations and a set of attributes. Some of these attributes can be customized by the user, others don't. There is a [__Blueprint library__](bp_library.md) containing all the blueprints available as well as information on them.  
 
-### 3rd. Maps and navigation
+### 3rd- Maps and navigation
 
 __The map__ is the object representing the simulated world, the town mostly. There are eight maps available. All of them use OpenDRIVE 1.4 standard to describe the roads.  
 
@@ -43,7 +43,7 @@ __Roads, lanes and junctions__ are managed by the [Python API](python_api.md) to
 
 __Traffic signs__ and __traffic lights__ are accessible as [__carla.Landmark__](#python_api.md#carla.landmark) objects that contain information about their OpenDRIVE definition. Additionally, the simulator automatically generates stops, yields and traffic light objects when running using the information on the OpenDRIVE file. These have bounding boxes placed on the road. Vehicles become aware of them once inside their bounding box.
 
-### 4th. Sensors and data
+### 4th- Sensors and data
 
 __Sensors__ wait for some event to happen, and then gather data from the simulation. They call for a function defining how to manage the data. Depending on which, sensors retrieve different types of __sensor data__. 
 

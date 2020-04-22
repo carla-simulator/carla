@@ -2567,7 +2567,7 @@ Speed to be applied.
 ---
 
 ## command.DestroyActor<a name="command.DestroyActor"></a>
-Command adaptation of **<font color="#7fb800">destroy()</font>** in [carla.Actor](#carla.Actor) that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_synch()</font>** in [carla.Client](#carla.Client) there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.  
+Command adaptation of **<font color="#7fb800">destroy()</font>** in [carla.Actor](#carla.Actor) that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_sync()</font>** in [carla.Client](#carla.Client) there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.  
 
 <h3>Instance Variables</h3>
 - <a name="command.DestroyActor.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2591,7 +2591,7 @@ A string stating the command has failed.
 
 <h3>Methods</h3>
 - <a name="command.Response.has_error"></a>**<font color="#7fb800">has_error</font>**(<font color="#00a6ed">**self**</font>)  
-Returns <b>True</b> if the command represents a successful execution and <b>False</b> if not.  
+Returns <b>True</b> if the command execution fails, and <b>False</b> if it was successful.  
     - **Return:** _bool_  
 
 ---

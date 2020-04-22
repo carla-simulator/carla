@@ -37,7 +37,7 @@ print(client.get_available_maps())
 
 ### Landmarks
 
-Traffic signs can be read as described in the OpenDRIVE road map. All of them will be described in CARLA as landmark objects that can be queried from the API. In order to facilitate their manipulation, there have been several additions to it.  
+The traffic signs defined in the OpenDRIVE file are translated into CARLA as landmark objects that can be queried from the API. In order to facilitate their manipulation, there have been several additions to it.  
 
 *   __[carla.Landmark](https://carla.readthedocs.io/en/latest/python_api/#carla.Landmark)__ objects represent the OpenDRIVE signals. The attributes and methods describe the landmark, and where it is effective.  
 	*	[__carla.LandmarkOrientation__](https://carla.readthedocs.io/en/latest/python_api/#carla.LandmarkOrientation) states the orientation of the landmark with regards of the road's geometry definition.  
@@ -48,7 +48,6 @@ Traffic signs can be read as described in the OpenDRIVE road map. All of them wi
 
 ```py
 my_waypoint.get_landmarks(200.0,True)
-
 ``` 
 
 ### Lanes
@@ -207,7 +206,7 @@ So far there are seven different maps available. Each one has unique features an
 <td>A rural environment with narrow roads, barely non traffic lights and barns.</td>
 <tr>
 <td><b>Town10</b></td>
-<td>A city environment with two with an avenue, a promenade and different environments with more realistic textures.</td>
+<td>A city environment with with different environments such as an avenue or a promenade, and more realistic textures.</td>
 </tbody>
 </table>
 <br>
