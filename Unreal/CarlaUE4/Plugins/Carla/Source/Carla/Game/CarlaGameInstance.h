@@ -87,6 +87,10 @@ public:
 
   void CheckAndLoadMap(UWorld *world, UCarlaEpisode &Episode);
 
+  bool IsLevelPendingLoad() const {
+    return bShouldLoadLevel;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
