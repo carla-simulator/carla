@@ -19,10 +19,10 @@ nav:
   - 'F.A.Q.': 'build_faq.md'
 - First steps:
   - 'Core concepts': 'core_concepts.md'
-  - '1st. World and client': 'core_world.md'
-  - '2nd. Actors and blueprints': 'core_actors.md'
-  - '3rd. Maps and navigation': 'core_map.md'
-  - '4th. Sensors and data': 'core_sensors.md'
+  - '1st- World and client': 'core_world.md'
+  - '2nd- Actors and blueprints': 'core_actors.md'
+  - '3rd- Maps and navigation': 'core_map.md'
+  - '4th- Sensors and data': 'core_sensors.md'
 - Advanced steps:
   - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
   - 'PTV-Vissim co-simulation': 'adv_ptv.md'

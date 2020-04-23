@@ -23,7 +23,7 @@
       return: bool
       params:
       doc: >
-        Returns <b>True</b> if the command represents a successful execution and <b>False</b> if not. 
+        Returns <b>True</b> if the command execution fails, and <b>False</b> if it was successful. 
     # --------------------------------------
 
   - class_name: SpawnActor
@@ -73,7 +73,7 @@
   - class_name: DestroyActor
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">destroy()</font>** in carla.Actor that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_synch()</font>** in carla.Client there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.
+      Command adaptation of **<font color="#7fb800">destroy()</font>** in carla.Actor that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_sync()</font>** in carla.Client there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -318,10 +318,10 @@
       type: bool
       doc: >
         If autopilot should be activated or not.
-    - var_name: tm
-      type: carla.TrafficManager
+    - var_name: port
+      type: uint16
       doc: >
-        The Traffic Manager where the vehicle is registered or unlisted. 
+        Port of the Traffic Manager where the vehicle is to be registered or unlisted. 
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -332,10 +332,10 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: enabled
         type: bool
-      - param_name: tm
-        type: carla.TrafficManager
-        default: None
+      - param_name: port
+        type: uint16
+        default: 8000
         doc: >
-          The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
+          The Traffic Manager port where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
     # --------------------------------------
 ...

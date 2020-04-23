@@ -396,6 +396,12 @@
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
+    - def_name: get_port
+      params:
+      return: uint16
+      doc: >
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
+    # --------------------------------------
     - def_name: set_hybrid_physics_mode
       params:
       - param_name: enabled
