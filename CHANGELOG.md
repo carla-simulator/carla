@@ -1,4 +1,4 @@
-## Latest
+## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
   * Upgraded to Unreal Engine 4.24
