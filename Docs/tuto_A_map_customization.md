@@ -42,15 +42,15 @@ The blueprint __BP_RepSpline__ adds __individual__ elements along the path defin
 *   __Consecutive__ — If selected, ???.  
 *   __Collision enabled__ — Set the type of collisions enabled for the meshes.  
 
-![bp_repspline_pic](img/map_customization/bp_repspline.png)
+![bp_repspline_pic](img/map_customization/bp_repspline.jpg)
 
 ### BP_Spline
 
 The blueprint __BP_Spline__ adds __connected__ elements __strictly__ following the path defined by a Bezier curve. The mesh will be warped to fit the path created.  
 
-*   __Gap distance__ — Set the distance between elements.  
+*   __Gap distance__ — Add a separation between elements.  
 
-![bp_spline_pic](img/map_customization/bp_spline.png)
+![bp_spline_pic](img/map_customization/bp_spline03.jpg)
 
 ### BP_Wall
 
@@ -60,7 +60,7 @@ The blueprint __BP_Wall__ adds __connected__ elements along the path defined by 
 *   __Vertically aligned__ — If selected, the elements will be vertically aligned regarding the world axis.  
 *   __Scale offset__ — Scale the length of the mesh to round out the connection between elements.  
 
-![bp_wall_pic](img/map_customization/bp_wall.png)
+![bp_wall_pic](img/map_customization/bp_wall02.jpg)
 
 
 ### BP_SplinePowerLine
@@ -69,7 +69,7 @@ The blueprint __BP_SplinePowerLine__ adds __electricity poles__ along the path d
 
 This blueprint can be found in `Carla/Static/Pole`. This blueprint allows to set an __array of meshes__ to repeat, to provide variety.  
 
-![bp_splinepowerline_pic](img/map_customization/bp_splinepowerline.png)
+![bp_splinepowerline_pic](img/map_customization/bp_splinepowerline.jpg)
 
 The power line that connects the pole meshes can be customized.  
 
@@ -77,15 +77,15 @@ The power line that connects the pole meshes can be customized.
 *   __Edit the tension__ value. If `0`, the power lines will be staight. The bigger the value, the looser the connection.  
 *   __Set the sockets__. Sockets are empty meshes that represent the connection points of the power line. A wire is created form socket to socket between poles. The amount of sockets can be changed inside the pole meshes.  
 
-![bp_powerline_socket_pic](img/map_customization/bp_splinepowerline_sockets.png)
+![bp_powerline_socket_pic](img/map_customization/bp_splinepowerline_sockets02.jpg)
 
 !!! Important
-    If the amount of sockets between poles changes, visualization issues may arise. 
+    The amount of sockets and their names should be consistent between poles. Otherwise, visualization issues may arise. 
 
 ---
 ## Procedural buildings
 
-The blueprint __BP_Procedural_Building__ in `Content/Carla/Blueprints` creates a realistic building using key meshes that are repeated along the structure. For each of them, the user can provide an array of meshes that will be used at random for variety. The meshes are only created once, and the repetitions will be instances of the same to save up costs.  
+The blueprint __BP_Procedural_Building__ in `Content/Carla/Blueprints/LevelDesign` creates a realistic building using key meshes that are repeated along the structure. For each of them, the user can provide an array of meshes that will be used at random for variety. The meshes are only created once, and the repetitions will be instances of the same to save up costs.  
 
 !!! Note
     Blueprints can be used instead of meshes, to allow more variety and customization for the building. Blueprints can use behaviour trees to set illumination inside the building, change the materials used, and much more.  
@@ -110,8 +110,8 @@ The following picture represents the global structure.
 
 The __Base parameters__ set the dimensions of the building.  
 
-*   ___???__ — Floors of the building. Repetitions of the __Body__ meshes.  
-*   __??? and ???__ — Area of the building. Repetitions of the central meshes for each side of the building.  
+*   ___Num Floors__ — Floors of the building. Repetitions of the __Body__ meshes.  
+*   __Length X and Length Y__ — Area of the building. Repetitions of the central meshes for each side of the building.  
 
 > *Picture as above but with more complex structure. With several floors and repetitions. Cube scheme and final result side to side.*  
 
@@ -120,8 +120,8 @@ The __Base parameters__ set the dimensions of the building.
 There are some additional options to modify the general structure of the building.  
 
 *   __Disable corners__ — If selected, no corner meshes will be used.  
-*   __Doors__ — Meshes that appear in the ground floor, right in front of the central meshes. The amount of floors and their location can be set __???__.  
-*   __Walls__ — Plane meshes that substitute one or more sides of the building.  
+*   __Doors__ — Meshes that appear in the ground floor, right in front of the central meshes. The amount of dloors and their location can be set. `0` is the initial position, `1` the next base repetition, and so on.  
+*   __Walls__ — Meshes that substitute one or more sides of the building. For example, a plane mesh can be used to paint one side of the building. 
 
 > *Picture for the three of them side to side?*  
 
