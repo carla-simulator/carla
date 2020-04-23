@@ -607,7 +607,6 @@ def rad_callback(radar_data):
         r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
         g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
         b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
-        print("I got here")
         world.debug.draw_point(
             radar_data.transform.location + fw_vec,
             size=0.075,
