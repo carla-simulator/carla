@@ -15,6 +15,7 @@
 > features. Keep in mind that the API and features in this channel can (and
 > probably will) change.
 
+- [CARLA 0.9.9](https://github.com/carla-simulator/carla/releases/tag/0.9.9)
 - [CARLA 0.9.8](https://github.com/carla-simulator/carla/releases/tag/0.9.8)
 - [CARLA 0.9.7](https://github.com/carla-simulator/carla/releases/tag/0.9.7)
 - [CARLA 0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
