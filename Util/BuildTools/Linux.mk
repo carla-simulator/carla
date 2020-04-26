@@ -80,24 +80,12 @@ CarlaUE4Editor: LibCarla.server.release
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla.client.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
-
-PythonAPI.2: LibCarla.client.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
-
-PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
 PythonAPI.rebuild: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
 
 PythonAPI.rss: LibCarla.client.rss.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss
-
-PythonAPI.rss.2: LibCarla.client.rss.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --rss
-
-PythonAPI.rss.3: LibCarla.client.rss.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss
 
 PythonAPI.rss.rebuild: LibCarla.client.rss.release

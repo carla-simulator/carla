@@ -91,7 +91,7 @@ else
     wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
   fi
 
-  log "Extracting boost for Python 2."
+  log "Extracting boost for Python 3."
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
   mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
@@ -104,48 +104,14 @@ else
 
   BOOST_TOOLSET="clang-8.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
-
-  py2="/usr/bin/env python2"
-  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
-  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
-  ./bootstrap.sh \
-      --with-toolset=clang \
-      --prefix=../boost-install \
-      --with-libraries=python,filesystem,system,program_options \
-      --with-python=${py2} --with-python-root=${py2_root}
-
-  if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
-  fi
-
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
-
-  # Get rid of  python2 build artifacts completely & do a clean build for python3
-  popd >/dev/null
-  rm -Rf ${BOOST_BASENAME}-source
-
-  log "Extracting boost for Python 3."
-  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-  # Boost patch for exception handling
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-  # ---
-
-  pushd ${BOOST_BASENAME}-source >/dev/null
-
+  
   py3="/usr/bin/env python3"
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python \
+      --with-libraries=python,filesystem,system,program_options \
       --with-python=${py3} --with-python-root=${py3_root}
 
   if ${TRAVIS} ; then

@@ -14,7 +14,6 @@ DOC_STRING="Build and package CARLA Python API."
 USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean]"
 
 REMOVE_INTERMEDIATE=false
-BUILD_FOR_PYTHON2=false
 BUILD_FOR_PYTHON3=false
 BUILD_RSS_VARIANT=false
 
@@ -28,11 +27,7 @@ while true; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
-      BUILD_FOR_PYTHON2=true;
       BUILD_FOR_PYTHON3=true;
-      shift ;;
-    --py2 )
-      BUILD_FOR_PYTHON2=true;
       shift ;;
     --py3 )
       BUILD_FOR_PYTHON3=true;
@@ -53,7 +48,7 @@ while true; do
   esac
 done
 
-if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3}; }; then
+if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON3}; }; then
   fatal_error "Nothing selected to be done."
 fi
 
@@ -82,18 +77,9 @@ if ${BUILD_RSS_VARIANT} ; then
   export BUILD_RSS_VARIANT=${BUILD_RSS_VARIANT}
 fi
 
-if ${BUILD_FOR_PYTHON2} ; then
-
-  log "Building Python API for Python 2."
-
-  /usr/bin/env python2 setup.py bdist_egg
-
-fi
-
 if ${BUILD_FOR_PYTHON3} ; then
 
   log "Building Python API for Python 3."
-
   /usr/bin/env python3 setup.py bdist_egg
 
 fi
