@@ -39,7 +39,6 @@ The blueprint __BP_RepSpline__ adds __individual__ elements along the path defin
 *   __Max Number of Meshes__ — Set the maximum amount of elements that will be place between nodes of the curve.  
 *   __World aligned ZY__ — If selected, the elements will be vertically aligned regarding the world axis.  
 *   __Place Mesheson Points__ — If selected, an element will be added in the ending node of the curve.  
-*   __Consecutive__ — If selected, ???.  
 *   __Collision enabled__ — Set the type of collisions enabled for the meshes.  
 
 ![bp_repspline_pic](img/map_customization/bp_repspline.jpg)
@@ -92,7 +91,7 @@ The blueprint __BP_Procedural_Building__ in `Content/Carla/Blueprints/LevelDesig
 
 ### Building structure
 
-The key meshes will be updated everytime a change is made, and the building will disappear. Enable __Create automatically__ or click on __Create Building__ to see the new result. 
+The key meshes will be updated everytime a change is made, and the building will disappear. Enable `Create automatically` or click on `Create Building` to see the new result. 
 
 These key meshes can be percieved as pieces of the building's structure. They can be grouped in four categories.  
 
@@ -100,7 +99,7 @@ These key meshes can be percieved as pieces of the building's structure. They ca
 *   __Body__ — The middle floors of the building.  
 *   __Roof__ — The highest floor of the building.  
 
-For each of them, there is a __Corner__ mesh that will be placed on the sides of the floor, and a __???__ mesh to fill center. Additionally, the __Roof__ mesh will be the center piece on top of the building.  
+For each of them, there is a mesh to fill the center of the floor, and a __Corner__ mesh that will be placed on the sides of the floor. Additionally, the __Roof__ mesh will be the center piece on top of the building.  
 
 The following picture represents the global structure. 
 
@@ -120,8 +119,10 @@ The __Base parameters__ set the dimensions of the building.
 There are some additional options to modify the general structure of the building.  
 
 *   __Disable corners__ — If selected, no corner meshes will be used.  
+*   __Use full blocks__ — If selected, n
 *   __Doors__ — Meshes that appear in the ground floor, right in front of the central meshes. The amount of dloors and their location can be set. `0` is the initial position, `1` the next base repetition, and so on.  
 *   __Walls__ — Meshes that substitute one or more sides of the building. For example, a plane mesh can be used to paint one side of the building. 
+
 
 > *Picture for the three of them side to side?*  
 
