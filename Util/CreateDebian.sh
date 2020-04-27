@@ -1,6 +1,7 @@
 #!/bin/sh
 
-#This script builds debian package for CARLA
+#This script builds debian package for CARLA,
+#Please read comments before making any changes
 #Tested with Ubuntu 14.04, 16.04, 18.04 and 19.10
 
 sudo apt-get install build-essential dh-make
@@ -10,15 +11,32 @@ DEBFULLNAME=Carla\ Simulator\ Team
 export DEBFULLNAME
 
 #replace CARLA_VERSION with your required carla-<version>
+#Note :Please check urls either at lines 28&29 or lines 32&33 works with given CARLA_VERSION
+#otherwise add an appropriate if statement with correct links after versionCompare() function.
+#For other Carla releases, please add/remove appropriate folder in Makefile at line 80.
 CARLA_VERSION=0.9.9
-CARLA_DIR=carla-${CARLA_VERSION}
+CARLA_VER=9.9 #for carla version like 1.0.1 use 10.1
+CARLA_DIR=carla-simulator-${CARLA_VERSION}
 
-#replace the url with your carla release url
-CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_${CARLA_VERSION}.tar.gz
+#to find correct github link
+versionCompare() {
+   awk -v v1="$1" -v v2="$2" 'BEGIN {printf v1<v2? 0:1 }'
+}
 
-#replace the url with your required additional maps url
-#if you do not have additional map then comment line 21, 22, 40, 41
-ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
+if [ $(versionCompare ${CARLA_VER} 9.8) -eq 1 ]
+then
+	CARLA_RELEASE_REPO=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_${CARLA_VERSION}.tar.gz
+	ADDITIONALMAPS=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
+elif [ $(versionCompare ${CARLA_VER} 9.5) -eq 1 ] && [ $(versionCompare 9.8 ${CARLA_VER}) -eq 1 ]
+then
+	CARLA_RELEASE_REPO=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_${CARLA_VERSION}.tar.gz
+	ADDITIONALMAPS=http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
+else
+	echo "For put correct link at line 35&36 in CreateDebian.sh for other Carla releases"
+	CARLA_RELEASE_REPO=
+	ADDITIONALMAPS=
+fi
+
 ADDITIONALMAPS_TAR=AdditionalMaps_${CARLA_VERSION}.tar.gz
 
 mkdir -p carla-debian/${CARLA_DIR}
@@ -51,9 +69,8 @@ rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.sym
 rm CarlaUE4.sh
 cat >> CarlaUE4.sh <<EOF
 #!/bin/sh
-
-chmod +x "/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
-"/opt/carla/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 $@
+sudo chmod +x "/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
+"/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 $@
 EOF
 
 
@@ -65,16 +82,18 @@ binary:
 	# we are not going to build anything
 
 install:
-	mkdir -p \$(DESTDIR)/opt/carla/bin
-	cp  CarlaUE4.sh \$(DESTDIR)/opt/carla/bin
-	cp ImportAssets.sh \$(DESTDIR)/opt/carla
-	cp -r CarlaUE4 \$(DESTDIR)/opt/carla
-	cp -r Engine \$(DESTDIR)/opt/carla
-	cp -r Import \$(DESTDIR)/opt/carla
-	cp -r PythonAPI \$(DESTDIR)/opt/carla
+	mkdir -p \$(DESTDIR)/opt/carla-simulator/bin
+	cp  CarlaUE4.sh \$(DESTDIR)/opt/carla-simulator/bin
+	cp ImportAssets.sh \$(DESTDIR)/opt/carla-simulator
+	cp -r CarlaUE4 \$(DESTDIR)/opt/carla-simulator
+	cp -r Engine \$(DESTDIR)/opt/carla-simulator
+	cp -r Import \$(DESTDIR)/opt/carla-simulator
+	cp -r PythonAPI \$(DESTDIR)/opt/carla-simulator
+	cp -r Co-Simulation \$(DESTDIR)/opt/carla-simulator
+	cp -r Tools \$(DESTDIR)/opt/carla-simulator
 EOF
 
-dh_make -e carla.simulator@gmail.com --indep --createorig -y  #to create necessary file structure for debian packaging
+timeout --signal=SIGINT 10 dh_make -e carla.simulator@gmail.com --indep --createorig -y  #to create necessary file structure for debian packaging
 
 cd debian/
 
@@ -86,7 +105,7 @@ rm control
 
 #Adding package dependencies(Package will install them itself) and description
 cat >> control <<EOF
-Source: carla
+Source: carla-simulator
 Section: simulator
 Priority: optional
 Maintainer: Carla Simulator Team <carla.simulator@gmail.com>
@@ -94,7 +113,7 @@ Build-Depends: debhelper (>= 9)
 Standards-Version: ${CARLA_VERSION}
 Homepage: http://carla.org/
 
-Package: carla
+Package: carla-simulator
 Architecture: any
 Depends: python,
 	 python-numpy,
@@ -119,13 +138,20 @@ cat>> postinst << EOF
 
 SITEDIR=\$(python3 -c 'import site; site._script()' --user-site)
 mkdir -p "\$SITEDIR"
-echo "/opt/carla/PythonAPI/carla/dist/${CARLA_DIR}-py3.5-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+
+if [ $(versionCompare ${CARLA_VER} 9.9) -eq 1 ]
+then
+	echo "/opt/carla-simulator/PythonAPI/carla/dist/carla-${CARLA_VERSION}-py3.7-linux-x86_64.egg\n/opt/carla-simulator/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+else
+	echo "/opt/carla-simulator/PythonAPI/carla/dist/carla-${CARLA_VERSION}-py3.5-linux-x86_64.egg\n/opt/carla-simulator/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+fi
+
 
 SITEDIR=\$(python2 -c 'import site; site._script()' --user-site)
 mkdir -p "\$SITEDIR"
-echo "/opt/carla/PythonAPI/carla/dist/${CARLA_DIR}-py2.7-linux-x86_64.egg\n/opt/carla/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
+echo "/opt/carla-simulator/PythonAPI/carla/dist/carla-${CARLA_VERSION}-py2.7-linux-x86_64.egg\n/opt/carla-simulator/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
 
-chmod +x /opt/carla/bin/CarlaUE4.sh
+chmod +x /opt/carla-simulator/bin/CarlaUE4.sh
 
 set -e
 
@@ -188,4 +214,4 @@ cd ..
 
 dpkg-buildpackage -uc -us -b #building debian package
 
-#install debian package using "sudo dpkg -i ../carla_<version>_amd64.deb"
+#install debian package using "sudo dpkg -i ../carla-simulator_<version>_amd64.deb"
