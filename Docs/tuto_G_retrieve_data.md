@@ -208,9 +208,9 @@ python spawn_npc.py -n 50 -w 50 --safe
 
 ### SUMO co-simulation traffic
 
-CARLA can run a co-simulation with SUMO. This allows for creating traffic in SUMO that will be propagated to CARLA. This co-simulation is bidirectional. Spawning vehicles in CARLA will do so in SUMO.  
+CARLA can run a co-simulation with SUMO. This allows for creating traffic in SUMO that will be propagated to CARLA. This co-simulation is bidirectional. Spawning vehicles in CARLA will do so in SUMO. Specific docs on this feature can be found [here](adv_sumo.md).  
 
-Right now this feature is available for CARLA 0.9.8 and later, in __Town01__, __Town04__, and __Town05__. The first one is the most stable.  
+This feature is available for CARLA 0.9.8 and later, in __Town01__, __Town04__, and __Town05__. The first one is the most stable.  
 
 !!! Note
     The co-simulation will enable synchronous mode in CARLA. Read the [documentation](adv_synchrony_timestep.md) to find out more about this. 
@@ -228,7 +228,7 @@ echo "export SUMO_HOME=/usr/share/sumo" >> ~/.bashrc && source ~/.bashrc
 * With the CARLA server on, run the [SUMO-CARLA synchrony script](https://github.com/carla-simulator/carla/blob/master/Co-Simulation/Sumo/run_synchronization.py). 
 ```sh
 cd ~/carla/Co-Simulation/Sumo
-python run_synchronization.py -c examples/Town01.sumocfg
+python run_synchronization.py examples/Town01.sumocfg --sumo-gui
 ```
 * A SUMO window should have opened. __Press Play__ in order to start traffic in both simulations. 
 ```
