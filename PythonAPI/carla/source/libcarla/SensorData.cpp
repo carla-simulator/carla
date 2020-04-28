@@ -99,18 +99,18 @@ namespace data {
   }
 
   std::ostream &operator<<(std::ostream &out, const DVSEvent &event) {
-    out << "Event(" << event.x
-        << ',' << event.y
-        << ',' << event.t
-        << ',' << event.pol << ')';
+    out << "Event(x=" << std::to_string(event.x)
+        << ", y=" << std::to_string(event.y)
+        << ", t=" << std::to_string(event.t)
+        << ", pol=" << std::to_string(event.pol) << ')';
     return out;
   }
 
   std::ostream &operator<<(std::ostream &out, const DVSEventArray &events) {
-    out << "EventArray(frame=" << events.GetFrame()
-        << ", timestamp=" << events.GetTimestamp()
-        << ", dimensions=" << events.GetWidth() << 'x' << events.GetHeight()
-        << ", number_of_events=" << events.size()
+    out << "EventArray(frame=" << std::to_string(events.GetFrame())
+        << ", timestamp=" << std::to_string(events.GetTimestamp())
+        << ", dimensions=" << std::to_string(events.GetWidth()) << 'x' << std::to_string(events.GetHeight())
+        << ", number_of_events=" << std::to_string(events.size())
         << ')';
     return out;
   }
@@ -350,7 +350,7 @@ void export_sensor_data() {
     .add_property("pol", &csd::DVSEvent::pol)
     .def(self_ns::str(self_ns::self))
   ;
-  
+
   class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
     .add_property("width", &csd::DVSEventArray::GetWidth)
     .add_property("height", &csd::DVSEventArray::GetHeight)

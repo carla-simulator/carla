@@ -1,9 +1,12 @@
+## Latest
+
+  * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
+
 ## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
   * Upgraded to Unreal Engine 4.24
   * Fixed autonomous agents' incorrect detection of red traffic lights affecting them
-  * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Improved manual_control by adding realistic throttle and brake
   * Added walkable pedestrian crosswalks in OpenDRIVE standalone mode
   * Improved mesh generation with a chunk system for better performance and bigger maps in the future

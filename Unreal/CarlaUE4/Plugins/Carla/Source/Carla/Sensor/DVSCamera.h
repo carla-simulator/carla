@@ -13,7 +13,7 @@
 
 namespace dvs
 {
-  /** DVS Configuration structure **/
+  /// DVS Configuration structure
   struct Config
   {
     float Cp;
@@ -35,7 +35,7 @@ namespace dvs
     return static_cast<double>(nanoseconds) / 1e9;
   }
 
-}//namespace dvs
+} // namespace dvs
 
 /// Sensor that produce Dynamic Vision Events
 UCLASS()
@@ -56,22 +56,22 @@ protected:
   ADVSCamera::DVSEventArray simulation (float DeltaTime);
 
 private:
-  //! @return Sample from normal distribution (real-valued).
+  /// @return Sample from normal distribution (real-valued).
   template<typename T> T sampleNormalDistribution( bool deterministic, T mean, T sigma);
 
 private:
-  /** Images containing last (current) and previous image **/
+  /// Images containing last (current) and previous image
   TArray<float> last_image, prev_image;
 
-  /** Image containing the last reference vaklue to trigger event **/
+  /// Image containing the last reference vaklue to trigger event
   TArray<float> ref_values;
 
-  /** Image containing time of last event in seconds **/
+  /// Image containing time of last event in seconds
   TArray<double> last_event_timestamp;
 
-  /** Current time in nanoseconds **/
+  /// Current time in nanoseconds
   std::int64_t current_time;
 
-  /** DVS simulation configuration **/
+  /// DVS simulation configuration
   dvs::Config config;
 };
