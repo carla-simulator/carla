@@ -41,7 +41,8 @@ The blueprint __BP_RepSpline__ adds __individual__ elements along the path defin
 *   __Place Mesheson Points__ — If selected, an element will be added in the ending node of the curve.  
 *   __Collision enabled__ — Set the type of collisions enabled for the meshes.  
 
-![bp_repspline_pic](img/map_customization/bp_repspline.jpg)
+![bp_repspline_pic](img/map_customization/BP_Repspline.jpg)
+<div style="text-align: right"><i>BP_RepSpline example.</i></div>
 
 ### BP_Spline
 
@@ -49,7 +50,8 @@ The blueprint __BP_Spline__ adds __connected__ elements __strictly__ following t
 
 *   __Gap distance__ — Add a separation between elements.  
 
-![bp_spline_pic](img/map_customization/bp_spline03.jpg)
+![bp_spline_pic](img/map_customization/BP_Spline.jpg)
+<div style="text-align: right"><i>BP_Spline example.</i></div>
 
 ### BP_Wall
 
@@ -59,8 +61,8 @@ The blueprint __BP_Wall__ adds __connected__ elements along the path defined by 
 *   __Vertically aligned__ — If selected, the elements will be vertically aligned regarding the world axis.  
 *   __Scale offset__ — Scale the length of the mesh to round out the connection between elements.  
 
-![bp_wall_pic](img/map_customization/bp_wall02.jpg)
-
+![bp_wall_pic](img/map_customization/BP_Wall.jpg)
+<div style="text-align: right"><i>BP_Wall example.</i></div>
 
 ### BP_SplinePowerLine
 
@@ -68,7 +70,8 @@ The blueprint __BP_SplinePowerLine__ adds __electricity poles__ along the path d
 
 This blueprint can be found in `Carla/Static/Pole`. This blueprint allows to set an __array of meshes__ to repeat, to provide variety.  
 
-![bp_splinepowerline_pic](img/map_customization/bp_splinepowerline.jpg)
+![bp_splinepowerline_pic](img/map_customization/BP_Splinepowerline.jpg)
+<div style="text-align: right"><i>BP_SplinePowerLine example.</i></div>
 
 The power line that connects the pole meshes can be customized.  
 
@@ -76,7 +79,8 @@ The power line that connects the pole meshes can be customized.
 *   __Edit the tension__ value. If `0`, the power lines will be staight. The bigger the value, the looser the connection.  
 *   __Set the sockets__. Sockets are empty meshes that represent the connection points of the power line. A wire is created form socket to socket between poles. The amount of sockets can be changed inside the pole meshes.  
 
-![bp_powerline_socket_pic](img/map_customization/bp_splinepowerline_sockets02.jpg)
+![bp_powerline_socket_pic](img/map_customization/BP_Splinepowerline_Sockets.jpg)
+<div style="text-align: right"><i>Visualization of the sockets for BP_SplinePowerLine.</i></div>
 
 !!! Important
     The amount of sockets and their names should be consistent between poles. Otherwise, visualization issues may arise. 
@@ -103,32 +107,32 @@ For each of them, there is a mesh to fill the center of the floor, and a __Corne
 
 The following picture represents the global structure. 
 
-![bp_procedural_building_pic](img/map_customization/bp_procedural_building.jpg)
-
-> *The picture above but only most basic structure with result side to side.*  
+![bp_procedural_building_visual](img/map_customization/BP_Procedural_Building_Visual.jpg)
+<div style="text-align: right"><i>Visualization of the building structure.</i></div>
 
 The __Base parameters__ set the dimensions of the building.  
 
 *   ___Num Floors__ — Floors of the building. Repetitions of the __Body__ meshes.  
 *   __Length X and Length Y__ — Area of the building. Repetitions of the central meshes for each side of the building.  
 
-> *Picture as above but with more complex structure. With several floors and repetitions. Cube scheme and final result side to side.*  
+![bp_procedural_building_full](img/map_customization/BP_Procedural_Building_Full.jpg)
+<div style="text-align: right"><i>Example of BP_Procedural_Building.</i></div>
 
 ### Structure modifications
 
 There are some additional options to modify the general structure of the building.  
 
 *   __Disable corners__ — If selected, no corner meshes will be used.  
-*   __Use full blocks__ — If selected, n
+*   __Use full blocks__ — If selected, the structure of the building will use only one mesh per floor. No corners nor repetitions will appear in each floor.  
 *   __Doors__ — Meshes that appear in the ground floor, right in front of the central meshes. The amount of dloors and their location can be set. `0` is the initial position, `1` the next base repetition, and so on.  
 *   __Walls__ — Meshes that substitute one or more sides of the building. For example, a plane mesh can be used to paint one side of the building. 
 
-
-> *Picture for the three of them side to side?*  
+![bp_procedural_building_extras](img/map_customization/BP_Procedural_Building_Extras.jpg)
+<div style="text-align: right"><i>On the left, a building with no cornes and one door. <br> On the right, a building with a wall applied to one side of the building. The wall is a texture with no fire escape.</i></div>
 
 ---
 
-That is all there is so far, regarding for the PTV-Vissim co-simulation with CARLA. 
+That is all there is so far, regarding the different map customization tools available in CARLA.
 
 Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 
