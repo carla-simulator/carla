@@ -4,6 +4,7 @@
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed missing include directive in file **WheelPhysicsControl.h**
+  * Fixed gravity measurement bug from IMU sensor
 
 ## CARLA 0.9.9
 
