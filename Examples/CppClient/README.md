@@ -55,21 +55,26 @@ ninja install
 This will generate the following structure at the provided install path
 
 ```
-libcarla-install/
-├── include/
-│   ├── carla/
-│   ├── boost/
-│   ├── rpc/
-│   └── ...
-└── lib/
+libcarla-install
+├── include
+│   ├── carla
+│   ├── cephes
+│   ├── pugixml
+|   ├── ...
+│   └── system
+│       ├── boost
+│       ├── recast
+│       └── rpc
+└── lib
     ├── libcarla_client.a
     ├── librpc.a
     ├── libboost_filesystem.a
     └── ...
 ```
 
-Our application needs to be linked at minimum against `libcarla_client.a` and
-`librpc.a`. If we make use of IO functionality and/or image processing we would
-need to link against `boost_filesystem`, `png`, `tiff`, and/or `jpeg`.
+Our application needs to be linked at minimum against `libcarla_client.a`,
+`librpc.a`, `libRecast.a`, and `libDetour*.a`. If we make use of IO
+functionality and/or image processing we would need to link against
+`boost_filesystem`, `png`, `tiff`, and/or `jpeg`.
 
 For more details take a look at the Makefile provided.
