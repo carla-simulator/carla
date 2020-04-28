@@ -6,7 +6,8 @@
 > branch. It contains the very last fixes and features that will be part of the
 > next release, but also some experimental changes. Use at your own risk!
 
-- [CARLA Nightly Build](http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz)
+- [CARLA Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)  
+- [CARLA Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)  
 
 ### Development [[Documentation](https://carla.readthedocs.io/en/latest/)]
 
@@ -14,6 +15,7 @@
 > features. Keep in mind that the API and features in this channel can (and
 > probably will) change.
 
+- [CARLA 0.9.9](https://github.com/carla-simulator/carla/releases/tag/0.9.9)
 - [CARLA 0.9.8](https://github.com/carla-simulator/carla/releases/tag/0.9.8)
 - [CARLA 0.9.7](https://github.com/carla-simulator/carla/releases/tag/0.9.7)
 - [CARLA 0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)

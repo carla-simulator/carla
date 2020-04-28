@@ -24,6 +24,7 @@
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
+#include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
@@ -227,11 +228,32 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    if (!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    FString MapName = cr::ToFString(map_name);
+    MapName = MapName.IsEmpty() ? Episode->GetMapName() : MapName;
+    auto Maps = UCarlaStatics::GetAllMapNames();
+    Maps.Add("OpenDriveMap");
+    bool bMissingMap = true;
+    for (auto & Map : Maps)
+    {
+      if(Map.Contains(MapName))
+      {
+        bMissingMap = false;
+        break;
+      }
+    }
+    if(bMissingMap)
     {
       RESPOND_ERROR("map not found");
     }
+    UCarlaStatics::GetGameInstance(Episode->GetWorld())->SetMapToLoad(MapName);
+    Episode->LoadNewEpisode(cr::ToFString("EmptyMap"));
     return R<void>::Success();
+  };
+
+  BIND_SYNC(check_intermediate_episode) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return UCarlaStatics::GetGameInstance(Episode->GetWorld())->IsLevelPendingLoad();
   };
 
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>
@@ -1032,6 +1054,34 @@ void FCarlaServer::FPimpl::BindActions()
     }
     return result;
   };
+
+  // ~~ Light Subsystem ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(query_lights_state) << [this](std::string client) -> R<std::vector<cr::LightState>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    std::vector<cr::LightState> result;
+    auto *World = Episode->GetWorld();
+    if(World) {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      result = CarlaLightSubsystem->GetLights(FString(client.c_str()));
+    }
+    return result;
+  };
+
+  BIND_SYNC(update_lights_state) << [this]
+    (std::string client, const std::vector<cr::LightState>& lights, bool discard_client) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    if(World) {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      CarlaLightSubsystem->SetLights(FString(client.c_str()), lights, discard_client);
+    }
+    return R<void>::Success();
+  };
+
+
 }
 
 // =============================================================================

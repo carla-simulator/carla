@@ -35,14 +35,12 @@ namespace client {
     : Actor(std::move(init)),
       _is_control_sticky(GetControlIsSticky(GetAttributes())) {}
 
-  void Vehicle::SetAutopilot(bool enabled, SharedPtr<TM> tm) {
-    if(tm == nullptr ) {
-      tm = MakeShared<TM>(GetEpisode());
-    }
+  void Vehicle::SetAutopilot(bool enabled, uint16_t tm_port) {
+    TM tm(GetEpisode(), tm_port);
     if (enabled) {
-      tm->RegisterVehicles({shared_from_this()});
+      tm.RegisterVehicles({shared_from_this()});
     } else {
-      tm->UnregisterVehicles({shared_from_this()});
+      tm.UnregisterVehicles({shared_from_this()});
     }
   }
 

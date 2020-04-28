@@ -126,20 +126,11 @@ Download the __latest__ assets to work with the current version of CARLA.
 
 ### make CARLA
 
-Go to the root CARLA folder to make the build. The process may take a while, around 20-40 minutes, it will download and install the necessary libraries. There are different commands to build the different modules.  
-
-!!! Warning
-    Make sure to run __make launch__ to prepare the server and __make PythonAPI__ for the client.  
-    Alternatively __make libcarla__ will prepare the CARLA library to be imported anywhere. 
-
-
-### make CARLA
-
 The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder.  
 
 !!! Warning
-    Make sure to run __make launch__ to prepare the server and __make PythonAPI__ for the client.  
-    Alternatively __make libcarla__ will prepare the CARLA library to be imported anywhere. 
+    Make sure to run `make launch` to prepare the server and `make PythonAPI` for the client.  
+    Alternatively `make LibCarla` will prepare the CARLA library to be imported anywhere. 
 
 * __make launch__ compiles the server simulator and launches Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
 ```sh

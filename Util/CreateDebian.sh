@@ -10,7 +10,7 @@ DEBFULLNAME=Carla\ Simulator\ Team
 export DEBFULLNAME
 
 #replace CARLA_VERSION with your required carla-<version>
-CARLA_VERSION=0.9.8
+CARLA_VERSION=0.9.9
 CARLA_DIR=carla-${CARLA_VERSION}
 
 #replace the url with your carla release url

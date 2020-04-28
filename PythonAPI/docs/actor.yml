@@ -216,11 +216,11 @@
       - param_name: enabled
         type: bool
         default: True
-      - param_name: tm
-        type: carla.TrafficManager
-        default: None
+      - param_name: port
+        type: uint16
+        default: 8000
         doc: >
-          The Traffic Manager where the vehicle is registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
+          The port of the TM-Server where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
       doc: >
         Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.
     # --------------------------------------

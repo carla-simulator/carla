@@ -128,16 +128,9 @@ Check that there is an `.fbx` and a `.xodr` for each map in the `Import` folder,
 make import ARGS="--package package_name --no-carla-materials"
 ```
 
-After the ingestion, only the pedestrian navigation is yet to be generated. However there are some optional steps that can be done before that. 
+After the ingestion, only the pedestrian navigation is yet to be generated. However there is an optional step that can be done before that.  
 
-*   __Create new spawning points.__ These will be used in scripts such as `spawn_npc.py`. Place the spawning point 2 to 3 meters above the ground, and a Route Planner's trigger box below it. Orient both in the same direction. When the vehicle falls into the trigger box, the autopilot will be enabled, and the vehicle will be registered to a Traffic Manager.
-
-  ![ue_vehicle_spawnpoint](img/ue_vehicle_spawnpoint.png)
-
-*   __Add the map to the Unreal packaging system.__ This will include the map along with the rest if a CARLA package is created.  
-`Edit > Project Settings > Project > Packaging > Show Advanced > List of maps to include...` <br>
-
-  ![ue_maps_to_include](img/ue_maps_to_include.png)
+*   __Create new spawning points.__ Place them a over the road, around 0.5/1m so the wheels do not collide with the ground. These will be used in scripts such as `spawn_npc.py`.  
 
 ### Generate pedestrian navigation
 
@@ -160,11 +153,8 @@ __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, t
 
 __2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
 
-
-    If no `.json` is provided, the name must be `map_package`
-
-If you don't have a .json then you don't need to specify a name unless you want to change the default map_package name. That is what I was intending to say, sorry.
 *   Sidewalk = `Road_Sidewalk`.  
+*   Crosswalk = `Road_Crosswalk`.  
 *   Grass = `Road_Grass`.  
 
 ![ue_meshes](img/ue_meshes.png) 
@@ -173,22 +163,20 @@ __3.__ Name these planes following the common format `Road_Crosswalk_mapname`.
 
 __4.__ Press `G` to deselect everything, and export the map. `File > Export CARLA...`. A `map_file.obj` file will be created in `Unreal/CarlaUE4/Saved`.
 
-__5.__ Move the `map_file.obj` and the `map_file.xodr` to `Util/DockerUtils/dist`. There are several scripts there that are going to be used.  
+__5.__ Move the `map_file.obj` and the `map_file.xodr` to `Util/DockerUtils/dist`.  
 
-__6.__ Run the following script to extract the crosswalks from the OpenDRIVE. This will create a `crosswalks.obj`.  
+__6.__ Run the following command to generate the navigation file.  
 
-``` sh
-python get_xodr_crosswalks.py -f map_file.xodr
-```
-__7.__ Combine `map_file.obj` and `crosswalks.obj` running the following script. After that, the `map_file.obj` should contain both.  
+*   __Windows__ 
 ```sh
-python addOBJ.py map_file.obj crosswalks.obj
+build.bat map_file # map_file has no extension
 ```
-__8.__ Create the file describing the pedestrian navigation. A `.bin` will be generated in `Util/DockerUtils/Dist`.  
+*   __Linux__
 ```sh
-./RecastBuilder.sh map_file.obj
+./build.sh map_file # map_file has no extension
 ```
-__9.__ Move the `.bin` into the `Nav` folder of the package that contains the map.  
+
+__7.__ Move the `.bin` into the `Nav` folder of the package that contains the map.  
 
 ---
 ## Deprecated ways to import a map

@@ -10,6 +10,7 @@
 #include "carla/Time.h"
 #include "carla/client/DebugHelper.h"
 #include "carla/client/Landmark.h"
+#include "carla/client/LightManager.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/EpisodeProxy.h"
@@ -131,6 +132,8 @@ namespace client {
     SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
+
+    SharedPtr<LightManager> GetLightManager() const;
 
     DebugHelper MakeDebugHelper() const {
       return DebugHelper{_episode};

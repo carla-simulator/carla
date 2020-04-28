@@ -17,6 +17,7 @@ void export_trafficmanager() {
     using namespace boost::python;
 
     class_<carla::traffic_manager::TrafficManager>("TrafficManager", no_init)
+      .def("get_port", &carla::traffic_manager::TrafficManager::Port)
       .def("vehicle_percentage_speed_difference", &carla::traffic_manager::TrafficManager::SetPercentageSpeedDifference)
       .def("global_percentage_speed_difference", &carla::traffic_manager::TrafficManager::SetGlobalPercentageSpeedDifference)
       .def("collision_detection", &carla::traffic_manager::TrafficManager::SetCollisionDetection)

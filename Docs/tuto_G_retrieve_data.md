@@ -198,7 +198,7 @@ python spawn_npc.py -n 50 -w 50 --safe
   --safe                avoid spawning vehicles prone to accidents
   --filterv PATTERN     vehicles filter (default: "vehicle.*")
   --filterw PATTERN     pedestrians filter (default: "walker.pedestrian.*")
-  -tm_p P, --tm_port P  port to communicate with TM (default: 8000)
+  -tm_p P, --tm-port P  port to communicate with TM (default: 8000)
   --sync                Synchronous mode execution
 ```
 </details>

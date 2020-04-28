@@ -60,7 +60,7 @@ static auto ApplyBatchCommandsSync(
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
   carla::client::World world = self.GetWorld();
-  boost::shared_ptr<carla::traffic_manager::TrafficManager> tm = nullptr;
+  uint16_t tm_port = 8000;
 
   std::atomic<size_t> vehicles_to_enable_index;
   std::atomic<size_t> vehicles_to_disable_index;
@@ -84,7 +84,7 @@ static auto ApplyBatchCommandsSync(
           auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmd_type);
           for (auto &cmd : spawn.do_after) {
             if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
-              tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm;
+              tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm_port;
               autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
               isAutopilot = true;
             }
@@ -92,7 +92,7 @@ static auto ApplyBatchCommandsSync(
         }
         // check SetAutopilot command
         else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
-          tm = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm;
+          tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm_port;
           autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
           isAutopilot = true;
         }
@@ -148,13 +148,8 @@ static auto ApplyBatchCommandsSync(
 
   // check if any autopilot command was sent
   if (vehicles_to_enable.size() || vehicles_to_disable.size()) {
-    if(tm){
-      tm->RegisterVehicles(vehicles_to_enable);
-      tm->UnregisterVehicles(vehicles_to_disable);
-    } else {
-      self.GetInstanceTM().RegisterVehicles(vehicles_to_enable);
-      self.GetInstanceTM().UnregisterVehicles(vehicles_to_disable);
-    }
+    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
   }
 
   return result;

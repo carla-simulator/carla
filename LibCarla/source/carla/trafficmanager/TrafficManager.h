@@ -235,12 +235,12 @@ private:
     auto it = _tm_map.find(port);
     if (it != _tm_map.end()) {
       _mutex.unlock();
-      return it->second.get();
+      return it->second;
     }
     return nullptr;
   }
 
-  static std::map<uint16_t, std::unique_ptr<TrafficManagerBase>> _tm_map;
+  static std::map<uint16_t, TrafficManagerBase*> _tm_map;
   static std::mutex _mutex;
 
   uint16_t _port = 0;

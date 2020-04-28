@@ -27,11 +27,18 @@ namespace s11n {
   class EpisodeStateSerializer {
   public:
 
+    enum SimulationState {
+      None               = (0x0 << 0),
+      MapChange          = (0x1 << 0),
+      PendingLightUpdate = (0x1 << 1)
+    };
+
 #pragma pack(push, 1)
     struct Header {
       uint64_t episode_id;
       double platform_timestamp;
       float delta_seconds;
+      SimulationState simulation_state = SimulationState::None;
     };
 #pragma pack(pop)
 

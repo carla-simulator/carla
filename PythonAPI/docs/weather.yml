@@ -83,12 +83,12 @@
         type: float
         default: 0.0
         doc: >
-          90 is midday, -90 is midnight. 
+          0 is an arbitrary North, 180 its corresponding South.  
       - param_name: sun_altitude_angle
         type: float
         default: 0.0
         doc: >
-          0 is an arbitrary North, 180 its corresponding South.  
+          90 is midday, -90 is midnight.  
       - param_name: fog_density
         type: float
         default: 0.0

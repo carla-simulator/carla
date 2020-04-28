@@ -69,7 +69,7 @@ def main():
         default='walker.pedestrian.*',
         help='pedestrians filter (default: "walker.pedestrian.*")')
     argparser.add_argument(
-        '-tm_p', '--tm_port',
+        '--tm-port',
         metavar='P',
         default=8000,
         type=int,
@@ -152,7 +152,7 @@ def main():
                 driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
                 blueprint.set_attribute('driver_id', driver_id)
             blueprint.set_attribute('role_name', 'autopilot')
-            batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True)))
+            batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
 
         for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:
