@@ -253,7 +253,7 @@ ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
               }
               else
               {
-                /** Dropping event because time since last event < refractory_period_ns **/ 
+                /** Dropping event because time since last event < refractory_period_ns **/
               }
               this->ref_values[i] = curr_cross;
             }

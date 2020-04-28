@@ -15,6 +15,7 @@
 
 // 1. Include the serializer here.
 #include "carla/sensor/s11n/CollisionEventSerializer.h"
+#include "carla/sensor/s11n/DVSEventArraySerializer.h"
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
@@ -23,7 +24,6 @@
 #include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
 #include "carla/sensor/s11n/RadarSerializer.h"
-#include "carla/sensor/s11n/DVSEventArraySerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;

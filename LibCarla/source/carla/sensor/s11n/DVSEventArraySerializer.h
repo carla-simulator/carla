@@ -54,19 +54,18 @@ namespace s11n {
       sensor.GetFOVAngle(),
     };
 
-    /** Reset the output buffer **/
+    /// Reset the output buffer
     output.reset(sizeof(DVSHeader) + (events.size() * sizeof(data::DVSEvent)));
 
-    /** Pointer to data in buffer **/
+    /// Pointer to data in buffer
     unsigned char *it = output.data();
 
-    /** Copy the header into the output buffer **/
+    /// Copy the header into the output buffer
     std::memcpy(it, reinterpret_cast<const void *>(&header), sizeof(header));
     it += sizeof(DVSHeader);
 
-    /** Copy the events into the output buffer **/
-    for (auto e : events)
-    {
+    /// Copy the events into the output buffer
+    for (auto e : events) {
       std::memcpy(it, reinterpret_cast<const void *>(&e), sizeof(data::DVSEvent));
       it += sizeof(data::DVSEvent);
     }

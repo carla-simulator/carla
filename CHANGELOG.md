@@ -6,6 +6,7 @@
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
   * OpenDRIVE ingestion bugfixes
+  * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
 
 ## CARLA 0.9.9
 
