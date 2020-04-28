@@ -18,6 +18,7 @@
     - Added new methods to `Map`: `get_all_landmarks`, `get_all_landmarks_from_id` and `get_all_landmarks_of_type`
   * Added synchronization of traffic lights in sumo co-simulation
   * Added light manager to control the lights of the map.
+  * Fixed gravity measurement bug from IMU sensor.
 
 ## CARLA 0.9.8
 
