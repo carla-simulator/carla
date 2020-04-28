@@ -38,7 +38,7 @@ The blueprint __BP_RepSpline__ adds __individual__ elements along the path defin
 *   __Offset translation__ — Set a range of random locations along the different axis.  
 *   __Max Number of Meshes__ — Set the maximum amount of elements that will be place between nodes of the curve.  
 *   __World aligned ZY__ — If selected, the elements will be vertically aligned regarding the world axis.  
-*   __Place Mesheson Points__ — If selected, an element will be added in the ending node of the curve.  
+*   __EndPoint__ — If selected, an element will be added in the ending node of the curve.  
 *   __Collision enabled__ — Set the type of collisions enabled for the meshes.  
 
 ![bp_repspline_pic](img/map_customization/BP_Repspline.jpg)
@@ -101,11 +101,10 @@ These key meshes can be percieved as pieces of the building's structure. They ca
 
 *   __Base__ — The ground floor of the building.  
 *   __Body__ — The middle floors of the building.  
-*   __Roof__ — The highest floor of the building.  
+*   __Top__ — The highest floor of the building.  
+*   __Roof__ — Additional mesh that used to fill the spaces in the middle of the top floor.  
 
-For each of them, there is a mesh to fill the center of the floor, and a __Corner__ mesh that will be placed on the sides of the floor. Additionally, the __Roof__ mesh will be the center piece on top of the building.  
-
-The following picture represents the global structure. 
+For each of them, except the __Roof__, there is a mesh to fill the center of the floor, and a __Corner__ mesh that will be placed on the sides of the floor. The following picture represents the global structure. 
 
 ![bp_procedural_building_visual](img/map_customization/BP_Procedural_Building_Visual.jpg)
 <div style="text-align: right"><i>Visualization of the building structure.</i></div>
