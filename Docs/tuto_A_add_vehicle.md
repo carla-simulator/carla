@@ -49,14 +49,20 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __3.2 - Change the general collider__ — Select a box and adjust it to the shape of the vehicle.  
 	*   __3.3 - *Physics Type*__ — `Kinematic`.  
 	*   __3.4 - *Simulation Generates Hit Event*__ — Enabled.  
-<br>
+
+![add_vehicle_step_03](img/add_vehicle_step_03.jpg)
+<div style="text-align: right"><i>Step 3, set colliders.</i></div>
+
 *   __4. Create the Animation Blueprint__. In the new vehicle folder, click right and go to `Create advanced asset/Animation/Animation blueprint`.  
 	*   __4.1 - *Parent Class*__ — `VehicleAnimInstance`.  
 	*   __4.2 - *Skeleton*__ — `<vehicle_name>_Skeleton`.  
 	*   __4.3 - Rename the blueprint__ — `BP_<vehicle_name>_anim`.  
 	*   __4.4 - Copy an existing Animation Blueprint__ — Go to `Content/Carla/Static/Vehicle` and choose any vehicle folder. Open its Animation Blueprint and copy the content.  
 	*   __4.5 - Compile the Animation Blueprint__ — Connect the content in the blueprint and click the button `Compile` on the top left corner.  
-<br>
+
+![add_vehicle_step_04](img/add_vehicle_step_04.jpg)
+<div style="text-align: right"><i>Step 4.5, connect the blueprint.</i></div>
+
 *   __5. Create a folder for the vehicle blueprints__. Go to `Content/Carla/Blueprints/Vehicles` and create a new folder `<vehicle_name>`.  
 <br>
 *   __6. Create blueprints for the wheels__. Inside the folder, right-click and go to `Created advanced assets/Blueprints class`. Create two blueprints derived from `VehicleWheel`, one named `<vehicle_name>_FrontWheel` and the other `<vehicle_name>_RearWheel`.  
@@ -64,18 +70,27 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __6.2 - *Rig Config*__ — `CommonTireConfig`.  
 	*   __6.3 - On the front wheel__ — Set `Steer Angle`, default is `70`. Uncheck `Affected by Handbrake`.  
 	*   __6.4 - On the rear wheel__ — Set `Steer Angle` to `0`. Check `Affected by Handbrake`.  
-<br>
+
+![add_vehicle_step_06](img/add_vehicle_step_06.jpg)
+<div style="text-align: right"><i>Step 6.3, front wheel setup.</i></div>
+
 *   __7. Create a blueprint for the vehicle__. Inside the folder, create another blueprint derived from `BaseVehiclePawn` and named `BP_<vehicle_name>`.  
 	*   __7.1 - *Mesh*__ — Choose the skelletal mesh of the vehicle.  
 	*   __7.2 - *Anim class*__ — Choose the Animation blueprint created in *step 4*.  
 	*   __7.3 - *Vehicle bound*__ — Adjust it to include the whole volume of the vehicle.  
-<br>
+
+![add_vehicle_step_07](img/add_vehicle_step_07.jpg)
+<div style="text-align: right"><i>Step 6.3, create the blueprint.</i></div>
+
 *   __8. Pair the wheels with their blueprint__. In `Vehicle Movement/Wheel Setups` expand the menu and prepare each wheel.  
 	*   __8.1 - *Wheel_Front_Left*__ — `<vehicle_model>_FrontWheel`  
 	*   __8.2 - *Wheel_Front_Right*__ — `<vehicle_model>_FrontWheel`  
 	*   __8.3 - *Wheel_Rear_Left*__ — `<vehicle_model>_RearWheel`  
 	*   __8.4 - *Wheel_Rear_Right*__ — `<vehicle_model>_RearWheel`  
-<br>
+
+![add_vehicle_step_08](img/add_vehicle_step_08.jpg)
+<div style="text-align: right"><i>Step 8, pair the wheels.</i></div>
+
 *   __9 - Compile the blueprint__ — Click the button `Compile` on the top left corner.  
 <br>
 *   __10 - Add the vehicle__. In `Content/Carla/Blueprint/Vehicle`, open the `VehicleFactory` and add a new element to the array of vehicles.  
@@ -83,7 +98,10 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __10.2 - *Model*__ — Choose the name to be used in the blueprint library in CARLA.  
 	*   __10.3 - *Class*__ — `BP_<vehicle_name>`.  
 	*   __10.4 - *Recommended colours*__ — Optionally, provide a set of recommended colours for the vehicle.  
-<br>
+
+![add_vehicle_step_10](img/add_vehicle_step_10.jpg)
+<div style="text-align: right"><i>Step 10, add the new vehicle.</i></div>
+
 *   __11. Test the vehicle__. Launch CARLA, open a terminal in `PythonAPI/examples` and run the following command.  
 ```sh
 python manual_control.py --filter <model_name> # The name used in step 10.2
