@@ -9,6 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/data/DVSEvent.h"
+#include "carla/sensor/data/Color.h"
 #include "carla/sensor/s11n/DVSEventArraySerializer.h"
 
 namespace carla {
@@ -16,7 +17,7 @@ namespace sensor {
 namespace data {
 
   /// An array of DVS Events in an image structure HxW
-  class DVSEventArray : public Array<DVSEvent>  {
+  class DVSEventArray : public Array<DVSEvent> {
     using Super = Array<DVSEvent>;
   protected:
 
@@ -51,6 +52,22 @@ namespace data {
     auto GetFOVAngle() const {
       return GetHeader().fov_angle;
     }
+
+    std::vector<Color> ToImage() const {
+      std::vector<Color> img(GetHeight() * GetWidth());
+      for (const auto &event : *this) {
+        size_t index = (GetWidth() * event.y) + event.x;
+        if (event.pol == true) {
+          // Blue is positive
+          img[index].b = 255u;
+        } else {
+          // Red is negative
+          img[index].r = 255u;
+        }
+      }
+      return img;
+    }
+
   };
 
 } // namespace data
