@@ -22,8 +22,6 @@ set DO_PACKAGE=true
 set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
-
-set UE_VERSION=4.24
 set PACKAGES=Carla
 
 
@@ -43,10 +41,6 @@ if not "%1"=="" (
 
     if "%1"=="--no-packaging" (
         set DO_PACKAGE=false
-    )
-
-    if "%1"=="--ue-version" (
-        set UE_VERSION=%~2
     )
 
     if "%1"=="--packages" (
@@ -71,13 +65,17 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-rem Extract Unreal Engine root path
-rem
-set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\%UE_VERSION%"
-set VALUE_NAME=InstalledDirectory
-
-for /f "usebackq tokens=2*" %%A in (`reg query %KEY_NAME% /v %VALUE_NAME% /reg:64`) do set UE4_ROOT=%%B
-if not defined UE4_ROOT goto error_unreal_no_found
+rem Get Unreal Engine root path
+if not defined UE4_ROOT (
+    set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine"
+    set VALUE_NAME=InstalledDirectory
+    for /f "usebackq tokens=1,2,*" %%A in (`reg query !KEY_NAME! /s /reg:64`) do (
+        if "%%A" == "!VALUE_NAME!" (
+            set UE4_ROOT=%%C
+        )
+    )
+    if not defined UE4_ROOT goto error_unreal_no_found
+)
 
 rem Set packaging paths
 rem
@@ -354,7 +352,7 @@ rem ============================================================================
 
 :error_unreal_no_found
     echo.
-    echo %FILE_N% [ERROR] Unreal Engine %UE_VERSION% not detected
+    echo %FILE_N% [ERROR] Unreal Engine not detected
     goto bad_exit
 
 :error_build_editor
