@@ -19,11 +19,14 @@ struct DVSEvent {
 
     /// Copy Constructor
     DVSEvent(const DVSEvent &arg)
-      :x(arg.x), y(arg.y), t(arg.t), pol(arg.pol){}
+      : x(arg.x), y(arg.y), t(arg.t), pol(arg.pol) {}
 
     /// Moving constructor
     DVSEvent(const DVSEvent &&arg)
-      :x(std::move(arg.x)), y(std::move(arg.y)), t(std::move(arg.t)), pol(std::move(arg.pol)){}
+      : x(std::move(arg.x)),
+        y(std::move(arg.y)),
+        t(std::move(arg.t)),
+        pol(std::move(arg.pol)) {}
 
     /// Constructor
     DVSEvent(std::uint16_t x, std::uint16_t y, std::int64_t t, bool pol)
@@ -47,11 +50,11 @@ struct DVSEvent {
       return *this;
     }
 
-    bool operator==(const DVSEvent &rhs) const  {
+    bool operator==(const DVSEvent &rhs) const {
       return (x == rhs.x) && (y == rhs.y) && (t == rhs.t) && (pol == rhs.pol);
     }
 
-    bool operator!=(const DVSEvent &rhs) const  {
+    bool operator!=(const DVSEvent &rhs) const {
       return !(*this == rhs);
     }
 
