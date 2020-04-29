@@ -14,7 +14,6 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set UE_VERSION=4.24
 set BUILD_UE4_EDITOR=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
@@ -51,11 +50,15 @@ if %REMOVE_INTERMEDIATE% == false (
     )
 )
 
-rem Extract Unreal Engine root path
+rem Get Unreal Engine root path
 if not defined UE4_ROOT (
-    set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\%UE_VERSION%"
+    set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine"
     set VALUE_NAME=InstalledDirectory
-    for /f "usebackq tokens=2*" %%A in (`reg query !KEY_NAME! /v !VALUE_NAME! /reg:64`) do set UE4_ROOT=%%B
+    for /f "usebackq tokens=1,2,*" %%A in (`reg query !KEY_NAME! /s /reg:64`) do (
+        if "%%A" == "!VALUE_NAME!" (
+            set UE4_ROOT=%%C
+        )
+    )
     if not defined UE4_ROOT goto error_unreal_no_found
 )
 
@@ -157,5 +160,5 @@ rem ============================================================================
 
 :error_unreal_no_found
     echo.
-    echo %FILE_N% [ERROR] Unreal Engine %UE_VERSION% not detected
+    echo %FILE_N% [ERROR] Unreal Engine not detected
     goto bad_exit
