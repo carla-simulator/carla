@@ -56,10 +56,6 @@ protected:
   ADVSCamera::DVSEventArray simulation (float DeltaTime);
 
 private:
-  /// @return Sample from normal distribution (real-valued).
-  template<typename T> T sampleNormalDistribution( bool deterministic, T mean, T sigma);
-
-private:
   /// Images containing last (current) and previous image
   TArray<float> last_image, prev_image;
 

@@ -8,7 +8,9 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+
 #include "Carla.h"
+#include "Carla/Util/RandomEngine.h"
 #include "Carla/Sensor/DVSCamera.h"
 
 ADVSCamera::ADVSCamera(const FObjectInitializer &ObjectInitializer)
@@ -17,6 +19,8 @@ ADVSCamera::ADVSCamera(const FObjectInitializer &ObjectInitializer)
   EnablePostProcessingEffects(true);
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 FActorDefinition ADVSCamera::GetSensorDefinition()
@@ -174,7 +178,6 @@ void ADVSCamera::imageToLogGray(const TArray<FColor> &image, TArray<float> &gray
   }
 }
 
-
 ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
 {
   /** Array of events **/
@@ -203,27 +206,28 @@ ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
   static constexpr float tolerance = 1e-6;
 
   /** delta time in nanoseconds **/
-  std::uint64_t delta_t_ns = dvs::secToNanosec(this->GetEpisode().GetElapsedGameTime()) - this->current_time;
+  const std::uint64_t delta_t_ns = dvs::secToNanosec(
+      this->GetEpisode().GetElapsedGameTime()) - this->current_time;
 
   /** Loop along the image size **/
-  for (int y = 0; y < this->GetImageHeight(); ++y)
+  for (uint32 y = 0; y < this->GetImageHeight(); ++y)
   {
-    for (int x = 0; x < this->GetImageWidth(); ++x)
+    for (uint32 x = 0; x < this->GetImageWidth(); ++x)
     {
-      int i = (this->GetImageWidth() * y) + x;
-      float itdt = this->last_image[i];
-      float it = this->prev_image[i];
-      float prev_cross = this->ref_values[i];
+      const uint32 i = (this->GetImageWidth() * y) + x;
+      const float itdt = this->last_image[i];
+      const float it = this->prev_image[i];
+      const float prev_cross = this->ref_values[i];
 
       if (std::fabs (it - itdt) > tolerance)
       {
-        float pol = (itdt >= it) ? +1.0 : -1.0;
+        const float pol = (itdt >= it) ? +1.0 : -1.0;
         float C = (pol > 0) ? this->config.Cp : this->config.Cm;
-        float sigma_C = (pol > 0) ? this->config.sigma_Cp : this->config.sigma_Cm;
+        const float sigma_C = (pol > 0) ? this->config.sigma_Cp : this->config.sigma_Cm;
 
         if(sigma_C > 0)
         {
-          C += this->sampleNormalDistribution<float>(false, 0, sigma_C);
+          C += RandomEngine->GetNormalDistribution(0, sigma_C);
           constexpr float minimum_contrast_threshold = 0.01;
           C = std::max(minimum_contrast_threshold, C);
         }
@@ -237,8 +241,8 @@ ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
           if ((pol > 0 && curr_cross > it && curr_cross <= itdt)
               || (pol < 0 && curr_cross < it && curr_cross >= itdt))
           {
-            std::uint64_t edt = (curr_cross - it) * delta_t_ns / (itdt - it);
-            std::int64_t t = this->current_time + edt;
+            const std::uint64_t edt = (curr_cross - it) * delta_t_ns / (itdt - it);
+            const std::int64_t t = this->current_time + edt;
 
             // check that pixel (x,y) is not currently in a "refractory" state
             // i.e. |t-that last_timestamp(x,y)| >= refractory_period
@@ -264,7 +268,7 @@ ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
           }
         } while (!all_crossings);
       } // end tolerance
-    }//end for each pixel
+    } // end for each pixel
   }
 
   /** Update current time **/
@@ -277,12 +281,4 @@ ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
   std::sort(events.begin(), events.end(), [](const ::carla::sensor::data::DVSEvent& it1, const ::carla::sensor::data::DVSEvent& it2){return it1.t < it2.t;});
 
   return events;
-}
-
-template<typename T> T ADVSCamera::sampleNormalDistribution(bool deterministic, T mean, T sigma)
-{
-  static std::mt19937 gen_nondeterministic(std::random_device{}());
-  static std::mt19937 gen_deterministic(0);
-  auto dist = std::normal_distribution<T>(mean, sigma);
-  return deterministic ? dist(gen_deterministic) : dist(gen_nondeterministic);
 }
