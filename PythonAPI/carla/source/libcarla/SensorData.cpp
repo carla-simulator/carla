@@ -319,12 +319,6 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-    class_<std::vector<csd::Color> >("ColorVector")
-    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<csd::Color> >)
-    .def("__len__", &std::vector<csd::Color>::size)
-    .def(vector_indexing_suite< std::vector<csd::Color> >())
-  ;
-
   class_<std::vector<std::int64_t>>("IntVector")
     .add_property("raw_data", &GetRawDataAsBuffer< std::vector<std::int64_t> >)
     .def("__len__", &std::vector<std::int64_t>::size)
@@ -364,25 +358,7 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::DVSEventArray &self, size_t pos, csd::DVSEvent event) {
       self.at(pos) = event;
     })
-    .def("to_image", +[](const csd::DVSEventArray &self) -> std::vector<csd::Color> {
-      std::vector<csd::Color> img (self.GetHeight() * self.GetWidth());
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        size_t index = (self.GetWidth() * event.y) + event.x;
-        if (event.pol == true)
-        {
-          /** Blue is positive **/
-          img[index].b = 255u;
-        }
-        else
-        {
-          /** Red is negative **/
-          img[index].r = 255u;
-        }
-     }
-      return img;
-    })
+    .def("to_image", CALL_RETURNING_LIST(csd::DVSEventArray, ToImage))
     .def("to_array", +[](const csd::DVSEventArray &self) -> std::vector<std::vector<std::int64_t>> {
       std::vector<std::vector<std::int64_t>> array (self.size());
       for (size_t i=0; i<self.size(); ++i)
