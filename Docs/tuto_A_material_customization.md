@@ -24,17 +24,8 @@ In CARLA, there is a set of master materials that are used as templates for the 
 *   __M_CarLightsGlass_Master__ — Material applied to the glass covering car lights.  
 *   __M_CarWindows_Master__ — Material applied to the windows.  
 *   __M_CarLicensePlate_Master__ — Material applied to the license plate.  
-*   __M_CarVehicleLights_Master__ — Material applied to the base the car lights.  
+*   __M_CarVehicleLights_Master__ — Material applied to the car lights as an emissive texure.  
 *   __M_CarVehicleLigthsSirens_Master__ — Material applied to the sirens, if applicable.  
-
-For each of these materials, a texture is used, designed using the following references.  
-
-![materials_references](img/material_customization/Materials_References.png)
-<div style="text-align: right"><i>References to create car textures.</i></div>
-
-Additionally, texture used for vehicle lights follows also a specific reference. 
-
-![materials_vehiclelights](img/material_customization/Materials_VehicleLights02.jpg)
 
 ---
 ## Customize car materials
@@ -56,7 +47,7 @@ The exterior material is applied to the body of the car, and it is the one that 
 ![materials_Tint](img/material_customization/Materials_Tint.jpg)
 <div style="text-align: right"><i>Red car with pink tint. On the left, tint is disabled, on the right, enabled.</i></div>
 
-*   __Dust__ — A texture of dirt applied to the car. Dust is mean to pile on top of the car, and it is barely noticeable in the bottom parts.  
+*   __Dust__ — A texture of dirt applied to the car. Dust is meant to pile on top of the geometry, and it is barely noticeable in the bottom parts. If the geometry is rotated, the dust will appear on the parts of the vehicle that are on top. 
 	*   `Amount` — Opacity of the texture.  
 	*   `Color` — Base color of the dust texture.  
 	*   `Tiling` — Size and repetition of the dust texture pattern.  
@@ -66,7 +57,7 @@ The exterior material is applied to the body of the car, and it is the one that 
 ![materials_Dust](img/material_customization/Materials_Dust.png)
 <div style="text-align: right"><i>Dust property in a car's material.</i></div>
 
-*   __Flakes__ — Sparkling flakes to the metallic paint of the ca.  
+*   __Flakes__ — Sparkling flakes to the metallic paint of the car.  
 	*   `On/Off` — Enables or disables the feature.  
 	*   `Scale` — Size of the flakes. 
 	*   `Brightness` — Intensity of the sparkle.  
@@ -121,28 +112,29 @@ The materials applied to buildings are made of four basic textures that are comb
 	*   `Ambient occlusion` — Contained in the `R` channel.  
 	*   `Roughness` — Contained in the `G` channel.  
 	*   `Metallic map` — Contained in the `B` channel.  
-	*   `Emissive mask` — Contained in the `Alpha` channel. This mask allos to change the emissive color and intensity of the portions in white.  
+	*   `Emissive mask` — Contained in the `Alpha` channel. This mask allows to change the emissive color and intensity of the portions in white.  
 
 *   __Normal__ — Contains the normal map of the material.  
 	*   `RGB` — The normal map information.  
 
 *   __Emissive__ — If applicable, this texture is used to set the emissive base colors of the texture.  
-	*   `RGB` — Mask that sets emissive colors for portions painted with other than black.  
+	*   `RGB` — Color information for the emissive elements in the texture.  
 
 ---
 ## Customize a building material
 
 Similarly to car materials, a building material can be greatly changed if desired, but it is only recommended if the user has some expertise with Unreal Engine. However, there is some customization available for the two main shaders that buildings use.  
 
-*   __Glass shader__ — Who uses this??? .  
-> Properties???
+*   __Glass shader__ — `M_CarWindows_Master`.  
+	*   `Opacity` — Enable color changes on the white area on the __Diffuse__ `Alpha` texture.  
+	*   `Color` — Tint to be applied based on the white area on the __Diffuse__ `Alpha` texture.  
 
-*   __Material shader__ — Who uses this???.  
+*   __Building shader__ — `M_Building_Master`  
 	*   `Change Color` — Enable color changes on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Color` — Tint to be applied based on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Emissive Texture` — Enable the usage of an __Emissive__ texture.  
 	*   `EmissiveColor` — Tint to be applied based on the white area on the __ORME__ `Emissive mask` texture.
-	*   `Emissive atenuance` — Intensity of the emissive texture.  
+	*   `Emissive atenuance` — Factor that divides the intensity stated in __BP_Lights__ to obtain proper emissive values.  
 	*   `RoughnessCorrection` — Changes the intensity of the roughness map.  
 	*   `MetallicCorrection` — Changes the intensity of the metallic map.  
 	*   `NormalFlatness` — Changes the intensity of the normal map.  

@@ -126,8 +126,8 @@ CARLA forum</a>
         — Generate and handle standalone packages for assets.  
     [__Map customization__](tuto_A_map_customization.md)
         — Edit an existing map.  
-    [__Use Epic's Automotive materials__](tuto_A_epic_automotive_materials.md)
-        — Apply Epic's set of Automotive materials to vehicles.  
+    [__Material customization__](tuto_A_material_customization.md)
+        — Edit vehicle and building materials.  
     [__Vehicle modelling__](tuto_A_vehicle_modelling.md)
         — Create a new vehicle for CARLA.  
     </p>
