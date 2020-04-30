@@ -232,8 +232,8 @@ The variable should be added to `~/.bashrc` or `~/.profile` to be set persistent
 The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder.  
 
 !!! Warning
-    Make sure to run __make launch__ to prepare the server and __make PythonAPI__ for the client.  
-    Alternatively __make libcarla__ will prepare the CARLA library to be imported anywhere. 
+    Make sure to run `make launch` to prepare the server and `make PythonAPI` for the client.  
+    Alternatively `make LibCarla` will prepare the CARLA library to be imported anywhere. 
 
 * __make launch__ compiles the server simulator and launches Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
 ```sh

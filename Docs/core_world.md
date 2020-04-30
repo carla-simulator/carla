@@ -4,23 +4,23 @@ The client and the world are two of the fundamentals of CARLA, a necessary abstr
 
 This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://forum.carla.org/) is there to solve them.  
 
-* [__The client__](#the-client)
-	* Client creation
-	* World connection 
-	* Other client utilities
-* [__The world__](#the-world)
-	* World life cycle   
-	* Get() from the world
-	* Weather 
-	* World snapshots 
-	* Settings  
+*   [__The client__](#the-client)  
+	*   [Client creation](#client-creation)  
+	*   [World connection](#world-connection)  
+	*   [Other client utilities](#other-client-utilities)  
+*   [__The world__](#the-world)  
+	*   [Actors](#actors)  
+	*   [Weather](#weather)  
+	*   [Debugging](#debugging)  
+	*   [World snapshots](#world-snapshots)  
+	*   [World settings](#world-settings)  
 
 ---
 ## The client
 
 Clients are one of the main elements in the CARLA architecture. They connect to the server, retrieve information, and command changes. That is done via scripts. The client identifies itself, and connects to the world to then operate with the simulation.  
 
-Besides that, clients are able to access other CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest of features are more complex, and will be dealt with in other sections.  
+Besides that, clients are able to access advanced CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest of features are more complex, and they will be addressed in their respective pages in __Advanced steps__.  
 
 Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API reference to learn on specific methods and variables of the class. 
 
@@ -63,42 +63,48 @@ world = client.load_world('Town01')
 
 Every world object has an `id` or episode. Everytime the client calls for `load_world()` or `reload_world()` the previous one is destroyed. A new one is created from scratch with a new episode. Unreal Engine is not rebooted in the process. 
 
-### Other client utilities
+### Using commands
 
-The main purpose of the client object is to get or change the world. Usually it is no longer used after that. However, the client also applies command batches and accesses advanced features. These features are.  
+__Commands__ are adaptations of some of the most-common CARLA methods, that can be applied in batches. For instance, the [command.SetAutopilot](python_api.md#command.SetAutopilot) is equivalent to [Vehicle.set_autopilot()](python_api.md#carla.Vehicle.set_autopilot), enables the autopilot for a vehicle. However, using the methods [Client.apply_batch](python_api.md#carla.Client.apply_batch) or [Client.apply_batch_sync()](python_api.md#carla.Client.apply_batch_sync), a list of commands can be applied in one single simulation step. This becomes extremely useful for methods that are usually applied to even hundreds of elements.  
 
-* __Traffic manager.__ This module is in charge of every vehicle set to autopilot to recreate urban traffic. 
-* __[Recorder](adv_recorder.md).__ Allows to reenact a previous simulation. Uses [snapshots](core_world.md#world-snapshots) summarizing the simulation state per frame. 
+The following example uses a batch to destroy a list of vehicles all at once.  
 
-As for command batches, the latest sections in the Python API describe the [available commands](python_api.md#command.ApplyAngularVelocity). These are common functions prepared to be executed in lots during the same step of the simulation. They can, for instance, destroy all the vehicles contained in `vehicles_list` at once.  
 ```py
 client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
 ```
 
-`apply_batch_sync()` is only available in [synchronous mode](adv_synchrony_timestep.md). It returns a [command.Response](python_api.md#command.Response) per command applied.
+All the commands available are listed in the [latest section](python_api.md#command.ApplyAngularVelocity) of the Python API reference.  
+
+### Other client utilities
+
+The main purpose of the client object is to get or change the world, and apply commands. However, it also provides access to some additional features.  
+
+*   __Traffic manager.__ This module is in charge of every vehicle set to autopilot to recreate urban traffic.  
+*   __[Recorder](adv_recorder.md).__ Allows to reenact a previous simulation. Uses [snapshots](core_world.md#world-snapshots) summarizing the simulation state per frame.  
 
 ---
 ## The world
 
 The major ruler of the simulation. Its instance should be retrieved by the client. It does not contain the model of the world itself, that is part of the [Map](core_map.md) class. Instead, most of the information, and general settings can be accessed from this class.
 
-* Actors in the simulation and the spectator. 
-* Blueprint library. 
-* Map. 
-* Simulation settings. 
-* Snapshots. 
+*   Actors in the simulation and the spectator.  
+*   Blueprint library.  
+*   Map.  
+*   Simulation settings.  
+*   Snapshots.  
+*   Weather and light manager.  
 
-Some of its most important methods are _getters_. Take a look at [carla.World](python_api.md#carla.World) to learn more about it. 
+Some of its most important methods are _getters_, precisely to retrieve information or instances of these elements. Take a look at [carla.World](python_api.md#carla.World) to learn more about it.  
 
 ### Actors
 
 The world has different methods related with actors that allow for different functionalities.  
 
-* Spawn actors (but not destroy them). 
-* Get every actor on scene, or find one in particular.  
-* Access the blueprint library.  
-* Access the spectator actor, the simulation's point of view.  
-* Retrieve a random location that is fitting to spawn an actor.  
+*   Spawn actors (but not destroy them). 
+*   Get every actor on scene, or find one in particular.  
+*   Access the blueprint library.  
+*   Access the spectator actor, the simulation's point of view.  
+*   Retrieve a random location that is fitting to spawn an actor.  
 
 Spawning will be explained in [2nd. Actors and blueprints](core_actors.md). It requires some understanding on the blueprint library, attributes, etc.  
 
@@ -121,9 +127,27 @@ There are some weather presets that can be directly applied to the world. These 
 ```py
 world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
-
 !!! Note
     Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors. 
+
+__Night mode starts when sun_altitude_angle < 0__, which is considered sunset. This is when street and vehicle lights become especially relevant.  
+
+
+*   __Street lights__ automatically turn on when night mode starts. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Their properties can be changed at will. An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights.  
+
+* __Vehicle lights__ have to be turned on/off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). So far, not all vehicles have lights integrated. Here is a list of those that are available by the time of writing.  
+	*   __Bikes.__ All of them have a front and back position light.  
+	*   __Motorcycles.__ Yamaha and Harley Davidson models.  
+	*   __Cars.__ Audi TT, Chevrolet, Dodge (the police car), Etron, Lincoln, Mustang, Tesla 3S, Wolkswagen T2 and the new guests coming to CARLA.  
+
+The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
+
+```py
+# Turn on position lights
+current_lights = carla.VehicleLightState.NONE
+current_lights |= carla.VehicleLightState.Position
+vehicle.set_light_state(current_lights)
+```
 
 ### Debugging
 

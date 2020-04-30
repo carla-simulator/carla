@@ -1,4 +1,4 @@
-## Latest
+## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
   * Upgraded to Unreal Engine 4.24
@@ -13,6 +13,7 @@
   * Upgraded to AD RSS v3.0.0 supporting complex road layouts and i.e. intersections
   * Added examples of sumo co-simulation for Town01, Town04 and Town05
   * Added ptv vissim and carla co-simulation
+  * Fixed `GetLeftLaneMarking()` from a possible runtime error
   * API extensions:
     - Added new methods to `Map`: `get_all_landmarks`, `get_all_landmarks_from_id` and `get_all_landmarks_of_type`
   * Added synchronization of traffic lights in sumo co-simulation
