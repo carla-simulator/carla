@@ -10,6 +10,7 @@
 * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
+	* Set the environment variable  
 	* make CARLA  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community. 
