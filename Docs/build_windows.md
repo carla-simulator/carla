@@ -124,6 +124,15 @@ Only the assets package is yet to be downloaded. `\Util\ContentVersions.txt` con
 
 Download the __latest__ assets to work with the current version of CARLA.
 
+### Set the environment variable
+
+This is necessary for CARLA to find the Unreal Engine installation folder. By doing so, users can choose which specific version of Unreal Engine is to be used. If no environment variable is specified, the CARLA will look up in the directories and use the last version in search order.  
+
+__1.   Open the Windows Control Panel__ and go to `Advanced System Settings`.  
+__2.   On the `Advanced` panel__ open `Environment Variables...`.  
+__3.   Click `New...`__ to create the variable.  
+__4.   Name the variable as `UE4_ROOT`__ and choose the path to the installation folder of the desire UE4 installation.  
+
 ### make CARLA
 
 The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder.  
