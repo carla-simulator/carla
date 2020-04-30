@@ -15,16 +15,19 @@ This tutorial covers step by step the process to add a new vehicle model. From t
 
 ### Bind the skeleton
 
-CARLA provides a general skeleton for 4-wheeled vehicles that must be used by all of them. The position of the bones can be changed, but adding new bones or changing the hierarchy will lead to errors.  
+CARLA provides a general skeleton for 4-wheeled vehicles that must be used by all of them. The position of the bones can be changed, but rotating them, adding new ones or changing the hierarchy will lead to errors.  
 
-__1.   Download the skeleton__ `General4WheeledVehicleSkeleton` from [LINK].  
+__1.   Download the skeleton__ from the CARLA repositories. [Here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/VehicleSkeleton.rar) is the link to `General4WheeledVehicleSkeleton`, the reference skeleton for 4 wheeled vehicles.  
 
 __2.   Import the skeleton__ into the 3D project of the new vehicle. This could be in Maya, Blender or whichever software used for modelling.  
 
-__3.   Bind the bones__ to the corresponding bone.  
+__3.   Bind the bones__ to the corresponding portions of the mesh. Make sure to center the wheels' bones within the mesh.  
 
-*   Bind each wheel to the bone named as `???`. Make sure to center the bone inside the wheel.  
-*   Bind the rest of the mesh to the bone `VehicleBase`.  
+*   __Front left wheel__ — `Wheel_Front_Left`.  
+*   __Front right wheel__ — `Wheel_Front_Right`.  
+*   __Rear left wheel__ — `Wheel_Rear_Left`.  
+*   __Rear right wheel__ — `Wheel_Rear_Right`.  
+*   __Rest of the mesh__ — `VehicleBase`.  
 
 !!! Warning
     Do not add new bones, change their names or the hierarchy.  
@@ -36,19 +39,20 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 
 *   __1. Create a new folder__ named `<vehicle_name>` in `Content/Carla/Static/Vehicle`.  
 <br>
+
 *   __2. Import the `.fbx`__ in its folder. The Skelletal Mesh will appear along with two new files, `<vehicle_name>_PhysicsAssets` and `<vehicle_name>_Skeleton`.  
 	*   __2.1 - *Import Content Type*__ — `Geometry and Skinning Weights`.  
 	*   __2.2 - *Normal Import Method*__ — `Import Normals`.  
-	*   __2.3 - *Material import method*__ — Optionally choose `Do not create materials` and uncheck `Import Textures` to avoid Unreal .  
+	*   __2.3 - *Material import method*__ — Optionally choose `Do not create materials` and uncheck `Import Textures` to avoid Unreal creating its own default materials.  
 
 !!! Note
     If Unreal does not create the vehicle materials, these will have to be created manually.  
 
 *   __3. Open `<vehicle_name>_PhysicsAssets`__ to set the vehicle colliders.  
-	*   __3.1 - Change the wheels colliders__ — Select a sphere and adjust it to the shape of the wheel.  
-	*   __3.2 - Change the general collider__ — Select a box and adjust it to the shape of the vehicle.  
-	*   __3.3 - *Physics Type*__ — `Kinematic`.  
-	*   __3.4 - *Simulation Generates Hit Event*__ — Enabled.  
+	*   __3.1 - Change the wheels' colliders__ — Select a sphere and adjust it to the shape of the wheel.  
+	*   __3.2 - Change the wheels' *Physics Type*__ — Select `Kinematic` for all of them.  
+	*   __3.3 - Change the general collider__ — Select a box and adjust it to the shape of the vehicle.  
+	*   __3.4 - Enable *Simulation Generates Hit Event*__ — Check it for all of the physics' bodies.  
 
 ![add_vehicle_step_03](img/add_vehicle_step_03.jpg)
 <div style="text-align: right"><i>Step 3, set colliders.</i></div>
@@ -57,7 +61,7 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __4.1 - *Parent Class*__ — `VehicleAnimInstance`.  
 	*   __4.2 - *Skeleton*__ — `<vehicle_name>_Skeleton`.  
 	*   __4.3 - Rename the blueprint__ — `BP_<vehicle_name>_anim`.  
-	*   __4.4 - Copy an existing Animation Blueprint__ — Go to `Content/Carla/Static/Vehicle` and choose any vehicle folder. Open its Animation Blueprint and copy the content.  
+	*   __4.4 - Copy an existing Animation Blueprint__ — Go to `Content/Carla/Static/Vehicle` and choose any vehicle folder. Open its Animation Blueprint and copy the content from the *AnimGraph*.  
 	*   __4.5 - Compile the Animation Blueprint__ — Connect the content in the blueprint and click the button `Compile` on the top left corner.  
 
 ![add_vehicle_step_04](img/add_vehicle_step_04.jpg)
@@ -78,6 +82,9 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __7.1 - *Mesh*__ — Choose the skelletal mesh of the vehicle.  
 	*   __7.2 - *Anim class*__ — Choose the Animation blueprint created in *step 4*.  
 	*   __7.3 - *Vehicle bound*__ — Adjust it to include the whole volume of the vehicle.  
+
+!!! Note
+    These options papear in the menu *Components* on the left side of the window. 
 
 ![add_vehicle_step_07](img/add_vehicle_step_07.jpg)
 <div style="text-align: right"><i>Step 6.3, create the blueprint.</i></div>
@@ -110,8 +117,7 @@ python manual_control.py --filter <model_name> # The name used in step 10.2
 ---
 ## Add a 2 wheeled vehicle
 
-Adding 2 wheeled vehicles is similar to adding a 4 wheeled one but due to the complexity of the
-animation you'll need to set up aditional bones to guide the driver's animation:
+Adding 2 wheeled vehicles is similar to adding a 4 wheeled one but due to the complexity of the animation you'll need to set up aditional bones to guide the driver's animation. [Here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/BikeSkeleton.rar) is the link to the reference skeleton for 2 wheeled vehicles.
 
 As with the 4 wheeled vehicles, orient the model towards positive "x" and every bone axis towards
 positive x and with the z axis facing upwards.
