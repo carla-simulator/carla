@@ -84,7 +84,7 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __7.3 - *Vehicle bound*__ — Adjust it to include the whole volume of the vehicle.  
 
 !!! Note
-    These options papear in the menu *Components* on the left side of the window. 
+    These options appear in the menu *Components* on the left side of the window. 
 
 ![add_vehicle_step_07](img/add_vehicle_step_07.jpg)
 <div style="text-align: right"><i>Step 6.3, create the blueprint.</i></div>
