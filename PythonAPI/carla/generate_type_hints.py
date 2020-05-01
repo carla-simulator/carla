@@ -26,7 +26,7 @@ def get_docstring(doc_file: str) -> dict:
                 details = method.get('doc', '')
                 for param in safe_list(method.get('params', [])):
                     details += "\t@param " + str(param['param_name']) + ": " + str(param.get('doc', ''))
-                    param_sig = str({param['param_name']}) + ": " + str(param.get('type', None))
+                    param_sig = str(param['param_name']) + ": " + str(param.get('type', None))
                     if param.get('default', None):
                         param_sig += " = " + str(param['default'])
                     params.append(param_sig)
