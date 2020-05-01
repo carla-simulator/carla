@@ -1,3 +1,5 @@
+  * Added documentation in Python.
+
 ## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
