@@ -94,7 +94,14 @@ if ${BUILD_FOR_PYTHON3} ; then
 
   log "Building Python API for Python 3."
 
+  cp -R source/libcarla/ source/libcarla_temp/  # copy original files to temp folder
+  /usr/bin/env python3 -m pip install pyyaml
+  /usr/bin/env python3 generate_type_hints.py "${CARLA_PYTHONAPI_ROOT_FOLDER}/docs/*.yml" "${CARLA_PYTHONAPI_SOURCE_FOLDER}/source/libcarla/*.cpp"  # replace template with docs
+
   /usr/bin/env python3 setup.py bdist_egg
+
+  rm -r source/libcarla
+  mv source/libcarla_temp source/libcarla  # replace temp data with template files
 
 fi
 
