@@ -205,6 +205,11 @@ static auto MakeCallback(boost::python::object callback) {
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
+
+  docstring_options doc_options;
+  doc_options.disable_all();
+  doc_options.enable_user_defined();
+
   PyEval_InitThreads();
   scope().attr("__path__") = "libcarla";
   export_geom();

@@ -97,25 +97,25 @@ void export_ad_rss() {
   namespace csd = carla::sensor::data;
 
   class_<carla::rss::EgoDynamicsOnRoute>("RssEgoDynamicsOnRoute")
-      .def_readwrite("timestamp", &carla::rss::EgoDynamicsOnRoute::timestamp)
+      .def_readwrite("timestamp", &carla::rss::EgoDynamicsOnRoute::timestamp, "@DocString(RssEgoDynamicsOnRoute.timestamp)")
       .def_readwrite("time_since_epoch_check_start_ms",
-                     &carla::rss::EgoDynamicsOnRoute::time_since_epoch_check_start_ms)
-      .def_readwrite("time_since_epoch_check_end_ms", &carla::rss::EgoDynamicsOnRoute::time_since_epoch_check_end_ms)
-      .def_readwrite("ego_speed", &carla::rss::EgoDynamicsOnRoute::ego_speed)
-      .def_readwrite("min_stopping_distance", &carla::rss::EgoDynamicsOnRoute::min_stopping_distance)
-      .def_readwrite("ego_center", &carla::rss::EgoDynamicsOnRoute::ego_center)
-      .def_readwrite("ego_heading", &carla::rss::EgoDynamicsOnRoute::ego_heading)
-      .def_readwrite("ego_center_within_route", &carla::rss::EgoDynamicsOnRoute::ego_center_within_route)
-      .def_readwrite("crossing_border", &carla::rss::EgoDynamicsOnRoute::crossing_border)
-      .def_readwrite("route_heading", &carla::rss::EgoDynamicsOnRoute::route_heading)
-      .def_readwrite("route_nominal_center", &carla::rss::EgoDynamicsOnRoute::route_nominal_center)
-      .def_readwrite("heading_diff", &carla::rss::EgoDynamicsOnRoute::heading_diff)
-      .def_readwrite("route_speed_lat", &carla::rss::EgoDynamicsOnRoute::route_speed_lat)
-      .def_readwrite("route_speed_lon", &carla::rss::EgoDynamicsOnRoute::route_speed_lon)
-      .def_readwrite("route_accel_lat", &carla::rss::EgoDynamicsOnRoute::route_accel_lat)
-      .def_readwrite("route_accel_lon", &carla::rss::EgoDynamicsOnRoute::route_accel_lon)
-      .def_readwrite("avg_route_accel_lat", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lat)
-      .def_readwrite("avg_route_accel_lon", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lon)
+                     &carla::rss::EgoDynamicsOnRoute::time_since_epoch_check_start_ms, "@DocString(RssEgoDynamicsOnRoute.time_since_epoch_check_start_ms)")
+      .def_readwrite("time_since_epoch_check_end_ms", &carla::rss::EgoDynamicsOnRoute::time_since_epoch_check_end_ms, "@DocString(RssEgoDynamicsOnRoute.time_since_epoch_check_end_ms)")
+      .def_readwrite("ego_speed", &carla::rss::EgoDynamicsOnRoute::ego_speed, "@DocString(RssEgoDynamicsOnRoute.ego_speed)")
+      .def_readwrite("min_stopping_distance", &carla::rss::EgoDynamicsOnRoute::min_stopping_distance, "@DocString(RssEgoDynamicsOnRoute.min_stopping_distance)")
+      .def_readwrite("ego_center", &carla::rss::EgoDynamicsOnRoute::ego_center, "@DocString(RssEgoDynamicsOnRoute.ego_center)")
+      .def_readwrite("ego_heading", &carla::rss::EgoDynamicsOnRoute::ego_heading, "@DocString(RssEgoDynamicsOnRoute.ego_heading)")
+      .def_readwrite("ego_center_within_route", &carla::rss::EgoDynamicsOnRoute::ego_center_within_route, "@DocString(RssEgoDynamicsOnRoute.ego_center_within_route)")
+      .def_readwrite("crossing_border", &carla::rss::EgoDynamicsOnRoute::crossing_border, "@DocString(RssEgoDynamicsOnRoute.crossing_border)")
+      .def_readwrite("route_heading", &carla::rss::EgoDynamicsOnRoute::route_heading, "@DocString(RssEgoDynamicsOnRoute.route_heading)")
+      .def_readwrite("route_nominal_center", &carla::rss::EgoDynamicsOnRoute::route_nominal_center, "@DocString(RssEgoDynamicsOnRoute.route_nominal_center)")
+      .def_readwrite("heading_diff", &carla::rss::EgoDynamicsOnRoute::heading_diff, "@DocString(RssEgoDynamicsOnRoute.heading_diff)")
+      .def_readwrite("route_speed_lat", &carla::rss::EgoDynamicsOnRoute::route_speed_lat, "@DocString(RssEgoDynamicsOnRoute.route_speed_lat)")
+      .def_readwrite("route_speed_lon", &carla::rss::EgoDynamicsOnRoute::route_speed_lon, "@DocString(RssEgoDynamicsOnRoute.route_speed_lon)")
+      .def_readwrite("route_accel_lat", &carla::rss::EgoDynamicsOnRoute::route_accel_lat, "@DocString(RssEgoDynamicsOnRoute.route_accel_lat)")
+      .def_readwrite("route_accel_lon", &carla::rss::EgoDynamicsOnRoute::route_accel_lon, "@DocString(RssEgoDynamicsOnRoute.route_accel_lon)")
+      .def_readwrite("avg_route_accel_lat", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lat, "@DocString(RssEgoDynamicsOnRoute.avg_route_accel_lat)")
+      .def_readwrite("avg_route_accel_lon", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lon, "@DocString(RssEgoDynamicsOnRoute.avg_route_accel_lon)")
       .def(self_ns::str(self_ns::self));
 
   enum_<carla::rss::RoadBoundariesMode>("RssRoadBoundariesMode")
@@ -131,28 +131,28 @@ void export_ad_rss() {
 
   class_<csd::RssResponse, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RssResponse>>(
       "RssResponse", no_init)
-      .add_property("response_valid", &csd::RssResponse::GetResponseValid)
-      .add_property("proper_response", CALL_RETURNING_COPY(csd::RssResponse, GetProperResponse))
-      .add_property("acceleration_restriction", CALL_RETURNING_COPY(csd::RssResponse, GetAccelerationRestriction))
-      .add_property("rss_state_snapshot", CALL_RETURNING_COPY(csd::RssResponse, GetRssStateSnapshot))
-      .add_property("ego_dynamics_on_route", CALL_RETURNING_COPY(csd::RssResponse, GetEgoDynamicsOnRoute))
+      .add_property("response_valid", &csd::RssResponse::GetResponseValid, "@DocString(RssResponse.response_valid)")
+      .add_property("proper_response", CALL_RETURNING_COPY(csd::RssResponse, GetProperResponse), "@DocString(RssResponse.proper_response)")
+      .add_property("acceleration_restriction", CALL_RETURNING_COPY(csd::RssResponse, GetAccelerationRestriction), "@DocString(RssResponse.acceleration_restriction)")
+      .add_property("rss_state_snapshot", CALL_RETURNING_COPY(csd::RssResponse, GetRssStateSnapshot), "@DocString(RssResponse.rss_state_snapshot)")
+      .add_property("ego_dynamics_on_route", CALL_RETURNING_COPY(csd::RssResponse, GetEgoDynamicsOnRoute), "@DocString(RssResponse.ego_dynamics_on_route)")
       .def(self_ns::str(self_ns::self));
 
   class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::RssSensor>>("RssSensor", no_init)
-      .add_property("ego_vehicle_dynamics", &GetEgoVehicleDynamics, &cc::RssSensor::SetEgoVehicleDynamics)
-      .add_property("other_vehicle_dynamics", &GetOtherVehicleDynamics, &cc::RssSensor::SetOtherVehicleDynamics)
-      .add_property("road_boundaries_mode", &GetRoadBoundariesMode, &cc::RssSensor::SetRoadBoundariesMode)
-      .add_property("visualization_mode", &GetVisualizationMode, &cc::RssSensor::SetVisualizationMode)
-      .add_property("routing_targets", &GetRoutingTargets)
-      .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget, (arg("routing_target")))
-      .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets)
-      .def("drop_route", &cc::RssSensor::DropRoute)
+      .add_property("ego_vehicle_dynamics", &GetEgoVehicleDynamics, &cc::RssSensor::SetEgoVehicleDynamics, "@DocString(RssSensor.ego_vehicle_dynamics)")
+      .add_property("other_vehicle_dynamics", &GetOtherVehicleDynamics, &cc::RssSensor::SetOtherVehicleDynamics, "@DocString(RssSensor.other_vehicle_dynamics)")
+      .add_property("road_boundaries_mode", &GetRoadBoundariesMode, &cc::RssSensor::SetRoadBoundariesMode, "@DocString(RssSensor.road_boundaries_mode)")
+      .add_property("visualization_mode", &GetVisualizationMode, &cc::RssSensor::SetVisualizationMode, "@DocString(RssSensor.visualization_mode)")
+      .add_property("routing_targets", &GetRoutingTargets, "@DocString(RssSensor.routing_targets)")
+      .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget, (arg("routing_target")), "@DocString(RssSensor.append_routing_target)")
+      .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets, "@DocString(RssSensor.reset_routing_targets)")
+      .def("drop_route", &cc::RssSensor::DropRoute, "@DocString(RssSensor.drop_route)")
       .def(self_ns::str(self_ns::self));
 
   class_<carla::rss::RssRestrictor, boost::noncopyable, boost::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",
                                                                                                       no_init)
-      .def(init<>())
+      .def(init<>(), "@RssRestrictor(RssSensor.__init__)")
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
-           (arg("vehicle_control"), arg("restriction"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
+           (arg("vehicle_control"), arg("restriction"), arg("ego_dynamics_on_route"), arg("vehicle_physics")), "@RssRestrictor(RssSensor.restrict_vehicle_control)")
       .def(self_ns::str(self_ns::self));
 }

@@ -72,23 +72,23 @@ void export_world() {
         (arg("frame")=0u,
          arg("elapsed_seconds")=0.0,
          arg("delta_seconds")=0.0,
-         arg("platform_timestamp")=0.0)))
-    .def_readwrite("frame", &cc::Timestamp::frame)
-    .def_readwrite("frame_count", &cc::Timestamp::frame) // deprecated.
-    .def_readwrite("elapsed_seconds", &cc::Timestamp::elapsed_seconds)
-    .def_readwrite("delta_seconds", &cc::Timestamp::delta_seconds)
-    .def_readwrite("platform_timestamp", &cc::Timestamp::platform_timestamp)
-    .def("__eq__", &cc::Timestamp::operator==)
-    .def("__ne__", &cc::Timestamp::operator!=)
+         arg("platform_timestamp")=0.0), "@DocString(Timestamp.__init__)"))
+    .def_readwrite("frame", &cc::Timestamp::frame, "@DocString(Timestamp.frame)")
+    .def_readwrite("frame_count", &cc::Timestamp::frame, "@DocString(Timestamp.frame_count)") // deprecated.
+    .def_readwrite("elapsed_seconds", &cc::Timestamp::elapsed_seconds, "@DocString(Timestamp.elapsed_seconds)")
+    .def_readwrite("delta_seconds", &cc::Timestamp::delta_seconds, "@DocString(Timestamp.delta_seconds)")
+    .def_readwrite("platform_timestamp", &cc::Timestamp::platform_timestamp, "@DocString(Timestamp.platform_timestamp)")
+    .def("__eq__", &cc::Timestamp::operator==, "@DocString(Timestamp.__eq__)")
+    .def("__ne__", &cc::Timestamp::operator!=, "@DocString(Timestamp.__ne__)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::ActorList, boost::shared_ptr<cc::ActorList>>("ActorList", no_init)
-    .def("find", &cc::ActorList::Find, (arg("id")))
-    .def("filter", &cc::ActorList::Filter, (arg("wildcard_pattern")))
-    .def("__getitem__", &cc::ActorList::at)
-    .def("__len__", &cc::ActorList::size)
-    .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end))
+    .def("find", &cc::ActorList::Find, (arg("id")), "@DocString(ActorList.find)")
+    .def("filter", &cc::ActorList::Filter, (arg("wildcard_pattern")), "@DocString(ActorList.filter)")
+    .def("__getitem__", &cc::ActorList::at, "@DocString(ActorList.__getitem__)")
+    .def("__len__", &cc::ActorList::size, "@DocString(ActorList.__len__)")
+    .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end), "@DocString(ActorList.__iter__)")
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -96,9 +96,9 @@ void export_world() {
     .def(init<bool, bool, double>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
-         arg("fixed_delta_seconds")=0.0)))
-    .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
-    .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
+         arg("fixed_delta_seconds")=0.0), "@DocString(WorldSettings.__init__)"))
+    .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode, "@DocString(WorldSettings.synchronous_mode)")
+    .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode, "@DocString(WorldSettings.no_rendering_mode)")
     .add_property("fixed_delta_seconds",
         +[](const cr::EpisodeSettings &self) {
           return OptionalToPythonObject(self.fixed_delta_seconds);
@@ -106,9 +106,9 @@ void export_world() {
         +[](cr::EpisodeSettings &self, object value) {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
           self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
-        })
-    .def("__eq__", &cc::Timestamp::operator==)
-    .def("__ne__", &cc::Timestamp::operator!=)
+        }, "@DocString(WorldSettings.fixed_delta_seconds)")
+    .def("__eq__", &cc::Timestamp::operator==, "@DocString(WorldSettings.__eq__)")
+    .def("__ne__", &cc::Timestamp::operator!=, "@DocString(WorldSettings.__ne__)")
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -133,30 +133,30 @@ void export_world() {
       arg("attachment_type")=cr::AttachmentType::Rigid)
 
   class_<cc::World>("World", no_init)
-    .add_property("id", &cc::World::GetId)
-    .add_property("debug", &cc::World::MakeDebugHelper)
-    .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
-    .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
-    .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation))
-    .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
-    .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
-    .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))
-    .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
-    .def("set_weather", &cc::World::SetWeather)
-    .def("get_snapshot", &cc::World::GetSnapshot)
-    .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
-    .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
-    .def("get_actors", &GetActorsById, (arg("actor_ids")))
-    .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
-    .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
-    .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
-    .def("on_tick", &OnTick, (arg("callback")))
-    .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
-    .def("tick", &Tick, (arg("seconds")=10.0))
-    .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
-    .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
-    .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
-    .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
+    .add_property("id", &cc::World::GetId, "@DocString(World.id)")
+    .add_property("debug", &cc::World::MakeDebugHelper, "@DocString(World.debug)")
+    .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary), "@DocString(World.get_blueprint_library)")
+    .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap), "@DocString(World.get_map)")
+    .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation), "@DocString(World.get_random_location_from_navigation)")
+    .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator), "@DocString(World.get_spectator)")
+    .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings), "@DocString(World.get_settings)")
+    .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"), "@DocString(World.apply_settings)")
+    .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather), "@DocString(World.get_weather)")
+    .def("set_weather", &cc::World::SetWeather, "@DocString(World.set_weather)")
+    .def("get_snapshot", &cc::World::GetSnapshot, "@DocString(World.get_snapshot)")
+    .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")), "@DocString(World.get_actor)")
+    .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors), "@DocString(World.get_actors)")
+    .def("get_actors", &GetActorsById, (arg("actor_ids")), "@DocString(World.get_actors)")
+    .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor), "@DocString(World.spawn_actor)")
+    .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor), "@DocString(World.try_spawn_actor)")
+    .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0), "@DocString(World.wait_for_tick)")
+    .def("on_tick", &OnTick, (arg("callback")), "@DocString(World.on_tick)")
+    .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")), "@DocString(World.remove_on_tick)")
+    .def("tick", &Tick, (arg("seconds")=10.0), "@DocString(World.tick)")
+    .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")), "@DocString(World.set_pedestrians_cross_factor)")
+    .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"), "@DocString(World.get_traffic_sign)")
+    .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"), "@DocString(World.get_traffic_light)")
+    .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager), "@DocString(World.get_lightmanager)")
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -168,14 +168,14 @@ void export_world() {
          arg("size")=0.1f,
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
-         arg("persistent_lines")=true))
+         arg("persistent_lines")=true), "@DocString(DebugHelper.draw_point)")
     .def("draw_line", &cc::DebugHelper::DrawLine,
         (arg("begin"),
          arg("end"),
          arg("thickness")=0.1f,
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
-         arg("persistent_lines")=true))
+         arg("persistent_lines")=true), "@DocString(DebugHelper.draw_line)")
     .def("draw_arrow", &cc::DebugHelper::DrawArrow,
         (arg("begin"),
          arg("end"),
@@ -183,20 +183,20 @@ void export_world() {
          arg("arrow_size")=0.1f,
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
-         arg("persistent_lines")=true))
+         arg("persistent_lines")=true), "@DocString(DebugHelper.draw_arrow)")
     .def("draw_box", &cc::DebugHelper::DrawBox,
         (arg("box"),
          arg("rotation"),
          arg("thickness")=0.1f,
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
-         arg("persistent_lines")=true))
+         arg("persistent_lines")=true), "@DocString(DebugHelper.draw_box)")
     .def("draw_string", &cc::DebugHelper::DrawString,
         (arg("location"),
          arg("text"),
          arg("draw_shadow")=false,
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
-         arg("persistent_lines")=true))
+         arg("persistent_lines")=true), "@DocString(DebugHelper.draw_string)")
   ;
 }
