@@ -25,19 +25,19 @@ def get_docstring(doc_file: str) -> dict:
                 params = []
                 details = method.get('doc', '')
                 for param in safe_list(method.get('params', [])):
-                    details += f"\t@param {param['param_name']}: {param.get('doc', '')}"
-                    param_sig = f"{param['param_name']}: {param.get('type', None)}"
+                    details += "\t@param " + str(param['param_name']) + ": " + str(param.get('doc', ''))
+                    param_sig = str({param['param_name']}) + ": " + str(param.get('type', None))
                     if param.get('default', None):
-                        param_sig += f" = {param['default']}"
+                        param_sig += " = " + str(param['default'])
                     params.append(param_sig)
 
-                details += f"\t@return: {method.get('return', None)}"
-                signature = f"{method['def_name']}({', '.join(params)}) -> {method.get('return', None)}\n\n"
-                docstrings[f'{class_doc["class_name"]}.{method["def_name"]}'] = signature + details
+                details += "\t@return: " + str(method.get('return', None))
+                signature = str(method['def_name']) + "(" + str(', '.join(params)) + ") -> " + str(method.get('return', None)) + "\n\n"
+                docstrings[str(class_doc["class_name"]) + "." + str(method["def_name"])] = signature + details
 
             for instance_variable in safe_list(class_doc.get('instance_variables', [])):
                 if instance_variable.get('doc', None):
-                    docstrings[f'{class_doc["class_name"]}.{instance_variable["var_name"]}'] = f"{instance_variable.get('type', None)}: {instance_variable['doc']}"
+                    docstrings[str(class_doc["class_name"]) + "." + str(instance_variable["var_name"])] = str(instance_variable.get('type', None)) + ": " + str(instance_variable['doc'])
 
     return docstrings
 
