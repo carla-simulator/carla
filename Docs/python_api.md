@@ -16,11 +16,11 @@ The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.must
 
 <h3>Methods</h3>
 - <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Adds an impulse to the actor.  
+Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Adds an angular impulse to the actor (in degrees).  
+Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2455,7 +2455,7 @@ Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in 
 - <a name="command.ApplyAngularImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
 - <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-Angular impulse applied to the actor.  
+Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
