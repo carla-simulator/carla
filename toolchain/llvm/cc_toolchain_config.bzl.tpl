@@ -160,6 +160,9 @@ def _impl(ctx):
         "-l:libc++.a",
         "-l:libc++abi.a",
 
+        # Hide symbols from static libraries.
+        "-Wl,--exclude-libs,ALL",
+
         "-lpthread",
         "-ldl",
         "-lm",
