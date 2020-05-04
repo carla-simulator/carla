@@ -3,10 +3,14 @@
 The CARLA team prepares every asset to run under certain default settings. However, users that work in a build from source can modify these to best suit their needs.  
 
 *   [__Car materials__](#car-materials)  
-*   [Customize car materials](#customize-car-materials)  
+*   [__Customize car materials__](#customize-car-materials)  
 	*   [Exterior properties](#exterior-properties)  
 *   [__Building material__](#building-material)  
 *   [__Customize a building material__](#customize-a-building-material)  
+*   [__Customize the road__](#customize-the-road)  
+	*   [Create a group material](#create-a-group-material)  
+	*   [Change the appearance of the road](#change-the-appearance-of-the-road)  
+	*   [Update the appearance of lane markings](#update-the-appearance-of-lane-markings)  
 
 !!! Important
     This tutorial only applies to users that work with a build from source, and have access to the Unreal Editor.  
@@ -138,6 +142,83 @@ Similarly to car materials, a building material can be greatly changed if desire
 	*   `RoughnessCorrection` — Changes the intensity of the roughness map.  
 	*   `MetallicCorrection` — Changes the intensity of the metallic map.  
 	*   `NormalFlatness` — Changes the intensity of the normal map.  
+
+
+---
+## Customize the road
+
+The blueprint __RoadPainter__ is an easy way to change drastically the appearence of the road. The initial geometry of the road is painted like a canvas. There is no need to apply photometry techniques nor consider the UVs of the geometry. The result is achieved simply by blending textures and creating masks.  
+
+### Create a group material
+
+First of all, a group material will be created. This will contain the instances of the materials the road will be painted with.  
+
+__1. Create an instance of the RoadMaster material.__ It can be found in `???/path`.  
+__2. Set the `RenderTarget`.__ [Create a render target](https://docs.unrealengine.com/en-US/Engine/Rendering/RenderTargets/BlueprintRenderTargets/HowTo/CreatingTextures/index.html) for the road map that is bein used, and add it in the corresponding field.  
+> Obtain the render target.  
+__3. Set the map size.__ ??? How to know value? What is it used for? 
+__4. Choose the materials to be applied.__ Add them to the fields `??? base`, `??? 2`, `??? 3`. The tool allows up to three materials, as the pain each of them will be codified in one channel in the RenderTarget.  
+
+### Change the appearance of the road
+
+The appearence of the road is changed using a blueprint provided by CARLA. The blueprint will paint the road using the materials passed, combined with some brush settings. Additionally, decals and meshes can be added so that the final result is more detailed. This tool takes into account road information and will paint the elements using the orientation of the lane, unless an offset is stated.  
+> True? Even for external maps?? 
+
+!!! Note 
+    This tool does not interfere with the weather settings that change the road's appearence, such as wetness or precipitation.  
+
+__1. Create an instance of the RoadPainter blueprint.__ It can be found in `Carla/Blueprints/LevelDesign`. This blueprint determines how is the road being painted, and how are the materials in `RoadMaster` being used.  
+__2. Set the `RenderTarget` and the `Map size`.__ This must be the same as in the __RoadMaster__ material.  
+
+!!! Note 
+    The `Z-size` option will give you the exact size of the map. Increase this by a little and make sure both, the blueprint and the master material have the same value.  
+
+__3. Apply the group material in `???`.__
+
+__4. For each material, set the brush to be used.__ There are different brushes available in `GenericMateirals/RoadStencil/Alphas`. The materials will be applied over the road using the brush and parameters stated here.  
+> Parameters??? 
+
+__5. For each material, apply it to the desired portions of the road.__ In the `???` section, there is a series of buttons that will apply the materials.  
+
+* `Paint all roads`
+* `Paint by actor`
+* `Paint over circle`
+* `Paint over square`  
+
+This section also contains options to erase the changes applied. 
+* `Clear all`
+* `Clear materials`
+* `Clear material by actor`
+
+!!! Note 
+    Move the editor view a little for the changes to be visible.  
+
+__5. Add decals in `` and meshes in ``.__ Add the elements to the corresponding array and set some basic parameters for how should these be spawned over the road.  
+
+* `number`
+* `fixed offset`
+* `random offset`
+* `scale`
+* `rotation` 
+
+__6. Spawn the decals and meshes.__ Use the buttons `Spawn decals` and `Spawn meshes` to do so. Additionally, the button `Spawn meshes by actor` ??. 
+
+
+__7. Play around.__ Try different settings, materials and brushes to obtain completely different results. This tool allows to create different presets for the road appearence and changing between them simply by changing the group material and updating a few settings. 
+
+> Pictures
+
+> This tool does not interfere with weather parameters that affect the road, such as wetness, puddles or rain. 
+
+### Update the appearance of lane markings
+
+After the road's appearance has been customized, the lane markings should be updated accordingly to get a realistic look. The process to do so, is really simple.  
+
+__1. Create a copy of the group material.__ This has be the same as it was for the road.  
+__2. Select the lane marking meshes.__ 
+__3. Switch the `???` option.__ This will update the lane markings to be consistent to the painting applied to the road.  
+__4. Choose the color of the lane marking.__ The parameter `???` will set the lane markings selected to have a base paint of the stated color.  
+
 
 ---
 
