@@ -12,12 +12,15 @@
 #include "carla/client/Actor.h"
 #include "carla/client/detail/ActorVariant.h"
 #include "carla/rpc/Server.h"
+#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 
 namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
+
+using namespace constants::Networking;
 
 class TrafficManagerServer {
 public:

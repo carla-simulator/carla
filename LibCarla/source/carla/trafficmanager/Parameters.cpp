@@ -4,8 +4,6 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <random>
-
 #include "carla/trafficmanager/Parameters.h"
 
 namespace carla {
@@ -18,6 +16,8 @@ Parameters::Parameters() {
 }
 
 Parameters::~Parameters() {}
+
+//////////////////////////////////// SETTERS //////////////////////////////////
 
 void Parameters::SetHybridPhysicsMode(const bool mode_switch) {
 
@@ -43,7 +43,7 @@ void Parameters::SetCollisionDetection(const ActorPtr &reference_actor, const Ac
     if (ignore_collision.Contains(reference_id)) {
       std::shared_ptr<AtomicActorSet> actor_set = ignore_collision.GetValue(reference_id);
       if (actor_set->Contains(other_id)) {
-        actor_set->Remove({other_actor});
+        actor_set->Remove({other_id});
       }
     }
   } else {
@@ -87,116 +87,17 @@ void Parameters::SetDistanceToLeadingVehicle(const ActorPtr &actor, const float 
   distance_to_leading_vehicle.AddEntry(entry);
 }
 
-bool Parameters::GetSynchronousMode() {
-  return synchronous_mode.load();
+void Parameters::SetSynchronousMode(const bool mode_switch) {
+  synchronous_mode.store(mode_switch);
 }
 
 void Parameters::SetSynchronousModeTimeOutInMiliSecond(const double time) {
   synchronous_time_out = std::chrono::duration<double, std::milli>(time);
 }
 
-double Parameters::GetSynchronousModeTimeOutInMiliSecond() {
-  return synchronous_time_out.count();
-}
-
-void Parameters::SetSynchronousMode(const bool mode_switch) {
-  synchronous_mode.store(mode_switch);
-}
-
-float Parameters::GetVehicleTargetVelocity(const ActorPtr &actor) {
-
-  const ActorId actor_id = actor->GetId();
-  const auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
-  const float speed_limit = vehicle->GetSpeedLimit();
-  float percentage_difference = global_percentage_difference_from_limit;
-
-  if (percentage_difference_from_speed_limit.Contains(actor_id)) {
-    percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
-  }
-
-  return speed_limit * (1.0f - percentage_difference / 100.0f);
-}
-
-bool Parameters::GetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor) {
-
-  const ActorId reference_actor_id = reference_actor->GetId();
-  const ActorId other_actor_id = other_actor->GetId();
-  bool avoid_collision = true;
-
-  if (ignore_collision.Contains(reference_actor_id) &&
-    ignore_collision.GetValue(reference_actor_id)->Contains(other_actor_id)) {
-    avoid_collision = false;
-  }
-
-  return avoid_collision;
-}
-
-ChangeLaneInfo Parameters::GetForceLaneChange(const ActorPtr &actor) {
-
-  const ActorId actor_id = actor->GetId();
-  ChangeLaneInfo change_lane_info;
-
-  if (force_lane_change.Contains(actor_id)) {
-    change_lane_info = force_lane_change.GetValue(actor_id);
-  }
-
-  force_lane_change.RemoveEntry(actor_id);
-
-  return change_lane_info;
-}
-
-float Parameters::GetKeepRightPercentage(const ActorPtr &actor) {
-
-  const ActorId actor_id = actor->GetId();
-  float percentage = -1.0f;
-
-  if (perc_keep_right.Contains(actor_id)) {
-    percentage = perc_keep_right.GetValue(actor_id);
-  }
-
-  perc_keep_right.RemoveEntry(actor_id);
-
-  return percentage;
-}
-
-bool Parameters::GetAutoLaneChange(const ActorPtr &actor) {
-
-  const ActorId actor_id = actor->GetId();
-  bool auto_lane_change_policy = true;
-
-  if (auto_lane_change.Contains(actor_id)) {
-    auto_lane_change_policy = auto_lane_change.GetValue(actor_id);
-  }
-
-  return auto_lane_change_policy;
-}
-
-float Parameters::GetDistanceToLeadingVehicle(const ActorPtr &actor) {
-
-  const ActorId actor_id = actor->GetId();
-  float specific_distance_margin = 0.0f;
-  if (distance_to_leading_vehicle.Contains(actor_id)) {
-    specific_distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
-  } else {
-    specific_distance_margin = distance_margin;
-  }
-
-  return specific_distance_margin;
-}
-
 void Parameters::SetGlobalDistanceToLeadingVehicle(const float dist) {
 
   distance_margin.store(dist);
-}
-
-float Parameters::GetHybridPhysicsRadius() {
-
-  return hybrid_physics_radius.load();
-}
-
-void Parameters::SetHybridPhysicsRadius(const float radius) {
-  float new_radius = std::max(radius, 0.0f);
-  hybrid_physics_radius.store(new_radius);
 }
 
 void Parameters::SetPercentageRunningLight(const ActorPtr &actor, const float perc) {
@@ -227,9 +128,100 @@ void Parameters::SetPercentageIgnoreWalkers(const ActorPtr &actor, const float p
   perc_ignore_walkers.AddEntry(entry);
 }
 
-float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
+void Parameters::SetHybridPhysicsRadius(const float radius) {
+  float new_radius = std::max(radius, 0.0f);
+  hybrid_physics_radius.store(new_radius);
+}
 
-  const ActorId actor_id = actor->GetId();
+//////////////////////////////////// GETTERS //////////////////////////////////
+
+float Parameters::GetHybridPhysicsRadius() const {
+
+  return hybrid_physics_radius.load();
+}
+
+bool Parameters::GetSynchronousMode() const {
+  return synchronous_mode.load();
+}
+
+double Parameters::GetSynchronousModeTimeOutInMiliSecond() const {
+  return synchronous_time_out.count();
+}
+
+float Parameters::GetVehicleTargetVelocity(const ActorId &actor_id, const float speed_limit) const {
+
+  float percentage_difference = global_percentage_difference_from_limit;
+
+  if (percentage_difference_from_speed_limit.Contains(actor_id)) {
+    percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
+  }
+
+  return speed_limit * (1.0f - percentage_difference / 100.0f);
+}
+
+bool Parameters::GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const {
+
+  bool avoid_collision = true;
+
+  if (ignore_collision.Contains(reference_actor_id) &&
+    ignore_collision.GetValue(reference_actor_id)->Contains(other_actor_id)) {
+    avoid_collision = false;
+  }
+
+  return avoid_collision;
+}
+
+ChangeLaneInfo Parameters::GetForceLaneChange(const ActorId &actor_id) {
+
+  ChangeLaneInfo change_lane_info {false, false};
+
+  if (force_lane_change.Contains(actor_id)) {
+    change_lane_info = force_lane_change.GetValue(actor_id);
+  }
+
+  force_lane_change.RemoveEntry(actor_id);
+
+  return change_lane_info;
+}
+
+float Parameters::GetKeepRightPercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_keep_right.Contains(actor_id)) {
+    percentage = perc_keep_right.GetValue(actor_id);
+  }
+
+  perc_keep_right.RemoveEntry(actor_id);
+
+  return percentage;
+}
+
+bool Parameters::GetAutoLaneChange(const ActorId &actor_id) const {
+
+  bool auto_lane_change_policy = true;
+
+  if (auto_lane_change.Contains(actor_id)) {
+    auto_lane_change_policy = auto_lane_change.GetValue(actor_id);
+  }
+
+  return auto_lane_change_policy;
+}
+
+float Parameters::GetDistanceToLeadingVehicle(const ActorId &actor_id) const {
+
+  float specific_distance_margin = 0.0f;
+  if (distance_to_leading_vehicle.Contains(actor_id)) {
+    specific_distance_margin = distance_to_leading_vehicle.GetValue(actor_id);
+  } else {
+    specific_distance_margin = distance_margin;
+  }
+
+  return specific_distance_margin;
+}
+
+float Parameters::GetPercentageRunningLight(const ActorId &actor_id) const {
+
   float percentage = 0.0f;
 
   if (perc_run_traffic_light.Contains(actor_id)) {
@@ -239,9 +231,8 @@ float Parameters::GetPercentageRunningLight(const ActorPtr &actor) {
   return percentage;
 }
 
-float Parameters::GetPercentageRunningSign(const ActorPtr &actor) {
+float Parameters::GetPercentageRunningSign(const ActorId &actor_id) const {
 
-  const ActorId actor_id = actor->GetId();
   float percentage = 0.0f;
 
   if (perc_run_traffic_sign.Contains(actor_id)) {
@@ -251,9 +242,8 @@ float Parameters::GetPercentageRunningSign(const ActorPtr &actor) {
   return percentage;
 }
 
-float Parameters::GetPercentageIgnoreWalkers(const ActorPtr &actor) {
+float Parameters::GetPercentageIgnoreWalkers(const ActorId &actor_id) const {
 
-  const ActorId actor_id = actor->GetId();
   float percentage = 0.0f;
 
   if (perc_ignore_walkers.Contains(actor_id)) {
@@ -263,9 +253,8 @@ float Parameters::GetPercentageIgnoreWalkers(const ActorPtr &actor) {
   return percentage;
 }
 
-float Parameters::GetPercentageIgnoreVehicles(const ActorPtr &actor) {
+float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {
 
-  const ActorId actor_id = actor->GetId();
   float percentage = 0.0f;
 
   if (perc_ignore_vehicles.Contains(actor_id)) {
@@ -275,7 +264,7 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorPtr &actor) {
   return percentage;
 }
 
-bool Parameters::GetHybridPhysicsMode() {
+bool Parameters::GetHybridPhysicsMode() const {
 
   return hybrid_physics_mode.load();
 }

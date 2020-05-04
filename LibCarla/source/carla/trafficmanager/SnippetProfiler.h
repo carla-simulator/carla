@@ -19,26 +19,6 @@ namespace traffic_manager {
   using namespace chr;
   using TimePoint = chr::time_point<chr::system_clock, chr::nanoseconds>;
 
-  class PerformanceDiagnostics {
-
-  private:
-    /// Stage name.
-    std::string stage_name;
-    /// Throughput clock.
-    TimePoint throughput_clock;
-    /// Throughput counter.
-    uint64_t throughput_counter;
-    /// Inter-update clock.
-    TimePoint inter_update_clock;
-    /// Inter-update duration.
-    chr::duration<float> inter_update_duration;
-
-  public:
-    PerformanceDiagnostics(std::string name);
-
-    void RegisterUpdate(bool begin_or_end);
-  };
-
   class SnippetProfiler {
 
     private:

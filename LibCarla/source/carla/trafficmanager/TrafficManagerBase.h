@@ -9,9 +9,6 @@
 #include <memory>
 #include "carla/client/Actor.h"
 
-#define MIN_TRY_COUNT       20
-#define TM_DEFAULT_PORT     8000
-
 namespace carla {
 namespace traffic_manager {
 

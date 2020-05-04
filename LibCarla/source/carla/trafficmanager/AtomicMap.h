@@ -17,7 +17,7 @@ namespace traffic_manager {
 
     private:
 
-    std::mutex map_mutex;
+    mutable std::mutex map_mutex;
     std::unordered_map<Key, Value> map;
 
     public:
@@ -30,13 +30,13 @@ namespace traffic_manager {
       map.insert(entry);
     }
 
-    bool Contains(const Key &key) {
+    bool Contains(const Key &key) const {
 
       std::lock_guard<std::mutex> lock(map_mutex);
       return map.find(key) != map.end();
     }
 
-    Value &GetValue(const Key &key) {
+    const Value &GetValue(const Key &key) const {
 
       std::lock_guard<std::mutex> lock(map_mutex);
       return map.at(key);
