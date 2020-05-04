@@ -1,3 +1,7 @@
+## Latest
+
+  * Added API function **add_angular_impulse** to add angular impulse to any actor
+
 ## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
