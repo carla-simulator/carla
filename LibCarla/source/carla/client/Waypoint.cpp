@@ -207,7 +207,7 @@ namespace client {
     return (c_right & lane_change_type::Right) | (c_left & lane_change_type::Left);
   }
 
-  std::vector<SharedPtr<Landmark>> Waypoint::GetAllLandmakrsInDistance(
+  std::vector<SharedPtr<Landmark>> Waypoint::GetAllLandmarksInDistance(
       double distance, bool stop_at_junction) const {
     std::vector<SharedPtr<Landmark>> result;
     auto signals = _parent->GetMap().GetSignalsInDistance(
@@ -225,7 +225,7 @@ namespace client {
     return result;
   }
 
-  std::vector<SharedPtr<Landmark>> Waypoint::GetLandmakrsOfTypeInDistance(
+  std::vector<SharedPtr<Landmark>> Waypoint::GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction) const {
     std::vector<SharedPtr<Landmark>> result;
     std::unordered_set<const road::element::RoadInfoSignal*> added_signals; // check for repeated signals
