@@ -38,6 +38,13 @@
       doc: >
         Adds an impulse to the actor.
     # --------------------------------------
+    - def_name: add_angular_impulse
+      params:
+      - param_name: impulse
+        type: carla.Vector3D
+      doc: >
+        Adds an angular impulse to the actor (in degrees).
+    # --------------------------------------
     - def_name: destroy
       return: bool
       doc: >

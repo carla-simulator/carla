@@ -325,6 +325,10 @@ namespace detail {
       _client.AddActorImpulse(actor.GetId(), vector);
     }
 
+    void AddActorAngularImpulse(const Actor &actor, const geom::Vector3D &vector) {
+      _client.AddActorAngularImpulse(actor.GetId(), vector);
+    }
+
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
       return GetActorSnapshot(actor).acceleration;
     }
