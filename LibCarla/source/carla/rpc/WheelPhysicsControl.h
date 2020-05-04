@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#include "carla/geom/Vector3D.h"
 
 namespace carla {
 namespace rpc {
