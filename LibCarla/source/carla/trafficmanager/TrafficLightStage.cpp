@@ -1,29 +1,22 @@
 
-/// This file has functionality for responding to traffic lights
-/// and managing entry into non-signalized junctions.
-
-#include "carla/trafficmanager/Constants.h"
-#include "carla/trafficmanager/DataStructures.h"
-#include "carla/trafficmanager/LocalizationUtils.h"
-#include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace carla
 {
 namespace traffic_manager
 {
 
-using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
-using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
+TrafficLightStage::TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,
+                                     const SimulationState &simulation_state,
+                                     const BufferMapPtr &buffer_map,
+                                     const Parameters &parameters,
+                                     TLFramePtr &output_array) : vehicle_id_list(vehicle_id_list),
+                                                                 simulation_state(simulation_state),
+                                                                 buffer_map(buffer_map),
+                                                                 parameters(parameters),
+                                                                 output_array(output_array) {}
 
-void TrafficLightResponse (const unsigned long index,
-                           const std::vector<ActorId> &vehicle_id_list,
-                           const TrafficLightStateMap &tl_state_map,
-                           const BufferMapPtr &buffer_map,
-                           const Parameters &parameters,
-                           std::unordered_map<ActorId, TimeInstance> &vehicle_last_ticket,
-                           std::unordered_map<JunctionID, TimeInstance> &junction_last_ticket,
-                           std::unordered_map<ActorId, JunctionID> &vehicle_last_junction,
-                           TLFramePtr &tl_frame)
+void TrafficLightStage::Update(const unsigned long index)
 {
   bool traffic_light_hazard = false;
 
@@ -35,9 +28,9 @@ void TrafficLightResponse (const unsigned long index,
   const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
   const TimeInstance current_time = chr::system_clock::now();
 
-  const TrafficLightState tl_state = tl_state_map.at(ego_actor_id);
+  const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
   const TLS traffic_light_state = tl_state.tl_state;
-  const bool is_at_traffic_light = tl_state_map.at(ego_actor_id).at_traffic_light;
+  const bool is_at_traffic_light = tl_state.at_traffic_light;
 
   // We determine to stop if the current position of the vehicle is not a
   // junction and there is a red or yellow light.
@@ -109,7 +102,20 @@ void TrafficLightResponse (const unsigned long index,
     }
   }
 
-  tl_frame->at(index) = traffic_light_hazard;
+  output_array->at(index) = traffic_light_hazard;
+}
+
+void TrafficLightStage::RemoveActor(const ActorId actor_id)
+{
+  vehicle_last_ticket.erase(actor_id);
+  vehicle_last_junction.erase(actor_id);
+}
+
+void TrafficLightStage::Reset()
+{
+  vehicle_last_ticket.clear();
+  vehicle_last_junction.clear();
+  junction_last_ticket.clear();
 }
 
 } // namespace traffic_manager

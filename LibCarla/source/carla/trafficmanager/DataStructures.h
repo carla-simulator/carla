@@ -43,6 +43,7 @@ struct KinematicState
   cg::Location location;
   cg::Rotation rotation;
   cg::Vector3D velocity;
+  float speed_limit;
 };
 using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
 
@@ -59,7 +60,6 @@ struct StaticAttributes
   float half_length;
   float half_width;
   float half_height;
-  float speed_limit;
 };
 using StaticAttributeMap = std::unordered_map<ActorId, StaticAttributes>;
 

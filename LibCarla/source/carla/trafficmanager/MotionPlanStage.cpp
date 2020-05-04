@@ -1,51 +1,41 @@
 
-/// This file has functionality for motion planning based on information
-/// from localization, collision avoidance and traffic light response.
-
-#include "carla/client/detail/EpisodeProxy.h"
-#include "carla/rpc/VehicleControl.h"
-#include "carla/rpc/Command.h"
-
-#include "carla/trafficmanager/Constants.h"
-#include "carla/trafficmanager/DataStructures.h"
-#include "carla/trafficmanager/LocalizationUtils.h"
-#include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/PIDController.h"
+#include "carla/trafficmanager/MotionPlanStage.h"
 
 namespace carla
 {
 namespace traffic_manager
 {
 
-using namespace constants::MotionPlan;
-using namespace constants::WaypointSelection;
+MotionPlanStage::MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
+                                 const SimulationState &simulation_state,
+                                 const Parameters &parameters,
+                                 const BufferMapPtr &buffer_map,
+                                 const std::vector<float> &urban_longitudinal_parameters,
+                                 const std::vector<float> &highway_longitudinal_parameters,
+                                 const std::vector<float> &urban_lateral_parameters,
+                                 const std::vector<float> &highway_lateral_parameters,
+                                 const CollisionFramePtr &collision_frame,
+                                 const TLFramePtr &tl_frame,
+                                 ControlFramePtr &output_array) : vehicle_id_list(vehicle_id_list),
+                                                                  simulation_state(simulation_state),
+                                                                  parameters(parameters),
+                                                                  buffer_map(buffer_map),
+                                                                  urban_longitudinal_parameters(urban_longitudinal_parameters),
+                                                                  highway_longitudinal_parameters(highway_longitudinal_parameters),
+                                                                  urban_lateral_parameters(urban_lateral_parameters),
+                                                                  highway_lateral_parameters(highway_lateral_parameters),
+                                                                  collision_frame(collision_frame),
+                                                                  tl_frame(tl_frame),
+                                                                  output_array(output_array) {}
 
-using constants::SpeedThreshold::HIGHWAY_SPEED;
-using constants::HybridMode::HYBRID_MODE_DT;
-
-void MotionPlan(const unsigned long index,
-                const std::vector<ActorId> &vehicle_id_list,
-                const KinematicStateMap &state_map,
-                const StaticAttributeMap &attribute_map,
-                const Parameters &parameters,
-                const BufferMapPtr &buffer_map,
-                const std::vector<float> &urban_longitudinal_parameters,
-                const std::vector<float> &highway_longitudinal_parameters,
-                const std::vector<float> &urban_lateral_parameters,
-                const std::vector<float> &highway_lateral_parameters,
-                const CollisionFramePtr &collision_frame,
-                const TLFramePtr &tl_frame,
-                std::unordered_map<ActorId, StateEntry> &pid_state_map,
-                std::unordered_map<ActorId, TimeInstance> &teleportation_instance,
-                ControlFramePtr &output_array)
+void MotionPlanStage::Update(const unsigned long index)
 {
   const ActorId actor_id = vehicle_id_list.at(index);
-  const KinematicState kinematic_state = state_map.at(actor_id);
-  const cg::Location ego_location = kinematic_state.location;
-  const cg::Vector3D ego_velocity = kinematic_state.velocity;
+  const cg::Location ego_location = simulation_state.GetLocation(actor_id);
+  const cg::Vector3D ego_velocity = simulation_state.GetVelocity(actor_id);
   const float ego_speed = ego_velocity.Length();
-  const cg::Vector3D ego_heading = kinematic_state.rotation.GetForwardVector();
-  const bool ego_physics_enabled = kinematic_state.physics_enabled;
+  const cg::Vector3D ego_heading = simulation_state.GetHeading(actor_id);
+  const bool ego_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
   const Buffer &waypoint_buffer = buffer_map->at(actor_id);
   const CollisionHazardData &collision_hazard = collision_frame->at(index);
   const bool &tl_hazard = tl_frame->at(index);
@@ -89,7 +79,7 @@ void MotionPlan(const unsigned long index,
   }
 
   // Target velocity for vehicle.
-  const float ego_speed_limit = attribute_map.at(actor_id).speed_limit;
+  const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
   float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
   float dynamic_target_velocity = max_target_velocity;
   //////////////////////// Collision related data handling ///////////////////////////
@@ -97,8 +87,7 @@ void MotionPlan(const unsigned long index,
   if (collision_hazard.hazard)
   {
     const ActorId other_actor_id = collision_hazard.hazard_actor_id;
-    const KinematicState &other_kinematic_state = state_map.at(other_actor_id);
-    const cg::Vector3D other_velocity = other_kinematic_state.velocity;
+    const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
     const float ego_relative_speed = (ego_velocity - other_velocity).Length();
     const float available_distance_margin = collision_hazard.available_distance_margin;
 
@@ -211,7 +200,7 @@ void MotionPlan(const unsigned long index,
     // Also, teleport only once every dt in asynchronous mode.
     else
     {
-      teleportation_transform = cg::Transform(ego_location, kinematic_state.rotation);
+      teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
     }
   }
 
@@ -233,6 +222,18 @@ void MotionPlan(const unsigned long index,
   {
     output_array->at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
+}
+
+void MotionPlanStage::RemoveActor(const ActorId actor_id)
+{
+  pid_state_map.erase(actor_id);
+  teleportation_instance.erase(actor_id);
+}
+
+void MotionPlanStage::Reset()
+{
+  pid_state_map.clear();
+  teleportation_instance.clear();
 }
 
 } // namespace traffic_manager
