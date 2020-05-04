@@ -82,7 +82,7 @@ export UE4_ROOT=~/UnrealEngine_4.24
 make launch
 make PythonAPI 
 
-# Run an example script to test CARLA. 
+# Press play in the Editor to initialize the server, and run an example script to test CARLA. 
 cd PythonAPI/examples
 python3 spawn_npc.py
 ```
