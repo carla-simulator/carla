@@ -1,3 +1,7 @@
+## Latest
+
+  * Fixed rain drop spawn issues when spawning camera sensors
+
 ## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
