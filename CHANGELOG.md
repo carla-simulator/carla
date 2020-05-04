@@ -1,6 +1,7 @@
 ## Latest
 
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Fixed Update.sh from failing when the root folder contains a space on it
 
 ## CARLA 0.9.9
 
