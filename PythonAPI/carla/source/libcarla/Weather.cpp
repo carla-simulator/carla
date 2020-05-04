@@ -38,18 +38,18 @@ void export_weather() {
          arg("sun_altitude_angle")=0.0f,
          arg("fog_density")=0.0f,
          arg("fog_distance")=0.0f,
-         arg("wetness")=0.0f)))
-    .def_readwrite("cloudiness", &cr::WeatherParameters::cloudiness)
-    .def_readwrite("precipitation", &cr::WeatherParameters::precipitation)
-    .def_readwrite("precipitation_deposits", &cr::WeatherParameters::precipitation_deposits)
-    .def_readwrite("wind_intensity", &cr::WeatherParameters::wind_intensity)
-    .def_readwrite("sun_azimuth_angle", &cr::WeatherParameters::sun_azimuth_angle)
-    .def_readwrite("sun_altitude_angle", &cr::WeatherParameters::sun_altitude_angle)
-    .def_readwrite("fog_density", &cr::WeatherParameters::fog_density)
-    .def_readwrite("fog_distance", &cr::WeatherParameters::fog_distance)
-    .def_readwrite("wetness", &cr::WeatherParameters::wetness)
-    .def("__eq__", &cr::WeatherParameters::operator==)
-    .def("__ne__", &cr::WeatherParameters::operator!=)
+         arg("wetness")=0.0f), "@DocString(WeatherParameters.__init__)"))
+    .def_readwrite("cloudiness", &cr::WeatherParameters::cloudiness, "@DocString(WeatherParameters.cloudiness)")
+    .def_readwrite("precipitation", &cr::WeatherParameters::precipitation, "@DocString(WeatherParameters.precipitation)")
+    .def_readwrite("precipitation_deposits", &cr::WeatherParameters::precipitation_deposits, "@DocString(WeatherParameters.precipitation_deposits)")
+    .def_readwrite("wind_intensity", &cr::WeatherParameters::wind_intensity, "@DocString(WeatherParameters.wind_intensity)")
+    .def_readwrite("sun_azimuth_angle", &cr::WeatherParameters::sun_azimuth_angle, "@DocString(WeatherParameters.sun_azimuth_angle)")
+    .def_readwrite("sun_altitude_angle", &cr::WeatherParameters::sun_altitude_angle, "@DocString(WeatherParameters.sun_altitude_angle)")
+    .def_readwrite("fog_density", &cr::WeatherParameters::fog_density, "@DocString(WeatherParameters.fog_density)")
+    .def_readwrite("fog_distance", &cr::WeatherParameters::fog_distance, "@DocString(WeatherParameters.fog_distance)")
+    .def_readwrite("wetness", &cr::WeatherParameters::wetness, "@DocString(WeatherParameters.wetness)")
+    .def("__eq__", &cr::WeatherParameters::operator==, "@DocString(WeatherParameters.__eq__)")
+    .def("__ne__", &cr::WeatherParameters::operator!=, "@DocString(WeatherParameters.__ne__)")
     .def(self_ns::str(self_ns::self))
   ;
 

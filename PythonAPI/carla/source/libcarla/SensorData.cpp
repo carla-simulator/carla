@@ -197,10 +197,10 @@ void export_sensor_data() {
   namespace css = carla::sensor::s11n;
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
-    .add_property("frame", &cs::SensorData::GetFrame)
-    .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
-    .add_property("timestamp", &cs::SensorData::GetTimestamp)
-    .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform))
+    .add_property("frame", &cs::SensorData::GetFrame, "@DocString(SensorData.frame)")
+    .add_property("frame_number", &cs::SensorData::GetFrame, "@DocString(SensorData.frame_number)") // deprecated.
+    .add_property("timestamp", &cs::SensorData::GetTimestamp, "@DocString(SensorData.timestamp)")
+    .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform), "@DocString(SensorData.transform)")
   ;
 
   enum_<EColorConverter>("ColorConverter")
@@ -211,93 +211,93 @@ void export_sensor_data() {
   ;
 
   class_<csd::Image, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image>>("Image", no_init)
-    .add_property("width", &csd::Image::GetWidth)
-    .add_property("height", &csd::Image::GetHeight)
-    .add_property("fov", &csd::Image::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
-    .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")))
-    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
-    .def("__len__", &csd::Image::size)
-    .def("__iter__", iterator<csd::Image>())
+    .add_property("width", &csd::Image::GetWidth, "@DocString(Image.width)")
+    .add_property("height", &csd::Image::GetHeight, "@DocString(Image.height)")
+    .add_property("fov", &csd::Image::GetFOVAngle, "@DocString(Image.fov)")
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>, "@DocString(Image.raw_data)")
+    .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")), "@DocString(Image.convert)")
+    .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw), "@DocString(Image.save_to_disk)")
+    .def("__len__", &csd::Image::size, "@DocString(Image.__len__)")
+    .def("__iter__", iterator<csd::Image>(), "@DocString(Image.__iter__)")
     .def("__getitem__", +[](const csd::Image &self, size_t pos) -> csd::Color {
       return self.at(pos);
-    })
+    }, "@DocString(Image.__getitem__)")
     .def("__setitem__", +[](csd::Image &self, size_t pos, csd::Color color) {
       self.at(pos) = color;
-    })
+    }, "@DocString(Image.__setitem__)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
-    .add_property("horizontal_angle", &csd::LidarMeasurement::GetHorizontalAngle)
-    .add_property("channels", &csd::LidarMeasurement::GetChannelCount)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>)
-    .def("get_point_count", &csd::LidarMeasurement::GetPointCount, (arg("channel")))
-    .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
-    .def("__len__", &csd::LidarMeasurement::size)
-    .def("__iter__", iterator<csd::LidarMeasurement>())
+    .add_property("horizontal_angle", &csd::LidarMeasurement::GetHorizontalAngle, "@DocString(LidarMeasurement.horizontal_angle)")
+    .add_property("channels", &csd::LidarMeasurement::GetChannelCount, "@DocString(LidarMeasurement.channels)")
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>, "@DocString(LidarMeasurement.raw_data)")
+    .def("get_point_count", &csd::LidarMeasurement::GetPointCount, (arg("channel")), "@DocString(LidarMeasurement.get_point_count)")
+    .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")), "@DocString(LidarMeasurement.save_to_disk)")
+    .def("__len__", &csd::LidarMeasurement::size, "@DocString(LidarMeasurement.__len__)")
+    .def("__iter__", iterator<csd::LidarMeasurement>(), "@DocString(LidarMeasurement.__iter__)")
     .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> cr::Location {
       return self.at(pos);
-    })
+    }, "@DocString(LidarMeasurement.__getitem__)")
     .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const cr::Location &point) {
       self.at(pos) = point;
-    })
+    }, "@DocString(LidarMeasurement.__setitem__)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
-    .add_property("actor", &csd::CollisionEvent::GetActor)
-    .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
-    .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
+    .add_property("actor", &csd::CollisionEvent::GetActor, "@DocString(CollisionEvent.actor)")
+    .add_property("other_actor", &csd::CollisionEvent::GetOtherActor, "@DocString(CollisionEvent.other_actor)")
+    .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse), "@DocString(CollisionEvent.normal_impulse)")
     .def(self_ns::str(self_ns::self))
   ;
 
     class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
-    .add_property("actor", &csd::ObstacleDetectionEvent::GetActor)
-    .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
-    .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
+    .add_property("actor", &csd::ObstacleDetectionEvent::GetActor, "@DocString(ObstacleDetectionEvent.actor)")
+    .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor, "@DocString(ObstacleDetectionEvent.other_actor)")
+    .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance), "@DocString(ObstacleDetectionEvent.distance)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
-    .add_property("actor", &csd::LaneInvasionEvent::GetActor)
-    .add_property("crossed_lane_markings", CALL_RETURNING_LIST(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
+    .add_property("actor", &csd::LaneInvasionEvent::GetActor, "@DocString(LaneInvasionEvent.actor)")
+    .add_property("crossed_lane_markings", CALL_RETURNING_LIST(csd::LaneInvasionEvent, GetCrossedLaneMarkings), "@DocString(LaneInvasionEvent.crossed_lane_markings)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
-    .add_property("latitude", &csd::GnssMeasurement::GetLatitude)
-    .add_property("longitude", &csd::GnssMeasurement::GetLongitude)
-    .add_property("altitude", &csd::GnssMeasurement::GetAltitude)
+    .add_property("latitude", &csd::GnssMeasurement::GetLatitude, "@DocString(GnssMeasurement.latitude)")
+    .add_property("longitude", &csd::GnssMeasurement::GetLongitude, "@DocString(GnssMeasurement.longitude)")
+    .add_property("altitude", &csd::GnssMeasurement::GetAltitude, "@DocString(GnssMeasurement.altitude)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
-    .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer)
-    .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope)
-    .add_property("compass", &csd::IMUMeasurement::GetCompass)
+    .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer, "@DocString(IMUMeasurement.accelerometer)")
+    .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope, "@DocString(IMUMeasurement.gyroscope)")
+    .add_property("compass", &csd::IMUMeasurement::GetCompass, "@DocString(IMUMeasurement.compass)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::RadarMeasurement>)
-    .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount)
-    .def("__len__", &csd::RadarMeasurement::size)
-    .def("__iter__", iterator<csd::RadarMeasurement>())
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::RadarMeasurement>, "@DocString(RadarMeasurement.raw_data)")
+    .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount, "@DocString(RadarMeasurement.get_detection_count)")
+    .def("__len__", &csd::RadarMeasurement::size, "@DocString(RadarMeasurement.__len__)")
+    .def("__iter__", iterator<csd::RadarMeasurement>(), "@DocString(RadarMeasurement.__iter__)")
     .def("__getitem__", +[](const csd::RadarMeasurement &self, size_t pos) -> css::RadarDetection {
       return self.at(pos);
-    })
+    }, "@DocString(RadarMeasurement.__getitem__)")
     .def("__setitem__", +[](csd::RadarMeasurement &self, size_t pos, const css::RadarDetection &detection) {
       self.at(pos) = detection;
-    })
+    }, "@DocString(RadarMeasurement.__setitem__)")
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<css::RadarDetection>("RadarDetection")
-    .def_readwrite("velocity", &css::RadarDetection::velocity)
-    .def_readwrite("azimuth", &css::RadarDetection::azimuth)
-    .def_readwrite("altitude", &css::RadarDetection::altitude)
-    .def_readwrite("depth", &css::RadarDetection::depth)
+    .def_readwrite("velocity", &css::RadarDetection::velocity, "@DocString(RadarDetection.velocity)")
+    .def_readwrite("azimuth", &css::RadarDetection::azimuth, "@DocString(RadarDetection.azimuth)")
+    .def_readwrite("altitude", &css::RadarDetection::altitude, "@DocString(RadarDetection.altitude)")
+    .def_readwrite("depth", &css::RadarDetection::depth, "@DocString(RadarDetection.depth)")
     .def(self_ns::str(self_ns::self))
   ;
 }
