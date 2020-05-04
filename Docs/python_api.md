@@ -19,6 +19,10 @@ The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.must
 Adds an impulse to the actor.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
+Adds an angular impulse to the actor (in degrees).  
+    - **Parameters:**
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
 Tells the simulator to destroy this actor and returns <b>True</b> if it was successful. It has no effect if it was already destroyed.  
     - **Return:** _bool_  
@@ -2441,6 +2445,23 @@ Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same
 - <a name="carla.WorldSnapshot.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
 Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different.  
     - **Return:** _bool_  
+
+---
+
+## command.ApplyAngularImpulse<a name="command.ApplyAngularImpulse"></a>
+Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in [carla.Actor](#carla.Actor). Adds angular impulse to an actor.  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyAngularImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Angular impulse applied to the actor.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
 
