@@ -250,7 +250,7 @@ So far there are seven different maps available. Each one has unique features an
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town10.png">
+    <img src="../img/Town10.jpg">
     <div class="text">Town10</div>
   </div>
 

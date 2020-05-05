@@ -39,7 +39,7 @@ The following diagram is a summary of the internal architecture of the Traffic M
 The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. 
 
 <div style="text-align:center">
-<img src="../img/traffic_manager_diagram.png">
+<img src="../img/traffic_manager_diagram.jpg">
 </div>
 
 ### Stages

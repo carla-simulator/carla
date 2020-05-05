@@ -11,7 +11,7 @@ The most challenging part of the setup is to compile all the dependencies and mo
 
 The goal is to be able to call Unreal Engine's functions from a separate Python process.
 
-![modules](img/modules.png)
+![modules](img/build_modules.jpg)
 
 In Linux, we compile CARLA and all the dependencies with clang-8.0 and C++14 standard. We however link against different runtime C++ libraries depending on where the code going to be used, since all the code that is going to be linked with Unreal Engine needs to be compiled using `libc++`.
 
