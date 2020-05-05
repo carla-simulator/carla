@@ -359,59 +359,11 @@ void export_sensor_data() {
       self.at(pos) = event;
     })
     .def("to_image", CALL_RETURNING_LIST(csd::DVSEventArray, ToImage))
-    .def("to_array", +[](const csd::DVSEventArray &self) -> std::vector<std::vector<std::int64_t>> {
-      std::vector<std::vector<std::int64_t>> array (self.size());
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        std::vector<std::int64_t> element = {static_cast<std::int64_t>(event.x), static_cast<std::int64_t>(event.y), static_cast<std::int64_t>(event.t), static_cast<std::int64_t>(event.pol)};
-        array[i] = element;
-      }
-      return array;
-    })
-
-    .def("to_array_x", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
-      std::vector<std::int64_t> array;
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        array.push_back(event.x);
-      }
-      return array;
-    })
-
-     .def("to_array_y", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
-      std::vector<std::int64_t> array;
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        array.push_back(event.y);
-      }
-      return array;
-    })
-      .def("to_array_t", +[](const csd::DVSEventArray &self) -> std::vector<std::int64_t> {
-      std::vector<std::int64_t> array;
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        array.push_back(event.t);
-      }
-      return array;
-    })
-
-      .def("to_array_pol", +[](const csd::DVSEventArray &self) -> std::vector<short> {
-      std::vector<short> array;
-      for (size_t i=0; i<self.size(); ++i)
-      {
-        const csd::DVSEvent &event = self[i];
-        if (event.pol == true)
-          array.push_back(1);
-        else
-          array.push_back(-1);
-
-      }
-      return array;
-    })
+    .def("to_array", CALL_RETURNING_LIST(csd::DVSEventArray, ToArray))
+    .def("to_array_x", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayX))
+    .def("to_array_y", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayY))
+    .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))
+    .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
     .def(self_ns::str(self_ns::self))
   ;
 }
