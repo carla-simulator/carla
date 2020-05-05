@@ -48,7 +48,7 @@ git clone https://github.com/carla-simulator/carla
 make launch
 make PythonAPI
 
-# Run an example script to test CARLA. 
+# Press play in the Editor to initialize the server, and run an example script to test CARLA. 
 cd PythonAPI/Examples && python3 spawn_npc.py
 ```
 </details>
