@@ -202,7 +202,13 @@ void ALSM::Update()
 
     if (!enable_physics)
     {
-      cg::Vector3D displacement = (vehicle_location - simulation_state.GetLocation(actor_id));
+      cg::Location previous_location;
+      if (simulation_state.ContainsActor(actor_id)) {
+        previous_location = simulation_state.GetLocation(actor_id);
+      } else {
+        previous_location = vehicle_location;
+      }
+      cg::Vector3D displacement = (vehicle_location - previous_location);
       vehicle_velocity = displacement / dt;
     }
 
