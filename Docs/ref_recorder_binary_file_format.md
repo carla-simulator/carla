@@ -5,13 +5,13 @@ using little endian byte order for the multibyte values.
 In the next image representing the file format, we can get a quick view of all the detailed
 information. Each part that is visualized in the image will be explained in the following sections:
 
-![file format 1](img/RecorderFileFormat1.png)
+![file format 1](img/RecorderFileFormat1.jpg)
 
 In summary, the file format has a small header with general info
 (version, magic string, date and the map used) and a collection of packets of different types
 (currently we use 10 types, but that will continue growing up in the future).
 
-![global file format](img/RecorderFileFormat3.png)
+![global file format](img/RecorderFileFormat3.jpg)
 
 ---
 ## 1. Strings in binary
@@ -20,7 +20,7 @@ Strings are encoded first with the length of it, followed by its characters with
 character ending. For example, the string 'Town06' will be saved
 as hex values: 06 00 54 6f 77 6e 30 36
 
-![binary dynamic string](img/RecorderString.png)
+![binary dynamic string](img/RecorderString.jpg)
 
 ---
 ## 2. Info header
@@ -30,18 +30,18 @@ and a magic string to identify the file as a recorder file. If the header change
 will change also. Furthermore, it contains a date timestamp, with the number of seconds from the
 Epoch 1900, and also it contains a string with the name of the map that has been used for recording.
 
-![info header](img/RecorderInfoHeader.png)
+![info header](img/RecorderInfoHeader.jpg)
 
 A sample info header is:
 
-![info header sample](img/RecorderHeader.png)
+![info header sample](img/RecorderHeader.jpg)
 
 ---
 ## 3. Packets
 
 Each packet starts with a little header of two fields (5 bytes):
 
-![packet header](img/RecorderPacketHeader.png)
+![packet header](img/RecorderPacketHeader.jpg)
 
 * **id**: The packet type
 * **size**: Size of packet data
@@ -55,11 +55,11 @@ The header of the packet is useful because we can just ignore those packets we a
 in when doing playback. We only need to read the header (first 5 bytes) of the packet and jump to
 the next packet just skipping the data of the packet:
 
-![packets size](img/RecorderPackets.png)
+![packets size](img/RecorderPackets.jpg)
 
 The types of packets are:
 
-![packets type list](img/RecorderPacketsList.png)
+![packets type list](img/RecorderPacketsList.jpg)
 
 We suggest to use **id** over 100 for user custom packets, because this list will keep growing in
 the future.
@@ -69,7 +69,7 @@ the future.
 This packet marks the start of a new frame, and it will be the first one to start each frame.
 All packets need to be placed between a **Frame Start** and a **Frame End**.
 
-![frame start](img/RecorderFrameStart.png)
+![frame start](img/RecorderFrameStart.jpg)
 
 So, elapsed + durationThis = elapsed time for next frame
 
@@ -79,13 +79,13 @@ This frame has no data and it only marks the end of the current frame. That help
 to know the end of each frame just before the new one starts.
 Usually, the next frame should be a Frame Start packet to start a new frame.
 
-![frame end](img/RecorderFrameEnd.png)
+![frame end](img/RecorderFrameEnd.jpg)
 
 ### 3.3 Packet 2: Event Add
 
 This packet says how many actors we need to create at current frame.
 
-![event add](img/RecorderEventAdd.png)
+![event add](img/RecorderEventAdd.jpg)
 
 The field **total** says how many records follow. Each record starts with the **id** field,
 that is the id the actor has when it was recorded (on playback that id could change internally,
@@ -114,13 +114,13 @@ The number of attributes is variable and should look similar to this:
 
 This packet says how many actors need to be destroyed this frame.
 
-![event del](img/RecorderEventDel.png)
+![event del](img/RecorderEventDel.jpg)
 
 It has the **total** of records, and each record has the **id** of the actor to remove.
 
 For example, this packet could be like this:
 
-![event del](img/RecorderPacketSampleEventDel.png)
+![event del](img/RecorderPacketSampleEventDel.jpg)
 
 The number 3 identifies the packet as (Event Del). The number 16 is the size of the data of
 the packet (4 fields of 4 bytes each). So if we don't want to process this packet, we could skip
@@ -132,7 +132,7 @@ So, we need to remove at this frame the actors 100, 101 and 120.
 
 This packet says which actor is the child of another (the parent).
 
-![event parent](img/RecorderEventParent.png)
+![event parent](img/RecorderEventParent.jpg)
 
 The first id is the child actor, and the second one will be the parent actor.
 
@@ -142,7 +142,7 @@ If a collision happens between two actors, it will be registered in this packet.
 actors with a collision sensor will report collisions, so currently only hero vehicles have that
 sensor attached automatically.
 
-![event collision](img/RecorderCollision.png)
+![event collision](img/RecorderCollision.jpg)
 
 The **id** is just a sequence to identify each collision internally.
 Several collisions between the same pair of actors can happen in the same frame, because physics
@@ -153,28 +153,28 @@ frame rate is fixed and usually there are several physics substeps in the same r
 This packet records the position and orientation of all actors of type **vehicle** and
 **walker** that exist in the scene.
 
-![position](img/RecorderPosition.png)
+![position](img/RecorderPosition.jpg)
 
 ### 3.8 Packet 7: TrafficLight
 
 This packet records the state of all **traffic lights** in the scene. Which means that it
 stores the state (red, orange or green) and the time it is waiting to change to a new state.
 
-![state](img/RecorderTrafficLight.png)
+![state](img/RecorderTrafficLight.jpg)
 
 ### 3.9 Packet 8: Vehicle animation
 
 This packet records the animation of the vehicles, bikes and cycles. This packet stores the
 **throttle**, **sterring**, **brake**, **handbrake** and **gear** inputs, and then set them at playback.
 
-![state](img/RecorderVehicle.png)
+![state](img/RecorderVehicle.jpg)
 
 ### 3.10 Packet 9: Walker animation
 
 This packet records the animation of the walker. It just saves the **speed** of the walker
 that is used in the animation.
 
-![state](img/RecorderWalker.png)
+![state](img/RecorderWalker.jpg)
 
 ---
 ## 4. Frame Layout
@@ -182,7 +182,7 @@ that is used in the animation.
 A frame consists of several packets, where all of them are optional, except the ones that
 have the **start** and **end** in that frame, that must be there always.
 
-![layout](img/RecorderFrameLayout.png)
+![layout](img/RecorderFrameLayout.jpg)
 
 **Event** packets exist only in the frame where they happen.
 
@@ -201,7 +201,7 @@ The layout of the file starts with the **info header** and then follows a collec
 groups. The first in each group is the **Frame Start** packet, and the last in the group is
 the **Frame End** packet. In between, we can find the rest of packets as well.
 
-![layout](img/RecorderLayout.png)
+![layout](img/RecorderLayout.jpg)
 
 Usually, it is a good idea to have all packets regarding events first, and then the packets
 regarding position and state later.
@@ -209,7 +209,7 @@ regarding position and state later.
 The event packets are optional, since they appear when they happen, so we could have a layout
 like this one:
 
-![layout](img/RecorderLayoutSample.png)
+![layout](img/RecorderLayoutSample.jpg)
 
 In **frame 1** some actors are created and reparented, so we can observe its events in the image.
 In **frame 2** there are no events. In **frame 3** some actors have collided so the collision event

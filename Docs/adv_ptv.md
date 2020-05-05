@@ -46,7 +46,7 @@ In order for a new PTV-Vissim network to run with CARLA, there are a few setting
 * __Specify the vehicle and pedestrian types__. These are the types that will be used in PTV-Vissim to sync with the spawnings done in CARLA. By default are empty.  
 * __Export the network as `.inpx`__. Create the network, export it, and run the co-simulation with `run_synchronization.py`.  
 
-![ptv_types](img/ptv_types.png)
+![ptv_types](img/ptv_types.jpg)
 <div style="text-align: right"><i>Any vehicle that is spawned in CARLA, will be spawned in PTV-Vissim using these types.</i></div>
 
 !!! Warning

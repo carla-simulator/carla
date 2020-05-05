@@ -37,7 +37,7 @@ We can **tag** any mesh with the name **NoExport** and then the exporter will ig
 
 Once we have all meshes with the proper nomenclature and tagged the ones that we want to ignore, we can call the Carla Exporter that is found under the `File > Actors > Carla Exporter`:
 
-![Carla Exporter](img/CarlaExporter.png)
+![Carla Exporter](img/tuto_D_pedestrian_CarlaExporter.jpg)
 
 The `.OBJ` file will be saved with the name of the map with extension OBJ in the **CarlaUE4/Saved** folder of UE4.
 
