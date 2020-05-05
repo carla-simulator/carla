@@ -3,6 +3,8 @@
 /// This file has functionality for motion planning based on information
 /// from localization, collision avoidance and traffic light response.
 
+#pragma once
+
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/Command.h"
 
@@ -10,7 +12,6 @@
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/PIDController.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 

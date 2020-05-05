@@ -79,8 +79,6 @@ private:
 
   void RemoveActor(const ActorId actor_id, const bool registered_actor);
 
-  void Reset();
-
 public:
   ALSM(AtomicActorSet &registered_vehicles,
        BufferMapPtr &buffer_map_ptr,
@@ -95,6 +93,8 @@ public:
        MotionPlanStage &motion_plan_stage);
 
   void Update();
+
+  void Reset();
 };
 
 } // namespace traffic_manager

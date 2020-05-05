@@ -40,6 +40,8 @@ public :
 
   void RemoveActor(ActorId actor_id);
 
+  void Reset();
+
   void UpdateKinematicState(ActorId actorid, KinematicState state);
 
   void UpdateTrafficLightState(ActorId actor_id, TrafficLightState state);

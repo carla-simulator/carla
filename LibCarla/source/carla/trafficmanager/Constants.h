@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <limits>
+
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define SQUARE(a) ((a) * (a))
@@ -20,7 +22,7 @@ namespace constants
 namespace Networking
 {
 static unsigned int MIN_TRY_COUNT = 20u;
-static uint16_t TM_DEFAULT_PORT = 8000u;
+static unsigned short TM_DEFAULT_PORT = 8000u;
 static unsigned int TM_TIMEOUT = 2000; // ms
 } // namespace Networking
 

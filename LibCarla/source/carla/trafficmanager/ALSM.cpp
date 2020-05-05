@@ -247,14 +247,13 @@ void ALSM::Update()
     const cg::Location actor_location = actor_transform.location;
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
-    KinematicState kinematic_state {true, actor_location, actor_rotation, actor_velocity};
+    KinematicState kinematic_state {true, actor_location, actor_rotation, actor_velocity, -1.0f};
 
     TrafficLightState tl_state;
 
     const std::string type_id = actor_ptr->GetTypeId();
     ActorType actor_type = ActorType::Any;
     cg::Vector3D dimensions;
-    float speed_limit = -1.0f;
     if (type_id.front() == 'v')
     {
       auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor_ptr);

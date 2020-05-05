@@ -1,6 +1,8 @@
 
 #include "carla/trafficmanager/MotionPlanStage.h"
 
+#include "carla/trafficmanager/PIDController.h"
+
 namespace carla
 {
 namespace traffic_manager

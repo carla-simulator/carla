@@ -1,6 +1,8 @@
 
 /// This file has functionality to detect potential collision with a nearby actor.
 
+#pragma once
+
 #include <memory>
 
 #include "carla/Memory.h"

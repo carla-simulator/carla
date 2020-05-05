@@ -2,6 +2,8 @@
 /// This file has functionality for responding to traffic lights
 /// and managing entry into non-signalized junctions.
 
+#pragma once
+
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/LocalizationUtils.h"

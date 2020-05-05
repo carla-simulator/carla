@@ -27,6 +27,13 @@ void SimulationState::RemoveActor(ActorId actor_id) {
   tl_state_map.erase(actor_id);
 }
 
+void SimulationState::Reset() {
+  actor_set.clear();
+  kinematic_state_map.clear();
+  static_attribute_map.clear();
+  tl_state_map.clear();
+}
+
 void SimulationState::UpdateKinematicState(ActorId actor_id, KinematicState state) {
   kinematic_state_map.at(actor_id) = state;
 }
