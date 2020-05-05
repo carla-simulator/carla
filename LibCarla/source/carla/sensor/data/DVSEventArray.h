@@ -53,6 +53,7 @@ namespace data {
       return GetHeader().fov_angle;
     }
 
+    ///  Get an event "frame" image for visualization
     std::vector<Color> ToImage() const {
       std::vector<Color> img(GetHeight() * GetWidth());
       for (const auto &event : *this) {
@@ -66,6 +67,51 @@ namespace data {
         }
       }
       return img;
+    }
+
+    /// Get the array of events in pure vector format
+    std::vector<std::vector<std::int64_t>> ToArray() const {
+      std::vector<std::vector<std::int64_t>> array;
+      for (const auto &event : *this) {
+        array.push_back({static_cast<std::int64_t>(event.x), static_cast<std::int64_t>(event.y), static_cast<std::int64_t>(event.t), static_cast<std::int64_t>(event.pol)});
+      }
+      return array;
+    }
+
+    /// Get all events' x coordinate for convenience
+    std::vector<std::uint16_t> ToArrayX() const {
+      std::vector<std::uint16_t> array;
+      for (const auto &event : *this) {
+        array.push_back(event.x);
+      }
+      return array;
+    }
+
+    /// Get all events' y coordinate for convenience
+    std::vector<std::uint16_t> ToArrayY() const {
+      std::vector<std::uint16_t> array;
+      for (const auto &event : *this) {
+        array.push_back(event.y);
+      }
+      return array;
+    }
+
+    /// Get all events' timestamp for convenience
+    std::vector<std::int64_t> ToArrayT() const {
+      std::vector<std::int64_t> array;
+      for (const auto &event : *this) {
+        array.push_back(event.t);
+      }
+      return array;
+    }
+
+    /// Get all events' polarity for convenience
+    std::vector<short> ToArrayPol() const {
+      std::vector<short> array;
+      for (const auto &event : *this) {
+        array.push_back(2*static_cast<short>(event.pol) - 1);
+      }
+      return array;
     }
 
   };
