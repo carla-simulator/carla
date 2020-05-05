@@ -1,6 +1,8 @@
 ## Latest
 
-  * Added API function **add_angular_impulse** to add angular impulse to any actor
+  * Added API function `add_angular_impulse()` to add angular impulse to any actor
+  * Fixed rain drop spawn issues when spawning camera sensors
+  * Fixed Update.sh from failing when the root folder contains a space on it
 
 ## CARLA 0.9.9
 
@@ -21,7 +23,7 @@
   * API extensions:
     - Added new methods to `Map`: `get_all_landmarks`, `get_all_landmarks_from_id` and `get_all_landmarks_of_type`
   * Added synchronization of traffic lights in sumo co-simulation
-  * Added light manager to control the lights of the map.
+  * Added light manager to control the lights of the map
 
 ## CARLA 0.9.8
 
