@@ -29,7 +29,6 @@ private:
 
 public :
   SimulationState(/* args */);
-  ~SimulationState();
 
   void AddActor(ActorId actor_id,
                 KinematicState kinematic_state,

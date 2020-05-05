@@ -6,6 +6,8 @@ namespace carla
 namespace traffic_manager
 {
 
+SimulationState::SimulationState() {}
+
 void SimulationState::AddActor(ActorId actor_id,
                                KinematicState kinematic_state,
                                StaticAttributes attributes,
