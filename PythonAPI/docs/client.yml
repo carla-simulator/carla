@@ -288,7 +288,7 @@
       - param_name: detect_collision
         type: bool
         doc: >
-          __True__ is default and enables collisions. __False will disable them.
+          __True__ is default and enables collisions. __False__ will disable them.
       doc: >
         Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
     # --------------------------------------
