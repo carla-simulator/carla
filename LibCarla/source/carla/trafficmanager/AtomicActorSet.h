@@ -72,12 +72,15 @@ namespace traffic_manager {
       ++state_counter;
     }
 
-    void Destroy(ActorPtr actor) {
+    void Destroy(ActorId actor_id) {
 
       std::lock_guard<std::mutex> lock(modification_mutex);
-      actor_set.erase(actor->GetId());
-      actor->Destroy();
-      ++state_counter;
+      if (actor_set.find(actor_id) != actor_set.end()) {
+        ActorPtr actor = actor_set.at(actor_id);
+        actor->Destroy();
+        actor_set.erase(actor_id);
+        ++state_counter;
+      }
     }
 
     int GetState() {

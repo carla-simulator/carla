@@ -240,7 +240,8 @@ void ALSM::Update()
   }
 
   if (IsVehicleStuck(max_idle_time.first)
-      && current_timestamp.elapsed_seconds - elapsed_last_actor_destruction > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+      && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+    registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
   }

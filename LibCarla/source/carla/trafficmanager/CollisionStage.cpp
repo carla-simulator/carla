@@ -79,7 +79,6 @@ void CollisionStage::Update(const unsigned long index)
 
       if (parameters.GetCollisionDetection(ego_actor_id, other_actor_id)
           && buffer_map->find(ego_actor_id) != buffer_map->end()
-          && buffer_map->find(other_actor_id) != buffer_map->end()
           && simulation_state.ContainsActor(other_actor_id))
       {
         std::pair<bool, float> negotiation_result = NegotiateCollision(ego_actor_id,
@@ -186,9 +185,8 @@ LocationList CollisionStage::GetGeodesicBoundary(const ActorId actor_id)
   {
     const LocationList bbox = GetBoundary(actor_id);
 
-    if (simulation_state.GetType(actor_id) == ActorType::Vehicle)
+    if (buffer_map->find(actor_id) != buffer_map->end())
     {
-
       float bbox_extension = GetBoundingBoxExtention(actor_id);
       const float specific_lead_distance = parameters.GetDistanceToLeadingVehicle(actor_id);
       bbox_extension = MAX(specific_lead_distance, bbox_extension);
