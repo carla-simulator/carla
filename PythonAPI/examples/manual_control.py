@@ -420,11 +420,11 @@ class KeyboardControl(object):
                 if self._control.brake:
                     current_lights |= carla.VehicleLightState.Brake
                 else: # Remove the Brake flag
-                    current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Brake
+                    current_lights &= ~carla.VehicleLightState.Brake
                 if self._control.reverse:
                     current_lights |= carla.VehicleLightState.Reverse
                 else: # Remove the Reverse flag
-                    current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Reverse
+                    current_lights &= ~carla.VehicleLightState.Reverse
                 if current_lights != self._lights: # Change the light state only if necessary
                     self._lights = current_lights
                     world.player.set_light_state(carla.VehicleLightState(self._lights))
