@@ -219,7 +219,7 @@ namespace detail {
   void Client::SetLightStateToVehicle(
       rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {
-    return _pimpl->AsyncCall("apply_vehicle_light_state", vehicle, light_state);
+    return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
   }
 
   rpc::Actor Client::SpawnActor(
