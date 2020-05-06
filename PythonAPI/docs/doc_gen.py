@@ -394,7 +394,7 @@ def add_doc_method(md, method, class_key):
 
     md.list_pop()
 
-def add_doc_getter_setter(md, method, class_key,is_getter,other_list):
+def add_doc_getter_setter(md, method,class_key,is_getter,other_list):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
     method_def = gen_doc_method_def(method, False)
@@ -585,6 +585,7 @@ class Documentation:
         md.first_title()
         md.textn(
         "This reference contains all the details about latest version of the Python API. To consult a valid reference for a specific CARLA release, please select it from the list hereunder.<br>"
+        +"<br><i><strong>Warning!</strong> These links change the version of the documentation to a previous state. Make sure to go back to the latest to get the updated version of the docs.</i><br>"
         +"<details><summary><b>Previous references</b></summary><br><ul>"
 +"<li><a href="+"https://carla.readthedocs.io/en/0.9.8/python_api/"+"><b>CARLA 0.9.8</b></a></li>"
 +"<li><a href="+"https://carla.readthedocs.io/en/0.9.7/python_api/"+"><b>CARLA 0.9.7</b></a></li>"
@@ -595,8 +596,7 @@ class Documentation:
 +"<li><a href="+"https://carla.readthedocs.io/en/0.9.2/python_api/"+"><b>CARLA 0.9.2</b></a></li>"
 +"<li><a href="+"https://carla.readthedocs.io/en/0.9.1/python_api/"+"><b>CARLA 0.9.1</b></a></li>"
 +"<li><a href="+"https://carla.readthedocs.io/en/0.9.0/python_api/"+"><b>CARLA 0.9.0</b></a></li>"
-+"</ul></details><br><hr>"
-+"<div class='alert alert-warning'><strong>Warning!</strong> These links change the version of the documentation to a previous state. Make sure to go back to the latest to get the updated version of the docs.</div>")
++"</ul></details><br><hr>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name
@@ -641,11 +641,11 @@ class Documentation:
                         if len(get_list)>0:
                             md.title_html(5, 'Getters')
                         for method in get_list:
-                            add_doc_getter_setter(md, method, class_key,True,set_list)
+                            add_doc_getter_setter(md, method,class_key,True,set_list)
                         if len(set_list)>0:
                             md.title_html(5, 'Setters')
                         for method in set_list:
-                            add_doc_getter_setter(md, method, class_key,False,get_list)
+                            add_doc_getter_setter(md, method,class_key,False,get_list)
                         if len(dunder_list)>0:
                             md.title_html(5, 'Dunder methods')
                         for method in dunder_list:
