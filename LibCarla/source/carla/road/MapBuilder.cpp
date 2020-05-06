@@ -840,7 +840,10 @@ namespace road {
         for (int i = 0; i < number_intervals; ++i) {
           if (interval < std::numeric_limits<double>::epsilon())
             break;
-          next_wp = map.GetNext(next_wp, interval).back();
+          auto next = map.GetNext(next_wp, interval);
+          if(next.size()){
+            next_wp = next.back();
+          }
 
           location = map.ComputeTransform(next_wp).location;
           get_min_max(location);

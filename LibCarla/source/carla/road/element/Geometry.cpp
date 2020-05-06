@@ -136,10 +136,11 @@ namespace element {
     double current_s = 0;
     double current_u = 0;
     double last_u = 0;
-    double last_v = 0;
+    double last_v = _poly.Evaluate(current_u);
     double last_s = 0;
-    RtreeValue last_val;
+    RtreeValue last_val{last_u, last_v, last_s, _poly.Tangent(current_u)};
     while (current_s < _length + delta_u) {
+      current_u += delta_u;
       double current_v = _poly.Evaluate(current_u);
       double du = current_u - last_u;
       double dv = current_v - last_v;
@@ -157,7 +158,6 @@ namespace element {
       last_s = current_s;
       last_val = current_val;
 
-      current_u += delta_u;
     }
   }
 
@@ -167,7 +167,6 @@ namespace element {
 
     auto &val1 = result.second.first;
     auto &val2 = result.second.second;
-
     double rate = (val2.s - dist) / (val2.s - val1.s);
     double u = rate * val1.u + (1.0 - rate) * val2.u;
     double v = rate * val1.v + (1.0 - rate) * val2.v;
@@ -195,11 +194,17 @@ namespace element {
     }
     double param_p = 0;
     double current_s = 0;
-    double last_u = 0;
-    double last_v = 0;
+    double last_u = _polyU.Evaluate(param_p);
+    double last_v = _polyV.Evaluate(param_p);
     double last_s = 0;
-    RtreeValue last_val;
+    RtreeValue last_val{
+        last_u,
+        last_v,
+        last_s,
+        _polyU.Tangent(param_p),
+        _polyV.Tangent(param_p) };
     for(size_t i = 0; i < number_intervals; ++i) {
+      param_p += delta_p;
       double current_u = _polyU.Evaluate(param_p);
       double current_v = _polyV.Evaluate(param_p);
       double du = current_u - last_u;
@@ -224,7 +229,6 @@ namespace element {
       last_s = current_s;
       last_val = current_val;
 
-      param_p += delta_p;
       if(current_s > _length){
         break;
       }
