@@ -56,6 +56,13 @@ namespace client {
         bool project_to_road = true,
         uint32_t lane_type = static_cast<uint32_t>(road::Lane::LaneType::Driving)) const;
 
+    std::vector<SharedPtr<Waypoint>>
+    GetWaypointList(const geom::Location &location, bool project_to_road = true,
+                    uint32_t lane_type = static_cast<uint32_t>(
+                        road::Lane::LaneType::Driving)) const;
+    std::vector<SharedPtr<road::element::CurvatureAtDistance>>
+    GetCurvatureList(const road::element::Waypoint waypoint) const;
+
     SharedPtr<Waypoint> GetWaypointXODR(
       carla::road::RoadId road_id,
       carla::road::LaneId lane_id,

@@ -252,5 +252,40 @@ namespace client {
     return result;
   }
 
+  double Waypoint::GetLaneLength() const {
+    return (_parent->GetMap().GetLane(_waypoint)).GetLength();
+  }
+
+  double Waypoint::GetCurvature() const {
+    return _parent->GetMap().GetCurvature(_waypoint);
+  }
+
+  std::vector<SharedPtr<road::element::CurvatureAtDistance>>
+  Waypoint::GetCurvatureList() const {
+    return _parent->GetCurvatureList(_waypoint);
+  }
+
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetSuccessors() const {
+    auto waypoints = _parent->GetMap().GetSuccessors(_waypoint);
+    std::vector<SharedPtr<Waypoint>> result;
+    result.reserve(waypoints.size());
+    for (auto &waypoint : waypoints) {
+      result.emplace_back(
+          SharedPtr<Waypoint>(new Waypoint(_parent, std::move(waypoint))));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Waypoint>> Waypoint::GetPredecessors() const {
+    auto waypoints = _parent->GetMap().GetPredecessors(_waypoint);
+    std::vector<SharedPtr<Waypoint>> result;
+    result.reserve(waypoints.size());
+    for (auto &waypoint : waypoints) {
+      result.emplace_back(
+          SharedPtr<Waypoint>(new Waypoint(_parent, std::move(waypoint))));
+    }
+    return result;
+  }
+
 } // namespace client
 } // namespace carla

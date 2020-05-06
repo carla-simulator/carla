@@ -14,7 +14,7 @@
   * Added parameter to enable/disable pedestrian navigation in standalone mode
   * Improved mesh split in standalone mode
   * Fixed large RAM usage when loading polinomial geometry from OpenDRIVE
-
+  * Added API functions to get the lane curvature
 
 ## CARLA 0.9.9
 

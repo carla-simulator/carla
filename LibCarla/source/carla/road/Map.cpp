@@ -153,6 +153,145 @@ namespace road {
   // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
+  std::vector<Waypoint>
+  Map::GetClosestWaypointsOnRoad(const geom::Location &pos,
+                                 uint32_t lane_type) const {
+    // max_nearests represents the max nearests roads
+    // where we will search for nearests lanes
+    constexpr int max_nearests = 50;
+    // in case that map has less than max_nearests lanes,
+    // we will use the maximum lanes
+    const int max_nearest_allowed = _data.GetRoadCount() < max_nearests
+                                        ? int(_data.GetRoadCount())
+                                        : max_nearests;
+
+    // Unreal's Y axis hack
+    const auto pos_inverted_y = geom::Location(pos.x, -pos.y, pos.z);
+
+    double nearest_dist[max_nearests];
+    std::fill(nearest_dist, nearest_dist + max_nearest_allowed,
+              std::numeric_limits<double>::max());
+
+    RoadId ids[max_nearests];
+    std::fill(ids, ids + max_nearest_allowed, 0);
+
+    double dists[max_nearests];
+    std::fill(dists, dists + max_nearest_allowed, 0.0);
+
+    for (const auto &road_pair : _data.GetRoads()) {
+      const auto road = &road_pair.second;
+      const auto current_dist = road->GetNearestPoint(pos_inverted_y);
+
+      for (int i = 0; i < max_nearest_allowed; ++i) {
+        if (current_dist.second < nearest_dist[i]) {
+          // reorder nearest_dist
+          for (auto j = max_nearest_allowed - 1; j > i; --j) {
+            nearest_dist[j] = nearest_dist[j - 1];
+            ids[j] = ids[j - 1];
+            dists[j] = dists[j - 1];
+          }
+          nearest_dist[i] = current_dist.second;
+          ids[i] = road->GetId();
+          dists[i] = current_dist.first;
+          break;
+        }
+      }
+    }
+
+    // search for the nearest lane in nearest_dist
+    int nbWp = 6;
+    std::vector<Waypoint> waypoints;
+    waypoints.reserve(size_t(nbWp));
+    auto toSelect = nbWp;
+    int idx = 0;
+    int ignore[6];
+    for (int k = 0; k < 6; ++k) {
+      ignore[k] = -1;
+    }
+    do {
+      auto nearest_lane_dist = std::numeric_limits<double>::max();
+      Waypoint waypoint;
+      for (int i = 0; i < max_nearest_allowed; ++i) {
+        auto lane_dist = _data.GetRoad(ids[i]).GetNearestLane(
+            dists[i], pos_inverted_y, lane_type);
+        bool bIgnore = false;
+        for (int k = 0; k < nbWp - 1; ++k) {
+          if (i == ignore[k]) {
+            bIgnore = true;
+          }
+        }
+        if (bIgnore) {
+          continue;
+        }
+        if (lane_dist.second < nearest_lane_dist) {
+          nearest_lane_dist = lane_dist.second;
+          waypoint.lane_id = lane_dist.first->GetId();
+          waypoint.road_id = ids[i];
+          waypoint.s = dists[i];
+          ignore[idx] = i;
+        }
+      }
+
+      if (nearest_lane_dist == std::numeric_limits<double>::max()) {
+        continue;
+      }
+
+      const auto &road = _data.GetRoad(waypoint.road_id);
+
+      // Make sure 0.0 < waypoint.s < Road's length
+      constexpr double margin = 5.0 * EPSILON;
+      DEBUG_ASSERT(margin < road.GetLength() - margin);
+      waypoint.s = geom::Math::Clamp<double>(waypoint.s, margin,
+                                             road.GetLength() - margin);
+
+      auto &lane = road.GetLaneByDistance(waypoint.s, waypoint.lane_id);
+
+      const auto lane_section = lane.GetLaneSection();
+      RELEASE_ASSERT(lane_section != nullptr);
+      const auto lane_section_id = lane_section->GetId();
+      waypoint.section_id = lane_section_id;
+      idx++;
+      waypoints.emplace_back(waypoint);
+    } while (--toSelect);
+    return waypoints;
+  }
+
+  double Map::GetCurvature(const Waypoint waypoint) const {
+    const auto s = waypoint.s;
+    const auto &lane = GetLane(waypoint);
+    const auto road = lane.GetRoad();
+    RELEASE_ASSERT(road != nullptr);
+    const auto geom = road->GetInfo<element::RoadInfoGeometry>(s);
+    return geom->GetGeometry().GetCurvature(s);
+  }
+
+  std::vector<CurvatureAtDistance>
+  Map::GetCurvatureList(const Waypoint waypoint) const {
+    const auto &lane = GetLane(waypoint);
+    const auto road = lane.GetRoad();
+    RELEASE_ASSERT(road != nullptr);
+    const auto geomVec = road->GetInfos<element::RoadInfoGeometry>();
+    std::vector<CurvatureAtDistance> result;
+    for (const auto geom : geomVec) {
+      const auto s = geom->GetGeometry().GetStartOffset();
+      if (waypoint.lane_id > 0) {
+        if (s > waypoint.s) {
+          continue;
+        }
+        result.insert(result.begin(),
+                      CurvatureAtDistance{waypoint.road_id, s,
+                                          geom->GetGeometry().GetCurvature(s)});
+      } else {
+        if (s < waypoint.s) {
+          continue;
+        }
+        result.emplace_back(CurvatureAtDistance{
+            waypoint.road_id, s, geom->GetGeometry().GetCurvature(s)});
+      }
+    }
+    return result;
+  }
+
   boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
       const geom::Location &pos,
       uint32_t lane_type) const {

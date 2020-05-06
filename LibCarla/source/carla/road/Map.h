@@ -49,6 +49,11 @@ namespace road {
     /// -- Geometry ------------------------------------------------------------
     /// ========================================================================
 
+    std::vector<Waypoint> GetClosestWaypointsOnRoad(const geom::Location &pos,
+                                                    uint32_t lane_type) const;
+    double GetCurvature(const Waypoint waypoint) const;
+    std::vector<element::CurvatureAtDistance>
+    GetCurvatureList(const Waypoint waypoint) const;
     boost::optional<element::Waypoint> GetClosestWaypointOnRoad(
         const geom::Location &location,
         uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
