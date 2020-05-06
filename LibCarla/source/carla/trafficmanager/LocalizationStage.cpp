@@ -6,17 +6,19 @@ namespace carla
 namespace traffic_manager
 {
 
-LocalizationStage::LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
-                                     BufferMapPtr &buffer_map,
-                                     const SimulationState &simulation_state,
-                                     TrackTraffic &track_traffic,
-                                     const LocalMapPtr &local_map,
-                                     Parameters &parameters) : vehicle_id_list(vehicle_id_list),
-                                                               buffer_map(buffer_map),
-                                                               simulation_state(simulation_state),
-                                                               track_traffic(track_traffic),
-                                                               local_map(local_map),
-                                                               parameters(parameters) {}
+LocalizationStage::LocalizationStage(
+  const std::vector<ActorId> &vehicle_id_list,
+  BufferMapPtr &buffer_map,
+  const SimulationState &simulation_state,
+  TrackTraffic &track_traffic,
+  const LocalMapPtr &local_map,
+  Parameters &parameters)
+  : vehicle_id_list(vehicle_id_list),
+    buffer_map(buffer_map),
+    simulation_state(simulation_state),
+    track_traffic(track_traffic),
+    local_map(local_map),
+    parameters(parameters) {}
 
 void LocalizationStage::Update(const unsigned long index)
 {
@@ -100,7 +102,9 @@ void LocalizationStage::Update(const unsigned long index)
   const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
   const double lane_change_distance = SQUARE(MAX(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
 
-  if (((parameters.GetAutoLaneChange(actor_id) || force_lane_change) && !front_waypoint->CheckJunction()) && (last_lane_change_location.find(actor_id) == last_lane_change_location.end() || cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location) > lane_change_distance))
+  if (((parameters.GetAutoLaneChange(actor_id) || force_lane_change) && !front_waypoint->CheckJunction())
+      && (last_lane_change_location.find(actor_id) == last_lane_change_location.end()
+          || cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location) > lane_change_distance))
   {
 
     SimpleWaypointPtr change_over_point = AssignLaneChange(actor_id, vehicle_location, vehicle_speed,
@@ -215,7 +219,12 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
         // Check both vehicles are not in junction,
         // Check if the other vehicle is in front of the current vehicle,
         // Check if the two vehicles have acceptable angular deviation between their headings.
-        if (!current_waypoint->CheckJunction() && !other_current_waypoint->CheckJunction() && other_current_waypoint->GetWaypoint()->GetRoadId() == current_waypoint->GetWaypoint()->GetRoadId() && other_current_waypoint->GetWaypoint()->GetLaneId() == current_waypoint->GetWaypoint()->GetLaneId() && cg::Math::Dot(reference_heading, reference_to_other) > 0.0f && cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE)
+        if (!current_waypoint->CheckJunction()
+            && !other_current_waypoint->CheckJunction()
+            && other_current_waypoint->GetWaypoint()->GetRoadId() == current_waypoint->GetWaypoint()->GetRoadId()
+            && other_current_waypoint->GetWaypoint()->GetLaneId() == current_waypoint->GetWaypoint()->GetLaneId()
+            && cg::Math::Dot(reference_heading, reference_to_other) > 0.0f
+            && cg::Math::Dot(reference_heading, other_heading) > MAXIMUM_LANE_OBSTACLE_CURVATURE)
         {
           float squared_distance = cg::Math::DistanceSquared(vehicle_location, other_location);
           // Abort if the obstacle is too close.
@@ -266,11 +275,13 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
       // Based on what lanes are free near the obstacle,
       // find the change over point with no vehicles passing through them.
-      if (distant_right_lane_free && right_waypoint != nullptr && track_traffic.GetPassingVehicles(right_waypoint->GetId()).size() == 0)
+      if (distant_right_lane_free && right_waypoint != nullptr
+          && track_traffic.GetPassingVehicles(right_waypoint->GetId()).size() == 0)
       {
         change_over_point = right_waypoint;
       }
-      else if (distant_left_lane_free && left_waypoint != nullptr && track_traffic.GetPassingVehicles(left_waypoint->GetId()).size() == 0)
+      else if (distant_left_lane_free && left_waypoint != nullptr
+               && track_traffic.GetPassingVehicles(left_waypoint->GetId()).size() == 0)
       {
         change_over_point = left_waypoint;
       }

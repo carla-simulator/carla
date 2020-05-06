@@ -6,15 +6,17 @@ namespace carla
 namespace traffic_manager
 {
 
-TrafficLightStage::TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,
-                                     const SimulationState &simulation_state,
-                                     const BufferMapPtr &buffer_map,
-                                     const Parameters &parameters,
-                                     TLFramePtr &output_array) : vehicle_id_list(vehicle_id_list),
-                                                                 simulation_state(simulation_state),
-                                                                 buffer_map(buffer_map),
-                                                                 parameters(parameters),
-                                                                 output_array(output_array) {}
+TrafficLightStage::TrafficLightStage(
+  const std::vector<ActorId> &vehicle_id_list,
+  const SimulationState &simulation_state,
+  const BufferMapPtr &buffer_map,
+  const Parameters &parameters,
+  TLFramePtr &output_array)
+  : vehicle_id_list(vehicle_id_list),
+    simulation_state(simulation_state),
+    buffer_map(buffer_map),
+    parameters(parameters),
+    output_array(output_array) {}
 
 void TrafficLightStage::Update(const unsigned long index)
 {

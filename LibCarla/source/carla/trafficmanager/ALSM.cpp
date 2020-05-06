@@ -6,27 +6,29 @@ namespace carla
 namespace traffic_manager
 {
 
-ALSM::ALSM(AtomicActorSet &registered_vehicles,
-           BufferMapPtr &buffer_map_ptr,
-           TrackTraffic &track_traffic,
-           const Parameters &parameters,
-           const cc::World &world,
-           const LocalMapPtr &local_map,
-           SimulationState &simulation_state,
-           LocalizationStage &localization_stage,
-           CollisionStage &collision_stage,
-           TrafficLightStage &traffic_light_stage,
-           MotionPlanStage &motion_plan_stage) : registered_vehicles(registered_vehicles),
-                                                 buffer_map_ptr(buffer_map_ptr),
-                                                 track_traffic(track_traffic),
-                                                 parameters(parameters),
-                                                 world(world),
-                                                 local_map(local_map),
-                                                 simulation_state(simulation_state),
-                                                 localization_stage(localization_stage),
-                                                 collision_stage(collision_stage),
-                                                 traffic_light_stage(traffic_light_stage),
-                                                 motion_plan_stage(motion_plan_stage) {}
+ALSM::ALSM(
+  AtomicActorSet &registered_vehicles,
+  BufferMapPtr &buffer_map_ptr,
+  TrackTraffic &track_traffic,
+  const Parameters &parameters,
+  const cc::World &world,
+  const LocalMapPtr &local_map,
+  SimulationState &simulation_state,
+  LocalizationStage &localization_stage,
+  CollisionStage &collision_stage,
+  TrafficLightStage &traffic_light_stage,
+  MotionPlanStage &motion_plan_stage)
+  : registered_vehicles(registered_vehicles),
+    buffer_map_ptr(buffer_map_ptr),
+    track_traffic(track_traffic),
+    parameters(parameters),
+    world(world),
+    local_map(local_map),
+    simulation_state(simulation_state),
+    localization_stage(localization_stage),
+    collision_stage(collision_stage),
+    traffic_light_stage(traffic_light_stage),
+    motion_plan_stage(motion_plan_stage) {}
 
 void ALSM::Update()
 {
@@ -136,9 +138,9 @@ void ALSM::Update()
         float bx = extent.x;
         float by = extent.y;
         std::vector<cg::Location> corners = {location + cg::Location(bx, by, 0.0f),
-                                              location + cg::Location(-bx, by, 0.0f),
-                                              location + cg::Location(bx, -by, 0.0f),
-                                              location + cg::Location(-bx, -by, 0.0f)};
+                                             location + cg::Location(-bx, by, 0.0f),
+                                             location + cg::Location(bx, -by, 0.0f),
+                                             location + cg::Location(-bx, -by, 0.0f)};
         for (cg::Location &vertex: corners) {
           SimpleWaypointPtr nearest_waypoint = local_map->GetWaypointInVicinity(vertex);
           if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetPedWaypoint(vertex);};

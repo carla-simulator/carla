@@ -8,27 +8,29 @@ namespace carla
 namespace traffic_manager
 {
 
-MotionPlanStage::MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
-                                 const SimulationState &simulation_state,
-                                 const Parameters &parameters,
-                                 const BufferMapPtr &buffer_map,
-                                 const std::vector<float> &urban_longitudinal_parameters,
-                                 const std::vector<float> &highway_longitudinal_parameters,
-                                 const std::vector<float> &urban_lateral_parameters,
-                                 const std::vector<float> &highway_lateral_parameters,
-                                 const CollisionFramePtr &collision_frame,
-                                 const TLFramePtr &tl_frame,
-                                 ControlFramePtr &output_array) : vehicle_id_list(vehicle_id_list),
-                                                                  simulation_state(simulation_state),
-                                                                  parameters(parameters),
-                                                                  buffer_map(buffer_map),
-                                                                  urban_longitudinal_parameters(urban_longitudinal_parameters),
-                                                                  highway_longitudinal_parameters(highway_longitudinal_parameters),
-                                                                  urban_lateral_parameters(urban_lateral_parameters),
-                                                                  highway_lateral_parameters(highway_lateral_parameters),
-                                                                  collision_frame(collision_frame),
-                                                                  tl_frame(tl_frame),
-                                                                  output_array(output_array) {}
+MotionPlanStage::MotionPlanStage(
+  const std::vector<ActorId> &vehicle_id_list,
+  const SimulationState &simulation_state,
+  const Parameters &parameters,
+  const BufferMapPtr &buffer_map,
+  const std::vector<float> &urban_longitudinal_parameters,
+  const std::vector<float> &highway_longitudinal_parameters,
+  const std::vector<float> &urban_lateral_parameters,
+  const std::vector<float> &highway_lateral_parameters,
+  const CollisionFramePtr &collision_frame,
+  const TLFramePtr &tl_frame,
+  ControlFramePtr &output_array)
+  : vehicle_id_list(vehicle_id_list),
+    simulation_state(simulation_state),
+    parameters(parameters),
+    buffer_map(buffer_map),
+    urban_longitudinal_parameters(urban_longitudinal_parameters),
+    highway_longitudinal_parameters(highway_longitudinal_parameters),
+    urban_lateral_parameters(urban_lateral_parameters),
+    highway_lateral_parameters(highway_lateral_parameters),
+    collision_frame(collision_frame),
+    tl_frame(tl_frame),
+    output_array(output_array) {}
 
 void MotionPlanStage::Update(const unsigned long index)
 {

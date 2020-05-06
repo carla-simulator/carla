@@ -5,13 +5,14 @@
 
 #include <memory>
 
-#include "carla/Memory.h"
-
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/geometries.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
+
+#include "carla/client/DebugHelper.h"
 #include "carla/geom/Math.h"
+#include "carla/Memory.h"
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
@@ -34,6 +35,7 @@ struct GeometryComparison
   double inter_bbox_distance;
 };
 
+namespace cc = carla::client;
 namespace bg = boost::geometry;
 
 using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
@@ -58,6 +60,7 @@ private:
   const TrackTraffic &track_traffic;
   const Parameters &parameters;
   CollisionFramePtr &output_array;
+  cc::DebugHelper &debug_helper;
   CollisionLockMap collision_locks;
   GeometryComparisonMap geometry_cache;
   GeodesicBoundaryMap geodesic_boundary_map;
@@ -68,7 +71,8 @@ public:
                  const BufferMapPtr &buffer_map,
                  const TrackTraffic &track_traffic,
                  const Parameters &parameters,
-                 CollisionFramePtr &output_array);
+                 CollisionFramePtr &output_array,
+                 cc::DebugHelper& debug_helper);
 
   void Update (const unsigned long index) override;
 
@@ -78,23 +82,22 @@ public:
 
   std::pair<bool, float> NegotiateCollision(const ActorId reference_vehicle_id,
                                             const ActorId other_actor_id,
-                                            const uint64_t reference_junction_look_ahead_index,
-                                            const float reference_lead_distance,
-                                            const float other_lead_distance);
+                                            const uint64_t reference_junction_look_ahead_index);
 
   float GetBoundingBoxExtention(const ActorId actor_id);
 
   LocationList GetBoundary(const ActorId actor_id);
 
-  LocationList GetGeodesicBoundary(const ActorId actor_id,
-                                   const float specific_lead_distance);
+  LocationList GetGeodesicBoundary(const ActorId actor_id);
 
   Polygon GetPolygon(const LocationList &boundary);
 
   GeometryComparison GetGeometryBetweenActors(const ActorId reference_vehicle_id,
-                                              const ActorId other_actor_id,
-                                              const float reference_lead_distance,
-                                              const float other_lead_distance);
+                                              const ActorId other_actor_id);
+
+  void ClearCycleCache();
+
+  void DrawBoundary(const LocationList &boundary);
 };
 
 } // namespace traffic_manager

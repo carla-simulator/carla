@@ -43,7 +43,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    buffer_map,
                                    track_traffic,
                                    parameters,
-                                   collision_frame_ptr)),
+                                   collision_frame_ptr,
+                                   debug_helper)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
@@ -82,12 +83,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
   registered_vehicles_state = -1;
 
-  buffer_map = std::make_shared<BufferMap>();
-
-  collision_frame_ptr = std::make_shared<CollisionFrame>(INITIAL_SIZE);
-  tl_frame_ptr = std::make_shared<TLFrame>(INITIAL_SIZE);
-  control_frame_ptr = std::make_shared<ControlFrame>(INITIAL_SIZE);
-
   SetupLocalMap();
 
   Start();
@@ -114,6 +109,11 @@ void TrafficManagerLocal::Start()
 
 void TrafficManagerLocal::Run()
 {
+  buffer_map = std::make_shared<BufferMap>();
+  collision_frame_ptr = std::make_shared<CollisionFrame>(INITIAL_SIZE);
+  tl_frame_ptr = std::make_shared<TLFrame>(INITIAL_SIZE);
+  control_frame_ptr = std::make_shared<ControlFrame>(INITIAL_SIZE);
+
   while (run_traffic_manger.load())
   {
     bool synchronous_mode = parameters.GetSynchronousMode();
@@ -146,9 +146,9 @@ void TrafficManagerLocal::Run()
       }
     }
 
-    snippet_profiler.MeasureExecutionTime("ALSM", true);
+    // snippet_profiler.MeasureExecutionTime("ALSM", true);
     alsm.Update();
-    snippet_profiler.MeasureExecutionTime("ALSM", false);
+    // snippet_profiler.MeasureExecutionTime("ALSM", false);
 
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
@@ -166,33 +166,34 @@ void TrafficManagerLocal::Run()
       registered_vehicles_state = registered_vehicles.GetState();
     }
 
-    snippet_profiler.MeasureExecutionTime("Localization", true);
+    // snippet_profiler.MeasureExecutionTime("Localization", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index)
     {
       localization_stage.Update(index);
     }
-    snippet_profiler.MeasureExecutionTime("Localization", false);
+    // snippet_profiler.MeasureExecutionTime("Localization", false);
 
-    snippet_profiler.MeasureExecutionTime("Collision", true);
+    // snippet_profiler.MeasureExecutionTime("Collision", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index)
     {
       collision_stage.Update(index);
     }
-    snippet_profiler.MeasureExecutionTime("Collision", false);
+    collision_stage.ClearCycleCache();
+    // snippet_profiler.MeasureExecutionTime("Collision", false);
 
-    snippet_profiler.MeasureExecutionTime("TrafficLight", true);
+    // snippet_profiler.MeasureExecutionTime("TrafficLight", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index)
     {
       traffic_light_stage.Update(index);
     }
-    snippet_profiler.MeasureExecutionTime("TrafficLight", false);
+    // snippet_profiler.MeasureExecutionTime("TrafficLight", false);
 
-    snippet_profiler.MeasureExecutionTime("MotionPlan", true);
+    // snippet_profiler.MeasureExecutionTime("MotionPlan", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index)
     {
       motion_plan_stage.Update(index);
     }
-    snippet_profiler.MeasureExecutionTime("MotionPlan", false);
+    // snippet_profiler.MeasureExecutionTime("MotionPlan", false);
 
     std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
     for (unsigned long i = 0u; i < number_of_vehicles; ++i)
