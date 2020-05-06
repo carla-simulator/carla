@@ -9,13 +9,15 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/geom/Transform.h"
-#include "carla/road/element/LaneMarking.h"
-#include "carla/road/element/RoadInfoMarkRecord.h"
-#include "carla/road/element/Waypoint.h"
 #include "carla/road/Lane.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/road/element/LaneMarking.h"
+#include "carla/road/element/RoadInfoGeometry.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/Waypoint.h"
 
 #include <boost/optional.hpp>
+
 
 namespace carla {
 namespace client {
@@ -99,6 +101,13 @@ namespace client {
     /// Filters by specified type
     std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction = false) const;
+
+    double GetLaneLength() const;
+    double GetCurvature() const;
+    std::vector<SharedPtr<road::element::CurvatureAtDistance>>
+    GetCurvatureList() const;
+    std::vector<SharedPtr<Waypoint>> GetSuccessors() const;
+    std::vector<SharedPtr<Waypoint>> GetPredecessors() const;
 
   private:
 

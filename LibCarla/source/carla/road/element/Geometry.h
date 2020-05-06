@@ -9,6 +9,7 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/CubicPolynomial.h"
+#include "carla/road/RoadTypes.h"
 #include "carla/geom/Rtree.h"
 
 namespace carla {
@@ -21,6 +22,12 @@ namespace element {
     SPIRAL,
     POLY3,
     POLY3PARAM
+  };
+
+  struct CurvatureAtDistance {
+    RoadId road_id;
+    double s;
+    double curvature;
   };
 
   struct DirectedPoint {
@@ -72,6 +79,8 @@ namespace element {
 
     virtual std::pair<float, float> DistanceTo(const geom::Location &p) const = 0;
 
+    virtual double GetCurvature(double s) const = 0;
+
   protected:
 
     Geometry(
@@ -122,6 +131,7 @@ namespace element {
           PosFromDist(_length).location);
     }
 
+    double GetCurvature(double) const override { return 0.0; }
   };
 
   class GeometryArc final : public Geometry {
@@ -152,9 +162,9 @@ namespace element {
           static_cast<float>(_curvature));
     }
 
-    double GetCurvature() const {
-      return _curvature;
-    }
+    double GetCurvature() const { return _curvature; }
+
+    double GetCurvature(double) const override { return _curvature; }
 
   private:
 
@@ -186,6 +196,19 @@ namespace element {
     DirectedPoint PosFromDist(double dist) const override;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
+
+    /**
+     * Returns the local curvature at a specific location in lane
+     * The location is a double, whose value must be between 0 and _length
+     *
+     * @param locationInLane The specific location in lane whose local curvature is needed
+     * @return The local curvature at the specified location
+     */
+    double GetCurvature(double s) const override {
+      return ((_curve_end - _curve_start) *
+                  (std::abs(_start_position_offset - s) / _length) +
+              _curve_start);
+    }
 
   private:
 
@@ -230,6 +253,8 @@ namespace element {
     DirectedPoint PosFromDist(double dist) const override;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
+
+    double GetCurvature(double) const override { return 0.0; }
 
   private:
 
@@ -312,6 +337,8 @@ namespace element {
     DirectedPoint PosFromDist(double dist) const override;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
+
+    double GetCurvature(double) const override { return 0.0; }
 
   private:
 

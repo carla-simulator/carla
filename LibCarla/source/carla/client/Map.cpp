@@ -53,6 +53,43 @@ namespace client {
     nullptr;
   }
 
+  std::vector<SharedPtr<Waypoint>>
+  Map::GetWaypointList(const geom::Location &location, bool project_to_road,
+                       uint32_t lane_type) const {
+    std::vector<SharedPtr<Waypoint>> result;
+    if (project_to_road) {
+      const auto waypoints =
+          _map.GetClosestWaypointsOnRoad(location, lane_type);
+      result.reserve(waypoints.size());
+      for (const auto &waypoint : waypoints) {
+        result.emplace_back(
+            SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint}));
+      }
+      return result;
+    } else {
+      result.reserve(1);
+      boost::optional<road::element::Waypoint> waypoint;
+      waypoint = _map.GetWaypoint(location, lane_type);
+      if (waypoint) {
+        result.emplace_back(
+            SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}));
+      }
+      return result;
+    }
+  }
+
+  std::vector<SharedPtr<road::element::CurvatureAtDistance>>
+  Map::GetCurvatureList(const road::element::Waypoint waypoint) const {
+    std::vector<SharedPtr<road::element::CurvatureAtDistance>> result;
+    const auto curves = _map.GetCurvatureList(waypoint);
+    result.reserve(curves.size());
+    for (const auto curve : curves) {
+      result.emplace_back(
+          boost::make_shared<road::element::CurvatureAtDistance>(curve));
+    }
+    return result;
+  }
+
   SharedPtr<Waypoint> Map::GetWaypointXODR(
       carla::road::RoadId road_id,
       carla::road::LaneId lane_id,

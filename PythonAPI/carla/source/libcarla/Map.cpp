@@ -159,6 +159,7 @@ void export_map() {
     .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
     .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_waypoint_list", CALL_RETURNING_LIST_3(cc::Map, GetWaypointList, cg::Location, bool, uint32_t), (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
     .def("get_waypoint_xodr", &cc::Map::GetWaypointXODR, (arg("road_id"), arg("lane_id"), arg("s")))
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
@@ -172,6 +173,12 @@ void export_map() {
     .def("get_landmark_group", CALL_RETURNING_LIST_1(cc::Map, GetLandmarkGroup, cc::Landmark), args("landmark"))
     .def(self_ns::str(self_ns::self))
   ;
+
+  class_<cre::CurvatureAtDistance, boost::shared_ptr<cre::CurvatureAtDistance>>("CurvatureAtDistance", no_init)
+      .add_property("road_id", &cre::CurvatureAtDistance::road_id)
+      .add_property("s", &cre::CurvatureAtDistance::s)
+      .add_property("curvature", &cre::CurvatureAtDistance::curvature)
+      ;
 
   // ===========================================================================
   // -- Helper objects ---------------------------------------------------------
@@ -208,6 +215,11 @@ void export_map() {
     .def("get_junction", &cc::Waypoint::GetJunction)
     .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmarksInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
     .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmarksOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
+    .add_property("lane_length", &cc::Waypoint::GetLaneLength)
+    .def("get_curvature", &cc::Waypoint::GetCurvature)
+    .def("get_curvature_list", CALL_RETURNING_LIST(cc::Waypoint, GetCurvatureList))
+    .def("get_successors", CALL_RETURNING_LIST(cc::Waypoint, GetSuccessors))
+    .def("get_predecessors", CALL_RETURNING_LIST(cc::Waypoint, GetPredecessors))
     .def(self_ns::str(self_ns::self))
   ;
 
