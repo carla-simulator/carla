@@ -38,11 +38,15 @@ nav:
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
-  - "Sensors reference": 'ref_sensors.md'  
+  - "Sensors reference": 'ref_sensors.md'
 - ROS bridge:
   - 'ROS bridge installation': 'ros_installation.md'
   - 'CARLA messages reference': 'ros_msgs.md'
   - 'Launchfiles reference': 'ros_launchs.md'
+- ScenarioRunner:
+  - 'Getting started with ScenarioRunner': 'scenariorunner_getting_started.md'
+  - 'OpenSCENARIO support': 'scenariorunner_openscenario.md'
+  - 'Scenarios': 'scenariorunner_scenarios.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"

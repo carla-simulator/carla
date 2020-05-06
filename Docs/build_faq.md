@@ -13,9 +13,9 @@ CARLA forum</a>
 ## System requirements
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Expected disk space to build CARLA.
-    </h5></summary>
+    </h6></summary>
 
 It is advised to have at least 30/50GB. Building CARLA requires about 25GB of disk space, plus Unreal Engine, which is quite a similar size. 
 
@@ -24,9 +24,9 @@ Unreal Engine on Linux requires much more disk space as it keeps all the interme
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Recommended hardware to run CARLA.
-    </h5></summary>
+    </h6></summary>
 
 CARLA is a very performance demanding software. At the very minimum it needs for a 4GB GPU or, even better, a dedicated GPU capable of running Unreal Engine.  
 
@@ -37,9 +37,9 @@ Take a look at [Unreal Engine's recommended hardware](https://wiki.unrealengine.
 ## Linux build
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     "CarlaUE4.sh" script does not appear when downloading from GitHub.
-    </h5></summary>
+    </h6></summary>
 
 There is no `CarlaUE4.sh` script in the source version of CARLA. Follow the [build instructions](build_linux.md) to build CARLA from source.  
 
@@ -48,9 +48,9 @@ To run CARLA using `CarlaUE4.sh`, follow the [quick start installation](start_qu
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     "make launch" is not working on Linux.
-    </h5></summary>
+    </h6></summary>
 
 Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
 
@@ -69,9 +69,9 @@ Other specific reasons for a system to show conflicts with CARLA may occur. Plea
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     "CarlaUE4.exe" does not appear when downloading from GitHub.
-    </h5></summary>
+    </h6></summary>
 
 There is no `CarlaUE4.exe` executable in the source version of CARLA. Follow the [build instructions](build_windows.md) to build CARLA from source. To directly get the `CarlaUE4.exe`, follow the [quick start instructions](start_quickstart.md).  
 
@@ -79,9 +79,9 @@ There is no `CarlaUE4.exe` executable in the source version of CARLA. Follow the
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     CarlaUE4 could not be compiled. Try rebuilding it from source manually. 
-    </h5></summary>
+    </h6></summary>
 
 Something went wrong when trying to build CARLA. Rebuild using Visual Studio to discover what happened.  
 
@@ -93,9 +93,9 @@ __4.__ Compile the project with Visual Studio. The shortcut is F7. The build wil
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     CMake error shows but CMake is properly installed.
-    </h5></summary>
+    </h6></summary>
 	
 This issue occurs when trying to use the _make_ command either to build the server or the client. Even if CMake is installed, updated, and added to the environment path. There may be a conflict between Visual Studio versions.  
 
@@ -104,9 +104,9 @@ Leave only VS2017 and completely erase the rest.
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Error C2440, C2672: compiler version.
-    </h5></summary>
+    </h6></summary>
 	
 The build is not using the 2017 compiler due to conflicts with other Visual Studio or Microsoft Compiler versions. Uninstall these and rebuild again.  
 
@@ -127,9 +127,9 @@ To keep other Visual Studio versions, edit ```%appdata%\Unreal Engine\UnrealBuil
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     "make launch" is not working on Windows.
-    </h5></summary>
+    </h6></summary>
 
 Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
 
@@ -145,18 +145,18 @@ Other specific reasons for a system to show conflicts with CARLA may occur. Plea
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Make is missing libintl3.dll or/and libiconv2.dll.
-    </h5></summary>
+    </h6></summary>
 
 Download the [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the _bin_ content into the __make__ installation path.   
   </details>
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Modules are missing or built with a different engine version.  
-    </h5></summary>
+    </h6></summary>
 
 Click on __Accept__ to rebuild them. 
   </details>
@@ -165,9 +165,9 @@ Click on __Accept__ to rebuild them.
 ## Running CARLA
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Low FPS rate when running the server in Unreal Editor.
-    </h5></summary>
+    </h6></summary>
 
 UE4 Editor goes to a low performance mode when out of focus.  
 
@@ -177,9 +177,9 @@ Go to `Edit/Editor Preferences/Performance` in the editor preferences, and disab
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Can't run a script.
-    </h5></summary>
+    </h6></summary>
 	
 Some scripts have requirements. These are listed in files named __Requirements.txt__, in the same path as the script itself. Be sure to check these in order to run the script. The majority of them can be installed with a simple `pip` command.  
 
@@ -190,9 +190,9 @@ Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try addin
 <!-- ======================================================================= -->
 
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Connect to the simulator while running within Unreal Editor.
-    </h5></summary>
+    </h6></summary>
 
 Click on __Play__ and wait until the scene is loaded. At that point, a Python client can connect to the simulator as with the standalone simulator.
 
@@ -200,38 +200,103 @@ Click on __Play__ and wait until the scene is loaded. At that point, a Python cl
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
    Can't run CARLA neither binary nor source build.
-    </h5></summary>
+    </h6></summary>
 
 NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://forum.carla.org/) and post the specific issue. 
   </details>
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     ImportError: DLL load failed: The specified module could not be found.
-    </h5></summary>
+    </h6></summary>
 
 One of the libraries needed has not been properly installed. As a work around, go to `carla\Build\zlib-source\build`, and copy the file named `zlib.dll` in the directory of the script. 
   </details>
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     ImportError: DLL load failed while importing libcarla: %1 is not a valid Win32 app. 
-    </h5></summary>
+    </h6></summary>
 
 A 32-bit Python version is creating conflicts when trying to run a script. Uninstall it and leave only the Python3 x64 required. 
+  </details>
+
+---
+## ScenarioRunner
+<!-- ======================================================================= -->
+  <details>
+    <summary><h6 style="display:inline">
+    "TypeError: 'instancemethod' object has no attribute '__getitem__'" in the agent navigation 
+    </h6></summary>
+
+This issue is most likely caused by an outdated version of the Python Networkx package. Please remove the current installation, and install the last one using the following commands. 
+
+```sh
+# Remove current Python Networkx package
+sudo apt-get remove python-networkx
+
+# Install new Python Networkx package
+pip install --user networkx==2.2
+```
+
+  </details>
+
+<!-- ======================================================================= -->
+  <details>
+    <summary><h6 style="display:inline">
+    "No more scenarios .... Exiting" and no scenario visible
+    </h6></summary>
+
+This error shows nothing happening and an ouput similar to this one. 
+
+```sh
+Preparing scenario: FollowLeadingVehicle_1
+ScenarioManager: Running scenario FollowVehicle
+Resetting ego-vehicle!
+Failure!
+Resetting ego-vehicle!
+ERROR: failed to destroy actor 527 : unable to destroy actor: not found
+No more scenarios .... Exiting
+```
+
+Most likely, there is no program controlling the ego vehicle. Try to run manual control or any script that manages the ego vehicle script to see something happening.
+
+```sh
+cd ~/carla/PythonAPI/examples
+python manual_control.py 
+```
+
+  </details>
+
+<!-- ======================================================================= -->
+  <details>
+    <summary><h6 style="display:inline">
+    Using --debug commandline parameter forces ScenarioRunner to exit
+    </h6></summary>
+
+The output could be similar to this one.
+```
+UnicodeEncodeError: 'ascii' codec can't encode character '\u2713' in position 58: ordinal not in range(128)
+```
+
+If it is the case, set the environment variable.
+```
+PYTHONIOENCODING=utf-8
+```
+
   </details>
 
 ---
 ## Other
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Fatal error: 'version.h' has been modified since the precompiled header.
-    </h5></summary>
+    </h6></summary>
 
 This happens from time to time due to Linux updates. There is a special target in the Makefile for this issue. It takes a long time but fixes the issue:
 
@@ -242,9 +307,9 @@ This happens from time to time due to Linux updates. There is a special target i
 
 <!-- ======================================================================= -->
   <details>
-    <summary><h5 style="display:inline">
+    <summary><h6 style="display:inline">
     Create a binary version of CARLA.
-    </h5></summary>
+    </h6></summary>
 
 In Linux, run `make package` in the project folder. The package will include the project, and the Python API modules.  
 
