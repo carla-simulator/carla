@@ -12,13 +12,15 @@ LocalizationStage::LocalizationStage(
   const SimulationState &simulation_state,
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
-  Parameters &parameters)
+  Parameters &parameters,
+  cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
     track_traffic(track_traffic),
     local_map(local_map),
-    parameters(parameters) {}
+    parameters(parameters),
+    debug_helper(debug_helper) {}
 
 void LocalizationStage::Update(const unsigned long index)
 {
@@ -52,6 +54,8 @@ void LocalizationStage::Update(const unsigned long index)
     }
   }
 
+  bool is_at_junction_entrance = false;
+
   if (!waypoint_buffer.empty())
   {
     // Purge passed waypoints.
@@ -66,8 +70,13 @@ void LocalizationStage::Update(const unsigned long index)
       }
     }
 
+    SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+    is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+
     // Purge waypoints too far from the front of the buffer.
-    while (!waypoint_buffer.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square)
+    while (!is_at_junction_entrance
+           && !waypoint_buffer.empty()
+           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square)
     {
       PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
     }
@@ -155,6 +164,87 @@ void LocalizationStage::Update(const unsigned long index)
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
   }
 
+  // Extend buffer if at junction entrance.
+  if (is_at_junction_entrance && vehicles_at_junction.find(actor_id) == vehicles_at_junction.end())
+  {
+
+    debug_helper.DrawPoint(vehicle_location + cg::Location(0, 0, 2), 0.15f, {0u, 0u, 255u}, 0.05f);
+
+    vehicles_at_junction.insert(actor_id);
+
+    bool entered_junction = false;
+    bool past_junction = false;
+    bool safe_point_found = false;
+    SimpleWaypointPtr current_waypoint = nullptr;
+    SimpleWaypointPtr junction_end_point = nullptr;
+    SimpleWaypointPtr safe_point_after_junction = nullptr;
+    float safe_distance_squared = SQUARE(SAFE_DISTANCE_AFTER_JUNCTION);
+
+    // Scanning existing buffer points.
+    for (unsigned long i = 0u; i < waypoint_buffer.size() && !safe_point_found; ++i)
+    {
+      current_waypoint = waypoint_buffer.at(i);
+      if (!entered_junction && current_waypoint->CheckJunction())
+      {
+        entered_junction = true;
+      }
+      if (entered_junction && !past_junction && !current_waypoint->CheckJunction())
+      {
+        past_junction = true;
+        junction_end_point = current_waypoint;
+      }
+      if (past_junction && junction_end_point->DistanceSquared(current_waypoint) > safe_distance_squared)
+      {
+        safe_point_after_junction = current_waypoint;
+        safe_point_found = true;
+
+        debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2), "Found", false, {0u, 255u, 0u}, 2.0f);
+      }
+    }
+
+    if (!safe_point_found)
+    {
+      while (!past_junction)
+      {
+        current_waypoint = current_waypoint->GetNextWaypoint().front();
+        PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
+        if (!current_waypoint->CheckJunction())
+        {
+          past_junction = true;
+          junction_end_point = current_waypoint;
+        }
+      }
+
+      while (!safe_point_found)
+      {
+        std::vector<SimpleWaypointPtr> next_waypoints = current_waypoint->GetNextWaypoint();
+        if ((junction_end_point->DistanceSquared(current_waypoint) > safe_distance_squared)
+            || next_waypoints.size() > 1
+            || current_waypoint->CheckJunction())
+        {
+          safe_point_found = true;
+          safe_point_after_junction = current_waypoint;
+
+          debug_helper.DrawString(vehicle_location + cg::Location(0, 0, 2), "Made", false, {255u, 0u, 0u}, 2.0f);
+        }
+        else
+        {
+          current_waypoint = next_waypoints.front();
+          PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
+        }
+      }
+    }
+
+    debug_helper.DrawPoint(junction_end_point->GetLocation() + cg::Location(0, 0, 2),
+                           0.15f, {0u, 0u, 255u}, 2.0f);
+    debug_helper.DrawPoint(safe_point_after_junction->GetLocation() + cg::Location(0, 0, 2),
+                           0.15f, {255u, 0u, 0u}, 2.0f);
+  }
+  else if (!is_at_junction_entrance && vehicles_at_junction.find(actor_id) != vehicles_at_junction.end())
+  {
+    vehicles_at_junction.erase(actor_id);
+  }
+
   // Updating geodesic grid position for actor.
   track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
 }
@@ -165,11 +255,16 @@ void LocalizationStage::RemoveActor(ActorId actor_id)
   {
     last_lane_change_location.erase(actor_id);
   }
+  if (vehicles_at_junction.find(actor_id) != vehicles_at_junction.end())
+  {
+    vehicles_at_junction.erase(actor_id);
+  }
 }
 
 void LocalizationStage::Reset()
 {
   last_lane_change_location.clear();
+  vehicles_at_junction.clear();
 }
 
 SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
@@ -311,6 +406,16 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   }
 
   return change_over_point;
+}
+
+void LocalizationStage::DrawBuffer(Buffer &buffer) {
+  uint64_t buffer_size = buffer.size();
+  uint64_t step_size =  buffer_size/10u;
+  for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
+      debug_helper.DrawLine(buffer.at(i)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                            buffer.at(i + step_size)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
+                            0.2f, {0u, 255u, 0u}, 0.05f);
+  }
 }
 
 } // namespace traffic_manager

@@ -36,7 +36,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          simulation_state,
                                          track_traffic,
                                          local_map,
-                                         parameters)),
+                                         parameters,
+                                         debug_helper)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -211,6 +212,8 @@ void TrafficManagerLocal::Run()
     else
     {
       episode_proxy.Lock()->ApplyBatch(std::move(batch_command), false);
+
+      std::this_thread::sleep_for(0.05s);
     }
   }
 }
