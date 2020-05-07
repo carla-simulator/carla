@@ -17,37 +17,25 @@ float DeviationCrossProduct(const cg::Location &vehicle_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location)
 {
-
-  cg::Location next_vector = target_location - vehicle_location;
-  if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon())
-  {
-    next_vector = next_vector.MakeUnitVector();
-    const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
-    return cross_z;
-  }
-  else
-  {
-    return 0.0f;
-  }
+  cg::Vector3D next_vector = target_location - vehicle_location;
+  float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
+  next_vector = next_vector.MakeSafeUnitVector(vector_magnitude_epsilon);
+  const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
+  return cross_z;
 }
 
 float DeviationDotProduct(const cg::Location &vehicle_location,
                           const cg::Vector3D &heading_vector,
                           const cg::Location &target_location)
 {
-
-  cg::Location next_vector = target_location - vehicle_location;
+  cg::Vector3D next_vector = target_location - vehicle_location;
+  float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   next_vector.z = 0.0f;
-  if (next_vector.Length() > 2.0f * std::numeric_limits<float>::epsilon())
-  {
-    next_vector = next_vector.MakeUnitVector();
-    const float dot_product = cg::Math::Dot(next_vector, heading_vector);
-    return dot_product;
-  }
-  else
-  {
-    return 0.0f;
-  }
+  next_vector = next_vector.MakeSafeUnitVector(vector_magnitude_epsilon);
+  cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
+  heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(vector_magnitude_epsilon);
+  const float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  return dot_product;
 }
 
 void PushWaypoint(ActorId actor_id, TrackTraffic &track_traffic,
