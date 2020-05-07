@@ -78,7 +78,7 @@ namespace geom {
     // This ensures the mesh is constant and have no gaps between roads,
     // adding geometry at the very end of the lane
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
-      const auto edges = lane.GetCornerPositions(s_end * MESH_EPSILON, road_param.extra_lane_width);
+      const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
     }
@@ -151,7 +151,7 @@ namespace geom {
     // This ensures the mesh is constant and have no gaps between roads,
     // adding geometry at the very end of the lane
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
-      const auto edges = lane.GetCornerPositions(s_end * MESH_EPSILON, road_param.extra_lane_width);
+      const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       r_vertices.push_back(edges.first + height_vector);
       r_vertices.push_back(edges.first);
     }
@@ -202,7 +202,7 @@ namespace geom {
     // This ensures the mesh is constant and have no gaps between roads,
     // adding geometry at the very end of the lane
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
-      const auto edges = lane.GetCornerPositions(s_end * MESH_EPSILON, road_param.extra_lane_width);
+      const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       l_vertices.push_back(edges.second);
       l_vertices.push_back(edges.second + height_vector);
     }
