@@ -31,13 +31,13 @@ FActorDefinition ADVSCamera::GetSensorDefinition()
   FActorVariation Cp;
   Cp.Id = TEXT("positive_threshold");
   Cp.Type = EActorAttributeType::Float;
-  Cp.RecommendedValues = { TEXT("0.5") };
+  Cp.RecommendedValues = { TEXT("0.3") };
   Cp.bRestrictToRecommended = false;
 
   FActorVariation Cm;
   Cm.Id = TEXT("negative_threshold");
   Cm.Type = EActorAttributeType::Float;
-  Cm.RecommendedValues = { TEXT("0.5") };
+  Cm.RecommendedValues = { TEXT("0.3") };
   Cm.bRestrictToRecommended = false;
 
   FActorVariation Sigma_Cp;
