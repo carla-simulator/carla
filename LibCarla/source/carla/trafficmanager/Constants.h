@@ -43,6 +43,7 @@ namespace SpeedThreshold
 {
 static const float HIGHWAY_SPEED = 50.0f / 3.6f;
 static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;
 } // namespace SpeedThreshold
 
 namespace PathBufferUpdate

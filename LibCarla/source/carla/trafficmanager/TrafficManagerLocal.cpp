@@ -37,6 +37,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          track_traffic,
                                          local_map,
                                          parameters,
+                                         localization_frame_ptr,
                                          debug_helper)),
 
     collision_stage(CollisionStage(vehicle_id_list,
@@ -57,10 +58,12 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       simulation_state,
                                       parameters,
                                       buffer_map,
+                                      track_traffic,
                                       longitudinal_PID_parameters,
                                       longitudinal_highway_PID_parameters,
                                       lateral_PID_parameters,
                                       lateral_highway_PID_parameters,
+                                      localization_frame_ptr,
                                       collision_frame_ptr,
                                       tl_frame_ptr,
                                       control_frame_ptr)),
@@ -111,6 +114,7 @@ void TrafficManagerLocal::Start()
 void TrafficManagerLocal::Run()
 {
   buffer_map = std::make_shared<BufferMap>();
+  localization_frame_ptr = std::make_shared<LocalizationFrame>(INITIAL_SIZE);
   collision_frame_ptr = std::make_shared<CollisionFrame>(INITIAL_SIZE);
   tl_frame_ptr = std::make_shared<TLFrame>(INITIAL_SIZE);
   control_frame_ptr = std::make_shared<ControlFrame>(INITIAL_SIZE);
@@ -160,6 +164,7 @@ void TrafficManagerLocal::Run()
       unsigned long new_frame_size = INITIAL_SIZE + GROWTH_STEP_SIZE * (number_of_vehicles / GROWTH_STEP_SIZE);
       if (new_frame_size != control_frame_ptr->size())
       {
+        localization_frame_ptr = std::make_shared<LocalizationFrame>(new_frame_size);
         collision_frame_ptr = std::make_shared<CollisionFrame>(new_frame_size);
         tl_frame_ptr = std::make_shared<TLFrame>(new_frame_size);
         control_frame_ptr = std::make_shared<ControlFrame>(new_frame_size);
@@ -273,6 +278,7 @@ void TrafficManagerLocal::Release()
 
   buffer_map.reset();
   local_map.reset();
+  localization_frame_ptr.reset();
   collision_frame_ptr.reset();
   tl_frame_ptr.reset();
   control_frame_ptr.reset();

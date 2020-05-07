@@ -78,6 +78,15 @@ struct CollisionLock
 };
 using CollisionLockMap = std::unordered_map<ActorId, CollisionLock>;
 
+struct LocalizationData
+{
+  bool is_at_junction_entrance;
+  unsigned long junction_end_index;
+  unsigned long safe_point_index;
+};
+using LocalizationFrame = std::vector<LocalizationData>;
+using LocalizationFramePtr = std::shared_ptr<LocalizationFrame>;
+
 struct CollisionHazardData
 {
   bool hazard;

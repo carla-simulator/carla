@@ -45,9 +45,10 @@ private:
   TrackTraffic &track_traffic;
   const LocalMapPtr &local_map;
   Parameters &parameters;
+  LocalizationFramePtr &output_array;
   cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
-  std::unordered_set<ActorId> vehicles_at_junction;
+  ActorIdSet vehicles_at_junction;
 
   SimpleWaypointPtr AssignLaneChange(const ActorId actor_id,
                                      const cg::Location vehicle_location,
@@ -63,6 +64,7 @@ public:
                     TrackTraffic &track_traffic,
                     const LocalMapPtr &local_map,
                     Parameters &parameters,
+                    LocalizationFramePtr &output_array,
                     cc::DebugHelper &debug_helper);
 
   void Update(const unsigned long index) override;

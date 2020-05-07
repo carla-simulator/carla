@@ -84,6 +84,8 @@ private:
   Parameters parameters;
   /// Carla's debug helper object.
   carla::client::DebugHelper debug_helper;
+  /// Array to hold output data of localization stage.
+  LocalizationFramePtr localization_frame_ptr;
   /// Array to hold output data of collision avoidance.
   CollisionFramePtr collision_frame_ptr;
   /// Array to hold output data of traffic light response.

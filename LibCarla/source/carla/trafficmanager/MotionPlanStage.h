@@ -14,6 +14,7 @@
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
+#include "carla/trafficmanager/TrackTraffic.h"
 
 namespace carla
 {
@@ -22,8 +23,8 @@ namespace traffic_manager
 
 using namespace constants::MotionPlan;
 using namespace constants::WaypointSelection;
+using namespace constants::SpeedThreshold;
 
-using constants::SpeedThreshold::HIGHWAY_SPEED;
 using constants::HybridMode::HYBRID_MODE_DT;
 
 class MotionPlanStage: Stage
@@ -33,10 +34,12 @@ private:
   const SimulationState &simulation_state;
   const Parameters &parameters;
   const BufferMapPtr &buffer_map;
+  const TrackTraffic &track_traffic;
   const std::vector<float> urban_longitudinal_parameters;
   const std::vector<float> highway_longitudinal_parameters;
   const std::vector<float> urban_lateral_parameters;
   const std::vector<float> highway_lateral_parameters;
+  const LocalizationFramePtr &localization_frame;
   const CollisionFramePtr &collision_frame;
   const TLFramePtr &tl_frame;
   std::unordered_map<ActorId, StateEntry> pid_state_map;
@@ -48,10 +51,12 @@ public:
                   const SimulationState &simulation_state,
                   const Parameters &parameters,
                   const BufferMapPtr &buffer_map,
+                  const TrackTraffic &track_traffic,
                   const std::vector<float> &urban_longitudinal_parameters,
                   const std::vector<float> &highway_longitudinal_parameters,
                   const std::vector<float> &urban_lateral_parameters,
                   const std::vector<float> &highway_lateral_parameters,
+                  const LocalizationFramePtr &localization_frame,
                   const CollisionFramePtr &collision_frame,
                   const TLFramePtr &tl_frame,
                   ControlFramePtr &output_array);

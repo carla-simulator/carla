@@ -13,10 +13,12 @@ MotionPlanStage::MotionPlanStage(
   const SimulationState &simulation_state,
   const Parameters &parameters,
   const BufferMapPtr &buffer_map,
+  const TrackTraffic &track_traffic,
   const std::vector<float> &urban_longitudinal_parameters,
   const std::vector<float> &highway_longitudinal_parameters,
   const std::vector<float> &urban_lateral_parameters,
   const std::vector<float> &highway_lateral_parameters,
+  const LocalizationFramePtr & localization_frame,
   const CollisionFramePtr &collision_frame,
   const TLFramePtr &tl_frame,
   ControlFramePtr &output_array)
@@ -24,10 +26,12 @@ MotionPlanStage::MotionPlanStage(
     simulation_state(simulation_state),
     parameters(parameters),
     buffer_map(buffer_map),
+    track_traffic(track_traffic),
     urban_longitudinal_parameters(urban_longitudinal_parameters),
     highway_longitudinal_parameters(highway_longitudinal_parameters),
     urban_lateral_parameters(urban_lateral_parameters),
     highway_lateral_parameters(highway_lateral_parameters),
+    localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
     output_array(output_array) {}
@@ -41,6 +45,7 @@ void MotionPlanStage::Update(const unsigned long index)
   const cg::Vector3D ego_heading = simulation_state.GetHeading(actor_id);
   const bool ego_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
   const Buffer &waypoint_buffer = buffer_map->at(actor_id);
+  const LocalizationData &localization = localization_frame->at(index);
   const CollisionHazardData &collision_hazard = collision_frame->at(index);
   const bool &tl_hazard = tl_frame->at(index);
 
@@ -133,8 +138,38 @@ void MotionPlanStage::Update(const unsigned long index)
   // Clip dynamic target velocity to maximum allowed speed for the vehicle.
   dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
 
+  // Don't enter junction if there isn't enough free space after the junction.
+  bool safe_after_junction = true;
+  if (!tl_hazard && !collision_emergency_stop && localization.is_at_junction_entrance)
+  {
+    unsigned long current_index = localization.junction_end_index;
+    SimpleWaypointPtr junction_end_point = waypoint_buffer.at(current_index);
+    ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
+    SimpleWaypointPtr current_waypoint = junction_end_point;
+    float squared_speed_threshold = SQUARE(AFTER_JUNCTION_MIN_SPEED);
+    for (; current_index <= localization.safe_point_index && safe_after_junction; ++current_index)
+    {
+      current_waypoint = waypoint_buffer.at(current_index);
+      ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
+      ActorIdSet difference;
+      std::set_difference(current_set.begin(), current_set.end(),
+                          initial_set.begin(), initial_set.end(),
+                          std::inserter(difference, difference.begin()));
+      if (difference.size() > 0)
+      {
+        for (const ActorId &blocking_id: difference)
+        {
+          if (simulation_state.GetVelocity(blocking_id).SquaredLength() < squared_speed_threshold)
+          {
+            safe_after_junction = false;
+          }
+        }
+      }
+    }
+  }
+
   // In case of collision or traffic light hazard.
-  bool emergency_stop = (tl_hazard || collision_emergency_stop);
+  bool emergency_stop = (tl_hazard || collision_emergency_stop || !safe_after_junction);
 
   ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
   cg::Transform teleportation_transform;
