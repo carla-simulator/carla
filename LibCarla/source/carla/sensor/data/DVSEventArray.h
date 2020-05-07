@@ -73,7 +73,7 @@ namespace data {
     std::vector<std::vector<std::int64_t>> ToArray() const {
       std::vector<std::vector<std::int64_t>> array;
       for (const auto &event : *this) {
-        array.push_back({static_cast<std::int64_t>(event.x), static_cast<std::int64_t>(event.y), static_cast<std::int64_t>(event.t), static_cast<std::int64_t>(event.pol)});
+        array.push_back({static_cast<std::int64_t>(event.x), static_cast<std::int64_t>(event.y), static_cast<std::int64_t>(event.t), (2*static_cast<std::int64_t>(event.pol)) - 1});
       }
       return array;
     }
