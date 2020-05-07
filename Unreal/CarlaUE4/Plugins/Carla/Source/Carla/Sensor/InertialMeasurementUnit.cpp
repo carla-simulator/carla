@@ -122,12 +122,12 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
   PrevLocation[1] = CurrentLocation;
   PrevDeltaTime = DeltaTime;
 
+  // Add gravitational acceleration
+  FVectorAccelerometer.Z += GRAVITY;
+
   FQuat ImuRotation =
       GetRootComponent()->GetComponentTransform().GetRotation();
   FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
-
-  // Add gravitational acceleration
-  FVectorAccelerometer.Z += GRAVITY;
 
   // Cast from FVector to our Vector3D to correctly send the data in m/s^2
   // and apply the desired noise function, in this case a normal distribution
