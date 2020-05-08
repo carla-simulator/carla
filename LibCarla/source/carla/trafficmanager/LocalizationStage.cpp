@@ -72,8 +72,11 @@ void LocalizationStage::Update(const unsigned long index)
       }
     }
 
-    SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
-    is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+    if (!waypoint_buffer.empty())
+    {
+      SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+      is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+    }
 
     // Purge waypoints too far from the front of the buffer.
     while (!is_at_junction_entrance

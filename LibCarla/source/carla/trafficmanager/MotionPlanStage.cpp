@@ -153,8 +153,9 @@ void MotionPlanStage::Update(const unsigned long index)
     SimpleWaypointPtr junction_end_point = localization.junction_end_point;
     SimpleWaypointPtr safe_point = localization.safe_point;
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
+    float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
     for (SimpleWaypointPtr current_waypoint = junction_end_point;
-         current_waypoint->GetId() != safe_point->GetId() && safe_after_junction;
+         current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
          current_waypoint = current_waypoint->GetNextWaypoint().front())
     {
       ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
