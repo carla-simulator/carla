@@ -469,4 +469,101 @@
     - def_name: __str__
     # --------------------------------------
 
+  - class_name: DVSEvent
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: int
+      doc: >
+        X pixel coordinate.
+    # --------------------------------------
+    - var_name: 'y'
+      type: int
+      doc: >
+        Y pixel coordinate.
+    # --------------------------------------
+    - var_name: t
+      type: int
+      doc: >
+        Timestamp of the moment the event happened. 
+    # --------------------------------------
+    - var_name: pol
+      type: bool
+      doc: >
+        Polarity of the event. __True__ for positive and __False__ for negative.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: DVSEventArray
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a stream of events in [carla.DVSEvent](#carla.DVSEvent). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: fov
+      type: float
+      doc: >
+        Horizontal field of view of the image in degrees. 
+    # --------------------------------------
+    - var_name: height
+      type: int
+      doc: >
+        Image height in pixels. 
+    # --------------------------------------
+    - var_name: width
+      type: int
+      doc: >
+        Image width in pixels. 
+    # --------------------------------------
+    - var_name: raw_data
+      type: bytes
+    # - METHODS ----------------------------
+    methods:
+    - def_name: to_image
+      doc: >
+        Converts the image following this pattern: blue indicates positive events, red indicates negative events.
+    # --------------------------------------
+    - def_name: to_array
+      doc: >
+        Converts the stream of events to an array of int values in the following order <code>[x, y, t, pol]</code>.
+    # --------------------------------------
+    - def_name: to_array_x
+      doc: >
+        Returns an array with X pixel coordinate of all the events in the stream.
+    # --------------------------------------
+    - def_name: to_array_y
+      doc: >
+        Returns an array with Y pixel coordinate of all the events in the stream.
+    # --------------------------------------
+    - def_name: to_array_t
+      doc: >
+        Returns an array with the timestamp of all the events in the stream.
+    # --------------------------------------
+    - def_name: to_array_pol
+      doc: >
+        Returns an array with the polarity of all the events in the stream.
+    # --------------------------------------
+    - def_name: __getitem__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+    # --------------------------------------
+    - def_name: __len__
+    # --------------------------------------
+    - def_name: __setitem__
+      params:
+      - param_name: pos
+        type: int
+      - param_name: color
+        type: carla.Color
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
 ...
