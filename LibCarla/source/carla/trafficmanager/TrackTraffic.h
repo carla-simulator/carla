@@ -33,6 +33,12 @@ private:
     /// Structure to keep track of overlapping waypoints between vehicles.
     using WaypointOverlap = std::unordered_map<uint64_t, ActorIdSet>;
     WaypointOverlap waypoint_overlap_tracker;
+
+    /// Structure to keep track of waypoints occupied by vehicles;
+    using WaypointIdSet = std::unordered_set<uint64_t>;
+    using WaypointOccupancyMap = std::unordered_map<ActorId, WaypointIdSet>;
+    WaypointOccupancyMap waypoint_occupied;
+
     /// Geodesic grids occupied by actors's paths.
     std::unordered_map<ActorId, std::unordered_set<GeoGridId>> actor_to_grids;
     /// Actors currently passing through grids.
