@@ -102,9 +102,14 @@ void MotionPlanStage::Update(const unsigned long index)
 
     const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
 
+    if (localization.is_at_junction_entrance
+        && other_velocity.SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED))
+    {
+      collision_emergency_stop = true;
+    }
     // Consider collision avoidance decisions only if there is positive relative velocity
     // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-    if (ego_relative_speed > EPSILON_RELATIVE_SPEED)
+    else if (ego_relative_speed > EPSILON_RELATIVE_SPEED)
     {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
@@ -148,7 +153,6 @@ void MotionPlanStage::Update(const unsigned long index)
     SimpleWaypointPtr junction_end_point = localization.junction_end_point;
     SimpleWaypointPtr safe_point = localization.safe_point;
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
-    float squared_speed_threshold = SQUARE(AFTER_JUNCTION_MIN_SPEED);
     for (SimpleWaypointPtr current_waypoint = junction_end_point;
          current_waypoint->GetId() != safe_point->GetId() && safe_after_junction;
          current_waypoint = current_waypoint->GetNextWaypoint().front())
@@ -164,7 +168,7 @@ void MotionPlanStage::Update(const unsigned long index)
         {
           cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
           if (cg::Math::DistanceSquared(blocking_actor_location, ego_location) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
-              && simulation_state.GetVelocity(blocking_id).SquaredLength() < squared_speed_threshold
+              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)
               && DeviationDotProduct(junction_end_point->GetLocation(),
                                      junction_end_point->GetForwardVector(),
                                      blocking_actor_location) > 0.0f
