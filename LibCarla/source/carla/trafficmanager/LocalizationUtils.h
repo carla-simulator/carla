@@ -33,12 +33,12 @@ namespace traffic_manager {
   /// Returns the cross product (z component value) between the vehicle's
   /// heading vector and the vector along the direction to the next
   /// target waypoint on the horizon.
-  float DeviationCrossProduct(const cg::Location &vehicle_location,
+  float DeviationCrossProduct(const cg::Location &reference_location,
                               const cg::Vector3D &heading_vector,
                               const cg::Location &target_location);
   /// Returns the dot product between the vehicle's heading vector and
   /// the vector along the direction to the next target waypoint on the horizon.
-  float DeviationDotProduct(const cg::Location &vehicle_location,
+  float DeviationDotProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location);
 

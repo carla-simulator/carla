@@ -166,8 +166,8 @@ void LocalizationStage::Update(const unsigned long index)
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
   }
 
-  unsigned long junction_end_index = 0u;
-  unsigned long safe_point_index = 0u;
+  SimpleWaypointPtr junction_end_point = nullptr;
+  SimpleWaypointPtr safe_point_after_junction = nullptr;
 
   // Extend buffer if at junction entrance.
   if (is_at_junction_entrance && vehicles_at_junction.find(actor_id) == vehicles_at_junction.end())
@@ -178,15 +178,11 @@ void LocalizationStage::Update(const unsigned long index)
     bool past_junction = false;
     bool safe_point_found = false;
     SimpleWaypointPtr current_waypoint = nullptr;
-    SimpleWaypointPtr junction_end_point = nullptr;
-    SimpleWaypointPtr safe_point_after_junction = nullptr;
-    unsigned long current_index = 0u;
     float safe_distance_squared = SQUARE(SAFE_DISTANCE_AFTER_JUNCTION);
 
     // Scanning existing buffer points.
     for (unsigned long i = 0u; i < waypoint_buffer.size() && !safe_point_found; ++i)
     {
-      current_index = i;
       current_waypoint = waypoint_buffer.at(i);
       if (!entered_junction && current_waypoint->CheckJunction())
       {
@@ -196,28 +192,25 @@ void LocalizationStage::Update(const unsigned long index)
       {
         past_junction = true;
         junction_end_point = current_waypoint;
-        junction_end_index = current_index;
       }
       if (past_junction && junction_end_point->DistanceSquared(current_waypoint) > safe_distance_squared)
       {
         safe_point_found = true;
         safe_point_after_junction = current_waypoint;
-        safe_point_index = current_index;
       }
     }
 
+    // Extend buffer if safe point not found.
     if (!safe_point_found)
     {
       while (!past_junction)
       {
         current_waypoint = current_waypoint->GetNextWaypoint().front();
         PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
-        ++current_index;
         if (!current_waypoint->CheckJunction())
         {
           past_junction = true;
           junction_end_point = current_waypoint;
-          junction_end_index = current_index;
         }
       }
 
@@ -230,29 +223,32 @@ void LocalizationStage::Update(const unsigned long index)
         {
           safe_point_found = true;
           safe_point_after_junction = current_waypoint;
-          safe_point_index = current_index;
         }
         else
         {
           current_waypoint = next_waypoints.front();
           PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
-          ++current_index;
         }
       }
     }
+
+    LocalizationData &output = output_array->at(index);
+    output.is_at_junction_entrance = is_at_junction_entrance;
+    output.junction_end_point = junction_end_point;
+    output.safe_point = safe_point_after_junction;
   }
   else if (!is_at_junction_entrance && vehicles_at_junction.find(actor_id) != vehicles_at_junction.end())
   {
     vehicles_at_junction.erase(actor_id);
+
+    LocalizationData &output = output_array->at(index);
+    output.is_at_junction_entrance = is_at_junction_entrance;
+    output.junction_end_point = nullptr;
+    output.safe_point = nullptr;
   }
 
   // Updating geodesic grid position for actor.
   track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-
-  LocalizationData &output = output_array->at(index);
-  output.is_at_junction_entrance = is_at_junction_entrance;
-  output.junction_end_index = junction_end_index;
-  output.safe_point_index = safe_point_index;
 }
 
 void LocalizationStage::RemoveActor(ActorId actor_id)

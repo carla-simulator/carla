@@ -135,12 +135,10 @@ void ALSM::Update()
       if (type[0] == 'v') {
         auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(iter->second);
         cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
-        float bx = extent.x;
-        float by = extent.y;
-        std::vector<cg::Location> corners = {location + cg::Location(bx, by, 0.0f),
-                                             location + cg::Location(-bx, by, 0.0f),
-                                             location + cg::Location(bx, -by, 0.0f),
-                                             location + cg::Location(-bx, -by, 0.0f)};
+        cg::Vector3D heading_vector = vehicle_ptr->GetTransform().GetForwardVector();
+        std::vector<cg::Location> corners = {location + cg::Location(extent.x * heading_vector),
+                                             location,
+                                             location + cg::Location(-extent.x * heading_vector)};
         for (cg::Location &vertex: corners) {
           SimpleWaypointPtr nearest_waypoint = local_map->GetWaypointInVicinity(vertex);
           if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetPedWaypoint(vertex);};
@@ -170,10 +168,6 @@ void ALSM::Update()
   std::vector<ActorPtr> vehicle_list = registered_vehicles.GetList();
   for (const Actor &vehicle : vehicle_list)
   {
-    // StaticAttributes attributes;
-    // KinematicState kinmeatic_state;
-    // TrafficLightState tl_state;
-
     ActorId actor_id = vehicle->GetId();
     cg::Transform vehicle_transform = vehicle->GetTransform();
     cg::Location vehicle_location = vehicle_transform.location;

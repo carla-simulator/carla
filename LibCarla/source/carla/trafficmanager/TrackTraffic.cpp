@@ -8,7 +8,7 @@ namespace carla
 namespace traffic_manager
 {
 
-TrackTraffic::TrackTraffic() {}
+TrackTraffic::TrackTraffic(cc::DebugHelper &debug_helper) :debug_helper(debug_helper) {}
 
 void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
                                                   const std::vector<SimpleWaypointPtr> waypoints)
@@ -21,6 +21,8 @@ void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
     // Step through waypoints and update grid list for actor and actor list for grids.
     for (auto &waypoint : waypoints)
     {
+        debug_helper.DrawPoint(waypoint->GetLocation() + cg::Location(0, 0, 2), 0.15f, {255u, 0u, 0u}, 0.05f);
+
         UpdatePassingVehicle(waypoint->GetId(), actor_id);
 
         GeoGridId ggid = waypoint->GetGeodesicGridId();

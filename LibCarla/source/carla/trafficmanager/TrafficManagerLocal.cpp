@@ -30,6 +30,7 @@ TrafficManagerLocal::TrafficManagerLocal(
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
     debug_helper(world.MakeDebugHelper()),
+    track_traffic(TrackTraffic(debug_helper)),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -66,7 +67,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame_ptr,
                                       collision_frame_ptr,
                                       tl_frame_ptr,
-                                      control_frame_ptr)),
+                                      control_frame_ptr,
+                                      debug_helper)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,

@@ -3,6 +3,7 @@
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/DebugHelper.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/World.h"
 #include "carla/geom/Location.h"
@@ -44,8 +45,10 @@ private:
     /// Actors currently passing through grids.
     std::unordered_map<GeoGridId, ActorIdSet> grid_to_actors;
 
+    cc::DebugHelper &debug_helper;
+
 public:
-    TrackTraffic();
+    TrackTraffic(cc::DebugHelper &debug_helper);
 
     /// Methods to update, remove and retrieve vehicles passing through a waypoint.
     void UpdatePassingVehicle(uint64_t waypoint_id, ActorId actor_id);

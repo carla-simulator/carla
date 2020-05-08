@@ -74,6 +74,8 @@ private:
   LocalMapPtr local_map;
   /// Structures to hold waypoint buffers for all vehicles.
   std::shared_ptr<BufferMap> buffer_map;
+  /// Carla's debug helper object.
+  cc::DebugHelper debug_helper;
   /// Object for tracking paths of the traffic vehicles.
   TrackTraffic track_traffic;
   /// Type containing the current state of all actors involved in the simulation.
@@ -82,8 +84,6 @@ private:
   TimePoint previous_update_instance;
   /// Parameterization object.
   Parameters parameters;
-  /// Carla's debug helper object.
-  carla::client::DebugHelper debug_helper;
   /// Array to hold output data of localization stage.
   LocalizationFramePtr localization_frame_ptr;
   /// Array to hold output data of collision avoidance.

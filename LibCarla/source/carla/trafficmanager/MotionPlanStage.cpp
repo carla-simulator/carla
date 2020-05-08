@@ -21,7 +21,8 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFramePtr & localization_frame,
   const CollisionFramePtr &collision_frame,
   const TLFramePtr &tl_frame,
-  ControlFramePtr &output_array)
+  ControlFramePtr &output_array,
+  cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -34,7 +35,8 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
-    output_array(output_array) {}
+    output_array(output_array),
+    debug_helper(debug_helper) {}
 
 void MotionPlanStage::Update(const unsigned long index)
 {
@@ -140,16 +142,19 @@ void MotionPlanStage::Update(const unsigned long index)
 
   // Don't enter junction if there isn't enough free space after the junction.
   bool safe_after_junction = true;
-  if (!tl_hazard && !collision_emergency_stop && localization.is_at_junction_entrance)
+
+  if (!tl_hazard && localization.is_at_junction_entrance
+      && localization.junction_end_point != nullptr
+      && localization.safe_point != nullptr)
   {
-    unsigned long current_index = localization.junction_end_index;
-    SimpleWaypointPtr junction_end_point = waypoint_buffer.at(current_index);
+    SimpleWaypointPtr junction_end_point = localization.junction_end_point;
+    SimpleWaypointPtr safe_point = localization.safe_point;
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
-    SimpleWaypointPtr current_waypoint = junction_end_point;
     float squared_speed_threshold = SQUARE(AFTER_JUNCTION_MIN_SPEED);
-    for (; current_index <= localization.safe_point_index && safe_after_junction; ++current_index)
+    for (SimpleWaypointPtr current_waypoint = junction_end_point;
+         current_waypoint->GetId() != safe_point->GetId() && safe_after_junction;
+         current_waypoint = current_waypoint->GetNextWaypoint().front())
     {
-      current_waypoint = waypoint_buffer.at(current_index);
       ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
       ActorIdSet difference;
       std::set_difference(current_set.begin(), current_set.end(),
@@ -159,9 +164,21 @@ void MotionPlanStage::Update(const unsigned long index)
       {
         for (const ActorId &blocking_id: difference)
         {
-          if (simulation_state.GetVelocity(blocking_id).SquaredLength() < squared_speed_threshold)
+          cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
+          if (cg::Math::DistanceSquared(blocking_actor_location, ego_location) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
+              && simulation_state.GetVelocity(blocking_id).SquaredLength() < squared_speed_threshold
+              && DeviationDotProduct(junction_end_point->GetLocation(),
+                                     junction_end_point->GetForwardVector(),
+                                     blocking_actor_location) > 0.0f
+              && DeviationDotProduct(safe_point->GetLocation(),
+                                     safe_point->GetForwardVector(),
+                                     blocking_actor_location) < 0.0f)
           {
             safe_after_junction = false;
+
+            debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
+                                   blocking_actor_location + cg::Location(0, 0, 2),
+                                   0.15f, 0.15f, {255u, 0u, 255u}, 0.05f);
           }
         }
       }
