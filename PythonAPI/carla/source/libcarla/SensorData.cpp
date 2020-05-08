@@ -319,24 +319,6 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<std::int64_t>>("IntVector")
-    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<std::int64_t> >)
-    .def("__len__", &std::vector<std::int64_t>::size)
-    .def(vector_indexing_suite< std::vector<std::int64_t> >())
-  ;
-
-  class_<std::vector<short>>("ShortVector")
-    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<short> >)
-    .def("__len__", &std::vector<short>::size)
-    .def(vector_indexing_suite< std::vector<short> >())
-  ;
-
-  class_<std::vector<std::vector<std::int64_t>> >("IntMatrix")
-    .add_property("raw_data", &GetRawDataAsBuffer< std::vector<std::vector<std::int64_t>> >)
-    .def("__len__", &std::vector<std::vector<std::int64_t>>::size)
-    .def(vector_indexing_suite< std::vector<std::vector<std::int64_t>> >())
-  ;
-
   class_<csd::DVSEvent>("DVSEvent")
     .add_property("x", &csd::DVSEvent::x)
     .add_property("y", &csd::DVSEvent::y)
