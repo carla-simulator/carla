@@ -504,6 +504,61 @@ No changes applied to the image.
 
 ---
 
+## carla.DVSEvent<a name="carla.DVSEvent"></a>
+Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.DVSEvent.x"></a>**<font color="#f8805a">x</font>** (_int_)  
+X pixel coordinate.  
+- <a name="carla.DVSEvent.y"></a>**<font color="#f8805a">y</font>** (_int_)  
+Y pixel coordinate.  
+- <a name="carla.DVSEvent.t"></a>**<font color="#f8805a">t</font>** (_int_)  
+Timestamp of the moment the event happened.  
+- <a name="carla.DVSEvent.pol"></a>**<font color="#f8805a">pol</font>** (_bool_)  
+Polarity of the event. __True__ for positive and __False__ for negative.  
+
+<h3>Methods</h3>
+
+<h3>Dunder methods</h3>
+- <a name="carla.DVSEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.DVSEventArray<a name="carla.DVSEventArray"></a>
+Class that defines a stream of events in [[carla.DVSEvent](#carla.DVSEvent)](#[carla.DVSEvent](#carla.DVSEvent)). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.DVSEventArray.fov"></a>**<font color="#f8805a">fov</font>** (_float_)  
+Horizontal field of view of the image in degrees.  
+- <a name="carla.DVSEventArray.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Image height in pixels.  
+- <a name="carla.DVSEventArray.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+Image width in pixels.  
+- <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+
+<h3>Methods</h3>
+- <a name="carla.DVSEventArray.to_image"></a>**<font color="#7fb800">to_image</font>**(<font color="#00a6ed">**self**</font>)  
+Converts the image following this pattern: blue indicates positive events, red indicates negative events.  
+- <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)  
+Converts the stream of events to an array of int values in the following order <code>[x, y, t, pol]</code>.  
+- <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with X pixel coordinate of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with Y pixel coordinate of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with the timestamp of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_pol"></a>**<font color="#7fb800">to_array_pol</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with the polarity of all the events in the stream.  
+
+<h3>Dunder methods</h3>
+- <a name="carla.DVSEventArray.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+- <a name="carla.DVSEventArray.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
+- <a name="carla.DVSEventArray.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.DebugHelper<a name="carla.DebugHelper"></a>
 Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
 
@@ -2768,59 +2823,5 @@ Identificator of the parent actor.
 Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
     - **Parameters:**
         - `command` (_any carla Command_) – a Carla command.  
-
-
----
-
-## carla.DVSEvent<a name="carla.DVSEvent"></a>
-Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with x, y pixel coordinate location, timestamp t and polarity of the event. Learn more about them [here](ref_sensors.md).  
-
-<h3>Instance Variables</h3>
-- <a name="carla.DVSEvent.x"></a>**<font color="#f8805a">x</font>** (_int_)  
-X pixel coordinate.
-- <a name="carla.DVSEvent.y"></a>**<font color="#f8805a">y</font>** (_int_)  
-Y pixel coordinate.  
-- <a name="carla.DVSEvent.t"></a>**<font color="#f8805a">t</font>** (_int_)  
-Timestamp.
-- <a name="carla.DVSEvent.pol"></a>**<font color="#f8805a">pol</font>** (_bool_)  
-Polarity of the event in boolean. True for positive and False for negative.
-
-<h3>Dunder methods</h3>
-- <a name="carla.DVSEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>) 
- 
----
-
-## carla.DVSEventArray<a name="carla.DVSEventArray"></a>
-Class that defines a stream of events in [carla.DVSEvent](#carla.DVSEvent). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
-
-<h3>Instance Variables</h3>
-- <a name="carla.DVSEventArray.fov"></a>**<font color="#f8805a">fov</font>** (_float_)  
-Horizontal field of view of the image in degrees.  
-- <a name="carla.DVSEventArray.height"></a>**<font color="#f8805a">height</font>** (_int_)  
-Image height in pixels.  
-- <a name="carla.DVSEventArray.width"></a>**<font color="#f8805a">width</font>** (_int_)  
-Image width in pixels.  
-- <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-
-<h3>Methods</h3>
-- <a name="carla.DVSEventArray.to_image"></a>**<font color="#7fb800">to_image</font>**(<font color="#00a6ed">**self**</font>) 
-Converts the image following this pattern: blue indicates positive events, red indicates negative events.
-- <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)
-Convert the stream of events to an array of integer values in the following order [x, y, t, pol].
-- <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)
-Return an array with X pixel coordinate of all the events in the stream.
-- <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)
-Return an array with Y pixel coordinate of all the events in the stream.
-- <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)
-Return an array with the timestamp of all the events in the stream.
-- <a name="carla.DVSEventArray.to_array_pol"></a>**<font color="#7fb800">to_array_pol</font>**(<font color="#00a6ed">**self**</font>)
-Return an array with the polarity of all the events in the stream.
-
-<h3>Dunder methods</h3>
-- <a name="carla.DVSEventArray.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
-- <a name="carla.DVSEventArray.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.DVSEventArray.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="carla.DVSEventArray.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
-- <a name="carla.DVSEventArray.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
