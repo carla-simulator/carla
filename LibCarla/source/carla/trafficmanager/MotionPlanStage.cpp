@@ -21,8 +21,7 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFramePtr & localization_frame,
   const CollisionFramePtr &collision_frame,
   const TLFramePtr &tl_frame,
-  ControlFramePtr &output_array,
-  cc::DebugHelper &debug_helper)
+  ControlFramePtr &output_array)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -35,8 +34,7 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
-    output_array(output_array),
-    debug_helper(debug_helper) {}
+    output_array(output_array) {}
 
 void MotionPlanStage::Update(const unsigned long index)
 {
@@ -175,10 +173,6 @@ void MotionPlanStage::Update(const unsigned long index)
                                      blocking_actor_location) < 0.0f)
           {
             safe_after_junction = false;
-
-            debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
-                                   blocking_actor_location + cg::Location(0, 0, 2),
-                                   0.15f, 0.15f, {255u, 0u, 255u}, 0.05f);
           }
         }
       }

@@ -45,10 +45,8 @@ private:
     /// Actors currently passing through grids.
     std::unordered_map<GeoGridId, ActorIdSet> grid_to_actors;
 
-    cc::DebugHelper &debug_helper;
-
 public:
-    TrackTraffic(cc::DebugHelper &debug_helper);
+    TrackTraffic();
 
     /// Methods to update, remove and retrieve vehicles passing through a waypoint.
     void UpdatePassingVehicle(uint64_t waypoint_id, ActorId actor_id);
