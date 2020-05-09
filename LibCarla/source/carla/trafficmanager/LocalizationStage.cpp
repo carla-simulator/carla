@@ -415,11 +415,16 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
 void LocalizationStage::DrawBuffer(Buffer &buffer) {
   uint64_t buffer_size = buffer.size();
-  uint64_t step_size =  buffer_size/10u;
+  uint64_t step_size =  buffer_size/20u;
   for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
+      cc::DebugHelper::Color color {0, 0, 0};
+      if (!buffer.at(i)->CheckJunction() && !buffer.at(i + step_size)->CheckJunction())
+      {
+        color.g = 255u;
+      }
       debug_helper.DrawLine(buffer.at(i)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
                             buffer.at(i + step_size)->GetLocation() + cg::Location(0.0, 0.0, 2.0),
-                            0.2f, {0u, 255u, 0u}, 0.05f);
+                            0.2f, color, 0.05f);
   }
 }
 

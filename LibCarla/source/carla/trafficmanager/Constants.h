@@ -62,6 +62,7 @@ static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
 static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.5f;
 static const float JUNCTION_LOOK_AHEAD = 10.0f; // m
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 10.0f; //m
+static const float MIN_SAFE_INTERVAL_LENGTH = 0.9f * SAFE_DISTANCE_AFTER_JUNCTION;
 } // namespace WaypointSelection
 
 namespace LaneChange
