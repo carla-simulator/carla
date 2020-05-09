@@ -147,7 +147,8 @@ Similarly to car materials, a building material can be greatly changed if desire
 ---
 ## Customize the road
 
-The blueprint __RoadPainter__ is an easy way to change drastically the appearence of the road. The initial geometry of the road is painted like a canvas. There is no need to apply photometry techniques nor consider the UVs of the geometry. The result is achieved simply by blending textures and creating masks.  
+__RoadPainter__ is a tool that uses OpenDRIVE information to paint roads. To be able to do so, a blueprint is used, which uses a master material, a render target of the road as canvas, and additional decals and meshes. The master material grous a collection of materials that will be used by the blueprint, using brushes to blend their application.  
+This makes for an easy way to change drastically the appearence of the road. The initial geometry of the road is painted like a canvas. There is no need to apply photometry techniques nor consider the UVs of the geometry. The result is achieved simply by blending textures and creating masks.  
 
 ### Create a group material
 
@@ -163,13 +164,12 @@ __2. Set the `RenderTarget`.__ [Create a render target](https://docs.unrealengin
 ![materials_RoadMaster_RenderTarget](img/material_customization/Materials_RenderTarget.jpg)
 <div style="text-align: right"><i>Panel where the Render Target should be set.</i></div>
 
-__3. Set the map size.__ In `Scalar Parameter Values` the field `Map units (CM)`. If the size is not known, use a temporary value. The real size of the map can be retrieved later, when using the blueprint. ??? How to know value? What is it used for?  
+__3. Set the map size.__ In `Scalar Parameter Values` the field `Map units (CM)`. If the size is not known, use a temporary value. The real size of the map can be retrieved later, when using the blueprint. 
 __4. Choose the materials to be applied.__ There is space for one base material and three additional materils that will be used to paint over the base one. The painting information will be stored in the RGB channels of a RenderTarget, one channel per material. Add them to the fields `Base Material`, `Material 1`, `Material 2`, and `Material 3`.  
 
 ### Change the appearance of the road
 
 The appearence of the road is changed using a blueprint provided by CARLA. The blueprint will paint the road using the materials passed, combined with some brush settings. Additionally, decals and meshes can be added so that the final result is more detailed. This tool takes into account road information and will paint the elements using the orientation of the lane, unless an offset is stated.  
-> True? Even for external maps?? 
 
 !!! Note 
     This tool does not interfere with the weather settings that change the road's appearence, such as wetness or precipitation.  
@@ -177,13 +177,13 @@ The appearence of the road is changed using a blueprint provided by CARLA. The b
 __1. Create an instance of the RoadPainter blueprint.__ It can be found in `Carla/Blueprints/LevelDesign`. This blueprint determines how is the road being painted, and how are the materials in `RoadMaster` being used.  
 __2. Set the `RenderTarget` and the `Map size`.__ In the `Paint` category. These must be the same as in the __RoadMaster__ material.  
 
-![materials_RoadPaint_RenderTarget](img/material_customization/Materials_RenderTarget.jpg)
-<div style="text-align: right"><i>Panel where the Render Target and Map Size should be set to fit the Road group material.</i></div>
+![materials_RoadPaint_MatchSize](img/material_customization/Materials_Road_Matchsize.jpg)
+<div style="text-align: right"><i>Panels in group material and road blueprint where  the Render Target and Map Size values should match.</i></div>
 
 !!! Note 
     The `Z-size` option in the `Default` panel will give you the exact size of the map. Increase this by a little and make sure both, the blueprint and the master material have the same value.  
 
-__3. Apply the group material in `???`.__
+__3. Apply the group material.__ Select all the road meshes and apply the instance.
 
 __4. For each material, set the brush to be used.__ There are different brushes available in `GenericMaterials/RoadStencil/Alphas`. The materials will be applied over the road using the brush and parameters stated here.  
 
@@ -197,18 +197,21 @@ __4. For each material, set the brush to be used.__ There are different brushes 
 ![materials_roadpaint_brushes](img/material_customization/Materials_Brush.jpg)
 <div style="text-align: right"><i>Brush panel.</i></div>
 
-__5. For each material, apply it to the desired portions of the road.__ In the `???` section, there is a series of buttons that will apply the materials.  
+![materials_roadpaint_typesofbrushes](img/material_customization/Materials_Road_Typesofbrushes.jpg)
+<div style="text-align: right"><i>Different types of brushes.</i></div>
 
-* `Paint all roads` — Applies the brush to all the road. 
-* `Paint by actor` — Paints a specific actor being selected. 
-* `Paint over circle` — 
-* `Paint over square` — 
+__5. For each material, apply it to the desired portions of the road.__ In the `Default` section, there is a series of buttons to choose how materials are applied.  
+
+* `Paint all roads` — Applies the brush to all the road.  
+* `Paint by actor` — Paints a specific actor being selected.  
+* `Paint over circle` — Paints using a circular pattern, useful to provide variation.  
+* `Paint over square` — Paints using a square pattern, useful to provide variation.  
 
 This section also contains options to erase the changes applied.  
 
 * `Clear all` — Erases all the painting applied by the blueprint.  
-* `Clear materials` — 
-* `Clear material by actor` — 
+* `Clear materials` — Remove the materials currently active.  
+* `Clear material by actor` — Removes material closest to the actor selected.  
 
 ![materials_roadpaint_brushes](img/material_customization/Materials_RoadPainter_Default.jpg)
 <div style="text-align: right"><i>Different painting and erasing options.</i></div>
@@ -216,7 +219,7 @@ This section also contains options to erase the changes applied.
 !!! Note 
     Move the editor view a little for the changes to be visible.  
 
-__5. Add decals in `` and meshes in ``.__ Add the elements to the corresponding array and set some basic parameters for how should these be spawned over the road.  
+__5. Add decals and meshes.__ Add the elements to the corresponding array and set some basic parameters for how should these be spawned over the road.  
 
 * `Decal/Mesh Scale` — Scale of the decal/mesh per axis.  
 * `Fixed Decal/Mesh Offset` — Deviation from the center of the lane per axis.  
@@ -228,10 +231,29 @@ __5. Add decals in `` and meshes in ``.__ Add the elements to the corresponding 
 ![materials_](img/material_customization/Materials_DecalsMeshes.jpg)
 <div style="text-align: right"><i>Decals and Meshes panels.</i></div>
 
-__6. Spawn the decals and meshes.__ Use the buttons `Spawn decals` and `Spawn meshes` to do so. Additionally, the button `Spawn meshes by actor` ??. 
-
+__6. Spawn the decals and meshes.__ Use the buttons `Spawn decals` and `Spawn meshes` to do so. 
 
 __7. Play around.__ Try different settings, materials and brushes to obtain completely different results. This tool allows to create different presets for the road appearence and changing between them simply by changing the group material and updating a few settings.  
+
+Here is an example of the how the appearence of the road changes along the previous steps. 
+
+![materials_roadpaint_mat00](img/material_customization/Materials_Road_MaterialBase.jpg)
+<div style="text-align: right"><i>Example of base road material.</i></div>
+
+![materials_roadpaint_mat01](img/material_customization/Materials_Road_Material1.jpg)
+<div style="text-align: right"><i>Example after material 1 is applied.</i></div>
+
+![materials_roadpaint_mat02](img/material_customization/Materials_Road_Material2.jpg)
+<div style="text-align: right"><i>Example after material 2 is applied.</i></div>
+
+![materials_roadpaint_mat03](img/material_customization/Materials_Road_Material3.jpg)
+<div style="text-align: right"><i>Example after material 3 is applied.</i></div>
+
+![materials_roadpaint_mat03](img/material_customization/Materials_Road_Decals.jpg)
+<div style="text-align: right"><i>Example after decals are applied.</i></div>
+
+![materials_roadpaint_mat03](img/material_customization/Materials_Road_Meshes.jpg)
+<div style="text-align: right"><i>Example after meshes are applied.</i></div>
 
 ### Update the appearance of lane markings
 
