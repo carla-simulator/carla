@@ -159,6 +159,10 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
+    void AddActorAngularImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);

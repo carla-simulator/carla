@@ -131,6 +131,16 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, impulse);
     };
 
+    struct ApplyAngularImpulse : CommandBase<ApplyAngularImpulse> {
+      ApplyAngularImpulse() = default;
+      ApplyAngularImpulse(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          impulse(value) {}
+      ActorId actor;
+      geom::Vector3D impulse;
+      MSGPACK_DEFINE_ARRAY(actor, impulse);
+    };
+
     struct SetSimulatePhysics : CommandBase<SetSimulatePhysics> {
       SetSimulatePhysics() = default;
       SetSimulatePhysics(ActorId id, bool value)
@@ -168,6 +178,7 @@ namespace rpc {
         ApplyVelocity,
         ApplyAngularVelocity,
         ApplyImpulse,
+        ApplyAngularImpulse,
         SetSimulatePhysics,
         SetAutopilot>;
 

@@ -28,10 +28,6 @@ namespace client {
     return GetEpisode().Lock()->GetActorAngularVelocity(*this);
   }
 
-  void Actor::SetAngularVelocity(const geom::Vector3D &vector) {
-    GetEpisode().Lock()->SetActorAngularVelocity(*this, vector);
-  }
-
   geom::Vector3D Actor::GetAcceleration() const {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
@@ -48,8 +44,16 @@ namespace client {
     GetEpisode().Lock()->SetActorVelocity(*this, vector);
   }
 
+  void Actor::SetAngularVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->SetActorAngularVelocity(*this, vector);
+  }
+
   void Actor::AddImpulse(const geom::Vector3D &vector) {
     GetEpisode().Lock()->AddActorImpulse(*this, vector);
+  }
+
+  void Actor::AddAngularImpulse(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->AddActorAngularImpulse(*this, vector);
   }
 
   void Actor::SetSimulatePhysics(const bool enabled) {

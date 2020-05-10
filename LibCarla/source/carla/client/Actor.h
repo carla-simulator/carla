@@ -67,14 +67,17 @@ namespace client {
     /// Set the actor velocity.
     void SetVelocity(const geom::Vector3D &vector);
 
+    /// Set the angular velocity of the actor
+    void SetAngularVelocity(const geom::Vector3D &vector);
+
     /// Add impulse to the actor.
     void AddImpulse(const geom::Vector3D &vector);
 
+    /// Add angular impulse to the actor.
+    void AddAngularImpulse(const geom::Vector3D &vector);
+
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
-
-    /// Set the angular velocity of the actor
-    void SetAngularVelocity(const geom::Vector3D &vector);
 
     /// @warning This method only checks whether this instance of Actor has
     /// called the Destroy() method, it does not check whether the actor is

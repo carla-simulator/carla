@@ -11,6 +11,7 @@
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/String.h>
 #include <carla/road/SignalType.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -254,6 +255,17 @@ void ATrafficLightManager::SpawnTrafficLights()
   }
   for(auto &SignalId : SignalsToSpawn)
   {
+    // TODO: should this be an assert?
+    // RELEASE_ASSERT(
+    //     Signals.count(SignalId) > 0,
+    //     "Reference to inexistent signal. Possible OpenDRIVE error.");
+    if (Signals.count(SignalId) == 0)
+    {
+      UE_LOG(LogCarla, Warning,
+          TEXT("Possible OpenDRIVE error, reference to nonexistent signal id: %s"),
+          *carla::rpc::ToFString(SignalId));
+      continue;
+    }
     const auto& Signal = Signals.at(SignalId);
     auto CarlaTransform = Signal->GetTransform();
     FTransform SpawnTransform(CarlaTransform);

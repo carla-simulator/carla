@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem BAT script that creates the binaries for Carla (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
@@ -48,6 +48,18 @@ if %REMOVE_INTERMEDIATE% == false (
             goto eof
         )
     )
+)
+
+rem Get Unreal Engine root path
+if not defined UE4_ROOT (
+    set KEY_NAME="HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine"
+    set VALUE_NAME=InstalledDirectory
+    for /f "usebackq tokens=1,2,*" %%A in (`reg query !KEY_NAME! /s /reg:64`) do (
+        if "%%A" == "!VALUE_NAME!" (
+            set UE4_ROOT=%%C
+        )
+    )
+    if not defined UE4_ROOT goto error_unreal_no_found
 )
 
 rem Set the visual studio solution directory
@@ -145,3 +157,8 @@ rem ============================================================================
 :bad_exit
     endlocal
     exit /b %errorlevel%
+
+:error_unreal_no_found
+    echo.
+    echo %FILE_N% [ERROR] Unreal Engine not detected
+    goto bad_exit

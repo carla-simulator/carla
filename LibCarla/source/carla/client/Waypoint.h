@@ -92,12 +92,12 @@ namespace client {
     road::element::LaneMarking::LaneChange GetLaneChange() const;
 
     /// Returns a list of landmarks from the current position to a certain distance
-    std::vector<SharedPtr<Landmark>> GetAllLandmakrsInDistance(
+    std::vector<SharedPtr<Landmark>> GetAllLandmarksInDistance(
         double distance, bool stop_at_junction = false) const;
 
     /// Returns a list of landmarks from the current position to a certain distance
     /// Filters by specified type
-    std::vector<SharedPtr<Landmark>> GetLandmakrsOfTypeInDistance(
+    std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction = false) const;
 
   private:

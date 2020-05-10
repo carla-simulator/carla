@@ -88,6 +88,7 @@ void export_actor() {
       .def("set_velocity", &cc::Actor::SetVelocity, (arg("vector")))
       .def("set_angular_velocity", &cc::Actor::SetAngularVelocity, (arg("vector")))
       .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
+      .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("vector")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
       .def(self_ns::str(self_ns::self))

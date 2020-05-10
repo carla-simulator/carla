@@ -14,7 +14,7 @@
 * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
-	* Set the environment variable 
+	* Set the environment variable  
 	* make CARLA  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community. 
@@ -82,7 +82,7 @@ export UE4_ROOT=~/UnrealEngine_4.24
 make launch
 make PythonAPI 
 
-# Run an example script to test CARLA. 
+# Press play in the Editor to initialize the server, and run an example script to test CARLA. 
 cd PythonAPI/examples
 python3 spawn_npc.py
 ```
@@ -93,7 +93,7 @@ python3 spawn_npc.py
 
 ### System specifics
 
-* __Ubuntu 16.04 or later.__ Currently migrating to Ubuntu 18.  
+* __Ubuntu 18.04.__ Since release 0.9.9, CARLA cannot run in Ubuntu 16.04 using default compilers.  
 * __30GB disk space.__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.  
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning.  
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Be sure neither the firewall nor any other application block these.  
@@ -168,7 +168,7 @@ Unreal Engine should be installed in the system. Run `Engine/Binaries/Linux/UE4E
 cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
 ```
 
-In case something went wrong, it is related with Unreal Engine There is not much CARLA can do about it. However, the [build documentation](https://wiki.unrealengine.com/Building_On_Linux) provided by Unreal Engine may be helpful.
+In case something went wrong, it is related with Unreal Engine There is not much CARLA can do about it. However, the [build documentation](https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Build/BatchFiles/Linux/README.md) provided by Unreal Engine may be helpful.
 
 ---
 ## CARLA build

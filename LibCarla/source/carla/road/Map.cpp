@@ -185,7 +185,7 @@ namespace road {
       } else if (delta_s <= 0) {
         return result_start;
       } else {
-        return GetNext(result_start, distance_to_segment.first).front();
+        return GetNext(result_start, delta_s).front();
       }
     } else {
       double delta_s = distance_to_segment.first;
@@ -195,7 +195,7 @@ namespace road {
       } else if (delta_s <= 0) {
         return result_start;
       } else {
-        return GetNext(result_start, distance_to_segment.first).front();
+        return GetNext(result_start, delta_s).front();
       }
     }
   }

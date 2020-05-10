@@ -461,6 +461,10 @@ void ASceneCaptureSensor::BeginPlay()
   SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
       bEnablePostProcessingEffects);
 
+  // This ensures the camera is always spawning the rain drops in case the
+  // weather was previously set to has rain
+  GetEpisode().GetWeather()->NotifyWeather();
+
   Super::BeginPlay();
 }
 

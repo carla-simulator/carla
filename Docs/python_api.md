@@ -1,4 +1,6 @@
 #Python API reference
+This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>This will change the whole documentation to a previous state. Remember to go back to <i>latest</i> to get the details of the current state of CARLA.<hr>  
+
 ## carla.Actor<a name="carla.Actor"></a>
 CARLA defines actors as anything that plays a role in the simulation or can be moved around. That includes: pedestrians, vehicles, sensors and traffic signs (considering traffic lights as part of these). Actors are spawned in the simulation by [carla.World](#carla.World) and they need for a [carla.ActorBlueprint](#carla.ActorBlueprint) to be created. These blueprints belong into a library provided by CARLA, find more about them [here](bp_library.md).  
 
@@ -16,7 +18,11 @@ The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.must
 
 <h3>Methods</h3>
 - <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Adds an impulse to the actor.  
+Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
+    - **Parameters:**
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
+Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
@@ -24,32 +30,42 @@ Tells the simulator to destroy this actor and returns <b>True</b> if it was succ
     - **Return:** _bool_  
     - **Warning:** <font color="#ED2F2F">_This method blocks the script until the destruction is completed by the simulator.
 _</font>  
-- <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+    - **Setter:** _[carla.Actor.set_angular_velocity](#carla.Actor.set_angular_velocity)_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)_  
+    - **Setter:** _[carla.Actor.set_location](#carla.Actor.set_location)_  
 - <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
+    - **Setter:** _[carla.Actor.set_transform](#carla.Actor.set_transform)_  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+    - **Setter:** _[carla.Actor.set_velocity](#carla.Actor.set_velocity)_  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world this actor belongs to.  
     - **Return:** _[carla.World](#carla.World)_  
-- <a name="carla.Actor.set_angular_velocity"></a>**<font color="#7fb800">set_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_angular_velocity"></a>**<font color="#7fb800">set_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
 Changes the actor's angular velocity vector.  
     - **Parameters:**
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
+    - **Getter:** _[carla.Actor.get_angular_velocity](#carla.Actor.get_angular_velocity)_  
 - <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
 Teleports the actor to a given location.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
+    - **Getter:** _[carla.Actor.get_location](#carla.Actor.get_location)_  
 - <a name="carla.Actor.set_simulate_physics"></a>**<font color="#7fb800">set_simulate_physics</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
 Enables or disables the simulation of physics on this actor.  
     - **Parameters:**
@@ -58,13 +74,15 @@ Enables or disables the simulation of physics on this actor.
 Teleports the actor to a given transform (location and rotation).  
     - **Parameters:**
         - `transform` (_[carla.Transform](#carla.Transform)_)  
+    - **Getter:** _[carla.Actor.get_transform](#carla.Actor.get_transform)_  
 - <a name="carla.Actor.set_velocity"></a>**<font color="#7fb800">set_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
 Sets the actor's velocity vector.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
+    - **Getter:** _[carla.Actor.get_velocity](#carla.Actor.get_velocity)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Actor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -93,8 +111,8 @@ Reads the attribute as int.
 - <a name="carla.ActorAttribute.as_str"></a>**<font color="#7fb800">as_str</font>**(<font color="#00a6ed">**self**</font>)  
 Reads the attribute as string.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.ActorAttribute.__bool__"></a>**<font color="#7fb800">\__bool__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorAttribute.__bool__"></a>**<font color="#7fb800">\__bool__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__float__"></a>**<font color="#7fb800">\__float__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__int__"></a>**<font color="#7fb800">\__int__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.ActorAttribute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -147,19 +165,25 @@ Returns <b>True</b> if any of the tags listed for this blueprint matches `wildca
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _bool_  
-- <a name="carla.ActorBlueprint.get_attribute"></a>**<font color="#7fb800">get_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.get_attribute"></a>**<font color="#7fb800">get_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
 Returns the actor's attribute with `id` as identifier if existing.  
     - **Parameters:**
         - `id` (_str_)  
     - **Return:** _[carla.ActorAttribute](#carla.ActorAttribute)_  
-- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
+    - **Setter:** _[carla.ActorBlueprint.set_attribute](#carla.ActorBlueprint.set_attribute)_  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
 If the `id` attribute is modifiable, changes its value to `value`.  
     - **Parameters:**
         - `id` (_str_) – The identifier for the attribute that is intended to be changed.  
         - `value` (_str_) – The new value for said attribute.  
+    - **Getter:** _[carla.ActorBlueprint.get_attribute](#carla.ActorBlueprint.get_attribute)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.ActorBlueprint.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 Allows iteration within this class' attributes.  
 - <a name="carla.ActorBlueprint.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of attributes for this blueprint.  
@@ -182,8 +206,8 @@ Finds an actor using its identifier and returns it or <b>None</b> if it is not p
         - `actor_id` (_int_)  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.ActorList.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorList.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 Returns the actor corresponding to `pos` position in the list.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.ActorList.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -205,7 +229,9 @@ A class that comprises all the information for an actor at a certain moment in t
 An identifier for the snapshot itself.  
 
 <h3>Methods</h3>
-- <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the acceleration vector registered for an actor in that tick.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.ActorSnapshot.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
@@ -248,8 +274,8 @@ Returns the blueprint corresponding to that identifier.
         - `id` (_str_)  
     - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.BlueprintLibrary.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 Returns the blueprint stored in `pos` position inside the data structure containing them.  
     - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 - <a name="carla.BlueprintLibrary.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -284,7 +310,9 @@ Returns **True** if a point passed in world space is inside this bounding box.
         - `world_point` (_[carla.Location](#carla.Location)_) – The point in world space to be checked.  
         - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
     - **Return:** _bool_  
-- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list containing the locations of this object's vertices in local space.  
     - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
@@ -293,8 +321,8 @@ Returns a list containing the locations of this object's vertices in world space
         - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
     - **Return:** _list([carla.Location](#carla.Location))_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.BoundingBox](#carla.BoundingBox)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.BoundingBox.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.BoundingBox](#carla.BoundingBox)</font>)  
 Returns true if both location and extent are equal for this and `other`.  
     - **Return:** _bool_  
 - <a name="carla.BoundingBox.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.BoundingBox](#carla.BoundingBox)</font>)  
@@ -380,7 +408,9 @@ Enables the recording feature, which will start saving every information possibl
         - `filename` (_str_) – Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
 Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.  
-- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
   ['/Game/Carla/Maps/Town01',
   '/Game/Carla/Maps/Town02',
@@ -404,7 +434,9 @@ Returns an instance of the traffic manager related to the specified port. If it 
 - <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world object currently active in the simulation. This world will be later used for example to load maps.  
     - **Return:** _[carla.World](#carla.World)_  
-- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
 When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
     - **Parameters:**
         - `time_factor` (_float_) – 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
@@ -450,8 +482,8 @@ Initializes a color, black by default.
         - `b` (_int_)  
         - `a` (_int_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Color.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Color](#carla.Color)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Color.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Color](#carla.Color)</font>)  
 - <a name="carla.Color.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Color](#carla.Color)</font>)  
 - <a name="carla.Color.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -469,6 +501,61 @@ Converts the image to a linear depth map. Used by <b>sensor.camera.depth</b>.
 Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.  
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
 No changes applied to the image.  
+
+---
+
+## carla.DVSEvent<a name="carla.DVSEvent"></a>
+Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.DVSEvent.x"></a>**<font color="#f8805a">x</font>** (_int_)  
+X pixel coordinate.  
+- <a name="carla.DVSEvent.y"></a>**<font color="#f8805a">y</font>** (_int_)  
+Y pixel coordinate.  
+- <a name="carla.DVSEvent.t"></a>**<font color="#f8805a">t</font>** (_int_)  
+Timestamp of the moment the event happened.  
+- <a name="carla.DVSEvent.pol"></a>**<font color="#f8805a">pol</font>** (_bool_)  
+Polarity of the event. __True__ for positive and __False__ for negative.  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.DVSEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.DVSEventArray<a name="carla.DVSEventArray"></a>
+Class that defines a stream of events in [[carla.DVSEvent](#carla.DVSEvent)](#[carla.DVSEvent](#carla.DVSEvent)). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.DVSEventArray.fov"></a>**<font color="#f8805a">fov</font>** (_float_)  
+Horizontal field of view of the image in degrees.  
+- <a name="carla.DVSEventArray.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Image height in pixels.  
+- <a name="carla.DVSEventArray.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+Image width in pixels.  
+- <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+
+<h3>Methods</h3>
+- <a name="carla.DVSEventArray.to_image"></a>**<font color="#7fb800">to_image</font>**(<font color="#00a6ed">**self**</font>)  
+Converts the image following this pattern: blue indicates positive events, red indicates negative events.  
+- <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)  
+Converts the stream of events to an array of int values in the following order <code>[x, y, t, pol]</code>.  
+- <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with X pixel coordinate of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with Y pixel coordinate of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with the timestamp of all the events in the stream.  
+- <a name="carla.DVSEventArray.to_array_pol"></a>**<font color="#7fb800">to_array_pol</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an array with the polarity of all the events in the stream.  
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.DVSEventArray.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+- <a name="carla.DVSEventArray.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
+- <a name="carla.DVSEventArray.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -537,8 +624,8 @@ Quotient between current RPM and MaxRPM where the autonomous gear box should shi
         - `down_ratio` (_float_)  
         - `up_ratio` (_float_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.GearPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GearPhysicsControl](#carla.GearPhysicsControl)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.GearPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GearPhysicsControl](#carla.GearPhysicsControl)</font>)  
 - <a name="carla.GearPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GearPhysicsControl](#carla.GearPhysicsControl)</font>)  
 - <a name="carla.GearPhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -562,8 +649,8 @@ Height regarding ground level.
         - `longitude` (_float_)  
         - `altitude` (_float_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.GeoLocation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoLocation](#carla.GeoLocation)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.GeoLocation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoLocation](#carla.GeoLocation)</font>)  
 - <a name="carla.GeoLocation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoLocation](#carla.GeoLocation)</font>)  
 - <a name="carla.GeoLocation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -582,8 +669,8 @@ West/East value of a point on the map.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.GnssMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.GnssMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -600,8 +687,8 @@ Angular velocity in rad/sec.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.IMUMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.IMUMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -628,8 +715,8 @@ Saves the image to disk using a converter pattern stated as `color_converter`. T
         - `path` (_str_) – Path that will contain the image.  
         - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_) – Default <b>Raw</b> will make no changes.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.Image.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
@@ -647,7 +734,9 @@ Identificator found in the OpenDRIVE file.
 Bounding box encapsulating the junction lanes.  
 
 <h3>Methods</h3>
-- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  
 Returns a list of pairs of waypoints. Every tuple on the list contains first an initial and then a final waypoint within the intersection boundaries that describe the beginning and the end of said lane along the junction. Lanes follow their OpenDRIVE definitions so there may be many different tuples with the same starting waypoint due to possible deviations, as this are considered different lanes.  
     - **Parameters:**
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Type of lanes to get the waypoints.  
@@ -707,7 +796,9 @@ A waypoint placed in the lane of the one that made the query and at the `s` of t
 The location and orientation of the landmark in the simulation.  
 
 <h3>Methods</h3>
-- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
 Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:
 <small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
     - **Return:** _list(tuple(int))_  
@@ -829,8 +920,8 @@ List of lane markings that have been crossed and detected by the sensor.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.LaneInvasionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LaneInvasionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -929,13 +1020,15 @@ List of 3D points received as data.
 Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
     - **Parameters:**
         - `path` (_str_)  
-- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
 Retrieves the number of points sorted by channel that are generated by this measure. Sorting by channel allows to identify the original channel for every point.  
     - **Parameters:**
         - `channel` (_int_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.LidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**location**=[carla.Location](#carla.Location)</font>)  
@@ -968,7 +1061,9 @@ State of the light. Summarizes its attributes, group, and if it is on/off.
 Switches off the light.  
 - <a name="carla.Light.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>)  
 Switches on the light.  
-- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
 Changes the color of the light to `color`.  
     - **Parameters:**
         - `color` (_[carla.Color](#carla.Color)_)  
@@ -1021,7 +1116,9 @@ Switches off all the lights in `lights`.
 Switches on all the lights in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on.  
-- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
 Returns a list containing the lights in a certain group. By default, the group is `None`.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to filter the lights returned. Default is `None`.  
@@ -1031,21 +1128,25 @@ Returns a list with the colors of every element in `lights`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.Color](#carla.Color))_  
+    - **Setter:** _[carla.LightManager.set_color](#carla.LightManager.set_color)_  
 - <a name="carla.LightManager.get_intensity"></a>**<font color="#7fb800">get_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the intensity of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list(float)_  
+    - **Setter:** _[carla.LightManager.set_intensity](#carla.LightManager.set_intensity)_  
 - <a name="carla.LightManager.get_light_group"></a>**<font color="#7fb800">get_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the group of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightGroup](#carla.LightGroup))_  
+    - **Setter:** _[carla.LightManager.set_light_group](#carla.LightManager.set_light_group)_  
 - <a name="carla.LightManager.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
 Returns a list with the state of all the attributes of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightState](#carla.LightState))_  
+    - **Setter:** _[carla.LightManager.set_light_state](#carla.LightManager.set_light_state)_  
 - <a name="carla.LightManager.get_turned_off_lights"></a>**<font color="#7fb800">get_turned_off_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
 Returns a list containing lights switched off in the scene, filtered by group.  
     - **Parameters:**
@@ -1056,7 +1157,9 @@ Returns a list containing lights switched on in the scene, filtered by group.
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – List of lights to be queried.  
     - **Return:** _list([carla.Light](#carla.Light))_  
-- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
 Switches on/off the elements in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on/off.  
@@ -1066,6 +1169,7 @@ Changes the color of the elements in `lights` to `color`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `color` (_[carla.Color](#carla.Color)_) – Color to be applied.  
+    - **Getter:** _[carla.LightManager.get_color](#carla.LightManager.get_color)_  
 - <a name="carla.LightManager.set_colors"></a>**<font color="#7fb800">set_colors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**colors**</font>)  
 Changes the color of each element in `lights` to the corresponding in `colors`.  
     - **Parameters:**
@@ -1076,6 +1180,7 @@ Changes the intensity of every element in `lights` to `intensity`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `intensity` (_float_) – Intensity to be applied.  
+    - **Getter:** _[carla.LightManager.get_intensity](#carla.LightManager.get_intensity)_  
 - <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
 Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
     - **Parameters:**
@@ -1086,6 +1191,7 @@ Changes the group of every element in `lights` to `light_group`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_group](#carla.LightManager.get_light_group)_  
 - <a name="carla.LightManager.set_light_groups"></a>**<font color="#7fb800">set_light_groups</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_groups**</font>)  
 Changes the group of each element in `lights` to the corresponding in `light_groups`.  
     - **Parameters:**
@@ -1096,6 +1202,7 @@ Changes the state of the attributes of every element in `lights` to `light_state
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_state` (_[carla.LightState](#carla.LightState)_) – State of the attributes to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_state](#carla.LightManager.get_light_state)_  
 - <a name="carla.LightManager.set_light_states"></a>**<font color="#7fb800">set_light_states</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_states**</font>)  
 Changes the state of the attributes of each element in `lights` to the corresponding in `light_states`.  
     - **Parameters:**
@@ -1150,8 +1257,8 @@ Returns Euclidean distance in meters from this location to another one.
         - `location` (_[carla.Location](#carla.Location)_) – The other point to compute the distance with.  
     - **Return:** _float_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Location](#carla.Location)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Location.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Location](#carla.Location)</font>)  
 Returns __True__ if both locations are the same point in space.  
     - **Return:** _bool_  
 - <a name="carla.Location.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Location](#carla.Location)</font>)  
@@ -1194,7 +1301,9 @@ Converts a given `location`, a point in the simulation, to a [carla.GeoLocation]
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
     - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
-- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
 Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
 - <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  
@@ -1234,8 +1343,8 @@ Returns a waypoint if all the parameters passed are correct. Otherwise, returns 
         - `s` (_float_) – Specify the length from the road start.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Map.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Map.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1252,8 +1361,8 @@ Distance between `actor` and `other`.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.ObstacleDetectionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ObstacleDetectionEvent.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1291,8 +1400,8 @@ The velocity of the detected object towards the sensor in m/s.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.RadarDetection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarDetection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1304,11 +1413,13 @@ The velocity of the detected object towards the sensor in m/s.
 The complete information of the [carla.RadarDetection](#carla.RadarDetection) the radar has registered.  
 
 <h3>Methods</h3>
-- <a name="carla.RadarMeasurement.get_detection_count"></a>**<font color="#7fb800">get_detection_count</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarMeasurement.get_detection_count"></a>**<font color="#7fb800">get_detection_count</font>**(<font color="#00a6ed">**self**</font>)  
 Retrieves the number of entries generated, same as **<font color="#7fb800">\__str__()</font>**.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.RadarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.RadarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.RadarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.RadarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**detection**=[carla.RadarDetection](#carla.RadarDetection)</font>)  
@@ -1335,12 +1446,14 @@ Degrees around the X-axis.
         - `pitch` (_float_) – Y rotation in degrees.  
         - `yaw` (_float_) – Z rotation in degrees.  
         - `roll` (_float_) – X rotation in degrees.  
-- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes the vector pointing forward according to the orientation of each axis.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Rotation](#carla.Rotation)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Rotation](#carla.Rotation)</font>)  
 Returns __True__ if both rotations represent the same orientation of each axis.  
     - **Return:** _bool_  
 - <a name="carla.Rotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Rotation](#carla.Rotation)</font>)  
@@ -1388,8 +1501,8 @@ The ego acceleration component _lon_ regarding the route smoothened by an averag
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.RssEgoDynamicsOnRoute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssEgoDynamicsOnRoute.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1412,8 +1525,8 @@ Current ego vehicle dynamics regarding the route.
 
 <h3>Methods</h3>
 
-<h3>Dunder methods</h3>
-- <a name="carla.RssResponse.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssResponse.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1470,8 +1583,8 @@ Erases the targets that have been appended to the route.
 - <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
 Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1517,8 +1630,8 @@ The function the sensor will be calling to every time a new measurement is recei
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Commands the sensor to stop listening for data.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Sensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Sensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1565,8 +1678,8 @@ Time register of the frame at which this measurement was taken given by the OS i
         - `delta_seconds` (_float_)  
         - `platform_timestamp` (_float_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Timestamp.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Timestamp](#carla.Timestamp)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Timestamp.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Timestamp](#carla.Timestamp)</font>)  
 - <a name="carla.Timestamp.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Timestamp](#carla.Timestamp)</font>)  
 - <a name="carla.Timestamp.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1589,7 +1702,9 @@ Stops the traffic light at its current state.
 - <a name="carla.TrafficLight.is_frozen"></a>**<font color="#7fb800">is_frozen</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns <b>True</b> if a traffic light is frozen according to last tick. The method does not call the simulator.  
     - **Return:** _bool_  
-- <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
 - <a name="carla.TrafficLight.get_group_traffic_lights"></a>**<font color="#7fb800">get_group_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1603,33 +1718,43 @@ Returns the index of the pole that identifies it as part of the traffic light gr
 - <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the state of the traffic light according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
+    - **Setter:** _[carla.TrafficLight.set_state](#carla.TrafficLight.set_state)_  
 - <a name="carla.TrafficLight.get_green_time"></a>**<font color="#7fb800">get_green_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the seconds set for the traffic light to be green according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
+    - **Setter:** _[carla.TrafficLight.set_green_time](#carla.TrafficLight.set_green_time)_  
 - <a name="carla.TrafficLight.get_red_time"></a>**<font color="#7fb800">get_red_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the seconds set for the traffic light to be red according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
+    - **Setter:** _[carla.TrafficLight.set_red_time](#carla.TrafficLight.set_red_time)_  
 - <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the the seconds set for the traffic light to be yellow according to last tick. The method does not call the simulator.  
     - **Return:** _float_  
-- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  
+    - **Setter:** _[carla.TrafficLight.set_yellow_time](#carla.TrafficLight.set_yellow_time)_  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  
 Sets a given state to a traffic light actor.  
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
+    - **Getter:** _[carla.TrafficLight.get_state](#carla.TrafficLight.get_state)_  
 - <a name="carla.TrafficLight.set_green_time"></a>**<font color="#7fb800">set_green_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**green_time**</font>)  
     - **Parameters:**
         - `green_time` (_float_) – Sets a given time (in seconds) for the green light to be active.  
+    - **Getter:** _[carla.TrafficLight.get_green_time](#carla.TrafficLight.get_green_time)_  
 - <a name="carla.TrafficLight.set_red_time"></a>**<font color="#7fb800">set_red_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**red_time**</font>)  
 Sets a given time (in seconds) for the red state to be active.  
     - **Parameters:**
         - `red_time` (_float_)  
+    - **Getter:** _[carla.TrafficLight.get_red_time](#carla.TrafficLight.get_red_time)_  
 - <a name="carla.TrafficLight.set_yellow_time"></a>**<font color="#7fb800">set_yellow_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**yellow_time**</font>)  
 Sets a given time (in seconds) for the yellow light to be active.  
     - **Parameters:**
         - `yellow_time` (_float_)  
+    - **Getter:** _[carla.TrafficLight.get_yellow_time](#carla.TrafficLight.get_yellow_time)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.TrafficLight.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1660,7 +1785,7 @@ Tunes on/off collisions between a vehicle and another specific actor. In order t
     - **Parameters:**
         - `reference_actor` (_[carla.Actor](#carla.Actor)_) – Vehicle that is going to ignore collisions.  
         - `other_actor` (_[carla.Actor](#carla.Actor)_) – The actor that `reference_actor` is going to ignore collisions with.  
-        - `detect_collision` (_bool_) – __True__ is default and enables collisions. __False will disable them.  
+        - `detect_collision` (_bool_) – __True__ is default and enables collisions. __False__ will disable them.  
 - <a name="carla.TrafficManager.distance_to_leading_vehicle"></a>**<font color="#7fb800">distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**distance**</font>)  
 Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.  
     - **Parameters:**
@@ -1703,10 +1828,14 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
-- <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
     - **Return:** _uint16_  
-- <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  
 Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.  
     - **Parameters:**
         - `enabled` (_bool_) – If __True__, enables the hybrid physics.  
@@ -1744,12 +1873,14 @@ Describes a rotation for an object according to Unreal Engine's axis system.
 Translates a 3D point from global to local coordinates using the current transformation as frame of reference.  
     - **Parameters:**
         - `in_point` (_[carla.Location](#carla.Location)_) – Location in the space to which the transformation will be applied.  
-- <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes a forward vector using its rotation.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
 Returns __True__ if both location and rotation are equal for this and `other`.  
     - **Return:** _bool_  
 - <a name="carla.Transform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
@@ -1776,8 +1907,8 @@ Y-axis value.
         - `x` (_float_)  
         - `y` (_float_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Vector2D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vector2D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
 - <a name="carla.Vector2D.__sub__"></a>**<font color="#7fb800">\__sub__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
 - <a name="carla.Vector2D.__mul__"></a>**<font color="#7fb800">\__mul__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
 - <a name="carla.Vector2D.__truediv__"></a>**<font color="#7fb800">\__truediv__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
@@ -1811,8 +1942,8 @@ Z-axis value.
         - `y` (_float_)  
         - `z` (_float_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Vector3D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vector3D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
 - <a name="carla.Vector3D.__sub__"></a>**<font color="#7fb800">\__sub__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
 - <a name="carla.Vector3D.__mul__"></a>**<font color="#7fb800">\__mul__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
 - <a name="carla.Vector3D.__truediv__"></a>**<font color="#7fb800">\__truediv__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector3D](#carla.Vector3D)</font>)  
@@ -1847,12 +1978,15 @@ Applies a physics control object in the next tick containing the parameters that
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
     - **Return:** _bool_  
-- <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the control applied in the last tick. The method does not call the simulator.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
 - <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a flag representing the vehicle light state, this represents which lights are active or not.  
     - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
+    - **Setter:** _[carla.Vehicle.set_light_state](#carla.Vehicle.set_light_state)_  
 - <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
 The simulator returns the last physics control applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
@@ -1866,7 +2000,9 @@ Retrieves the traffic light actor affecting this vehicle (if any) according to l
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
-- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  
 Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
@@ -1875,9 +2011,10 @@ Registers or deletes the vehicle from a Traffic Manager's list. When __True__, t
 Sets the light state of a vehicle using a flag that represents the lights that are on and off.  
     - **Parameters:**
         - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
+    - **Getter:** _[carla.Vehicle.get_light_state](#carla.Vehicle.get_light_state)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Vehicle.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1911,8 +2048,8 @@ States which gear is the vehicle running on.
         - `manual_gear_shift` (_bool_)  
         - `gear` (_int_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehicleControl](#carla.VehicleControl)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.VehicleControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehicleControl](#carla.VehicleControl)</font>)  
 - <a name="carla.VehicleControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehicleControl](#carla.VehicleControl)</font>)  
 - <a name="carla.VehicleControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -1999,8 +2136,8 @@ VehiclePhysicsControl constructor.
         - `steering_curve` (_[carla.Vector2D](#carla.Vector2D)_)  
         - `wheels` (_list([carla.WheelPhysicsControl](#carla.WheelPhysicsControl))_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
 - <a name="carla.VehiclePhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
 - <a name="carla.VehiclePhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -2022,12 +2159,14 @@ On the next tick, the control will move the walker in a certain direction with a
 On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton.  
     - **Parameters:**
         - `control` (_[carla.WalkerBoneControl](#carla.WalkerBoneControl)_)  
-- <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the control applied to this walker during last tick. The method does not call the simulator.  
     - **Return:** _[carla.WalkerControl](#carla.WalkerControl)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Walker.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Walker.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -2043,13 +2182,15 @@ Sets the destination that the pedestrian will reach.
 Enables AI control for its parent walker.  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Disables AI control for its parent walker.  
-- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
 Sets a speed for the walker in meters per second.  
     - **Parameters:**
         - `speed` (_float_) – speed in m/s. An easy walking speed is set by default.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WalkerAIController.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerAIController.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -2066,8 +2207,8 @@ Intializes an object containing moves to be applied on tick. These are listed wi
     - **Parameters:**
         - `list(name,transform)` (_tuple_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WalkerBoneControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerBoneControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -2091,8 +2232,8 @@ If <b>True</b>, the walker will perform a jump.
         - `speed` (_float_)  
         - `jump` (_bool_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WalkerControl](#carla.WalkerControl)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WalkerControl](#carla.WalkerControl)</font>)  
 Compares every variable with `other` and returns <b>True</b> if these are all the same.  
 - <a name="carla.WalkerControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WalkerControl](#carla.WalkerControl)</font>)  
 Compares every variable with `other` and returns <b>True</b> if any of these differ.  
@@ -2152,7 +2293,9 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
     - **Parameters:**
         - `distance` (_float_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
 If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.  
     - **Return:** _[carla.Junction](#carla.Junction)_  
 - <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
@@ -2177,8 +2320,8 @@ Generates a waypoint at the center of the right lane based on the direction of t
 Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -2222,8 +2365,8 @@ Method to initialize an object defining weather conditions. This class has some 
     - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
 _</font>  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
 Returns <b>True</b> if both objects' variables are the same.  
     - **Return:** _bool_  
 - <a name="carla.WeatherParameters.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
@@ -2263,8 +2406,8 @@ World position of the wheel. This is a read-only parameter.
         - `max_handbrake_torque` (_float_)  
         - `position` (_[carla.Vector3D](#carla.Vector3D)_)  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)</font>)  
 - <a name="carla.WheelPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)</font>)  
 - <a name="carla.WheelPhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
@@ -2318,7 +2461,9 @@ Same as **<font color="#7fb800">spawn_actor()</font>** but returns <b>None</b> o
         - `attach_to` (_[carla.Actor](#carla.Actor)_) – The parent object that the spawned actor will follow around.  
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) – Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
-- <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
 Looks up for an actor by ID and returns <b>None</b> if not found.  
     - **Parameters:**
         - `actor_id` (_int_)  
@@ -2362,13 +2507,17 @@ Returns the spectator actor. The spectator is a special type of actor created by
 - <a name="carla.World.get_weather"></a>**<font color="#7fb800">get_weather</font>**(<font color="#00a6ed">**self**</font>)  
 Retrieves an object containing weather parameters currently active in the simulation, mainly cloudiness, precipitation, wind and sun position.  
     - **Return:** _[carla.WeatherParameters](#carla.WeatherParameters)_  
-- <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
+    - **Setter:** _[carla.World.set_weather](#carla.World.set_weather)_  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
     - **Parameters:**
         - `weather` (_[carla.WeatherParameters](#carla.WeatherParameters)_) – New conditions to be applied.  
+    - **Getter:** _[carla.World.get_weather](#carla.World.get_weather)_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.World.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 The content of the world is parsed and printed as a brief report of its current state.  
     - **Return:** _string_  
 
@@ -2393,8 +2542,8 @@ Creates an object containing desired settings that could later be applied throug
         - `no_rendering_mode` (_bool_) – Set this to true to completely disable rendering in the simulation.  
         - `fixed_delta_seconds` (_float_) – Set this time in seconds to get a fixed time-step in between frames. 0.0 means variable time-step and it is the default mode.  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
 Returns <b>True</b> if both objects' variables are the same.  
     - **Return:** _bool_  
 - <a name="carla.WorldSettings.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
@@ -2429,8 +2578,8 @@ Given a certain actor ID, checks if there is a snapshot corresponding it and so,
         - `actor_id` (_int_)  
     - **Return:** _bool_  
 
-<h3>Dunder methods</h3>
-- <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
 Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value.  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this snapshot.  
@@ -2441,6 +2590,23 @@ Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same
 - <a name="carla.WorldSnapshot.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
 Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different.  
     - **Return:** _bool_  
+
+---
+
+## command.ApplyAngularImpulse<a name="command.ApplyAngularImpulse"></a>
+Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in [carla.Actor](#carla.Actor). Adds angular impulse to an actor.  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyAngularImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_)  
 
 ---
 

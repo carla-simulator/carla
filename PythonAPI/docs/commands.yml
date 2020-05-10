@@ -278,6 +278,32 @@
         type: carla.Vector3D
     # --------------------------------------
 
+  - class_name: ApplyAngularImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in carla.Actor. Adds angular impulse to an actor.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: impulse
+      type: carla.Vector3D
+      doc: >
+        Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: impulse
+        type: carla.Vector3D
+    # --------------------------------------
+
   - class_name: SetSimulatePhysics
     # - DESCRIPTION ------------------------
     doc: >

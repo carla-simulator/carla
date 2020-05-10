@@ -18,6 +18,7 @@
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
+#include <carla/sensor/data/DVSEventArray.h>
 
 #include <carla/sensor/s11n/RadarData.h>
 
@@ -93,6 +94,23 @@ namespace data {
     out << "RadarMeasurement(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", point_count=" << std::to_string(meas.GetDetectionAmount())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const DVSEvent &event) {
+    out << "Event(x=" << std::to_string(event.x)
+        << ", y=" << std::to_string(event.y)
+        << ", t=" << std::to_string(event.t)
+        << ", pol=" << std::to_string(event.pol) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const DVSEventArray &events) {
+    out << "EventArray(frame=" << std::to_string(events.GetFrame())
+        << ", timestamp=" << std::to_string(events.GetTimestamp())
+        << ", dimensions=" << std::to_string(events.GetWidth()) << 'x' << std::to_string(events.GetHeight())
+        << ", number_of_events=" << std::to_string(events.size())
         << ')';
     return out;
   }
@@ -298,6 +316,36 @@ void export_sensor_data() {
     .def_readwrite("azimuth", &css::RadarDetection::azimuth)
     .def_readwrite("altitude", &css::RadarDetection::altitude)
     .def_readwrite("depth", &css::RadarDetection::depth)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::DVSEvent>("DVSEvent")
+    .add_property("x", &csd::DVSEvent::x)
+    .add_property("y", &csd::DVSEvent::y)
+    .add_property("t", &csd::DVSEvent::t)
+    .add_property("pol", &csd::DVSEvent::pol)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
+    .add_property("width", &csd::DVSEventArray::GetWidth)
+    .add_property("height", &csd::DVSEventArray::GetHeight)
+    .add_property("fov", &csd::DVSEventArray::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::DVSEventArray>)
+    .def("__len__", &csd::DVSEventArray::size)
+    .def("__iter__", iterator<csd::DVSEventArray>())
+    .def("__getitem__", +[](const csd::DVSEventArray &self, size_t pos) -> csd::DVSEvent {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::DVSEventArray &self, size_t pos, csd::DVSEvent event) {
+      self.at(pos) = event;
+    })
+    .def("to_image", CALL_RETURNING_LIST(csd::DVSEventArray, ToImage))
+    .def("to_array", CALL_RETURNING_LIST(csd::DVSEventArray, ToArray))
+    .def("to_array_x", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayX))
+    .def("to_array_y", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayY))
+    .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))
+    .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
     .def(self_ns::str(self_ns::self))
   ;
 }
