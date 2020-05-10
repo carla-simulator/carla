@@ -250,8 +250,6 @@ void LocalizationStage::Update(const unsigned long index)
     output.safe_point = nullptr;
   }
 
-  DrawBuffer(waypoint_buffer);
-
   // Updating geodesic grid position for actor.
   track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
 }
