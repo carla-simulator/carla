@@ -385,6 +385,10 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
                  (ego_path_clear && other_path_clear && !ego_angular_priority && !ego_path_priority)))
             || (vehicle_bbox_touching && !ego_angular_priority && !ego_path_priority)))
     {
+      debug_helper.DrawArrow(reference_location + cg::Location(0, 0, 2),
+                             other_location + cg::Location(0, 0, 2),
+                             0.15f, 0.15f, {255u, 0u, 0u}, 0.05f);
+
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);

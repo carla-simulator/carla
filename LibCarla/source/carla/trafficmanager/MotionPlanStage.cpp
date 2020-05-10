@@ -21,7 +21,8 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFramePtr & localization_frame,
   const CollisionFramePtr &collision_frame,
   const TLFramePtr &tl_frame,
-  ControlFramePtr &output_array)
+  ControlFramePtr &output_array,
+  cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -34,7 +35,8 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
-    output_array(output_array) {}
+    output_array(output_array),
+    debug_helper(debug_helper) {}
 
 void MotionPlanStage::Update(const unsigned long index)
 {
@@ -154,6 +156,7 @@ void MotionPlanStage::Update(const unsigned long index)
   {
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
     float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
+    cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
     for (SimpleWaypointPtr current_waypoint = junction_end_point;
          current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
          current_waypoint = current_waypoint->GetNextWaypoint().front())
@@ -168,16 +171,14 @@ void MotionPlanStage::Update(const unsigned long index)
         for (const ActorId &blocking_id: difference)
         {
           cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
-          if (cg::Math::DistanceSquared(blocking_actor_location, ego_location) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
-              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)
-              && DeviationDotProduct(junction_end_point->GetLocation(),
-                                     junction_end_point->GetForwardVector(),
-                                     blocking_actor_location) > 0.0f
-              && DeviationDotProduct(safe_point->GetLocation(),
-                                     safe_point->GetForwardVector(),
-                                     blocking_actor_location) < 0.0f)
+          if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
+              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED))
           {
             safe_after_junction = false;
+
+            debug_helper.DrawArrow(ego_location + cg::Location(0, 0, 2),
+                                   blocking_actor_location + cg::Location(0, 0, 2),
+                                   0.15f, 0.15f, {255u, 0u, 255u}, 0.05f);
           }
         }
       }
@@ -282,7 +283,10 @@ void MotionPlanStage::Update(const unsigned long index)
 void MotionPlanStage::RemoveActor(const ActorId actor_id)
 {
   pid_state_map.erase(actor_id);
-  teleportation_instance.erase(actor_id);
+  if (teleportation_instance.find(actor_id) != teleportation_instance.end())
+  {
+    teleportation_instance.erase(actor_id);
+  }
 }
 
 void MotionPlanStage::Reset()

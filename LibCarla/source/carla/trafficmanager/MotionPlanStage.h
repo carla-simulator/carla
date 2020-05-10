@@ -48,6 +48,7 @@ private:
   std::unordered_map<ActorId, StateEntry> pid_state_map;
   std::unordered_map<ActorId, TimeInstance> teleportation_instance;
   ControlFramePtr &output_array;
+  cc::DebugHelper &debug_helper;
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
@@ -62,7 +63,8 @@ public:
                   const LocalizationFramePtr &localization_frame,
                   const CollisionFramePtr &collision_frame,
                   const TLFramePtr &tl_frame,
-                  ControlFramePtr &output_array);
+                  ControlFramePtr &output_array,
+                  cc::DebugHelper &debug_helper);
 
   void Update(const unsigned long index);
 
