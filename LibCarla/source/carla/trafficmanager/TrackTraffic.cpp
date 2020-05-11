@@ -97,9 +97,9 @@ void TrackTraffic::DeleteActor(ActorId actor_id) {
         for (auto &grid_id : grid_ids) {
             if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
                 ActorIdSet &actor_ids = grid_to_actors.at(grid_id);
-                    actor_ids.erase(actor_id);
+                actor_ids.erase(actor_id);
+                }
             }
-        }
         actor_to_grids.erase(actor_id);
     }
 
