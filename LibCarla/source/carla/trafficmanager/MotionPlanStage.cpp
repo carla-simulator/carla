@@ -278,10 +278,7 @@ void MotionPlanStage::Update(const unsigned long index)
 void MotionPlanStage::RemoveActor(const ActorId actor_id)
 {
   pid_state_map.erase(actor_id);
-  if (teleportation_instance.find(actor_id) != teleportation_instance.end())
-  {
-    teleportation_instance.erase(actor_id);
-  }
+  teleportation_instance.erase(actor_id);
 }
 
 void MotionPlanStage::Reset()

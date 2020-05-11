@@ -60,10 +60,7 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
             if (grid_to_actors.find(grid_id) != grid_to_actors.end())
             {
                 ActorIdSet &actor_ids = grid_to_actors.at(grid_id);
-                if (actor_ids.find(actor_id) != actor_ids.end())
-                {
-                    actor_ids.erase(actor_id);
-                }
+                actor_ids.erase(actor_id);
             }
         }
 
