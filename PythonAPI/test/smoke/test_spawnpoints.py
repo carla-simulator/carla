@@ -5,7 +5,6 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import carla
-import random
 
 from . import SyncSmokeTest
 
@@ -18,10 +17,10 @@ class TestSpawnpoints(SyncSmokeTest):
         
         # get all available maps
         maps = self.client.get_available_maps()
-        for map in maps:
+        for m in maps:
             
             # load the map
-            self.client.load_world(map)
+            self.client.load_world(m)
             self.world = self.client.get_world()
             
             # get all spawn points
