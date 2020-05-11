@@ -264,14 +264,8 @@ void LocalizationStage::Update(const unsigned long index)
 
 void LocalizationStage::RemoveActor(ActorId actor_id)
 {
-  if (last_lane_change_location.find(actor_id) != last_lane_change_location.end())
-  {
     last_lane_change_location.erase(actor_id);
-  }
-  if (vehicles_at_junction.find(actor_id) != vehicles_at_junction.end())
-  {
     vehicles_at_junction.erase(actor_id);
-  }
 }
 
 void LocalizationStage::Reset()

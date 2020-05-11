@@ -337,9 +337,7 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor)
   else
   {
     unregistered_actors.erase(actor_id);
-    if (hero_actors.find(actor_id) != hero_actors.end()) {
-      hero_actors.erase(actor_id);
-    }
+    hero_actors.erase(actor_id);
   }
 
   track_traffic.DeleteActor(actor_id);

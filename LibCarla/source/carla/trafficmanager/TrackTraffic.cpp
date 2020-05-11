@@ -38,7 +38,7 @@ void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
         {
             grid_to_actors.insert({ggid, {actor_id}});
         }
-        
+
     }
 }
 
@@ -123,10 +123,7 @@ void TrackTraffic::DeleteActor(ActorId actor_id)
             if (grid_to_actors.find(grid_id) != grid_to_actors.end())
             {
                 ActorIdSet &actor_ids = grid_to_actors.at(grid_id);
-                if (actor_ids.find(actor_id) != actor_ids.end())
-                {
                     actor_ids.erase(actor_id);
-                }
             }
         }
         actor_to_grids.erase(actor_id);
@@ -193,10 +190,7 @@ void TrackTraffic::RemovePassingVehicle(uint64_t waypoint_id, ActorId actor_id)
     if (waypoint_overlap_tracker.find(waypoint_id) != waypoint_overlap_tracker.end())
     {
         ActorIdSet &actor_id_set = waypoint_overlap_tracker.at(waypoint_id);
-        if (actor_id_set.find(actor_id) != actor_id_set.end())
-        {
-            actor_id_set.erase(actor_id);
-        }
+        actor_id_set.erase(actor_id);
 
         if (actor_id_set.size() == 0)
         {
@@ -207,10 +201,7 @@ void TrackTraffic::RemovePassingVehicle(uint64_t waypoint_id, ActorId actor_id)
     if (waypoint_occupied.find(actor_id) != waypoint_occupied.end())
     {
         WaypointIdSet &waypoint_id_set = waypoint_occupied.at(actor_id);
-        if (waypoint_id_set.find(waypoint_id) != waypoint_id_set.end())
-        {
-            waypoint_id_set.erase(waypoint_id);
-        }
+        waypoint_id_set.erase(waypoint_id);
 
         if (waypoint_id_set.size() == 0)
         {

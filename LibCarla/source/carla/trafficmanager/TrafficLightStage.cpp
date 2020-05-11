@@ -24,7 +24,6 @@ void TrafficLightStage::Update(const unsigned long index)
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
   const Buffer &waypoint_buffer = buffer_map->at(ego_actor_id);
-  const SimpleWaypointPtr closest_waypoint = waypoint_buffer.front();
   const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
 
   const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
