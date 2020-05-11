@@ -269,6 +269,10 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_impulse", actor, vector);
   }
 
+  void Client::AddActorAngularImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_angular_impulse", actor, vector);
+  }
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
   }

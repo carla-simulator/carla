@@ -11,6 +11,7 @@
   * [__RGB camera__](#rgb-camera)
   * [__RSS sensor__](#rss-sensor)
   * [__Semantic segmentation camera__](#semantic-segmentation-camera)
+  * [__DVS camera__](#dvs-camera)
 
 
 ---
@@ -1409,4 +1410,94 @@ The following tags are currently available:
 </tbody>
 </table>
 
+<br>
+
+---
+## DVS camera
+
+*   __Blueprint:__ sensor.camera.dvs  
+*   __Output:__ [carla.DVSEventArray](python_api.md#carla.DVSEventArray) per step (unless `sensor_tick` says otherwise).  
+
+
+A Dynamic Vision Sensor (DVS) or Event camera is a sensor that works radically differently from a conventional camera. Instead of capturing
+intensity images at a fixed rate, event cameras measure changes of intensity asynchronously, in the form of a stream of events, which encode per-pixel
+brightness changes. Event cameras possess outstanding properties when compared to standard cameras. They have a very high dynamic range (140 dB
+versus 60 dB), no motion blur, and high temporal resolution (in the order of microseconds). Event cameras are thus sensors that can provide high-quality
+visual information even in challenging high-speed scenarios and high dynamic range environments, enabling new application domains for vision-based
+algorithms.
+
+The DVS camera outputs a stream of events. An event `e=(x,y,t,pol)` is triggered at a pixel `x`, `y` at a timestamp `t` when the change in
+logarithmic intensity `L` reaches a predefined constant threshold `C` (typically between 15% and 30%).
+
+``
+L(x,y,t) - L(x,y,t-\delta t) = pol C
+``
+
+`t-\delta t` is the time when the last event at that pixel was triggered and `pol` is the polarity of the event according to the sign of the
+brightness change. The polarity is positive `+1` when there is increment in brightness and negative `-1` when a decrement in brightness occurs. The
+working principles depicted in the following figure. The standard camera outputs frames at a fixed rate, thus sending redundant information
+when no motion is present in the scene. In contrast, event cameras are data-driven sensors that respond to brightness changes with microsecond
+latency. At the plot, a positive (resp. negative) event (blue dot, resp. red dot) is generated whenever the (signed) brightness change exceeds the
+contrast threshold `C` for one dimension `x` over time `t`. Observe how the event rate grows when the signal changes rapidly.
+
+![DVSCameraWorkingPrinciple](img/sensor_dvs_scheme.jpg)
+
+The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to
+emulate the high temporal resolution (order of microseconds) of a real event camera, the sensor requires to execute at a high frequency (much higher
+frequency than a conventional camera). Effectively, the number of events increases as faster a CARLA car drives. Therefore, the sensor frequency
+should increase accordingly with the dynamic of the scene. The user should find their balance between time accuracy and computational cost.
+
+The provided script `manual_control.py` uses the DVS camera in order to show how to configure the sensor, how to get the stream of events and how to depict such events in an image format, usually called event frame.
+
+![DVSCameraWorkingPrinciple](img/sensor_dvs.gif)
+
+DVS is a camera and therefore has all the attributes available in the RGB camera. Nevertheless, there are few attributes exclusive to the working principle of an Event camera.
+
+#### DVS camera attributes
+
+<table class ="defTable">
+<thead>
+<th>Blueprint attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</thead>
+<tbody>
+<td>
+<code>positive_threshold</code> </td>
+<td>float</td>
+<td>0.3</td>
+<td>Positive threshold C associated to a increment in brightness change (0-1).</td>
+<tr>
+<td><code>negative_threshold</code></td>
+<td>float</td>
+<td>0.3</td>
+<td>Negative threshold C associated to a decrement in brightness change (0-1).</td>
+<tr>
+<td><code>sigma_positive_threshold</code></td>
+<td>float</td>
+<td>0</td>
+<td>White noise standard deviation for positive events (0-1).</td>
+<tr>
+<td><code>sigma_negative_threshold</code></td>
+<td>float</td>
+<td>0</td>
+<td>White noise standard deviation for negative events (0-1).</td>
+<tr>
+<td><code>refractory_period_ns</code></td>
+<td>int</td>
+<td>0.0</td>
+<td> Refractory period (time during which a pixel cannot fire events just after it fired one), in nanoseconds. It limits the highest frequency of triggering events.</td>
+<tr>
+<td><code>use_log</code></td>
+<td>bool</td>
+<td>true</td>
+<td>Whether to work in the logarithmic intensity scale.</td>
+<tr>
+<td><code>log_eps</code></td>
+<td>float</td>
+<td>0.001</td>
+<td>Epsilon value used to convert images to log: <code>L = log(eps + I / 255.0)</code>.<br> Where <code>I</code> is the grayscale value of the RGB image: <br><code>I = 0.2989*R +  0.5870*G + 0.1140*B</code>.</td>
+</tbody>
+</table>
 <br>

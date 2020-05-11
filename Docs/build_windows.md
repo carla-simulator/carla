@@ -10,6 +10,7 @@
 * [__CARLA build__](#carla-build)  
 	* Clone repository  
 	* Get assets  
+	* Set the environment variable  
 	* make CARLA  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community. 
@@ -47,7 +48,7 @@ git clone https://github.com/carla-simulator/carla
 make launch
 make PythonAPI
 
-# Run an example script to test CARLA. 
+# Press play in the Editor to initialize the server, and run an example script to test CARLA. 
 cd PythonAPI/Examples && python3 spawn_npc.py
 ```
 </details>
@@ -123,6 +124,15 @@ Now the latest content for the project, known as `master` branch in the reposito
 Only the assets package is yet to be downloaded. `\Util\ContentVersions.txt` contains the links to the assets for CARLA releases. These must be extracted in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
 
 Download the __latest__ assets to work with the current version of CARLA.
+
+### Set the environment variable
+
+This is necessary for CARLA to find the Unreal Engine installation folder. By doing so, users can choose which specific version of Unreal Engine is to be used. If no environment variable is specified, the CARLA will look up in the directories and use the last version in search order.  
+
+__1.   Open the Windows Control Panel__ and go to `Advanced System Settings`.  
+__2.   On the `Advanced` panel__ open `Environment Variables...`.  
+__3.   Click `New...`__ to create the variable.  
+__4.   Name the variable as `UE4_ROOT`__ and choose the path to the installation folder of the desire UE4 installation.  
 
 ### make CARLA
 

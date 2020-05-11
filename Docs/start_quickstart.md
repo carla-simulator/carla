@@ -70,7 +70,7 @@ The requirements are simpler than those for the build installation.
 
 * __Server side.__ A 4GB minimum GPU will be needed to run a highly realistic environment. A dedicated GPU is highly advised for machine learning.  
 * __Client side.__ [Python](https://www.python.org/downloads/) is necessary to access the API via command line. Also, a good internet connection and two TCP ports (2000 and 2001 by default).  
-* __System requirements.__ Any 64-bits OS should run CARLA.  
+* __System requirements.__ Any 64-bits OS should run CARLA. However, since release 0.9.9, __CARLA cannot run in 16.04 Linux systems with default compilers__. These should be upgraded to work with CARLA.  
 * __Other requirements.__  Two Python modules: [Pygame](https://pypi.org/project/pygame/) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for great calculus.  
 
 To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), run the following commands. 
