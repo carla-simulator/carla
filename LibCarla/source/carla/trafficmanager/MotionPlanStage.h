@@ -17,10 +17,8 @@
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace cc = carla::client;
 
@@ -30,8 +28,7 @@ using namespace constants::SpeedThreshold;
 
 using constants::HybridMode::HYBRID_MODE_DT;
 
-class MotionPlanStage: Stage
-{
+class MotionPlanStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;

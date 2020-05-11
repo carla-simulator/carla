@@ -3,16 +3,13 @@
 
 #include "carla/rpc/ActorId.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using ActorId = carla::rpc::ActorId;
 
 /// Stage type interface.
-class Stage
-{
+class Stage {
 
 public:
     Stage() {};

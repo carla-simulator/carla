@@ -35,10 +35,8 @@
 #include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace chr = std::chrono;
 
@@ -50,8 +48,7 @@ using LocalMapPtr = std::shared_ptr<InMemoryMap>;
 
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.
-class TrafficManagerLocal : public TrafficManagerBase
-{
+class TrafficManagerLocal : public TrafficManagerBase {
 
 private:
   /// PID controller parameters.

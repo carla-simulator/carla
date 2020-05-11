@@ -18,24 +18,20 @@
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/AtomicMap.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace cc = carla::client;
 namespace cg = carla::geom;
 using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
 
-struct ChangeLaneInfo
-{
+struct ChangeLaneInfo {
   bool change_lane = false;
   bool direction = false;
 };
 
-class Parameters
-{
+class Parameters {
 
 private:
   /// Target velocity map for individual vehicles.

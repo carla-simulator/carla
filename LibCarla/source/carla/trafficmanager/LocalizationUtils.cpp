@@ -6,17 +6,14 @@
 
 #include "carla/trafficmanager/LocalizationUtils.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using constants::Map::MAP_RESOLUTION;
 
 float DeviationCrossProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
-                            const cg::Location &target_location)
-{
+                            const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
   float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   next_vector = next_vector.MakeSafeUnitVector(vector_magnitude_epsilon);
@@ -26,8 +23,7 @@ float DeviationCrossProduct(const cg::Location &reference_location,
 
 float DeviationDotProduct(const cg::Location &reference_location,
                           const cg::Vector3D &heading_vector,
-                          const cg::Location &target_location)
-{
+                          const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
   float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   next_vector.z = 0.0f;
@@ -39,8 +35,7 @@ float DeviationDotProduct(const cg::Location &reference_location,
 }
 
 void PushWaypoint(ActorId actor_id, TrackTraffic &track_traffic,
-                  Buffer &buffer, SimpleWaypointPtr &waypoint)
-{
+                  Buffer &buffer, SimpleWaypointPtr &waypoint) {
 
   const uint64_t waypoint_id = waypoint->GetId();
   buffer.push_back(waypoint);
@@ -48,24 +43,19 @@ void PushWaypoint(ActorId actor_id, TrackTraffic &track_traffic,
 }
 
 void PopWaypoint(ActorId actor_id, TrackTraffic &track_traffic,
-                 Buffer &buffer, bool front_or_back)
-{
+                 Buffer &buffer, bool front_or_back) {
 
   SimpleWaypointPtr removed_waypoint = front_or_back ? buffer.front() : buffer.back();
   const uint64_t removed_waypoint_id = removed_waypoint->GetId();
-  if (front_or_back)
-  {
+  if (front_or_back) {
     buffer.pop_front();
-  }
-  else
-  {
+  } else {
     buffer.pop_back();
   }
   track_traffic.RemovePassingVehicle(removed_waypoint_id, actor_id);
 }
 
-TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &target_point_distance)
-{
+TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &target_point_distance) {
 
   SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
   const SimpleWaypointPtr &buffer_front = waypoint_buffer.front();
@@ -73,38 +63,29 @@ TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &targe
   uint64_t index = 0;
   /// Condition to determine forward or backward scanning of  WayPoint Buffer.
 
-  if (startPosn < waypoint_buffer.size())
-  {
+  if (startPosn < waypoint_buffer.size()) {
     bool mScanForward = false;
     double target_point_dist_power = std::pow(target_point_distance, 2);
-    if (buffer_front->DistanceSquared(target_waypoint) < target_point_dist_power)
-    {
+    if (buffer_front->DistanceSquared(target_waypoint) < target_point_dist_power) {
       mScanForward = true;
     }
 
-    if (mScanForward)
-    {
+    if (mScanForward) {
       for (uint64_t i = startPosn;
            (i < waypoint_buffer.size()) && (buffer_front->DistanceSquared(target_waypoint) < target_point_dist_power);
-           ++i)
-      {
+           ++i) {
         target_waypoint = waypoint_buffer.at(i);
         index = i;
       }
-    }
-    else
-    {
+    } else {
       for (uint64_t i = startPosn;
            (buffer_front->DistanceSquared(target_waypoint) > target_point_dist_power);
-           --i)
-      {
+           --i) {
         target_waypoint = waypoint_buffer.at(i);
         index = i;
       }
     }
-  }
-  else
-  {
+  } else {
     target_waypoint = waypoint_buffer.back();
     index = waypoint_buffer.size() - 1;
   }

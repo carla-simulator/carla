@@ -12,10 +12,8 @@
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace cc = carla::client;
 namespace cg = carla::geom;
@@ -28,8 +26,7 @@ using Buffer = std::deque<SimpleWaypointPtr>;
 using GeoGridId = carla::road::JuncId;
 
 // This class is used to track the waypoint occupancy of all the actors.
-class TrackTraffic
-{
+class TrackTraffic {
 
 private:
     /// Structure to keep track of overlapping waypoints between vehicles.

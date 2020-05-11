@@ -17,10 +17,8 @@
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using namespace constants::PathBufferUpdate;
 using namespace constants::LaneChange;
@@ -35,8 +33,7 @@ using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
 /// of the vehicle for it to follow.
 /// The class is also responsible for managing lane change decisions and
 /// modify the waypoint trajectory appropriately.
-class LocalizationStage : Stage
-{
+class LocalizationStage : Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   BufferMapPtr &buffer_map;

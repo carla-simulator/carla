@@ -3,10 +3,8 @@
 
 #include "carla/trafficmanager/PIDController.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -36,8 +34,7 @@ MotionPlanStage::MotionPlanStage(
     tl_frame(tl_frame),
     output_array(output_array) {}
 
-void MotionPlanStage::Update(const unsigned long index)
-{
+void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
   const cg::Location ego_location = simulation_state.GetLocation(actor_id);
   const cg::Vector3D ego_velocity = simulation_state.GetVelocity(actor_id);
@@ -56,15 +53,13 @@ void MotionPlanStage::Update(const unsigned long index)
   float dot_product = DeviationDotProduct(ego_location, ego_heading, target_location);
   float cross_product = DeviationCrossProduct(ego_location, ego_heading, target_location);
   dot_product = 1.0f - dot_product;
-  if (cross_product < 0.0f)
-  {
+  if (cross_product < 0.0f) {
     dot_product *= -1.0f;
   }
   const float current_deviation = dot_product;
 
   // If previous state for vehicle not found, initialize state entry.
-  if (pid_state_map.find(actor_id) == pid_state_map.end())
-  {
+  if (pid_state_map.find(actor_id) == pid_state_map.end()) {
     const auto initial_state = StateEntry{0.0f, 0.0f, chr::system_clock::now(), 0.0f, 0.0f};
     pid_state_map.insert({actor_id, initial_state});
   }
@@ -76,13 +71,10 @@ void MotionPlanStage::Update(const unsigned long index)
   // Select PID parameters.
   std::vector<float> longitudinal_parameters;
   std::vector<float> lateral_parameters;
-  if (ego_speed > HIGHWAY_SPEED)
-  {
+  if (ego_speed > HIGHWAY_SPEED) {
     longitudinal_parameters = highway_longitudinal_parameters;
     lateral_parameters = highway_lateral_parameters;
-  }
-  else
-  {
+  } else {
     longitudinal_parameters = urban_longitudinal_parameters;
     lateral_parameters = urban_lateral_parameters;
   }
@@ -93,8 +85,7 @@ void MotionPlanStage::Update(const unsigned long index)
   float dynamic_target_velocity = max_target_velocity;
   //////////////////////// Collision related data handling ///////////////////////////
   bool collision_emergency_stop = false;
-  if (collision_hazard.hazard)
-  {
+  if (collision_hazard.hazard) {
     const ActorId other_actor_id = collision_hazard.hazard_actor_id;
     const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
     const float ego_relative_speed = (ego_velocity - other_velocity).Length();
@@ -103,38 +94,31 @@ void MotionPlanStage::Update(const unsigned long index)
     const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
 
     if (localization.is_at_junction_entrance
-        && other_velocity.SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED))
-    {
+        && other_velocity.SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
       collision_emergency_stop = true;
     }
     // Consider collision avoidance decisions only if there is positive relative velocity
     // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-    else if (ego_relative_speed > EPSILON_RELATIVE_SPEED)
-    {
+    else if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
       float follow_lead_distance = ego_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
-      if (available_distance_margin > follow_lead_distance)
-      {
+      if (available_distance_margin > follow_lead_distance) {
         // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
         // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
         dynamic_target_velocity = other_speed_along_heading + RELATIVE_APPROACH_SPEED;
       }
       // If vehicle is approaching a lead vehicle and the lead vehicle is further
       // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN)
-      {
+      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
         // Then follow the lead vehicle by acquiring it's speed along current heading.
         dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
-      }
-      else
-      {
+      } else {
         // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
         collision_emergency_stop = true;
       }
     }
-    if (available_distance_margin < CRITICAL_BRAKING_MARGIN)
-    {
+    if (available_distance_margin < CRITICAL_BRAKING_MARGIN) {
       collision_emergency_stop = true;
     }
   }
@@ -149,8 +133,7 @@ void MotionPlanStage::Update(const unsigned long index)
   SimpleWaypointPtr safe_point = localization.safe_point;
   if (!tl_hazard && localization.is_at_junction_entrance
       && junction_end_point != nullptr && safe_point != nullptr
-      && junction_end_point->DistanceSquared(safe_point) > SQUARE(MIN_SAFE_INTERVAL_LENGTH))
-  {
+      && junction_end_point->DistanceSquared(safe_point) > SQUARE(MIN_SAFE_INTERVAL_LENGTH)) {
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
     float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
     cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
@@ -158,21 +141,17 @@ void MotionPlanStage::Update(const unsigned long index)
     // by finding their occupied waypoints.
     for (SimpleWaypointPtr current_waypoint = junction_end_point;
          current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
-         current_waypoint = current_waypoint->GetNextWaypoint().front())
-    {
+         current_waypoint = current_waypoint->GetNextWaypoint().front()) {
       ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
       ActorIdSet difference;
       std::set_difference(current_set.begin(), current_set.end(),
                           initial_set.begin(), initial_set.end(),
                           std::inserter(difference, difference.begin()));
-      if (difference.size() > 0)
-      {
-        for (const ActorId &blocking_id: difference)
-        {
+      if (difference.size() > 0) {
+        for (const ActorId &blocking_id: difference) {
           cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
           if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
-              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED))
-          {
+              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
             safe_after_junction = false;
           }
         }
@@ -189,8 +168,7 @@ void MotionPlanStage::Update(const unsigned long index)
   // If physics is enabled for the vehicle, use PID controller.
   const auto current_time = chr::system_clock::now();
   StateEntry current_state;
-  if (ego_physics_enabled)
-  {
+  if (ego_physics_enabled) {
 
     // State update for vehicle.
     current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
@@ -200,8 +178,7 @@ void MotionPlanStage::Update(const unsigned long index)
     actuation_signal = PID::RunStep(current_state, previous_state,
                                     longitudinal_parameters, lateral_parameters);
 
-    if (emergency_stop)
-    {
+    if (emergency_stop) {
 
       current_state.deviation_integral = 0.0f;
       current_state.velocity_integral = 0.0f;
@@ -210,16 +187,14 @@ void MotionPlanStage::Update(const unsigned long index)
     }
   }
   // For physics-less vehicles, determine position and orientation for teleportation.
-  else
-  {
+  else {
     // Flushing controller state for vehicle.
     current_state = {0.0f, 0.0f,
                      chr::system_clock::now(),
                      0.0f, 0.0f};
 
     // Add entry to teleportation duration clock table if not present.
-    if (teleportation_instance.find(actor_id) == teleportation_instance.end())
-    {
+    if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
       teleportation_instance.insert({actor_id, chr::system_clock::now()});
     }
 
@@ -227,8 +202,7 @@ void MotionPlanStage::Update(const unsigned long index)
     chr::duration<float> elapsed_time = current_time - teleportation_instance.at(actor_id);
 
     // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT))
-    {
+    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT)) {
 
       // Target displacement magnitude to achieve target velocity.
       const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
@@ -237,8 +211,7 @@ void MotionPlanStage::Update(const unsigned long index)
       // Construct target transform to accurately achieve desired velocity.
       float missing_displacement = 0.0f;
       const float base_displacement = teleport_target_waypoint->Distance(ego_location);
-      if (base_displacement < target_displacement)
-      {
+      if (base_displacement < target_displacement) {
         missing_displacement = target_displacement - base_displacement;
       }
       cg::Transform target_base_transform = teleport_target_waypoint->GetTransform();
@@ -249,8 +222,7 @@ void MotionPlanStage::Update(const unsigned long index)
     }
     // In case of an emergency stop, stay in the same location.
     // Also, teleport only once every dt in asynchronous mode.
-    else
-    {
+    else {
       teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
     }
   }
@@ -260,29 +232,24 @@ void MotionPlanStage::Update(const unsigned long index)
   state = current_state;
 
   // Constructing the actuation signal.
-  if (ego_physics_enabled)
-  {
+  if (ego_physics_enabled) {
     carla::rpc::VehicleControl vehicle_control;
     vehicle_control.throttle = actuation_signal.throttle;
     vehicle_control.brake = actuation_signal.brake;
     vehicle_control.steer = actuation_signal.steer;
 
     output_array->at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
-  }
-  else
-  {
+  } else {
     output_array->at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
 }
 
-void MotionPlanStage::RemoveActor(const ActorId actor_id)
-{
+void MotionPlanStage::RemoveActor(const ActorId actor_id) {
   pid_state_map.erase(actor_id);
   teleportation_instance.erase(actor_id);
 }
 
-void MotionPlanStage::Reset()
-{
+void MotionPlanStage::Reset() {
   pid_state_map.clear();
   teleportation_instance.clear();
 }

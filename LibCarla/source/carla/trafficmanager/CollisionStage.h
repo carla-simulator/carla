@@ -20,13 +20,10 @@
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
-struct GeometryComparison
-{
+struct GeometryComparison {
   double reference_vehicle_to_other_geodesic;
   double other_vehicle_to_reference_geodesic;
   double inter_geodesic_distance;
@@ -50,8 +47,7 @@ using namespace constants::Collision;
 using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 /// This class has functionality to detect potential collision with a nearby actor.
-class CollisionStage : Stage
-{
+class CollisionStage : Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;

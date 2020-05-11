@@ -30,10 +30,8 @@
 #include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using namespace constants::HybridMode;
 using namespace constants::VehicleRemoval;

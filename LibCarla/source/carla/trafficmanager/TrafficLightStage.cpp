@@ -1,10 +1,8 @@
 
 #include "carla/trafficmanager/TrafficLightStage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 TrafficLightStage::TrafficLightStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -18,8 +16,7 @@ TrafficLightStage::TrafficLightStage(
     parameters(parameters),
     output_array(output_array) {}
 
-void TrafficLightStage::Update(const unsigned long index)
-{
+void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
@@ -106,14 +103,12 @@ void TrafficLightStage::Update(const unsigned long index)
   output_array->at(index) = traffic_light_hazard;
 }
 
-void TrafficLightStage::RemoveActor(const ActorId actor_id)
-{
+void TrafficLightStage::RemoveActor(const ActorId actor_id) {
   vehicle_last_ticket.erase(actor_id);
   vehicle_last_junction.erase(actor_id);
 }
 
-void TrafficLightStage::Reset()
-{
+void TrafficLightStage::Reset() {
   vehicle_last_ticket.clear();
   vehicle_last_junction.clear();
   junction_last_ticket.clear();

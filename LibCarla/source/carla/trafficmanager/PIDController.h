@@ -16,10 +16,8 @@
 
 #define CLAMP(__v, __hi, __lo) ((__v) > (__hi) ? (__hi) : ((__v) < (__lo) ? (__lo) : (__v)))
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace chr = std::chrono;
 
@@ -27,8 +25,7 @@ using namespace constants::PID;
 
 using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 
-namespace PID
-{
+namespace PID {
 
 /// This function calculates the present state of the vehicle including
 /// the accumulated integral component of the PID system.
@@ -36,8 +33,7 @@ StateEntry StateUpdate(StateEntry previous_state,
                        float current_velocity,
                        float target_velocity,
                        float angular_deviation,
-                       TimeInstance current_time)
-{
+                       TimeInstance current_time) {
   StateEntry current_state = {
       angular_deviation,
       (current_velocity - target_velocity) / target_velocity,
@@ -62,8 +58,7 @@ StateEntry StateUpdate(StateEntry previous_state,
 ActuationSignal RunStep(StateEntry present_state,
                         StateEntry previous_state,
                         const std::vector<float> &longitudinal_parameters,
-                        const std::vector<float> &lateral_parameters)
-{
+                        const std::vector<float> &lateral_parameters) {
 
   // Longitudinal PID calculation.
   const float expr_v =
@@ -74,13 +69,10 @@ ActuationSignal RunStep(StateEntry present_state,
   float throttle;
   float brake;
 
-  if (expr_v < 0.0f)
-  {
+  if (expr_v < 0.0f) {
     throttle = std::min(std::abs(expr_v), MAX_THROTTLE);
     brake = 0.0f;
-  }
-  else
-  {
+  } else {
     throttle = 0.0f;
     brake = std::min(expr_v, MAX_BRAKE);
   }
@@ -95,7 +87,7 @@ ActuationSignal RunStep(StateEntry present_state,
 
   return ActuationSignal{throttle, brake, steer};
 }
-} // namespace PID
 
+} // namespace PID
 } // namespace traffic_manager
 } // namespace carla

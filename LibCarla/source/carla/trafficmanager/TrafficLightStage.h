@@ -8,18 +8,15 @@
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
 using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 /// This class has functionality for responding to traffic lights
 /// and managing entry into non-signalized junctions.
-class TrafficLightStage: Stage
-{
+class TrafficLightStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;

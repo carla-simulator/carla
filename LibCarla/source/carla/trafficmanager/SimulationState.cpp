@@ -1,10 +1,8 @@
 
 #include "carla/trafficmanager/SimulationState.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 SimulationState::SimulationState() {}
 

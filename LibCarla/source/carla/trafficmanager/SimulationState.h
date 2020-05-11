@@ -7,18 +7,15 @@
 #include "carla/rpc/ActorId.h"
 #include "carla/trafficmanager/DataStructures.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 namespace cg = carla::geom;
 
 using ActorId = carla::rpc::ActorId;
 
 /// This class holds the state of all the vehicles in the simlation.
-class SimulationState
-{
+class SimulationState {
 
 private:
   // Structure to hold ids of all actors in the simulation.

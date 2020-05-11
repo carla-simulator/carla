@@ -1,10 +1,8 @@
 
 #include "carla/trafficmanager/ALSM.h"
 
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
@@ -30,8 +28,7 @@ ALSM::ALSM(
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage) {}
 
-void ALSM::Update()
-{
+void ALSM::Update() {
   bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
 
   std::set<ActorId> world_vehicle_ids;
@@ -44,36 +41,30 @@ void ALSM::Update()
   ActorList world_pedestrians = world_actors->Filter("walker.*");
 
   // Scanning for new unregistered vehicles.
-  for (auto iter = world_vehicles->begin(); iter != world_vehicles->end(); ++iter)
-  {
+  for (auto iter = world_vehicles->begin(); iter != world_vehicles->end(); ++iter) {
     // Building set containing current world vehicle ids.
     const auto unregistered_id = (*iter)->GetId();
     world_vehicle_ids.insert(unregistered_id);
     if (!registered_vehicles.Contains(unregistered_id)
-        && unregistered_actors.find(unregistered_id) == unregistered_actors.end())
-    {
+        && unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
       unregistered_actors.insert({unregistered_id, *iter});
     }
   }
 
   // Scanning for new pedestrians.
-  for (auto iter = world_pedestrians->begin(); iter != world_pedestrians->end(); ++iter)
-  {
+  for (auto iter = world_pedestrians->begin(); iter != world_pedestrians->end(); ++iter) {
     // Building set containing current world pedestrian ids.
     const auto unregistered_id = (*iter)->GetId();
     world_pedestrian_ids.insert(unregistered_id);
-    if (unregistered_actors.find(unregistered_id) == unregistered_actors.end())
-    {
+    if (unregistered_actors.find(unregistered_id) == unregistered_actors.end()) {
       unregistered_actors.insert({unregistered_id, *iter});
     }
   }
 
   // Identify hero vehicle if currently not present
   // and system is in hybrid physics mode.
-  if (hybrid_physics_mode)
-  {
-    for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.end(); ++iter)
-    {
+  if (hybrid_physics_mode) {
+    for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.end(); ++iter) {
       ActorPtr actor_ptr = iter->second;
       if (actor_ptr->GetTypeId().front() == 'v') {
         ActorId hero_actor_id = actor_ptr->GetId();
@@ -104,10 +95,8 @@ void ALSM::Update()
   bool vehicles_unregistered = false;
   // Search for invalid/destroyed registered vehicles.
   std::vector<ActorId> vehicle_id_list = registered_vehicles.GetIDList();
-  for (const auto &deletion_id : vehicle_id_list)
-  {
-    if (world_vehicle_ids.find(deletion_id) == world_vehicle_ids.end())
-    {
+  for (const auto &deletion_id : vehicle_id_list) {
+    if (world_vehicle_ids.find(deletion_id) == world_vehicle_ids.end()) {
       RemoveActor(deletion_id, true);
       if (!vehicles_unregistered) {
         vehicles_unregistered = true;
@@ -116,17 +105,14 @@ void ALSM::Update()
   }
 
   // Regularly update unregistered actor grid position and identify any invalid actors.
-  for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.cend(); ++iter)
-  {
+  for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.cend(); ++iter) {
     ActorId unregistered_actor_id = iter->first;
     if (registered_vehicles.Contains(unregistered_actor_id)
         || (world_vehicle_ids.find(unregistered_actor_id) == world_vehicle_ids.end()
-            && world_pedestrian_ids.find(unregistered_actor_id) == world_pedestrian_ids.end()))
-    {
+            && world_pedestrian_ids.find(unregistered_actor_id) == world_pedestrian_ids.end())) {
       unregistered_list_to_be_deleted.push_back(iter->first);
     }
-    else
-    {
+    else {
       // Updating data structures.
       cg::Location location = iter->second->GetLocation();
       const auto type = iter->second->GetTypeId();
@@ -152,13 +138,11 @@ void ALSM::Update()
       }
 
       track_traffic.UpdateUnregisteredGridPosition(iter->first, nearest_waypoints);
-
     }
   }
 
   // Removing invalid/destroyed unregistered actors.
-  for (auto deletion_id : unregistered_list_to_be_deleted)
-  {
+  for (auto deletion_id : unregistered_list_to_be_deleted) {
     RemoveActor(deletion_id, false);
   }
 
@@ -166,8 +150,7 @@ void ALSM::Update()
   float dt = HYBRID_MODE_DT;
   std::pair<ActorId, double> max_idle_time = std::make_pair(0u, current_timestamp.elapsed_seconds);
   std::vector<ActorPtr> vehicle_list = registered_vehicles.GetList();
-  for (const Actor &vehicle : vehicle_list)
-  {
+  for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
     cg::Transform vehicle_transform = vehicle->GetTransform();
     cg::Location vehicle_location = vehicle_transform.location;
@@ -197,8 +180,7 @@ void ALSM::Update()
     vehicle->SetSimulatePhysics(enable_physics);
 
     // If physics is disabled, calculate velocity based on change in position.
-    if (!enable_physics)
-    {
+    if (!enable_physics) {
       cg::Location previous_location;
       if (simulation_state.ContainsActor(actor_id)) {
         previous_location = simulation_state.GetLocation(actor_id);
@@ -218,13 +200,11 @@ void ALSM::Update()
     TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
 
     // Update simulation state.
-    if (simulation_state.ContainsActor(actor_id))
-    {
+    if (simulation_state.ContainsActor(actor_id)) {
       simulation_state.UpdateKinematicState(actor_id, kinematic_state);
       simulation_state.UpdateTrafficLightState(actor_id, tl_state);
     }
-    else
-    {
+    else {
       cg::Vector3D dimensions = vehicle_ptr->GetBoundingBox().extent;
       StaticAttributes attributes{ActorType::Vehicle, dimensions.x, dimensions.y, dimensions.z};
 
@@ -244,8 +224,7 @@ void ALSM::Update()
   }
 
   // Update kinematic state and static attributes for unregistered actors.
-  for (auto &unregistered_actor: unregistered_actors)
-  {
+  for (auto &unregistered_actor: unregistered_actors) {
     const ActorId actor_id = unregistered_actor.first;
     const ActorPtr actor_ptr = unregistered_actor.second;
 
@@ -260,8 +239,7 @@ void ALSM::Update()
     const std::string type_id = actor_ptr->GetTypeId();
     ActorType actor_type = ActorType::Any;
     cg::Vector3D dimensions;
-    if (type_id.front() == 'v')
-    {
+    if (type_id.front() == 'v') {
       auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor_ptr);
       kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
 
@@ -278,8 +256,7 @@ void ALSM::Update()
         simulation_state.UpdateTrafficLightState(actor_id, tl_state);
       }
     }
-    else if (type_id.front() == 'w')
-    {
+    else if (type_id.front() == 'w') {
       auto walker_ptr = boost::static_pointer_cast<cc::Walker>(actor_ptr);
 
       if (!simulation_state.ContainsActor(actor_id)) {
@@ -295,8 +272,7 @@ void ALSM::Update()
   }
 }
 
-void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id)
-{
+void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id) {
   if (idle_time.find(actor_id) != idle_time.end()) {
     TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
     if (simulation_state.GetVelocity(actor_id).Length() > STOPPED_VELOCITY_THRESHOLD
@@ -311,8 +287,7 @@ void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const Actor
   }
 }
 
-bool ALSM::IsVehicleStuck(const ActorId& actor_id)
-{
+bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
   if (idle_time.find(actor_id) != idle_time.end()) {
     auto delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor_id);
     if (delta_idle_time >= BLOCKED_TIME_THRESHOLD) {
@@ -322,10 +297,8 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id)
   return false;
 }
 
-void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor)
-{
-  if (registered_actor)
-  {
+void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
+  if (registered_actor) {
     registered_vehicles.Remove({actor_id});
     buffer_map_ptr->erase(actor_id);
     idle_time.erase(actor_id);
@@ -334,8 +307,7 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor)
     traffic_light_stage.RemoveActor(actor_id);
     motion_plan_stage.RemoveActor(actor_id);
   }
-  else
-  {
+  else {
     unregistered_actors.erase(actor_id);
     hero_actors.erase(actor_id);
   }
@@ -344,8 +316,7 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor)
   simulation_state.RemoveActor(actor_id);
 }
 
-void ALSM::Reset()
-{
+void ALSM::Reset() {
   unregistered_actors.clear();
   idle_time.clear();
   hero_actors.clear();
