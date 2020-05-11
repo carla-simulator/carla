@@ -130,16 +130,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
 
 const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
 {
-  if (!Map.has_value())
-  {
-    FString MapName = GetWorld()->GetName();
-    std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
-    Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-    if (!Map.has_value()) {
-      UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-    }
-  }
-  return Map;
+  return UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 }
 
 void ATrafficLightManager::GenerateSignalsAndTrafficLights()
