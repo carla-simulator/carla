@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "OpenDriveGenerator.h"
 #include "Traffic/TrafficLightManager.h"
 #include "Util/ProceduralCustomMesh.h"
@@ -36,12 +37,12 @@ bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
     return false;
   }
 
-  CarlaMap = OpenDriveLoader::Load(carla::rpc::FromFString(OpenDrive));
-  if (!CarlaMap.has_value())
-  {
-    UE_LOG(LogCarla, Error, TEXT("The OpenDrive is invalid or not supported"));
-    return false;
-  }
+  // CarlaMap = OpenDriveLoader::Load(carla::rpc::FromFString(OpenDrive));
+  // if (!CarlaMap.has_value())
+  // {
+  //   UE_LOG(LogCarla, Error, TEXT("The OpenDrive is invalid or not supported"));
+  //   return false;
+  // }
 
   OpenDriveData = OpenDrive;
   return true;
@@ -54,7 +55,7 @@ const FString &AOpenDriveGenerator::GetOpenDrive() const
 
 bool AOpenDriveGenerator::IsOpenDriveValid() const
 {
-  return CarlaMap.has_value();
+  return UCarlaStatics::GetGameMode(GetWorld())->GetMap().has_value();
 }
 
 void AOpenDriveGenerator::GenerateRoadMesh()
@@ -76,6 +77,7 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     carla::log_warning("Missing game instance");
   }
 
+  auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
   const auto Meshes = CarlaMap->GenerateChunkedMesh(
       Parameters.vertex_distance,
       Parameters.max_road_length,
@@ -147,7 +149,7 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
     UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
     return;
   }
-
+  auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
   const auto Waypoints = CarlaMap->GenerateWaypointsOnRoadEntries();
   for (const auto &Wp : Waypoints)
   {
