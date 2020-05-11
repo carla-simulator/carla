@@ -145,7 +145,6 @@ void MotionPlanStage::Update(const unsigned long index)
 
   // Don't enter junction if there isn't enough free space after the junction.
   bool safe_after_junction = true;
-
   SimpleWaypointPtr junction_end_point = localization.junction_end_point;
   SimpleWaypointPtr safe_point = localization.safe_point;
   if (!tl_hazard && localization.is_at_junction_entrance
@@ -155,6 +154,8 @@ void MotionPlanStage::Update(const unsigned long index)
     ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
     float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
     cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
+    // Scan through the safe interval and find if any vehicles are present in it
+    // by finding their occupied waypoints.
     for (SimpleWaypointPtr current_waypoint = junction_end_point;
          current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
          current_waypoint = current_waypoint->GetNextWaypoint().front())
@@ -231,7 +232,7 @@ void MotionPlanStage::Update(const unsigned long index)
 
       // Target displacement magnitude to achieve target velocity.
       const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
-      const SimpleWaypointPtr teleport_target_waypoint = GetTargetWaypoint(waypoint_buffer, target_displacement).first; 
+      const SimpleWaypointPtr teleport_target_waypoint = GetTargetWaypoint(waypoint_buffer, target_displacement).first;
 
       // Construct target transform to accurately achieve desired velocity.
       float missing_displacement = 0.0f;

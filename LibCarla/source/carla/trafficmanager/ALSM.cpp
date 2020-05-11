@@ -115,7 +115,7 @@ void ALSM::Update()
     }
   }
 
-  // Regularly update unregistered actor states and clean up any invalid actors.
+  // Regularly update unregistered actor grid position and identify any invalid actors.
   for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.cend(); ++iter)
   {
     ActorId unregistered_actor_id = iter->first;
@@ -196,6 +196,7 @@ void ALSM::Update()
     bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
     vehicle->SetSimulatePhysics(enable_physics);
 
+    // If physics is disabled, calculate velocity based on change in position.
     if (!enable_physics)
     {
       cg::Location previous_location;
@@ -216,6 +217,7 @@ void ALSM::Update()
     // Updated traffic light state object.
     TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
 
+    // Update simulation state.
     if (simulation_state.ContainsActor(actor_id))
     {
       simulation_state.UpdateKinematicState(actor_id, kinematic_state);
@@ -233,6 +235,7 @@ void ALSM::Update()
     UpdateIdleTime(max_idle_time, actor_id);
   }
 
+  // Destroy registered vehicle if stuck at a location for too long.
   if (IsVehicleStuck(max_idle_time.first)
       && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
     registered_vehicles.Destroy(max_idle_time.first);

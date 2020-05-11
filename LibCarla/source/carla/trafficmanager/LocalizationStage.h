@@ -1,9 +1,4 @@
 
-/// This file has functionality to maintain a horizon of waypoints ahead
-/// of the vehicle for it to follow.
-/// The class is also responsible for managing lane change decisions and
-/// modify the waypoint trajectory appropriately.
-
 #pragma once
 
 #include <deque>
@@ -36,6 +31,10 @@ namespace cc = carla::client;
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
 using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
 
+/// This class has functionality to maintain a horizon of waypoints ahead
+/// of the vehicle for it to follow.
+/// The class is also responsible for managing lane change decisions and
+/// modify the waypoint trajectory appropriately.
 class LocalizationStage : Stage
 {
 private:

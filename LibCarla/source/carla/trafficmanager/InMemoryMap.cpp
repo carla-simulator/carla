@@ -439,5 +439,9 @@ namespace MapConstants {
     return grid_center;
   }
 
+  std::string InMemoryMap::GetMapName() {
+    return _world_map->GetName();
+  }
+
 } // namespace traffic_manager
 } // namespace carla

@@ -91,6 +91,8 @@ namespace crd = carla::road;
     void MakeGeodesiGridCenters();
     cg::Location GetGeodesicGridCenter(GeoGridId ggid);
 
+    std::string GetMapName();
+
   private:
 
     /// Method to generate the grid ids for given co-ordinates.

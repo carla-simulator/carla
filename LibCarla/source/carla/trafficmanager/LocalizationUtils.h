@@ -42,9 +42,11 @@ namespace traffic_manager {
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location);
 
+  // Function to add a waypoint to a path buffer and update waypoint tracking.
   void PushWaypoint(ActorId actor_id, TrackTraffic& track_traffic,
                     Buffer& buffer, SimpleWaypointPtr& waypoint);
 
+  // Function to remove a waypoint from a path buffer and update waypoint tracking.
   void PopWaypoint(ActorId actor_id, TrackTraffic& track_traffic,
                    Buffer& buffer, bool front_or_back=true);
 

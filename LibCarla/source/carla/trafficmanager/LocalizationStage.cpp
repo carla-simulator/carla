@@ -74,8 +74,16 @@ void LocalizationStage::Update(const unsigned long index)
 
     if (!waypoint_buffer.empty())
     {
+      // Determine if the vehicle is at the entrance of a junction.
       SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
       is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+      if (is_at_junction_entrance
+          // Exception for roundabout in Town03.
+          && local_map->GetMapName() == "Town03"
+          && vehicle_location.SquaredLength() < SQUARE(30))
+      {
+        is_at_junction_entrance = false;
+      }
     }
 
     // Purge waypoints too far from the front of the buffer.
@@ -172,7 +180,7 @@ void LocalizationStage::Update(const unsigned long index)
   SimpleWaypointPtr junction_end_point = nullptr;
   SimpleWaypointPtr safe_point_after_junction = nullptr;
 
-  // Extend buffer if at junction entrance.
+  // Find safe interval after junction exit.
   if (is_at_junction_entrance && vehicles_at_junction.find(actor_id) == vehicles_at_junction.end())
   {
     vehicles_at_junction.insert(actor_id);

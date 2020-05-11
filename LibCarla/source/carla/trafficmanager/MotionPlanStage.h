@@ -38,6 +38,7 @@ private:
   const Parameters &parameters;
   const BufferMapPtr &buffer_map;
   const TrackTraffic &track_traffic;
+  // PID paramenters for various road conditions.
   const std::vector<float> urban_longitudinal_parameters;
   const std::vector<float> highway_longitudinal_parameters;
   const std::vector<float> urban_lateral_parameters;
@@ -45,7 +46,10 @@ private:
   const LocalizationFramePtr &localization_frame;
   const CollisionFramePtr &collision_frame;
   const TLFramePtr &tl_frame;
+  // Structure holding the controller state for registered vehicles.
   std::unordered_map<ActorId, StateEntry> pid_state_map;
+  // Structure to keep track of duration between teleportation
+  // in hybrid physics mode.
   std::unordered_map<ActorId, TimeInstance> teleportation_instance;
   ControlFramePtr &output_array;
 

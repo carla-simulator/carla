@@ -1,6 +1,4 @@
 
-/// This class holds the state of all the vehicles in the simlation.
-
 #pragma once
 
 #include <unordered_set>
@@ -18,27 +16,36 @@ namespace cg = carla::geom;
 
 using ActorId = carla::rpc::ActorId;
 
+/// This class holds the state of all the vehicles in the simlation.
 class SimulationState
 {
 
 private:
+  // Structure to hold ids of all actors in the simulation.
   std::unordered_set<ActorId> actor_set;
+  // Structure containing dynamic motion related state of actors.
   KinematicStateMap kinematic_state_map;
+  // Structure containing static attributes of actors.
   StaticAttributeMap static_attribute_map;
+  // Structure containing dynamic traffic light related state of actors.
   TrafficLightStateMap tl_state_map;
 
 public :
   SimulationState(/* args */);
 
+  // Method to add an actor to the simulation state.
   void AddActor(ActorId actor_id,
                 KinematicState kinematic_state,
                 StaticAttributes attributes,
                 TrafficLightState tl_state);
 
+  // Method to verify if an actor is present currently present in the simulation state.
   bool ContainsActor(ActorId actor_id) const;
 
+  // Method to remove an actor from simulation state.
   void RemoveActor(ActorId actor_id);
 
+  // Method to flush all states and actors.
   void Reset();
 
   void UpdateKinematicState(ActorId actorid, KinematicState state);

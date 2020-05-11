@@ -27,6 +27,7 @@ using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 using Buffer = std::deque<SimpleWaypointPtr>;
 using GeoGridId = carla::road::JuncId;
 
+// This class is used to track the waypoint occupancy of all the actors.
 class TrackTraffic
 {
 

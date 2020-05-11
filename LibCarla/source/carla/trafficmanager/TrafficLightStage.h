@@ -1,7 +1,4 @@
 
-/// This file has functionality for responding to traffic lights
-/// and managing entry into non-signalized junctions.
-
 #pragma once
 
 #include "carla/trafficmanager/Constants.h"
@@ -19,6 +16,8 @@ namespace traffic_manager
 using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
 using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
+/// This class has functionality for responding to traffic lights
+/// and managing entry into non-signalized junctions.
 class TrafficLightStage: Stage
 {
 private:
@@ -26,8 +25,11 @@ private:
   const SimulationState &simulation_state;
   const BufferMapPtr &buffer_map;
   const Parameters &parameters;
+  /// Map containing the time ticket issued for vehicles.
   std::unordered_map<ActorId, TimeInstance> vehicle_last_ticket;
+  /// Map containing the previous time ticket issued for junctions.
   std::unordered_map<JunctionID, TimeInstance> junction_last_ticket;
+  /// Map containing the previous junction visited by a vehicle.
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
   TLFramePtr &output_array;
 

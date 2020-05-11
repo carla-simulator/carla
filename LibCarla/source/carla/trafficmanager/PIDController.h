@@ -14,7 +14,7 @@
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Constants.h"
 
-#define CLAMP(__v, __hi, __lo) (__v > __hi ? __hi : (__v < __lo ? __lo : __v))
+#define CLAMP(__v, __hi, __lo) ((__v) > (__hi) ? (__hi) : ((__v) < (__lo) ? (__lo) : (__v)))
 
 namespace carla
 {
@@ -30,7 +30,7 @@ using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 namespace PID
 {
 
-/// This method calculates the present state of the vehicle including
+/// This function calculates the present state of the vehicle including
 /// the accumulated integral component of the PID system.
 StateEntry StateUpdate(StateEntry previous_state,
                        float current_velocity,
@@ -57,7 +57,7 @@ StateEntry StateUpdate(StateEntry previous_state,
   return current_state;
 }
 
-/// This method calculates the actuation signals based on the resent state
+/// This function calculates the actuation signals based on the resent state
 /// change of the vehicle to minimize PID error.
 ActuationSignal RunStep(StateEntry present_state,
                         StateEntry previous_state,
