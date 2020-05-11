@@ -294,7 +294,7 @@ void export_lightmanager() {
     using namespace boost::python;
 
     enum_<cr::LightState::LightGroup>("LightGroup")
-      .value("None", cr::LightState::LightGroup::None)
+      .value("NONE", cr::LightState::LightGroup::None)
       .value("Vehicle", cr::LightState::LightGroup::Vehicle)
       .value("Street", cr::LightState::LightGroup::Street)
       .value("Building", cr::LightState::LightGroup::Building)
