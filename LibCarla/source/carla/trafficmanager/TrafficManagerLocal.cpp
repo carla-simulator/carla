@@ -137,10 +137,10 @@ void TrafficManagerLocal::Run() {
       }
     }
 
-    // snippet_profiler.MeasureExecutionTime("ALSM", true);
+    // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
-    // snippet_profiler.MeasureExecutionTime("ALSM", false);
 
+    // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
@@ -156,36 +156,30 @@ void TrafficManagerLocal::Run() {
       registered_vehicles_state = registered_vehicles.GetState();
     }
 
-    // snippet_profiler.MeasureExecutionTime("Localization", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
-    // snippet_profiler.MeasureExecutionTime("Localization", false);
 
-    // snippet_profiler.MeasureExecutionTime("Collision", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-    // snippet_profiler.MeasureExecutionTime("Collision", false);
 
-    // snippet_profiler.MeasureExecutionTime("TrafficLight", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
     }
-    // snippet_profiler.MeasureExecutionTime("TrafficLight", false);
 
-    // snippet_profiler.MeasureExecutionTime("MotionPlan", true);
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       motion_plan_stage.Update(index);
     }
-    // snippet_profiler.MeasureExecutionTime("MotionPlan", false);
 
+    // Building the command array for current cycle.
     std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
     for (unsigned long i = 0u; i < number_of_vehicles; ++i) {
       batch_command.at(i) = control_frame_ptr->at(i);
     }
 
+    // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
       episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
 
