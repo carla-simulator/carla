@@ -23,18 +23,25 @@
 # Install required modules Pygame and Numpy. 
  pip install --user pygame numpy
 
-# Option A) deb package installation of CARLA 0.9.8 (only Linux)
+# Option A) deb package installation of CARLA 0.9.9 (only Linux)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92635A407F7A020C
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.9/ all main"
+sudo apt-get update
+sudo apt-get install carla-simulator
+cd /opt/carla/bin
+./CarlaUE4.sh
+# To install CARLA  0.9.8 instead
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
 sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
 sudo apt-get update
-sudo apt-get install carla
+sudo apt-get install carla-simulator
 cd /opt/carla/bin
 ./CarlaUE4.sh
-# To install CARLA  0.9.7 instead of 0.9.8
+# To install CARLA  0.9.7 instead
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
 sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
 sudo apt-get update
-sudo apt-get install carla
+sudo apt-get install carla-simulator
 cd /opt/carla/bin
 ./CarlaUE4.sh
 
@@ -78,26 +85,16 @@ __Download the GitHub repository__ to get either a specific release or the Windo
 
 ### a) deb CARLA installation
 
-Add the CARLA 0.9.8 repository to the system. 
+Add the CARLA 0.9.9 repository to the system.
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92635A407F7A020C
+sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.9/ all main"
 ```
 Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
 sudo apt-get update
-sudo apt-get install carla
+sudo apt-get install carla-simulator
 cd /opt/carla
-```
-
-The installation of CARLA 0.9.7 instead of 0.9.8 would be quite similar.
-```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
-sudo apt-get update
-sudo apt-get install carla
-cd /opt/carla/bin
-./CarlaUE4.sh
 ```
 
 ### b) GitHub repository installation

@@ -141,7 +141,7 @@ The pedestrian navigation is managed using a `.bin`. However, before generating 
 !!! Note
     To generate new crosswalks, change the name of the mesh to `Road_Crosswalk`. Avoid doing so if the crosswalk is in the `.xodr`. Otherwise, it will be duplicated. 
 
-![ue_crosswalks](img/ue_crosswalks.png)  
+![ue_crosswalks](img/ue_crosswalks.jpg)  
 
 *   __Customize the map.__ In is common to modify the map after the ingestion. Props such as trees, streetlights or grass zones are added, probably interfering with the pedestrian navigation. Make sure to have the desired result before generating the pedestrian navigation. Otherwise, it will have to be generated again.  
 
@@ -149,7 +149,7 @@ Now that the version of the map is final, it is time to generate the pedestrian 
 
 __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. 
 
-![ue_skybox_no_export](img/ue_noexport.png) 
+![ue_skybox_no_export](img/ue_noexport.jpg) 
 
 __2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).  
 
@@ -157,7 +157,7 @@ __2.__ Check the name of the meshes. By default, pedestrians will be able to wal
 *   Crosswalk = `Road_Crosswalk`.  
 *   Grass = `Road_Grass`.  
 
-![ue_meshes](img/ue_meshes.png) 
+![ue_meshes](img/ue_meshes.jpg) 
 
 __3.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
 
@@ -212,15 +212,15 @@ Import
 └── Package01
   ├── Package01.json
   ├── Map01
-  │   ├── Asphalt1_Diff.png
-  │   ├── Asphalt1_Norm.png
-  │   ├── Asphalt1_Spec.png
-  │   ├── Grass1_Diff.png
-  │   ├── Grass1_Norm.png
-  │   ├── Grass1_Spec.png
-  │   ├── LaneMarking1_Diff.png
-  │   ├── LaneMarking1_Norm.png
-  │   ├── LaneMarking1_Spec.png
+  │   ├── Asphalt1_Diff.jpg
+  │   ├── Asphalt1_Norm.jpg
+  │   ├── Asphalt1_Spec.jpg
+  │   ├── Grass1_Diff.jpg
+  │   ├── Grass1_Norm.jpg
+  │   ├── Grass1_Spec.jpg
+  │   ├── LaneMarking1_Diff.jpg
+  │   ├── LaneMarking1_Norm.jpg
+  │   ├── LaneMarking1_Spec.jpg
   │   ├── Map01.fbx
   │   └── Map01.xodr
   └── Map02
@@ -299,25 +299,25 @@ __3. Rebuild the plugin__ following the instructions below.
 
 __4. Restart Unreal Engine.__ Make sure the checkbox is on for both plugins `Edit > Plugins`. 
 
-![rr_ue_plugins](img/rr-ue4_plugins.png)
+![rr_ue_plugins](img/rr-ue4_plugins.jpg)
 
 ### Import map
 
 __1. Import the _mapname.fbx_ file__ to a new folder under `/Content/Carla/Maps` with the `Import` button.  
 
-![ue_import](img/ue_import_mapname.png)
+![ue_import](img/ue_import_mapname.jpg)
 
 __2. Set `Scene > Hierarchy Type`__ to _Create One Blueprint Asset_ (selected by default).  
 __3. Set `Static Meshes > Normal Import Method`__ to _Import Normals_.  
 
-![ue_import_options](img/ue_import_options.png)
+![ue_import_options](img/ue_import_options.jpg)
 
 __4. Click `Import`.__  
 __5. Save the current level__ `File > Save Current As...` > _mapname_.  
 
 The new map should now appear next to the others in the Unreal Engine _Content Browser_.
 
-![ue_level_content](img/ue_level_content.png)
+![ue_level_content](img/ue_level_content.jpg)
 </details>
 
 !!! Note
@@ -340,7 +340,7 @@ This is the generic way to import maps into Unreal Engine using any _.fbx_ and _
 __1. Create a new level__ with the **Map** name in Unreal `Add New > Level` under `Content/Carla/Maps`.  
 __2. Copy the illumination folder and its content__ from the BaseMap `Content/Carla/Maps/BaseMap`, and paste it in the new level. Otherwise, the map will be in the dark.
 
-![ue_illumination](img/ue_illumination.png)
+![ue_illumination](img/ue_illumination.jpg)
 
 ### Import binaries
 
@@ -358,13 +358,13 @@ __2. Check the following options.__
     *   Material Import Method - _To create new materials_
     *   Import Textures
 
-![ue_import_file](img/ue_import_file.png)
+![ue_import_file](img/ue_import_file.jpg)
 
 __3. Check that the static meshes have appeared__ in the chosen folder.
 
 __4. Drag the meshes__ into the level.
 
-![ue_meshes](img/ue_drag_meshes.png)
+![ue_meshes](img/ue_drag_meshes.jpg)
 
 __5. Center the meshes at point (0,0,0)__ when Unreal finishes loading. 
 
@@ -375,12 +375,12 @@ __6. Generate collisions__. Otherwise, pedestrians and vehicles will fall into t
 *   Select the meshes meant to have colliders.
 *   Right-click `Asset Actions > Bulk Edit via Property Matrix...`.
 
-  ![ue_selectmesh_collision](img/ue_selectmesh_collision.png)
+  ![ue_selectmesh_collision](img/ue_selectmesh_collision.jpg)
 
 *   Search for _collision_ in Property's Matrix search box.
 *   Change `Collision complexity` from `Project Default` to `Use Complex Collision As Simple`.
 
-  ![ue_collision_complexity](img/ue_collision_complexity.png)
+  ![ue_collision_complexity](img/ue_collision_complexity.jpg)
 
 *   Go to `File > Save All`.
 
@@ -415,14 +415,14 @@ Content
                 └── Static Meshes
 ```
 
-![ue__semantic_segmentation](img/ue_ssgt.png)
+![ue__semantic_segmentation](img/ue_ssgt.jpg)
 
 ### Import OpenDRIVE files
 
 __1. Copy the `.xodr` file__ inside the `Content/Carla/Maps/OpenDrive` folder.  
 __2. Open the Unreal level.__ Drag the _Open Drive Actor_ inside the level. It will read the level's name. Search the Opendrive file with the same name and load it.
 
-![ue_opendrive_actor](img/ue_opendrive_actor.png)
+![ue_opendrive_actor](img/ue_opendrive_actor.jpg)
 
 </details>
 <br>
@@ -459,15 +459,15 @@ __1. Drag traffic light/sign actors__ into the level and place them.
 __2. Adjust the [`trigger volume`][triggerlink]__ for each of them. This will determine their area of influence.  
   [triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
 
-![ue_trafficlight](img/ue_trafficlight.png)
+![ue_trafficlight](img/ue_trafficlight.jpg)
 
 __3. In junctions, drag a traffic light group actor__ into the level. Assign to it all the traffic lights involved and configure their timing. Make sure to understand [how do traffic lights work](http://127.0.0.1:8000/core_actors/#traffic-signs-and-traffic-lights).  
 
-![ue_tl_group](img/ue_tl_group.png)
+![ue_tl_group](img/ue_tl_group.jpg)
 
 __4. Test traffic light timing and traffic trigger volumes.__ This may need trial and error to fit perfectly.
 
-![ue_tlsigns_example](img/ue_tlsigns_example.png)
+![ue_tlsigns_example](img/ue_tlsigns_example.jpg)
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
@@ -478,15 +478,15 @@ In order to prepare the map for pedestrian navigation, there are some settings t
 
 __1.__ Select the __Skybox object__ and add a tag `NoExport` to it. Otherwise, the map will not be exported, as the size would be too big. Any geometry that is not involved or interfering in the pedestrian navigation can be tagged also as `NoExport`.
 
-![ue_skybox_no_export](img/ue_noexport.png) 
+![ue_skybox_no_export](img/ue_noexport.jpg) 
 
 __2.__ Check the name of the meshes. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest).
 
-![ue_meshes](img/ue_meshes.png) 
+![ue_meshes](img/ue_meshes.jpg) 
 
 __3.__ Crosswalks have to be manually created. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
 
-![ue_crosswalks](img/ue_crosswalks.png) 
+![ue_crosswalks](img/ue_crosswalks.jpg) 
 
 __4.__ Name these planes following the common format `Road_Crosswalk_mapname`. 
 
@@ -495,7 +495,7 @@ __6.__ Run RecastDemo `./RecastDemo`.
 
   * Select `Solo Mesh` from the `Sample` parameter's box.
   * Select the _mapname.obj_ file from the `Input Mesh` parameter's box.
-![recast_example](img/recast_example.png)
+![recast_example](img/recast_example.jpg)
 
 __7.__ Click on the `Build` button.  
 __8.__ Once the build has finished, click on the `Save` button.  

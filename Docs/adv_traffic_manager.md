@@ -39,7 +39,7 @@ The following diagram is a summary of the internal architecture of the Traffic M
 The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. 
 
 <div style="text-align:center">
-<img src="../img/traffic_manager_diagram.png">
+<img src="../img/traffic_manager_diagram.jpg">
 </div>
 
 ### Stages
@@ -52,7 +52,7 @@ __2. Collision Stage:__ checks possible collisions for every vehicle. For each p
 
 * __Related .cpp files:__ `CollisionStage.cpp`.  
 
-__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. A _traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
+__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. A __traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
 
 * __Related .cpp files:__ `TrafficLightStage.cpp`.  
 

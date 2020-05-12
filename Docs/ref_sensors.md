@@ -80,7 +80,7 @@ in_meters = 1000 * normalized
 The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.
 There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects.
 
-![ImageDepth](img/capture_depth.png)
+![ImageDepth](img/ref_sensors_depth.jpg)
 
 
 #### Basic camera attributes
@@ -676,7 +676,7 @@ points = np.reshape(points, (len(radar_data), 4))
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
-![ImageRadar](img/sensor_radar.png)
+![ImageRadar](img/ref_sensors_radar.jpg)
 
 <table class ="defTable">
 <thead>
@@ -780,7 +780,7 @@ If `enable_postprocess_effects` is enabled, a set of post-process effects is app
 The `sensor_tick` tells how fast we want the sensor to capture the data.
 A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
-![ImageRGB](img/capture_scenefinal.png)
+![ImageRGB](img/ref_sensors_rgb.jpg)
 
 #### Basic camera attributes
 
@@ -1291,7 +1291,7 @@ The following tags are currently available:
     **Adding new tags**:
     It requires some C++ coding. Add a new label to the `ECityObjectLabel` enum in "Tagger.h", and its corresponding filepath check inside `GetLabelByFolderName()` function in "Tagger.cpp".
 
-![ImageSemanticSegmentation](img/capture_semseg.png)
+![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
 
 #### Basic camera attributes
 

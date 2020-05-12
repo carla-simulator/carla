@@ -1,161 +1,143 @@
-# Map customization
+# Map customization tools
 
-> _This document is a work in progress and might be incomplete._
+There are several tools provided by the CARLA team that allow users to edit maps at will from the Unreal Editor. This tutorial introduces the most relevant tools, according to their purpose. 
 
----
-## Creating a new map
+*   [__Serial meshes__](#add-serial-meshes)  
+	*   [BP_RepSpline](#bp_repspline)  
+	*   [BP_Spline](#bp_spline)  
+	*   [BP_Wall](#bp_wall)  
+	*   [BP_SplinePowerLine](#bp_splinepowerline)  
+*   [__Procedural buildings__](#add-serial-meshes)  
+	*   [Building structure](#building-structure)  
+	*   [Structure modifications](#structure-modifications)  
 
-!!! Bug
-    Creating a map from scratch with the Carla tools causes a crash with
-    UE4.17.2 ([Issue #99](https://github.com/carla-simulator/carla/issues/99)),
-    this guide will suggest duplicating an existing level instead of creating
-    one from scratch.
-
-#### Requirements
-
- - Checkout and build Carla from source on [Linux](build_linux.md) or [Windows](build_windows.md).
-
-#### Creating
-
-- Duplicate an existing map
-- Remove everything you don't need from the map
-    - Keep the folder "Lighting", "AtmosphericFog", "PostProcessVol" and "CarlaMapGenerator" this will keep the climate working as intended and the post process saved.
-    - It might be interesting to keep the empty level as a template and duplicate it before starting to populate it.
-- In the CarlaMapGenerator, there is a field "seed". You can change the map by altering that seed and clicking "Trigger Road Map Generation". "Save Road Map To Disk" should also be checked.
-- You can change the seed until you have a map you are satisfied with.
-- After that you can place new PlayerStarts at the places you want the cars to be spawned.
-- The AI already works, but the cars won't act randomly. Vehicles will follow the instructions given by the RoadMapGenerator. They will follow the road easily while in straight roads but wont so much when entering Intersections:
-![road_instructions_example.png](img/road_instructions_example.png)
-  > (This is a debug view of the instructions the road gives to the Vehicle. They will always follow the green arrows, the white points are shared points between one or more routes, by default they order the vehicle to continue straight; Black points are off the road, the vehicle gets no instructions and drives to the left, trying to get back to the road)
-
-- To get a random behavior, you have to place IntersectionEntrances, this will let you redefine the direction the vehicle will take overwriting the directions given by the road map (until they finish their given order).
-(See the two example towns how it exactly works).
-    - Before version 0.7.1: For every entrance you'll have to create a series of empty actors that will be the waypoints to guide the car through the intersection; Then you'll have to assign the corresponding actors to every Path
-    - After version 0.7.1: Every IntersectionEntrance has an array called routes, adding an element to this creates an editable spline in the world with the first point on the IntersectionEntrance (You might have to select another object before you can see it) This spline defines the possible routes any car will take when entering the intersection (as the Empty actors did before) you might configure this routes as you would edit any Unreal spline. Each route will create an element in the field bellow: "Probabilities" every number in this array defines the chances of any vehicle to take the corresponding route.
-- To change the speed of the car, use the SpeedLimiters. They are straightforward to use. (Make sure you limit the speed for the corners, otherwise the cars will try and fail to take them at full speed)
-- Traffic lights need to be scripted to avoid traffic accidents.
-Every street at a crossing should have its own turn at green without the other streets having green.
-- Then you can populate the world with landscape and buildings.
+!!! Important
+    This tutorial only applies to users that work with a build from source, and have access to the Unreal Editor. 
 
 ---
-## MultipleFloorBuilding
+## Add serial meshes
 
-The purpose of this blueprint is to make repeating and varying tall buildings a
-bit easier. Provided a Base, a MiddleFloor and a roof; this blueprint repeats
-the middle floor to the desired number of stores and tops it with the last floor
-given some conditions:
+There is a series of blueprints in `Carla/Blueprints/LevelDesign` that are useful to add props aligned in one direction. All of them use a series of meshes, and a Bezier curve that establishes the path where the props are placed.  
 
-  - All model pivots should be in the bottom center of the Specific mesh.
-  - Al models must start and end exactly where the repetition happen.
+There are differences between them, that make them fit specific purposes. However, the all work the same way. Only the parametrization presents differences.  
 
-This blueprint is controlled by this 6 specific Parameters:
+* __Initialize the series__. The blueprints need a __Static Mesh__ that will be repeated. Initially, only one element will appear, standing on the starting point of a Bezier curve with two nodes, beginning and ending.  
+* __Define the path__. Press __Alt__ over one of the nodes, to create a new one and modify the curve. A new mesh will appear on every node of the curve, and the space between nodes will be filled with elements __separated by a distance__ measure. Adjust the curve using the weights on every node.  
+* __Customize the pattern__. This is where the blueprints present differences between each other.  
 
-  - GroundFloor: The mesh to be placed in the base of the building.
-  - Floor: The mesh to be repeated along the building.
-  - Roof: Final mesh to top the building.
-  - FloorNumber: Number of stores of the building.
-  - FloorHeightOffset: Adjust The placement of every floor vertically.
-  - RoofOffset: Adjust the placement of the roof vertically.
+!!! Warning
+    New props will probably interfere with the mesh navigation. If necessary, rebuild that as explained [here](tuto_A_add_map.md#generate-pedestrian-navigation) after doing these changes.
 
-All of This parameters can be modified once this blueprint is placed in the
-world.
+### BP_RepSpline
 
----
-## SplinemeshRepeater
+The blueprint __BP_RepSpline__ adds __individual__ elements along the path defined by a Bezier curve. There are some specificic parameters that change the serialization.  
 
+*   __Distance between__ — Set the distance between elements.  
+*   __Offset rotation__ — Set a fixed rotation for the different axis.  
+*   __Random rotation__ — Set a range of random rotations for the different axis.  
+*   __Offset translation__ — Set a range of random locations along the different axis.  
+*   __Max Number of Meshes__ — Set the maximum amount of elements that will be place between nodes of the curve.  
+*   __World aligned ZY__ — If selected, the elements will be vertically aligned regarding the world axis.  
+*   __EndPoint__ — If selected, an element will be added in the ending node of the curve.  
+*   __Collision enabled__ — Set the type of collisions enabled for the meshes.  
 
-!!! Bug
-    See [#35 SplineMeshRepeater loses its collider mesh](https://github.com/carla-simulator/carla/issues/35)
+![bp_repspline_pic](img/map_customization/BP_Repspline.jpg)
+<div style="text-align: right"><i>BP_RepSpline example.</i></div>
 
-#### Standard use
+### BP_Spline
 
-SplineMeshRepeater "Content/Blueprints/SplineMeshRepeater" is a tool included in
-the Carla Project to help building urban environments; It repeats and aligns a
-specific chosen mesh along a
-[Spline](https://docs.unrealengine.com/latest/INT/Engine/BlueprintSplines/Reference/SplineEditorTool/index.html)
-(Unreal Component). Its principal function is to build Typically tiled and
-repetitive structures as Walls, Roads, Bridges, Fences... Once the actor is
-placed into the world the spline can be modified so the object gets the desired
-form. Each Point Defining the spline Generates a new tile so that as more points
-the Spline has, the more defined it will be, but also heavier on the world. This
-actor is defined by the following parameters:
+The blueprint __BP_Spline__ adds __connected__ elements __strictly__ following the path defined by a Bezier curve. The mesh will be warped to fit the path created.  
 
-  - StaticMesh: The mesh to be repeated along the spline.
-  - ForWardAxis: Changes the mesh axis to be aligned with the spline.
-  - Material: Overrides the mesh' default material.
-  - Collision Enabled: Chooses the type of collision to use.
-  - Gap distance: Places a Gap between each repeated mesh, for repetitive non continuous walls: bush chains, bollards...
+*   __Gap distance__ — Add a separation between elements.  
 
-(Last three variables are specific for some particular assets to be defined in
-the next point) A requisite to create assets compatibles with this component is
-that all the meshes have their pivot placed wherever the repetition starts in
-the lower point possible with the rest of the mesh pointing positive (Preferably
-by the X axis)
+![bp_spline_pic](img/map_customization/BP_Spline.jpg)
+<div style="text-align: right"><i>BP_Spline example.</i></div>
 
-#### Specific Walls (Dynamic material)
+### BP_Wall
 
-In the project folder "Content/Static/Walls" are included some specific assets
-to be used with this SplineMeshRepeater with a series of special
-characteristics. The UV space of this meshes and their materials are the same
-for all of them, making them exchangeable. each material is composed of three
-different surfaces the last three parameters slightly modify the color of this
-surfaces:
+The blueprint __BP_Wall__ adds __connected__ elements along the path defined by a Bezier curve. The mesh will not be warped to fit the curve, but the nodes will be respected.  
 
-  - MainMaterialColor: Change the main material of the Wall
-  - DetailsColor: Change the color of the details (if any)
-  - TopWallColor: Change the color of the wall cover (if any)
+*   __Distance between__ — Set the distance between elements.  
+*   __Vertically aligned__ — If selected, the elements will be vertically aligned regarding the world axis.  
+*   __Scale offset__ — Scale the length of the mesh to round out the connection between elements.  
 
-   To add elements that profit from this functions exist the GardenWallMask File that defines the uv space to place the materials: (Blue space: MainMaterial; green space: Details; red space TopWall).
+![bp_wall_pic](img/map_customization/BP_Wall.jpg)
+<div style="text-align: right"><i>BP_Wall example.</i></div>
 
-Between the material masters is WallMaster which is going to be the master of
-the materials using this function. An instance of this material will be created
-and the correspondent textures will be added. This material includes the
-following parameters to be modified by the material to use:
+### BP_SplinePowerLine
 
-  - Normal Flattener: Slightly modifies the normal map values to exaggerate it or flatten it.
-  - RoughnessCorrection: Changes the Roughness value given by the texture.
+The blueprint __BP_SplinePowerLine__ adds __electricity poles__ along the path defined by a Bezier curve, and __connects them with power lines__.  
 
-The rest of the parameters are the mask the textures and the color corrections
-that won't be modified in this instance but in the blueprint that will be
-launched into the world.
+This blueprint can be found in `Carla/Static/Pole`. This blueprint allows to set an __array of meshes__ to repeat, to provide variety.  
+
+![bp_splinepowerline_pic](img/map_customization/BP_Splinepowerline.jpg)
+<div style="text-align: right"><i>BP_SplinePowerLine example.</i></div>
+
+The power line that connects the pole meshes can be customized.  
+
+*   __Choose the mesh__ that will be used as wire.  
+*   __Edit the tension__ value. If `0`, the power lines will be staight. The bigger the value, the looser the connection.  
+*   __Set the sockets__. Sockets are empty meshes that represent the connection points of the power line. A wire is created form socket to socket between poles. The amount of sockets can be changed inside the pole meshes.  
+
+![bp_powerline_socket_pic](img/map_customization/BP_Splinepowerline_Sockets.jpg)
+<div style="text-align: right"><i>Visualization of the sockets for BP_SplinePowerLine.</i></div>
+
+!!! Important
+    The amount of sockets and their names should be consistent between poles. Otherwise, visualization issues may arise. 
 
 ---
-## Weather
+## Procedural buildings
 
-This is the actor in charge of modifying all the lighting, environmental actors
-an anything that affects the impression of the climate. It runs automatically
-with the game when is not specified otherwise In the Config. Ini but has Its own
-actor to launch in editor mode to configure the climatic conditions. To fully
-work It will need One of each of the following actors: SkySphere, Skylight,
-Postprocess Volume (Boundless) And Light Source to exist in the world.
+The blueprint __BP_Procedural_Building__ in `Content/Carla/Blueprints/LevelDesign` creates a realistic building using key meshes that are repeated along the structure. For each of them, the user can provide an array of meshes that will be used at random for variety. The meshes are only created once, and the repetitions will be instances of the same to save up costs.  
 
-  - SunPolarAngle: polar angle of the sun, determines time of the day
-  - SunAzimuthAngle: adds to the location of the sun in the current level
-  - SunBrightness: Brightness of the rendering of the sun in the skybox
-  - SunDirectionalLightIntensity: Intensity of the sunlight
-  - SunDirectionalLightColor: Color of the sunlight
-  - SunIndirectLightIntensity: intensity of the bounces of the main light
-  - CloudOpacity: visibility of the cloud rendering on the skybox
-  - HorizontFalloff: determines the height of the gradient between the zenith and horizon color
-  - ZenithColor: Defines the color of the zenith.
-  - HorizonColor: Defines the color of the horizon.
-  - CloudColor: Defines the color of the Clouds, if any.
-  - OverallSkyColor: multiplies every colored element in the sky by a single color.
-  - SkyLightIntensity: Intensity of the light bounced from the sky.
-  - SkyLightColor: Color of the light bounced from the sky.
-  - Precipitation: Defines if any precipitation is active.
-  - PrecipitationType: the type of precipitation to active.
-  - PrecipitationAmount: the quantity of the chosen precipitation.
-  - PrecipitationAccumulation: the accumulation of the chosen precipitation.
-  - bWind: defines if there is any wind.
-  - WindIntensity: defines the wind intensity.
-  - WindAngle: defines the wind direction.
-  - bOverrideCameraPostProcessParameters: Defines if the default camera postprocess is overwritten.
-  - CameraPostProcessParameters.AutoExposureMethod: Defines the method of autoexposure.
-  - CameraPostProcessParameters.AutoExposureMinBrightness: defines the minimum brightness the autoexposure will count as right in the final image.
-  - CameraPostProcessParameters.AutoExposureMaxBrightness: defines the maximum brightness the autoexposure will count as right in the final image.
-  - CameraPostProcessParameters.AutoExposureBias: Darkens or brightens the final image towards a defined bias.
+!!! Note
+    Blueprints can be used instead of meshes, to allow more variety and customization for the building. Blueprints can use behaviour trees to set illumination inside the building, change the materials used, and much more.  
 
-You can have as many different configurations saved in the project as you want
-and choose the configuration to apply while on the build, through the settings
-file; or in the editor while building the level or testing.
+### Building structure
+
+The key meshes will be updated everytime a change is made, and the building will disappear. Enable `Create automatically` or click on `Create Building` to see the new result. 
+
+These key meshes can be percieved as pieces of the building's structure. They can be grouped in four categories.  
+
+*   __Base__ — The ground floor of the building.  
+*   __Body__ — The middle floors of the building.  
+*   __Top__ — The highest floor of the building.  
+*   __Roof__ — Additional mesh that used to fill the spaces in the middle of the top floor.  
+
+For each of them, except the __Roof__, there is a mesh to fill the center of the floor, and a __Corner__ mesh that will be placed on the sides of the floor. The following picture represents the global structure. 
+
+![bp_procedural_building_visual](img/map_customization/BP_Procedural_Building_Visual.jpg)
+<div style="text-align: right"><i>Visualization of the building structure.</i></div>
+
+The __Base parameters__ set the dimensions of the building.  
+
+*   ___Num Floors__ — Floors of the building. Repetitions of the __Body__ meshes.  
+*   __Length X and Length Y__ — Area of the building. Repetitions of the central meshes for each side of the building.  
+
+![bp_procedural_building_full](img/map_customization/BP_Procedural_Building_Full.jpg)
+<div style="text-align: right"><i>Example of BP_Procedural_Building.</i></div>
+
+### Structure modifications
+
+There are some additional options to modify the general structure of the building.  
+
+*   __Disable corners__ — If selected, no corner meshes will be used.  
+*   __Use full blocks__ — If selected, the structure of the building will use only one mesh per floor. No corners nor repetitions will appear in each floor.  
+*   __Doors__ — Meshes that appear in the ground floor, right in front of the central meshes. The amount of dloors and their location can be set. `0` is the initial position, `1` the next base repetition, and so on.  
+*   __Walls__ — Meshes that substitute one or more sides of the building. For example, a plane mesh can be used to paint one side of the building. 
+
+![bp_procedural_building_extras](img/map_customization/BP_Procedural_Building_Extras.jpg)
+<div style="text-align: right"><i>On the left, a building with no cornes and one door. <br> On the right, a building with a wall applied to one side of the building. The wall is a texture with no fire escape.</i></div>
+
+---
+
+That is all there is so far, regarding the different map customization tools available in CARLA.
+
+Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>
