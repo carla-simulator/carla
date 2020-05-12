@@ -17,7 +17,7 @@
 namespace carla {
 namespace traffic_manager {
 
-using namespace constants::Networking;
+using constants::Networking::TM_DEFAULT_PORT;
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 

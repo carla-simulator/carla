@@ -10,7 +10,6 @@ namespace carla {
 namespace traffic_manager {
 
 using namespace constants::FrameMemory;
-using constants::HybridMode::HYBRID_MODE_DT;
 
 TrafficManagerLocal::TrafficManagerLocal(
   std::vector<float> longitudinal_PID_parameters,

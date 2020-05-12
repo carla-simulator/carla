@@ -45,6 +45,7 @@ using namespace std::chrono_literals;
 using TimePoint = chr::time_point<chr::system_clock, chr::nanoseconds>;
 using TLGroup = std::vector<carla::SharedPtr<carla::client::TrafficLight>>;
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
+using constants::HybridMode::HYBRID_MODE_DT;
 
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.

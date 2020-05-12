@@ -7,10 +7,13 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/trafficmanager/Constants.h"
+
 #include <rpc/client.h>
 
-#define TM_TIMEOUT        2000 // In ms
-#define TM_DEFAULT_PORT   8000 // TM_SERVER_PORT
+using carla::traffic_manager::constants::Networking::TM_TIMEOUT;
+using carla::traffic_manager::constants::Networking::TM_DEFAULT_PORT;
+
 
 namespace carla {
 namespace traffic_manager {
