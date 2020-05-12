@@ -17,12 +17,36 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+  constexpr size_t MaxStringLength = 5000000;
+
   static inline std::string FromFString(const FString &Str) {
-    return TCHAR_TO_UTF8(*Str);
+    std::string result;
+    size_t i = 0;
+    while(i + MaxStringLength < Str.Len()) {
+      auto Substr = Str.Mid(i, MaxStringLength);
+      std::string temp_string = TCHAR_TO_UTF8(*Substr);
+      result += temp_string;
+      i += MaxStringLength;
+    }
+    auto Substr = Str.Mid(i, Str.Len() - i);
+    std::string temp_string = TCHAR_TO_UTF8(*Substr);
+    result += temp_string;
+    return result;
   }
 
   static inline FString ToFString(const std::string &str) {
-    return FString(str.size(), UTF8_TO_TCHAR(str.c_str()));
+    FString result = "";
+    size_t i = 0;
+    while(i + MaxStringLength < str.size()) {
+      auto substr = str.substr(i, MaxStringLength);
+      FString temp_string(substr.size(), UTF8_TO_TCHAR(substr.c_str()));
+      result += temp_string;
+      i += MaxStringLength;
+    }
+    auto substr = str.substr(i);
+    FString temp_string(substr.size(), UTF8_TO_TCHAR(substr.c_str()));
+    result += temp_string;
+    return result;
   }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4

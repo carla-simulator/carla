@@ -978,17 +978,8 @@ namespace road {
   }
 
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
-      const double distance,
-      const float max_road_len,
-      const float extra_width,
-      const  bool smooth_junctions) const {
-    RELEASE_ASSERT(distance > 0.0);
-    RELEASE_ASSERT(extra_width >= 0.0);
-    RELEASE_ASSERT(max_road_len > 0.0);
-    geom::MeshFactory mesh_factory;
-    mesh_factory.road_param.resolution = static_cast<float>(distance);
-    mesh_factory.road_param.max_road_len = max_road_len;
-    mesh_factory.road_param.extra_lane_width = extra_width;
+      const rpc::OpendriveGenerationParameters& params) const {
+    geom::MeshFactory mesh_factory(params);
     std::vector<std::unique_ptr<geom::Mesh>> out_mesh_list;
 
     std::unordered_map<JuncId, geom::Mesh> junction_map;
@@ -1024,7 +1015,7 @@ namespace road {
           }
         }
       }
-      if(smooth_junctions) {
+      if(params.smooth_junctions) {
         auto merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
         for(auto& lane : sidewalk_lane_meshes) {
           *merged_mesh += *lane;
