@@ -14,6 +14,13 @@
 namespace carla {
 namespace geom {
 
+  MeshFactory::MeshFactory(rpc::OpendriveGenerationParameters params) {
+    road_param.resolution = static_cast<float>(params.vertex_distance);
+    road_param.max_road_len = static_cast<float>(params.max_road_length);
+    road_param.extra_lane_width = static_cast<float>(params.additional_width);
+    road_param.wall_height = static_cast<float>(params.wall_height);
+  }
+
   /// We use this epsilon to shift the waypoints away from the edges of the lane
   /// sections to avoid floating point precision errors.
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
