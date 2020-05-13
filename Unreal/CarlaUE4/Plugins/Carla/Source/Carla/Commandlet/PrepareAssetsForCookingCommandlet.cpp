@@ -24,11 +24,11 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
   static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1.M_Road1'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> RoadNodeAux(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
+      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
@@ -128,10 +128,6 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
         MeshAsset->MarkPackageDirty();
       }
-
-      // rotate all meshes 180 degrees to fit with OpenDRIVE info
-      // (seems that new version of RoadRunner is doing this)
-      // MeshActor->SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
 
       SpawnedMeshes.Add(MeshActor);
 
