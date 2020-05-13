@@ -193,7 +193,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 
-  if (FPaths::FileExists(AbsoluteRecastBuilderPath))
+  if (FPaths::FileExists(AbsoluteRecastBuilderPath) && Params.enable_pedestrian_navigation)
   {
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.
