@@ -17,6 +17,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+#include "Carla/Traffic/TrafficLightManager.h"
+
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -62,6 +64,12 @@ void ACarlaGameModeBase::InitGame(
 
   auto World = GetWorld();
   check(World != nullptr);
+
+  AActor* TrafficLightManagerActor =  UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
+  if(TrafficLightManagerActor == nullptr) {
+    World->SpawnActor<ATrafficLightManager>();
+  }
+
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
