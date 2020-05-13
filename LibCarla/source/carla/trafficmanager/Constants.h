@@ -57,7 +57,7 @@ static const float MIN_SAFE_INTERVAL_LENGTH = 0.9f * SAFE_DISTANCE_AFTER_JUNCTIO
 } // namespace WaypointSelection
 
 namespace LaneChange {
-static const float MINIMUM_LANE_CHANGE_DISTANCE = 10.0f;
+static const float MINIMUM_LANE_CHANGE_DISTANCE = 15.0f;
 static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
 static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
 static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
