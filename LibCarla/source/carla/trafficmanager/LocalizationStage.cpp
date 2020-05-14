@@ -161,6 +161,7 @@ void LocalizationStage::Update(const unsigned long index) {
     bool past_junction = false;
     bool safe_point_found = false;
     SimpleWaypointPtr current_waypoint = nullptr;
+    SimpleWaypointPtr junction_begin_point = nullptr;
     float safe_distance_squared = SQUARE(SAFE_DISTANCE_AFTER_JUNCTION);
 
     // Scanning existing buffer points.
@@ -168,6 +169,7 @@ void LocalizationStage::Update(const unsigned long index) {
       current_waypoint = waypoint_buffer.at(i);
       if (!entered_junction && current_waypoint->CheckJunction()) {
         entered_junction = true;
+        junction_begin_point = current_waypoint;
       }
       if (entered_junction && !past_junction && !current_waypoint->CheckJunction()) {
         past_junction = true;
@@ -203,6 +205,11 @@ void LocalizationStage::Update(const unsigned long index) {
           PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
         }
       }
+    }
+
+    if (junction_begin_point->DistanceSquared(junction_end_point) < SQUARE(MIN_JUNCTION_LENGTH)) {
+      junction_end_point = nullptr;
+      safe_point_after_junction = nullptr;
     }
 
     LocalizationData &output = output_array->at(index);
