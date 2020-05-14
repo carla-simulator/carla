@@ -215,42 +215,42 @@ So far there are seven different maps available. Each one has unique features an
 <div class="townslider-container">
   <!-- Town slide images -->
   <div class="townslide fade">
-  <img src="../img/Town01.png">
+  <img src="../img/Town01.jpg">
     <div class="text">Town01</div>
   </div>
 
   <div class="townslide fade">
-  <img src="../img/Town02.png">
+  <img src="../img/Town02.jpg">
     <div class="text">Town02</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town03.png">
+    <img src="../img/Town03.jpg">
     <div class="text">Town03</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town04.png">
+    <img src="../img/Town04.jpg">
     <div class="text">Town04</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town05.png">
+    <img src="../img/Town05.jpg">
     <div class="text">Town05</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town06.png">
+    <img src="../img/Town06.jpg">
     <div class="text">Town06</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town07.png">
+    <img src="../img/Town07.jpg">
     <div class="text">Town07</div>
   </div>
 
   <div class="townslide fade">
-    <img src="../img/Town10.png">
+    <img src="../img/Town10.jpg">
     <div class="text">Town10</div>
   </div>
 
