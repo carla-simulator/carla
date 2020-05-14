@@ -93,13 +93,9 @@ void MotionPlanStage::Update(const unsigned long index) {
 
     const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
 
-    if (localization.is_at_junction_entrance
-        && other_velocity.SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
-      collision_emergency_stop = true;
-    }
     // Consider collision avoidance decisions only if there is positive relative velocity
     // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-    else if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
+    if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
       float follow_lead_distance = ego_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
