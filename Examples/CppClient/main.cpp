@@ -94,10 +94,6 @@ int main(int argc, const char *argv[]) {
     auto map = world.GetMap();
     auto transform = RandomChoice(map->GetRecommendedSpawnPoints(), rng);
 
-    // Temporary workaround:
-    // Move the spawn point a bit up otherwise they can collide.
-    transform.location.z += 0.30f;
-
     // Spawn the vehicle.
     auto actor = world.SpawnActor(blueprint, transform);
     std::cout << "Spawned " << actor->GetDisplayId() << '\n';
