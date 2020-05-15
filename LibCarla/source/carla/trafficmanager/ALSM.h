@@ -71,7 +71,7 @@ private:
   TrafficLightStage &traffic_light_stage;
   MotionPlanStage &motion_plan_stage;
   // Time elapsed since last vehicle destruction due to being idle for too long.
-  double elapsed_last_actor_destruction;
+  double elapsed_last_actor_destruction {0.0f};
   cc::Timestamp current_timestamp;
 
   // Updates the duration for which a registered vehicle is stuck at a location.

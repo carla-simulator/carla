@@ -320,7 +320,7 @@ void ALSM::Reset() {
   unregistered_actors.clear();
   idle_time.clear();
   hero_actors.clear();
-  elapsed_last_actor_destruction = std::numeric_limits<double>::infinity();
+  elapsed_last_actor_destruction = 0.0f;
   current_timestamp = world.GetSnapshot().GetTimestamp();
 }
 
