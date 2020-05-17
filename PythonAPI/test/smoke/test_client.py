@@ -10,4 +10,6 @@ from . import SmokeTest
 
 class TestClient(SmokeTest):
     def test_version(self):
-        self.assertEqual(self.client.get_client_version(), self.client.get_server_version())
+        client_v = self.client.get_client_version().replace("-dbg", "")
+        server_v = self.client.get_server_version().replace("-dbg", "")
+        self.assertEqual(client_v, server_v)

@@ -210,5 +210,6 @@ def py_nose2_test(name, **kwargs):
         )
     native.test_suite(
         name = name,
+        tags = kwargs["tags"],
         tests = [":{}-py{}".format(name, v) for v in PYTHON_VERSIONS.keys()]
     )

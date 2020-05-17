@@ -58,9 +58,12 @@ for_each_py_version(
     ],
     includes = ["."],
     include_prefix = "carla/",
-    # This file should not be compiled in LibCarla since it depends on having
-    # Python enabled!
-    visibility = ["//PythonAPI:__subpackages__"],
+    # @todo This file should not be compiled in LibCarla since it depends on
+    # having Python enabled!
+    visibility = [
+        "//Examples:__subpackages__",
+        "//PythonAPI:__subpackages__",
+    ],
     deps = [
         "@boost//:python%{py_version}",
     ],

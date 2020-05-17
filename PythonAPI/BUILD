@@ -18,3 +18,11 @@ test_suite(
         "//PythonAPI/test:unit",
     ],
 )
+
+test_suite(
+    name = "smoke_test",
+    tags = ["manual"],
+    tests = [
+        "//PythonAPI/test:smoke",
+    ],
+)
