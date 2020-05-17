@@ -7,7 +7,7 @@
 #include "carla/road/Map.h"
 #include "carla/Exception.h"
 #include "carla/geom/Math.h"
-#include "carla/geom/MeshFactory.h"
+#include "carla/road/MeshFactory.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"

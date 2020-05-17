@@ -15,7 +15,7 @@
 #include <carla/road/Lane.h>
 
 namespace carla {
-namespace geom {
+namespace geom { // @todo change namespace.
 
   /// Mesh helper generator
   class MeshFactory {

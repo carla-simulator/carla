@@ -51,8 +51,11 @@ namespace client {
 } // namespace client
 } // namespace carla
 
+#include <ostream>
 
-namespace std {
+namespace carla {
+namespace client {
+
 /**
  * \brief standard ostream operator
  *
@@ -69,4 +72,6 @@ inline std::ostream &operator<<(std::ostream &out, const ::carla::client::Timest
       << ",platform_timestamp=" << std::to_string(timestamp.platform_timestamp) << ')';
   return out;
 }
-} // namespace std
+
+} // namespace client
+} // namespace carla
