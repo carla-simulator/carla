@@ -6,7 +6,7 @@ cc_gtest_library(
     name = "common",
     hdrs = glob(["*.h"]),
     srcs = glob(["*.cpp"]),
-    includes = ["."],
+    include_prefix = "",
     deps = [
         "//LibCarla/source/carla/geom",
         "//LibCarla/source/carla/profiler",

@@ -4,7 +4,6 @@ cc_library(
     name = "image",
     hdrs = glob(["*.h"]),
     srcs = glob(["*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/image",
     defines = [
         "LIBCARLA_IMAGE_WITH_PNG_SUPPORT=true",

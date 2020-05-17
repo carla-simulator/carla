@@ -120,6 +120,8 @@ def _impl(ctx):
         "-Wshadow",
         "-Wuninitialized",
         "-Wunreachable-code",
+        "-Wunused",
+        "-Wunused-parameter",
     ]
 
     cxx_flags_no_exceptions = ["-fno-exceptions"]

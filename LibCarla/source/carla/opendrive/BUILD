@@ -4,7 +4,6 @@ cc_library(
     name = "opendrive",
     hdrs = glob(["**/*.h"]),
     srcs = glob(["**/*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/opendrive",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [

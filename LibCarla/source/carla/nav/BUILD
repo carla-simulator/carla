@@ -4,7 +4,6 @@ cc_library(
     name = "nav",
     hdrs = glob(["**/*.h"]),
     srcs = glob(["**/*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/nav",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [

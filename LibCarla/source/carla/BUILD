@@ -21,7 +21,6 @@ cc_library(
         "sensor/**/*.cpp",
         "trafficmanager/**/*.cpp",
     ]),
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//visibility:public"],
     deps = [
@@ -56,7 +55,6 @@ for_each_py_version(
     hdrs = [
         "PythonUtil.h",
     ],
-    includes = ["."],
     include_prefix = "carla/",
     # @todo This file should not be compiled in LibCarla since it depends on
     # having Python enabled!
@@ -96,7 +94,6 @@ cc_library(
         "Exception.cpp",
         "Buffer.cpp",
     ],
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
@@ -114,7 +111,6 @@ cc_library(
         "ThreadGroup.h",
         "ThreadPool.h",
     ],
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
@@ -130,7 +126,6 @@ cc_library(
     srcs = [
         "StringUtil.cpp",
     ],
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
@@ -145,7 +140,6 @@ cc_library(
         "MsgPack.h",
         "MsgPackAdaptors.h",
     ],
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
@@ -158,7 +152,6 @@ cc_library(
     name = "filesystem",
     hdrs = ["FileSystem.h"],
     srcs = ["FileSystem.cpp"],
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
@@ -175,7 +168,6 @@ cc_library(
         "sensor/*.h",
         "sensor/s11n/*.h",
     ]),
-    includes = ["."],
     include_prefix = "carla/",
     visibility = ["//LibCarla/source:__subpackages__"],
 )

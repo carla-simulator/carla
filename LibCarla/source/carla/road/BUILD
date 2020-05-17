@@ -4,7 +4,6 @@ cc_library(
     name = "road",
     hdrs = glob(["**/*.h"]),
     srcs = glob(["**/*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/road",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [

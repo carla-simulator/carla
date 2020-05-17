@@ -4,7 +4,6 @@ cc_library(
     name = "streaming",
     hdrs = glob(["**/*.h"]),
     srcs = glob(["**/*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/streaming",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [

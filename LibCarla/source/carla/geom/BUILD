@@ -4,7 +4,6 @@ cc_library(
     name = "geom",
     hdrs = glob(["*.h"]),
     srcs = glob(["*.cpp"]),
-    includes = ["."],
     include_prefix = "carla/geom",
     visibility = ["//LibCarla/source:__subpackages__"],
     deps = [
