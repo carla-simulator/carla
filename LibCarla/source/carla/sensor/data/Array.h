@@ -35,51 +35,51 @@ namespace data {
     using const_reference = typename std::add_const<value_type>::type &;
 
     iterator begin() {
-     return reinterpret_cast<iterator>(_data.begin() + _offset);
+      return reinterpret_cast<iterator>(_data.begin() + _offset);
     }
 
     const_iterator cbegin() const {
-     return reinterpret_cast<const_iterator>(_data.begin() + _offset);
+      return reinterpret_cast<const_iterator>(_data.begin() + _offset);
     }
 
     const_iterator begin() const {
-     return cbegin();
+      return cbegin();
     }
 
     iterator end() {
-     return reinterpret_cast<iterator>(_data.end());
+      return reinterpret_cast<iterator>(_data.end());
     }
 
     const_iterator cend() const {
-     return reinterpret_cast<const_iterator>(_data.end());
+      return reinterpret_cast<const_iterator>(_data.end());
     }
 
     const_iterator end() const {
-     return cend();
+      return cend();
     }
 
     reverse_iterator rbegin() {
-     return reverse_iterator(begin());
+      return reverse_iterator(begin());
     }
 
     const_reverse_iterator crbegin() const {
-     return const_reverse_iterator(cbegin());
+      return const_reverse_iterator(cbegin());
     }
 
     const_reverse_iterator rbegin() const {
-     return crbegin();
+      return crbegin();
     }
 
     reverse_iterator rend() {
-     return reverse_iterator(end());
+      return reverse_iterator(end());
     }
 
     const_reverse_iterator crend() const {
-     return const_reverse_iterator(cend());
+      return const_reverse_iterator(cend());
     }
 
     const_reverse_iterator rend() const {
-     return crend();
+      return crend();
     }
 
     bool empty() const {
@@ -123,21 +123,18 @@ namespace data {
 
   protected:
 
-    explicit Array(size_t offset, RawData data)
+    template <typename FuncT>
+    explicit Array(RawData &&data, FuncT get_offset)
       : SensorData(data),
-        _data(std::move(data)) {
-      SetOffset(offset);
-    }
-
-    explicit Array(RawData data)
-      : Array(0u, std::move(data)) {}
-
-    void SetOffset(size_t offset) {
-      _offset = offset;
+        _data(std::move(data)),
+        _offset(get_offset(_data)) {
       DEBUG_ASSERT(_data.size() >= _offset);
       DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
       DEBUG_ASSERT(begin() <= end());
     }
+
+    explicit Array(size_t offset, RawData &&data)
+      : Array(std::move(data), [offset](const RawData &) { return offset; }) {}
 
     const RawData &GetRawData() const {
       return _data;
@@ -145,9 +142,9 @@ namespace data {
 
   private:
 
-    size_t _offset;
-
     RawData _data;
+
+    const size_t _offset;
   };
 
 } // namespace data
