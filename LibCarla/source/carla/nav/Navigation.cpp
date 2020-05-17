@@ -193,7 +193,7 @@ namespace nav {
       return;
     }
 
-    DEBUG_ASSERT(_crowd != nullptr);
+    DEBUG_ASSERT(_crowd == nullptr);
 
     // create and init
     _crowd = dtAllocCrowd();
