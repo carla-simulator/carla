@@ -9,7 +9,11 @@ test --test_verbose_timeout_warnings
 
 build --action_env=RUNNING_IN_BAZEL=true
 build --action_env=PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+build --action_env=UBSAN_OPTIONS=print_stacktrace=1
+
+test --action_env=RUNNING_IN_BAZEL=true
 test --action_env=PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+test --action_env=UBSAN_OPTIONS=print_stacktrace=1
 
 build --force_pic
 build --dynamic_mode=off

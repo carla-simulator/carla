@@ -126,12 +126,23 @@ def _impl(ctx):
 
     cxx_flags_no_rtti = ["-fno-rtti"]
 
+    cxx_flags_ubsan = [
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "-fno-omit-frame-pointer",
+    ]
+
+    cxx_flags_asan = [
+        "-fsanitize=address",
+        "-fno-omit-frame-pointer",
+    ]
+
     cxx_flags_dbg = [
         "-D_DEBUG",
-        "-O0",
+        "-O1",
         "-ggdb",
         "-fstandalone-debug",
-    ]
+    ] + cxx_flags_ubsan
 
     cxx_flags_opt = [
         "-DNDEBUG",
@@ -160,15 +171,34 @@ def _impl(ctx):
         "-l:libc++.a",
         "-l:libc++abi.a",
 
-        # Hide symbols from static libraries.
-        "-Wl,--exclude-libs,ALL",
-
         "-lpthread",
         "-ldl",
         "-lm",
     ]
 
-    linker_flags_opt = ["-Wl,--gc-sections"]
+    linker_flags_ubsan = cxx_flags_ubsan + [
+        "-Wl,--whole-archive",
+        "-Wl,-rpath=%{llvm_tools_lib}",
+        "-L%{llvm_tools_lib}",
+        "-lclang_rt.ubsan_standalone-x86_64",
+        "-Wl,--no-whole-archive",
+    ]
+
+    linker_flags_asan = cxx_flags_asan + [
+        "-Wl,--whole-archive",
+        "-Wl,-rpath=%{llvm_tools_lib}",
+        "-L%{llvm_tools_lib}",
+        "-lclang_rt.asan_cxx-x86_64",
+        "-Wl,--no-whole-archive",
+    ]
+
+    linker_flags_dbg = linker_flags_ubsan
+
+    linker_flags_opt = [
+        "-Wl,--gc-sections",
+        # Hide symbols from static libraries.
+        "-Wl,--exclude-libs,ALL",
+    ]
 
     for include in cxx_includes:
         if not include.startswith("/"):
@@ -176,9 +206,13 @@ def _impl(ctx):
         cxx_flags_default.append("-isystem")
         cxx_flags_default.append(include)
 
+    # Data required by sanitizing tools.
+    cxx_includes.append("%{llvm_tools_data}")
+
     opt_feature = feature(name = "opt")
     fastbuild_feature = feature(name = "fastbuild")
     dbg_feature = feature(name = "dbg")
+    asan_feature = feature(name = "asan")
 
     extra_warnings_feature = feature(name = "extra-warnings")
     no_exceptions_feature = feature(name = "no-exceptions")
@@ -215,6 +249,11 @@ def _impl(ctx):
                 flag_groups = [flag_group(flags = cxx_flags_opt)],
             ),
             flag_set(
+                actions = all_compile_actions,
+                with_features = [with_feature_set(features = ["asan"])],
+                flag_groups = [flag_group(flags = cxx_flags_asan)],
+            ),
+            flag_set(
                 actions = all_cpp_compile_actions,
                 with_features = [with_feature_set(features = ["no-exceptions"])],
                 flag_groups = [flag_group(flags = cxx_flags_no_exceptions)],
@@ -249,8 +288,18 @@ def _impl(ctx):
         ] + [
             flag_set(
                 actions = all_link_actions,
+                flag_groups = [flag_group(flags = linker_flags_dbg)],
+                with_features = [with_feature_set(features = ["dbg"])],
+            ),
+            flag_set(
+                actions = all_link_actions,
                 flag_groups = [flag_group(flags = linker_flags_opt)],
                 with_features = [with_feature_set(features = ["opt"])],
+            ),
+            flag_set(
+                actions = all_link_actions,
+                flag_groups = [flag_group(flags = linker_flags_asan)],
+                with_features = [with_feature_set(features = ["asan"])],
             ),
         ]
     )
@@ -289,6 +338,7 @@ def _impl(ctx):
         opt_feature,
         fastbuild_feature,
         dbg_feature,
+        asan_feature,
         extra_warnings_feature,
         no_exceptions_feature,
         no_rtti_feature,

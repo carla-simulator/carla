@@ -11,7 +11,7 @@ def _ensure_branch(rctx, branch, path):
         fail("{} - requires branch '{}', but found '{}'".format(path, branch, b))
 
 
-def _configure_llvm_toolchain(rctx, ue4_root):
+def _configure_llvm_toolchain(rctx, ue4_root, ue4_full_path):
     llvm_root = "llvm-8.0.1"
     version = "v15_clang-8.0.1-centos7"
     version_number = "8.0.1"
@@ -47,6 +47,14 @@ def _configure_llvm_toolchain(rctx, ue4_root):
         sdk_path + "/lib/clang",
         llvm_root + "/lib/clang")
 
+    # Need full path for this (sanitizers).
+    tools_path = "{}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/{}/{}/{}/lib/clang/{}".format(
+        ue4_full_path,
+        host,
+        version,
+        target,
+        version_number)
+
     return {
         "%{package_name}": rctx.name,
         "%{toolchain_name}": "clang-7-linux",
@@ -54,6 +62,8 @@ def _configure_llvm_toolchain(rctx, ue4_root):
         "%{target_system_name}": "x86_64-linux-gnu",
         "%{target_cpu}": "k8",
         "%{llvm_tools_path_prefix}": llvm_root,
+        "%{llvm_tools_data}": "{}/share".format(tools_path),
+        "%{llvm_tools_lib}": "{}/lib/linux".format(tools_path),
         "%{llvm_path_prefix}": llvm_root,
         "%{llvm_version}": version,
         "%{llvm_version_number}": version_number,
@@ -67,7 +77,7 @@ def _impl(rctx):
 
     rctx.symlink(ue4_root, "ue4_root")
 
-    llvm_substitutions = _configure_llvm_toolchain(rctx, "ue4_root")
+    llvm_substitutions = _configure_llvm_toolchain(rctx, "ue4_root", ue4_root)
 
     rctx.template(
         "BUILD",
