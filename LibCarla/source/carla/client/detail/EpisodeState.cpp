@@ -19,7 +19,7 @@ namespace detail {
           state.GetPlatformTimeStamp()),
       _simulation_state(state.GetSimulationState()) {
     _actors.reserve(state.size());
-    for (auto &&actor : state) {
+    for (auto actor : state) {
       DEBUG_ONLY(auto result = )
       _actors.emplace(
           actor.id,

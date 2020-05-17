@@ -57,7 +57,7 @@ namespace detail {
     }
 
     static inline float fps(float milliseconds) {
-      return 1e3f / milliseconds;
+      return milliseconds > 0.0f ? 1e3f / milliseconds : std::numeric_limits<float>::max();
     }
 
     const std::string _name;
