@@ -89,6 +89,9 @@ def main():
     temp_file.close()
 
     fixed_xodr = fix_opendrive(broken_xodr, args.center_map)
+    temp_file = open('temp_opendrive.xodr', 'w')
+    temp_file.write(fixed_xodr)
+    temp_file.close()
     print('OpenDRIVE file fixed, connecting to simulation...')
 
     client = carla.Client(args.host, args.port, worker_threads=1)

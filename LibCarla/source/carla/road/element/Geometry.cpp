@@ -132,7 +132,10 @@ namespace element {
   }
 
   void GeometryPoly3::PreComputeSpline() {
-    const double delta_u = 0.01; // interval between values of u
+    // Roughly the interval size in m
+    constexpr double interval_size = 0.5;
+    size_t number_intervals = std::max(static_cast<size_t>(_length / interval_size), size_t(1));
+    const double delta_u = 1.0 / number_intervals;; // interval between values of u
     double current_s = 0;
     double current_u = 0;
     double last_u = 0;
@@ -187,7 +190,9 @@ namespace element {
   }
 
   void GeometryParamPoly3::PreComputeSpline() {
-    size_t number_intervals = 1000;
+    // Roughly the interval size in m
+    constexpr double interval_size = 0.5;
+    size_t number_intervals = std::max(static_cast<size_t>(_length / interval_size), size_t(10));
     double delta_p = 1.0 / number_intervals;
     if (_arcLength) {
         delta_p *= _length;
