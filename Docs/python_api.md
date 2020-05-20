@@ -1795,7 +1795,7 @@ Sets the minimum distance in meters that a vehicle has to keep with the others. 
 Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle being forced to change lanes.  
-        - `direction` (_bool_) – Destination lane. __True__ is the one on the left and __False__ is the right one.  
+        - `direction` (_bool_) – Destination lane. __True__ is the one on the right and __False__ is the left one.  
 - <a name="carla.TrafficManager.global_distance_to_leading_vehicle"></a>**<font color="#7fb800">global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
     - **Parameters:**
