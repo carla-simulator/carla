@@ -150,6 +150,9 @@ void LocalizationStage::Update(const unsigned long index) {
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
   }
 
+  LocalizationData &output = output_array->at(index);
+  output.is_at_junction_entrance = is_at_junction_entrance;
+
   SimpleWaypointPtr junction_end_point = nullptr;
   SimpleWaypointPtr safe_point_after_junction = nullptr;
 
@@ -212,16 +215,12 @@ void LocalizationStage::Update(const unsigned long index) {
       safe_point_after_junction = nullptr;
     }
 
-    LocalizationData &output = output_array->at(index);
-    output.is_at_junction_entrance = is_at_junction_entrance;
     output.junction_end_point = junction_end_point;
     output.safe_point = safe_point_after_junction;
   }
   else if (!is_at_junction_entrance && vehicles_at_junction.find(actor_id) != vehicles_at_junction.end()) {
     vehicles_at_junction.erase(actor_id);
 
-    LocalizationData &output = output_array->at(index);
-    output.is_at_junction_entrance = is_at_junction_entrance;
     output.junction_end_point = nullptr;
     output.safe_point = nullptr;
   }
