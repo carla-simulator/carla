@@ -1033,7 +1033,31 @@ namespace road {
       }
     }
 
-    return out_mesh_list;
+    auto min_pos = geom::Vector2D(
+        out_mesh_list.front()->GetVertices().front().x,
+        out_mesh_list.front()->GetVertices().front().y);
+    auto max_pos = min_pos;
+      auto vertex = mesh->GetVertices().front();
+      min_pos.x = std::min(min_pos.x, vertex.x);
+      min_pos.y = std::min(min_pos.y, vertex.y);
+      max_pos.x = std::max(max_pos.x, vertex.x);
+      max_pos.y = std::max(max_pos.y, vertex.y);
+    }
+    size_t mesh_amount_x = static_cast<size_t>((max_pos.x - min_pos.x)/params.max_road_length) + 1;
+    size_t mesh_amount_y = static_cast<size_t>((max_pos.y - min_pos.y)/params.max_road_length) + 1;
+    std::vector<std::unique_ptr<geom::Mesh>> result;
+    result.reserve(mesh_amount_x*mesh_amount_y);
+    for (size_t i = 0; i < mesh_amount_x*mesh_amount_y; ++i) {
+      result.emplace_back(std::make_unique<geom::Mesh>());
+    }
+    for (auto & mesh : out_mesh_list) {
+      auto vertex = mesh->GetVertices().front();
+      size_t x_pos = static_cast<size_t>((vertex.x - min_pos.x) / params.max_road_length);
+      size_t y_pos = static_cast<size_t>((vertex.y - min_pos.y) / params.max_road_length);
+      *(result[x_pos + mesh_amount_x*y_pos]) += *mesh;
+    }
+
+    return result;
   }
 
   geom::Mesh Map::GetAllCrosswalkMesh() const {
