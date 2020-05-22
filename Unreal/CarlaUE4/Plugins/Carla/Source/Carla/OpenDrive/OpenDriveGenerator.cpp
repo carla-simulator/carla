@@ -80,6 +80,10 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
   const auto Meshes = CarlaMap->GenerateChunkedMesh(Parameters);
   for (const auto &Mesh : Meshes) {
+    if (!Mesh->GetVertices().size())
+    {
+      continue;
+    }
     AActor *TempActor = GetWorld()->SpawnActor<AActor>();
     UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
     TempPMC->RegisterComponent();
