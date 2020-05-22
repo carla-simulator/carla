@@ -70,7 +70,7 @@
         type: carla.OpendriveGenerationParameters
         default: (2.0, 50.0, 1.0, 0.6, true, true)
         doc: >
-           Additional settings for the mesh generation. If none are provided, default values will be used. 
+           Additional settings for the mesh generation. If none are provided, default values will be used.
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
@@ -255,7 +255,7 @@
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------
     doc: >
-      The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.  
+      The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.
 
       In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
@@ -334,7 +334,7 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
@@ -392,7 +392,7 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
@@ -400,7 +400,7 @@
       params:
       return: uint16
       doc: >
-        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.
     # --------------------------------------
     - def_name: set_hybrid_physics_mode
       params:
@@ -408,9 +408,9 @@
         type: bool
         default: False
         doc: >
-          If __True__, enables the hybrid physics. 
+          If __True__, enables the hybrid physics.
       doc: >
-        Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported. 
+        Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.
     # --------------------------------------
     - def_name: set_hybrid_mode_radius
       params:
@@ -418,9 +418,9 @@
         type: float
         default: 70.0
         doc: >
-          New radius where physics are enabled. 
+          New radius where physics are enabled.
       doc: >
-        With hybrid physics on, changes the radius of the area of influence where physics are enabled. 
+        With hybrid physics on, changes the radius of the area of influence where physics are enabled.
     # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
@@ -453,3 +453,7 @@
       type: bool
       doc: >
         If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.
+    - var_name: enable_pedestrian_navigation
+      type: bool
+      doc: >
+        If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.
