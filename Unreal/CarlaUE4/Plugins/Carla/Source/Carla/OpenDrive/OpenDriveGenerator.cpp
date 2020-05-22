@@ -37,13 +37,6 @@ bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
     return false;
   }
 
-  // CarlaMap = OpenDriveLoader::Load(carla::rpc::FromFString(OpenDrive));
-  // if (!CarlaMap.has_value())
-  // {
-  //   UE_LOG(LogCarla, Error, TEXT("The OpenDrive is invalid or not supported"));
-  //   return false;
-  // }
-
   OpenDriveData = OpenDrive;
   return true;
 }

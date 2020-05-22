@@ -1037,6 +1037,7 @@ namespace road {
         out_mesh_list.front()->GetVertices().front().x,
         out_mesh_list.front()->GetVertices().front().y);
     auto max_pos = min_pos;
+    for (auto & mesh : out_mesh_list) {
       auto vertex = mesh->GetVertices().front();
       min_pos.x = std::min(min_pos.x, vertex.x);
       min_pos.y = std::min(min_pos.y, vertex.y);
