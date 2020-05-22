@@ -177,6 +177,12 @@ void ATrafficLightManager::BeginPlay()
 {
   Super::BeginPlay();
 
+  // Should not run in empty maps
+  if (!GetMap()) 
+  {
+    return;
+  }
+
   if (TrafficLightsGenerated)
   {
     ResetTrafficLightObjects();

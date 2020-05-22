@@ -314,7 +314,7 @@
       - param_name: direction
         type: bool
         doc: >
-          Destination lane. __True__ is the one on the left and __False__ is the right one.
+          Destination lane. __True__ is the one on the right and __False__ is the left one.
       doc: >
         Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.
     # --------------------------------------
