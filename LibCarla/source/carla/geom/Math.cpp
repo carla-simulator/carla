@@ -135,6 +135,19 @@ namespace geom {
         -cp * sr};
   }
 
+  Vector3D Math::GetUpVector(const Rotation &rotation) {
+    const float cy = std::cos(ToRadians(rotation.yaw));
+    const float sy = std::sin(ToRadians(rotation.yaw));
+    const float cr = std::cos(ToRadians(rotation.roll));
+    const float sr = std::sin(ToRadians(rotation.roll));
+    const float cp = std::cos(ToRadians(rotation.pitch));
+    const float sp = std::sin(ToRadians(rotation.pitch));
+    return {
+        -cy * sp * cr - sy * sr,
+        -sy * sp * cr + cy * sr,
+        -cp * cr};
+  }
+
   std::vector<int> Math::GenerateRange(int a, int b) {
     std::vector<int> result;
     if (a < b) {
