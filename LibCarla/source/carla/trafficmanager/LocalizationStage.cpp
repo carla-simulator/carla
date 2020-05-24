@@ -150,15 +150,12 @@ void LocalizationStage::Update(const unsigned long index) {
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
   }
 
-  LocalizationData &output = output_array->at(index);
-  output.is_at_junction_entrance = is_at_junction_entrance;
-
   SimpleWaypointPtr junction_end_point = nullptr;
   SimpleWaypointPtr safe_point_after_junction = nullptr;
 
   // Find safe interval after junction exit.
-  if (is_at_junction_entrance && vehicles_at_junction.find(actor_id) == vehicles_at_junction.end()) {
-    vehicles_at_junction.insert(actor_id);
+  if (is_at_junction_entrance
+      && vehicles_at_junction_entrance.find(actor_id) == vehicles_at_junction_entrance.end()) {
 
     bool entered_junction = false;
     bool past_junction = false;
@@ -215,12 +212,23 @@ void LocalizationStage::Update(const unsigned long index) {
       safe_point_after_junction = nullptr;
     }
 
-    output.junction_end_point = junction_end_point;
-    output.safe_point = safe_point_after_junction;
+    vehicles_at_junction_entrance.insert({actor_id, {junction_end_point, safe_point_after_junction}});
   }
-  else if (!is_at_junction_entrance && vehicles_at_junction.find(actor_id) != vehicles_at_junction.end()) {
-    vehicles_at_junction.erase(actor_id);
+  else if (!is_at_junction_entrance
+           && vehicles_at_junction_entrance.find(actor_id) != vehicles_at_junction_entrance.end()) {
 
+    vehicles_at_junction_entrance.erase(actor_id);
+  }
+
+  // Editing output array
+  LocalizationData &output = output_array->at(index);
+  output.is_at_junction_entrance = is_at_junction_entrance;
+
+  if (is_at_junction_entrance) {
+    const SimpleWaypointPair &safe_space_end_points = vehicles_at_junction_entrance.at(actor_id);
+    output.junction_end_point = safe_space_end_points.first;
+    output.safe_point = safe_space_end_points.second;
+  } else {
     output.junction_end_point = nullptr;
     output.safe_point = nullptr;
   }
