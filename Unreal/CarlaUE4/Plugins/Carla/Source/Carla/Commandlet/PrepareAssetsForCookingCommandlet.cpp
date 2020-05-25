@@ -12,6 +12,28 @@
 #include "HAL/PlatformFilemanager.h"
 #include "UObject/ConstructorHelpers.h"
 
+static bool ValidateStaticMesh(UStaticMesh* Mesh) {
+  FString AssetName = Mesh->GetName();
+
+  if (  AssetName.Contains(TEXT("light"), ESearchCase::IgnoreCase) ||
+        AssetName.Contains(TEXT("sign"),  ESearchCase::IgnoreCase) ) {
+    return false;
+  }
+
+  for(int i = 0; i < Mesh->StaticMaterials.Num(); i++) {
+      UMaterialInterface* Material = Mesh->GetMaterial(i);
+      FString MaterialName = Material->GetName();
+
+      if (  MaterialName.Contains(TEXT("light"), ESearchCase::IgnoreCase) ||
+            MaterialName.Contains(TEXT("sign"),  ESearchCase::IgnoreCase) ) {
+        return false;
+      }
+  }
+
+  return true;
+}
+
+
 UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 {
   // Set necessary flags to run commandlet
@@ -105,7 +127,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   {
     // Spawn Static Mesh
     MeshAsset = Cast<UStaticMesh>(MapAsset.GetAsset());
-    if (MeshAsset)
+    if (MeshAsset && ValidateStaticMesh(MeshAsset) )
     {
       MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
       UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
