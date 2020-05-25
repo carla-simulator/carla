@@ -337,14 +337,17 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > 0.1;
     bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > 0.1;
     bool ego_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic < geometry_comparison.other_vehicle_to_reference_geodesic;
+    bool other_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic > geometry_comparison.other_vehicle_to_reference_geodesic;
     bool ego_angular_priority = cg::Math::Dot(reference_heading, reference_to_other) < cg::Math::Dot(other_heading, other_to_reference);
 
     // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
     if (geodesic_path_bbox_touching
         && ((!vehicle_bbox_touching
              && (!ego_path_clear ||
-                 (ego_path_clear && other_path_clear && !ego_angular_priority && !ego_path_priority)))
-            || (vehicle_bbox_touching && !ego_angular_priority && !ego_path_priority))) {
+                 (other_path_clear && !ego_path_priority
+                  && (other_path_priority || !ego_angular_priority))))
+            || (vehicle_bbox_touching && !ego_angular_priority))) {
+
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);
