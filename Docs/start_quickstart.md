@@ -115,9 +115,7 @@ Download and extract the release file. It contains a precompiled version of the 
 ---
 ## Import additional assets 
 
-For every release there are other packages containing additional assets and maps, such as __Additional_Maps_0.9.9.2__ or __Town06_0.9.5.tar.gz__.  
-
-__Town06__, __Town07__, __Town10__ are not contained in the main CARLA release to reduce the size of the build, so they can only be run after these packages are imported.  
+For every release there are other packages containing additional assets and maps, such as __Additional_Maps_0.9.9.2__ for CARLA 0.9.9.2, which contains __Town06__, __Town07__, and __Town10__. These are stored separatedly to reduce the size of the build, so they can only be run after these packages are imported.  
 
 Download and move the package to the _Import_ folder, and run the following script to extract them.  
 
