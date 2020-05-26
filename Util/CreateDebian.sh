@@ -21,8 +21,8 @@
 
 if [[ -z $1 ]];
 then
-  echo `date`" - Missing mandatory arguments: CARLA version. "
-  echo `date`" - Usage: ./CreateDebian.sh [version]. "
+  echo "$(date) - Missing mandatory arguments: CARLA version. "
+  echo "$(date) - Usage: ./CreateDebian.sh [version]. "
   exit 1
 fi
 
@@ -44,17 +44,17 @@ sudo apt-get install build-essential dh-make
 # ==================================================================================================
 # -- Download --------------------------------------------------------------------------------------
 # ==================================================================================================
-mkdir -p carla-debian/${CARLA_DIR}
-cd carla-debian/${CARLA_DIR}
+mkdir -p carla-debian/"${CARLA_DIR}"
+cd carla-debian/"${CARLA_DIR}"
 
 FILE=$(pwd)/ImportAssets.sh
 if [ -f "$FILE" ]; then
   echo "Package already downloaded!"
 else
-  curl ${CARLA_RELEASE_URL} | tar xz
+  curl "${CARLA_RELEASE_URL}" | tar xz
 
-  wget ${ADDITIONAL_MAPS_URL}
-  mv AdditionalMaps_${CARLA_VERSION}.tar.gz Import/
+  wget "${ADDITIONAL_MAPS_URL}"
+  mv AdditionalMaps_"${CARLA_VERSION}".tar.gz Import/
 fi
 
 # Importing new maps.
