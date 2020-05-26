@@ -72,7 +72,7 @@ rm CarlaUE4.sh
 cat >> CarlaUE4.sh <<EOF
 #!/bin/sh
 sudo chmod +x "/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
-"/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 $@
+"/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 \$@
 EOF
 
 # Making debian package to install Carla in /opt folder
