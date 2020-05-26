@@ -153,7 +153,7 @@ def generate_pb_docs():
                         "   print(blueprint.id)\n"
                         "   for attr in blueprint:\n"
                         "       print('  - {}'.format(attr))", "py"))
-    md.textn("Check out our [blueprint tutorial](../python_api_tutorial/#blueprints).")
+    md.textn("Check out the [introduction to blueprints](core_actors.md).")
 
     for key, value in bp_dict.items(): # bp types, bp's
         md.title(3, key) # Key = walker, static, controller, sensor, vehicle

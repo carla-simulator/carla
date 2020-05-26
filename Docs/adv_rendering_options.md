@@ -39,9 +39,21 @@ The simulation runs significantly faster in __Low__ mode. This is not only used 
 
 The images below compare both modes. The flag used is the same for Windows and Linux. There is no equivalent option when working with the build, but the UE editor has its own quality settings. Go to `Settings/Engine Scalability Settings` for a greater customization of the desired quality. 
 
-![](img/epic_quality_capture.png)  |  ![](img/low_quality_capture.png)
-:-------------------------:|:-------------------------:
-`./CarlaUE4.sh -quality-level=Epic`  |  `./CarlaUE4.sh -quality-level=Low`
+<table class ="defTable">
+<tbody>
+<td><b>Epic mode</b></td>
+<tr>
+<td><code>./CarlaUE4.sh -quality-level=Epic</code></td>
+<tr>
+<td><img src="../img/rendering_quality_epic.jpg"><br><br><div align="right"><i>Epic mode screenshot</i></div></td>
+<tr>
+<td><b>Low mode</b></td>
+<tr>
+<td><code>./CarlaUE4.sh -quality-level=Low</code></td>
+<tr>
+<td><img src="../img/rendering_quality_low.jpg"><br><br><div align="right"><i>Low mode screenshot</i></div></td>
+</tbody>
+</table>
 
 <br>
 
