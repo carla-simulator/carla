@@ -4,22 +4,15 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 
 namespace carla {
 namespace traffic_manager {
 
-namespace MapConstants {
-
-  static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-  static const float GRID_SIZE = 4.0f;
-  static const float PED_GRID_SIZE = 10.0f;
-  static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
-  static const float TOPOLOGY_DISTANCE = 0.1f;
-} // namespace MapConstants
 
   namespace cg = carla::geom;
-  using namespace MapConstants;
+  using namespace constants::Map;
 
   InMemoryMap::InMemoryMap(WorldMap world_map) : _world_map(world_map) {}
   InMemoryMap::~InMemoryMap() {}
@@ -116,7 +109,7 @@ namespace MapConstants {
 
     // 2. Consuming the raw dense topology from cc::Map into SimpleWaypoints.
     SegmentMap segment_map;
-    auto raw_dense_topology = _world_map->GenerateWaypoints(TOPOLOGY_DISTANCE);
+    auto raw_dense_topology = _world_map->GenerateWaypoints(MAP_RESOLUTION);
     for (auto &waypoint_ptr: raw_dense_topology) {
       segment_map[GetSegmentId(waypoint_ptr)].emplace_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
     }

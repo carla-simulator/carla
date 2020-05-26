@@ -111,7 +111,7 @@ public:
   /// Method to set probabilistic preference to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
 
-  /// Method to set distance to leading vehicle for a given vehicle.
+  /// Method to set the distance to leading vehicle for all registered vehicles.
   void SetGlobalDistanceToLeadingVehicle(const float dist);
 
   /// Set Synchronous mode time out.
