@@ -85,7 +85,7 @@ void MotionPlanStage::Update(const unsigned long index) {
   float dynamic_target_velocity = max_target_velocity;
   //////////////////////// Collision related data handling ///////////////////////////
   bool collision_emergency_stop = false;
-  if (collision_hazard.hazard) {
+  if (!tl_hazard && collision_hazard.hazard) {
     const ActorId other_actor_id = collision_hazard.hazard_actor_id;
     const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
     const float ego_relative_speed = (ego_velocity - other_velocity).Length();
