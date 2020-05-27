@@ -2802,6 +2802,23 @@ If physics should be activated or not.
 
 ---
 
+## command.SetVehicleLightState<a name="command.SetVehicleLightState"></a>
+Command adaptation of **<font color="#7fb800">set_light_state()</font>** in [carla.Vehicle](#carla.Vehicle). Sets the light state of a vehicle.  
+
+<h3>Instance Variables</h3>
+- <a name="command.SetVehicleLightState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor that is affected by the command.  
+- <a name="command.SetVehicleLightState.light_state"></a>**<font color="#f8805a">light_state</font>** (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
+Defines the light state of a vehicle.  
+
+<h3>Methods</h3>
+- <a name="command.SetVehicleLightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**light_state**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_) – Recaps the state of the lights of a vehicle, these can be used as a flags.  
+
+---
+
 ## command.SpawnActor<a name="command.SpawnActor"></a>
 Command adaptation of **<font color="#7fb800">spawn_actor()</font>** in [carla.World](#carla.World). Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.  
 
