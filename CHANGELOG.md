@@ -6,6 +6,8 @@
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
+  * Added PythonAPI command to set multiple car light states at once
+  * Added PythonAPI `carla.world.get_vehicles_light_state` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Added API functions `get_right_vector` and `get_up_vector`
