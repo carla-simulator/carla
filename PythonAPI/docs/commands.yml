@@ -364,4 +364,32 @@
         doc: >
           The Traffic Manager port where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
     # --------------------------------------
+
+  - class_name: SetVehicleLightState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of **<font color="#7fb800">set_light_state()</font>** in carla.Vehicle. Sets the light state of a vehicle.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: light_state
+      type: carla.VehicleLightState
+      doc: >
+        Defines the light state of a vehicle.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to.
+      - param_name: light_state
+        type: carla.VehicleLightState
+        doc: >
+          Recaps the state of the lights of a vehicle, these can be used as a flags.
+    # --------------------------------------
 ...
