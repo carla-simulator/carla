@@ -315,6 +315,10 @@ namespace detail {
     _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
   }
 
+  rpc::VehicleLightStateList Client::GetVehiclesLightStates() {
+    return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
+  }
+
   std::vector<ActorId> Client::GetGroupTrafficLights(rpc::ActorId traffic_light) {
     using return_t = std::vector<ActorId>;
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);

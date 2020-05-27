@@ -26,6 +26,10 @@ namespace client {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
+  rpc::VehicleLightStateList World::GetVehiclesLightStates() const {
+    return _episode.Lock()->GetVehiclesLightStates();
+  }
+
   boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
     return _episode.Lock()->GetRandomLocationFromNavigation();
   }
