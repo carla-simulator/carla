@@ -61,6 +61,15 @@ static auto GetActorsById(carla::client::World &self, const boost::python::list 
   return self.GetActors(ids);
 }
 
+static auto GetVehiclesLightStates(carla::client::World &self) {
+  boost::python::dict dict;
+  auto list = self.GetVehiclesLightStates();
+  for (auto &vehicle : list) {
+    dict[vehicle.first] = vehicle.second;
+  }
+  return dict;
+}
+
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -136,6 +145,7 @@ void export_world() {
     .add_property("id", &cc::World::GetId)
     .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
+    .def("get_vehicles_light_states", &GetVehiclesLightStates)
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
     .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))

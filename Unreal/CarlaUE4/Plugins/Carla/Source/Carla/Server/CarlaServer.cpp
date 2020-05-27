@@ -35,6 +35,7 @@
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
+#include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -256,7 +257,7 @@ void FCarlaServer::FPimpl::BindActions()
     return UCarlaStatics::GetGameInstance(Episode->GetWorld())->IsLevelPendingLoad();
   };
 
-  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>
+  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, cr::OpendriveGenerationParameters Params) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive), Params))
@@ -893,6 +894,27 @@ void FCarlaServer::FPimpl::BindActions()
     }
     TrafficLight->SetTimeIsFrozen(Freeze);
     return R<void>::Success();
+  };
+
+  BIND_SYNC(get_vehicle_light_states) << [this]() -> R<cr::VehicleLightStateList>
+  {
+    REQUIRE_CARLA_EPISODE();
+    cr::VehicleLightStateList List;
+
+    auto It = Episode->GetActorRegistry().begin();
+    for (; It != Episode->GetActorRegistry().end(); ++It)
+    {
+      auto Actor = It->GetActor();
+      if (!Actor->IsPendingKill() and It->GetActorType() == FActorView::ActorType::Vehicle)
+      {
+        const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+        List.emplace_back(
+            It->GetActorId(),
+            cr::VehicleLightState(Vehicle->GetVehicleLightState()).GetLightStateAsValue());
+      }
+    }
+
+    return List;
   };
 
   BIND_SYNC(get_group_traffic_lights) << [this](
