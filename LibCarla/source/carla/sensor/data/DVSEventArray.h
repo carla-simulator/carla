@@ -25,7 +25,7 @@ namespace data {
 
     friend Serializer;
 
-    explicit DVSEventArray(RawData data)
+    explicit DVSEventArray(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {
     }
 
