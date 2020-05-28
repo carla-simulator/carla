@@ -905,7 +905,7 @@ void FCarlaServer::FPimpl::BindActions()
     for (; It != Episode->GetActorRegistry().end(); ++It)
     {
       auto Actor = It->GetActor();
-      if (!Actor->IsPendingKill() and It->GetActorType() == FActorView::ActorType::Vehicle)
+      if (!Actor->IsPendingKill() && It->GetActorType() == FActorView::ActorType::Vehicle)
       {
         const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
         List.emplace_back(
