@@ -2,33 +2,21 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
 #include <unordered_map>
 
-#include "carla/client/Actor.h"
-#include "carla/client/ActorList.h"
 #include "carla/client/Timestamp.h"
-#include "carla/client/Vehicle.h"
-#include "carla/client/Walker.h"
 #include "carla/client/World.h"
 #include "carla/Memory.h"
-#include "carla/rpc/ActorId.h"
-#include "carla/rpc/TrafficLightState.h"
-#include "boost/pointer_cast.hpp"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
-#include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/CollisionStage.h"
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/InMemoryMap.h"
-#include "carla/trafficmanager/LocalizationUtils.h"
-#include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/SimpleWaypoint.h"
-#include "carla/trafficmanager/SimulationState.h"
-
 #include "carla/trafficmanager/LocalizationStage.h"
-#include "carla/trafficmanager/CollisionStage.h"
-#include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
+#include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/SimulationState.h"
+#include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -40,11 +28,9 @@ namespace chr = std::chrono;
 namespace cg = carla::geom;
 namespace cc = carla::client;
 
+using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorMap = std::unordered_map<ActorId, ActorPtr>;
-using ActorList = carla::SharedPtr<cc::ActorList>;
-using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
 using IdleTimeMap = std::unordered_map<ActorId, double>;
-using IdToIndexMap = std::unordered_map<ActorId, unsigned long>;
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
 
 /// ALSM: Agent Lifecycle and State Managerment
@@ -71,7 +57,7 @@ private:
   TrafficLightStage &traffic_light_stage;
   MotionPlanStage &motion_plan_stage;
   // Time elapsed since last vehicle destruction due to being idle for too long.
-  double elapsed_last_actor_destruction {0.0f};
+  double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
 
   // Updates the duration for which a registered vehicle is stuck at a location.

@@ -1,8 +1,21 @@
 
+#include "boost/pointer_cast.hpp"
+
+#include "carla/client/Actor.h"
+#include "carla/client/ActorList.h"
+#include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
+
+#include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/LocalizationUtils.h"
+#include "carla/trafficmanager/SimpleWaypoint.h"
+
 #include "carla/trafficmanager/ALSM.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using ActorList = carla::SharedPtr<cc::ActorList>;
 
 ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
