@@ -17,9 +17,20 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+  // Fast conversion from fstring
+  static inline std::string FromFString(const FString &Str) {
+    return TCHAR_TO_UTF8(*Str);
+  }
+
+  // Fast conversion to fstring
+  static inline FString ToFString(const std::string &str) {
+    return FString(str.size(), UTF8_TO_TCHAR(str.c_str()));
+  }
+
   constexpr size_t MaxStringLength = 5000000;
 
-  static inline std::string FromFString(const FString &Str) {
+  // Slower conversion from fstring for long text
+  static inline std::string FromLongFString(const FString &Str) {
     std::string result;
     size_t i = 0;
     while(i + MaxStringLength < Str.Len()) {
@@ -34,7 +45,8 @@ namespace rpc {
     return result;
   }
 
-  static inline FString ToFString(const std::string &str) {
+  // Slower conversion to fstring for long text
+  static inline FString ToLongFString(const std::string &str) {
     FString result = "";
     size_t i = 0;
     while(i + MaxStringLength < str.size()) {
