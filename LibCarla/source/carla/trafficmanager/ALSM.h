@@ -2,8 +2,8 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 
+#include "carla/client/ActorList.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/World.h"
 #include "carla/Memory.h"
@@ -29,6 +29,7 @@ namespace cg = carla::geom;
 namespace cc = carla::client;
 
 using ActorPtr = carla::SharedPtr<cc::Actor>;
+using ActorList = carla::SharedPtr<cc::ActorList>;
 using ActorMap = std::unordered_map<ActorId, ActorPtr>;
 using IdleTimeMap = std::unordered_map<ActorId, double>;
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
@@ -69,6 +70,15 @@ private:
   // Removes an actor from traffic manager and performs clean up of associated data
   // from various stages tracking the said vehicle.
   void RemoveActor(const ActorId actor_id, const bool registered_actor);
+
+  using ActorVector = std::vector<ActorPtr>;
+  // Method to identify actors newly spawned in the simulation since last tick.
+  ActorVector IdentifyNewActors(const ActorList &actor_list);
+
+  using DestroyeddActors = std::pair<ActorIdSet, ActorIdSet>;
+  // Method to identify actors deleted in the last frame.
+  // Arrays of registered and unregistered actors are returned separately.
+  DestroyeddActors IdentifyDestroyedActors(const ActorList &actor_list);
 
 public:
   ALSM(AtomicActorSet &registered_vehicles,
