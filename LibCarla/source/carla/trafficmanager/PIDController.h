@@ -64,7 +64,7 @@ ActuationSignal RunStep(StateEntry present_state,
   const float expr_v =
       longitudinal_parameters[0] * present_state.velocity +
       longitudinal_parameters[1] * present_state.velocity_integral +
-      longitudinal_parameters[2] * (present_state.velocity - previous_state.velocity) / DT;
+      longitudinal_parameters[2] * (present_state.velocity - previous_state.velocity) * INV_DT;
 
   float throttle;
   float brake;
@@ -81,7 +81,7 @@ ActuationSignal RunStep(StateEntry present_state,
   float steer =
       lateral_parameters[0] * present_state.deviation +
       lateral_parameters[1] * present_state.deviation_integral +
-      lateral_parameters[2] * (present_state.deviation - previous_state.deviation) / DT;
+      lateral_parameters[2] * (present_state.deviation - previous_state.deviation) * INV_DT;
 
   steer = std::max(-0.8f, std::min(steer, 0.8f));
 
