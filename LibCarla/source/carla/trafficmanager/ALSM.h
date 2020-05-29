@@ -80,6 +80,11 @@ private:
   // Arrays of registered and unregistered actors are returned separately.
   DestroyeddActors IdentifyDestroyedActors(const ActorList &actor_list);
 
+  using IdleInfo = std::pair<ActorId, double>;
+  void UpdateRegisteredActorsData(const bool hybrid_physics_mode, IdleInfo &max_idle_time);
+
+  void UpdateUnregisteredActorsData();
+
 public:
   ALSM(AtomicActorSet &registered_vehicles,
        BufferMapPtr &buffer_map_ptr,

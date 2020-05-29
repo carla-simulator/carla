@@ -49,8 +49,7 @@ void ALSM::Update() {
   current_timestamp = world.GetSnapshot().GetTimestamp();
   ActorList world_actors = world.GetActors();
 
-  ///////////////////// Find destroyed actors and perform clean up. ///////////////////
-
+  // Find destroyed actors and perform clean up.
   const ALSM::DestroyeddActors destroyed_actors = IdentifyDestroyedActors(world_actors);
 
   const ActorIdSet &destroyed_registered = destroyed_actors.first;
@@ -81,63 +80,83 @@ void ALSM::Update() {
   ALSM::ActorVector new_actors = IdentifyNewActors(world_actors);
   for (const ActorPtr &actor: new_actors) {
     unregistered_actors.insert({actor->GetId(), actor});
-  }
 
-  // Identify hero vehicle if currently not present
-  // and system is in hybrid physics mode.
-  if (hybrid_physics_mode) {
-    for (const ActorId &actor_ptr: new_actors) {
-      if (actor_ptr->GetTypeId().front() == 'v') {
-        ActorId hero_actor_id = actor_ptr->GetId();
-        for (auto&& attribute: actor_ptr->GetAttributes()) {
+    // Identify any new hero vehicle if the system is in hybrid physics mode.
+    if (hybrid_physics_mode) {
+      if (actor->GetTypeId().front() == 'v') {
+        ActorId hero_actor_id = actor->GetId();
+        for (auto&& attribute: actor->GetAttributes()) {
           if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
-            hero_actors.insert({hero_actor_id, actor_ptr});
+            hero_actors.insert({hero_actor_id, actor});
           }
         }
       }
     }
   }
 
-  // Regularly update unregistered actor grid position.
-  for (auto iter = unregistered_actors.begin(); iter != unregistered_actors.cend(); ++iter) {
-    ActorId unregistered_actor_id = iter->first;
-    if (registered_vehicles.Contains(unregistered_actor_id)
-        || (world_vehicle_ids.find(unregistered_actor_id) == world_vehicle_ids.end()
-            && world_pedestrian_ids.find(unregistered_actor_id) == world_pedestrian_ids.end())) {
-      unregistered_list_to_be_deleted.push_back(iter->first);
+  // Update dynamic state and static attributes for all registered vehicles.
+  ALSM::IdleInfo max_idle_time = std::make_pair(0u, current_timestamp.elapsed_seconds);
+  UpdateRegisteredActorsData(hybrid_physics_mode, max_idle_time);
+
+  // Destroy registered vehicle if stuck at a location for too long.
+  if (IsVehicleStuck(max_idle_time.first)
+      && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+    registered_vehicles.Destroy(max_idle_time.first);
+    RemoveActor(max_idle_time.first, true);
+    elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
+  }
+
+  // Update dynamic state and static attributes for unregistered actors.
+  UpdateUnregisteredActorsData();
+}
+
+std::vector<ActorPtr> ALSM::IdentifyNewActors(const ActorList &actor_list) {
+  std::vector<ActorPtr> new_actors;
+  for  (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
+    ActorPtr actor = *iter;
+    ActorId actor_id = actor->GetId();
+    if (!registered_vehicles.Contains(actor_id)
+        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
+      new_actors.push_back(actor);
     }
-    else {
-      // Updating data structures.
-      cg::Location location = iter->second->GetLocation();
-      const auto type = iter->second->GetTypeId();
+  }
+  return new_actors;
+}
 
-      std::vector<SimpleWaypointPtr> nearest_waypoints;
-      if (type[0] == 'v') {
-        auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(iter->second);
-        cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
-        cg::Vector3D heading_vector = vehicle_ptr->GetTransform().GetForwardVector();
-        std::vector<cg::Location> corners = {location + cg::Location(extent.x * heading_vector),
-                                             location,
-                                             location + cg::Location(-extent.x * heading_vector)};
-        for (cg::Location &vertex: corners) {
-          SimpleWaypointPtr nearest_waypoint = local_map->GetWaypointInVicinity(vertex);
-          if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetPedWaypoint(vertex);};
-          if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetWaypoint(location);};
-          nearest_waypoints.push_back(nearest_waypoint);
-        }
-      } else if (type[0] == 'w') {
-        SimpleWaypointPtr nearest_waypoint = local_map->GetPedWaypoint(location);
-        if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetWaypoint(location);};
-        nearest_waypoints.push_back(nearest_waypoint);
-      }
+ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list) {
 
-      track_traffic.UpdateUnregisteredGridPosition(iter->first, nearest_waypoints);
+  ALSM::DestroyeddActors destroyed_actors;
+  ActorIdSet &deleted_registered = destroyed_actors.first;
+  ActorIdSet &deleted_unregistered = destroyed_actors.second;
+
+  // Building hash set of actors present in current frame.
+  ActorIdSet current_actors;
+  for  (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
+    current_actors.insert((*iter)->GetId());
+  }
+
+  // Searching for destroyed registered actors.
+  std::vector<ActorId> registered_ids = registered_vehicles.GetIDList();
+  for (const ActorId &actor_id : registered_ids) {
+    if (current_actors.find(actor_id) == current_actors.end()) {
+      deleted_registered.insert(actor_id);
     }
   }
 
-  // Update dynamic state and static attributes for all registered vehicles.
-  float dt = HYBRID_MODE_DT;
-  std::pair<ActorId, double> max_idle_time = std::make_pair(0u, current_timestamp.elapsed_seconds);
+  // Searching for destroyed unregistered actors.
+  for (const auto &actor_info: unregistered_actors) {
+    const ActorId &actor_id = actor_info.first;
+     if (current_actors.find(actor_id) == current_actors.end()
+         || registered_vehicles.Contains(actor_id)) {
+      deleted_unregistered.insert(actor_id);
+    }
+  }
+
+  return destroyed_actors;
+}
+
+void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::IdleInfo &max_idle_time) {
+
   std::vector<ActorPtr> vehicle_list = registered_vehicles.GetList();
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
@@ -177,7 +196,7 @@ void ALSM::Update() {
         previous_location = vehicle_location;
       }
       cg::Vector3D displacement = (vehicle_location - previous_location);
-      vehicle_velocity = displacement / dt;
+      vehicle_velocity = displacement / HYBRID_MODE_DT;
     }
 
     // Updated kinematic state object.
@@ -203,19 +222,14 @@ void ALSM::Update() {
     // Updating idle time when necessary.
     UpdateIdleTime(max_idle_time, actor_id);
   }
+}
 
-  // Destroy registered vehicle if stuck at a location for too long.
-  if (IsVehicleStuck(max_idle_time.first)
-      && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
-    registered_vehicles.Destroy(max_idle_time.first);
-    RemoveActor(max_idle_time.first, true);
-    elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
-  }
+void ALSM::UpdateUnregisteredActorsData() {
+  for (auto &actor_info: unregistered_actors) {
 
-  // Update kinematic state and static attributes for unregistered actors.
-  for (auto &unregistered_actor: unregistered_actors) {
-    const ActorId actor_id = unregistered_actor.first;
-    const ActorPtr actor_ptr = unregistered_actor.second;
+    const ActorId actor_id = actor_info.first;
+    const ActorPtr actor_ptr = actor_info.second;
+    const std::string type_id = actor_ptr->GetTypeId();
 
     const cg::Transform actor_transform = actor_ptr->GetTransform();
     const cg::Location actor_location = actor_transform.location;
@@ -224,10 +238,10 @@ void ALSM::Update() {
     KinematicState kinematic_state {true, actor_location, actor_rotation, actor_velocity, -1.0f};
 
     TrafficLightState tl_state;
-
-    const std::string type_id = actor_ptr->GetTypeId();
     ActorType actor_type = ActorType::Any;
     cg::Vector3D dimensions;
+    std::vector<SimpleWaypointPtr> nearest_waypoints;
+
     if (type_id.front() == 'v') {
       auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor_ptr);
       kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
@@ -244,6 +258,19 @@ void ALSM::Update() {
         simulation_state.UpdateKinematicState(actor_id, kinematic_state);
         simulation_state.UpdateTrafficLightState(actor_id, tl_state);
       }
+
+      // Identify occupied waypoints.
+      cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
+      cg::Vector3D heading_vector = vehicle_ptr->GetTransform().GetForwardVector();
+      std::vector<cg::Location> corners = {actor_location + cg::Location(extent.x * heading_vector),
+                                           actor_location,
+                                           actor_location + cg::Location(-extent.x * heading_vector)};
+      for (cg::Location &vertex: corners) {
+        SimpleWaypointPtr nearest_waypoint = local_map->GetWaypointInVicinity(vertex);
+        if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetPedWaypoint(vertex);}
+        if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetWaypoint(actor_location);}
+        nearest_waypoints.push_back(nearest_waypoint);
+      }
     }
     else if (type_id.front() == 'w') {
       auto walker_ptr = boost::static_pointer_cast<cc::Walker>(actor_ptr);
@@ -257,52 +284,15 @@ void ALSM::Update() {
       } else {
         simulation_state.UpdateKinematicState(actor_id, kinematic_state);
       }
+
+      // Identify occupied waypoints.
+      SimpleWaypointPtr nearest_waypoint = local_map->GetPedWaypoint(actor_location);
+      if (nearest_waypoint == nullptr) {nearest_waypoint = local_map->GetWaypoint(actor_location);}
+      nearest_waypoints.push_back(nearest_waypoint);
     }
+
+    track_traffic.UpdateUnregisteredGridPosition(actor_id, nearest_waypoints);
   }
-}
-
-std::vector<ActorPtr> ALSM::IdentifyNewActors(const ActorList &actor_list) {
-  std::vector<ActorPtr> new_actors;
-  for  (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
-    ActorPtr actor = *iter;
-    ActorId actor_id = actor->GetId();
-    if (!registered_vehicles.Contains(actor_id)
-        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
-      new_actors.push_back(actor);
-    }
-  }
-  return new_actors;
-}
-
-ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list) {
-
-  ALSM::DestroyeddActors destroyed_actors;
-  ActorIdSet &deleted_registered = destroyed_actors.first;
-  ActorIdSet &deleted_unregistered = destroyed_actors.second;
-
-  // Building hash set of actors present in current frame.
-  ActorIdSet current_actors;
-  for  (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
-    current_actors.insert((*iter)->GetId());
-  }
-
-  // Searching for destroyed registered actors.
-  std::vector<ActorId> registered_ids = registered_vehicles.GetIDList();
-  for (const ActorId &actor_id : registered_ids) {
-    if (current_actors.find(actor_id) == current_actors.end()) {
-      deleted_registered.insert(actor_id);
-    }
-  }
-
-  // Searching for destroyed unregistered actors.
-  for (const auto &actor_info: unregistered_actors) {
-    const ActorId &actor_id = actor_info.first;
-     if (current_actors.find(actor_id) == current_actors.end()) {
-      deleted_unregistered.insert(actor_id);
-    }
-  }
-
-  return destroyed_actors;
 }
 
 void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id) {
