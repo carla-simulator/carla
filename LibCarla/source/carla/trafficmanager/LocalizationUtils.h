@@ -29,6 +29,8 @@ namespace traffic_manager {
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using Buffer = std::deque<SimpleWaypointPtr>;
   using GeoGridId = carla::road::JuncId;
+  using constants::Map::MAP_RESOLUTION;
+  using constants::Map::INV_MAP_RESOLUTION;
 
   /// Returns the cross product (z component value) between the vehicle's
   /// heading vector and the vector along the direction to the next

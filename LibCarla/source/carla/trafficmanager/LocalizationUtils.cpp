@@ -9,8 +9,6 @@
 namespace carla {
 namespace traffic_manager {
 
-using constants::Map::MAP_RESOLUTION;
-
 float DeviationCrossProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location) {
@@ -59,13 +57,13 @@ TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &targe
 
   SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
   const SimpleWaypointPtr &buffer_front = waypoint_buffer.front();
-  uint64_t startPosn = static_cast<uint64_t>(std::fabs(target_point_distance / MAP_RESOLUTION));
+  uint64_t startPosn = static_cast<uint64_t>(std::fabs(target_point_distance * INV_MAP_RESOLUTION));
   uint64_t index = 0;
   /// Condition to determine forward or backward scanning of  WayPoint Buffer.
 
   if (startPosn < waypoint_buffer.size()) {
     bool mScanForward = false;
-    double target_point_dist_power = std::pow(target_point_distance, 2);
+    const float target_point_dist_power = target_point_distance * target_point_distance;
     if (buffer_front->DistanceSquared(target_waypoint) < target_point_dist_power) {
       mScanForward = true;
     }

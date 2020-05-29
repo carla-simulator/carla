@@ -1,12 +1,8 @@
 
 #include "carla/trafficmanager/TrackTraffic.h"
 
-#define BUFFER_STEP_THROUGH 10
-
-namespace carla
-{
-namespace traffic_manager
-{
+namespace carla {
+namespace traffic_manager {
 
 TrackTraffic::TrackTraffic() {}
 
@@ -57,7 +53,7 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
 
         // Step through buffer and update grid list for actor and actor list for grids.
         uint64_t buffer_size = buffer.size();
-        uint64_t step_size = static_cast<uint64_t>(std::floor(buffer_size / BUFFER_STEP_THROUGH));
+        uint64_t step_size = static_cast<uint64_t>(static_cast<float>(buffer_size) * INV_BUFFER_STEP_THROUGH);
         for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
             GeoGridId ggid = buffer.at(std::min(i * step_size, buffer_size - 1u))->GetGeodesicGridId();
             current_grids.insert(ggid);

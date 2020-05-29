@@ -6,6 +6,8 @@
 #pragma once
 
 #include <limits>
+#include <stdint.h>
+#include <random>
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -17,9 +19,9 @@ namespace traffic_manager {
 namespace constants {
 
 namespace Networking {
-static unsigned int MIN_TRY_COUNT = 20u;
+static uint64_t MIN_TRY_COUNT = 20u;
 static unsigned short TM_DEFAULT_PORT = 8000u;
-static unsigned int TM_TIMEOUT = 2000; // ms
+static int64_t TM_TIMEOUT = 2000; // ms
 } // namespace Networking
 
 namespace VehicleRemoval {
@@ -82,8 +84,9 @@ static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 } // namespace Collision
 
 namespace FrameMemory {
-static const unsigned int INITIAL_SIZE = 50u;
-static const unsigned int GROWTH_STEP_SIZE = 50u;
+static const uint64_t INITIAL_SIZE = 50u;
+static const uint64_t GROWTH_STEP_SIZE = 50u;
+static const float INV_GROWTH_STEP_SIZE = 0.02f;
 } // namespace FrameMemory
 
 namespace Map {
@@ -92,10 +95,12 @@ static const float GRID_SIZE = 4.0f;
 static const float PED_GRID_SIZE = 10.0f;
 static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 static const float MAP_RESOLUTION = 0.1f;
+static const float INV_MAP_RESOLUTION = 10.0f;
 } // namespace Map
 
 namespace TrafficLight {
-static const unsigned int NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
+static const uint64_t NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
+static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
 } // namespace TrafficLight
 
 namespace MotionPlan {
@@ -115,8 +120,15 @@ static const float MAX_THROTTLE = 0.7f;
 static const float MAX_BRAKE = 1.0f;
 static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
-static const float DT = 1.0f/20.0f;
-}
+static const float DT = 0.05f;
+static const float INV_DT = 20.0f;
+} // namespace PID
+
+namespace TrackTraffic {
+static const uint64_t BUFFER_STEP_THROUGH = 10;
+static const float INV_BUFFER_STEP_THROUGH = 0.1f;
+} // namespace TrackTraffic
+
 
 } // namespace constants
 } // namespace traffic_manager

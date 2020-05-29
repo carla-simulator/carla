@@ -28,7 +28,7 @@ private:
   TrafficLightStateMap tl_state_map;
 
 public :
-  SimulationState(/* args */);
+  SimulationState();
 
   // Method to add an actor to the simulation state.
   void AddActor(ActorId actor_id,

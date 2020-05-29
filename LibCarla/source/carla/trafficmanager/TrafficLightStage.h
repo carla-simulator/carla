@@ -12,6 +12,7 @@ namespace carla {
 namespace traffic_manager {
 
 using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
+using constants::TrafficLight::DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
 using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 /// This class has functionality for responding to traffic lights

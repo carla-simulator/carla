@@ -23,6 +23,7 @@ LocalizationStage::LocalizationStage(
     debug_helper(debug_helper) {}
 
 void LocalizationStage::Update(const unsigned long index) {
+
   const ActorId actor_id = vehicle_id_list.at(index);
   const cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
   const cg::Vector3D heading_vector = simulation_state.GetHeading(actor_id);
@@ -106,7 +107,7 @@ void LocalizationStage::Update(const unsigned long index) {
   }
 
   const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
-  const double lane_change_distance = SQUARE(MAX(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
+  const float lane_change_distance = SQUARE(MAX(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
 
   if (((parameters.GetAutoLaneChange(actor_id) || force_lane_change) && !front_waypoint->CheckJunction())
       && (last_lane_change_location.find(actor_id) == last_lane_change_location.end()

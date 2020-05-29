@@ -119,9 +119,7 @@ void TrafficManagerLocal::Run() {
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
       std::unique_lock<std::mutex> lock(step_execution_mutex);
-      while (!step_begin.load()) {
-        step_begin_trigger.wait(lock, [this]() { return step_begin.load(); });
-      }
+      step_begin_trigger.wait(lock, [this]() { return step_begin.load(); });
       step_begin.store(false);
     }
 
@@ -145,7 +143,7 @@ void TrafficManagerLocal::Run() {
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
       vehicle_id_list = registered_vehicles.GetIDList();
       number_of_vehicles = vehicle_id_list.size();
-      unsigned long new_frame_size = INITIAL_SIZE + GROWTH_STEP_SIZE * (number_of_vehicles / GROWTH_STEP_SIZE);
+      unsigned long new_frame_size = INITIAL_SIZE + GROWTH_STEP_SIZE * static_cast<uint64_t>( static_cast<float>(number_of_vehicles) * INV_GROWTH_STEP_SIZE);
       if (new_frame_size != control_frame_ptr->size()) {
         localization_frame_ptr = std::make_shared<LocalizationFrame>(new_frame_size);
         collision_frame_ptr = std::make_shared<CollisionFrame>(new_frame_size);
@@ -161,16 +159,10 @@ void TrafficManagerLocal::Run() {
 
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       collision_stage.Update(index);
-    }
-    collision_stage.ClearCycleCache();
-
-    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
-    }
-
-    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       motion_plan_stage.Update(index);
     }
+    collision_stage.ClearCycleCache();
 
     // Building the command array for current cycle.
     std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
@@ -179,13 +171,10 @@ void TrafficManagerLocal::Run() {
     }
 
     // Sending the current cycle's batch command to the simulator.
+    episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
     if (synchronous_mode) {
-      episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
-
       step_end.store(true);
       step_end_trigger.notify_one();
-    } else {
-      episode_proxy.Lock()->ApplyBatch(std::move(batch_command), false);
     }
   }
 }
@@ -196,9 +185,7 @@ bool TrafficManagerLocal::SynchronousTick() {
     step_begin_trigger.notify_one();
 
     std::unique_lock<std::mutex> lock(step_execution_mutex);
-    while (!step_end.load()) {
-      step_end_trigger.wait(lock, [this]() { return step_end.load(); });
-    }
+    step_end_trigger.wait(lock, [this]() { return step_end.load(); });
     step_end.store(false);
   }
   return true;

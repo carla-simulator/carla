@@ -62,7 +62,7 @@ void TrafficLightStage::Update(const unsigned long index) {
 
         const TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
         const chr::duration<double> diff = current_time - previous_ticket;
-        if (diff.count() > NO_SIGNAL_PASSTHROUGH_INTERVAL) {
+        if (diff.count() > DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL) {
           need_to_issue_new_ticket = true;
         }
       }

@@ -11,6 +11,7 @@
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/Constants.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -18,6 +19,8 @@ namespace traffic_manager {
 namespace cc = carla::client;
 namespace cg = carla::geom;
 
+using constants::TrackTraffic::BUFFER_STEP_THROUGH;
+using constants::TrackTraffic::INV_BUFFER_STEP_THROUGH;
 using Actor = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
 using ActorIdSet = std::unordered_set<ActorId>;
