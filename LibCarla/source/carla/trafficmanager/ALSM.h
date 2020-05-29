@@ -28,7 +28,6 @@ namespace chr = std::chrono;
 namespace cg = carla::geom;
 namespace cc = carla::client;
 
-using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorList = carla::SharedPtr<cc::ActorList>;
 using ActorMap = std::unordered_map<ActorId, ActorPtr>;
 using IdleTimeMap = std::unordered_map<ActorId, double>;

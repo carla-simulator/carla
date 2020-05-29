@@ -9,14 +9,9 @@
 #include "boost/geometry/geometries/polygon.hpp"
 
 #include "carla/client/DebugHelper.h"
-#include "carla/geom/Math.h"
-#include "carla/Memory.h"
 
-#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
-#include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
@@ -36,15 +31,10 @@ namespace bg = boost::geometry;
 using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
 using BufferMap = std::unordered_map<carla::ActorId, Buffer>;
 using BufferMapPtr = std::shared_ptr<BufferMap>;
-using LocationList = std::vector<cg::Location>;
-using GeodesicBoundaryMap = std::unordered_map<ActorId, LocationList>;
-using GeometryComparisonMap = std::unordered_map<std::string, GeometryComparison>;
-using Point2D = bg::model::point<double, 2, bg::cs::cartesian>;
+using LocationVector = std::vector<cg::Location>;
+using GeodesicBoundaryMap = std::unordered_map<ActorId, LocationVector>;
+using GeometryComparisonMap = std::unordered_map<uint64_t, GeometryComparison>;
 using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
-using TLS = carla::rpc::TrafficLightState;
-
-using namespace constants::Collision;
-using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 /// This class has functionality to detect potential collision with a nearby actor.
 class CollisionStage : Stage {
@@ -73,12 +63,12 @@ private:
   float GetBoundingBoxExtention(const ActorId actor_id);
 
   // Method to calculate polygon points around the vehicle's bounding box.
-  LocationList GetBoundary(const ActorId actor_id);
+  LocationVector GetBoundary(const ActorId actor_id);
 
   // Method to construct polygon points around the path boundary of the vehicle.
-  LocationList GetGeodesicBoundary(const ActorId actor_id);
+  LocationVector GetGeodesicBoundary(const ActorId actor_id);
 
-  Polygon GetPolygon(const LocationList &boundary);
+  Polygon GetPolygon(const LocationVector &boundary);
 
   // Method to compare path boundaries, bounding boxes of vehicles
   // and cache the results for reuse in current update cycle.
@@ -86,7 +76,7 @@ private:
                                               const ActorId other_actor_id);
 
   // Method to draw path boundary.
-  void DrawBoundary(const LocationList &boundary);
+  void DrawBoundary(const LocationVector &boundary);
 
 public:
   CollisionStage(const std::vector<ActorId> &vehicle_id_list,

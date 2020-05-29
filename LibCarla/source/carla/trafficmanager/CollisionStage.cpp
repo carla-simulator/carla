@@ -1,15 +1,19 @@
 
-#include "carla/trafficmanager/CollisionStage.h"
+#include "carla/geom/Math.h"
 
-struct GeometryComparison {
-  double reference_vehicle_to_other_geodesic;
-  double other_vehicle_to_reference_geodesic;
-  double inter_geodesic_distance;
-  double inter_bbox_distance;
-};
+#include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/LocalizationUtils.h"
+
+#include "carla/trafficmanager/CollisionStage.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using Point2D = bg::model::point<double, 2, bg::cs::cartesian>;
+using TLS = carla::rpc::TrafficLightState;
+
+using namespace constants::Collision;
+using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 CollisionStage::CollisionStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -123,7 +127,7 @@ float CollisionStage::GetBoundingBoxExtention(const ActorId actor_id) {
   return bbox_extension;
 }
 
-LocationList CollisionStage::GetBoundary(const ActorId actor_id) {
+LocationVector CollisionStage::GetBoundary(const ActorId actor_id) {
   const ActorType actor_type = simulation_state.GetType(actor_id);
   const cg::Vector3D heading_vector = simulation_state.GetHeading(actor_id);
 
@@ -144,7 +148,7 @@ LocationList CollisionStage::GetBoundary(const ActorId actor_id) {
 
   // Four corners of the vehicle in top view clockwise order (left-handed system).
   const cg::Location location = simulation_state.GetLocation(actor_id);
-  LocationList bbox_boundary = {
+  LocationVector bbox_boundary = {
       location + cg::Location(x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector - y_boundary_vector),
       location + cg::Location(-1.0f * x_boundary_vector + y_boundary_vector),
@@ -154,13 +158,13 @@ LocationList CollisionStage::GetBoundary(const ActorId actor_id) {
   return bbox_boundary;
 }
 
-LocationList CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
-  LocationList geodesic_boundary;
+LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
+  LocationVector geodesic_boundary;
 
   if (geodesic_boundary_map.find(actor_id) != geodesic_boundary_map.end()) {
     geodesic_boundary = geodesic_boundary_map.at(actor_id);
   } else {
-    const LocationList bbox = GetBoundary(actor_id);
+    const LocationVector bbox = GetBoundary(actor_id);
 
     if (buffer_map->find(actor_id) != buffer_map->end()) {
       float bbox_extension = GetBoundingBoxExtention(actor_id);
@@ -168,8 +172,8 @@ LocationList CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
       bbox_extension = MAX(specific_lead_distance, bbox_extension);
       const float bbox_extension_square = SQUARE(bbox_extension);
 
-      LocationList left_boundary;
-      LocationList right_boundary;
+      LocationVector left_boundary;
+      LocationVector right_boundary;
       cg::Vector3D dimensions = simulation_state.GetDimensions(actor_id);
       const float width = dimensions.y;
       const float length = dimensions.x;
@@ -227,7 +231,7 @@ LocationList CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
   return geodesic_boundary;
 }
 
-Polygon CollisionStage::GetPolygon(const LocationList &boundary) {
+Polygon CollisionStage::GetPolygon(const LocationVector &boundary) {
 
   traffic_manager::Polygon boundary_polygon;
   for (const cg::Location &location : boundary) {
@@ -241,11 +245,20 @@ Polygon CollisionStage::GetPolygon(const LocationList &boundary) {
 GeometryComparison CollisionStage::GetGeometryBetweenActors(const ActorId reference_vehicle_id,
                                                             const ActorId other_actor_id) {
 
-  std::string actor_id_key = reference_vehicle_id < other_actor_id
-                              ? std::to_string(reference_vehicle_id) + "|" + std::to_string(other_actor_id)
-                              : std::to_string(other_actor_id) + "|" + std::to_string(reference_vehicle_id);
 
-  GeometryComparison comparision_result{-1, -1, -1, -1};
+  std::pair<ActorId, ActorId> key_parts;
+  if (reference_vehicle_id < other_actor_id) {
+    key_parts = {reference_vehicle_id, other_actor_id};
+  } else {
+    key_parts = {other_actor_id, reference_vehicle_id};
+  }
+
+  uint64_t actor_id_key = 0u;
+  actor_id_key |= key_parts.first;
+  actor_id_key <<= 32;
+  actor_id_key |= key_parts.second;
+
+  GeometryComparison comparision_result{-1.0f, -1.0f, -1.0f, -1.0f};
 
   if (geometry_cache.find(actor_id_key) != geometry_cache.end()) {
 
@@ -291,7 +304,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   // Ego and other vehicle heading.
   const cg::Vector3D reference_heading = simulation_state.GetHeading(reference_vehicle_id);
   // Vector from ego position to position of the other vehicle.
-  const float vector_magnitude_epsilon = 2 * std::numeric_limits<float>::epsilon();
+  const float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   cg::Vector3D reference_to_other = other_location - reference_location;
   reference_to_other = reference_to_other.MakeSafeUnitVector(vector_magnitude_epsilon);
 
@@ -315,7 +328,8 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   // Conditions to consider collision negotiation.
   bool other_vehicle_in_ego_range = inter_vehicle_distance < ego_detection_range;
   bool other_vehicles_in_cross_detection_range = inter_vehicle_distance < cross_detection_range;
-  bool other_vehicle_in_front = cg::Math::Dot(reference_heading, reference_to_other) > 0;
+  float reference_heading_to_other_dot = cg::Math::Dot(reference_heading, reference_to_other);
+  bool other_vehicle_in_front = reference_heading_to_other_dot > 0;
   const Buffer &reference_vehicle_buffer = buffer_map->at(reference_vehicle_id);
   SimpleWaypointPtr closest_point = reference_vehicle_buffer.front();
   bool ego_inside_junction = closest_point->CheckJunction();
@@ -338,21 +352,23 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > 0.1;
     bool ego_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic < geometry_comparison.other_vehicle_to_reference_geodesic;
     bool other_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic > geometry_comparison.other_vehicle_to_reference_geodesic;
-    bool ego_angular_priority = cg::Math::Dot(reference_heading, reference_to_other) < cg::Math::Dot(other_heading, other_to_reference);
+    bool ego_angular_priority = reference_heading_to_other_dot< cg::Math::Dot(other_heading, other_to_reference);
 
     // Whichever vehicle's path is farthest away from the other vehicle gets priority to move.
+    bool lower_priority = !ego_path_priority && (other_path_priority || !ego_angular_priority);
+    bool blocked_by_other_or_lower_priority = !ego_path_clear || (other_path_clear && lower_priority);
+    bool yield_pre_crash = !vehicle_bbox_touching && blocked_by_other_or_lower_priority;
+    bool yield_post_crash = vehicle_bbox_touching && !ego_angular_priority;
+
     if (geodesic_path_bbox_touching
-        && ((!vehicle_bbox_touching
-             && (!ego_path_clear ||
-                 (other_path_clear && !ego_path_priority
-                  && (other_path_priority || !ego_angular_priority))))
-            || (vehicle_bbox_touching && !ego_angular_priority))) {
+        && (yield_pre_crash || yield_post_crash)) {
 
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);
       const float specific_distance_margin = MAX(reference_lead_distance, BOUNDARY_EXTENSION_MINIMUM);
-      available_distance_margin = static_cast<float>(MAX(geometry_comparison.reference_vehicle_to_other_geodesic - specific_distance_margin, 0.0));
+      available_distance_margin = static_cast<float>(MAX(geometry_comparison.reference_vehicle_to_other_geodesic
+                                                         - static_cast<double>(specific_distance_margin), 0.0));
 
       ///////////////////////////////////// Collision locking mechanism /////////////////////////////////
       // The idea is, when encountering a possible collision,
@@ -399,11 +415,12 @@ void CollisionStage::ClearCycleCache() {
   geometry_cache.clear();
 }
 
-void CollisionStage::DrawBoundary(const LocationList &boundary) {
+void CollisionStage::DrawBoundary(const LocationVector &boundary) {
+  cg::Location one_meter_up(0.0f, 0.0f, 1.0f);
   for (uint64_t i = 0u; i < boundary.size(); ++i) {
     debug_helper.DrawLine(
-        boundary[i] + cg::Location(0.0f, 0.0f, 1.0f),
-        boundary[(i + 1) % boundary.size()] + cg::Location(0.0f, 0.0f, 1.0f),
+        boundary[i] + one_meter_up,
+        boundary[i+1 == boundary.size()? 0: i+1] + one_meter_up,
         0.1f, {255u, 255u, 0u}, 0.05f);
   }
 }
