@@ -45,7 +45,7 @@ public :
   // Method to flush all states and actors.
   void Reset();
 
-  void UpdateKinematicState(ActorId actorid, KinematicState state);
+  void UpdateKinematicState(ActorId actor_id, KinematicState state);
 
   void UpdateTrafficLightState(ActorId actor_id, TrafficLightState state);
 

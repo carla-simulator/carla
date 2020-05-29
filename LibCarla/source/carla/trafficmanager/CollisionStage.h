@@ -25,6 +25,13 @@ struct GeometryComparison {
   double inter_bbox_distance;
 };
 
+struct CollisionLock {
+  double distance_to_lead_vehicle;
+  double initial_lock_distance;
+  ActorId lead_vehicle_id;
+};
+using CollisionLockMap = std::unordered_map<ActorId, CollisionLock>;
+
 namespace cc = carla::client;
 namespace bg = boost::geometry;
 

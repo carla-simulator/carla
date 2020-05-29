@@ -60,7 +60,7 @@ void MotionPlanStage::Update(const unsigned long index) {
 
   // If previous state for vehicle not found, initialize state entry.
   if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-    const auto initial_state = StateEntry{0.0f, 0.0f, chr::system_clock::now(), 0.0f, 0.0f};
+    const auto initial_state = StateEntry{chr::system_clock::now(), 0.0f, 0.0f, 0.0f, 0.0f};
     pid_state_map.insert({actor_id, initial_state});
   }
 
@@ -185,8 +185,8 @@ void MotionPlanStage::Update(const unsigned long index) {
   // For physics-less vehicles, determine position and orientation for teleportation.
   else {
     // Flushing controller state for vehicle.
-    current_state = {0.0f, 0.0f,
-                     chr::system_clock::now(),
+    current_state = {chr::system_clock::now(),
+                     0.0f, 0.0f,
                      0.0f, 0.0f};
 
     // Add entry to teleportation duration clock table if not present.

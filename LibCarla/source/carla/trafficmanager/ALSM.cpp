@@ -205,8 +205,8 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
 
     // Updated kinematic state object.
     auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-    KinematicState kinematic_state{enable_physics, vehicle_location, vehicle_rotation,
-                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit()};
+    KinematicState kinematic_state{vehicle_location, vehicle_rotation,
+                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(), enable_physics};
 
     // Updated traffic light state object.
     TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
@@ -239,7 +239,7 @@ void ALSM::UpdateUnregisteredActorsData() {
     const cg::Location actor_location = actor_transform.location;
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
-    KinematicState kinematic_state {true, actor_location, actor_rotation, actor_velocity, -1.0f};
+    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true};
 
     TrafficLightState tl_state;
     ActorType actor_type = ActorType::Any;

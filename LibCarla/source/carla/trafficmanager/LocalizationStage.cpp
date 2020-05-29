@@ -31,7 +31,7 @@ void LocalizationStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity_vector.Length();
 
   // Speed dependent waypoint horizon length.
-  float horizon_length = MIN(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
+  float horizon_length = std::min(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
   const float horizon_square = SQUARE(horizon_length);
 
   if (buffer_map->find(actor_id) == buffer_map->end()) {
@@ -107,7 +107,7 @@ void LocalizationStage::Update(const unsigned long index) {
   }
 
   const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
-  const float lane_change_distance = SQUARE(MAX(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
+  const float lane_change_distance = SQUARE(std::max(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
 
   if (((parameters.GetAutoLaneChange(actor_id) || force_lane_change) && !front_waypoint->CheckJunction())
       && (last_lane_change_location.find(actor_id) == last_lane_change_location.end()

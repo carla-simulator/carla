@@ -169,7 +169,7 @@ LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
     if (buffer_map->find(actor_id) != buffer_map->end()) {
       float bbox_extension = GetBoundingBoxExtention(actor_id);
       const float specific_lead_distance = parameters.GetDistanceToLeadingVehicle(actor_id);
-      bbox_extension = MAX(specific_lead_distance, bbox_extension);
+      bbox_extension = std::max(specific_lead_distance, bbox_extension);
       const float bbox_extension_square = SQUARE(bbox_extension);
 
       LocationVector left_boundary;
@@ -360,15 +360,14 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     bool yield_pre_crash = !vehicle_bbox_touching && blocked_by_other_or_lower_priority;
     bool yield_post_crash = vehicle_bbox_touching && !ego_angular_priority;
 
-    if (geodesic_path_bbox_touching
-        && (yield_pre_crash || yield_post_crash)) {
+    if (geodesic_path_bbox_touching && (yield_pre_crash || yield_post_crash)) {
 
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);
-      const float specific_distance_margin = MAX(reference_lead_distance, BOUNDARY_EXTENSION_MINIMUM);
-      available_distance_margin = static_cast<float>(MAX(geometry_comparison.reference_vehicle_to_other_geodesic
-                                                         - static_cast<double>(specific_distance_margin), 0.0));
+      const float specific_distance_margin = std::max(reference_lead_distance, BOUNDARY_EXTENSION_MINIMUM);
+      available_distance_margin = static_cast<float>(std::max(geometry_comparison.reference_vehicle_to_other_geodesic
+                                                              - static_cast<double>(specific_distance_margin), 0.0));
 
       ///////////////////////////////////// Collision locking mechanism /////////////////////////////////
       // The idea is, when encountering a possible collision,
@@ -390,14 +389,14 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
           }
         } else {
           // If possible collision with a new vehicle, re-initialize with new lock entry.
-          lock = {other_actor_id, geometry_comparison.inter_bbox_distance, geometry_comparison.inter_bbox_distance};
+          lock = {geometry_comparison.inter_bbox_distance, geometry_comparison.inter_bbox_distance, other_actor_id};
         }
       } else {
         // Insert and initialize lock entry if not present.
         collision_locks.insert({reference_vehicle_id,
-                                {other_actor_id,
+                                {geometry_comparison.inter_bbox_distance,
                                  geometry_comparison.inter_bbox_distance,
-                                 geometry_comparison.inter_bbox_distance}});
+                                 other_actor_id}});
       }
     }
   }

@@ -35,9 +35,9 @@ StateEntry StateUpdate(StateEntry previous_state,
                        float angular_deviation,
                        TimeInstance current_time) {
   StateEntry current_state = {
+      current_time,
       angular_deviation,
       (current_velocity - target_velocity) / target_velocity,
-      current_time,
       0.0f,
       0.0f};
 

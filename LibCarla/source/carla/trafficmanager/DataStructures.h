@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <deque>
-#include <string>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -36,11 +35,11 @@ using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 using TLS = carla::rpc::TrafficLightState;
 
 struct KinematicState {
-  bool physics_enabled;
   cg::Location location;
   cg::Rotation rotation;
   cg::Vector3D velocity;
   float speed_limit;
+  bool physics_enabled;
 };
 using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
 
@@ -64,25 +63,18 @@ struct TrafficLightState {
 };
 using TrafficLightStateMap = std::unordered_map<ActorId, TrafficLightState>;
 
-struct CollisionLock {
-  ActorId lead_vehicle_id;
-  double distance_to_lead_vehicle;
-  double initial_lock_distance;
-};
-using CollisionLockMap = std::unordered_map<ActorId, CollisionLock>;
-
 struct LocalizationData {
-  bool is_at_junction_entrance;
   SimpleWaypointPtr junction_end_point;
   SimpleWaypointPtr safe_point;
+  bool is_at_junction_entrance;
 };
 using LocalizationFrame = std::vector<LocalizationData>;
 using LocalizationFramePtr = std::shared_ptr<LocalizationFrame>;
 
 struct CollisionHazardData {
-  bool hazard;
   float available_distance_margin;
   ActorId hazard_actor_id;
+  bool hazard;
 };
 using CollisionFrame = std::vector<CollisionHazardData>;
 using CollisionFramePtr = std::shared_ptr<CollisionFrame>;
@@ -102,9 +94,9 @@ struct ActuationSignal {
 
 /// Structure to hold the controller state.
 struct StateEntry {
+  TimeInstance time_instance;
   float deviation;
   float velocity;
-  TimeInstance time_instance;
   float deviation_integral;
   float velocity_integral;
 };
