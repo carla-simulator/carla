@@ -24,12 +24,13 @@ static unsigned int TM_TIMEOUT = 2000; // ms
 
 namespace VehicleRemoval {
 static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;
-static const float BLOCKED_TIME_THRESHOLD = 90.0f;
-static const float DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0f;
+static const double BLOCKED_TIME_THRESHOLD = 90.0;
+static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
 static const float HYBRID_MODE_DT = 0.05f;
+static const float INV_HYBRID_DT = 1.0f / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
 
