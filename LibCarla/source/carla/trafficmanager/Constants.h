@@ -7,7 +7,6 @@
 
 #include <limits>
 #include <stdint.h>
-#include <random>
 
 #define SQUARE(a) ((a) * (a))
 #define RATE(MaxY, MinY, DiffX) (((MaxY) - (MinY)) / (DiffX))
@@ -92,7 +91,7 @@ static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
 static const float GRID_SIZE = 4.0f;
 static const float PED_GRID_SIZE = 10.0f;
 static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
-static const float MAP_RESOLUTION = 0.1f;
+static const double MAP_RESOLUTION = 0.1;
 static const float INV_MAP_RESOLUTION = 10.0f;
 } // namespace Map
 
