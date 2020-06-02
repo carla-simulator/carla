@@ -55,7 +55,7 @@ UOpenDriveMap::UOpenDriveMap(const FObjectInitializer &ObjectInitializer)
 bool UOpenDriveMap::Load(const FString &XODRContent)
 {
   auto ResultMap = carla::opendrive::OpenDriveParser::Load(
-      carla::rpc::FromFString(XODRContent));
+      carla::rpc::FromLongFString(XODRContent));
   if (ResultMap)
   {
     Map = std::move(*ResultMap);

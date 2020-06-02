@@ -7,7 +7,7 @@
 #include "carla/road/Map.h"
 #include "carla/Exception.h"
 #include "carla/geom/Math.h"
-#include "carla/geom/MeshFactory.h"
+#include "carla/road/MeshFactory.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
@@ -978,17 +978,8 @@ namespace road {
   }
 
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
-      const double distance,
-      const float max_road_len,
-      const float extra_width,
-      const  bool smooth_junctions) const {
-    RELEASE_ASSERT(distance > 0.0);
-    RELEASE_ASSERT(extra_width >= 0.0);
-    RELEASE_ASSERT(max_road_len > 0.0);
-    geom::MeshFactory mesh_factory;
-    mesh_factory.road_param.resolution = static_cast<float>(distance);
-    mesh_factory.road_param.max_road_len = max_road_len;
-    mesh_factory.road_param.extra_lane_width = extra_width;
+      const rpc::OpendriveGenerationParameters& params) const {
+    geom::MeshFactory mesh_factory(params);
     std::vector<std::unique_ptr<geom::Mesh>> out_mesh_list;
 
     std::unordered_map<JuncId, geom::Mesh> junction_map;
@@ -1024,7 +1015,7 @@ namespace road {
           }
         }
       }
-      if(smooth_junctions) {
+      if(params.smooth_junctions) {
         auto merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
         for(auto& lane : sidewalk_lane_meshes) {
           *merged_mesh += *lane;
@@ -1042,7 +1033,32 @@ namespace road {
       }
     }
 
-    return out_mesh_list;
+    auto min_pos = geom::Vector2D(
+        out_mesh_list.front()->GetVertices().front().x,
+        out_mesh_list.front()->GetVertices().front().y);
+    auto max_pos = min_pos;
+    for (auto & mesh : out_mesh_list) {
+      auto vertex = mesh->GetVertices().front();
+      min_pos.x = std::min(min_pos.x, vertex.x);
+      min_pos.y = std::min(min_pos.y, vertex.y);
+      max_pos.x = std::max(max_pos.x, vertex.x);
+      max_pos.y = std::max(max_pos.y, vertex.y);
+    }
+    size_t mesh_amount_x = static_cast<size_t>((max_pos.x - min_pos.x)/params.max_road_length) + 1;
+    size_t mesh_amount_y = static_cast<size_t>((max_pos.y - min_pos.y)/params.max_road_length) + 1;
+    std::vector<std::unique_ptr<geom::Mesh>> result;
+    result.reserve(mesh_amount_x*mesh_amount_y);
+    for (size_t i = 0; i < mesh_amount_x*mesh_amount_y; ++i) {
+      result.emplace_back(std::make_unique<geom::Mesh>());
+    }
+    for (auto & mesh : out_mesh_list) {
+      auto vertex = mesh->GetVertices().front();
+      size_t x_pos = static_cast<size_t>((vertex.x - min_pos.x) / params.max_road_length);
+      size_t y_pos = static_cast<size_t>((vertex.y - min_pos.y) / params.max_road_length);
+      *(result[x_pos + mesh_amount_x*y_pos]) += *mesh;
+    }
+
+    return result;
   }
 
   geom::Mesh Map::GetAllCrosswalkMesh() const {

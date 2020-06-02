@@ -141,7 +141,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
   // Build the Map from the OpenDRIVE data
   const auto CarlaMap = carla::opendrive::OpenDriveParser::Load(
-      carla::rpc::FromFString(OpenDriveString));
+      carla::rpc::FromLongFString(OpenDriveString));
 
   // Check the Map is correclty generated
   if (!CarlaMap.has_value())
@@ -160,7 +160,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
   // Store the OBJ string to a file in order to that RecastBuilder can load it
   FFileHelper::SaveStringToFile(
-      carla::rpc::ToFString(RecastOBJ),
+      carla::rpc::ToLongFString(RecastOBJ),
       *AbsoluteOBJPath,
       FFileHelper::EEncodingOptions::ForceUTF8,
       &IFileManager::Get());
@@ -193,7 +193,8 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 
-  if (FPaths::FileExists(AbsoluteRecastBuilderPath))
+  if (FPaths::FileExists(AbsoluteRecastBuilderPath) &&
+      Params.enable_pedestrian_navigation)
   {
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.

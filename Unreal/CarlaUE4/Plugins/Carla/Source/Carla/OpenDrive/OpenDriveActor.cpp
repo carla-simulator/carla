@@ -138,7 +138,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
   // xodr file using the lavel name and the game content directory.
   const FString XodrContent = UOpenDrive::LoadXODR(MapName);
 
-  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
+  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
 
   if (!map.has_value())
   {

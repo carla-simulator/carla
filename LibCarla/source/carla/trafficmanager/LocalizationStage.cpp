@@ -106,7 +106,7 @@ void LocalizationStage::Update(const unsigned long index) {
 
   if (!force_lane_change) {
     float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
-    if (perc_keep_right >= 0.0f && perc_keep_right >= (rand() % 101)) {
+    if (perc_keep_right >= 0.0f && perc_keep_right >= pgen.next()) {
       force_lane_change = true;
       lane_change_direction = true;
     }
@@ -152,7 +152,7 @@ void LocalizationStage::Update(const unsigned long index) {
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      selection_index = static_cast<uint64_t>(rand()) % next_waypoints.size();
+      selection_index = static_cast<uint64_t>(pgen.next()) % next_waypoints.size();
     }
     SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
     if (next_wp == nullptr) {

@@ -34,7 +34,7 @@ void TrafficLightStage::Update(const unsigned long index) {
   // junction and there is a red or yellow light.
   if (is_at_traffic_light &&
       traffic_light_state != TLS::Green &&
-      parameters.GetPercentageRunningLight(ego_actor_id) <= (rand() % 101)) {
+      parameters.GetPercentageRunningLight(ego_actor_id) <= pgen.next()) {
 
     traffic_light_hazard = true;
   }
@@ -42,7 +42,7 @@ void TrafficLightStage::Update(const unsigned long index) {
   else if (look_ahead_point->CheckJunction()
            && !is_at_traffic_light
            && traffic_light_state != TLS::Green
-           && parameters.GetPercentageRunningSign(ego_actor_id) <= (rand() % 101)) {
+           && parameters.GetPercentageRunningSign(ego_actor_id) <= pgen.next()) {
 
     if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
       // Initializing new map entry for the actor with
