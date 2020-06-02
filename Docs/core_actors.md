@@ -70,8 +70,8 @@ __The world object is responsible of spawning actors and keeping track of these.
 
 The world has two different methods to spawn actors.  
 
-* [`spawn_actor()`](python_api.md#carla.World.spawn_actor) returns `None` if the spawning failed.  
-* [`try_spawn_actor()`](python_api.md#carla.World.try_spawn_actor) raises an exception if the spawning failed.  
+* [`spawn_actor()`](python_api.md#carla.World.spawn_actor) raises an exception if the spawning fails.
+* [`try_spawn_actor()`](python_api.md#carla.World.try_spawn_actor) returns `None` if the spawning fails.
 
 ```py
 transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
