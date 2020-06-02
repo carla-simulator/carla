@@ -5,8 +5,6 @@
 namespace carla {
 namespace traffic_manager {
 
-using ActorId = carla::rpc::ActorId;
-
 template<class T = double,
     class = std::enable_if_t<std::is_floating_point<T>::value>
 > class RandomGenerator {
