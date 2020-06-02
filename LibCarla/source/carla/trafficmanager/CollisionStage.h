@@ -12,6 +12,7 @@
 
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
@@ -60,6 +61,7 @@ private:
   // to avoid repeated computation within a cycle.
   GeometryComparisonMap geometry_cache;
   GeodesicBoundaryMap geodesic_boundary_map;
+  RandomGenerator<> pgen;
 
   // Method to determine if a vehicle is on a collision path to another.
   std::pair<bool, float> NegotiateCollision(const ActorId reference_vehicle_id,

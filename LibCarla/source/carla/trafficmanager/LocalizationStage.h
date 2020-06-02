@@ -12,6 +12,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 #include "carla/trafficmanager/SimulationState.h"
@@ -47,6 +48,7 @@ private:
   ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;
+  RandomGenerator<> pgen;
 
   SimpleWaypointPtr AssignLaneChange(const ActorId actor_id,
                                      const cg::Location vehicle_location,

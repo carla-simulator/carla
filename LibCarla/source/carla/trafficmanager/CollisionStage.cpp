@@ -81,9 +81,9 @@ void CollisionStage::Update(const unsigned long index) {
                                                                        look_ahead_index);
         if (negotiation_result.first) {
           if ((other_actor_type == ActorType::Vehicle
-               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= (rand() % 101))
+               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= pgen.next())
               || (other_actor_type == ActorType::Pedestrian
-                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= (rand() % 101))) {
+                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= pgen.next())) {
             collision_hazard = true;
             obstacle_id = other_actor_id;
             available_distance_margin = negotiation_result.second;
@@ -258,7 +258,7 @@ GeometryComparison CollisionStage::GetGeometryBetweenActors(const ActorId refere
   actor_id_key <<= 32;
   actor_id_key |= key_parts.second;
 
-  GeometryComparison comparision_result{-1.0f, -1.0f, -1.0f, -1.0f};
+  GeometryComparison comparision_result{-1.0, -1.0, -1.0, -1.0};
 
   if (geometry_cache.find(actor_id_key) != geometry_cache.end()) {
 

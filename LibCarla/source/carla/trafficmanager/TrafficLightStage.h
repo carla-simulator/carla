@@ -5,6 +5,7 @@
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
@@ -30,6 +31,7 @@ private:
   /// Map containing the previous junction visited by a vehicle.
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
   TLFramePtr &output_array;
+  RandomGenerator<> pgen;
 
 public:
   TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,
