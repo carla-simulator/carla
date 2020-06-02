@@ -163,13 +163,14 @@ void export_client() {
   namespace rpc = carla::rpc;
 
   class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
-      init<double, double, double, double, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true)))
+      init<double, double, double, double, bool, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true, arg("enable_pedestrian_navigation")=true)))
     .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
     .def_readwrite("max_road_length", &rpc::OpendriveGenerationParameters::max_road_length)
     .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
     .def_readwrite("additional_width", &rpc::OpendriveGenerationParameters::additional_width)
     .def_readwrite("smooth_junctions", &rpc::OpendriveGenerationParameters::smooth_junctions)
     .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)
+    .def_readwrite("enable_pedestrian_navigation", &rpc::OpendriveGenerationParameters::enable_pedestrian_navigation)
   ;
 
   class_<cc::Client>("Client",
