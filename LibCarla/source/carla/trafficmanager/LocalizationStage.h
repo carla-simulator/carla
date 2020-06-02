@@ -1,28 +1,20 @@
 
 #pragma once
 
-#include <deque>
 #include <memory>
 
 #include "carla/client/DebugHelper.h"
-#include "carla/rpc/ActorId.h"
 
-#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
 namespace carla {
 namespace traffic_manager {
-
-using namespace constants::PathBufferUpdate;
-using namespace constants::LaneChange;
-using namespace constants::WaypointSelection;
 
 namespace cc = carla::client;
 
@@ -54,6 +46,10 @@ private:
                                      bool force, bool direction);
 
   void DrawBuffer(Buffer &buffer);
+
+  void ExtendAndFindSafeSpace(const ActorId actor_id,
+                              const bool is_at_junction_entrance,
+                              Buffer &waypoint_buffer);
 
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
