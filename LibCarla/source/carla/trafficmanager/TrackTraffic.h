@@ -1,27 +1,14 @@
 
 #pragma once
 
-#include "carla/client/Actor.h"
-#include "carla/client/ActorList.h"
-#include "carla/client/DebugHelper.h"
-#include "carla/client/Vehicle.h"
-#include "carla/client/World.h"
-#include "carla/geom/Location.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/rpc/ActorId.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
-#include "carla/trafficmanager/Constants.h"
 
 namespace carla {
 namespace traffic_manager {
 
-namespace cc = carla::client;
-namespace cg = carla::geom;
-
-using constants::TrackTraffic::BUFFER_STEP_THROUGH;
-using constants::TrackTraffic::INV_BUFFER_STEP_THROUGH;
-using Actor = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
 using ActorIdSet = std::unordered_set<ActorId>;
 using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;

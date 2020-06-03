@@ -10,8 +10,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "carla/Logging.h"
-
 namespace carla {
 namespace traffic_manager {
 

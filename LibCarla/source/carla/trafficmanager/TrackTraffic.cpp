@@ -1,8 +1,13 @@
 
+#include "carla/trafficmanager/Constants.h"
+
 #include "carla/trafficmanager/TrackTraffic.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using constants::TrackTraffic::BUFFER_STEP_THROUGH;
+using constants::TrackTraffic::INV_BUFFER_STEP_THROUGH;
 
 TrackTraffic::TrackTraffic() {}
 
