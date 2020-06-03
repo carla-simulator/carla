@@ -88,8 +88,6 @@ namespace detail {
 
     void LoadEpisode(std::string map_name);
 
-    bool CheckIntermediateEpisode();
-
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 

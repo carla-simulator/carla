@@ -245,15 +245,9 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("map not found");
     }
-    UCarlaStatics::GetGameInstance(Episode->GetWorld())->SetMapToLoad(MapName);
-    Episode->LoadNewEpisode(cr::ToFString("EmptyMap"));
+    UGameplayStatics::OpenLevel(Episode->GetWorld(), TEXT("EmptyMap"), true, "");
+    Episode->LoadNewEpisode(MapName);
     return R<void>::Success();
-  };
-
-  BIND_SYNC(check_intermediate_episode) << [this]() -> R<bool>
-  {
-    REQUIRE_CARLA_EPISODE();
-    return UCarlaStatics::GetGameInstance(Episode->GetWorld())->IsLevelPendingLoad();
   };
 
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>
