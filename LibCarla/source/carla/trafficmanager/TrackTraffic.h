@@ -62,10 +62,6 @@ public:
     /// Method to delete actor data from tracking.
     void DeleteActor(ActorId actor_id);
 
-    std::unordered_set<GeoGridId> GetGridIds(ActorId actor_id) const;
-
-    std::unordered_map<GeoGridId, ActorIdSet> GetGridActors() const;
-
     void Clear();
 };
 

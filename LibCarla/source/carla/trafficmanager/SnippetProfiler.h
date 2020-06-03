@@ -33,12 +33,13 @@ public:
   SnippetProfiler(){};
 
   void MeasureExecutionTime(std::string snippet_name, bool begin_or_end) {
+    TimePoint current_time = chr::system_clock::now();
 
     if (print_clocks.find(snippet_name) == print_clocks.end()) {
-      print_clocks.insert({snippet_name, chr::system_clock::now()});
+      print_clocks.insert({snippet_name, current_time});
     }
     if (snippet_clocks.find(snippet_name) == snippet_clocks.end()) {
-      snippet_clocks.insert({snippet_name, TimePoint()});
+      snippet_clocks.insert({snippet_name, current_time});
     }
     if (snippet_durations.find(snippet_name) == snippet_durations.end()) {
       snippet_durations.insert({snippet_name, chr::duration<float>()});
@@ -47,7 +48,6 @@ public:
       number_of_calls.insert({snippet_name, 0u});
     }
 
-    TimePoint current_time = chr::system_clock::now();
     TimePoint &print_clock = print_clocks.at(snippet_name);
     TimePoint &snippet_clock = snippet_clocks.at(snippet_name);
     chr::duration<float> &snippet_duration = snippet_durations.at(snippet_name);

@@ -11,8 +11,7 @@ void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
 
     DeleteActor(actor_id);
 
-    actor_to_grids.insert({actor_id, {}});
-    std::unordered_set<GeoGridId> &current_grids = actor_to_grids.at(actor_id);
+    std::unordered_set<GeoGridId> current_grids;
     // Step through waypoints and update grid list for actor and actor list for grids.
     for (auto &waypoint : waypoints) {
         UpdatePassingVehicle(waypoint->GetId(), actor_id);
@@ -29,29 +28,28 @@ void TrackTraffic::UpdateUnregisteredGridPosition(const ActorId actor_id,
             grid_to_actors.insert({ggid, {actor_id}});
         }
     }
+
+    actor_to_grids.insert({actor_id, current_grids});
 }
 
 void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buffer) {
     if (!buffer.empty()) {
-        // Add actor entry, if not present.
-        if (actor_to_grids.find(actor_id) == actor_to_grids.end()) {
-            actor_to_grids.insert({actor_id, {}});
-        }
-
-        std::unordered_set<GeoGridId> &current_grids = actor_to_grids.at(actor_id);
 
         // Clear current actor from all grids containing itself.
-        for (auto &grid_id : current_grids) {
-            if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
-                ActorIdSet &actor_ids = grid_to_actors.at(grid_id);
-                actor_ids.erase(actor_id);
+        if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
+            std::unordered_set<GeoGridId> &current_grids = actor_to_grids.at(actor_id);
+            for (auto &grid_id : current_grids) {
+                if (grid_to_actors.find(grid_id) != grid_to_actors.end()) {
+                    ActorIdSet &actor_ids = grid_to_actors.at(grid_id);
+                    actor_ids.erase(actor_id);
+                }
             }
+
+            actor_to_grids.erase(actor_id);
         }
 
-        // Clear all grids the current actor is tracking.
-        current_grids.clear();
-
         // Step through buffer and update grid list for actor and actor list for grids.
+        std::unordered_set<GeoGridId> current_grids;
         uint64_t buffer_size = buffer.size();
         uint64_t step_size = static_cast<uint64_t>(static_cast<float>(buffer_size) * INV_BUFFER_STEP_THROUGH);
         for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
@@ -68,6 +66,8 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
                 actor_ids.insert(actor_id);
             }
         }
+
+        actor_to_grids.insert({actor_id, current_grids});
     }
 }
 
@@ -105,20 +105,6 @@ void TrackTraffic::DeleteActor(ActorId actor_id) {
             RemovePassingVehicle(waypoint_id, actor_id);
         }
     }
-}
-
-std::unordered_set<GeoGridId> TrackTraffic::GetGridIds(ActorId actor_id) const {
-    std::unordered_set<GeoGridId> grid_ids;
-
-    if (actor_to_grids.find(actor_id) != actor_to_grids.end()) {
-        grid_ids = actor_to_grids.at(actor_id);
-    }
-
-    return grid_ids;
-}
-
-std::unordered_map<GeoGridId, ActorIdSet> TrackTraffic::GetGridActors() const {
-    return grid_to_actors;
 }
 
 void TrackTraffic::UpdatePassingVehicle(uint64_t waypoint_id, ActorId actor_id) {
