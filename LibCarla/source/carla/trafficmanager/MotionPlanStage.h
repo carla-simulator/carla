@@ -36,6 +36,16 @@ private:
   std::unordered_map<ActorId, TimeInstance> teleportation_instance;
   ControlFramePtr &output_array;
 
+  std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
+                                           const bool tl_hazard,
+                                           const cg::Vector3D ego_velocity,
+                                           const cg::Vector3D ego_heading,
+                                           const float max_target_velocity);
+
+bool SafeAfterJunction(const LocalizationData &localization,
+                       const bool tl_hazard,
+                       const bool collision_emergency_stop);
+
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
                   const SimulationState &simulation_state,

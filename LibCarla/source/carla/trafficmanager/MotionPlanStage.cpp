@@ -89,81 +89,19 @@ void MotionPlanStage::Update(const unsigned long index) {
   // Target velocity for vehicle.
   const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
   float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
-  float dynamic_target_velocity = max_target_velocity;
-  //////////////////////// Collision related data handling ///////////////////////////
-  bool collision_emergency_stop = false;
-  if (!tl_hazard && collision_hazard.hazard) {
-    const ActorId other_actor_id = collision_hazard.hazard_actor_id;
-    const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
-    const float ego_relative_speed = (ego_velocity - other_velocity).Length();
-    const float available_distance_margin = collision_hazard.available_distance_margin;
 
-    const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
+  // Collision handling and target velocity correction.
+  std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, ego_velocity,
+                                                                ego_heading, max_target_velocity);
+  bool collision_emergency_stop = collision_response.first;
+  float dynamic_target_velocity = collision_response.second;
 
-    // Consider collision avoidance decisions only if there is positive relative velocity
-    // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-    if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
-      // If other vehicle is approaching lead vehicle and lead vehicle is further
-      // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
-      float follow_lead_distance = ego_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
-      if (available_distance_margin > follow_lead_distance) {
-        // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
-        // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
-        dynamic_target_velocity = other_speed_along_heading + RELATIVE_APPROACH_SPEED;
-      }
-      // If vehicle is approaching a lead vehicle and the lead vehicle is further
-      // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
-        // Then follow the lead vehicle by acquiring it's speed along current heading.
-        dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
-      } else {
-        // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
-        collision_emergency_stop = true;
-      }
-    }
-    if (available_distance_margin < CRITICAL_BRAKING_MARGIN) {
-      collision_emergency_stop = true;
-    }
-  }
-  ///////////////////////////////////////////////////////////////////////////////////
-
-  // Clip dynamic target velocity to maximum allowed speed for the vehicle.
-  dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
 
   // Don't enter junction if there isn't enough free space after the junction.
-  bool safe_after_junction = true;
-  SimpleWaypointPtr junction_end_point = localization.junction_end_point;
-  SimpleWaypointPtr safe_point = localization.safe_point;
-  if (!tl_hazard && localization.is_at_junction_entrance
-      && junction_end_point != nullptr && safe_point != nullptr
-      && junction_end_point->DistanceSquared(safe_point) > SQUARE(MIN_SAFE_INTERVAL_LENGTH)) {
-    ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
-    float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
-    cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
-    // Scan through the safe interval and find if any vehicles are present in it
-    // by finding their occupied waypoints.
-    for (SimpleWaypointPtr current_waypoint = junction_end_point;
-         current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
-         current_waypoint = current_waypoint->GetNextWaypoint().front()) {
-      ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
-      ActorIdSet difference;
-      std::set_difference(current_set.begin(), current_set.end(),
-                          initial_set.begin(), initial_set.end(),
-                          std::inserter(difference, difference.begin()));
-      if (difference.size() > 0) {
-        for (const ActorId &blocking_id: difference) {
-          cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
-          if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
-              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
-            safe_after_junction = false;
-          }
-        }
-      }
-    }
-  }
+  bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
 
   // In case of collision or traffic light hazard.
-  bool emergency_stop = (tl_hazard || collision_emergency_stop || !safe_after_junction);
+  bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
 
   ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
   cg::Transform teleportation_transform;
@@ -245,6 +183,97 @@ void MotionPlanStage::Update(const unsigned long index) {
   } else {
     output_array->at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
+}
+
+bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
+                                        const bool tl_hazard,
+                                        const bool collision_emergency_stop) {
+
+  SimpleWaypointPtr junction_end_point = localization.junction_end_point;
+  SimpleWaypointPtr safe_point = localization.safe_point;
+
+  bool safe_after_junction = true;
+
+  if (!tl_hazard && !collision_emergency_stop
+      && localization.is_at_junction_entrance
+      && junction_end_point != nullptr && safe_point != nullptr
+      && junction_end_point->DistanceSquared(safe_point) > SQUARE(MIN_SAFE_INTERVAL_LENGTH)) {
+
+    ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
+    float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
+    cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
+
+    // Scan through the safe interval and find if any vehicles are present in it
+    // by finding their occupied waypoints.
+    for (SimpleWaypointPtr current_waypoint = junction_end_point;
+         current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
+         current_waypoint = current_waypoint->GetNextWaypoint().front()) {
+
+      ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
+      ActorIdSet difference;
+      std::set_difference(current_set.begin(), current_set.end(),
+                          initial_set.begin(), initial_set.end(),
+                          std::inserter(difference, difference.begin()));
+      if (difference.size() > 0) {
+        for (const ActorId &blocking_id: difference) {
+          cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
+          if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
+              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
+            safe_after_junction = false;
+          }
+        }
+      }
+    }
+  }
+
+  return safe_after_junction;
+}
+
+std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,
+                                                          const bool tl_hazard,
+                                                          const cg::Vector3D ego_velocity,
+                                                          const cg::Vector3D ego_heading,
+                                                          const float max_target_velocity) {
+  bool collision_emergency_stop = false;
+  float dynamic_target_velocity = max_target_velocity;
+
+  if (collision_hazard.hazard && !tl_hazard) {
+    const ActorId other_actor_id = collision_hazard.hazard_actor_id;
+    const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
+    const float ego_relative_speed = (ego_velocity - other_velocity).Length();
+    const float available_distance_margin = collision_hazard.available_distance_margin;
+
+    const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
+
+    // Consider collision avoidance decisions only if there is positive relative velocity
+    // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
+    if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
+      // If other vehicle is approaching lead vehicle and lead vehicle is further
+      // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
+      float follow_lead_distance = ego_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
+      if (available_distance_margin > follow_lead_distance) {
+        // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
+        // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
+        dynamic_target_velocity = other_speed_along_heading + RELATIVE_APPROACH_SPEED;
+      }
+      // If vehicle is approaching a lead vehicle and the lead vehicle is further
+      // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
+      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
+        // Then follow the lead vehicle by acquiring it's speed along current heading.
+        dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
+      } else {
+        // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
+        collision_emergency_stop = true;
+      }
+    }
+    if (available_distance_margin < CRITICAL_BRAKING_MARGIN) {
+      collision_emergency_stop = true;
+    }
+  }
+
+  dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
+
+  return {collision_emergency_stop, dynamic_target_velocity};
 }
 
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {
