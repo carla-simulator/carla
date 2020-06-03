@@ -1,8 +1,15 @@
 
+#include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/LocalizationUtils.h"
+
 #include "carla/trafficmanager/TrafficLightStage.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
+using constants::TrafficLight::DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
+using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 TrafficLightStage::TrafficLightStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -44,63 +51,73 @@ void TrafficLightStage::Update(const unsigned long index) {
            && traffic_light_state != TLS::Green
            && parameters.GetPercentageRunningSign(ego_actor_id) <= pgen.next()) {
 
-    if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
-      // Initializing new map entry for the actor with
-      // an arbitrary and different junction id.
-      vehicle_last_junction.insert({ego_actor_id, junction_id + 1});
-    }
-
-    if (vehicle_last_junction.at(ego_actor_id) != junction_id) {
-      vehicle_last_junction.at(ego_actor_id) = junction_id;
-
-      // Check if the vehicle has an outdated ticket or needs a new one.
-      bool need_to_issue_new_ticket = false;
-      if (vehicle_last_ticket.find(ego_actor_id) == vehicle_last_ticket.end()) {
-
-        need_to_issue_new_ticket = true;
-      } else {
-
-        const TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
-        const chr::duration<double> diff = current_time - previous_ticket;
-        if (diff.count() > DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL) {
-          need_to_issue_new_ticket = true;
-        }
-      }
-
-      // If new ticket is needed for the vehicle, then query the junction
-      // ticket map
-      // and update the map value to the new ticket value.
-      if (need_to_issue_new_ticket) {
-        if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
-
-          TimeInstance &last_ticket = junction_last_ticket.at(junction_id);
-          const chr::duration<double> diff = current_time - last_ticket;
-          if (diff.count() > 0.0) {
-            last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
-          } else {
-            last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
-          }
-        } else {
-          junction_last_ticket.insert({junction_id, current_time +
-                                        chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
-        }
-        if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
-          vehicle_last_ticket.at(ego_actor_id) = junction_last_ticket.at(junction_id);
-        } else {
-          vehicle_last_ticket.insert({ego_actor_id, junction_last_ticket.at(junction_id)});
-        }
-      }
-    }
-
-    // If current time is behind ticket time, then do not enter junction.
-    const TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
-    const chr::duration<double> diff = current_ticket - current_time;
-    if (diff.count() > 0.0) {
-      traffic_light_hazard = true;
-    }
+    traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_time);
   }
 
   output_array->at(index) = traffic_light_hazard;
+}
+
+bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
+                                                    const TimeInstance current_time) {
+
+  bool traffic_light_hazard = false;
+
+  if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
+    // Initializing new map entry for the actor with
+    // an arbitrary and different junction id.
+    vehicle_last_junction.insert({ego_actor_id, junction_id + 1});
+  }
+
+  if (vehicle_last_junction.at(ego_actor_id) != junction_id) {
+    vehicle_last_junction.at(ego_actor_id) = junction_id;
+
+    // Check if the vehicle has an outdated ticket or needs a new one.
+    bool need_to_issue_new_ticket = false;
+    if (vehicle_last_ticket.find(ego_actor_id) == vehicle_last_ticket.end()) {
+
+      need_to_issue_new_ticket = true;
+    } else {
+
+      const TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
+      const chr::duration<double> diff = current_time - previous_ticket;
+      if (diff.count() > DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL) {
+        need_to_issue_new_ticket = true;
+      }
+    }
+
+    // If new ticket is needed for the vehicle, then query the junction
+    // ticket map
+    // and update the map value to the new ticket value.
+    if (need_to_issue_new_ticket) {
+      if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
+
+        TimeInstance &last_ticket = junction_last_ticket.at(junction_id);
+        const chr::duration<double> diff = current_time - last_ticket;
+        if (diff.count() > 0.0) {
+          last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+        } else {
+          last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+        }
+      } else {
+        junction_last_ticket.insert({junction_id, current_time +
+                                      chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
+      }
+      if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
+        vehicle_last_ticket.at(ego_actor_id) = junction_last_ticket.at(junction_id);
+      } else {
+        vehicle_last_ticket.insert({ego_actor_id, junction_last_ticket.at(junction_id)});
+      }
+    }
+  }
+
+  // If current time is behind ticket time, then do not enter junction.
+  const TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
+  const chr::duration<double> diff = current_ticket - current_time;
+  if (diff.count() > 0.0) {
+    traffic_light_hazard = true;
+  }
+
+  return traffic_light_hazard;
 }
 
 void TrafficLightStage::RemoveActor(const ActorId actor_id) {

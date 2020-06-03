@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
-#include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
@@ -11,10 +9,6 @@
 
 namespace carla {
 namespace traffic_manager {
-
-using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
-using constants::TrafficLight::DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
-using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
 /// This class has functionality for responding to traffic lights
 /// and managing entry into non-signalized junctions.
@@ -32,6 +26,9 @@ private:
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
   TLFramePtr &output_array;
   RandomGenerator<> pgen;
+
+  bool HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
+                                   const TimeInstance current_time);
 
 public:
   TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,
