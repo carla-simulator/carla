@@ -38,6 +38,7 @@ void export_weather() {
          arg("sun_altitude_angle")=0.0f,
          arg("fog_density")=0.0f,
          arg("fog_distance")=0.0f,
+         arg("fog_falloff")=0.2f,
          arg("wetness")=0.0f)))
     .def_readwrite("cloudiness", &cr::WeatherParameters::cloudiness)
     .def_readwrite("precipitation", &cr::WeatherParameters::precipitation)
