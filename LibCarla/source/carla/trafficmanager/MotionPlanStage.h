@@ -1,15 +1,9 @@
 
-
 /// This file has functionality for motion planning based on information
 /// from localization, collision avoidance and traffic light response.
 
 #pragma once
 
-#include "carla/client/DebugHelper.h"
-#include "carla/rpc/VehicleControl.h"
-#include "carla/rpc/Command.h"
-
-#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
@@ -19,14 +13,6 @@
 
 namespace carla {
 namespace traffic_manager {
-
-namespace cc = carla::client;
-
-using namespace constants::MotionPlan;
-using namespace constants::WaypointSelection;
-using namespace constants::SpeedThreshold;
-
-using constants::HybridMode::HYBRID_MODE_DT;
 
 class MotionPlanStage: Stage {
 private:

@@ -1,10 +1,17 @@
 
-#include "carla/trafficmanager/MotionPlanStage.h"
-
+#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/PIDController.h"
+
+#include "carla/trafficmanager/MotionPlanStage.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using namespace constants::MotionPlan;
+using namespace constants::WaypointSelection;
+using namespace constants::SpeedThreshold;
+
+using constants::HybridMode::HYBRID_MODE_DT;
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
