@@ -29,6 +29,27 @@ WEATHER_PRESETS = {
     'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 10.0],
     'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 100.0]}
 
+CAR_LIGHTS = {
+    'None' : [carla.VehicleLightState.NONE],
+    'Position' : [carla.VehicleLightState.Position],
+    'LowBeam' : [carla.VehicleLightState.LowBeam],
+    'HighBeam' : [carla.VehicleLightState.HighBeam],
+    'Brake' : [carla.VehicleLightState.Brake],
+    'RightBlinker' : [carla.VehicleLightState.RightBlinker],
+    'LeftBlinker' : [carla.VehicleLightState.LeftBlinker],
+    'Reverse' : [carla.VehicleLightState.Reverse],
+    'Fog' : [carla.VehicleLightState.Fog],
+    'Interior' : [carla.VehicleLightState.Interior],
+    'Special1' : [carla.VehicleLightState.Special1],
+    'Special2' : [carla.VehicleLightState.Special2],
+    'All' : [carla.VehicleLightState.All]}
+
+LIGHT_GROUP = {
+    'None' : [carla.LightGroup.NONE],
+    # 'Vehicle' : [carla.LightGroup.Vehicle],
+    'Street' : [carla.LightGroup.Street],
+    'Building' : [carla.LightGroup.Building],
+    'Other' : [carla.LightGroup.Other]}
 
 def apply_sun_presets(args, weather):
     """Uses sun presets to set the sun position"""
@@ -77,6 +98,52 @@ def apply_weather_values(args, weather):
         weather.fog_distance = args.fogdist
     if args.wetness is not None:
         weather.wetness = args.wetness
+
+
+def apply_lights_to_cars(args, world):
+    if args.cars is None:
+        return
+
+    light_mask = carla.VehicleLightState.NONE
+    for option in args.cars:
+        light_mask |= CAR_LIGHTS[option][0]
+
+    # Get all cars in level
+    all_vehicles = world.get_actors()
+    for ve in all_vehicles:
+        if "vehicle." in ve.type_id:
+            ve.set_light_state(carla.VehicleLightState(light_mask))
+
+def apply_lights_manager(args, light_manager):
+    if args.lights is None:
+        return
+
+    light_group = 'None'
+    if args.lightgroup is not None:
+        light_group = args.lightgroup
+
+    # filter by group
+    lights = light_manager.get_all_lights(LIGHT_GROUP[light_group][0]) # light_group
+
+    i = 0
+    while (i < len(args.lights)):
+        option = args.lights[i]
+
+        if option == "on":
+            light_manager.turn_on(lights)
+        elif option == "off":
+            light_manager.turn_off(lights)
+        elif option == "intensity":
+            light_manager.set_intensity(lights, int(args.lights[i + 1]))
+            i += 1
+        elif option == "color":
+            r = int(args.lights[i + 1])
+            g = int(args.lights[i + 2])
+            b = int(args.lights[i + 3])
+            light_manager.set_color(lights, carla.Color(r, g, b))
+            i += 3
+
+        i += 1
 
 
 def main():
@@ -158,6 +225,26 @@ def main():
         default=None,
         type=float,
         help='Wetness intensity [0.0, 100.0]')
+    argparser.add_argument(
+        '--cars',
+        metavar='Cars',
+        default=None,
+        type=str,
+        nargs='+',
+        help='Light Cars [' + ' | '.join([i for i in CAR_LIGHTS]) + ']')
+    argparser.add_argument(
+        '--lights', '-l',
+        metavar='Lights',
+        default=None,
+        type=str,
+        nargs='+',
+        help='Street Lights []')
+    argparser.add_argument(
+        '--lightgroup', '-lg',
+        metavar='LightGroup',
+        default=None,
+        type=str,
+        help='Light Group [' + ' | '.join([i for i in LIGHT_GROUP]) + ']')
     args = argparser.parse_args()
 
     # since all the arguments are None by default
@@ -181,6 +268,13 @@ def main():
     apply_weather_values(args, weather)
 
     world.set_weather(weather)
+
+    # apply car light changes
+    apply_lights_to_cars(args, world)
+
+    apply_lights_manager(args, world.get_lightmanager())
+
+    world.wait_for_tick()
 
 
 if __name__ == '__main__':
