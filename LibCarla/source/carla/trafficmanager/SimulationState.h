@@ -3,16 +3,39 @@
 
 #include <unordered_set>
 
-#include "carla/geom/Vector3D.h"
-#include "carla/rpc/ActorId.h"
 #include "carla/trafficmanager/DataStructures.h"
 
 namespace carla {
 namespace traffic_manager {
 
-namespace cg = carla::geom;
+enum ActorType {
+  Vehicle,
+  Pedestrian,
+  Any
+};
 
-using ActorId = carla::rpc::ActorId;
+struct KinematicState {
+  cg::Location location;
+  cg::Rotation rotation;
+  cg::Vector3D velocity;
+  float speed_limit;
+  bool physics_enabled;
+};
+using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
+
+struct TrafficLightState {
+  TLS tl_state;
+  bool at_traffic_light;
+};
+using TrafficLightStateMap = std::unordered_map<ActorId, TrafficLightState>;
+
+struct StaticAttributes {
+  ActorType actor_type;
+  float half_length;
+  float half_width;
+  float half_height;
+};
+using StaticAttributeMap = std::unordered_map<ActorId, StaticAttributes>;
 
 /// This class holds the state of all the vehicles in the simlation.
 class SimulationState {

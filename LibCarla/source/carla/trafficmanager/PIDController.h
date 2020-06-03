@@ -7,12 +7,9 @@
 #pragma once
 
 #include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <vector>
 
-#include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/DataStructures.h"
 
 #define CLAMP(__v, __hi, __lo) ((__v) > (__hi) ? (__hi) : ((__v) < (__lo) ? (__lo) : (__v)))
 

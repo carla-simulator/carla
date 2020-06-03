@@ -34,35 +34,6 @@ using BufferMapPtr = std::shared_ptr<BufferMap>;
 using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 using TLS = carla::rpc::TrafficLightState;
 
-struct KinematicState {
-  cg::Location location;
-  cg::Rotation rotation;
-  cg::Vector3D velocity;
-  float speed_limit;
-  bool physics_enabled;
-};
-using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
-
-enum ActorType {
-  Vehicle,
-  Pedestrian,
-  Any
-};
-
-struct StaticAttributes {
-  ActorType actor_type;
-  float half_length;
-  float half_width;
-  float half_height;
-};
-using StaticAttributeMap = std::unordered_map<ActorId, StaticAttributes>;
-
-struct TrafficLightState {
-  TLS tl_state;
-  bool at_traffic_light;
-};
-using TrafficLightStateMap = std::unordered_map<ActorId, TrafficLightState>;
-
 struct LocalizationData {
   SimpleWaypointPtr junction_end_point;
   SimpleWaypointPtr safe_point;

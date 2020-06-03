@@ -118,7 +118,7 @@ static const float MAX_BRAKE = 1.0f;
 static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
 static const float DT = 0.05f;
-static const float INV_DT = 20.0f;
+static const float INV_DT = 1.0f / DT;
 } // namespace PID
 
 namespace TrackTraffic {
