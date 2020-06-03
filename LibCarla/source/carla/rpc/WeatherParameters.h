@@ -69,6 +69,7 @@ namespace rpc {
     float sun_altitude_angle = 0.0f;
     float fog_density = 0.0f;
     float fog_distance = 0.0f;
+    float fog_falloff = 0.0f;
     float wetness = 0.0f;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -82,6 +83,7 @@ namespace rpc {
         sun_altitude_angle(Weather.SunAltitudeAngle),
         fog_density(Weather.FogDensity),
         fog_distance(Weather.FogDistance),
+        fog_falloff(Weather.FogFalloff),
         wetness(Weather.Wetness) {}
 
     operator FWeatherParameters() const {
@@ -94,6 +96,7 @@ namespace rpc {
       Weather.SunAltitudeAngle = sun_altitude_angle;
       Weather.FogDensity = fog_density;
       Weather.FogDistance = fog_distance;
+      Weather.FogFalloff = fog_falloff;
       Weather.Wetness = wetness;
       return Weather;
     }
@@ -110,6 +113,7 @@ namespace rpc {
           sun_altitude_angle != rhs.sun_altitude_angle ||
           fog_density != rhs.fog_density ||
           fog_distance != rhs.fog_distance ||
+          fog_falloff != rhs.fog_falloff ||
           wetness != rhs.wetness;
     }
 
@@ -126,6 +130,7 @@ namespace rpc {
         sun_altitude_angle,
         fog_density,
         fog_distance,
+        fog_falloff,
         wetness);
   };
 
