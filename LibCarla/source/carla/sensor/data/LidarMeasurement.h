@@ -20,16 +20,17 @@ namespace data {
   class LidarMeasurement : public Array<rpc::Location>  {
     static_assert(sizeof(rpc::Location) == 3u * sizeof(float), "Location size missmatch");
     using Super = Array<rpc::Location>;
+
   protected:
 
     using Serializer = s11n::LidarSerializer;
 
     friend Serializer;
 
-    explicit LidarMeasurement(RawData data)
-      : Super(std::move(data)) {
-      Super::SetOffset(Serializer::GetHeaderOffset(Super::GetRawData()));
-    }
+    explicit LidarMeasurement(RawData &&data)
+      : Super(std::move(data), [](const RawData &d) {
+      return Serializer::GetHeaderOffset(d);
+    }) {}
 
   private:
 

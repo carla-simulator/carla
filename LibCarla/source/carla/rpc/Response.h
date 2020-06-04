@@ -33,7 +33,10 @@ namespace rpc {
 
   private:
 
-    std::string _what;
+    /// @todo Needs initialization, empty strings end up calling memcpy on a
+    /// nullptr. Possibly a bug in MsgPack but could also be our specialization
+    /// for variants
+    std::string _what{"unknown error"};
   };
 
   template <typename T>
