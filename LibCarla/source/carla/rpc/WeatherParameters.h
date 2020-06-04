@@ -50,6 +50,7 @@ namespace rpc {
         float in_sun_altitude_angle,
         float in_fog_density,
         float in_fog_distance,
+        float in_fog_falloff,
         float in_wetness)
       : cloudiness(in_cloudiness),
         precipitation(in_precipitation),
@@ -59,6 +60,7 @@ namespace rpc {
         sun_altitude_angle(in_sun_altitude_angle),
         fog_density(in_fog_density),
         fog_distance(in_fog_distance),
+        fog_falloff(in_fog_falloff),
         wetness(in_wetness) {}
 
     float cloudiness = 0.0f;
