@@ -89,6 +89,7 @@ namespace detail {
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
       _episode->WaitForState(10ms);
+      _episode.reset();
       auto episode = GetCurrentEpisode();
       if (episode.GetId() != id && !_client.CheckIntermediateEpisode()) {
         return episode;
