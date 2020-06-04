@@ -7,19 +7,30 @@ We use a mix of markdown and HTML tags to customize the documentation along with
 [`extra.css`](https://github.com/carla-simulator/carla/tree/master/Docs/extra.css) file.
 
 ---
+## Prerequisites
+
+To update Python API docs, instead of directly modifying the Markdown you need to edit the corresponding YAML files inside [`carla/PythonAPI/docs/`][fileslink] and run [`doc_gen.py`][scriptlink] or `make PythonAPI.docs`. 
+This will re-generate the respective Markdown files inside `carla/Docs/`, which can then be fed into `mkdocs`.
+
+[fileslink]: https://github.com/carla-simulator/carla/tree/master/PythonAPI/docs
+[scriptlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/docs/doc_gen.py
+
+- Everything in Docs except for PythonAPI. 
+
+- PythonAPI in YAML files. Edit these and `make PythonAPI.docs`. 
+- Regenerate the Markdown file for references pythonAPI and blueprint library. 
+- Blueprint library only if the server is opened. 
+
+
+---
 ## Rules
 
-
-  * Leave always an empty line between sections and at the end of the document.
-  * Writting should not exceed `100` columns, except for HTML related content, markdown tables,
-  code snipets and referenced links.
-  * If an inline link exceeds the limit, use referenced `[name][reference_link]` markdown notation
-  `[reference_link]: https://` rather than `[name](https://)`.
-  * Use `<br>` to make inline jumps rather than leaving two spaces at the end of a line.
-  * Use `<h1>Title</h1>` at the beggining of a new page in order to make a Title or
-  `<hx>Heading<hx>` to make a heading that **won't show** on the navigation bar.
-  * Use `------` underlining a Heading or `#` hierarchy to make headings and show them in the
-  navigation bar.
+*   Leave always an empty line between sections and at the end of the document.
+*   Writting should not exceed `100` columns, except for HTML related content, markdown tables, code snipets and referenced links.
+*   If an inline link exceeds the limit, use referenced `[name][reference_link]` markdown notation `[reference_link]: https://` rather than `[name](https://)`.
+*   Use `<br>` to make inline jumps rather than leaving two spaces at the end of a line.
+*   Use `<h1>Title</h1>` at the beggining of a new page in order to make a Title or `<hx>Heading<hx>` to make a heading that **won't show** on the navigation bar.
+*   Use `------` underlining a Heading or `#` hierarchy to make headings and show them in the navigation bar.
 
 ---
 ## Exceptions
