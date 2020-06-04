@@ -16,9 +16,9 @@ namespace traffic_manager {
 namespace constants {
 
 namespace Networking {
-static uint64_t MIN_TRY_COUNT = 20u;
-static unsigned short TM_DEFAULT_PORT = 8000u;
-static int64_t TM_TIMEOUT = 2000; // ms
+static const uint64_t MIN_TRY_COUNT = 20u;
+static const unsigned short TM_DEFAULT_PORT = 8000u;
+static const int64_t TM_TIMEOUT = 2000; // ms
 } // namespace Networking
 
 namespace VehicleRemoval {
