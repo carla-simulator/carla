@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <memory.h>
 
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
-#include "carla/geom/Math.h"
 #include "carla/geom/Transform.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/Memory.h"
@@ -93,7 +91,7 @@ namespace traffic_manager {
     void SetGeodesicGridId(GeoGridId _geodesic_grid_id);
     GeoGridId GetGeodesicGridId();
 
-    /// Metod to retreive junction id of the waypoint.
+    /// Method to retreive junction id of the waypoint.
     GeoGridId GetJunctionId() const;
 
     /// Calculates the distance from the object's waypoint to the passed
