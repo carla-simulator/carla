@@ -18,3 +18,17 @@ UCarlaGameInstance::UCarlaGameInstance() {
 
 UCarlaGameInstance::~UCarlaGameInstance() = default;
 
+void UCarlaGameInstance::SetMapToLoad(const FString MapName)
+{
+  MapToLoad = MapName;
+  bShouldLoadLevel = true;
+}
+
+void UCarlaGameInstance::CheckAndLoadMap(UWorld *world, UCarlaEpisode &Episode)
+{
+  if(bShouldLoadLevel)
+  {
+    Episode.LoadNewEpisode(MapToLoad);
+    bShouldLoadLevel = false;
+  }
+}
