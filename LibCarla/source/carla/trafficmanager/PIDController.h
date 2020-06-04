@@ -11,8 +11,6 @@
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
 
-#define CLAMP(__v, __hi, __lo) ((__v) > (__hi) ? (__hi) : ((__v) < (__lo) ? (__lo) : (__v)))
-
 namespace carla {
 namespace traffic_manager {
 
@@ -44,8 +42,7 @@ StateEntry StateUpdate(StateEntry previous_state,
 
   // Clamp velocity integral to avoid accumulating over-compensation
   // with time for vehicles that take a long time to reach target velocity.
-  current_state.velocity_integral = CLAMP(current_state.velocity_integral,
-                                          VELOCITY_INTEGRAL_MAX, VELOCITY_INTEGRAL_MIN);
+  current_state.velocity_integral = std::min(VELOCITY_INTEGRAL_MAX, std::max(current_state.velocity_integral, VELOCITY_INTEGRAL_MIN));
 
   return current_state;
 }
