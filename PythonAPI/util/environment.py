@@ -25,9 +25,9 @@ SUN_PRESETS = {
     'sunset': (0.5, 180.0)}
 
 WEATHER_PRESETS = {
-    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0],
-    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 10.0],
-    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 100.0]}
+    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0],
+    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 0.9, 10.0],
+    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 0.9, 100.0]}
 
 CAR_LIGHTS = {
     'None' : [carla.VehicleLightState.NONE],
@@ -72,7 +72,8 @@ def apply_weather_presets(args, weather):
             weather.wind_intensity = WEATHER_PRESETS[args.weather][3]
             weather.fog_density = WEATHER_PRESETS[args.weather][4]
             weather.fog_distance = WEATHER_PRESETS[args.weather][5]
-            weather.wetness = WEATHER_PRESETS[args.weather][6]
+            weather.fog_falloff = WEATHER_PRESETS[args.weather][6]
+            weather.wetness = WEATHER_PRESETS[args.weather][7]
         else:
             print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
@@ -96,6 +97,8 @@ def apply_weather_values(args, weather):
         weather.fog_density = args.fog
     if args.fogdist is not None:
         weather.fog_distance = args.fogdist
+    if args.fogfalloff is not None:
+        weather.fog_falloff = args.fogfalloff
     if args.wetness is not None:
         weather.wetness = args.wetness
 
@@ -218,7 +221,13 @@ def main():
         metavar='Fd',
         default=None,
         type=float,
-        help='Fog Distance [0.0, inf)')
+        help='Fog Distance [0.0, 100.0)')
+    argparser.add_argument(
+        '--fogfalloff', '-fo',
+        metavar='Fo',
+        default=None,
+        type=float,
+        help='Fog Falloff [0.0, inf)')
     argparser.add_argument(
         '--wetness', '-wet',
         metavar='Wet',
