@@ -11,10 +11,13 @@
 #include <vector>
 
 #include "carla/client/Actor.h"
+#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 
 namespace carla {
 namespace traffic_manager {
+
+using constants::Networking::TM_DEFAULT_PORT;
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
 
