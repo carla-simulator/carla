@@ -3,24 +3,16 @@
 This document will serve as a guide and example of some rules that need to be
 followed in order to contribute to the documentation.
 
-We use a mix of markdown and HTML tags to customize the documentation along with an
-[`extra.css`](https://github.com/carla-simulator/carla/tree/master/Docs/extra.css) file.
-
 ---
-## Prerequisites
+## Docs structure
 
-To update Python API docs, instead of directly modifying the Markdown you need to edit the corresponding YAML files inside [`carla/PythonAPI/docs/`][fileslink] and run [`doc_gen.py`][scriptlink] or `make PythonAPI.docs`. 
+We use a mix of markdown and HTML tags to customize the documentation along with an [`extra.css`](https://github.com/carla-simulator/carla/tree/master/Docs/extra.css) file.
+To update Python API docs, instead of directly modifying the Markdown you need to edit the corresponding YAML files inside [`carla/PythonAPI/docs/`][fileslink] and run [`doc_gen.py`][scriptlink] or `make PythonAPI.docs`.  
+
 This will re-generate the respective Markdown files inside `carla/Docs/`, which can then be fed into `mkdocs`.
 
 [fileslink]: https://github.com/carla-simulator/carla/tree/master/PythonAPI/docs
 [scriptlink]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/docs/doc_gen.py
-
-- Everything in Docs except for PythonAPI. 
-
-- PythonAPI in YAML files. Edit these and `make PythonAPI.docs`. 
-- Regenerate the Markdown file for references pythonAPI and blueprint library. 
-- Blueprint library only if the server is opened. 
-
 
 ---
 ## Rules
