@@ -8,13 +8,11 @@
 
 #include <atomic>
 #include <chrono>
-#include <unordered_map>
 #include <thread>
 #include <vector>
 
 #include "carla/client/DebugHelper.h"
 #include "carla/client/detail/EpisodeProxy.h"
-#include "carla/client/detail/Simulator.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/World.h"
 #include "carla/Memory.h"

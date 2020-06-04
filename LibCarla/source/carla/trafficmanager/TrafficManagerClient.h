@@ -6,17 +6,16 @@
 
 #pragma once
 
-#include "carla/client/Actor.h"
 #include "carla/trafficmanager/Constants.h"
+#include "carla/rpc/Actor.h"
 
 #include <rpc/client.h>
 
-using carla::traffic_manager::constants::Networking::TM_TIMEOUT;
-using carla::traffic_manager::constants::Networking::TM_DEFAULT_PORT;
-
-
 namespace carla {
 namespace traffic_manager {
+
+using constants::Networking::TM_TIMEOUT;
+using constants::Networking::TM_DEFAULT_PORT;
 
 /// Provides communication with the rpc of TrafficManagerServer.
 class TrafficManagerClient {
