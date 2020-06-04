@@ -119,7 +119,7 @@ void TrafficManagerLocal::Run() {
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
       std::unique_lock<std::mutex> lock(step_execution_mutex);
-      step_begin_trigger.wait(lock, [this]() { return step_begin.load(); });
+      step_begin_trigger.wait(lock, [this]() {return step_begin.load();});
       step_begin.store(false);
     }
 
@@ -127,11 +127,11 @@ void TrafficManagerLocal::Run() {
     if (!synchronous_mode && hybrid_physics_mode) {
       TimePoint current_instance = chr::system_clock::now();
       chr::duration<float> elapsed_time = current_instance - previous_update_instance;
-      if (elapsed_time.count() > HYBRID_MODE_DT) {
-        previous_update_instance = current_instance;
-      } else {
-        continue;
+      float time_to_wait = HYBRID_MODE_DT - elapsed_time.count();
+      if (time_to_wait > 0.0f) {
+        std::this_thread::sleep_for(chr::duration<float>(time_to_wait));
       }
+      previous_update_instance = current_instance;
     }
 
     // Updating simulation state, actor life cycle and performing necessary cleanup.
@@ -141,9 +141,13 @@ void TrafficManagerLocal::Run() {
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
+
       vehicle_id_list = registered_vehicles.GetIDList();
       number_of_vehicles = vehicle_id_list.size();
-      unsigned long new_frame_size = INITIAL_SIZE + GROWTH_STEP_SIZE * static_cast<uint64_t>( static_cast<float>(number_of_vehicles) * INV_GROWTH_STEP_SIZE);
+
+      uint64_t growth_factor = static_cast<uint64_t>(static_cast<float>(number_of_vehicles) * INV_GROWTH_STEP_SIZE);
+      uint64_t new_frame_size = INITIAL_SIZE + GROWTH_STEP_SIZE * growth_factor;
+
       if (new_frame_size != control_frame_ptr->size()) {
         localization_frame_ptr = std::make_shared<LocalizationFrame>(new_frame_size);
         collision_frame_ptr = std::make_shared<CollisionFrame>(new_frame_size);

@@ -83,7 +83,7 @@ static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 namespace FrameMemory {
 static const uint64_t INITIAL_SIZE = 50u;
 static const uint64_t GROWTH_STEP_SIZE = 50u;
-static const float INV_GROWTH_STEP_SIZE = 0.02f;
+static const float INV_GROWTH_STEP_SIZE = 1.0f / static_cast<float>(GROWTH_STEP_SIZE);
 } // namespace FrameMemory
 
 namespace Map {
