@@ -153,7 +153,7 @@ __3. Choose the desired town__ and modify the parameters.
 
 ### BP_Sky
 
-This blueprint groups all the weather parameters. It can be loaded into the scene when there is no CARLA server running, and used to easily test different configurations before setting a new default weather.  
+This blueprint groups all the weather parameters. It can be loaded into the scene when there is no CARLA server running, and used to ea test different configurations before setting a new default weather.  
 
 __1. Find the BP_Sky__ in `Content/Carla/Blueprints/Weather`.  
 
