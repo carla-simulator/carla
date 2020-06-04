@@ -12,6 +12,7 @@
   * Added parameter to enable/disable pedestrian navigation in standalone mode
   * Improved mesh split in standalone mode
   * Fixed large RAM usage when loading polinomial geometry from OpenDRIVE
+  * Fixed collision issues when debug draw(debug.draw_line) is called 
 
 
 ## CARLA 0.9.9
