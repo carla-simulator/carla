@@ -369,6 +369,17 @@ fi
 unset RECAST_BASENAME
 
 # ==============================================================================
+# -- Install python requirements -----------------------------------------------
+# ==============================================================================
+
+log "Installing python requirements"
+
+pip2 install --ignore-installed --user setuptools==44.1.1
+pip2 install --user distro
+pip3 install --ignore-installed --user setuptools
+pip3 install --user distro
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
