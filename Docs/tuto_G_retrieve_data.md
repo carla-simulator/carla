@@ -136,15 +136,15 @@ cd /opt/carla/PythonAPI/examples
 python dynamic_weather.py --speed 1.0
 ```
 
-* __To set custom conditions__. Use the script __weather.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
+* __To set custom conditions__. Use the script __environment.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
 
 ```sh
 cd /opt/carla/PythonAPI/util
-python weather.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
+python environment.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
 
 ```
 <details>
-<summary> Optional arguments in <b>weather.py</b> </summary>
+<summary> Optional arguments in <b>environment.py</b> </summary>
 
 ```sh
   -h, --help            show this help message and exit

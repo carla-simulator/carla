@@ -2362,11 +2362,11 @@ Fog concentration or thickness. It only affects the RGB camera sensor. Values ra
 Fog start distance (in meters). Values range from 0 to infinite.  
 - <a name="carla.WeatherParameters.wetness"></a>**<font color="#f8805a">wetness</font>** (_float_)  
 Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.  
-- <a name="carla.WeatherParameters.falloff"></a>**<font color="#f8805a">falloff</font>** (_float_)  
+- <a name="carla.WeatherParameters.fog_falloff"></a>**<font color="#f8805a">fog_falloff</font>** (_float_)  
 Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to <a href="https://docs.unrealengine.com/en-US/Engine/Actors/FogEffects/HeightFog/index.html#:~:text=Using%20Exponential%20Height%20Fog%20Features,-The%20sections%20below&text=Add%20a%20second%20fog%20layer,height%20falloff%2C%20and%20height%20offset">Fog Height Falloff</a> in the UE docs. <br> If the value is 0, the fog will be lighter than air, and will cover the whole scene. <br> A value of 1 is approximately as dense as the air, and reaches normal-sized buildings. <br> For values greater than 5, the air will be so dense that it will be compressed on ground level.  
 
 <h3>Methods</h3>
-- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>, <font color="#00a6ed">**fog_density**=0.0</font>, <font color="#00a6ed">**fog_distance**=0.0</font>, <font color="#00a6ed">**wetness**=0.0</font>, <font color="#00a6ed">**falloff**=0.2</font>)  
+- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>, <font color="#00a6ed">**fog_density**=0.0</font>, <font color="#00a6ed">**fog_distance**=0.0</font>, <font color="#00a6ed">**wetness**=0.0</font>, <font color="#00a6ed">**fog_falloff**=0.2</font>)  
 Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.  
     - **Parameters:**
         - `cloudiness` (_float_) – 0 is a clear sky, 100 complete overcast.  
@@ -2378,7 +2378,7 @@ Method to initialize an object defining weather conditions. This class has some 
         - `fog_density` (_float_) – Concentration or thickness of the fog, from 0 to 100.  
         - `fog_distance` (_float_) – Distance where the fog starts in meters.  
         - `wetness` (_float_) – Humidity percentages of the road, from 0 to 100.  
-        - `falloff` (_float_) – Density (specific mass) of the fog, from 0 to infinity.  
+        - `fog_falloff` (_float_) – Density (specific mass) of the fog, from 0 to infinity.  
     - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
 _</font>  
 
