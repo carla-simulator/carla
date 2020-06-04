@@ -19,22 +19,22 @@ private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;
   const Parameters &parameters;
-  const BufferMapPtr &buffer_map;
+  const BufferMap &buffer_map;
   const TrackTraffic &track_traffic;
   // PID paramenters for various road conditions.
   const std::vector<float> urban_longitudinal_parameters;
   const std::vector<float> highway_longitudinal_parameters;
   const std::vector<float> urban_lateral_parameters;
   const std::vector<float> highway_lateral_parameters;
-  const LocalizationFramePtr &localization_frame;
-  const CollisionFramePtr &collision_frame;
-  const TLFramePtr &tl_frame;
+  const LocalizationFrame &localization_frame;
+  const CollisionFrame &collision_frame;
+  const TLFrame &tl_frame;
   // Structure holding the controller state for registered vehicles.
   std::unordered_map<ActorId, StateEntry> pid_state_map;
   // Structure to keep track of duration between teleportation
   // in hybrid physics mode.
   std::unordered_map<ActorId, TimeInstance> teleportation_instance;
-  ControlFramePtr &output_array;
+  ControlFrame &output_array;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
@@ -50,16 +50,16 @@ public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
                   const SimulationState &simulation_state,
                   const Parameters &parameters,
-                  const BufferMapPtr &buffer_map,
+                  const BufferMap &buffer_map,
                   const TrackTraffic &track_traffic,
                   const std::vector<float> &urban_longitudinal_parameters,
                   const std::vector<float> &highway_longitudinal_parameters,
                   const std::vector<float> &urban_lateral_parameters,
                   const std::vector<float> &highway_lateral_parameters,
-                  const LocalizationFramePtr &localization_frame,
-                  const CollisionFramePtr &collision_frame,
-                  const TLFramePtr &tl_frame,
-                  ControlFramePtr &output_array);
+                  const LocalizationFrame &localization_frame,
+                  const CollisionFrame &collision_frame,
+                  const TLFrame &tl_frame,
+                  ControlFrame &output_array);
 
   void Update(const unsigned long index);
 

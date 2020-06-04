@@ -12,12 +12,12 @@ using namespace constants::WaypointSelection;
 
 LocalizationStage::LocalizationStage(
   const std::vector<ActorId> &vehicle_id_list,
-  BufferMapPtr &buffer_map,
+  BufferMap &buffer_map,
   const SimulationState &simulation_state,
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
   Parameters &parameters,
-  LocalizationFramePtr &output_array,
+  LocalizationFrame &output_array,
   cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
@@ -40,11 +40,11 @@ void LocalizationStage::Update(const unsigned long index) {
   float horizon_length = std::min(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
   const float horizon_square = SQUARE(horizon_length);
 
-  if (buffer_map->find(actor_id) == buffer_map->end()) {
-    buffer_map->insert({actor_id, Buffer()});
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    buffer_map.insert({actor_id, Buffer()});
   }
 
-  Buffer &waypoint_buffer = buffer_map->at(actor_id);
+  Buffer &waypoint_buffer = buffer_map.at(actor_id);
 
   // Clear buffer if vehicle is too far from the first waypoint in the buffer.
   if (!waypoint_buffer.empty() &&
@@ -169,7 +169,7 @@ void LocalizationStage::Update(const unsigned long index) {
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
 
   // Editing output array
-  LocalizationData &output = output_array->at(index);
+  LocalizationData &output = output_array.at(index);
   output.is_at_junction_entrance = is_at_junction_entrance;
 
   if (is_at_junction_entrance) {
@@ -279,7 +279,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   SimpleWaypointPtr change_over_point = nullptr;
 
   // Retrieve waypoint buffer for current vehicle.
-  const Buffer &waypoint_buffer = buffer_map->at(actor_id);
+  const Buffer &waypoint_buffer = buffer_map.at(actor_id);
 
   // Check buffer is not empty.
   if (!waypoint_buffer.empty()) {
@@ -300,8 +300,8 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
          ++i) {
       const ActorId &other_actor_id = *i;
       // Find vehicle in buffer map and check if it's buffer is not empty.
-      if (buffer_map->find(other_actor_id) != buffer_map->end() && !buffer_map->at(other_actor_id).empty()) {
-        const Buffer &other_buffer = buffer_map->at(other_actor_id);
+      if (buffer_map.find(other_actor_id) != buffer_map.end() && !buffer_map.at(other_actor_id).empty()) {
+        const Buffer &other_buffer = buffer_map.at(other_actor_id);
         const SimpleWaypointPtr &other_current_waypoint = other_buffer.front();
         const cg::Location other_location = other_current_waypoint->GetLocation();
 
@@ -337,7 +337,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
     // If a valid immediate obstacle found.
     if (!obstacle_too_close && obstacle_actor_id != 0u && !force) {
-      const Buffer &other_buffer = buffer_map->at(obstacle_actor_id);
+      const Buffer &other_buffer = buffer_map.at(obstacle_actor_id);
       const SimpleWaypointPtr &other_current_waypoint = other_buffer.front();
       const auto other_neighbouring_lanes = {other_current_waypoint->GetLeftWaypoint(),
                                              other_current_waypoint->GetRightWaypoint()};

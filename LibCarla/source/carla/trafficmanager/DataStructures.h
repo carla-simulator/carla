@@ -30,7 +30,6 @@ using JunctionID = carla::road::JuncId;
 using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 using Buffer = std::deque<SimpleWaypointPtr>;
 using BufferMap = std::unordered_map<carla::ActorId, Buffer>;
-using BufferMapPtr = std::shared_ptr<BufferMap>;
 using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 using TLS = carla::rpc::TrafficLightState;
 
@@ -40,7 +39,6 @@ struct LocalizationData {
   bool is_at_junction_entrance;
 };
 using LocalizationFrame = std::vector<LocalizationData>;
-using LocalizationFramePtr = std::shared_ptr<LocalizationFrame>;
 
 struct CollisionHazardData {
   float available_distance_margin;
@@ -48,13 +46,10 @@ struct CollisionHazardData {
   bool hazard;
 };
 using CollisionFrame = std::vector<CollisionHazardData>;
-using CollisionFramePtr = std::shared_ptr<CollisionFrame>;
 
 using ControlFrame = std::vector<carla::rpc::Command>;
-using ControlFramePtr = std::shared_ptr<ControlFrame>;
 
 using TLFrame = std::vector<bool>;
-using TLFramePtr = std::shared_ptr<TLFrame>;
 
 /// Structure to hold the actuation signals.
 struct ActuationSignal {

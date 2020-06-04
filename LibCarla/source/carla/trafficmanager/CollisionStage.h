@@ -38,7 +38,6 @@ namespace bg = boost::geometry;
 
 using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
 using BufferMap = std::unordered_map<carla::ActorId, Buffer>;
-using BufferMapPtr = std::shared_ptr<BufferMap>;
 using LocationVector = std::vector<cg::Location>;
 using GeodesicBoundaryMap = std::unordered_map<ActorId, LocationVector>;
 using GeometryComparisonMap = std::unordered_map<uint64_t, GeometryComparison>;
@@ -49,10 +48,10 @@ class CollisionStage : Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;
-  const BufferMapPtr &buffer_map;
+  const BufferMap &buffer_map;
   const TrackTraffic &track_traffic;
   const Parameters &parameters;
-  CollisionFramePtr &output_array;
+  CollisionFrame &output_array;
   cc::DebugHelper &debug_helper;
   // Structure keeping track of blocking lead vehicles.
   CollisionLockMap collision_locks;
@@ -90,10 +89,10 @@ private:
 public:
   CollisionStage(const std::vector<ActorId> &vehicle_id_list,
                  const SimulationState &simulation_state,
-                 const BufferMapPtr &buffer_map,
+                 const BufferMap &buffer_map,
                  const TrackTraffic &track_traffic,
                  const Parameters &parameters,
-                 CollisionFramePtr &output_array,
+                 CollisionFrame &output_array,
                  cc::DebugHelper& debug_helper);
 
   void Update (const unsigned long index) override;

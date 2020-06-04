@@ -16,7 +16,7 @@ class TrafficLightStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;
-  const BufferMapPtr &buffer_map;
+  const BufferMap &buffer_map;
   const Parameters &parameters;
   /// Map containing the time ticket issued for vehicles.
   std::unordered_map<ActorId, TimeInstance> vehicle_last_ticket;
@@ -24,7 +24,7 @@ private:
   std::unordered_map<JunctionID, TimeInstance> junction_last_ticket;
   /// Map containing the previous junction visited by a vehicle.
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
-  TLFramePtr &output_array;
+  TLFrame &output_array;
   RandomGenerator<> pgen;
 
   bool HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
@@ -33,9 +33,9 @@ private:
 public:
   TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,
                     const SimulationState &Simulation_state,
-                    const BufferMapPtr &buffer_map,
+                    const BufferMap &buffer_map,
                     const Parameters &parameters,
-                    TLFramePtr &output_array);
+                    TLFrame &output_array);
 
   void Update(const unsigned long index) override;
 

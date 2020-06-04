@@ -14,9 +14,9 @@ using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 TrafficLightStage::TrafficLightStage(
   const std::vector<ActorId> &vehicle_id_list,
   const SimulationState &simulation_state,
-  const BufferMapPtr &buffer_map,
+  const BufferMap &buffer_map,
   const Parameters &parameters,
-  TLFramePtr &output_array)
+  TLFrame &output_array)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
@@ -27,7 +27,7 @@ void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
-  const Buffer &waypoint_buffer = buffer_map->at(ego_actor_id);
+  const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
   const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
 
   const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
@@ -54,7 +54,7 @@ void TrafficLightStage::Update(const unsigned long index) {
     traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_time);
   }
 
-  output_array->at(index) = traffic_light_hazard;
+  output_array.at(index) = traffic_light_hazard;
 }
 
 bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,

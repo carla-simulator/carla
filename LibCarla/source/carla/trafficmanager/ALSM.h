@@ -42,7 +42,7 @@ private:
   AtomicActorSet &registered_vehicles;
   // Structure containing vehicles in the simulator not registered with the traffic manager.
   ActorMap unregistered_actors;
-  BufferMapPtr &buffer_map_ptr;
+  BufferMap &buffer_map;
   // Structure keeping track of duration of vehicles stuck in a location.
   IdleTimeMap idle_time;
   // Structure containing vehicles with attribute role_name with value hero.
@@ -86,7 +86,7 @@ private:
 
 public:
   ALSM(AtomicActorSet &registered_vehicles,
-       BufferMapPtr &buffer_map_ptr,
+       BufferMap &buffer_map,
        TrackTraffic &track_traffic,
        const Parameters &parameters,
        const cc::World &world,

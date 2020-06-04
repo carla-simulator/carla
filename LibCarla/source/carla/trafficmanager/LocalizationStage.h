@@ -29,12 +29,12 @@ using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
 class LocalizationStage : Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
-  BufferMapPtr &buffer_map;
+  BufferMap &buffer_map;
   const SimulationState &simulation_state;
   TrackTraffic &track_traffic;
   const LocalMapPtr &local_map;
   Parameters &parameters;
-  LocalizationFramePtr &output_array;
+  LocalizationFrame &output_array;
   cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
   ActorIdSet vehicles_at_junction;
@@ -55,12 +55,12 @@ private:
 
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
-                    BufferMapPtr &buffer_map,
+                    BufferMap &buffer_map,
                     const SimulationState &simulation_state,
                     TrackTraffic &track_traffic,
                     const LocalMapPtr &local_map,
                     Parameters &parameters,
-                    LocalizationFramePtr &output_array,
+                    LocalizationFrame &output_array,
                     cc::DebugHelper &debug_helper);
 
   void Update(const unsigned long index) override;

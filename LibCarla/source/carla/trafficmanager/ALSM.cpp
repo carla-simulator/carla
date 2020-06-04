@@ -16,7 +16,7 @@ namespace traffic_manager {
 
 ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
-  BufferMapPtr &buffer_map_ptr,
+  BufferMap &buffer_map,
   TrackTraffic &track_traffic,
   const Parameters &parameters,
   const cc::World &world,
@@ -27,7 +27,7 @@ ALSM::ALSM(
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage)
   : registered_vehicles(registered_vehicles),
-    buffer_map_ptr(buffer_map_ptr),
+    buffer_map(buffer_map),
     track_traffic(track_traffic),
     parameters(parameters),
     world(world),
@@ -329,7 +329,7 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
 void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
   if (registered_actor) {
     registered_vehicles.Remove({actor_id});
-    buffer_map_ptr->erase(actor_id);
+    buffer_map.erase(actor_id);
     idle_time.erase(actor_id);
     localization_stage.RemoveActor(actor_id);
     collision_stage.RemoveActor(actor_id);

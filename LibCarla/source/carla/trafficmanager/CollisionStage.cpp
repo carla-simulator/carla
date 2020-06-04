@@ -18,10 +18,10 @@ using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 CollisionStage::CollisionStage(
   const std::vector<ActorId> &vehicle_id_list,
   const SimulationState &simulation_state,
-  const BufferMapPtr &buffer_map,
+  const BufferMap &buffer_map,
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
-  CollisionFramePtr &output_array,
+  CollisionFrame &output_array,
   cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -39,7 +39,7 @@ void CollisionStage::Update(const unsigned long index) {
   const ActorId ego_actor_id = vehicle_id_list.at(index);
   if (simulation_state.ContainsActor(ego_actor_id)) {
     const cg::Location ego_location = simulation_state.GetLocation(ego_actor_id);
-    const Buffer &ego_buffer = buffer_map->at(ego_actor_id);
+    const Buffer &ego_buffer = buffer_map.at(ego_actor_id);
     const unsigned long look_ahead_index = GetTargetWaypoint(ego_buffer, JUNCTION_LOOK_AHEAD).second;
 
     ActorIdSet overlapping_actors = track_traffic.GetOverlappingVehicles(ego_actor_id);
@@ -74,7 +74,7 @@ void CollisionStage::Update(const unsigned long index) {
       const ActorType other_actor_type = simulation_state.GetType(other_actor_id);
 
       if (parameters.GetCollisionDetection(ego_actor_id, other_actor_id)
-          && buffer_map->find(ego_actor_id) != buffer_map->end()
+          && buffer_map.find(ego_actor_id) != buffer_map.end()
           && simulation_state.ContainsActor(other_actor_id)) {
         std::pair<bool, float> negotiation_result = NegotiateCollision(ego_actor_id,
                                                                        other_actor_id,
@@ -93,7 +93,7 @@ void CollisionStage::Update(const unsigned long index) {
     }
   }
 
-  CollisionHazardData &output_element = output_array->at(index);
+  CollisionHazardData &output_element = output_array.at(index);
   output_element.hazard_actor_id = obstacle_id;
   output_element.hazard = collision_hazard;
   output_element.available_distance_margin = available_distance_margin;
@@ -166,7 +166,7 @@ LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
   } else {
     const LocationVector bbox = GetBoundary(actor_id);
 
-    if (buffer_map->find(actor_id) != buffer_map->end()) {
+    if (buffer_map.find(actor_id) != buffer_map.end()) {
       float bbox_extension = GetBoundingBoxExtention(actor_id);
       const float specific_lead_distance = parameters.GetDistanceToLeadingVehicle(actor_id);
       bbox_extension = std::max(specific_lead_distance, bbox_extension);
@@ -178,7 +178,7 @@ LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
       const float width = dimensions.y;
       const float length = dimensions.x;
 
-      const Buffer &waypoint_buffer = buffer_map->at(actor_id);
+      const Buffer &waypoint_buffer = buffer_map.at(actor_id);
       const TargetWPInfo target_wp_info = GetTargetWaypoint(waypoint_buffer, length);
       const SimpleWaypointPtr boundary_start = target_wp_info.first;
       const uint64_t boundary_start_index = target_wp_info.second;
@@ -330,7 +330,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   bool other_vehicles_in_cross_detection_range = inter_vehicle_distance < cross_detection_range;
   float reference_heading_to_other_dot = cg::Math::Dot(reference_heading, reference_to_other);
   bool other_vehicle_in_front = reference_heading_to_other_dot > 0;
-  const Buffer &reference_vehicle_buffer = buffer_map->at(reference_vehicle_id);
+  const Buffer &reference_vehicle_buffer = buffer_map.at(reference_vehicle_id);
   SimpleWaypointPtr closest_point = reference_vehicle_buffer.front();
   bool ego_inside_junction = closest_point->CheckJunction();
   TrafficLightState reference_tl_state = simulation_state.GetTLS(reference_vehicle_id);

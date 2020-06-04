@@ -17,16 +17,16 @@ MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
   const SimulationState &simulation_state,
   const Parameters &parameters,
-  const BufferMapPtr &buffer_map,
+  const BufferMap &buffer_map,
   const TrackTraffic &track_traffic,
   const std::vector<float> &urban_longitudinal_parameters,
   const std::vector<float> &highway_longitudinal_parameters,
   const std::vector<float> &urban_lateral_parameters,
   const std::vector<float> &highway_lateral_parameters,
-  const LocalizationFramePtr & localization_frame,
-  const CollisionFramePtr &collision_frame,
-  const TLFramePtr &tl_frame,
-  ControlFramePtr &output_array)
+  const LocalizationFrame &localization_frame,
+  const CollisionFrame&collision_frame,
+  const TLFrame &tl_frame,
+  ControlFrame &output_array)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -48,10 +48,10 @@ void MotionPlanStage::Update(const unsigned long index) {
   const float ego_speed = ego_velocity.Length();
   const cg::Vector3D ego_heading = simulation_state.GetHeading(actor_id);
   const bool ego_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
-  const Buffer &waypoint_buffer = buffer_map->at(actor_id);
-  const LocalizationData &localization = localization_frame->at(index);
-  const CollisionHazardData &collision_hazard = collision_frame->at(index);
-  const bool &tl_hazard = tl_frame->at(index);
+  const Buffer &waypoint_buffer = buffer_map.at(actor_id);
+  const LocalizationData &localization = localization_frame.at(index);
+  const CollisionHazardData &collision_hazard = collision_frame.at(index);
+  const bool &tl_hazard = tl_frame.at(index);
 
   const float target_point_distance = std::max(ego_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                TARGET_WAYPOINT_HORIZON_LENGTH);
@@ -179,9 +179,9 @@ void MotionPlanStage::Update(const unsigned long index) {
     vehicle_control.brake = actuation_signal.brake;
     vehicle_control.steer = actuation_signal.steer;
 
-    output_array->at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+    output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
   } else {
-    output_array->at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+    output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
 }
 
