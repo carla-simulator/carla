@@ -294,7 +294,7 @@ Helper class defining a box location and its dimensions that will later be used 
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis.  
+Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis.
 `extent.x * 2` would return the size of the box in the X-axis.  
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
 The center of the bounding box relative to its parent actor.  
@@ -1382,6 +1382,8 @@ Additional with applied junction lanes. Complex situations tend to occur at junc
 If __True__, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. __Default is `True`__.  
 - <a name="carla.OpendriveGenerationParameters.enable_mesh_visibility"></a>**<font color="#f8805a">enable_mesh_visibility</font>** (_bool_)  
 If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.  
+- <a name="carla.OpendriveGenerationParameters.enable_pedestrian_navigation"></a>**<font color="#f8805a">enable_pedestrian_navigation</font>** (_bool_)  
+If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.  
 
 ---
 
@@ -1450,6 +1452,12 @@ Degrees around the X-axis.
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes the vector pointing forward according to the orientation of each axis.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+- <a name="carla.Rotation.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  
+Computes the vector pointing to the right according to the orientation of each axis.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+- <a name="carla.Rotation.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
+Computes the vector pointing upwards according to the orientation of each axis.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
@@ -1771,7 +1779,7 @@ All possible states for traffic lights. These can either change at a specific ti
 ---
 
 ## carla.TrafficManager<a name="carla.TrafficManager"></a>
-The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a [carla.VehicleControl](#carla.VehicleControl) is applied to every vehicle registered in a traffic manager.  
+The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a [carla.VehicleControl](#carla.VehicleControl) is applied to every vehicle registered in a traffic manager.
 In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.  
 
 <h3>Methods</h3>
@@ -1801,7 +1809,7 @@ Sets the minimum distance in meters that vehicles have to keep with the rest. Th
     - **Parameters:**
         - `distance` (_float_) – Meters between vehicles.  
 - <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
-Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
@@ -1823,7 +1831,7 @@ During the collision detection stage, which runs every frame, this method sets a
 - <a name="carla.TrafficManager.reset_traffic_lights"></a>**<font color="#7fb800">reset_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
 Resets every traffic light in the map to its initial state.  
 - <a name="carla.TrafficManager.vehicle_percentage_speed_difference"></a>**<font color="#7fb800">vehicle_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
-Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.  
+Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose speed behaviour is being changed.  
@@ -1877,6 +1885,12 @@ Translates a 3D point from global to local coordinates using the current transfo
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes a forward vector using its rotation.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+- <a name="carla.Transform.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  
+Computes a right vector using its rotation.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+- <a name="carla.Transform.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
+Computes an up vector using its rotation.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>

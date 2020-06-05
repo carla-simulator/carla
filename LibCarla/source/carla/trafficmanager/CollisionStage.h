@@ -1,167 +1,109 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB).
-//
-// This work is licensed under the terms of the MIT license.
-// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <deque>
-#include <stdlib.h>
-#include <string>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
+#include <memory>
 
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/geometries.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
-#include "boost/pointer_cast.hpp"
-#include "carla/client/ActorList.h"
-#include "carla/client/Vehicle.h"
-#include "carla/client/Walker.h"
-#include "carla/client/World.h"
-#include "carla/geom/Location.h"
-#include "carla/geom/Math.h"
-#include "carla/geom/Vector3D.h"
-#include "carla/Logging.h"
-#include "carla/rpc/ActorId.h"
-#include "carla/rpc/TrafficLightState.h"
 
-#include "carla/trafficmanager/MessengerAndDataTypes.h"
+#include "carla/client/DebugHelper.h"
+
+#include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/PipelineStage.h"
+#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/SimulationState.h"
+#include "carla/trafficmanager/Stage.h"
 
 namespace carla {
 namespace traffic_manager {
 
-  namespace cc = carla::client;
-  namespace cg = carla::geom;
-  namespace chr = std::chrono;
-  namespace bg = boost::geometry;
+struct GeometryComparison {
+  double reference_vehicle_to_other_geodesic;
+  double other_vehicle_to_reference_geodesic;
+  double inter_geodesic_distance;
+  double inter_bbox_distance;
+};
 
-  using ActorId = carla::ActorId;
-  using Actor = carla::SharedPtr<cc::Actor>;
-  using Point2D = bg::model::point<double, 2, bg::cs::cartesian>;
-  using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
-  using LocationList = std::vector<cg::Location>;
-  using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
-  using TLS = carla::rpc::TrafficLightState;
+struct CollisionLock {
+  double distance_to_lead_vehicle;
+  double initial_lock_distance;
+  ActorId lead_vehicle_id;
+};
+using CollisionLockMap = std::unordered_map<ActorId, CollisionLock>;
 
+namespace cc = carla::client;
+namespace bg = boost::geometry;
 
-  /// Structure to hold the Geometry of reference vehicle to other vehicle.
-  struct GeometryComparisonCache {
+using Buffer = std::deque<std::shared_ptr<SimpleWaypoint>>;
+using BufferMap = std::unordered_map<carla::ActorId, Buffer>;
+using LocationVector = std::vector<cg::Location>;
+using GeodesicBoundaryMap = std::unordered_map<ActorId, LocationVector>;
+using GeometryComparisonMap = std::unordered_map<uint64_t, GeometryComparison>;
+using Polygon = bg::model::polygon<bg::model::d2::point_xy<double>>;
 
-     double reference_vehicle_to_other_geodesic;
-     double other_vehicle_to_reference_geodesic;
-     double inter_geodesic_distance;
-     double inter_bbox_distance;
-  };
-
-  /// Structure to hold data about collision locking with a lead vehicle.
-  struct CollisionLock {
-
-    ActorId lead_vehicle_id;
-    double distance_to_lead_vehicle;
-    double initial_lock_distance;
-  };
-
-/// This class is the thread executable for the collision detection stage
-/// and is responsible for checking possible collisions with other
-/// cars along the vehicle's trajectory.
-class CollisionStage : public PipelineStage {
-
+/// This class has functionality to detect potential collision with a nearby actor.
+class CollisionStage : Stage {
 private:
-
-  /// Geometry data for the vehicle
-  std::unordered_map<std::string, GeometryComparisonCache> vehicle_cache;
-  /// Selection key for switching between output frames.
-  bool frame_selector;
-  /// Pointer to data received from localization stage.
-  std::shared_ptr<LocalizationToCollisionFrame> localization_frame;
-  /// Pointers to output frames to be shared with motion planner stage.
-  std::shared_ptr<CollisionToPlannerFrame> planner_frame_a;
-  std::shared_ptr<CollisionToPlannerFrame> planner_frame_b;
-  /// Pointers to messenger objects.
-  std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger;
-  std::shared_ptr<CollisionToPlannerMessenger> planner_messenger;
-  /// Runtime parameterization object.
-  Parameters &parameters;
-  /// Reference to Carla's debug helper object.
+  const std::vector<ActorId> &vehicle_id_list;
+  const SimulationState &simulation_state;
+  const BufferMap &buffer_map;
+  const TrackTraffic &track_traffic;
+  const Parameters &parameters;
+  CollisionFrame &output_array;
   cc::DebugHelper &debug_helper;
-  /// The map used to connect actor ids to the array index of data frames.
-  std::unordered_map<ActorId, uint64_t> vehicle_id_to_index;
-  /// An object used to keep track of time between checking for all world
-  /// actors.
-  chr::time_point<chr::system_clock, chr::nanoseconds> last_world_actors_pass_instance;
-  /// Number of vehicles registered with the traffic manager.
-  uint64_t number_of_vehicles;
-  /// Structure to hold the geodesic boundaries during one iteration.
-  std::unordered_map<ActorId, LocationList> geodesic_boundaries;
-  /// Structure to keep track of collision locking.
-  std::unordered_map<ActorId, CollisionLock> collision_locks;
-  /// Snippet profiler for measuring execution time.
-  SnippetProfiler snippet_profiler;
+  // Structure keeping track of blocking lead vehicles.
+  CollisionLockMap collision_locks;
+  // Structures to cache geodesic boundaries of vehicle and
+  // comparision between vehicle boundaries
+  // to avoid repeated computation within a cycle.
+  GeometryComparisonMap geometry_cache;
+  GeodesicBoundaryMap geodesic_boundary_map;
+  RandomGenerator<> pgen;
 
-    /// Returns the bounding box corners of the vehicle passed to the method.
-    LocationList GetBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
+  // Method to determine if a vehicle is on a collision path to another.
+  std::pair<bool, float> NegotiateCollision(const ActorId reference_vehicle_id,
+                                            const ActorId other_actor_id,
+                                            const uint64_t reference_junction_look_ahead_index);
 
-    /// Returns the extrapolated bounding box of the vehicle along its
-    /// trajectory.
-    LocationList GetGeodesicBoundary(const Actor &actor, const cg::Location &location, const cg::Vector3D velocity);
+  // Method to calculate bounding box extention length ahead of the vehicle.
+  float GetBoundingBoxExtention(const ActorId actor_id);
 
-    /// Method to construct a boost polygon object.
-    Polygon GetPolygon(const LocationList &boundary);
+  // Method to calculate polygon points around the vehicle's bounding box.
+  LocationVector GetBoundary(const ActorId actor_id);
 
-    /// The method returns true if ego_vehicle should stop and wait for
-    /// other_vehicle to pass.
-    std::pair<bool, float> NegotiateCollision(const Actor &ego_vehicle, const Actor &other_vehicle,
-                                              const cg::Location &reference_location,
-                                              const cg::Location &other_location,
-                                              const SimpleWaypointPtr& closest_point,
-                                              const SimpleWaypointPtr& junction_look_ahead,
-                                              const cg::Vector3D reference_velocity,
-                                              const cg::Vector3D other_velocity);
+  // Method to construct polygon points around the path boundary of the vehicle.
+  LocationVector GetGeodesicBoundary(const ActorId actor_id);
 
-    /// Method to calculate the speed dependent bounding box extention for a vehicle.
-    float GetBoundingBoxExtention(const ActorId actor_id,
-                                  const cg::Vector3D velocity_vector,
-                                  const cg::Vector3D heading_vector);
+  Polygon GetPolygon(const LocationVector &boundary);
 
-    /// At intersections, used to see if there is space after the junction
-    bool IsLocationAfterJunctionSafe(const Actor &ego_actor, const Actor &overlapped_actor,
-                                     const SimpleWaypointPtr safe_point, const cg::Location &other_location,
-                                     const cg::Vector3D other_velocity);
+  // Method to compare path boundaries, bounding boxes of vehicles
+  // and cache the results for reuse in current update cycle.
+  GeometryComparison GetGeometryBetweenActors(const ActorId reference_vehicle_id,
+                                              const ActorId other_actor_id);
 
-  /// A simple method used to draw bounding boxes around vehicles
-  void DrawBoundary(const LocationList &boundary);
-
-  /// Method to compute Geometry result between two vehicles
-  GeometryComparisonCache GetGeometryBetweenActors(const Actor &reference_vehicle, const Actor &other_vehicle,
-                                                   const cg::Location &reference_location, const cg::Location &other_location,
-                                                   const cg::Vector3D reference_velocity,const cg::Vector3D other_velocity);
+  // Method to draw path boundary.
+  void DrawBoundary(const LocationVector &boundary);
 
 public:
+  CollisionStage(const std::vector<ActorId> &vehicle_id_list,
+                 const SimulationState &simulation_state,
+                 const BufferMap &buffer_map,
+                 const TrackTraffic &track_traffic,
+                 const Parameters &parameters,
+                 CollisionFrame &output_array,
+                 cc::DebugHelper& debug_helper);
 
-CollisionStage(
-        std::string stage_name,
-        std::shared_ptr<LocalizationToCollisionMessenger> localization_messenger,
-        std::shared_ptr<CollisionToPlannerMessenger> planner_messenger,
-        Parameters &parameters,
-        cc::DebugHelper &debug_helper);
+  void Update (const unsigned long index) override;
 
-  ~CollisionStage();
+  void RemoveActor(const ActorId actor_id) override;
 
-  void DataReceiver() override;
+  void Reset() override;
 
-  void Action() override;
-
-  void DataSender() override;
-
-  };
+  // Method to flush cache for current update cycle.
+  void ClearCycleCache();
+};
 
 } // namespace traffic_manager
 } // namespace carla

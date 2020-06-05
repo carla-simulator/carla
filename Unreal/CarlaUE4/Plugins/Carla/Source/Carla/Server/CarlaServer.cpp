@@ -260,7 +260,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, cr::OpendriveGenerationParameters Params) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    if (!Episode->LoadNewOpendriveEpisode(cr::ToFString(opendrive), Params))
+    if (!Episode->LoadNewOpendriveEpisode(cr::ToLongFString(opendrive), Params))
     {
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
@@ -282,7 +282,7 @@ void FCarlaServer::FPimpl::BindActions()
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
     return cr::MapInfo{
       cr::FromFString(Episode->GetMapName()),
-      cr::FromFString(FileContents),
+      cr::FromLongFString(FileContents),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
   };
 

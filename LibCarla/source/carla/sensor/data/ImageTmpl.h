@@ -24,7 +24,7 @@ namespace data {
 
     friend Serializer;
 
-    explicit ImageTmpl(RawData data)
+    explicit ImageTmpl(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {
       DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
     }

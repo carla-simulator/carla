@@ -66,6 +66,4 @@ protected:
   UPROPERTY(EditAnywhere)
   TArray<AActor *> ActorMeshList;
 
-  boost::optional<carla::road::Map> CarlaMap;
-
 };

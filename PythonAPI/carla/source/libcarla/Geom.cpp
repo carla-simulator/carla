@@ -155,6 +155,8 @@ void export_geom() {
     .def_readwrite("yaw", &cg::Rotation::yaw)
     .def_readwrite("roll", &cg::Rotation::roll)
     .def("get_forward_vector", &cg::Rotation::GetForwardVector)
+    .def("get_right_vector", &cg::Rotation::GetRightVector)
+    .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -171,6 +173,8 @@ void export_geom() {
       return location;
     }, arg("in_point"))
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
+    .def("get_right_vector", &cg::Transform::GetRightVector)
+    .def("get_up_vector", &cg::Transform::GetUpVector)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))

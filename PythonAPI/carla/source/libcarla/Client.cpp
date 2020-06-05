@@ -15,6 +15,8 @@
 
 #include <boost/python/stl_iterator.hpp>
 
+namespace ctm = carla::traffic_manager;
+
 static void SetTimeout(carla::client::Client &client, double seconds) {
   client.SetTimeout(TimeDurationFromSeconds(seconds));
 }
@@ -161,13 +163,14 @@ void export_client() {
   namespace rpc = carla::rpc;
 
   class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
-      init<double, double, double, double, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true)))
+      init<double, double, double, double, bool, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true, arg("enable_pedestrian_navigation")=true)))
     .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
     .def_readwrite("max_road_length", &rpc::OpendriveGenerationParameters::max_road_length)
     .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
     .def_readwrite("additional_width", &rpc::OpendriveGenerationParameters::additional_width)
     .def_readwrite("smooth_junctions", &rpc::OpendriveGenerationParameters::smooth_junctions)
     .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)
+    .def_readwrite("enable_pedestrian_navigation", &rpc::OpendriveGenerationParameters::enable_pedestrian_navigation)
   ;
 
   class_<cc::Client>("Client",
@@ -191,6 +194,6 @@ void export_client() {
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
-    .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=TM_DEFAULT_PORT))
+    .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))
   ;
 }
