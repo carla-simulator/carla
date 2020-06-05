@@ -92,6 +92,7 @@ def main():
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     synchronous_master = False
+    random.seed(0)
 
     try:
         world = client.get_world()

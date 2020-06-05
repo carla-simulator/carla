@@ -152,7 +152,9 @@ void LocalizationStage::Update(const unsigned long index) {
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      selection_index = static_cast<uint64_t>(pgen.next()) % next_waypoints.size();
+      auto p = pgen.next();
+      std::cout << p << " for ID: " << actor_id << std::endl;
+      selection_index = static_cast<uint64_t>(p) % next_waypoints.size();
     }
     SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
     if (next_wp == nullptr) {
