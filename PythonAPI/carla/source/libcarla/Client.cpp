@@ -15,6 +15,8 @@
 
 #include <boost/python/stl_iterator.hpp>
 
+namespace ctm = carla::traffic_manager;
+
 static void SetTimeout(carla::client::Client &client, double seconds) {
   client.SetTimeout(TimeDurationFromSeconds(seconds));
 }
@@ -192,6 +194,6 @@ void export_client() {
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
-    .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=TM_DEFAULT_PORT))
+    .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))
   ;
 }

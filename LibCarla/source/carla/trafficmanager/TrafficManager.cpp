@@ -8,6 +8,8 @@
 
 
 #include "carla/Sockets.h"
+#include "carla/client/detail/Simulator.h"
+
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/trafficmanager/TrafficManagerLocal.h"
