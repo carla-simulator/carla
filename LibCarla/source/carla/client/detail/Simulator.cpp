@@ -161,6 +161,10 @@ namespace detail {
     return MakeShared<BlueprintLibrary>(std::move(defs));
   }
 
+  rpc::VehicleLightStateList Simulator::GetVehiclesLightStates() {
+    return _client.GetVehiclesLightStates();
+  }
+
   SharedPtr<Actor> Simulator::GetSpectator() {
     return MakeActor(_client.GetSpectator());
   }

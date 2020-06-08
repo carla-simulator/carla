@@ -35,6 +35,7 @@
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
+#include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -256,7 +257,7 @@ void FCarlaServer::FPimpl::BindActions()
     return UCarlaStatics::GetGameInstance(Episode->GetWorld())->IsLevelPendingLoad();
   };
 
-  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>
+  BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, cr::OpendriveGenerationParameters Params) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     if (!Episode->LoadNewOpendriveEpisode(cr::ToLongFString(opendrive), Params))
@@ -665,7 +666,7 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_vehicle_light_state) << [this](
+  BIND_SYNC(set_vehicle_light_state) << [this](
       cr::ActorId ActorId,
       cr::VehicleLightState LightState) -> R<void>
   {
@@ -895,6 +896,27 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(get_vehicle_light_states) << [this]() -> R<cr::VehicleLightStateList>
+  {
+    REQUIRE_CARLA_EPISODE();
+    cr::VehicleLightStateList List;
+
+    auto It = Episode->GetActorRegistry().begin();
+    for (; It != Episode->GetActorRegistry().end(); ++It)
+    {
+      auto Actor = It->GetActor();
+      if (!Actor->IsPendingKill() && It->GetActorType() == FActorView::ActorType::Vehicle)
+      {
+        const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+        List.emplace_back(
+            It->GetActorId(),
+            cr::VehicleLightState(Vehicle->GetVehicleLightState()).GetLightStateAsValue());
+      }
+    }
+
+    return List;
+  };
+
   BIND_SYNC(get_group_traffic_lights) << [this](
       const cr::ActorId ActorId) -> R<std::vector<cr::ActorId>>
   {
@@ -1057,6 +1079,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
       // TODO: SetAutopilot should be removed. This is the old way to control the vehicles
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
+      [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
       [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
 
 #undef MAKE_RESULT

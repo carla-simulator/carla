@@ -2490,6 +2490,9 @@ Retrieves a list of [carla.Actor](#carla.Actor) elements, either using a list of
 - <a name="carla.World.get_blueprint_library"></a>**<font color="#7fb800">get_blueprint_library</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of actor blueprints available to ease the spawn of these into the world.  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
+- <a name="carla.World.get_vehicles_light_states"></a>**<font color="#7fb800">get_vehicles_light_states</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a dict where the keys are [carla.Actor](#carla.Actor) IDs and the values are [carla.VehicleLightState](#carla.VehicleLightState) of that vehicle.  
+    - **Return:** _dict_  
 - <a name="carla.World.get_light_manager"></a>**<font color="#7fb800">get_light_manager</font>**(<font color="#00a6ed">**self**</font>)  
 Returns an instance of [carla.LightManager](#carla.LightManager) that can be used to handle the lights in the scene.  
     - **Return:** _[carla.LightManager](#carla.LightManager)_  
@@ -2810,6 +2813,23 @@ If physics should be activated or not.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `enabled` (_bool_)  
+
+---
+
+## command.SetVehicleLightState<a name="command.SetVehicleLightState"></a>
+Command adaptation of **<font color="#7fb800">set_light_state()</font>** in [carla.Vehicle](#carla.Vehicle). Sets the light state of a vehicle.  
+
+<h3>Instance Variables</h3>
+- <a name="command.SetVehicleLightState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor that is affected by the command.  
+- <a name="command.SetVehicleLightState.light_state"></a>**<font color="#f8805a">light_state</font>** (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
+Defines the light state of a vehicle.  
+
+<h3>Methods</h3>
+- <a name="command.SetVehicleLightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**light_state**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_) – Recaps the state of the lights of a vehicle, these can be used as a flags.  
 
 ---
 
