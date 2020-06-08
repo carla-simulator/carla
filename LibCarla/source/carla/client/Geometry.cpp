@@ -24,5 +24,13 @@ namespace client {
   Geometry::Geometry(SharedPtr<const Map> parent, const road::element::Waypoint& waypoint)
     : _parent(std::move(parent)), _geometry(GeometryAt(*_parent, waypoint)) {}
 
+  road::element::GeometryType Geometry::GetType() const {
+    return _geometry.GetType();
+  }
+
+  double Geometry::GetCurvature(double s) const {
+    return _geometry.GetCurvature(s);
+  }
+
 } // namespace client
 } // namespace carla

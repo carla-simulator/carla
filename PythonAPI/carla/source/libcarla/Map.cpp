@@ -220,6 +220,7 @@ void export_map() {
     .def("get_curvature_list", CALL_RETURNING_LIST(cc::Waypoint, GetCurvatureList))
     .def("get_successors", CALL_RETURNING_LIST(cc::Waypoint, GetSuccessors))
     .def("get_predecessors", CALL_RETURNING_LIST(cc::Waypoint, GetPredecessors))
+    .def("get_geometry", &cc::Waypoint::GetGeometry)
     .def(self_ns::str(self_ns::self))
   ;
 

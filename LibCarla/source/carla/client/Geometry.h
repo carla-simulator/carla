@@ -9,10 +9,11 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 
+#include "carla/road/element/Geometry.h"
+
 namespace carla {
 namespace road {
 namespace element {
-    class Geometry;
     struct Waypoint;
 } // namespace element
 } // namespace road
@@ -24,6 +25,9 @@ namespace client {
 
   class Geometry : public EnableSharedFromThis<Geometry>, private NonCopyable {
   public:
+      road::element::GeometryType GetType() const;
+      double GetCurvature(double s) const;
+
   private:
     friend class Waypoint;
     Geometry(SharedPtr<const Map> parent, const road::element::Waypoint& waypoint);
