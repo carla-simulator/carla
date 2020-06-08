@@ -193,8 +193,6 @@ namespace nav {
       return;
     }
 
-    DEBUG_ASSERT(_crowd != nullptr);
-
     // create and init
     _crowd = dtAllocCrowd();
     // these radius should be the maximum size of the vehicles (CarlaCola for Carla)
