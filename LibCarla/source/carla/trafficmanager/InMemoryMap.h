@@ -77,7 +77,7 @@ namespace crd = carla::road;
     /// local cache.
     NodeList GetDenseTopology() const;
 
-     std::string GetMapName();
+    std::string GetMapName();
 
   private:
 
