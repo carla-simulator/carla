@@ -8,6 +8,7 @@
 
 #include "carla/client/Map.h"
 #include "carla/client/Junction.h"
+#include "carla/client/Geometry.h"
 #include "carla/client/Landmark.h"
 
 #include <unordered_set>
@@ -22,6 +23,10 @@ namespace client {
       _mark_record(_parent->GetMap().GetMarkRecord(_waypoint)) {}
 
   Waypoint::~Waypoint() = default;
+
+  SharedPtr<Geometry> Waypoint::GetGeometry() const {
+    return SharedPtr<Geometry>(new Geometry(_parent, _waypoint));
+  }
 
   road::JuncId Waypoint::GetJunctionId() const {
     return _parent->GetMap().GetJunctionId(_waypoint.road_id);

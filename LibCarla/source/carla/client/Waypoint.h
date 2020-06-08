@@ -22,6 +22,7 @@
 namespace carla {
 namespace client {
 
+  class Geometry;
   class Map;
   class Junction;
   class Landmark;
@@ -60,6 +61,8 @@ namespace client {
     const geom::Transform &GetTransform() const {
       return _transform;
     }
+
+    SharedPtr<Geometry> GetGeometry() const;
 
     road::JuncId GetJunctionId() const;
 
