@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/geom/Math.h"
+
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
 namespace carla {

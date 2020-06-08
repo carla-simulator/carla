@@ -24,7 +24,7 @@ namespace data {
 
     friend Serializer;
 
-    explicit RawEpisodeState(RawData data)
+    explicit RawEpisodeState(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {}
 
   private:

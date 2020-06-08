@@ -4,10 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/client/Client.h>
-#include "carla/client/TrafficLight.h"
-#include "carla/client/ActorList.h"
-#include "carla/client/DebugHelper.h"
+#include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerRemote.h"
 
