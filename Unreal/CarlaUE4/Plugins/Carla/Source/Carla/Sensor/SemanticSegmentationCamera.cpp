@@ -22,10 +22,12 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
+
+  Offset = carla::sensor::SensorRegistry::get<ASemanticSegmentationCamera*>::type::header_offset;
 }
 
 void ASemanticSegmentationCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  SendPixelsInStream(*this);
 }

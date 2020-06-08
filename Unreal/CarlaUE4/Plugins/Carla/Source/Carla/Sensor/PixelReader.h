@@ -64,6 +64,11 @@ public:
   template <typename TSensor>
   static void SendPixelsInRenderThread(TSensor &Sensor);
 
+  static void WritePixelsToArray(
+      UTextureRenderTarget2D &RenderTarget,
+      TArray<FColor>& Pixels,
+      FRHICommandListImmediate &InRHICmdList);
+
 private:
 
   /// Copy the pixels in @a RenderTarget into @a Buffer.
@@ -102,7 +107,11 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
             Buffer,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
             InRHICmdList);
-        Stream.Send(Sensor, std::move(Buffer));
+
+        {
+          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          Stream.Send(Sensor, std::move(Buffer));
+        }
       }
     }
   );

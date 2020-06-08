@@ -279,7 +279,42 @@ protected:
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
-private:
+  uint32 Offset = 0u;
+
+  void Capture();
+
+  template <typename TSensor>
+  void SendPixelsInStream(TSensor &Sensor) {
+    TArray<FColor>& PixelsData = Pixels[PreviousTexture];
+
+    if(PixelsData.Num() > 0)
+    {
+      auto Stream = GetDataStream(Sensor);
+      auto Buffer = Stream.PopBufferFromPool();
+
+      {
+        SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
+        Buffer.copy_from(Offset, PixelsData);
+      }
+
+      {
+        SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+        Stream.Send(Sensor, std::move(Buffer));
+      }
+    }
+  }
+
+protected:
+
+  FDelegateHandle CaptureDelegate;
+
+  static TArray<ASceneCaptureSensor*> CaptureSensors;
+  static int32 NumCaptureSensors;
+  static const int32 MaxNumTextures = 2; // This has to be POT
+  int32 CurrentTexture = 0;
+  int32 PreviousTexture = 0;
+
+  TArray<FColor> Pixels[MaxNumTextures];
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)

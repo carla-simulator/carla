@@ -26,10 +26,13 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
       TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'")
 #endif
   );
+
+  Offset = carla::sensor::SensorRegistry::get<ADepthCamera*>::type::header_offset;
+
 }
 
 void ADepthCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  SendPixelsInStream(*this);
 }
