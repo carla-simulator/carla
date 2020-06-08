@@ -20,10 +20,12 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 {
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+
+  Offset = carla::sensor::SensorRegistry::get<ASceneCaptureCamera*>::type::header_offset;
 }
 
 void ASceneCaptureCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  SendPixelsInStream(*this);
 }

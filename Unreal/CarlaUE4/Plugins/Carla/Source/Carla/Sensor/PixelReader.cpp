@@ -61,11 +61,12 @@ static void WritePixelsToBuffer_Vulkan(
     return;
   }
 
+  FIntPoint Rect = RenderResource->GetSizeXY();
   // NS: Extra copy here, don't know how to avoid it.
   TArray<FColor> Pixels;
   InRHICmdList.ReadSurfaceData(
       Texture,
-      FIntRect(0, 0, RenderResource->GetSizeXY().X, RenderResource->GetSizeXY().Y),
+      FIntRect(0, 0, Rect.X, Rect.Y),
       Pixels,
       FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
 
@@ -183,4 +184,30 @@ void FPixelReader::WritePixelsToBuffer(
     const uint8 *Source = Lock.Source;
     Buffer.copy_from(Offset, Source, ExpectedStride * Height);
   }
+}
+
+// TODO: test on windows
+void FPixelReader::WritePixelsToArray(
+    UTextureRenderTarget2D &RenderTarget,
+    TArray<FColor>& Pixels,
+    FRHICommandListImmediate& InRHICmdList)
+{
+
+  check(IsInRenderingThread());
+  auto RenderResource =
+      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
+  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+  if (!Texture)
+  {
+    UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
+    return;
+  }
+
+  FIntPoint Rect = RenderResource->GetSizeXY();
+
+  InRHICmdList.ReadSurfaceData(
+      Texture,
+      FIntRect(0, 0, Rect.X, Rect.Y),
+      Pixels,
+      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
 }
