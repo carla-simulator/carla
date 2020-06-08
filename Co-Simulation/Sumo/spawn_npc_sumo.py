@@ -78,8 +78,8 @@ def write_sumocfg_xml(cfg_file, net_file, vtypes_file, viewsettings_file, additi
 
     gui_tag = ET.SubElement(root, 'gui_only')
     ET.SubElement(gui_tag, 'gui-settings-file', {'value': viewsettings_file})
-    
-    num_clients_tag = ET.SubElement(root, 'num-clients', {'value': str(additional_traci_clients+1)})
+
+    ET.SubElement(root, 'num-clients', {'value': str(additional_traci_clients+1)})
 
     tree = ET.ElementTree(root)
     tree.write(cfg_file, pretty_print=True, encoding='UTF-8', xml_declaration=True)
