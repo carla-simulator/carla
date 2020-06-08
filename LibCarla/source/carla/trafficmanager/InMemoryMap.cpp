@@ -10,7 +10,6 @@
 namespace carla {
 namespace traffic_manager {
 
-
   namespace cg = carla::geom;
   using namespace constants::Map;
 
@@ -189,13 +188,13 @@ namespace traffic_manager {
     for (auto &simple_waypoint: dense_topology) {
       if (simple_waypoint != nullptr) {
         const cg::Location loc = simple_waypoint->GetLocation();
-        const int64_t grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
+        const std::string grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
         if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
           waypoint_grid.insert({grid_key, {simple_waypoint}});
         } else {
           waypoint_grid.at(grid_key).insert(simple_waypoint);
         }
-        const int64_t ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
+        const std::string ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
         if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
           ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
         } else {
@@ -250,14 +249,8 @@ namespace traffic_manager {
     }
   }
 
-  int64_t InMemoryMap::MakeGridKey(std::pair<int, int> grid_id) {
-
-    int64_t grid_key = 0;
-    grid_key |= grid_id.first;
-    grid_key <<= 32;
-    grid_key |= grid_id.second;
-
-    return grid_key;
+  std::string InMemoryMap::MakeGridKey(std::pair<int, int> grid_key) {
+    return std::to_string(grid_key.first) + "#" + std::to_string(grid_key.second);
   }
 
   SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {
@@ -270,7 +263,7 @@ namespace traffic_manager {
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
-        const int64_t grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
+        const std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
         if (waypoint_grid.find(grid_key) != waypoint_grid.end()) {
 
           const auto &waypoint_set = waypoint_grid.at(grid_key);
@@ -308,7 +301,7 @@ namespace traffic_manager {
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
 
-        const int64_t grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
+        const std::string grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
         if (ped_waypoint_grid.find(grid_key) != ped_waypoint_grid.end()) {
 
           const auto &waypoint_set = ped_waypoint_grid.at(grid_key);

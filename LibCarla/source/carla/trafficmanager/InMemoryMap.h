@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <string>
 
 #include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"
@@ -31,7 +32,7 @@ namespace crd = carla::road;
   using NodeList = std::vector<SimpleWaypointPtr>;
   using GeoGridId = crd::JuncId;
   using WorldMap = carla::SharedPtr<cc::Map>;
-  using WaypointGrid = std::unordered_map<int64_t, std::unordered_set<SimpleWaypointPtr>>;
+  using WaypointGrid = std::unordered_map<std::string, std::unordered_set<SimpleWaypointPtr>>;
 
   using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
   using SegmentTopology = std::map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
@@ -76,7 +77,7 @@ namespace crd = carla::road;
     /// local cache.
     NodeList GetDenseTopology() const;
 
-    std::string GetMapName();
+     std::string GetMapName();
 
   private:
 
@@ -84,7 +85,7 @@ namespace crd = carla::road;
     std::pair<int, int> MakeGridId(float x, float y, bool vehicle_or_pedestrian);
 
     /// Method to generate map key for waypoint_grid.
-    int64_t MakeGridKey(std::pair<int, int> gird_id);
+    std::string MakeGridKey(std::pair<int, int> gird_id);
 
     /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
