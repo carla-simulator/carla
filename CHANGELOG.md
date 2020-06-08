@@ -45,6 +45,7 @@
   * Added Renderdoc plugin to the Unreal project
   * Added configurable noise to Lidar sensor
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
+  * Improved the performance on capture sensors.
 
 ## CARLA 0.9.9
 
