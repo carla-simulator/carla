@@ -118,7 +118,8 @@ def main(args):
                                      args.step_length,
                                      host=None,
                                      port=None,
-                                     sumo_gui=args.sumo_gui)
+                                     sumo_gui=args.sumo_gui,
+                                     client_order=args.client_order)
 
     # ---------------
     # synchronization
@@ -247,6 +248,11 @@ if __name__ == '__main__':
                            default=0,
                            type=int,
                            help='number of additional TraCI clients to wait for (default: 0)')
+    argparser.add_argument('--client-order',
+                           metavar='TRACI_CLIENT_ORDER',
+                           default=1,
+                           type=int,
+                           help='client order number for the co-simulation TraCI connection (default: 1)')
     argparser.add_argument('--sync-vehicle-lights',
                            action='store_true',
                            help='synchronize vehicle lights state (default: False)')
