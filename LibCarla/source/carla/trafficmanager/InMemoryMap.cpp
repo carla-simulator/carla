@@ -189,18 +189,8 @@ namespace traffic_manager {
     for (auto &simple_waypoint: dense_topology) {
       if (simple_waypoint != nullptr) {
         const cg::Location loc = simple_waypoint->GetLocation();
-        const int64_t grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, true));
-        if (waypoint_grid.find(grid_key) == waypoint_grid.end()) {
-          waypoint_grid.insert({grid_key, {simple_waypoint}});
-        } else {
-          waypoint_grid.at(grid_key).insert(simple_waypoint);
-        }
-        const int64_t ped_grid_key = MakeGridKey(MakeGridId(loc.x, loc.y, false));
-        if (ped_waypoint_grid.find(ped_grid_key) == ped_waypoint_grid.end()) {
-          ped_waypoint_grid.insert({ped_grid_key, {simple_waypoint}});
-        } else {
-          ped_waypoint_grid.at(ped_grid_key).insert(simple_waypoint);
-        }
+        Point3D point(loc.x, loc.y, loc.z);
+        rtree.insert(std::make_pair(point, simple_waypoint));
       }
     }
 
@@ -241,107 +231,16 @@ namespace traffic_manager {
     }
   }
 
-  std::pair<int, int> InMemoryMap::MakeGridId(float x, float y, bool vehicle_or_pedestrian) {
-    if (vehicle_or_pedestrian) {
-      return {static_cast<int>(std::floor(x / GRID_SIZE)), static_cast<int>(std::floor(y / GRID_SIZE))};
-    } else {
-      return {static_cast<int>(std::floor(x / PED_GRID_SIZE)),
-              static_cast<int>(std::floor(y / PED_GRID_SIZE))};
-    }
-  }
+  SimpleWaypointPtr InMemoryMap::GetWaypoint(const cg::Location loc) const {
 
-  int64_t InMemoryMap::MakeGridKey(std::pair<int, int> grid_id) {
+    Point3D query_point(loc.x, loc.y, loc.z);
+    std::vector<SpatialTreeEntry> result_1;
 
-    int64_t grid_key = 0;
-    grid_key |= grid_id.first;
-    grid_key <<= 32;
-    grid_key |= grid_id.second;
+    rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
+    SpatialTreeEntry &closest_entry = result_1.front();
+    SimpleWaypointPtr &closest_point = closest_entry.second;
 
-    return grid_key;
-  }
-
-  SimpleWaypointPtr InMemoryMap::GetWaypointInVicinity(cg::Location location) {
-
-    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, true);
-    SimpleWaypointPtr closest_waypoint = nullptr;
-    float closest_distance = INFINITE_DISTANCE;
-
-    // Search all surrounding grids for closest waypoint.
-    for (int i = -1; i <= 1; ++i) {
-      for (int j = -1; j <= 1; ++j) {
-
-        const int64_t grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
-        if (waypoint_grid.find(grid_key) != waypoint_grid.end()) {
-
-          const auto &waypoint_set = waypoint_grid.at(grid_key);
-          if (closest_waypoint == nullptr) {
-            closest_waypoint = *waypoint_set.begin();
-          }
-
-          for (auto &simple_waypoint: waypoint_set) {
-
-            if (simple_waypoint->DistanceSquared(location) < SQUARE(closest_distance)) {
-              closest_waypoint = simple_waypoint;
-              closest_distance = simple_waypoint->DistanceSquared(location);
-            }
-          }
-        }
-      }
-    }
-
-    // Return the closest waypoint in the surrounding grids
-    // only if it is in the same horizontal plane as the requested location.
-    if (closest_waypoint != nullptr && std::abs(closest_waypoint->GetLocation().z - location.z) > 1.0f) {
-      closest_waypoint = nullptr;
-    }
-
-    return closest_waypoint;
-  }
-
-  SimpleWaypointPtr InMemoryMap::GetPedWaypoint(cg::Location location) {
-
-    const std::pair<int, int> grid_ids = MakeGridId(location.x, location.y, false);
-    SimpleWaypointPtr closest_waypoint = nullptr;
-    float closest_distance = INFINITE_DISTANCE;
-
-    // Search all surrounding grids for closest waypoint.
-    for (int i = -1; i <= 1; ++i) {
-      for (int j = -1; j <= 1; ++j) {
-
-        const int64_t grid_key = MakeGridKey({grid_ids.first + i, grid_ids.second + j});
-        if (ped_waypoint_grid.find(grid_key) != ped_waypoint_grid.end()) {
-
-          const auto &waypoint_set = ped_waypoint_grid.at(grid_key);
-          if (closest_waypoint == nullptr) {
-            closest_waypoint = *waypoint_set.begin();
-          }
-
-          for (auto &simple_waypoint: waypoint_set) {
-
-            if (simple_waypoint->DistanceSquared(location) < std::pow(closest_distance, 2)) {
-              closest_waypoint = simple_waypoint;
-              closest_distance = simple_waypoint->DistanceSquared(location);
-            }
-          }
-        }
-      }
-    }
-
-    return closest_waypoint;
-  }
-
-  SimpleWaypointPtr InMemoryMap::GetWaypoint(const cg::Location &location) const {
-
-    SimpleWaypointPtr closest_waypoint;
-    float min_distance = INFINITE_DISTANCE;
-    for (auto &simple_waypoint : dense_topology) {
-      const float current_distance = simple_waypoint->DistanceSquared(location);
-      if (current_distance < min_distance) {
-        min_distance = current_distance;
-        closest_waypoint = simple_waypoint;
-      }
-    }
-    return closest_waypoint;
+    return closest_point;
   }
 
   std::vector<SimpleWaypointPtr> InMemoryMap::GetDenseTopology() const {
@@ -364,11 +263,7 @@ namespace traffic_manager {
         left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
         (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
 
-          SimpleWaypointPtr closest_simple_waypoint =
-          GetWaypointInVicinity(left_waypoint->GetTransform().location);
-          if (closest_simple_waypoint == nullptr) {
-            closest_simple_waypoint = GetWaypoint(left_waypoint->GetTransform().location);
-          }
+          SimpleWaypointPtr closest_simple_waypoint = GetWaypoint(left_waypoint->GetTransform().location);
           reference_waypoint->SetLeftWaypoint(closest_simple_waypoint);
         }
       }
@@ -382,11 +277,7 @@ namespace traffic_manager {
 	    right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
 	    (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
 
-	      SimpleWaypointPtr closest_simple_waypoint =
-	      GetWaypointInVicinity(right_waypoint->GetTransform().location);
-	      if (closest_simple_waypoint == nullptr) {
-		    closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
-	      }
+	      SimpleWaypointPtr closest_simple_waypoint = GetWaypoint(right_waypoint->GetTransform().location);
 	      reference_waypoint->SetRightWaypoint(closest_simple_waypoint);
 	    }
       }
@@ -401,11 +292,7 @@ namespace traffic_manager {
         right_waypoint->GetType() == crd::Lane::LaneType::Driving &&
         (right_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
 
-          SimpleWaypointPtr closest_simple_waypointR =
-          GetWaypointInVicinity(right_waypoint->GetTransform().location);
-          if (closest_simple_waypointR == nullptr) {
-            closest_simple_waypointR = GetWaypoint(right_waypoint->GetTransform().location);
-          }
+          SimpleWaypointPtr closest_simple_waypointR = GetWaypoint(right_waypoint->GetTransform().location);
           reference_waypoint->SetRightWaypoint(closest_simple_waypointR);
         }
 
@@ -415,11 +302,7 @@ namespace traffic_manager {
         left_waypoint->GetType() == crd::Lane::LaneType::Driving &&
         (left_waypoint->GetLaneId() * raw_waypoint->GetLaneId() > 0)) {
 
-          SimpleWaypointPtr closest_simple_waypointL =
-          GetWaypointInVicinity(left_waypoint->GetTransform().location);
-          if (closest_simple_waypointL == nullptr) {
-            closest_simple_waypointL = GetWaypoint(left_waypoint->GetTransform().location);
-          }
+          SimpleWaypointPtr closest_simple_waypointL = GetWaypoint(left_waypoint->GetTransform().location);
           reference_waypoint->SetLeftWaypoint(closest_simple_waypointL);
         }
       }
