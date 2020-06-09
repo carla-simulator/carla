@@ -9,7 +9,6 @@
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/streaming/detail/MultiStreamState.h"
-#include "carla/streaming/detail/StreamState.h"
 
 #include <exception>
 
@@ -50,12 +49,7 @@ namespace detail {
   carla::streaming::Stream Dispatcher::MakeStream() {
     std::lock_guard<std::mutex> lock(_mutex);
     ++_cached_token._token.stream_id; // id zero only happens in overflow.
-    return MakeStreamState<StreamState>(_cached_token, _stream_map);
-  }
-
-  carla::streaming::MultiStream Dispatcher::MakeMultiStream() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    ++_cached_token._token.stream_id; // id zero only happens in overflow.
+    log_info("Created new stream:", _cached_token._token.stream_id);
     return MakeStreamState<MultiStreamState>(_cached_token, _stream_map);
   }
 
@@ -66,6 +60,7 @@ namespace detail {
     if (search != _stream_map.end()) {
       auto stream_state = search->second.lock();
       if (stream_state != nullptr) {
+        log_info("Connecting session (stream ", session->get_stream_id(), ")");
         stream_state->ConnectSession(std::move(session));
         return true;
       }
@@ -82,6 +77,7 @@ namespace detail {
     if (search != _stream_map.end()) {
       auto stream_state = search->second.lock();
       if (stream_state != nullptr) {
+        log_info("Disconnecting session (stream ", session->get_stream_id(), ")");
         stream_state->DisconnectSession(session);
       }
     }
