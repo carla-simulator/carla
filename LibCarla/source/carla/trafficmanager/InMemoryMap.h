@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <chrono>
-#include <cmath>
-#include <limits>
 #include <memory>
-#include <string>
 #include <unordered_map>
+#include <unordered_set>
+
+#include "boost/geometry.hpp"
+#include "boost/geometry/geometries/point.hpp"
+#include "boost/geometry/index/rtree.hpp"
 
 #include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/Memory.h"
-#include "carla/road/Lane.h"
 #include "carla/road/RoadTypes.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
@@ -29,15 +29,17 @@ namespace traffic_manager {
 namespace cg = carla::geom;
 namespace cc = carla::client;
 namespace crd = carla::road;
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
-  using TopologyList = std::vector<std::pair<WaypointPtr, WaypointPtr>>;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
-  using RawNodeList = std::vector<WaypointPtr>;
   using GeoGridId = crd::JuncId;
   using WorldMap = carla::SharedPtr<cc::Map>;
-  using WaypointGrid = std::unordered_map<std::string, std::unordered_set<SimpleWaypointPtr>>;
+
+  using Point3D = bg::model::point<float, 3, bg::cs::cartesian>;
+  using SpatialTreeEntry = std::pair<Point3D, SimpleWaypointPtr>;
 
   using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
   using SegmentTopology = std::map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
@@ -55,10 +57,9 @@ namespace crd = carla::road;
     /// Structure to hold all custom waypoint objects after interpolation of
     /// sparse topology.
     NodeList dense_topology;
-    /// Grid localization map for all waypoints in the system.
-    WaypointGrid waypoint_grid;
-    /// Larger localization map for all waypoints to be used for localizing pedestrians.
-    WaypointGrid ped_waypoint_grid;
+    /// Spatial quadratic R-tree for indexing and querying waypoints.
+    bgi::rtree<SpatialTreeEntry, bgi::quadratic<32>> rtree;
+
     /// Geodesic grid topology.
     std::unordered_map<GeoGridId, cg::Location> geodesic_grid_center;
 
@@ -71,33 +72,16 @@ namespace crd = carla::road;
     /// sampling_resolution.
     void SetUp();
 
-    /// Computes the segment id of a given waypoint.
-    ///
-    /// The Id takes into account OpenDrive's road Id, lane Id and Section Id.
-    SegmentId GetSegmentId(const WaypointPtr &wp) const;
-    SegmentId GetSegmentId(const SimpleWaypointPtr &swp) const;
-
     /// This method returns the closest waypoint to a given location on the map.
-    SimpleWaypointPtr GetWaypoint(const cg::Location &location) const;
-
-    /// This method returns closest waypoint in the vicinity of the given co-ordinates.
-    SimpleWaypointPtr GetWaypointInVicinity(cg::Location location);
-    SimpleWaypointPtr GetPedWaypoint(cg::Location location);
+    SimpleWaypointPtr GetWaypoint(const cg::Location loc) const;
 
     /// This method returns the full list of discrete samples of the map in the
     /// local cache.
     NodeList GetDenseTopology() const;
 
-    void MakeGeodesiGridCenters();
-    cg::Location GetGeodesicGridCenter(GeoGridId ggid);
+    std::string GetMapName();
 
   private:
-
-    /// Method to generate the grid ids for given co-ordinates.
-    std::pair<int, int> MakeGridId(float x, float y, bool vehicle_or_pedestrian);
-
-    /// Method to generate map key for waypoint_grid.
-    std::string MakeGridKey(std::pair<int, int> gird_id);
 
     /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
@@ -106,6 +90,11 @@ namespace crd = carla::road;
     const SegmentTopology &segment_topology, const SegmentMap &segment_map);
     std::vector<SimpleWaypointPtr> GetPredecessors(const SegmentId segment_id,
     const SegmentTopology &segment_topology, const SegmentMap &segment_map);
+
+    /// Computes the segment id of a given waypoint.
+    /// The Id takes into account OpenDrive's road Id, lane Id and Section Id.
+    SegmentId GetSegmentId(const WaypointPtr &wp) const;
+    SegmentId GetSegmentId(const SimpleWaypointPtr &swp) const;
   };
 
 } // namespace traffic_manager

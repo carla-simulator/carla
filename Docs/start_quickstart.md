@@ -5,7 +5,7 @@
 * __[CARLA installation](#carla-installation)__  
 	* a) deb CARLA installation  
 	* b) GitHub repository installation  
-* __[Import additional assets](#import-addditional-assets)__  
+* __[Import additional assets](#import-additional-assets)__  
 * __[Running CARLA](#running-carla)__  
 	* Command-line options  
 * __[Updating CARLA](#updating-carla)__  
@@ -28,21 +28,21 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92635A407F7A020C
 sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.9/ all main"
 sudo apt-get update
 sudo apt-get install carla-simulator
-cd /opt/carla/bin
+cd /opt/carla-simulator/bin
 ./CarlaUE4.sh
 # To install CARLA  0.9.8 instead
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
 sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
 sudo apt-get update
 sudo apt-get install carla-simulator
-cd /opt/carla/bin
+cd /opt/carla-simulator/bin
 ./CarlaUE4.sh
 # To install CARLA  0.9.7 instead
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
 sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
 sudo apt-get update
 sudo apt-get install carla-simulator
-cd /opt/carla/bin
+cd /opt/carla-simulator/bin
 ./CarlaUE4.sh
 
 # Option B) GitHub repository installation
@@ -94,10 +94,10 @@ Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
 sudo apt-get update
 sudo apt-get install carla-simulator
-cd /opt/carla
+cd /opt/carla-simulator
 ```
 
-### b) GitHub repository installation
+### b) Package installation
 
 <div class="build-buttons">
 <p>
@@ -106,16 +106,18 @@ cd /opt/carla
 </p>
 </div>
 
-The repository contains the different versions of the simulator available. _Development_ and _stable_ sections list the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable.  
+The repository contains different versions of the simulator available. _Development_ and _stable_ sections list the packages for the different official releases. The later the version the more experimental it is. The _nightly build_ is the current development version as today and so, the most unstable.  
 
-There may be many files per release. The package is a compressed file named as __CARLA_version.number__. Other elements such as __Town06_0.9.5.tar.gz__ are additional maps.
+There may be many files per release. The package is a compressed file named as __CARLA_version.number__.  
 
 Download and extract the release file. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples. 
 
 ---
 ## Import additional assets 
 
-Additional assets are distributed in CARLA under a compressed package file. For instance, some releases come with [__additional maps__](https://github.com/carla-simulator/carla/blob/master/Docs/download.md) as mentioned previously. In order to use them in CARLA, download and move the package to the _Import_ folder, and run the following script to extract them.  
+For every release there are other packages containing additional assets and maps, such as __Additional_Maps_0.9.9.2__ for CARLA 0.9.9.2, which contains __Town06__, __Town07__, and __Town10__. These are stored separatedly to reduce the size of the build, so they can only be run after these packages are imported.  
+
+Download and move the package to the _Import_ folder, and run the following script to extract them.  
 
 ```sh
 > cd ~/carla

@@ -211,7 +211,7 @@ def main():
                     sys.exit()
             print('load opendrive map %r.' % os.path.basename(args.xodr_path))
             vertex_distance = 2.0  # in meters
-            max_road_length = 50.0 # in meters
+            max_road_length = 500.0 # in meters
             wall_height = 1.0      # in meters
             extra_width = 0.6      # in meters
             world = client.generate_opendrive_world(

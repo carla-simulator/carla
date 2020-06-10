@@ -13,6 +13,7 @@
 #include <carla/road/Road.h>
 #include <carla/road/LaneSection.h>
 #include <carla/road/Lane.h>
+#include <carla/rpc/OpendriveGenerationParameters.h>
 
 namespace carla {
 namespace geom {
@@ -21,7 +22,8 @@ namespace geom {
   class MeshFactory {
   public:
 
-    MeshFactory() = default;
+    MeshFactory(rpc::OpendriveGenerationParameters params =
+        rpc::OpendriveGenerationParameters());
 
     // =========================================================================
     // -- Map Related ----------------------------------------------------------

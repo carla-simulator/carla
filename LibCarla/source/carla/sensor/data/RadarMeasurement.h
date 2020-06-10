@@ -25,8 +25,8 @@ namespace data {
 
     friend Serializer;
 
-    explicit RadarMeasurement(RawData data)
-      : Super(std::move(data)) {}
+    explicit RadarMeasurement(RawData &&data)
+      : Super(0u, std::move(data)) {}
 
   public:
 
