@@ -81,7 +81,8 @@ TrafficManagerLocal::TrafficManagerLocal(
               localization_stage,
               collision_stage,
               traffic_light_stage,
-              motion_plan_stage)),
+              motion_plan_stage,
+              random_devices)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -230,6 +231,7 @@ void TrafficManagerLocal::Stop() {
   track_traffic.Clear();
   previous_update_instance = chr::system_clock::now();
   current_reserved_capacity = 0u;
+  random_devices.clear();
 
   simulation_state.Reset();
   localization_stage.Reset();
@@ -266,15 +268,17 @@ void TrafficManagerLocal::Reset() {
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   registered_vehicles.Insert(vehicle_list);
+  for (const ActorPtr &vehicle: vehicle_list) {
+    random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
+  }
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
 
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
-    actor_id_list.push_back(actor->GetId());
+    alsm.RemoveActor(actor->GetId(), true);
   }
-  registered_vehicles.Remove(actor_id_list);
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -393,6 +397,11 @@ carla::client::detail::EpisodeProxy &TrafficManagerLocal::GetEpisodeProxy() {
 
 std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
   return registered_vehicles.GetIDList();
+}
+
+void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
+  seed = _seed;
+  ResetAllTrafficLights();
 }
 
 } // namespace traffic_manager

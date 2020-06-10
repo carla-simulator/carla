@@ -114,6 +114,9 @@ public:
   /// Method to check server is alive or not.
   void HealthCheckRemoteTM();
 
+  /// Method to set randomization seed.
+  void SetRandomDeviceSeed(const uint64_t seed);
+
 private:
 
   /// Remote client using the IP and port information it connects to

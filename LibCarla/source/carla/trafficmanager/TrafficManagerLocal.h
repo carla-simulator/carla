@@ -112,6 +112,8 @@ private:
   std::unique_ptr<std::thread> worker_thread;
   /// Structure holding random devices per vehicle.
   RandomGeneratorMap random_devices;
+  /// Randomization seed.
+  uint64_t seed {static_cast<uint64_t>(time(NULL))};
 
   /// Method to check if all traffic lights are frozen in a group.
   bool CheckAllFrozen(TLGroup tl_to_freeze);
@@ -151,7 +153,7 @@ public:
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
 
   /// This method unregisters a vehicle from traffic manager.
-    void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
+  void UnregisterVehicles(const std::vector<ActorPtr> &actor_list);
 
   /// Method to set a vehicle's % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
@@ -217,6 +219,9 @@ public:
 
   /// Method to set hybrid physics radius.
   void SetHybridPhysicsRadius(const float radius);
+
+  /// Method to set randomization seed.
+  void SetRandomDeviceSeed(const uint64_t _seed);
 };
 
 } // namespace traffic_manager

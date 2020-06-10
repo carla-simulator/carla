@@ -104,6 +104,9 @@ public:
   /// Method to set hybrid physics radius.
   virtual void SetHybridPhysicsRadius(const float radius) = 0;
 
+  /// Method to set randomization seed.
+  virtual void SetRandomDeviceSeed(const uint64_t seed) = 0;
+
 protected:
 
 };

@@ -15,6 +15,7 @@
 #include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
 
@@ -59,16 +60,14 @@ private:
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
+  // Random devices.
+  RandomGeneratorMap &random_devices;
 
   // Updates the duration for which a registered vehicle is stuck at a location.
   void UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id);
 
   // Method to determine if a vehicle is stuck at a place for too long.
   bool IsVehicleStuck(const ActorId& actor_id);
-
-  // Removes an actor from traffic manager and performs clean up of associated data
-  // from various stages tracking the said vehicle.
-  void RemoveActor(const ActorId actor_id, const bool registered_actor);
 
   using ActorVector = std::vector<ActorPtr>;
   // Method to identify actors newly spawned in the simulation since last tick.
@@ -95,9 +94,14 @@ public:
        LocalizationStage &localization_stage,
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
-       MotionPlanStage &motion_plan_stage);
+       MotionPlanStage &motion_plan_stage,
+       RandomGeneratorMap &random_devices);
 
   void Update();
+
+  // Removes an actor from traffic manager and performs clean up of associated data
+  // from various stages tracking the said vehicle.
+  void RemoveActor(const ActorId actor_id, const bool registered_actor);
 
   void Reset();
 };

@@ -82,6 +82,11 @@ def main():
         '--hybrid',
         action='store_true',
         help='Enanble')
+    argparser.add_argument(
+        '-s', '--seed',
+        metavar='S',
+        type=int,
+        help='Random device seed')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -92,7 +97,7 @@ def main():
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     synchronous_master = False
-    random.seed(0)
+    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
@@ -101,7 +106,8 @@ def main():
         traffic_manager.set_global_distance_to_leading_vehicle(2.0)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
-
+        if args.seed is not None:
+            traffic_manager.set_random_device_seed(args.seed)
         if args.sync:
             settings = world.get_settings()
             traffic_manager.set_synchronous_mode(True)
