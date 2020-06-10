@@ -8,6 +8,7 @@
   * Fixed gravity measurement bug from IMU sensor
   * OpenDRIVE ingestion bugfixes
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
+  * Added support for additional TraCI clients in Sumo co-simulation
 
 ## CARLA 0.9.9
 
