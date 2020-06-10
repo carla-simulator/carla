@@ -125,6 +125,24 @@ namespace element {
     return p;
   }
 
+  double GeometryPoly3::GetCurvature(double dist) const {
+    auto result = _rtree.GetNearestNeighbours(Rtree::BPoint(static_cast<float>(dist))).front();
+
+    auto &val1 = result.second.first;
+    auto &val2 = result.second.second;
+
+    double rate = (val2.s - dist) / (val2.s - val1.s);
+    double u = rate * val1.u + (1.0 - rate) * val2.u;
+    double v = _poly.Evaluate(u);
+    double t_v = _poly.Tangent(u);
+    double sqr_uv = u * u + v * v;
+    double sqrt_uv = sqrt(sqr_uv);
+    double dT_x = 1.0 / sqrt_uv - u * (u + v * t_v) / sqrt(sqr_uv * sqr_uv * sqr_uv);
+    double dT_y = t_v / sqrt_uv - v * (u + v * t_v) / sqrt(sqr_uv * sqr_uv * sqr_uv);
+
+    return sqrt(dT_x * dT_x + dT_y * dT_y) / sqrt(1.0 + t_v * t_v);
+  }
+
   std::pair<float, float> GeometryPoly3::DistanceTo(const geom::Location & /*p*/) const {
     // No analytical expression (Newton-Raphson?/point search)
     // throw_exception(std::runtime_error("not implemented"));
@@ -182,6 +200,31 @@ namespace element {
     p.location.y += pos.y;
     return p;
   }
+
+  double GeometryParamPoly3::GetCurvature(double dist) const {
+    auto result = _rtree.GetNearestNeighbours(Rtree::BPoint(static_cast<float>(dist))).front();
+
+    auto &val1 = result.second.first;
+    auto &val2 = result.second.second;
+
+    double rate = (val2.s - dist) / (val2.s - val1.s);
+    double u = rate * val1.u + (1.0 - rate) * val2.u;
+    double v = rate * val1.v + (1.0 - rate) * val2.v;
+    double t_u = (rate * val1.t_u + (1.0 - rate) * val2.t_u);
+    double t_v = (rate * val1.t_v + (1.0 - rate) * val2.t_v);
+    double sqr_uv = u * u + v * v;
+    double sqrt_uv = sqrt(sqr_uv);
+    double dT_x = t_u / sqrt_uv - u * (u * t_u + v * t_v) / sqrt(sqr_uv * sqr_uv * sqr_uv);
+    double dT_y = t_v / sqrt_uv - v * (u * t_u + v * t_v) / sqrt(sqr_uv * sqr_uv * sqr_uv);
+
+    double sqr_tuv = t_u * t_u + t_v * t_v;
+    if (sqr_tuv < std::numeric_limits<double>::epsilon()) {
+      return 0.0;
+    } else {
+      return sqrt(dT_x * dT_x + dT_y * dT_y) / sqrt(t_u * t_u + t_v * t_v);
+    }
+  }
+
   std::pair<float, float> GeometryParamPoly3::DistanceTo(const geom::Location &) const {
     // No analytical expression (Newton-Raphson?/point search)
     // throw_exception(std::runtime_error("not implemented"));

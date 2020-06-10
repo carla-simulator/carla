@@ -254,7 +254,7 @@ namespace element {
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 
-    double GetCurvature(double) const override { return 0.0; }
+    double GetCurvature(double) const override;
 
   private:
 
@@ -338,7 +338,7 @@ namespace element {
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 
-    double GetCurvature(double) const override { return 0.0; }
+    double GetCurvature(double) const override;
 
   private:
 
