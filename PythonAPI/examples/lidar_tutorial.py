@@ -184,6 +184,7 @@ def one_run(args):
     display_manager = None
     vehicle = None
     vehicle_list = []
+    prof_str = ""
 
     # In this tutorial script, we are going to add a vehicle to the simulation
     # and let it drive in autopilot. We will also create a camera attached to
@@ -315,7 +316,8 @@ def one_run(args):
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
-                    print("%s %s %.3f %.3f" % (args.lidar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames))
+                    prof_str = "%s %s %.3f %.3f" % (args.lidar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
+                    print(prof_str)
                     break
             if call_exit:
                 break
@@ -331,6 +333,8 @@ def one_run(args):
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
             world.apply_settings(settings)
+
+    return prof_str
 
 
 
@@ -403,12 +407,30 @@ def main():
     if args.profiling:
         args.render_cam = False
         args.render_window = False
+        runs_output = []
 
         points_range = ['100000', '200000', '300000', '400000', '500000', '600000', '650000', '700000', '750000', '800000', '850000', '900000', '950000', '1000000']
-        print("#NumLidars PointsPerSecond FPS PercentageProcessing")
         for points in points_range:
             args.lidar_points = points
-            one_run(args)
+            run_str = one_run(args)
+            runs_output.append(run_str)
+
+        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")
+        try:
+            import multiprocessing
+            print("#Number of cores: %d" % multiprocessing.cpu_count())
+        except ImportError as error:
+            print("#Hardware information not available, please install the " \
+                "multiprocessing module")
+
+
+
+        print("#Profiling of parallel LiDAR sensor")
+        print("#NumLidars PointsPerSecond FPS PercentageProcessing")
+        for o  in runs_output:
+            print(o)
+
     else:
         one_run(args)
 
