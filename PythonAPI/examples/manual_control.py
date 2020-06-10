@@ -906,7 +906,7 @@ class CameraManager(object):
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
                 'Camera Semantic Segmentation (CityScapes Palette)', {}],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {}],
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '200'}],
             ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
@@ -925,7 +925,14 @@ class CameraManager(object):
                 for attr_name, attr_value in item[3].items():
                     bp.set_attribute(attr_name, attr_value)
             elif item[0].startswith('sensor.lidar'):
-                bp.set_attribute('range', '50')
+                self.lidar_range = 50
+
+                for attr_name, attr_value in item[3].items():
+                    bp.set_attribute(attr_name, attr_value)
+                    if attr_name == 'range':
+                        self.lidar_range = float(attr_value)
+
+
             item.append(bp)
         self.index = None
 
@@ -974,7 +981,7 @@ class CameraManager(object):
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 3), 3))
             lidar_data = np.array(points[:, :2])
-            lidar_data *= min(self.hud.dim) / 100.0
+            lidar_data *= min(self.hud.dim) / (2.0 * self.lidar_range)
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
             lidar_data = np.fabs(lidar_data)  # pylint: disable=E1111
             lidar_data = lidar_data.astype(np.int32)
