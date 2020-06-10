@@ -18,7 +18,8 @@ LocalizationStage::LocalizationStage(
   const LocalMapPtr &local_map,
   Parameters &parameters,
   LocalizationFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  cc::DebugHelper &debug_helper,
+  RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -26,7 +27,8 @@ LocalizationStage::LocalizationStage(
     local_map(local_map),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper) {}
+    debug_helper(debug_helper),
+    random_devices(random_devices) {}
 
 void LocalizationStage::Update(const unsigned long index) {
 
@@ -106,7 +108,7 @@ void LocalizationStage::Update(const unsigned long index) {
 
   if (!force_lane_change) {
     float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
-    if (perc_keep_right >= 0.0f && perc_keep_right >= pgen.next()) {
+    if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices[actor_id].next()) {
       force_lane_change = true;
       lane_change_direction = true;
     }
@@ -152,7 +154,7 @@ void LocalizationStage::Update(const unsigned long index) {
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      auto p = pgen.next();
+      auto p = random_devices[actor_id].next();
       std::cout << p << " for ID: " << actor_id << std::endl;
       selection_index = static_cast<uint64_t>(p) % next_waypoints.size();
     }

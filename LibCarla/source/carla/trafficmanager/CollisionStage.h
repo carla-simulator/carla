@@ -60,7 +60,7 @@ private:
   // to avoid repeated computation within a cycle.
   GeometryComparisonMap geometry_cache;
   GeodesicBoundaryMap geodesic_boundary_map;
-  RandomGenerator<> pgen;
+  RandomGeneratorMap &random_devices;
 
   // Method to determine if a vehicle is on a collision path to another.
   std::pair<bool, float> NegotiateCollision(const ActorId reference_vehicle_id,
@@ -93,7 +93,8 @@ public:
                  const TrackTraffic &track_traffic,
                  const Parameters &parameters,
                  CollisionFrame &output_array,
-                 cc::DebugHelper& debug_helper);
+                 cc::DebugHelper& debug_helper,
+                 RandomGeneratorMap &random_devices);
 
   void Update (const unsigned long index) override;
 

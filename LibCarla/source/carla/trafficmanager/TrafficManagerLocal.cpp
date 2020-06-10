@@ -38,7 +38,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          local_map,
                                          parameters,
                                          localization_frame,
-                                         debug_helper)),
+                                         debug_helper,
+                                         random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -46,13 +47,15 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper)),
+                                   debug_helper,
+                                   random_devices)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
                                           buffer_map,
                                           parameters,
-                                          tl_frame)),
+                                          tl_frame,
+                                          random_devices)),
 
     motion_plan_stage(MotionPlanStage(vehicle_id_list,
                                       simulation_state,
