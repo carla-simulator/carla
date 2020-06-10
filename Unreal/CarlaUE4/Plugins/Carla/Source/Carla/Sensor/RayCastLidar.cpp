@@ -15,6 +15,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -93,17 +94,27 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
+  std::vector<std::vector<FVector>> Points3;
+  Points3.resize(ChannelCount);
 
-  for (auto Channel = 0u; Channel < ChannelCount; ++Channel)
-  {
-    for (auto i = 0u; i < PointsToScanWithOneLaser; ++i)
-    {
+  ParallelFor(ChannelCount, [&](int32 idxChannel) {
+    Points3[idxChannel].reserve(PointsToScanWithOneLaser);
+
+    FCriticalSection Mutex3;
+    ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FVector Point;
-      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i;
-      if (ShootLaser(Channel, Angle, Point))
-      {
-        LidarMeasurement.WritePoint(Channel, Point);
+      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+      if (ShootLaser(idxChannel, Angle, Point)) {
+        Mutex3.Lock();
+        Points3[idxChannel].emplace_back(Point);
+        Mutex3.Unlock();
       }
+    });
+  });
+
+  for (auto idxChannel = 0u; idxChannel < ChannelCount; ++idxChannel) {
+    for (auto& Pt : Points3[idxChannel]) {
+      LidarMeasurement.WritePoint(idxChannel, Pt);
     }
   }
 
