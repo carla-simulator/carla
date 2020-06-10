@@ -26,6 +26,7 @@ namespace parser {
       road::Lane *lane = map_builder.GetLane(road_id, lane_id, s);
 
       // Lane Width
+      int width_count = 0;
       for (pugi::xml_node lane_width_node : lane_node.children("width")) {
         const double s_offset = lane_width_node.attribute("sOffset").as_double();
         const double a = lane_width_node.attribute("a").as_double();
@@ -35,6 +36,12 @@ namespace parser {
 
         // Call Map builder create Lane Width function
         map_builder.CreateLaneWidth(lane, s_offset + s, a, b, c, d);
+        width_count++;
+      }
+      if (width_count == 0 && lane->GetId() != 0) {
+        map_builder.CreateLaneWidth(lane, s, 0.0, 0.0, 0.0, 0.0);
+        std::cout << "WARNING: In road " << lane->GetRoad()->GetId() << " lane " << lane->GetId() <<
+        " no \"<width>\" parameter found under \"<lane>\" tag. Using default values." << std::endl;
       }
 
       // Lane Border
