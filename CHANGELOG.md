@@ -12,6 +12,7 @@
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Added support for additional TraCI clients in Sumo co-simulation
   * Added API functions `get_right_vector` and `get_up_vector`
+  * Added default values and a warning message for lanes missing the width parameter in OpenDRIVE
   * Added parameter to enable/disable pedestrian navigation in standalone mode
   * Improved mesh split in standalone mode
   * Fixed large RAM usage when loading polinomial geometry from OpenDRIVE
