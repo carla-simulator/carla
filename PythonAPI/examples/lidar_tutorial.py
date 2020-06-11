@@ -11,7 +11,6 @@
 import glob
 import os
 import sys
-import argparse
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -22,11 +21,11 @@ except IndexError:
     pass
 
 import carla
-
+import argparse
 import random
 import time
-
 import numpy as np
+
 
 try:
     import pygame
@@ -37,7 +36,7 @@ except ImportError:
 
 
 class DisplayManager:
-    def __init__(self, grid_size=[1, 1], window_size=[1280, 720], show_window=True):
+    def __init__(self, grid_size, window_size, show_window=True):
         if show_window:
             pygame.init()
             pygame.font.init()
@@ -103,10 +102,10 @@ class SensorManager:
             camera_bp.set_attribute('image_size_y', str(disp_size[1]))
 
             for key in sensor_options:
-              camera_bp.set_attribute(key, sensor_options[key])
+                camera_bp.set_attribute(key, sensor_options[key])
 
             camera = self.world.spawn_actor(camera_bp, transform, attach_to=attached)
-            camera.listen(lambda image: self.save_rgb_image(image))
+            camera.listen(self.save_rgb_image)
 
             return camera
 
@@ -115,11 +114,11 @@ class SensorManager:
             lidar_bp.set_attribute('range', '100')
 
             for key in sensor_options:
-              lidar_bp.set_attribute(key, sensor_options[key])
+                lidar_bp.set_attribute(key, sensor_options[key])
 
             lidar = self.world.spawn_actor(lidar_bp, transform, attach_to=attached)
 
-            lidar.listen(lambda image: self.save_lidar_image(image))
+            lidar.listen(self.save_lidar_image)
 
             return lidar
 
@@ -128,7 +127,6 @@ class SensorManager:
 
     def get_sensor(self):
         return self.sensor
-
 
     def save_rgb_image(self, image):
         t_start = time.perf_counter()
@@ -195,7 +193,7 @@ def one_run(args):
         # to the simulator. Here we'll assume the simulator is accepting
         # requests in the localhost at port 2000.
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(5.0)
 
         # Once we have a client we can retrieve the world that is currently
         # running.
@@ -246,7 +244,7 @@ def one_run(args):
         # receives an image. In this example we are saving the image to disk
         # converting the pixels to gray-scale.
 
-        display_manager = DisplayManager(grid_size=[2, 2], show_window=args.render_window)
+        display_manager = DisplayManager(grid_size=[2, 2], window_size=[1280, 720], show_window=args.render_window)
 
         if args.render_cam:
             SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=1.5, z=2.4)), vehicle, {}, [0, 0])
@@ -316,7 +314,7 @@ def one_run(args):
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
-                    prof_str = "%s %s %.3f %.3f" % (args.lidar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
+                    prof_str = "%-10s %-15s %-7.2f %-20.3f" % (args.lidar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
                     print(prof_str)
                     break
             if call_exit:
@@ -404,12 +402,15 @@ def main():
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
+
     if args.profiling:
         args.render_cam = False
         args.render_window = False
         runs_output = []
 
-        points_range = ['100000', '200000', '300000', '400000', '500000', '600000', '650000', '700000', '750000', '800000', '850000', '900000', '950000', '1000000']
+        points_range = ['100000', '200000', '300000', '400000', '500000',
+                        '600000', '700000', '800000', '900000', '1000000',
+                        '1100000', '1200000', '1300000', '1400000', '1500000']
         for points in points_range:
             args.lidar_points = points
             run_str = one_run(args)
@@ -420,14 +421,12 @@ def main():
         try:
             import multiprocessing
             print("#Number of cores: %d" % multiprocessing.cpu_count())
-        except ImportError as error:
+        except ImportError:
             print("#Hardware information not available, please install the " \
                 "multiprocessing module")
 
-
-
         print("#Profiling of parallel LiDAR sensor")
-        print("#NumLidars PointsPerSecond FPS PercentageProcessing")
+        print("#NumLidars PointsPerSecond FPS     PercentageProcessing")
         for o  in runs_output:
             print(o)
 
