@@ -150,23 +150,28 @@ void LocalizationStage::Update(const unsigned long index) {
   // Populating the buffer.
   while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
-    std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+    SimpleWaypointPtr furthest_waypoint = waypoint_buffer.back();
+    std::vector<SimpleWaypointPtr> next_waypoints = furthest_waypoint->GetNextWaypoint();
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      auto p = random_devices.at(actor_id).next();
-      selection_index = static_cast<uint64_t>(p) % next_waypoints.size();
+      // Arranging selection points from right to left.
+      std::sort(next_waypoints.begin(), next_waypoints.end(),
+                [&furthest_waypoint](const SimpleWaypointPtr &a, const SimpleWaypointPtr &b) {
+                  float a_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
+                                                            furthest_waypoint->GetForwardVector(),
+                                                            a->GetLocation());
+                  float b_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
+                                                            furthest_waypoint->GetForwardVector(),
+                                                            b->GetLocation());
+                  return a_x_product < b_x_product;
+                });
+      double r_sample = random_devices.at(actor_id).next();
+      double s_bucket = 100.0 / next_waypoints.size();
+      selection_index = static_cast<uint64_t>(std::floor(r_sample/s_bucket));
     }
-    SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
-    if (next_wp == nullptr) {
-      for (auto &wp : next_waypoints) {
-        if (wp != nullptr) {
-          next_wp = wp;
-          break;
-        }
-      }
-    }
-    PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
+    SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+    PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
   }
 
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
