@@ -32,5 +32,17 @@ namespace client {
     return _geometry.GetCurvature(s);
   }
 
+  double Geometry::GetLength() const {
+    return _geometry.GetLength();
+  }
+
+  double Geometry::GetStartOffset() const {
+    return _geometry.GetStartOffset();
+  }
+
+  double Geometry::GetHeading() const {
+    return _geometry.GetHeading();
+  }
+
 } // namespace client
 } // namespace carla

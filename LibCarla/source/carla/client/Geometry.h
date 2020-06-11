@@ -27,14 +27,17 @@ namespace client {
   public:
       road::element::GeometryType GetType() const;
       double GetCurvature(double s) const;
+      double GetLength() const;
+      double GetStartOffset() const;
+      double GetHeading() const;
 
-  private:
-    friend class Waypoint;
-    Geometry(SharedPtr<const Map> parent, const road::element::Waypoint& waypoint);
+    private:
+      friend class Waypoint;
+      Geometry(SharedPtr<const Map> parent, const road::element::Waypoint& waypoint);
 
-  private:
-    SharedPtr<const Map> _parent;
-    const road::element::Geometry& _geometry;
+    private:
+      SharedPtr<const Map> _parent;
+      const road::element::Geometry& _geometry;
   };
 }
 } // namespace carla
