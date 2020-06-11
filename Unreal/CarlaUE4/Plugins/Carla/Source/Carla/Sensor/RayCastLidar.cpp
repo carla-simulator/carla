@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <PxScene.h>
+
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
@@ -97,20 +99,22 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   std::vector<std::vector<FVector>> Points3;
   Points3.resize(ChannelCount);
 
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
     Points3[idxChannel].reserve(PointsToScanWithOneLaser);
 
-    FCriticalSection Mutex3;
+    FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FVector Point;
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
       if (ShootLaser(idxChannel, Angle, Point)) {
-        Mutex3.Lock();
+        Mutex.Lock();
         Points3[idxChannel].emplace_back(Point);
-        Mutex3.Unlock();
+        Mutex.Unlock();
       }
     });
   });
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   for (auto idxChannel = 0u; idxChannel < ChannelCount; ++idxChannel) {
     for (auto& Pt : Points3[idxChannel]) {
