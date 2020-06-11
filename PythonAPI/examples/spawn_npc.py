@@ -25,8 +25,7 @@ import carla
 
 import argparse
 import logging
-import random
-
+from numpy import random
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -103,7 +102,7 @@ def main():
         world = client.get_world()
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
-        traffic_manager.set_global_distance_to_leading_vehicle(2.0)
+        traffic_manager.set_global_distance_to_leading_vehicle(1.0)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
         if args.seed is not None:
