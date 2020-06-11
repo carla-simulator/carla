@@ -11,6 +11,7 @@
   * OpenDRIVE ingestion bugfixes
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Added support for additional TraCI clients in Sumo co-simulation
+  * CARLA repo now includes a folder for plugins from the community
   * Added API functions `get_right_vector` and `get_up_vector`
   * Added parameter to enable/disable pedestrian navigation in standalone mode
   * Improved mesh split in standalone mode
