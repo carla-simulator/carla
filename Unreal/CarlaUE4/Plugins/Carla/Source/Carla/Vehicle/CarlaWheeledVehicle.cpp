@@ -289,7 +289,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
   return PhysicsControl;
 }
 
-FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState()
+FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
 {
   return InputControl.LightState;
 }

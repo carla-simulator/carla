@@ -10,6 +10,9 @@ There are several tools provided by the CARLA team that allow users to edit maps
 *   [__Procedural buildings__](#add-serial-meshes)  
 	*   [Building structure](#building-structure)  
 	*   [Structure modifications](#structure-modifications)  
+*   [__Weather customization__](#weather-customization)  
+	*   [BP_Weather](#bp_weather)  
+	*   [BP_Sky](#bp_sky)  
 
 !!! Important
     This tutorial only applies to users that work with a build from source, and have access to the Unreal Editor. 
@@ -111,7 +114,7 @@ For each of them, except the __Roof__, there is a mesh to fill the center of the
 
 The __Base parameters__ set the dimensions of the building.  
 
-*   ___Num Floors__ — Floors of the building. Repetitions of the __Body__ meshes.  
+*   __Num Floors__ — Floors of the building. Repetitions of the __Body__ meshes.  
 *   __Length X and Length Y__ — Area of the building. Repetitions of the central meshes for each side of the building.  
 
 ![bp_procedural_building_full](img/map_customization/BP_Procedural_Building_Full.jpg)
@@ -128,6 +131,38 @@ There are some additional options to modify the general structure of the buildin
 
 ![bp_procedural_building_extras](img/map_customization/BP_Procedural_Building_Extras.jpg)
 <div style="text-align: right"><i>On the left, a building with no cornes and one door. <br> On the right, a building with a wall applied to one side of the building. The wall is a texture with no fire escape.</i></div>
+
+---
+## Weather customization
+
+The weather can be easily customized by the users in CARLA using the PythonAPI. However, there is some configuration that users can do in order to set the default weather for a map. The weather parameters available for configuration by the following blueprints, are the same accessible from the API. These are described [here](https://carla.readthedocs.io/en/latest/python_api/#carlaweatherparameters).  
+
+### BP_Weather
+
+This blueprint is loaded into the world when the simulation starts. It contains the default weather parameters for every map, and these can be modified at will.  
+
+__1. Open the BP_Weather__ in `Content/Carla/Blueprints/Weather`.  
+
+__2. Go to the Weather group__ in the blueprint.  
+
+__3. Choose the desired town__ and modify the parameters.  
+
+![bp_weather_pic](img/map_customization/BP_Weather.jpg)<br>
+<div style="text-align: right">
+<i>Array containing default weather parameters for every CARLA map. Town01 opened.</i></div>
+
+### BP_Sky
+
+This blueprint groups all the weather parameters. It can be loaded into the scene when there is no CARLA server running, and used to ea test different configurations before setting a new default weather.  
+
+__1. Find the BP_Sky__ in `Content/Carla/Blueprints/Weather`.  
+
+__2. Load the blueprint in the scene.__ Drag it into the scene view.  
+
+__3. Edit the weather parameters.__ The weather in the scene will be updated accordingly.  
+
+!!! Important
+    If more than one blueprint is loaded into the scene, the weather will be duplicated with weird results, such as having two suns. 
 
 ---
 

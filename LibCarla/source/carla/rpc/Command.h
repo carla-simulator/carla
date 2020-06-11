@@ -12,6 +12,7 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
 
 #include <boost/variant.hpp>
@@ -152,8 +153,6 @@ namespace rpc {
     };
 
     struct SetAutopilot : CommandBase<SetAutopilot> {
-      using TM = traffic_manager::TrafficManager;
-
       SetAutopilot() = default;
       SetAutopilot(
           ActorId id,
@@ -168,6 +167,18 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
+    struct SetVehicleLightState : CommandBase<SetVehicleLightState> {
+      SetVehicleLightState() = default;
+      SetVehicleLightState(
+          ActorId id,
+          VehicleLightState::flag_type value)
+        : actor(id),
+          light_state(value) {}
+      ActorId actor;
+      VehicleLightState::flag_type light_state;
+      MSGPACK_DEFINE_ARRAY(actor, light_state);
+    };
+
     using CommandType = boost::variant<
         SpawnActor,
         DestroyActor,
@@ -180,7 +191,8 @@ namespace rpc {
         ApplyImpulse,
         ApplyAngularImpulse,
         SetSimulatePhysics,
-        SetAutopilot>;
+        SetAutopilot,
+        SetVehicleLightState>;
 
     CommandType command;
 
