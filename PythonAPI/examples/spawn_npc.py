@@ -128,6 +128,8 @@ def main():
             blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
             blueprints = [x for x in blueprints if not x.id.endswith('t2')]
 
+        blueprints = sorted(blueprints, key=lambda bp: bp.id)
+
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)
 
