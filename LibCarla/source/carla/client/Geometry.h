@@ -26,7 +26,11 @@ namespace client {
   class Geometry : public EnableSharedFromThis<Geometry>, private NonCopyable {
   public:
       road::element::GeometryType GetType() const;
-      double GetCurvature(double s) const;
+
+      // Waypoint must have the same geometry
+      double GetCurvatureFromWaypoint(const Waypoint& w) const;
+      // distance is from the geometry beginning
+      double GetCurvature(double dist) const;
       double GetLength() const;
       double GetStartOffset() const;
       double GetHeading() const;

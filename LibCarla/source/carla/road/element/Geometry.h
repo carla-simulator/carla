@@ -205,9 +205,7 @@ namespace element {
      * @return The local curvature at the specified location
      */
     double GetCurvature(double s) const override {
-      return ((_curve_end - _curve_start) *
-                  (std::abs(_start_position_offset - s) / _length) +
-              _curve_start);
+      return ((_curve_end - _curve_start) * (s / _length) + _curve_start);
     }
 
   private:

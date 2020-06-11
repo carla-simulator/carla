@@ -57,6 +57,7 @@ void export_geometry() {
   class_<cc::Geometry, boost::noncopyable, boost::shared_ptr<cc::Geometry>>("Geometry", no_init)
       .def("get_type", &cc::Geometry::GetType)
       .def("get_curvature", &cc::Geometry::GetCurvature)
+      .def("get_curvature_from_waypoint", &cc::Geometry::GetCurvatureFromWaypoint)
       .def("get_length", &cc::Geometry::GetLength)
       .def("get_start_offset", &cc::Geometry::GetStartOffset)
       .def("get_heading", &cc::Geometry::GetHeading)

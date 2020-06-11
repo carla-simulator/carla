@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/client/Geometry.h"
+#include "carla/client/Waypoint.h"
 
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/element/Geometry.h"
@@ -28,8 +29,26 @@ namespace client {
     return _geometry.GetType();
   }
 
-  double Geometry::GetCurvature(double s) const {
-    return _geometry.GetCurvature(s);
+  double Geometry::GetCurvatureFromWaypoint(const Waypoint& w) const {
+    auto& other_geometry = GeometryAt(*_parent, {
+                                                    w.GetRoadId(),
+                                                    w.GetSectionId(),
+                                                    w.GetLaneId(),
+                                                    w.GetDistance(),
+                                                });
+    if (std::addressof(other_geometry) != std::addressof(_geometry)) {
+      throw std::runtime_error("Waypoint is on another geometry");
+    }
+
+    auto s = w.GetDistance() - _geometry.GetStartOffset();
+    return GetCurvature(s);
+  }
+
+  double Geometry::GetCurvature(double dist) const {
+    if (dist < 0 || dist > _geometry.GetLength()) {
+      throw std::invalid_argument("dist must be within the geometry length");
+    }
+    return _geometry.GetCurvature(dist);
   }
 
   double Geometry::GetLength() const {
