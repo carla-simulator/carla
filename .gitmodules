@@ -1,3 +1,0 @@
-[submodule "Plugins"]
-	path = Plugins
-	url = https://github.com/carla-simulator/carla-plugins.git
