@@ -10,12 +10,9 @@ CARLA Simulator
 [![forum](Docs/img/btn/forum.png)](https://forum.carla.org)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
 
-CARLA is an open-source simulator for autonomous driving research. CARLA has
-been developed from the ground up to support development, training, and
-validation of autonomous driving systems. In addition to open-source code
-and protocols, CARLA provides open digital assets (urban layouts, buildings,
-vehicles) that were created for this purpose and can be used freely. The
-simulation platform supports flexible specification of sensor suites and
+CARLA is an open-source simulator for autonomous driving research. CARLA has been developed from the ground up to support development, training, and
+validation of autonomous driving systems. In addition to open-source code and protocols, CARLA provides open digital assets (urban layouts, buildings,
+vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
 [![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
@@ -71,7 +68,7 @@ The Linux build needs for an UE patch to solve some visualization issues regardi
 ```sh
 # Download and install the UE patch  
 cd ~/UnrealEngine_4.24
-wget url://... ~Download//430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~Download//430667-13636743-patch.txt
 patch --strip=4 < ~/Downloads/430667-13636743-patch.txt
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
