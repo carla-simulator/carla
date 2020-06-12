@@ -75,6 +75,8 @@ TEST(streaming, low_level_sending_strings) {
 
   std::this_thread::sleep_for(2ms);
   ASSERT_GE(message_count, number_of_messages - 3u);
+
+  io.service.stop();
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -118,6 +120,8 @@ TEST(streaming, low_level_unsubscribing) {
 
     ASSERT_GE(message_count, number_of_messages - 3u);
   }
+
+  io.service.stop();
 }
 
 TEST(streaming, low_level_tcp_small_message) {
