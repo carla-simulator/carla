@@ -54,6 +54,7 @@ private:
   FLidarDescription Description;
 
   TArray<float> LaserAngles;
+  std::vector<std::vector<FVector>> AuxPoints;
 
   FLidarMeasurement LidarMeasurement;
 };

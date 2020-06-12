@@ -96,12 +96,13 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
-  std::vector<std::vector<FVector>> Points3;
-  Points3.resize(ChannelCount);
+  AuxPoints.resize(ChannelCount);
+
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
-    Points3[idxChannel].reserve(PointsToScanWithOneLaser);
+    AuxPoints[idxChannel].clear();
+    AuxPoints[idxChannel].reserve(PointsToScanWithOneLaser);
 
     FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
@@ -109,7 +110,7 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
       if (ShootLaser(idxChannel, Angle, Point)) {
         Mutex.Lock();
-        Points3[idxChannel].emplace_back(Point);
+        AuxPoints[idxChannel].emplace_back(Point);
         Mutex.Unlock();
       }
     });
@@ -117,7 +118,7 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   for (auto idxChannel = 0u; idxChannel < ChannelCount; ++idxChannel) {
-    for (auto& Pt : Points3[idxChannel]) {
+    for (auto& Pt : AuxPoints[idxChannel]) {
       LidarMeasurement.WritePoint(idxChannel, Pt);
     }
   }
