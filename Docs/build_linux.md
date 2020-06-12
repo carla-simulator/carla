@@ -60,7 +60,7 @@ git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/Unre
 cd ~/UnrealEngine_4.24
 
 # Download and install the UE patch  
-wget url://... ~Download//430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~Download//430667-13636743-patch.txt
 patch --strip=4 < ~/Downloads/430667-13636743-patch.txt
 
 # Build UE
@@ -162,7 +162,7 @@ cd ~/UnrealEngine_4.24
 
 Get a patch for Unreal Engine. The patch fixes some Vulkan visualization issues that may occur when changing the map. Download and install it with the following commands.  
 ```sh
-wget url://... ~Download//430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~Download//430667-13636743-patch.txt
 patch --strip=4 < ~/Downloads/430667-13636743-patch.txt
 ```
 
