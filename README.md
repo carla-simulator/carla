@@ -63,15 +63,21 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA
 --------------
 
-Use `git clone` or download the project from this page. Note that the master
-branch contains the latest fixes and features, for the latest stable code may be
+Use `git clone` or download the project from this page. Note that the master branch contains the latest fixes and features, for the latest stable code may be
 best to switch to the `stable` branch.
 
-Then follow the instruction at [How to build on Linux][buildlinuxlink] or
-[How to build on Windows][buildwindowslink].
+Then follow the instruction at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].  
+The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.  
+```sh
+# Download and install the UE patch  
+cd ~/UnrealEngine_4.24
+wget url://... ~Download//430667-13636743-patch.txt
+patch --strip=4 < ~/Downloads/430667-13636743-patch.txt
+# Build UE
+./Setup.sh && ./GenerateProjectFiles.sh && make
+```
 
-Unfortunately we don't have official instructions to build on Mac yet, please
-check the progress at [issue #150][issue150].
+Unfortunately we don't have official instructions to build on Mac yet, please check the progress at [issue #150][issue150].
 
 [buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
 [buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
