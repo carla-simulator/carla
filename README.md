@@ -68,8 +68,8 @@ The Linux build needs for an UE patch to solve some visualization issues regardi
 ```sh
 # Download and install the UE patch  
 cd ~/UnrealEngine_4.24
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~Download//430667-13636743-patch.txt
-patch --strip=4 < ~/Downloads/430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
+patch --strip=4 < ~/430667-13636743-patch.txt
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
