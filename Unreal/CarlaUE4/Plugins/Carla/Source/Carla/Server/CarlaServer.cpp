@@ -245,18 +245,8 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("map not found");
     }
-    UCarlaStatics::GetGameInstance(Episode->GetWorld())->SetMapToLoad(MapName);
-    UGameplayStatics::OpenLevel(Episode->GetWorld(), TEXT("EmptyMap"), true, "");
+    Episode->LoadNewEpisode(MapName);
     return R<void>::Success();
-  };
-
-  BIND_SYNC(is_in_intermediate_episode) << [this]() -> R<bool>
-  {
-    REQUIRE_CARLA_EPISODE();
-    // Hack: The 2 seconds is a hint, not a requirement. The objective is to wait until all the map is loaded.
-    // Since we don't have async loads of the assets (BPs, meshes, etc.) of the map yet, a big load will happen
-    // in the first ticks of the level, halting the execution.
-    return (Episode->GetWorld()->GetMapName().Contains(TEXT("EmptyMap")) || Episode->GetElapsedGameTime() < 2.0 );
   };
 
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, carla::rpc::OpendriveGenerationParameters Params) -> R<void>

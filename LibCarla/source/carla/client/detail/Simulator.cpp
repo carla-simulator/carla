@@ -90,7 +90,7 @@ namespace detail {
       using namespace std::literals::chrono_literals;
       _episode->WaitForState(10ms);
       auto episode = GetCurrentEpisode();
-      if (episode.GetId() != id && !_client.IsInIntermediateEpisode()) {
+      if (episode.GetId() != id) {
         return episode;
       }
     }

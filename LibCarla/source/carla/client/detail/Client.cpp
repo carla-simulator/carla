@@ -145,10 +145,6 @@ namespace detail {
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name));
   }
 
-  bool Client::IsInIntermediateEpisode() {
-    return _pimpl->CallAndWait<bool>("is_in_intermediate_episode");
-  }
-
   void Client::CopyOpenDriveToServer(std::string opendrive, const rpc::OpendriveGenerationParameters & params) {
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive), params);

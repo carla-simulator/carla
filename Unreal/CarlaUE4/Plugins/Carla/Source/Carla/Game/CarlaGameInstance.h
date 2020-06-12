@@ -83,14 +83,6 @@ public:
     return GenerationParameters;
   }
 
-  void SetMapToLoad(const FString MapName);
-
-  void CheckAndLoadMap(UWorld *world, UCarlaEpisode &Episode);
-
-  bool IsLevelPendingLoad() const {
-    return bShouldLoadLevel;
-  }
-
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
@@ -99,11 +91,5 @@ private:
   FCarlaEngine CarlaEngine;
 
   carla::rpc::OpendriveGenerationParameters GenerationParameters;
-
-  UPROPERTY()
-  bool bShouldLoadLevel = false;
-
-  UPROPERTY()
-  FString MapToLoad;
 
 };
