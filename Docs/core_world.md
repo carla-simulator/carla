@@ -11,6 +11,7 @@ This tutorial goes from defining the basics and creation of these elements, to d
 *   [__The world__](#the-world)  
 	*   [Actors](#actors)  
 	*   [Weather](#weather)  
+	*   [Lights](#lights)  
 	*   [Debugging](#debugging)  
 	*   [World snapshots](#world-snapshots)  
 	*   [World settings](#world-settings)  
@@ -127,13 +128,75 @@ There are some weather presets that can be directly applied to the world. These 
 ```py
 world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
+
+The weather can also be customized using two scripts provided by CARLA. 
+
+*   __`environment.py`__ *(in `PythonAPI/util`)* — Provides access to weather and light parameters so that these can be changed in real time.  
+
+<details>
+<summary> Optional arguments in <b>environment.py</b> </summary>
+
+```sh
+  -h, --help            show this help message and exit
+  --host H              IP of the host server (default: 127.0.0.1)
+  -p P, --port P        TCP port to listen to (default: 2000)
+  --sun SUN             Sun position presets [sunset | day | night]
+  --weather WEATHER     Weather condition presets [clear | overcast | rain]
+  --altitude A, -alt A  Sun altitude [-90.0, 90.0]
+  --azimuth A, -azm A   Sun azimuth [0.0, 360.0]
+  --clouds C, -c C      Clouds amount [0.0, 100.0]
+  --rain R, -r R        Rain amount [0.0, 100.0]
+  --puddles Pd, -pd Pd  Puddles amount [0.0, 100.0]
+  --wind W, -w W        Wind intensity [0.0, 100.0]
+  --fog F, -f F         Fog intensity [0.0, 100.0]
+  --fogdist Fd, -fd Fd  Fog Distance [0.0, inf)
+  --wetness Wet, -wet Wet
+                        Wetness intensity [0.0, 100.0]
+```
+</details><br>
+
+*   __`dynamic_weather.py`__ *(in `PythonAPI/examples`)* — Enables a particular weather cycle prepared by developers for each CARLA map.  
+
+<details>
+<summary> Optional arguments in <b>dynamic_weather.py</b> </summary>
+
+```sh
+  -h, --help            show this help message and exit
+  --host H              IP of the host server (default: 127.0.0.1)
+  -p P, --port P        TCP port to listen to (default: 2000)
+  -s FACTOR, --speed FACTOR
+                        rate at which the weather changes (default: 1.0)
+```
+</details><br>
+
 !!! Note
     Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors. 
 
-__Night mode starts when sun_altitude_angle < 0__, which is considered sunset. This is when street and vehicle lights become especially relevant.  
+__Night mode starts when sun_altitude_angle < 0__, which is considered sunset. This is when lights become especially relevant.  
 
+### Lights
 
-*   __Street lights__ automatically turn on when night mode starts. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Their properties can be changed at will. An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights.  
+*   __Street lights__ automatically turn on when the simulation enters night mode. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Properties such as color and intensity can be changed at will. The variable __light_state__ of type [__carla.LightState__](python_api.md#carla.LightState) allows setting all of these in one call.  
+Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.  
+
+```py
+# Get the light manager and lights
+lmanager = world.get_light_manager()
+mylights = lmanager.get_all_lights()
+
+# Custom a specific light
+light01 = mylights[0]
+light01.turn_on()
+light01.set_intensity(100.0)
+state01 = carla.LightState(200.0,red,carla.LightGroup.Building,True)
+light01.set_light_state(state01)
+
+# Custom a group of lights
+my_lights = lmanager.get_light_group(carla.LightGroup.Building)
+lmanager.turn_on(my_lights)
+lmanager.set_color(my_lights,carla.Color(255,0,0))
+lmanager.set_intensities(my_lights,list_of_intensities)
+```
 
 * __Vehicle lights__ have to be turned on/off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). So far, not all vehicles have lights integrated. Here is a list of those that are available by the time of writing.  
 	*   __Bikes.__ All of them have a front and back position light.  
@@ -148,6 +211,9 @@ current_lights = carla.VehicleLightState.NONE
 current_lights |= carla.VehicleLightState.Position
 vehicle.set_light_state(current_lights)
 ```
+
+!!! Note
+    Lights can also be set in real time using the `environment.py` described in the [weather](#weather) section.  
 
 ### Debugging
 

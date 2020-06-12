@@ -29,7 +29,7 @@ void export_weather() {
   namespace cr = carla::rpc;
 
   auto cls = class_<cr::WeatherParameters>("WeatherParameters")
-    .def(init<float, float, float, float, float, float, float, float, float>(
+    .def(init<float, float, float, float, float, float, float, float, float, float>(
         (arg("cloudiness")=0.0f,
          arg("precipitation")=0.0f,
          arg("precipitation_deposits")=0.0f,
@@ -38,6 +38,7 @@ void export_weather() {
          arg("sun_altitude_angle")=0.0f,
          arg("fog_density")=0.0f,
          arg("fog_distance")=0.0f,
+         arg("fog_falloff")=0.0f,
          arg("wetness")=0.0f)))
     .def_readwrite("cloudiness", &cr::WeatherParameters::cloudiness)
     .def_readwrite("precipitation", &cr::WeatherParameters::precipitation)
@@ -47,6 +48,7 @@ void export_weather() {
     .def_readwrite("sun_altitude_angle", &cr::WeatherParameters::sun_altitude_angle)
     .def_readwrite("fog_density", &cr::WeatherParameters::fog_density)
     .def_readwrite("fog_distance", &cr::WeatherParameters::fog_distance)
+    .def_readwrite("fog_falloff", &cr::WeatherParameters::fog_falloff)
     .def_readwrite("wetness", &cr::WeatherParameters::wetness)
     .def("__eq__", &cr::WeatherParameters::operator==)
     .def("__ne__", &cr::WeatherParameters::operator!=)

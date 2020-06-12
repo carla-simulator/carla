@@ -24,6 +24,7 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
+#include "carla/rpc/VehicleLightStateList.h"
 
 #include <functional>
 #include <memory>
@@ -200,6 +201,10 @@ namespace detail {
     void FreezeTrafficLight(
         rpc::ActorId traffic_light,
         bool freeze);
+
+    /// Returns a list of pairs where the firts element is the vehicle ID
+    /// and the second one is the light state
+    rpc::VehicleLightStateList GetVehiclesLightStates();
 
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);

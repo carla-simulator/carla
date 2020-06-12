@@ -22,6 +22,7 @@
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleLightStateList.h"
 
 #include <boost/optional.hpp>
 
@@ -196,6 +197,10 @@ namespace detail {
     }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+
+    /// Returns a list of pairs where the firts element is the vehicle ID
+    /// and the second one is the light state
+    rpc::VehicleLightStateList GetVehiclesLightStates();
 
     SharedPtr<Actor> GetSpectator();
 
