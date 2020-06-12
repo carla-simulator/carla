@@ -4,10 +4,13 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <PxScene.h>
+
 #include "Carla.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 #include "carla/geom/Math.h"
 
@@ -89,7 +92,6 @@ void ARadar::SendLineTraces(float DeltaTime)
 {
 
   constexpr float TO_METERS = 1e-2;
-  FHitResult OutHit(ForceInit);
   const FTransform& ActorTransform = GetActorTransform();
   const FRotator& TransformRotator = ActorTransform.Rotator();
   const FVector& RadarLocation = GetActorLocation();
@@ -103,8 +105,10 @@ void ARadar::SendLineTraces(float DeltaTime)
   const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Range;
   const int NumPoints = (int)(PointsPerSecond * DeltaTime);
 
-  for (int i = 0; i < NumPoints; i++)
-  {
+  FCriticalSection Mutex;
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
+  ParallelFor(NumPoints, [&](int32 idxChannel) {
+    FHitResult OutHit(ForceInit);
     const float Radius = RandomEngine->GetUniformFloat();
     const float Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
 
@@ -138,14 +142,17 @@ void ARadar::SendLineTraces(float DeltaTime)
         TransformZAxis
       );
 
+      Mutex.Lock();
       RadarData.WriteDetection({
         RelativeVelocity,
         AzimuthAndElevation.X,
         AzimuthAndElevation.Y,
         OutHit.Distance * TO_METERS
       });
+      Mutex.Unlock();
     }
-  }
+  });
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)
