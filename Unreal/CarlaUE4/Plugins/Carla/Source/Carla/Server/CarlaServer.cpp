@@ -229,24 +229,10 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    FString MapName = cr::ToFString(map_name);
-    MapName = MapName.IsEmpty() ? Episode->GetMapName() : MapName;
-    auto Maps = UCarlaStatics::GetAllMapNames();
-    Maps.Add("OpenDriveMap");
-    bool bMissingMap = true;
-    for (auto & Map : Maps)
-    {
-      if(Map.Contains(MapName))
-      {
-        bMissingMap = false;
-        break;
-      }
-    }
-    if(bMissingMap)
+    if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
     {
       RESPOND_ERROR("map not found");
     }
-    Episode->LoadNewEpisode(MapName);
     return R<void>::Success();
   };
 
