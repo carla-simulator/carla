@@ -463,7 +463,6 @@ def main():
             points_range = ['100000', '200000', '300000', '400000', '500000',
                             '600000', '700000', '800000', '900000', '1000000',
                             '1100000', '1200000', '1300000', '1400000', '1500000']
-            points_range = ['100000']
             for points in points_range:
                 args.lidar_points = points
                 args.radar_points = points
