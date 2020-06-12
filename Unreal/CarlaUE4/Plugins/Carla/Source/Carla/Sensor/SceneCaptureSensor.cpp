@@ -489,7 +489,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   for(int32 i = 0; i < MaxNumTextures; i++)
   {
-    Pixels[i].Reserve(ImageWidth * ImageHeight);
+    Pixels[i].Init(FColor(), ImageWidth * ImageHeight);
   }
 
   CaptureDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureCamera::Capture);
