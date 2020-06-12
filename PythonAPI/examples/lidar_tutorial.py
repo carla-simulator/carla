@@ -6,7 +6,26 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Spawn NPCs into the simulation"""
+"""
+Raycast sensor profiler
+
+This script can be used to test, visualize and profile the raycast sensors,
+LiDARs and Radar (radar visualization not available, sorry).
+
+By default, the script render one RGB Camera and three LiDARS whose output
+can be visualized in a window just running:
+  python raycast_sensor_testing.py
+
+For profiling, you can choose the number of LiDARs and Radars and then use
+the profiling option to run a series of simulations for points from 100k
+to 1.5M per second. In this mode we do not render anything but processing
+of the data is done.
+For example for profiling one lidar:
+  python raycast_sensor_testing.py -ln 1 --profiling
+And for profiling one radar:
+  python raycast_sensor_testing.py -rn 1 --profiling
+
+"""
 
 import glob
 import os
@@ -121,7 +140,19 @@ class SensorManager:
             lidar.listen(self.save_lidar_image)
 
             return lidar
+        elif sensor_type == "Radar":
+           # velocity_range = 7.5 # m/s
+            #self.debug = world.debug
+            radar_bp = self.world.get_blueprint_library().find('sensor.other.radar')
+            #for key in sensor_options:
+             # radar_bp.set_attribute(key, sensor_options[key])
+            for key in sensor_options:
+                radar_bp.set_attribute(key, sensor_options[key])
 
+            radar = self.world.spawn_actor(radar_bp, transform, attach_to=attached)
+            radar.listen(self.save_radar_image)
+
+            return radar
         else:
             return None
 
@@ -162,9 +193,29 @@ class SensorManager:
         lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
         lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
 
+#        frame = self.world.get_snapshot().timestamp.frame
+#        for i in range(0, lidar_img.shape[0]):
+#            for j in range(0, lidar_img.shape[1]):
+#                if lidar_img[i][j][0] > 0.1:
+#                    print(lidar_img[i][j])
+#                    r = i*i + j*j
+#                    #np.savetxt('lidar_data_%04d_%03d.dat' % (i, frame), lidar_img[i], delimiter=' ')
+
         if self.display_man.render_enabled():
             self.surface = pygame.surfarray.make_surface(lidar_img)
 
+        t_end = time.perf_counter()
+        self.time_processing += (t_end-t_start)
+        self.tics_processing += 1
+
+    def save_radar_image(self, radar_data):
+        t_start = time.perf_counter()
+        #print("Hola, saving Radar data!!")
+        # To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
+        points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
+        points = np.reshape(points, (len(radar_data), 4))
+
+        #print(len(radar_data))
         t_end = time.perf_counter()
         self.time_processing += (t_end-t_start)
         self.tics_processing += 1
@@ -178,7 +229,7 @@ class SensorManager:
         self.sensor.destroy()
 
 
-def one_run(args):
+def one_run(args, client):
     display_manager = None
     vehicle = None
     vehicle_list = []
@@ -192,8 +243,6 @@ def one_run(args):
         # First of all, we need to create the client that will send the requests
         # to the simulator. Here we'll assume the simulator is accepting
         # requests in the localhost at port 2000.
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(5.0)
 
         # Once we have a client we can retrieve the world that is currently
         # running.
@@ -250,6 +299,7 @@ def one_run(args):
             SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=1.5, z=2.4)), vehicle, {}, [0, 0])
 
         lidar_points_per_second = args.lidar_points
+        radar_points_per_second = args.radar_points
 
         if args.lidar_number >= 3:
             SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50',  'points_per_second': lidar_points_per_second}, [1,0])
@@ -260,6 +310,14 @@ def one_run(args):
         if args.lidar_number >= 1:
             SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': lidar_points_per_second}, [1,1])
 
+        if args.radar_number >= 3:
+            SensorManager(world, display_manager, 'Radar', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(pitch=5, yaw=90)), vehicle, {'points_per_second': radar_points_per_second}, [2,2])
+
+        if args.radar_number >= 2:
+            SensorManager(world, display_manager, 'Radar', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(pitch=5, yaw=-90)), vehicle, {'points_per_second': radar_points_per_second}, [2,2])
+
+        if args.radar_number >= 1:
+            SensorManager(world, display_manager, 'Radar', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(pitch=5)), vehicle, {'points_per_second': radar_points_per_second}, [2,2])
 
         call_exit = False
         time_init_sim = time.perf_counter()
@@ -314,7 +372,7 @@ def one_run(args):
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
-                    prof_str = "%-10s %-15s %-7.2f %-20.3f" % (args.lidar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
+                    prof_str = "%-10s %-10s %-15s %-7.2f %-20.3f" % (args.lidar_number, args.radar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
                     print(prof_str)
                     break
             if call_exit:
@@ -367,7 +425,7 @@ def main():
         help='window resolution (default: 1280x720)')
     argparser.add_argument(
         '-lp', '--lidar_points',
-        metavar='LD',
+        metavar='LP',
         default='100000',
         help='lidar points per second (default: "100000")')
     argparser.add_argument(
@@ -376,7 +434,19 @@ def main():
         default=3,
         type=int,
         choices=range(0, 4),
-        help='Number of lidars to render')
+        help='Number of lidars to render (from zero to three)')
+    argparser.add_argument(
+        '-rp', '--radar_points',
+        metavar='RP',
+        default='100000',
+        help='radar points per second (default: "100000")')
+    argparser.add_argument(
+        '-rn', '--radar_number',
+        metavar='LN',
+        default=0,
+        type=int,
+        choices=range(0, 4),
+        help='Number of radars to render (from zero to three)')
     argparser.add_argument(
         '--camera',
         dest='render_cam', action='store_true',
@@ -402,37 +472,44 @@ def main():
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
+    try:
+        client = carla.Client(args.host, args.port)
+        client.set_timeout(5.0)
 
-    if args.profiling:
-        args.render_cam = False
-        args.render_window = False
-        runs_output = []
 
-        points_range = ['100000', '200000', '300000', '400000', '500000',
-                        '600000', '700000', '800000', '900000', '1000000',
-                        '1100000', '1200000', '1300000', '1400000', '1500000']
-        for points in points_range:
-            args.lidar_points = points
-            run_str = one_run(args)
-            runs_output.append(run_str)
+        if args.profiling:
+            args.render_cam = False
+            args.render_window = False
+            runs_output = []
 
-        print("-------------------------------------------------------")
-        print("-------------------------------------------------------")
-        try:
-            import multiprocessing
-            print("#Number of cores: %d" % multiprocessing.cpu_count())
-        except ImportError:
-            print("#Hardware information not available, please install the " \
-                "multiprocessing module")
+            points_range = ['100000', '200000', '300000', '400000', '500000',
+                            '600000', '700000', '800000', '900000', '1000000',
+                            '1100000', '1200000', '1300000', '1400000', '1500000']
+            for points in points_range:
+                args.lidar_points = points
+                args.radar_points = points
+                run_str = one_run(args, client)
+                runs_output.append(run_str)
 
-        print("#Profiling of parallel LiDAR sensor")
-        print("#NumLidars PointsPerSecond FPS     PercentageProcessing")
-        for o  in runs_output:
-            print(o)
+            print("-------------------------------------------------------")
+            print("-------------------------------------------------------")
+            print("#Profiling of parallel raycast sensors (LiDAR and Radar)")
+            try:
+                import multiprocessing
+                print("#Number of cores: %d" % multiprocessing.cpu_count())
+            except ImportError:
+                print("#Hardware information not available, please install the " \
+                    "multiprocessing module")
 
-    else:
-        one_run(args)
+            print("#NumLidars NumRadars PointsPerSecond FPS     PercentageProcessing")
+            for o  in runs_output:
+                print(o)
 
+        else:
+            one_run(args, client)
+
+    except KeyboardInterrupt:
+        print('\nCancelled by user. Bye!')
 
 
 if __name__ == '__main__':
