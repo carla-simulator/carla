@@ -125,7 +125,7 @@ void ARadar::SendLineTraces(float DeltaTime)
       OutHit,
       RadarLocation,
       EndLocation,
-      ECC_MAX,
+      ECC_GameTraceChannel2,
       TraceParams,
       FCollisionResponseParams::DefaultResponseParam
     );
