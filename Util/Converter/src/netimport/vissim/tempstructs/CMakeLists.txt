@@ -1,0 +1,55 @@
+set(netimport_vissim_tempstructs_STAT_SRCS
+   NIVissimAbstractEdge.cpp
+   NIVissimAbstractEdge.h
+   NIVissimBoundedClusterObject.cpp
+   NIVissimBoundedClusterObject.h
+   NIVissimClosedLaneDef.cpp
+   NIVissimClosedLaneDef.h
+   NIVissimClosedLanesVector.h
+   NIVissimClosures.cpp
+   NIVissimClosures.h
+   NIVissimConflictArea.cpp
+   NIVissimConflictArea.h
+   NIVissimConnection.cpp
+   NIVissimConnection.h
+   NIVissimConnectionCluster.cpp
+   NIVissimConnectionCluster.h
+   NIVissimDistrictConnection.cpp
+   NIVissimDistrictConnection.h
+   NIVissimDisturbance.cpp
+   NIVissimDisturbance.h
+   NIVissimEdge.cpp
+   NIVissimEdge.h
+   NIVissimEdgePosMap.cpp
+   NIVissimEdgePosMap.h
+   NIVissimExtendedEdgePoint.cpp
+   NIVissimExtendedEdgePoint.h
+   NIVissimExtendedEdgePointVector.h
+   NIVissimNodeCluster.cpp
+   NIVissimNodeCluster.h
+   NIVissimNodeDef.cpp
+   NIVissimNodeDef.h
+   NIVissimNodeDef_Edges.cpp
+   NIVissimNodeDef_Edges.h
+   NIVissimNodeDef_Poly.cpp
+   NIVissimNodeDef_Poly.h
+   NIVissimNodeParticipatingEdge.cpp
+   NIVissimNodeParticipatingEdge.h
+   NIVissimNodeParticipatingEdgeVector.h
+   NIVissimSource.cpp
+   NIVissimSource.h
+   NIVissimTL.cpp
+   NIVissimTL.h
+   NIVissimTrafficDescription.cpp
+   NIVissimTrafficDescription.h
+   NIVissimVehTypeClass.cpp
+   NIVissimVehTypeClass.h
+   NIVissimVehicleClass.cpp
+   NIVissimVehicleClass.h
+   NIVissimVehicleClassVector.h
+   NIVissimVehicleType.cpp
+   NIVissimVehicleType.h
+)
+
+add_library(netimport_vissim_tempstructs STATIC ${netimport_vissim_tempstructs_STAT_SRCS})
+set_property(TARGET netimport_vissim_tempstructs PROPERTY PROJECT_LABEL "z_netimport_vissim_tempstructs")

@@ -149,3 +149,6 @@ pretty:
 
 build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
+
+converter:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildConverter.sh $(ARGS)
