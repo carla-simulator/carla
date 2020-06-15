@@ -5,7 +5,7 @@
 * __[CARLA installation](#carla-installation)__  
 	* a) deb CARLA installation  
 	* b) GitHub repository installation  
-* __[Import additional assets](#import-addditional-assets)__  
+* __[Import additional assets](#import-additional-assets)__  
 * __[Running CARLA](#running-carla)__  
 	* Command-line options  
 * __[Updating CARLA](#updating-carla)__  

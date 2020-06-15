@@ -28,6 +28,7 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
   UE_LOG(LogCarla, Log, TEXT("  - SunAltitudeAngle = %.2f"), Weather.SunAltitudeAngle);
   UE_LOG(LogCarla, Log, TEXT("  - FogDensity = %.2f"), Weather.FogDensity);
   UE_LOG(LogCarla, Log, TEXT("  - FogDistance = %.2f"), Weather.FogDistance);
+  UE_LOG(LogCarla, Log, TEXT("  - FogFalloff = %.2f"), Weather.FogFalloff);
   UE_LOG(LogCarla, Log, TEXT("  - Wetness = %.2f"), Weather.Wetness);
 #endif // CARLA_WEATHER_EXTRA_LOG
 
