@@ -1,0 +1,10 @@
+add_subdirectory(common)
+add_subdirectory(distribution)
+add_subdirectory(geom)
+add_subdirectory(importio)
+add_subdirectory(iodevices)
+add_subdirectory(options)
+add_subdirectory(shapes)
+add_subdirectory(traction_wire)
+add_subdirectory(xml)
+
