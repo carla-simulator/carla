@@ -152,7 +152,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     HitInfo,
     LidarBodyLoc,
     EndTrace,
-    ECC_MAX,
+    ECC_GameTraceChannel2,
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
