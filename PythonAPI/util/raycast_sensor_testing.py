@@ -53,6 +53,15 @@ try:
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
+class CustomTimer:
+    def __init__(self):
+        try:
+            self.timer = time.perf_counter
+        except AttributeError:
+            self.timer = time.time
+
+    def time(self):
+        return self.timer()
 
 class DisplayManager:
     def __init__(self, grid_size, window_size, show_window=True):
@@ -107,6 +116,7 @@ class SensorManager:
         self.display_pos = display_pos
         self.sensor = self.init_sensor(sensor_type, transform, attached, sensor_options)
         self.sensor_options = sensor_options
+        self.timer = CustomTimer()
 
         self.time_processing = 0.0
         self.tics_processing = 0
@@ -156,7 +166,7 @@ class SensorManager:
         return self.sensor
 
     def save_rgb_image(self, image):
-        t_start = time.perf_counter()
+        t_start = self.timer.time()
 
         image.convert(carla.ColorConverter.Raw)
         array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -167,12 +177,12 @@ class SensorManager:
         if self.display_man.render_enabled():
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
-        t_end = time.perf_counter()
+        t_end = self.timer.time()
         self.time_processing += (t_end-t_start)
         self.tics_processing += 1
 
     def save_lidar_image(self, image):
-        t_start = time.perf_counter()
+        t_start = self.timer.time()
 
         disp_size = self.display_man.get_display_size()
         lidar_range = 2.0*float(self.sensor_options['range'])
@@ -193,18 +203,18 @@ class SensorManager:
         if self.display_man.render_enabled():
             self.surface = pygame.surfarray.make_surface(lidar_img)
 
-        t_end = time.perf_counter()
+        t_end = self.timer.time()
         self.time_processing += (t_end-t_start)
         self.tics_processing += 1
 
     def save_radar_image(self, radar_data):
-        t_start = time.perf_counter()
+        t_start = self.timer.time()
         #print("Hola, saving Radar data!!")
         # To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
         points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
         points = np.reshape(points, (len(radar_data), 4))
 
-        t_end = time.perf_counter()
+        t_end = self.timer.time()
         self.time_processing += (t_end-t_start)
         self.tics_processing += 1
 
@@ -225,6 +235,7 @@ def one_run(args, client):
     vehicle = None
     vehicle_list = []
     prof_str = ""
+    timer = CustomTimer()
 
     try:
 
@@ -295,10 +306,10 @@ def one_run(args, client):
 
 
         call_exit = False
-        time_init_sim = time.perf_counter()
+        time_init_sim = timer.time()
 
         frame = 0
-        time0 = time.perf_counter()
+        time0 = timer.time()
 
         while True:
             frame += 1
@@ -315,7 +326,7 @@ def one_run(args, client):
             # Time measurement for profiling or to output
             if not args.profiling:
                 if frame == 30:
-                    time_frames = time.perf_counter() - time0
+                    time_frames = timer.time() - time0
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
@@ -325,7 +336,7 @@ def one_run(args, client):
                     for sensor in display_manager.sensor_list:
                         sensor.time_processing = 0
                         sensor.tics_processing = 0
-                    time0 = time.perf_counter()
+                    time0 = timer.time()
 
                 if args.render_window:
                     for event in pygame.event.get():
@@ -336,15 +347,15 @@ def one_run(args, client):
                                 call_exit = True
                                 break
             else:
-                if (time.perf_counter() - time_init_sim) < 5.0:
+                if (timer.time() - time_init_sim) < 5.0:
                     frame = 0
                     for sensor in display_manager.sensor_list:
                         sensor.time_processing = 0
                         sensor.tics_processing = 0
-                    time0 = time.perf_counter()
+                    time0 = timer.time()
 
-                if (time.perf_counter() - time0) > 10.0:
-                    time_frames = time.perf_counter() - time0
+                if (timer.time() - time0) > 10.0:
+                    time_frames = timer.time() - time0
 
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
