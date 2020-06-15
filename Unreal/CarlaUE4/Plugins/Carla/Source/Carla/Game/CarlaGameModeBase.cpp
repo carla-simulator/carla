@@ -142,7 +142,6 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  UCarlaStatics::GetGameInstance(GetWorld())->CheckAndLoadMap(GetWorld(), *Episode);
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -194,15 +193,12 @@ void ACarlaGameModeBase::SpawnActorFactories()
 
 void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
 {
-  if(!UCarlaStatics::GetGameInstance(Episode->GetWorld())->IsLevelPendingLoad())
-  {
-    std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::LoadXODR(MapName));
-    Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-    if (!Map.has_value()) {
-      UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-    } else {
-      Episode->MapGeoReference = Map->GetGeoReference();
-    }
+  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::LoadXODR(MapName));
+  Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  if (!Map.has_value()) {
+    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
+  } else {
+    Episode->MapGeoReference = Map->GetGeoReference();
   }
 }
 
