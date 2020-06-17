@@ -37,6 +37,12 @@ namespace tcp {
       callback_function_type on_closed) {
     DEBUG_ASSERT(on_opened && on_closed);
     _on_closed = std::move(on_closed);
+
+    // This forces not using Nagle's algorithm.
+    // Improves the sync mode velocity on Linux by a factor of ~3.
+    const boost::asio::ip::tcp::no_delay option(true);
+    _socket.set_option(option);
+
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
     _strand.post([=]() {
