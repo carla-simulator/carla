@@ -74,7 +74,7 @@ set BOOST_TEMP_FILE_DIR=%BUILD_DIR%%BOOST_TEMP_FILE%
 set BOOST_REPO=https://dl.bintray.com/boostorg/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
 set BOOST_SRC_DIR=%BUILD_DIR%%BOOST_BASENAME%-source\
 set BOOST_INSTALL_DIR=%BUILD_DIR%%BOOST_BASENAME%-install\
-set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%lib
+set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%lib\
 
 rem ============================================================================
 rem -- Get Boost ---------------------------------------------------------------
