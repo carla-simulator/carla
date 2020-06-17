@@ -54,11 +54,12 @@ if not defined UE4_ROOT (
     set VALUE_NAME=InstalledDirectory
     for /f "usebackq tokens=1,2,*" %%A in (`reg query !KEY_NAME! /s /reg:64`) do (
         if "%%A" == "!VALUE_NAME!" (
-            set UE4_ROOT=%%C\
+            set UE4_ROOT=%%C
         )
     )
     if not defined UE4_ROOT goto error_unreal_no_found
 )
+if not "%UE4_ROOT:~-1%"=="\" set UE4_ROOT=%UE4_ROOT%\
 
 rem Set the visual studio solution directory
 rem
