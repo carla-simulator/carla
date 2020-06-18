@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <PxScene.h>
+
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
@@ -15,6 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -93,17 +96,30 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
+  AuxPoints.resize(ChannelCount);
 
-  for (auto Channel = 0u; Channel < ChannelCount; ++Channel)
-  {
-    for (auto i = 0u; i < PointsToScanWithOneLaser; ++i)
-    {
+
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
+  ParallelFor(ChannelCount, [&](int32 idxChannel) {
+    AuxPoints[idxChannel].clear();
+    AuxPoints[idxChannel].reserve(PointsToScanWithOneLaser);
+
+    FCriticalSection Mutex;
+    ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FVector Point;
-      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i;
-      if (ShootLaser(Channel, Angle, Point))
-      {
-        LidarMeasurement.WritePoint(Channel, Point);
+      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+      if (ShootLaser(idxChannel, Angle, Point)) {
+        Mutex.Lock();
+        AuxPoints[idxChannel].emplace_back(Point);
+        Mutex.Unlock();
       }
+    });
+  });
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
+
+  for (auto idxChannel = 0u; idxChannel < ChannelCount; ++idxChannel) {
+    for (auto& Pt : AuxPoints[idxChannel]) {
+      LidarMeasurement.WritePoint(idxChannel, Pt);
     }
   }
 
