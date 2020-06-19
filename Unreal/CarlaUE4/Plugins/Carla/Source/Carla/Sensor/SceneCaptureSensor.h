@@ -310,7 +310,7 @@ protected:
 
   static TArray<ASceneCaptureSensor*> CaptureSensors;
   static int32 NumCaptureSensors;
-  static const int32 MaxNumTextures = 2; // This has to be POT
+  static const int32 MaxNumTextures = 1; // This has to be POT
   int32 CurrentTexture = 0;
   int32 PreviousTexture = 0;
 
