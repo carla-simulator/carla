@@ -23,6 +23,8 @@ except IndexError:
 
 import carla
 
+from carla import VehicleLightState as vls
+
 import argparse
 import logging
 from numpy import random
@@ -86,6 +88,11 @@ def main():
         metavar='S',
         type=int,
         help='Random device seed')
+    argparser.add_argument(
+        '--car-lights-on',
+        action='store_true',
+        default=False,
+        help='Enanble car lights')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -143,6 +150,7 @@ def main():
         # @todo cannot import these directly.
         SpawnActor = carla.command.SpawnActor
         SetAutopilot = carla.command.SetAutopilot
+        SetVehicleLightState = carla.command.SetVehicleLightState
         FutureActor = carla.command.FutureActor
 
         # --------------
@@ -160,7 +168,16 @@ def main():
                 driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
                 blueprint.set_attribute('driver_id', driver_id)
             blueprint.set_attribute('role_name', 'autopilot')
-            batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
+
+            # prepare the light state of the cars to spawn
+            light_state = vls.NONE
+            if args.car_lights_on:
+                light_state = vls.Position | vls.LowBeam | vls.LowBeam
+
+            # spawn the cars and set their autopilot and light state all together
+            batch.append(SpawnActor(blueprint, transform)
+                .then(SetAutopilot(FutureActor, True, traffic_manager.get_port()))
+                .then(SetVehicleLightState(FutureActor, light_state)))
 
         for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:

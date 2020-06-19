@@ -219,7 +219,7 @@ namespace detail {
   void Client::SetLightStateToVehicle(
       rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {
-    return _pimpl->AsyncCall("apply_vehicle_light_state", vehicle, light_state);
+    return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
   }
 
   rpc::Actor Client::SpawnActor(
@@ -313,6 +313,10 @@ namespace detail {
 
   void Client::FreezeTrafficLight(rpc::ActorId traffic_light, bool freeze) {
     _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
+  }
+
+  rpc::VehicleLightStateList Client::GetVehiclesLightStates() {
+    return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
   }
 
   std::vector<ActorId> Client::GetGroupTrafficLights(rpc::ActorId traffic_light) {

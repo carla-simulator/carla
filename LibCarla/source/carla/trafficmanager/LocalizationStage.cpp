@@ -94,10 +94,7 @@ void LocalizationStage::Update(const unsigned long index) {
 
   // Initializing buffer if it is empty.
   if (waypoint_buffer.empty()) {
-    SimpleWaypointPtr closest_waypoint = local_map->GetWaypointInVicinity(vehicle_location);
-    if (closest_waypoint == nullptr) {
-      closest_waypoint = local_map->GetWaypoint(vehicle_location);
-    }
+    SimpleWaypointPtr closest_waypoint = local_map->GetWaypoint(vehicle_location);
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, closest_waypoint);
   }
 
