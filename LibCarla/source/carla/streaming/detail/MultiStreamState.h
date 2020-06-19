@@ -13,6 +13,7 @@
 
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 namespace carla {
 namespace streaming {
@@ -25,6 +26,7 @@ namespace detail {
   public:
 
     using StreamStateBase::StreamStateBase;
+    using WriteMethodPointer = void (MultiStreamState::*)(std::shared_ptr<const tcp::Message>);
 
     MultiStreamState(const token_type &token) : 
       StreamStateBase(token), 
@@ -52,7 +54,6 @@ namespace detail {
       else if (_sessions.size() > 1) {
         _writeFunction = &MultiStreamState::WriteMulti;
       }
-      (_writeFunction == &MultiStreamState::WriteSingle) ? log_debug("Pointer to single stream") : log_debug("Pointer to multi stream");
     }
 
     void DisconnectSession(std::shared_ptr<Session> session) final {
@@ -63,7 +64,6 @@ namespace detail {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
-        _writeFunction = &MultiStreamState::WriteSingle;
       } else {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
@@ -77,7 +77,6 @@ namespace detail {
           _writeFunction = &MultiStreamState::WriteSingle;
       }
       log_debug("Disconnecting multistream sessions:", _sessions.size());
-      (_writeFunction == &MultiStreamState::WriteSingle) ? log_debug("Pointer to single stream") : log_debug("Pointer to multi stream");
     }
 
     void ClearSessions() final {
@@ -86,7 +85,6 @@ namespace detail {
       _session.store(nullptr);
       _writeFunction = &MultiStreamState::WriteSingle;
       log_debug("Disconnecting all multistream sessions");
-      (_writeFunction == &MultiStreamState::WriteSingle) ? log_debug("Pointer to single stream") : log_debug("Pointer to multi stream");
     }
 
     void WriteSingle(std::shared_ptr<const tcp::Message> message) {
@@ -114,7 +112,7 @@ namespace detail {
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
     // write function pointer (by default write single stream)
-    void (MultiStreamState::*_writeFunction)(std::shared_ptr<const tcp::Message>);
+    std::atomic<WriteMethodPointer> _writeFunction;
   };
 
 } // namespace detail

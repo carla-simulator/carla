@@ -13,7 +13,7 @@ namespace carla {
 namespace streaming {
 
   /// A stream represents an unidirectional channel for sending data from server
-  /// to client. A **single** client can subscribe to this stream using the
+  /// to client. **Multiple** clients can subscribe to this stream using the
   /// stream token. If no client is subscribed, the data flushed down the stream
   /// is discarded.
   using Stream = detail::Stream<detail::MultiStreamState>;
