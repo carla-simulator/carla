@@ -104,7 +104,7 @@ if not exist "%BOOST_SRC_DIR%" (
 cd "%BOOST_SRC_DIR%"
 if not exist "b2.exe" (
     echo %FILE_N% Generating build...
-    call bootstrap.bat
+    call bootstrap.bat vc141
 )
 
 if %errorlevel% neq 0 goto error_bootstrap
