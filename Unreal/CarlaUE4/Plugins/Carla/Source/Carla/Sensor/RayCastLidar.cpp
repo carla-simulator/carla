@@ -95,40 +95,49 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
-  AuxPoints.resize(ChannelCount);
+  LidarMeasurement.Reset(ChannelCount,  PointsToScanWithOneLaser);
 
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
-    AuxPoints[idxChannel].clear();
-    AuxPoints[idxChannel].reserve(PointsToScanWithOneLaser);
 
     FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FVector Point;
+      float Intensity;
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
-      if (ShootLaser(idxChannel, Angle, Point)) {
+      if (ShootLaser(idxChannel, Angle, Point, Intensity)) {
         Mutex.Lock();
-        AuxPoints[idxChannel].emplace_back(Point);
+        LidarMeasurement.WritePointAsync(idxChannel, {Point, Intensity});
         Mutex.Unlock();
       }
     });
   });
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
-  for (auto idxChannel = 0u; idxChannel < ChannelCount; ++idxChannel) {
-    for (auto& Pt : AuxPoints[idxChannel]) {
-      LidarMeasurement.WritePoint(idxChannel, Pt);
-    }
-  }
+  LidarMeasurement.SaveDetections();
+
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 
-bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
+float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector &XYZ, const FHitResult& HitInfo) const
+{
+  const float Distance = XYZ.Size();
+  const float AttenAtm = -0.004;
+
+  const float IntEm = 1.0f;
+
+  const float AbsAtm = exp(AttenAtm * Distance);
+
+  const float IntRec = IntEm * AbsAtm;
+
+  return IntRec;
+}
+
+bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
 {
   const float VerticalAngle = LaserAngles[Channel];
 
@@ -174,6 +183,9 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
 
     const FVector hp = HitInfo.ImpactPoint;
     XYZ = actorTransf.Inverse().TransformPosition(hp);
+
+    Intensity = ComputeIntensity(LidarBodyLoc, XYZ, HitInfo);
+
 
     return true;
   } else {

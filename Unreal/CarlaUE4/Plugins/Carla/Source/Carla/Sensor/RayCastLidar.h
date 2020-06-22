@@ -48,13 +48,15 @@ private:
   void ReadPoints(float DeltaTime);
 
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point) const;
+  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point, float& Intensity) const;
+
+  /// Compute the received intensity of the point
+  float ComputeIntensity(const FVector &LidarBodyLoc, const FVector &XYZ, const FHitResult& HitInfo) const;
 
   UPROPERTY(EditAnywhere)
   FLidarDescription Description;
 
   TArray<float> LaserAngles;
-  std::vector<std::vector<FVector>> AuxPoints;
 
   FLidarMeasurement LidarMeasurement;
 };
