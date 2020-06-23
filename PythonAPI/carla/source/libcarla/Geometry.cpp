@@ -32,9 +32,12 @@ namespace element {
 
 namespace client {
 
+  std::ostream &operator<<(std::ostream &out, const Geometry &g) {
+    return out << "Geometry(type=" << g.GetType() << ")";
+  }
 
-  std::ostream &operator<<(std::ostream &out, const Geometry &geo) {
-    return out << "Geometry(type=" << geo.GetType() << ")";
+  std::ostream &operator<<(std::ostream &out, const RoadGeometries &rg) {
+    return out << "RoadGeometries(road_id=" << rg.GetRoadId() << ")";
   }
 
 } // namespace geom
@@ -61,6 +64,16 @@ void export_geometry() {
       .def("get_length", &cc::Geometry::GetLength)
       .def("get_start_offset", &cc::Geometry::GetStartOffset)
       .def("get_heading", &cc::Geometry::GetHeading)
+      .def(self_ns::str(self_ns::self))
+
+      ;
+
+  class_<cc::RoadGeometries, boost::noncopyable, boost::shared_ptr<cc::RoadGeometries>>("RoadGeometries", no_init)
+      //.def("get_type", &cc::RoadGeometries::GetType)
+      .def("get_curvature", &cc::RoadGeometries::GetCurvature)
+      .def("get_curvature_from_waypoint", &cc::RoadGeometries::GetCurvatureFromWaypoint)
+      .def("get_geometry_from_waypoint", &cc::RoadGeometries::GetGeometryFromWaypoint)
+      .def("get_geometry_at_distance", &cc::RoadGeometries::GetGeometry)
       .def(self_ns::str(self_ns::self))
 
       ;

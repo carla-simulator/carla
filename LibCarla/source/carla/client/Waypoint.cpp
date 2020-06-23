@@ -24,8 +24,8 @@ namespace client {
 
   Waypoint::~Waypoint() = default;
 
-  SharedPtr<Geometry> Waypoint::GetGeometry() const {
-    return SharedPtr<Geometry>(new Geometry(_parent, _waypoint));
+  SharedPtr<RoadGeometries> Waypoint::GetRoadGeometries() const {
+    return SharedPtr<RoadGeometries>(new RoadGeometries(_parent, _waypoint));
   }
 
   road::JuncId Waypoint::GetJunctionId() const {
