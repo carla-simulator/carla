@@ -138,6 +138,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
 
   FHitResult HitInfo(ForceInit);
 
+  FTransform actorTransf = GetTransform();
   FVector LidarBodyLoc = GetActorLocation();
   FRotator LidarBodyRot = GetActorRotation();
   FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
@@ -171,12 +172,8 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
       );
     }
 
-    XYZ = LidarBodyLoc - HitInfo.ImpactPoint;
-    XYZ = UKismetMathLibrary::RotateAngleAxis(
-      XYZ,
-      - LidarBodyRot.Yaw + 90,
-      FVector(0, 0, 1)
-    );
+    const FVector hp = HitInfo.ImpactPoint;
+    XYZ = actorTransf.Inverse().TransformPosition(hp);
 
     return true;
   } else {
