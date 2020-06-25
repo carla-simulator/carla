@@ -110,7 +110,7 @@ namespace s11n {
       _points.clear();
 
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
-        _header[Index::SIZE + idxChannel] = _aux_points.size();
+        _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
         for (auto& Pt : _aux_points[idxChannel]) {
           _points.emplace_back(Pt.x);
           _points.emplace_back(Pt.y);
