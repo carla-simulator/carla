@@ -77,6 +77,30 @@ namespace geom {
       in_point = out_point;
     }
 
+    std::array<float, 16> GetMatrix() const {
+      const float yaw = rotation.yaw;
+      const float cy = std::cos(Math::ToRadians(yaw));
+      const float sy = std::sin(Math::ToRadians(yaw));
+
+      const float roll = rotation.roll;
+      const float cr = std::cos(Math::ToRadians(roll));
+      const float sr = std::sin(Math::ToRadians(roll));
+
+      const float pitch = rotation.pitch;
+      const float cp = std::cos(Math::ToRadians(pitch));
+      const float sp = std::sin(Math::ToRadians(pitch));
+
+      std::array<float, 16> transform = {
+          cp * cy, cy * sp * sr - sy * cr, -cy * sp * cr - sy * sr, location.x,
+          cp * sy, sy * sp * sr + cy * cr, -sy * sp * cr + cy * sr, location.y,
+          sp, -cp * sr, cp * cr, location.z,
+          0.0, 0.0, 0.0, 1.0};
+
+      return transform;
+    }
+
+
+
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
     // =========================================================================
