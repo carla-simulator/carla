@@ -331,6 +331,24 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
   }
 }
 
+// set the lights for vehicles
+void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
+{
+  check(Episode != nullptr);
+  AActor *Actor = Episode->GetActorRegistry().Find(LightVehicle.DatabaseId).GetActor();
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto Veh = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Veh == nullptr)
+    {
+      return;
+    }
+
+    carla::rpc::VehicleLightState LightState(LightVehicle.State);
+    Veh->SetVehicleLightState(FVehicleLightState(LightState));
+  }
+}
+
 // set the animation for walkers
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {

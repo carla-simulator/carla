@@ -9,6 +9,10 @@
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/VehicleLightState.h"
+#include <compiler/enable-ue4-macros.h>
+
 #include "CarlaRecorder.h"
 #include "CarlaReplayerHelper.h"
 
@@ -82,6 +86,7 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
         case FActorView::ActorType::Vehicle:
           AddActorPosition(View);
           AddVehicleAnimation(View);
+          AddVehicleLight(View);
           break;
 
         // save the transform of all walkers
@@ -205,6 +210,29 @@ void ACarlaRecorder::AddTrafficLightState(FActorView &View)
   }
 }
 
+void ACarlaRecorder::AddVehicleLight(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  auto Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle == nullptr)
+  {
+    return;
+  }
+
+  CarlaRecorderLightVehicle LightVehicle;
+  LightVehicle.DatabaseId = View.GetActorId();
+  auto LightState = Vehicle->GetVehicleLightState();
+  LightVehicle.State = carla::rpc::VehicleLightState(LightState).light_state;
+  AddLightVehicle(LightVehicle);
+}
+
 std::string ACarlaRecorder::Start(std::string Name, FString MapName)
 {
   // stop replayer if any in course
@@ -268,6 +296,7 @@ void ACarlaRecorder::Clear(void)
   States.Clear();
   Vehicles.Clear();
   Walkers.Clear();
+  LightVehicles.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -291,6 +320,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   // animations
   Vehicles.Write(File);
   Walkers.Write(File);
+  LightVehicles.Write(File);
 
   // end
   Frames.WriteEnd(File);
@@ -384,6 +414,14 @@ void ACarlaRecorder::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
   if (Enabled)
   {
     Walkers.Add(Walker);
+  }
+}
+
+void ACarlaRecorder::AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle)
+{
+  if (Enabled)
+  {
+    LightVehicles.Add(LightVehicle);
   }
 }
 
