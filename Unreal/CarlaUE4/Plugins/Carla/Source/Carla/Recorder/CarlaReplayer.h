@@ -141,6 +141,8 @@ private:
   void ProcessAnimVehicle(void);
   void ProcessAnimWalker(void);
 
+  void ProcessLightVehicle(void);
+
   // positions
   void UpdatePositions(double Per, double DeltaTime);
 
