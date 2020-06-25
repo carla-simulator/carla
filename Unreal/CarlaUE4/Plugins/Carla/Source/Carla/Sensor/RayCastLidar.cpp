@@ -186,7 +186,6 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
 
     Intensity = ComputeIntensity(LidarBodyLoc, XYZ, HitInfo);
 
-
     return true;
   } else {
     return false;
