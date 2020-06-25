@@ -201,6 +201,9 @@ public:
   /// Method to reset all traffic light groups to the initial stage.
   void ResetAllTrafficLights();
 
+  /// Method to start all traffic light groups to the initial stage.
+  void StartAllTrafficLights();
+
   /// Get CARLA episode information.
   carla::client::detail::EpisodeProxy &GetEpisodeProxy();
 
