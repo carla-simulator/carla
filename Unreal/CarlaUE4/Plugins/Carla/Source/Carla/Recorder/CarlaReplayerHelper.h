@@ -47,6 +47,9 @@ public:
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
 
+  // set the vehicle light
+  void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);
+
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);
 
