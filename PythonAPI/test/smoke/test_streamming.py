@@ -54,7 +54,7 @@ class TestStreamming(SmokeTest):
             t[i] = threading.Thread(target=self.create_client)
             t[i].setDaemon(True)
             t[i].start()
-        
+
         # wait for ending clients
         for i in range(5):
             t[i].join()
