@@ -127,7 +127,7 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
 
 float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector &XYZ, const FHitResult& HitInfo) const
 {
-  const float Distance = XYZ.Size();
+  const float Distance = 0.01f * XYZ.Size();
   const float AttenAtm = -0.004;
 
   const float IntEm = 1.0f;
