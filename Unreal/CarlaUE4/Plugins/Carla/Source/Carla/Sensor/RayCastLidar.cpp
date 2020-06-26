@@ -28,6 +28,8 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
@@ -139,6 +141,10 @@ float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector
 
 bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
 {
+
+  if(RandomEngine->GetUniformFloat() > 0.7f)
+    return false;
+
   const float VerticalAngle = LaserAngles[Channel];
 
   FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
@@ -185,6 +191,9 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     XYZ = actorTransf.Inverse().TransformPosition(hp);
 
     Intensity = ComputeIntensity(LidarBodyLoc, XYZ, HitInfo);
+
+    if(Intensity*0.5 + 0.5 < RandomEngine->GetUniformFloat())
+      return false;
 
     return true;
   } else {
