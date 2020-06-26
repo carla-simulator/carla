@@ -47,9 +47,9 @@ namespace detail {
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
-      for (auto &session : _sessions) {
-        if (session != nullptr) {
-          session->Write(message);
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          s->Write(message);
         }
       }
     }
