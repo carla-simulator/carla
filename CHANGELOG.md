@@ -9,6 +9,8 @@
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
+  * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system.
+  * Exposed matrix form of transformation to the client and Python API.
   * Added PythonAPI command to set multiple car light states at once
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
