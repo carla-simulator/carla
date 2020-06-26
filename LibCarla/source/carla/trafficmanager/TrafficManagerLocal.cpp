@@ -374,12 +374,12 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
         tl_group.begin() + 1, tl_group.end(),
         [](auto &tl) { tl->SetState(TLS::Red); tl->Freeze(true); });
   }
-
   while (!CheckAllFrozen(tl_to_freeze)) {
     for (auto &tln : tl_to_freeze) {
       tln->SetState(TLS::Red);
       tln->Freeze(true);
     }
+    world.Tick(time_duration::seconds(1));
   }
 
   for (TLGroup &tl_group : list_of_all_groups) {
@@ -428,7 +428,6 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
   ResetAllTrafficLights();
-  SetSynchronousMode(true);
   StartAllTrafficLights();
 }
 
