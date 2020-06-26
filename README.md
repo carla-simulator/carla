@@ -10,12 +10,9 @@ CARLA Simulator
 [![forum](Docs/img/btn/forum.png)](https://forum.carla.org)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
 
-CARLA is an open-source simulator for autonomous driving research. CARLA has
-been developed from the ground up to support development, training, and
-validation of autonomous driving systems. In addition to open-source code
-and protocols, CARLA provides open digital assets (urban layouts, buildings,
-vehicles) that were created for this purpose and can be used freely. The
-simulation platform supports flexible specification of sensor suites and
+CARLA is an open-source simulator for autonomous driving research. CARLA has been developed from the ground up to support development, training, and
+validation of autonomous driving systems. In addition to open-source code and protocols, CARLA provides open digital assets (urban layouts, buildings,
+vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
 [![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
@@ -63,15 +60,21 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA
 --------------
 
-Use `git clone` or download the project from this page. Note that the master
-branch contains the latest fixes and features, for the latest stable code may be
+Use `git clone` or download the project from this page. Note that the master branch contains the latest fixes and features, for the latest stable code may be
 best to switch to the `stable` branch.
 
-Then follow the instruction at [How to build on Linux][buildlinuxlink] or
-[How to build on Windows][buildwindowslink].
+Then follow the instruction at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].  
+The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.  
+```sh
+# Download and install the UE patch  
+cd ~/UnrealEngine_4.24
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
+patch --strip=4 < ~/430667-13636743-patch.txt
+# Build UE
+./Setup.sh && ./GenerateProjectFiles.sh && make
+```
 
-Unfortunately we don't have official instructions to build on Mac yet, please
-check the progress at [issue #150][issue150].
+Unfortunately we don't have official instructions to build on Mac yet, please check the progress at [issue #150][issue150].
 
 [buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
 [buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/

@@ -308,7 +308,7 @@ class SumoSimulation(object):
     """
     SumoSimulation is responsible for the management of the sumo simulation.
     """
-    def __init__(self, cfg_file, step_length, host=None, port=None, sumo_gui=False):
+    def __init__(self, cfg_file, step_length, host=None, port=None, sumo_gui=False, client_order=1):
         if sumo_gui is True:
             sumo_binary = sumolib.checkBinary('sumo-gui')
         else:
@@ -329,6 +329,8 @@ class SumoSimulation(object):
         else:
             logging.info('Connection to sumo server. Host: %s Port: %s', host, port)
             traci.init(host=host, port=port)
+
+        traci.setOrder(client_order)
 
         # Retrieving net from configuration file.
         self.net = _get_sumo_net(cfg_file)
