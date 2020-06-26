@@ -116,6 +116,36 @@ static auto GetTransformMatrix(const carla::geom::Transform &self) {
   return py_tranf;
 }
 
+static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
+  const std::array<float, 16> tr = self.GetInverseMatrix();
+  boost::python::list py_tranf;
+  boost::python::list rows[4];
+
+  rows[0].append(tr[0]);
+  rows[0].append(tr[1]);
+  rows[0].append(tr[2]);
+  rows[0].append(tr[3]);
+  rows[1].append(tr[4]);
+  rows[1].append(tr[5]);
+  rows[1].append(tr[6]);
+  rows[1].append(tr[7]);
+  rows[2].append(tr[8]);
+  rows[2].append(tr[9]);
+  rows[2].append(tr[10]);
+  rows[2].append(tr[11]);
+  rows[3].append(tr[12]);
+  rows[3].append(tr[13]);
+  rows[3].append(tr[14]);
+  rows[3].append(tr[15]);
+
+  py_tranf.append(rows[0]);
+  py_tranf.append(rows[1]);
+  py_tranf.append(rows[2]);
+  py_tranf.append(rows[3]);
+
+  return py_tranf;
+}
+
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -206,6 +236,7 @@ void export_geom() {
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)
     .def("get_matrix", &GetTransformMatrix)
+    .def("get_inverse_matrix", &GetInverseTransformMatrix)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
