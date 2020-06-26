@@ -89,6 +89,12 @@ def main():
         action='store_true',
         default=False,
         help='Enanble car lights')
+    argparser.add_argument(
+        '--timeout',
+	metavar='Tout',
+	default=10.0,
+	type=float,
+	help='Override timeout settings (default: 10.0)')    
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -97,7 +103,7 @@ def main():
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
+    client.set_timeout(args.timeout)
     synchronous_master = False
 
     try:
@@ -263,7 +269,7 @@ def main():
             if args.sync and synchronous_master:
                 world.tick()
             else:
-                world.wait_for_tick()
+                world.wait_for_tick(args.timeout)
 
     finally:
 
