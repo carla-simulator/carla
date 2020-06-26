@@ -26,18 +26,32 @@ namespace detail {
   public:
 
     using StreamStateBase::StreamStateBase;
-    using WriteMethodPointer = void (MultiStreamState::*)(std::shared_ptr<const tcp::Message>);
 
     MultiStreamState(const token_type &token) : 
       StreamStateBase(token), 
-      _session(nullptr),
-      _writeFunction(&MultiStreamState::WriteSingle)
+      _session(nullptr)
       {};
 
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
       auto message = Session::MakeMessage(std::move(buffers)...);
-      (this->*_writeFunction)(std::move(message));
+
+      // try write single stream
+      auto session = _session.load();
+      if (session != nullptr) {
+        session->Write(std::move(message));
+        // Return here, _session is only valid if we have a 
+        // single session.
+        return; 
+      }
+
+      // try write multiple stream
+      std::lock_guard<std::mutex> lock(_mutex);
+      for (auto &session : _sessions) {
+        if (session != nullptr) {
+          session->Write(message);
+        }
+      }
     }
 
   private:
@@ -49,10 +63,9 @@ namespace detail {
       log_debug("Connecting multistream sessions:", _sessions.size());
       if (_sessions.size() == 1) {
         _session.store(_sessions[0]);
-        _writeFunction = &MultiStreamState::WriteSingle;
       }
       else if (_sessions.size() > 1) {
-        _writeFunction = &MultiStreamState::WriteMulti;
+        _session.store(nullptr);
       }
     }
 
@@ -68,13 +81,12 @@ namespace detail {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
             _sessions.end());
-            _session.store(_sessions[0]);
         
-        // choose multi or single stream write function
-        if (_sessions.size() > 1)
-          _writeFunction = &MultiStreamState::WriteMulti;
+        // set single session if only one
+        if (_sessions.size() == 1)
+          _session.store(_sessions[0]);
         else
-          _writeFunction = &MultiStreamState::WriteSingle;
+          _session.store(nullptr);
       }
       log_debug("Disconnecting multistream sessions:", _sessions.size());
     }
@@ -83,26 +95,7 @@ namespace detail {
       std::lock_guard<std::mutex> lock(_mutex);
       _sessions.clear();
       _session.store(nullptr);
-      _writeFunction = &MultiStreamState::WriteSingle;
       log_debug("Disconnecting all multistream sessions");
-    }
-
-    void WriteSingle(std::shared_ptr<const tcp::Message> message) {
-      auto session = _session.load();
-      if (session != nullptr) {
-        log_debug("Multistream single write to stream id", session->get_stream_id());
-        session->Write(std::move(message));
-      }
-    }
-
-    void WriteMulti(std::shared_ptr<const tcp::Message> message) {
-      std::lock_guard<std::mutex> lock(_mutex);
-      for (auto &session : _sessions) {
-        if (session != nullptr) {
-          log_debug("Multistream multi write to stream id", session->get_stream_id());
-          session->Write(message);
-        }
-      }
     }
 
     std::mutex _mutex;
@@ -111,8 +104,6 @@ namespace detail {
     AtomicSharedPtr<Session> _session;
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
-    // write function pointer (by default write single stream)
-    std::atomic<WriteMethodPointer> _writeFunction;
   };
 
 } // namespace detail
