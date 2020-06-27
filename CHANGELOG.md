@@ -28,6 +28,7 @@
   * Fixed collision issues when debug draw(debug.draw_line) is called
   * Fixed Gyroscope sensor to properly give angular velocity readings in local frame
   * Added Renderdoc plugin to the Unreal project.
+  * Added configurable noise to Lidar sensor
 
 ## CARLA 0.9.9
 
