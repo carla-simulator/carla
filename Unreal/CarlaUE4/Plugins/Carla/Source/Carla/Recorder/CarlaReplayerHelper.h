@@ -50,6 +50,9 @@ public:
   // set the vehicle light
   void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);
 
+  // set scene lights
+  void ProcessReplayerLightScene(CarlaRecorderLightScene LightScene);
+
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);
 
