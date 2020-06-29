@@ -19,6 +19,7 @@
   * Fixed delay in the tcp communication from server to client, improving performance in synchronous mode in linux systems
   * Fixed large RAM usage when loading polinomial geometry from OpenDRIVE
   * Fixed collision issues when debug draw(debug.draw_line) is called 
+  * Added timeout parameter to spawn_npc.py script. 
 
 ## CARLA 0.9.9
 
