@@ -341,6 +341,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // scene lights animation
+      case static_cast<char>(CarlaRecorderPacketId::SceneLight):
+        if (bFrameFound)
+          ProcessLightScene();
+        else
+          SkipPacket();
+        break;
+
       // frame end
       case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         if (bFrameFound)
@@ -539,6 +547,20 @@ void CarlaReplayer::ProcessLightVehicle(void)
     {
       Helper.ProcessReplayerLightVehicle(LightVehicle);
     }
+  }
+}
+
+void CarlaReplayer::ProcessLightScene(void)
+{
+  uint16_t Total;
+  CarlaRecorderLightScene LightScene;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    LightScene.Read(File);
+    Helper.ProcessReplayerLightScene(LightScene);
   }
 }
 
