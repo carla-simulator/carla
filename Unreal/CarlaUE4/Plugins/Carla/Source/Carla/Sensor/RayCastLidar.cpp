@@ -142,7 +142,7 @@ float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector
 bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
 {
 
-  if(RandomEngine->GetUniformFloat() > 0.7f)
+  if(RandomEngine->GetUniformFloat() > 0.55f)
     return false;
 
   const float VerticalAngle = LaserAngles[Channel];
@@ -192,7 +192,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
 
     Intensity = ComputeIntensity(LidarBodyLoc, XYZ, HitInfo);
 
-    if(Intensity*0.5 + 0.5 < RandomEngine->GetUniformFloat())
+    if(Intensity*0.5 + 0.6 < RandomEngine->GetUniformFloat())
       return false;
 
     return true;
