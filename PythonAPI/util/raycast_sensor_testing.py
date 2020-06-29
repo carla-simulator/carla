@@ -250,6 +250,8 @@ def one_run(args, client):
             settings.fixed_delta_seconds = 0.05
             world.apply_settings(settings)
 
+            if args.profiling:
+                settings.no_rendering_mode = True
 
 
         # Instanciating the vehicle to which we attached the sensors
