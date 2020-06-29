@@ -297,6 +297,7 @@ void ACarlaRecorder::Clear(void)
   Vehicles.Clear();
   Walkers.Clear();
   LightVehicles.Clear();
+  LightScenes.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -321,6 +322,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   Vehicles.Write(File);
   Walkers.Write(File);
   LightVehicles.Write(File);
+  LightScenes.Write(File);
 
   // end
   Frames.WriteEnd(File);
@@ -422,6 +424,23 @@ void ACarlaRecorder::AddLightVehicle(const CarlaRecorderLightVehicle &LightVehic
   if (Enabled)
   {
     LightVehicles.Add(LightVehicle);
+  }
+}
+
+void ACarlaRecorder::AddEventLightSceneChanged(const UCarlaLight* Light)
+{
+  if (Enabled)
+  {
+    CarlaRecorderLightScene LightScene =
+    {
+      Light->GetId(),
+      Light->GetLightIntensity(),
+      Light->GetLightColor(),
+      Light->GetLightOn(),
+      static_cast<uint8>(Light->GetLightType())
+    };
+
+    LightScenes.Add(LightScene);
   }
 }
 

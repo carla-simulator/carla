@@ -55,11 +55,12 @@ public:
       std::vector<carla::rpc::LightState> LightsToSet,
       bool DiscardClient = false);
 
+  UCarlaLight* GetLight(int Id);
 private:
 
   void SetClientStatesdirty(FString ClientThatUpdate);
 
-  TMap<uint32, UCarlaLight* > Lights;
+  TMap<int, UCarlaLight* > Lights;
 
   // Flag for each client to tell if an update needs to be done
   TMap<FString, bool> ClientStates;

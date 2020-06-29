@@ -11,6 +11,7 @@
 
 #include "Carla/Actor/ActorDescription.h"
 
+#include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
@@ -30,7 +31,7 @@
 class AActor;
 class UCarlaEpisode;
 class ACarlaWheeledVehicle;
-struct FVehicleLightState;
+class UCarlaLight;
 
 enum class CarlaRecorderPacketId : uint8_t
 {
@@ -96,6 +97,8 @@ public:
 
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
 
+  void AddEventLightSceneChanged(const UCarlaLight* Light);
+
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
@@ -150,6 +153,7 @@ private:
   CarlaRecorderAnimVehicles Vehicles;
   CarlaRecorderAnimWalkers Walkers;
   CarlaRecorderLightVehicles LightVehicles;
+  CarlaRecorderLightScenes LightScenes;
 
   // replayer
   CarlaReplayer Replayer;
