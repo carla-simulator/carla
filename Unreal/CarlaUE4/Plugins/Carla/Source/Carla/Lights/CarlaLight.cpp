@@ -8,10 +8,6 @@
 #include "CarlaLightSubsystem.h"
 #include "Carla/Game/CarlaStatics.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include <boost/container_hash/hash.hpp>
-#include <compiler/enable-ue4-macros.h>
-
 UCarlaLight::UCarlaLight()
 {
   PrimaryComponentTick.bCanEverTick = false;
@@ -132,9 +128,12 @@ void UCarlaLight::SetId(int InId)
 void UCarlaLight::RecordLightChange() const
 {
   auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  auto* Recorder = Episode->GetRecorder();
-  if (Recorder && Recorder->IsEnabled())
+  if (Episode)
   {
-    Recorder->AddEventLightSceneChanged(this);
+    auto* Recorder = Episode->GetRecorder();
+    if (Recorder && Recorder->IsEnabled())
+    {
+      Recorder->AddEventLightSceneChanged(this);
+    }
   }
 }
