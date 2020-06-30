@@ -555,7 +555,7 @@ void CarlaReplayer::ProcessLightScene(void)
   uint16_t Total;
   CarlaRecorderLightScene LightScene;
 
-  // read Total walkers
+  // read Total light events
   ReadValue<uint16_t>(File, Total);
   for (uint16_t i = 0; i < Total; ++i)
   {
