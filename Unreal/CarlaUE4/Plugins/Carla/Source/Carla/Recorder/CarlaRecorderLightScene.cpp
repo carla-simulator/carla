@@ -46,20 +46,16 @@ void CarlaRecorderLightScenes::Write(std::ofstream &OutFile)
   std::streampos PosStart = OutFile.tellp();
 
   // write a dummy packet size
-  uint32_t Total = 0;
+  uint32_t Total = 2 + Lights.size() * sizeof(CarlaRecorderLightScene);
   WriteValue<uint32_t>(OutFile, Total);
 
   // write total records
   Total = Lights.size();
   WriteValue<uint16_t>(OutFile, Total);
 
-  for (uint16_t i=0; i<Total; ++i)
-    Lights[i].Write(OutFile);
+  for (auto& Light : Lights)
+  {
+    Light.Write(OutFile);
+  }
 
-  // write the real packet size
-  std::streampos PosEnd = OutFile.tellp();
-  Total = PosEnd - PosStart - sizeof(uint32_t);
-  OutFile.seekp(PosStart, std::ios::beg);
-  WriteValue<uint32_t>(OutFile, Total);
-  OutFile.seekp(PosEnd, std::ios::beg);
 }

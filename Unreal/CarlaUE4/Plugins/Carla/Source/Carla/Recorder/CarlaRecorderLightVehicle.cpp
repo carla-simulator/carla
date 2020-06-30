@@ -39,23 +39,16 @@ void CarlaRecorderLightVehicles::Write(std::ofstream &OutFile)
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::VehicleLight));
 
-  std::streampos PosStart = OutFile.tellp();
-
   // write a dummy packet size
-  uint32_t Total = 0;
+  uint32_t Total = 2 + Vehicles.size() * sizeof(CarlaRecorderLightVehicle);
   WriteValue<uint32_t>(OutFile, Total);
 
   // write total records
   Total = Vehicles.size();
   WriteValue<uint16_t>(OutFile, Total);
 
-  for (uint16_t i=0; i<Total; ++i)
-    Vehicles[i].Write(OutFile);
-
-  // write the real packet size
-  std::streampos PosEnd = OutFile.tellp();
-  Total = PosEnd - PosStart - sizeof(uint32_t);
-  OutFile.seekp(PosStart, std::ios::beg);
-  WriteValue<uint32_t>(OutFile, Total);
-  OutFile.seekp(PosEnd, std::ios::beg);
+  for (auto& Vehicle : Vehicles)
+  {
+    Vehicle.Write(OutFile);
+  }
 }
