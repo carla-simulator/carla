@@ -114,11 +114,14 @@ namespace geom {
       const float cp = std::cos(Math::ToRadians(pitch));
       const float sp = std::sin(Math::ToRadians(pitch));
 
+      Vector3D a = {0.0f, 0.0f, 0.0f};
+      InverseTransformPoint(a);
+
       std::array<float, 16> transform = {
-          cp * cy, cp * sy, sp, location.x,
-          cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, -cp * sr, location.y,
-          -cy * sp * cr - sy * sr, -sy * sp * cr + cy * sr, cp * cr, location.z,
-          0.0, 0.0, 0.0, 1.0};
+          cp * cy, cp * sy, sp, a.x,
+          cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, -cp * sr, a.y,
+          -cy * sp * cr - sy * sr, -sy * sp * cr + cy * sr, cp * cr, a.z,
+          0.0f, 0.0f, 0.0f, 1.0};
 
       return transform;
     }
