@@ -79,7 +79,7 @@ private:
 
 using FAsyncDataStream = FAsyncDataStreamTmpl<carla::streaming::Stream>;
 
-using FAsyncDataMultiStream = FAsyncDataStreamTmpl<carla::streaming::MultiStream>;
+using FAsyncDataMultiStream = FAsyncDataStreamTmpl<carla::streaming::Stream>;
 
 // =============================================================================
 // -- FAsyncDataStreamTmpl implementation --------------------------------------

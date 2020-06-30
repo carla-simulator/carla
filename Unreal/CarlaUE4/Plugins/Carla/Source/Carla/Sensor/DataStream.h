@@ -61,4 +61,4 @@ private:
 
 using FDataStream = FDataStreamTmpl<carla::streaming::Stream>;
 
-using FDataMultiStream = FDataStreamTmpl<carla::streaming::MultiStream>;
+using FDataMultiStream = FDataStreamTmpl<carla::streaming::Stream>;

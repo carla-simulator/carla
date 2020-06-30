@@ -25,6 +25,7 @@ TESTING_ADDRESS = ('localhost', 3654)
 
 class SmokeTest(unittest.TestCase):
     def setUp(self):
+        self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
         self.client.set_timeout(60.0)
 

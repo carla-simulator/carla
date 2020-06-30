@@ -112,16 +112,16 @@ namespace tcp {
               _socket,
               boost::asio::buffer(&stream_id, sizeof(stream_id)),
               _strand.wrap([=](error_code ec, size_t DEBUG_ONLY(bytes)) {
-            if (!ec) {
-              DEBUG_ASSERT_EQ(bytes, sizeof(stream_id));
-              // If succeeded start reading data.
-              ReadData();
-            } else {
-              // Else try again.
-              log_info("streaming client: failed to send stream id:", ec.message());
-              Connect();
-            }
-          }));
+                if (!ec) {
+                  DEBUG_ASSERT_EQ(bytes, sizeof(stream_id));
+                  // If succeeded start reading data.
+                  ReadData();
+                } else {
+                  // Else try again.
+                  log_info("streaming client: failed to send stream id:", ec.message());
+                  Connect();
+                }
+              }));
         } else {
           log_info("streaming client: connection failed:", ec.message());
           Reconnect();
@@ -161,7 +161,7 @@ namespace tcp {
         return;
       }
 
-      log_debug("streaming client: Client::ReadData");
+      // log_debug("streaming client: Client::ReadData");
 
       auto message = std::make_shared<IncomingMessage>(_buffer_pool->Pop());
 
@@ -172,7 +172,7 @@ namespace tcp {
           DEBUG_ASSERT_NE(bytes, 0u);
           // Move the buffer to the callback function and start reading the next
           // piece of data.
-          log_debug("streaming client: success reading data, calling the callback");
+          // log_debug("streaming client: success reading data, calling the callback");
           _strand.context().post([self, message]() { self->_callback(message->pop()); });
           ReadData();
         } else {
