@@ -341,6 +341,74 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
+      // dynamic actor kinematics
+      case static_cast<char>(CarlaRecorderPacketId::Kinematics):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Dynamic actors: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            Kinematics.Read(File);
+            Info << "  Actor id " << Kinematics.DatabaseId << ": Linear Velocity ("
+                << Kinematics.LinearVelocity.X << ", " << Kinematics.LinearVelocity.Y << ", " << Kinematics.LinearVelocity.Z << ")"
+                << " Angular Velocity ("
+                << Kinematics.AngularVelocity.X << ", " << Kinematics.AngularVelocity.Y << ", " << Kinematics.AngularVelocity.Z << ")"
+                << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // actors bounding boxes
+      case static_cast<char>(CarlaRecorderPacketId::BoundingBox):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Actor bounding boxes: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            BoundingBox.Read(File);
+            Info << "  Actor id " << BoundingBox.DatabaseId << ": Origin ("
+                << BoundingBox.Origin.X << ", " << BoundingBox.Origin.Y << ", " << BoundingBox.Origin.Z << ")"
+                << " Extension ("
+                << BoundingBox.Extension.X << ", " << BoundingBox.Extension.Y << ", " << BoundingBox.Extension.Z << ")"
+                << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // Platform time
+      case static_cast<char>(CarlaRecorderPacketId::PlatformTime):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+
+          PlatformTime.Read(File);
+          Info << " Current platform time: " << PlatformTime.Time << std::endl;
+        }
+        else
+          SkipPacket();
+        break;
+
       // frame end
       case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         // do nothing, it is empty

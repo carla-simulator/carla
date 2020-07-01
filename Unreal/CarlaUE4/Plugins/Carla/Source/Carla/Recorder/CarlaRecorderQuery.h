@@ -8,6 +8,9 @@
 
 #include <fstream>
 
+#include "CarlaRecorderPlatformTime.h"
+#include "CarlaRecorderBoundingBox.h"
+#include "CarlaRecorderKinematics.h"
 #include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
@@ -56,6 +59,9 @@ private:
   CarlaRecorderAnimWalker Walker;
   CarlaRecorderLightVehicle LightVehicle;
   CarlaRecorderLightScene LightScene;
+  CarlaRecorderKinematics Kinematics;
+  CarlaRecorderBoundingBox BoundingBox;
+  CarlaRecorderPlatformTime PlatformTime;
 
   // read next header packet
   bool ReadHeader(void);
