@@ -12,6 +12,8 @@
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
@@ -328,6 +330,46 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
     Veh->ApplyVehicleControl(Control, EVehicleInputPriority::User);
+  }
+}
+
+// set the lights for vehicles
+void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
+{
+  check(Episode != nullptr);
+  AActor *Actor = Episode->GetActorRegistry().Find(LightVehicle.DatabaseId).GetActor();
+  if (Actor && !Actor->IsPendingKill())
+  {
+    auto Veh = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Veh == nullptr)
+    {
+      return;
+    }
+
+    carla::rpc::VehicleLightState LightState(LightVehicle.State);
+    Veh->SetVehicleLightState(FVehicleLightState(LightState));
+  }
+}
+
+void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene LightScene)
+{
+  check(Episode != nullptr);
+  UWorld* World = Episode->GetWorld();
+  if(World)
+  {
+    UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+    if (!CarlaLightSubsystem)
+    {
+      return;
+    }
+    auto* CarlaLight = CarlaLightSubsystem->GetLight(LightScene.LightId);
+    if (CarlaLight)
+    {
+      CarlaLight->SetLightIntensity(LightScene.Intensity);
+      CarlaLight->SetLightColor(LightScene.Color);
+      CarlaLight->SetLightOn(LightScene.bOn);
+      CarlaLight->SetLightType(static_cast<ELightType>(LightScene.Type));
+    }
   }
 }
 

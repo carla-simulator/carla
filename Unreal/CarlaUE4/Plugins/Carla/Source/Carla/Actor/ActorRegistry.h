@@ -70,7 +70,7 @@ public:
     return it != ActorDatabase.end() ? it->second : FActorView();
   }
 
-  FActorView Find(AActor *Actor) const
+  FActorView Find(const AActor *Actor) const
   {
     auto PtrToId = Ids.Find(Actor);
     return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
