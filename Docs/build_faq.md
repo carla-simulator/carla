@@ -89,6 +89,21 @@ __1.__ Go to `carla/Unreal/CarlaUE4` and right-click the `CarlaUE4.uproject`.
 __2.__ Click on __Generate Visual Studio project files__.  
 __3.__ Open the file generated with Visual Studio 2017.  
 __4.__ Compile the project with Visual Studio. The shortcut is F7. The build will fail, but the issues found will be shown below.
+
+Different issues may result in this specific error message. The user [@tamakoji](https://github.com/tamakoji) solved a recurrent case where the source code hadn't been cloned properly and the CARLA version could not be set (when downloading this as a .zip from git).  
+
+*   __Check the `Build/CMakeLists.txt.in`.__ If it shows like `set(CARLA_VERSION )` do the following.  
+
+__1.__ Go to `Setup.bat` line 198.  
+
+__2.__ Update the line from: 
+```sh
+for /f %%i in ('git describe --tags --dirty --always') do set carla_version=%%i
+```
+to:
+```sh
+for /f %%i in ('git describe --tags --dirty --always') do set carla_version="0.9.9"
+```
   </details>
 
 <!-- ======================================================================= -->
