@@ -5,10 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <PxScene.h>
-
+#include <cmath>
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "carla/geom/Math.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -61,6 +62,11 @@ void ARayCastLidar::CreateLasers()
         Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
     LaserAngles.Emplace(VerticalAngle);
   }
+
+  // Compute drop off model parameters
+  DropOffBeta = 1.0f - Description.DropOffAtZeroIntensity;
+  DropOffAlpha = Description.DropOffAtZeroIntensity / Description.DropOffIntensityLimit;
+  DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
 void ARayCastLidar::Tick(const float DeltaTime)
@@ -97,7 +103,7 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarMeasurement.Reset(ChannelCount,  PointsToScanWithOneLaser);
+  LidarMeasurement.Reset(ChannelCount, PointsToScanWithOneLaser);
 
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
@@ -125,16 +131,47 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 
-float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector &XYZ, const FHitResult& HitInfo) const
+float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const
 {
-  const float Distance = 0.01f * XYZ.Size();
-  const float AttenAtm = -0.004;
+  const FVector HitPoint = HitInfo.ImpactPoint - LidarBodyLoc;
+  const float Distance = 0.01f * HitPoint.Size();
 
-  const float IntEm = 1.0f;
+  const float AttenAtm = Description.AtmospAttenRate;
+  const float AbsAtm = exp(-AttenAtm * Distance);
 
-  const float AbsAtm = exp(AttenAtm * Distance);
+  const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
 
-  const float IntRec = IntEm * AbsAtm;
+  uint8 label = 69;
+
+//  AActor* actor = HitInfo.Actor.Get();
+//  if (actor != nullptr) {
+//    FActorView view = Registry.Find(actor);
+//
+//    if(view.IsValid()){
+//      const FActorInfo* ActorInfo = view.GetActorInfo();
+//
+//      if(ActorInfo != nullptr) {
+//        //TSet<ECityObjectLabel> labels = ActorInfo->SemanticTags;
+//        //if(labels.Num() == 1)
+//        //    label = static_cast<uint8>(*labels.CreateConstIterator());
+//      }
+//      else {
+//        UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
+//      }
+//    }
+//    else {
+//      UE_LOG(LogCarla, Warning, TEXT("View not valid %p!!!!"), view.GetActor());
+//    }
+//
+//  }
+//  else {
+//    UE_LOG(LogCarla, Warning, TEXT("Actor not found!!!!"));
+//  }
+
+
+
+
+  const float IntRec = AbsAtm;
 
   return IntRec;
 }
@@ -142,7 +179,7 @@ float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FVector
 bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
 {
 
-  if(RandomEngine->GetUniformFloat() > 0.55f)
+  if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
     return false;
 
   const float VerticalAngle = LaserAngles[Channel];
@@ -173,6 +210,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     FCollisionResponseParams::DefaultResponseParam
   );
 
+
   if (HitInfo.bBlockingHit)
   {
     if (Description.ShowDebugPoints)
@@ -190,12 +228,15 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     const FVector hp = HitInfo.ImpactPoint;
     XYZ = actorTransf.Inverse().TransformPosition(hp);
 
-    Intensity = ComputeIntensity(LidarBodyLoc, XYZ, HitInfo);
+    Intensity = ComputeIntensity(LidarBodyLoc, HitInfo);
 
-    if(Intensity*0.5 + 0.6 < RandomEngine->GetUniformFloat())
-      return false;
 
-    return true;
+
+    if(Intensity > Description.DropOffIntensityLimit)
+      return true;
+    else
+      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+
   } else {
     return false;
   }
