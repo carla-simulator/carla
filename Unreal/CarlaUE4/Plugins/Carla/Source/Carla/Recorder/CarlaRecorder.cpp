@@ -73,6 +73,7 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
   // check if recording
   if (Enabled)
   {
+    PlatformTime.UpdateTime();
     const FActorRegistry &Registry = Episode->GetActorRegistry();
 
     // through all actors in registry
@@ -87,12 +88,14 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
           AddActorPosition(View);
           AddVehicleAnimation(View);
           AddVehicleLight(View);
+          AddActorKinematics(View);
           break;
 
         // save the transform of all walkers
         case FActorView::ActorType::Walker:
           AddActorPosition(View);
           AddWalkerAnimation(View);
+          AddActorKinematics(View);
           break;
 
         // save the state of each traffic light
@@ -100,6 +103,8 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
           AddTrafficLightState(View);
           break;
       }
+      // Add bounding box for all actors
+      AddActorBoundingBox(View);
     }
 
     // write all data for this frame
@@ -233,7 +238,54 @@ void ACarlaRecorder::AddVehicleLight(FActorView &View)
   AddLightVehicle(LightVehicle);
 }
 
-std::string ACarlaRecorder::Start(std::string Name, FString MapName)
+void ACarlaRecorder::AddActorKinematics(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  FVector Velocity, AngularVelocity;
+  constexpr float TO_METERS = 1e-2;
+  Velocity = TO_METERS * Actor->GetVelocity();
+  UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+  if (Primitive)
+  {
+    AngularVelocity = Primitive->GetPhysicsAngularVelocityInDegrees();
+  }
+  CarlaRecorderKinematics Kinematic =
+  {
+    View.GetActorId(),
+    Velocity,
+    AngularVelocity
+   };
+   AddKinematics(Kinematic);
+}
+void ACarlaRecorder::AddActorBoundingBox(FActorView &View)
+{
+  AActor *Actor = View.GetActor();
+  check(Actor != nullptr);
+
+  if (Actor->IsPendingKill())
+  {
+    return;
+  }
+
+  const auto &Box = View.GetActorInfo()->BoundingBox;
+  CarlaRecorderBoundingBox BoundingBox =
+  {
+    View.GetActorId(),
+    Box.Origin,
+    Box.Extent
+  };
+
+  AddBoundingBox(BoundingBox);
+}
+
+std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -265,8 +317,11 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName)
   Info.Write(File);
 
   Frames.Reset();
+  PlatformTime.SetStartTime();
 
   Enable();
+
+  bAdditionalData = AdditionalData;
 
   // add all existing actors
   AddExistingActors();
@@ -298,6 +353,8 @@ void ACarlaRecorder::Clear(void)
   Walkers.Clear();
   LightVehicles.Clear();
   LightScenes.Clear();
+  Kinematics.Clear();
+  BoundingBoxes.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -323,6 +380,14 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   Walkers.Write(File);
   LightVehicles.Write(File);
   LightScenes.Write(File);
+
+  // additional info
+  if (bAdditionalData)
+  {
+    Kinematics.Write(File);
+    BoundingBoxes.Write(File);
+    PlatformTime.Write(File);
+  }
 
   // end
   Frames.WriteEnd(File);
@@ -441,6 +506,22 @@ void ACarlaRecorder::AddEventLightSceneChanged(const UCarlaLight* Light)
     };
 
     LightScenes.Add(LightScene);
+  }
+}
+
+void ACarlaRecorder::AddKinematics(const CarlaRecorderKinematics &ActorKinematics)
+{
+  if (Enabled && bAdditionalData)
+  {
+    Kinematics.Add(ActorKinematics);
+  }
+}
+
+void ACarlaRecorder::AddBoundingBox(const CarlaRecorderBoundingBox &ActorBoundingBox)
+{
+  if (Enabled && bAdditionalData)
+  {
+    BoundingBoxes.Add(ActorBoundingBox);
   }
 }
 
