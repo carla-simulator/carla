@@ -91,10 +91,10 @@ def main():
         help='Enanble car lights')
     argparser.add_argument(
         '--timeout',
-	metavar='Tout',
-	default=10.0,
-	type=float,
-	help='Override timeout settings (default: 10.0)')
+        metavar='Tout',
+        default=10.0,
+        type=float,
+        help='Override timeout settings (default: 10.0)')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
