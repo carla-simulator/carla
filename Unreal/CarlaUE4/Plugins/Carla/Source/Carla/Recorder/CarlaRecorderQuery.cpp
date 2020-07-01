@@ -8,6 +8,7 @@
 
 #include <ctime>
 #include <sstream>
+#include <string>
 
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
@@ -256,6 +257,84 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           {
             Walker.Read(File);
             Info << "  Walker id " << Walker.DatabaseId << ": speed " << Walker.Speed << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // vehicle light animations
+      case static_cast<char>(CarlaRecorderPacketId::VehicleLight):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle light animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            LightVehicle.Read(File);
+
+            carla::rpc::VehicleLightState LightState(LightVehicle.State);
+            FVehicleLightState State(LightState);
+            std::string enabled_lights_list;
+            if (State.Position)
+              enabled_lights_list += "Position, ";
+            if (State.LowBeam)
+              enabled_lights_list += "Low Beam, ";
+            if (State.HighBeam)
+              enabled_lights_list += "Hight Beam, ";
+            if (State.Brake)
+              enabled_lights_list += "Brake, ";
+            if (State.RightBlinker)
+              enabled_lights_list += "Right Blinker, ";
+            if (State.LeftBlinker)
+              enabled_lights_list += "Left Blinker, ";
+            if (State.Reverse)
+              enabled_lights_list += "Reverse, ";
+            if (State.Fog)
+              enabled_lights_list += "Fog, ";
+            if (State.Special1)
+              enabled_lights_list += "Special1, ";
+            if (State.Special2)
+              enabled_lights_list += "Special2, ";
+
+            if (enabled_lights_list.size())
+            {
+              Info << "  Vehicle id " << LightVehicle.DatabaseId << ": enabled lights: " <<
+                  enabled_lights_list.substr(0, enabled_lights_list.size() - 2) << std::endl;
+            }
+            else
+            {
+              Info << "  Vehicle id " << LightVehicle.DatabaseId << ": no lights enabled" << std::endl;
+            }
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // scene light animations
+      case static_cast<char>(CarlaRecorderPacketId::SceneLight):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Scene light changes: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            LightScene.Read(File);
+            Info << "  Light id " << LightScene.LightId << ": " << (LightScene.bOn ? "enabled" : "disabled")
+                << ", intensity " << LightScene.Intensity
+                << ", RGB color (" << LightScene.Color.R << " " << LightScene.Color.G << " " << LightScene.Color.B << ")"
+                << std::endl;
           }
         }
         else
