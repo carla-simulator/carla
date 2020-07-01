@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Util/NonCopyable.h"
@@ -37,6 +38,11 @@ public:
     return CurrentEpisode;
   }
 
+  void SetRecorder(ACarlaRecorder *InRecorder)
+  {
+    Recorder = InRecorder;
+  }
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
@@ -58,6 +64,8 @@ private:
   FWorldObserver WorldObserver;
 
   UCarlaEpisode *CurrentEpisode = nullptr;
+
+  ACarlaRecorder *Recorder = nullptr;
 
   FDelegateHandle OnPreTickHandle;
 
