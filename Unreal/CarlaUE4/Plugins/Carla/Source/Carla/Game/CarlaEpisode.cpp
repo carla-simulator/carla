@@ -328,13 +328,13 @@ void UCarlaEpisode::EndPlay(void)
   }
 }
 
-std::string UCarlaEpisode::StartRecorder(std::string Name)
+std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData)
 {
   std::string result;
 
   if (Recorder)
   {
-    result = Recorder->Start(Name, MapName);
+    result = Recorder->Start(Name, MapName, AdditionalData);
   }
   else
   {
