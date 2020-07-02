@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "TrafficLightGroup.h"
 
 
@@ -22,7 +23,7 @@ void ATrafficLightGroup::SetFrozenGroup(bool InFreeze)
   bIsFrozen = InFreeze;
 }
 
-bool ATrafficLightGroup::IsFrozen()
+bool ATrafficLightGroup::IsFrozen() const
 {
   return bIsFrozen;
 }
@@ -47,10 +48,28 @@ float ATrafficLightGroup::GetElapsedTime() const
   return (CurrentStateTimer - Timer);
 }
 
+void ATrafficLightGroup::SetElapsedTime(float ElapsedTime)
+{
+  Timer = CurrentStateTimer - ElapsedTime;
+}
+
 // Called every frame
 void ATrafficLightGroup::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
+
+  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (Episode)
+  {
+    auto* Replayer = Episode->GetReplayer();
+    if (Replayer)
+    {
+      if(Replayer->IsEnabled())
+      {
+        return;
+      }
+    }
+  }
 
   if (bIsFrozen)
   {

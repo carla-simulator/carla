@@ -1,16 +1,20 @@
 ## Latest
 
+  * Added Light ids
+  * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
+  * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Added PythonAPI command to set multiple car light states at once
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
   * Improved the LiDAR and Radar sensors with a parallel implentation of the raycasting
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
+  * Improved LiDAR and radar to better match the shape of the vehicles
   * Added support for additional TraCI clients in Sumo co-simulation
   * Added API functions `get_right_vector` and `get_up_vector`
   * Added default values and a warning message for lanes missing the width parameter in OpenDRIVE

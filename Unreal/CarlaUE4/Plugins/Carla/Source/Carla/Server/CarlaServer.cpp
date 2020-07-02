@@ -69,7 +69,7 @@ public:
   FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
     : Server(RPCPort),
       StreamingServer(StreamingPort),
-      BroadcastStream(StreamingServer.MakeMultiStream())
+      BroadcastStream(StreamingServer.MakeStream())
   {
     BindActions();
   }
@@ -81,7 +81,7 @@ public:
 
   carla::streaming::Server StreamingServer;
 
-  carla::streaming::MultiStream BroadcastStream;
+  carla::streaming::Stream BroadcastStream;
 
   UCarlaEpisode *Episode = nullptr;
 

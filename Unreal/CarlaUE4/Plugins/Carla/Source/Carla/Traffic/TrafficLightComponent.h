@@ -41,8 +41,12 @@ public:
   UFUNCTION(Category = "Traffic Light", BlueprintPure)
   ATrafficLightGroup* GetGroup();
 
+  const ATrafficLightGroup* GetGroup() const;
+
   UFUNCTION(Category = "Traffic Light", BlueprintPure)
   UTrafficLightController* GetController();
+
+  const UTrafficLightController* GetController() const;
 
   virtual void InitializeSign(const carla::road::Map &Map) override;
 
