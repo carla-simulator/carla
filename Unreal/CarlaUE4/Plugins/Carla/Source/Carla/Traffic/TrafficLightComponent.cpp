@@ -114,7 +114,17 @@ ATrafficLightGroup* UTrafficLightComponent::GetGroup()
   return TrafficLightGroup;
 }
 
+const ATrafficLightGroup* UTrafficLightComponent::GetGroup() const
+{
+  return TrafficLightGroup;
+}
+
 UTrafficLightController* UTrafficLightComponent::GetController()
+{
+  return TrafficLightController;
+}
+
+const UTrafficLightController* UTrafficLightComponent::GetController() const
 {
   return TrafficLightController;
 }
