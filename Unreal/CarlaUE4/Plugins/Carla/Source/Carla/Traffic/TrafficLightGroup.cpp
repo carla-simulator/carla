@@ -22,7 +22,7 @@ void ATrafficLightGroup::SetFrozenGroup(bool InFreeze)
   bIsFrozen = InFreeze;
 }
 
-bool ATrafficLightGroup::IsFrozen()
+bool ATrafficLightGroup::IsFrozen() const
 {
   return bIsFrozen;
 }
@@ -45,6 +45,11 @@ void ATrafficLightGroup::ResetGroup()
 float ATrafficLightGroup::GetElapsedTime() const
 {
   return (CurrentStateTimer - Timer);
+}
+
+void ATrafficLightGroup::SetElapsedTime(float ElapsedTime)
+{
+  Timer = CurrentStateTimer - ElapsedTime;
 }
 
 // Called every frame

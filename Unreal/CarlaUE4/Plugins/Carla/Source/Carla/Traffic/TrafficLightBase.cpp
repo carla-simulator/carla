@@ -53,7 +53,7 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  if (TimeIsFrozen)
+  if (TimeIsFrozen || TrafficLightComponent)
   {
     return;
   }
@@ -103,14 +103,26 @@ void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
 }
 #endif // WITH_EDITOR
 
+ETrafficLightState ATrafficLightBase::GetTrafficLightState() const
+{
+  if (TrafficLightComponent)
+  {
+    return TrafficLightComponent->GetLightState();
+  }
+  else
+  {
+    return State;
+  }
+}
+
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     TrafficLightComponent->SetLightState(InState);
-  } else {
+  }
+  else
+  {
     ElapsedTime = 0.0f;
     State = InState;
     SetTrafficSignState(ToTrafficSignState(State));
@@ -185,83 +197,128 @@ void ATrafficLightBase::UnNotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
 
 void ATrafficLightBase::SetGreenTime(float InGreenTime)
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     UTrafficLightController* TrafficLightController =
-      TrafficLightComponent->GetController();
+        TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetGreenTime(InGreenTime);
 
-  } else {
+  }
+  else
+  {
     GreenTime = InGreenTime;
   }
 }
 
 float ATrafficLightBase::GetGreenTime() const
 {
-  return GreenTime;
+  if (TrafficLightComponent)
+  {
+    auto* Controller = TrafficLightComponent->GetController();
+    check(Controller);
+    return Controller->GetGreenTime();
+  }
+  else
+  {
+    return GreenTime;
+  }
 }
 
 void ATrafficLightBase::SetYellowTime(float InYellowTime)
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     UTrafficLightController* TrafficLightController =
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetYellowTime(InYellowTime);
-  } else {
+  }
+  else
+  {
     YellowTime = InYellowTime;
   }
 }
 
 float ATrafficLightBase::GetYellowTime() const
 {
-  return YellowTime;
+  if (TrafficLightComponent)
+  {
+    auto* Controller = TrafficLightComponent->GetController();
+    check(Controller);
+    return Controller->GetYellowTime();
+  }
+  else
+  {
+    return YellowTime;
+  }
 }
 
 void ATrafficLightBase::SetRedTime(float InRedTime)
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     UTrafficLightController* TrafficLightController =
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetRedTime(InRedTime);
-  } else {
+  }
+  else
+  {
     RedTime = InRedTime;
   }
 }
 
 float ATrafficLightBase::GetRedTime() const
 {
-  return RedTime;
+  if (TrafficLightComponent)
+  {
+    auto* Controller = TrafficLightComponent->GetController();
+    check(Controller);
+    return Controller->GetRedTime();
+  }
+  else
+  {
+    return RedTime;
+  }
 }
 
 float ATrafficLightBase::GetElapsedTime() const
 {
-  return ElapsedTime;
+  if (TrafficLightComponent)
+  {
+    auto* Group = TrafficLightComponent->GetGroup();
+    check(Group);
+    return Group->GetElapsedTime();
+  }
+  else
+  {
+    return ElapsedTime;
+  }
 }
 
 void ATrafficLightBase::SetElapsedTime(float InElapsedTime)
 {
-  ElapsedTime = InElapsedTime;
+  if (TrafficLightComponent)
+  {
+    auto* Group = TrafficLightComponent->GetGroup();
+    check(Group);
+    return Group->SetElapsedTime(InElapsedTime);
+  }
+  else
+  {
+    ElapsedTime = InElapsedTime;
+  }
 }
 
 void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     TrafficLightComponent->SetFrozenGroup(InTimeIsFrozen);
-  } else {
+  }
+  else
+  {
     TimeIsFrozen = InTimeIsFrozen;
     if (!TimeIsFrozen)
     {
@@ -272,6 +329,12 @@ void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 
 bool ATrafficLightBase::GetTimeIsFrozen() const
 {
+  if(TrafficLightComponent)
+  {
+    auto* Group = TrafficLightComponent->GetGroup();
+    check(Group);
+    return Group->IsFrozen();
+  }
   return TimeIsFrozen;
 }
 
@@ -287,10 +350,8 @@ int ATrafficLightBase::GetPoleIndex() const
 
 TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
 {
-  UTrafficLightComponent* TrafficLightComponent =
-      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-
-  if(TrafficLightComponent) {
+  if(TrafficLightComponent)
+  {
     TArray<ATrafficLightBase *> result;
 
     ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
@@ -312,4 +373,23 @@ TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
 void ATrafficLightBase::SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights)
 {
   GroupTrafficLights = InGroupTrafficLights;
+}
+
+UTrafficLightComponent* ATrafficLightBase::CreateTrafficLightComponent()
+{
+  TrafficLightComponent = NewObject<UTrafficLightComponent>(RootComponent);
+  TrafficLightComponent->RegisterComponent();
+  TrafficLightComponent->AttachToComponent(
+      GetRootComponent(),
+      FAttachmentTransformRules::KeepRelativeTransform);
+  return TrafficLightComponent;
+}
+
+UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent()
+{
+  return TrafficLightComponent;
+}
+const UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent() const
+{
+  return TrafficLightComponent;
 }

@@ -70,8 +70,8 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
     auto TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
     if (TrafficLight != nullptr)
     {
-      UTrafficLightComponent* TrafficLightComponent =
-        Cast<UTrafficLightComponent>(TrafficLight->FindComponentByClass<UTrafficLightComponent>());
+      auto* TrafficLightComponent =
+          TrafficLight->GetTrafficLightComponent();
 
       using TLS = carla::rpc::TrafficLightState;
 
@@ -89,8 +89,8 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
       }
       else
       {
-        UTrafficLightController* Controller =  TrafficLightComponent->GetController();
-        ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
+        const UTrafficLightController* Controller =  TrafficLightComponent->GetController();
+        const ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
 
         if (!Controller)
         {

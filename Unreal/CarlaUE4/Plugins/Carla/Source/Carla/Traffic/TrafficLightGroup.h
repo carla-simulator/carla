@@ -35,7 +35,7 @@ public:
   void SetFrozenGroup(bool InFreeze);
 
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
-  bool IsFrozen();
+  bool IsFrozen() const;
 
   UFUNCTION(Category = "Traffic Group", BlueprintPure)
   int GetJunctionId() const;
@@ -45,6 +45,9 @@ public:
 
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
   float GetElapsedTime() const;
+
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
+  void SetElapsedTime(float ElapsedTime);
 
 protected:
   // Called every frame
