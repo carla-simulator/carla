@@ -88,14 +88,20 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
           AddActorPosition(View);
           AddVehicleAnimation(View);
           AddVehicleLight(View);
-          AddActorKinematics(View);
+          if (bAdditionalData)
+          {
+            AddActorKinematics(View);
+          }
           break;
 
         // save the transform of all walkers
         case FActorView::ActorType::Walker:
           AddActorPosition(View);
           AddWalkerAnimation(View);
-          AddActorKinematics(View);
+          if (bAdditionalData)
+          {
+            AddActorKinematics(View);
+          }
           break;
 
         // save the state of each traffic light
@@ -104,7 +110,10 @@ void ACarlaRecorder::Tick(float DeltaSeconds)
           break;
       }
       // Add bounding box for all actors
-      AddActorBoundingBox(View);
+      if (bAdditionalData)
+      {
+        AddActorBoundingBox(View);
+      }
     }
 
     // write all data for this frame
@@ -511,7 +520,7 @@ void ACarlaRecorder::AddEventLightSceneChanged(const UCarlaLight* Light)
 
 void ACarlaRecorder::AddKinematics(const CarlaRecorderKinematics &ActorKinematics)
 {
-  if (Enabled && bAdditionalData)
+  if (Enabled)
   {
     Kinematics.Add(ActorKinematics);
   }
@@ -519,7 +528,7 @@ void ACarlaRecorder::AddKinematics(const CarlaRecorderKinematics &ActorKinematic
 
 void ACarlaRecorder::AddBoundingBox(const CarlaRecorderBoundingBox &ActorBoundingBox)
 {
-  if (Enabled && bAdditionalData)
+  if (Enabled)
   {
     BoundingBoxes.Add(ActorBoundingBox);
   }
