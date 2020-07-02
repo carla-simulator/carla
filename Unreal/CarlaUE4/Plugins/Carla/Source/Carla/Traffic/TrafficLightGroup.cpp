@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "TrafficLightGroup.h"
 
 
@@ -56,6 +57,19 @@ void ATrafficLightGroup::SetElapsedTime(float ElapsedTime)
 void ATrafficLightGroup::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
+
+  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (Episode)
+  {
+    auto* Replayer = Episode->GetReplayer();
+    if (Replayer)
+    {
+      if(Replayer->IsEnabled())
+      {
+        return;
+      }
+    }
+  }
 
   if (bIsFrozen)
   {
