@@ -131,7 +131,7 @@
     - var_name: raw_data
       type: bytes
       doc: >
-        List of 3D points received as data.
+        Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.
     # - METHODS ----------------------------
     methods:
     - def_name: save_to_disk
