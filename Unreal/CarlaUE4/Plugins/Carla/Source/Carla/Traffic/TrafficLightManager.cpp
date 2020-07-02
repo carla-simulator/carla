@@ -178,7 +178,7 @@ void ATrafficLightManager::BeginPlay()
   Super::BeginPlay();
 
   // Should not run in empty maps
-  if (!GetMap()) 
+  if (!GetMap())
   {
     return;
   }
@@ -213,11 +213,11 @@ void ATrafficLightManager::ResetTrafficLightObjects()
   }
   TrafficControllers.Empty();
 
-  for (TActorIterator<ATrafficSignBase> It(GetWorld()); It; ++It)
+  for (TActorIterator<ATrafficLightBase> It(GetWorld()); It; ++It)
   {
-    ATrafficSignBase* trafficSignBase = (*It);
+    ATrafficLightBase* trafficSignBase = (*It);
     UTrafficLightComponent* TrafficLightComponent =
-      trafficSignBase->FindComponentByClass<UTrafficLightComponent>();
+        trafficSignBase->GetTrafficLightComponent();
 
     if(TrafficLightComponent)
     {
@@ -290,13 +290,8 @@ void ATrafficLightManager::SpawnTrafficLights()
 
     TrafficSigns.Add(TrafficLight);
 
-    UTrafficLightComponent *TrafficLightComponent =
-        NewObject<UTrafficLightComponent>(TrafficLight);
+    UTrafficLightComponent *TrafficLightComponent = TrafficLight->CreateTrafficLightComponent();
     TrafficLightComponent->SetSignId(SignalId.c_str());
-    TrafficLightComponent->RegisterComponent();
-    TrafficLightComponent->AttachToComponent(
-        TrafficLight->GetRootComponent(),
-        FAttachmentTransformRules::KeepRelativeTransform);
 
     auto ClosestWaypointToSignal =
         GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);

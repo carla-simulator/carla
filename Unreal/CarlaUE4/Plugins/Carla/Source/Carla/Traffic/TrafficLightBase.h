@@ -9,6 +9,7 @@
 #include "Traffic/TrafficSignBase.h"
 
 #include "Traffic/TrafficLightState.h"
+#include "Traffic/TrafficLightComponent.h"
 
 #include "TrafficLightBase.generated.h"
 
@@ -39,10 +40,7 @@ protected:
 public:
 
   UFUNCTION(Category = "Traffic Light", BlueprintCallable)
-  ETrafficLightState GetTrafficLightState() const
-  {
-    return State;
-  }
+  ETrafficLightState GetTrafficLightState() const;
 
   UFUNCTION(Category = "Traffic Light", BlueprintCallable)
   void SetTrafficLightState(ETrafficLightState State);
@@ -99,6 +97,11 @@ public:
   // used from replayer
   void SetElapsedTime(float InElapsedTime);
 
+  UTrafficLightComponent* CreateTrafficLightComponent();
+
+  UTrafficLightComponent* GetTrafficLightComponent();
+  const UTrafficLightComponent* GetTrafficLightComponent() const;
+
 protected:
 
   UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
@@ -132,4 +135,7 @@ private:
 
   UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
   TArray<ATrafficLightBase *> GroupTrafficLights;
+
+  UPROPERTY(Category = "Traffic Light", EditAnywhere)
+  UTrafficLightComponent * TrafficLightComponent = nullptr;
 };
