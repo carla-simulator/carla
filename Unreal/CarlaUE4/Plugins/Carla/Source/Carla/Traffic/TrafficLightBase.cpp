@@ -6,7 +6,7 @@
 
 #include "Carla.h"
 #include "TrafficLightBase.h"
-
+#include "Carla/Game/CarlaStatics.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 #include "Vehicle/WheeledVehicleAIController.h"
 
@@ -56,6 +56,19 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
   if (TimeIsFrozen || TrafficLightComponent)
   {
     return;
+  }
+
+  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (Episode)
+  {
+    auto* Replayer = Episode->GetReplayer();
+    if (Replayer)
+    {
+      if(Replayer->IsEnabled())
+      {
+        return;
+      }
+    }
   }
 
   ElapsedTime += DeltaSeconds;
