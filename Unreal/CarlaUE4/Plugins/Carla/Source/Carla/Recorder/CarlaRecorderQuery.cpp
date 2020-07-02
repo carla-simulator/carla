@@ -395,8 +395,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
       case static_cast<char>(CarlaRecorderPacketId::PlatformTime):
         if (bShowAll)
         {
-          ReadValue<uint16_t>(File, Total);
-          if (Total > 0 && !bFramePrinted)
+          if (!bFramePrinted)
           {
             PrintFrame(Info);
             bFramePrinted = true;
