@@ -17,14 +17,16 @@ class RssResponse : public SensorData {
 public:
   explicit RssResponse(size_t frame_number, double timestamp, const rpc::Transform &sensor_transform,
                        const bool &response_valid, const ::ad::rss::state::ProperResponse &response,
-                       const ::ad::rss::world::AccelerationRestriction &acceleration_restriction,
                        const ::ad::rss::state::RssStateSnapshot &rss_state_snapshot,
+                       const ::ad::rss::situation::SituationSnapshot &situation_snapshot,
+                       const ::ad::rss::world::WorldModel &world_model,
                        const carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route)
     : SensorData(frame_number, timestamp, sensor_transform),
       _response_valid(response_valid),
       _response(response),
-      _acceleration_restriction(acceleration_restriction),
       _rss_state_snapshot(rss_state_snapshot),
+      _situation_snapshot(situation_snapshot),
+      _world_model(world_model),
       _ego_dynamics_on_route(ego_dynamics_on_route) {}
 
   bool GetResponseValid() const {
@@ -35,12 +37,16 @@ public:
     return _response;
   }
 
-  const ::ad::rss::world::AccelerationRestriction &GetAccelerationRestriction() const {
-    return _acceleration_restriction;
-  }
-
   const ::ad::rss::state::RssStateSnapshot &GetRssStateSnapshot() const {
     return _rss_state_snapshot;
+  }
+
+  const ::ad::rss::situation::SituationSnapshot &GetSituationSnapshot() const {
+    return _situation_snapshot;
+  }
+
+  const ::ad::rss::world::WorldModel &GetWorldModel() const {
+    return _world_model;
   }
 
   const carla::rss::EgoDynamicsOnRoute &GetEgoDynamicsOnRoute() const {
@@ -55,9 +61,11 @@ private:
 
   ::ad::rss::state::ProperResponse _response;
 
-  ::ad::rss::world::AccelerationRestriction _acceleration_restriction;
-
   ::ad::rss::state::RssStateSnapshot _rss_state_snapshot;
+
+  ::ad::rss::situation::SituationSnapshot _situation_snapshot;
+
+  ::ad::rss::world::WorldModel _world_model;
 
   carla::rss::EgoDynamicsOnRoute _ego_dynamics_on_route;
 };
