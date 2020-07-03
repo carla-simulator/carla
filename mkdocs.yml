@@ -28,7 +28,7 @@ nav:
   - 'PTV-Vissim co-simulation': 'adv_ptv.md'
   - 'Recorder': 'adv_recorder.md'
   - 'Rendering options': 'adv_rendering_options.md'
-  - 'RSS sensor': 'adv_rss.md'
+  - 'RSS': 'adv_rss.md'
   - 'SUMO co-simulation': 'adv_sumo.md'
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
