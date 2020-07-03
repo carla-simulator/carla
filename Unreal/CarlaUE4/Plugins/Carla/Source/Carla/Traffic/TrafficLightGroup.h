@@ -66,13 +66,13 @@ private:
   UPROPERTY(Category = "Traffic Group", EditAnywhere)
   TArray<UTrafficLightController*> Controllers;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   float Timer = 0.0f;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   float CurrentStateTimer = 0.0f;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   int CurrentController = 0;
 
   UFUNCTION()
