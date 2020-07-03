@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSCENARIO>
+    <FileHeader revMajor="1" revMinor="0" date="2020-03-20T00:00:00" description="CARLA:AgentExample" author="" />
+    <ParameterDeclarations/>
+    <CatalogLocations/>
+    <RoadNetwork>
+        <LogicFile filepath="Town01" />
+        <SceneGraphFile filepath="" />
+    </RoadNetwork>
+    <Entities>
+        <ScenarioObject name="hero">
+            <Vehicle name="vehicle.lincoln.mkz2017" vehicleCategory="car">
+                <ParameterDeclarations/>
+                <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0"/>
+                <BoundingBox>
+                    <Center x="1.5" y="0.0" z="0.9" />
+                    <Dimensions width="2.1" length="4.5" height="1.8"/>
+                </BoundingBox>
+                <Axles>
+                    <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3" />
+                    <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3" />
+                </Axles>
+                <Properties>
+                    <Property name="type" value="ego_vehicle" />
+                    <Property name="color" value="0,0,255" />
+                </Properties>
+            </Vehicle>
+        </ScenarioObject>
+        <ScenarioObject name="pedestrian1">
+            <Pedestrian mass="100" model="walker.pedestrian.0001" name="Pedestrian1" pedestrianCategory="pedestrian">
+                <ParameterDeclarations/>
+                <BoundingBox>
+                    <Center x="0.5" y="0.5" z="0.9"/>
+                    <Dimensions width="1.0" length="1.0" height="1.8"/>
+                </BoundingBox>
+                <Properties>
+                    <Property name="type" value="simulation"/>
+                </Properties>
+            </Pedestrian>
+        </ScenarioObject>
+    </Entities>
+    <Storyboard>
+        <Init>
+            <Actions>         
+                <GlobalAction>
+                    <EnvironmentAction>
+                        <Environment name="Environment1">
+                            <TimeOfDay animation="false" dateTime="2020-03-20T12:00:00"/>
+                            <Weather cloudState="free">
+                                <Sun intensity="0.85" azimuth="0" elevation="1.31" />
+                                <Fog visualRange="100000.0" />
+                                <Precipitation precipitationType="dry" intensity="0.0" />
+                            </Weather>
+                            <RoadCondition frictionScaleFactor="1.0" />
+                        </Environment>
+                    </EnvironmentAction>
+                </GlobalAction>
+                <Private entityRef="hero">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <WorldPosition x="338.9" y="319.5" z="1" h="4.71" />
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <ControllerAction>
+                            <AssignControllerAction>
+                                <Controller name="EgoVehicleAgent">
+                                    <Properties>
+                                        <Property name="module" value="external_control"/>
+                                    </Properties>
+                                </Controller>
+                            </AssignControllerAction>
+                            <OverrideControllerValueAction>
+                                <Throttle value="0" active="false" />
+                                <Brake value="0" active="false" />
+                                <Clutch value="0" active="false" />
+                                <ParkingBrake value="0" active="false" />
+                                <SteeringWheel value="0" active="false" />
+                                <Gear number="0" active="false" />
+                            </OverrideControllerValueAction>
+                        </ControllerAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <LongitudinalAction>
+                            <SpeedAction>
+                                <SpeedActionDynamics dynamicsShape="step" value="20" dynamicsDimension="distance"/>
+                                <SpeedActionTarget>
+                                    <AbsoluteTargetSpeed value="10" />
+                                </SpeedActionTarget>
+                            </SpeedAction>
+                        </LongitudinalAction>
+                    </PrivateAction>
+                </Private>
+                <Private entityRef="pedestrian1">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <WorldPosition x="339.5" y="300" z="1" h="4.71" />
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                </Private>
+            </Actions>
+        </Init>
+        <Story name="MyStory">
+            <Act name="Behavior">
+                <ManeuverGroup name="Pedestrian1ManeuverSequence" maximumExecutionCount="1">
+                    <Actors selectTriggeringEntities="false">
+                        <EntityRef entityRef="pedestrian1" />
+                    </Actors>
+                    <Maneuver name="Pedestrian1RouteManeuver">
+                        <!-- 
+                            1. walk 20m when the ego-vehicle starts moving
+                            1. pause for some seconds
+                            3. walk another 20m
+                        -->
+                        <Event name="Pedestrian1WalksEvent" priority="overwrite">
+                            <Action name="Pedestrian1Walks">
+                                <PrivateAction>
+                                    <LongitudinalAction>
+                                        <SpeedAction>
+                                            <SpeedActionDynamics dynamicsShape="step" value="20" dynamicsDimension="distance"/>
+                                            <SpeedActionTarget>
+                                                <AbsoluteTargetSpeed value="2" />
+                                            </SpeedActionTarget>
+                                        </SpeedAction>
+                                    </LongitudinalAction>
+                                </PrivateAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="Pedestrian1WalksCondition" delay="0" conditionEdge="rising">
+                                        <ByEntityCondition>
+                                            <TriggeringEntities triggeringEntitiesRule="any">
+                                                <EntityRef entityRef="hero" />
+                                            </TriggeringEntities>
+                                            <EntityCondition>
+                                                <TraveledDistanceCondition value="1.0" />
+                                            </EntityCondition>
+                                        </ByEntityCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                        <Event name="Pedestrian1WaitsEvent" priority="overwrite">
+                            <Action name="Pedestrian1Waits">
+                                <PrivateAction>
+                                    <LongitudinalAction>
+                                    <SpeedAction>
+                                        <SpeedActionDynamics dynamicsShape="step" value="10" dynamicsDimension="time"/>
+                                        <SpeedActionTarget>
+                                            <AbsoluteTargetSpeed value="0.0"/>
+                                        </SpeedActionTarget>
+                                    </SpeedAction>
+                                    </LongitudinalAction>
+                                </PrivateAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="AfterPedestrian1Walks" delay="0" conditionEdge="rising">
+                                    <ByValueCondition>
+                                        <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="Pedestrian1Walks" state="endTransition"/>
+                                    </ByValueCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                        <Event name="Pedestrian1ContinuesWalkingEvent" priority="overwrite">
+                            <!-- contine walking 20m -->
+                            <Action name="Pedestrian1ContinuesWalking">
+                                <PrivateAction>
+                                    <LongitudinalAction>
+                                        <SpeedAction>
+                                            <SpeedActionDynamics dynamicsShape="step" value="20" dynamicsDimension="distance"/>
+                                            <SpeedActionTarget>
+                                                <AbsoluteTargetSpeed value="2" />
+                                            </SpeedActionTarget>
+                                        </SpeedAction>
+                                    </LongitudinalAction>
+                                </PrivateAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="AfterPedestrian1Waits" delay="0" conditionEdge="rising">
+                                    <ByValueCondition>
+                                        <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="Pedestrian1Waits" state="endTransition"/>
+                                    </ByValueCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                    </Maneuver>
+                </ManeuverGroup>
+                <StartTrigger>
+                    <ConditionGroup>
+                        <Condition name="StartTime" delay="0" conditionEdge="rising">
+                            <ByValueCondition>
+                                <SimulationTimeCondition value="0" rule="equalTo" />
+                            </ByValueCondition>
+                        </Condition>
+                    </ConditionGroup>
+                </StartTrigger>
+                <StopTrigger>
+                    <ConditionGroup>
+                        <Condition name="EndCondition" delay="0" conditionEdge="rising">
+                            <ByEntityCondition>
+                                <TriggeringEntities triggeringEntitiesRule="any">
+                                    <EntityRef entityRef="hero" />
+                                </TriggeringEntities>
+                                <EntityCondition>
+                                    <TraveledDistanceCondition value="40.0" />
+                                </EntityCondition>
+                            </ByEntityCondition>
+                        </Condition>
+                    </ConditionGroup>
+                </StopTrigger>
+            </Act>
+        </Story>
+        <StopTrigger/>
+    </Storyboard>
+</OpenSCENARIO>

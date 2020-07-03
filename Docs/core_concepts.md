@@ -68,7 +68,7 @@ CARLA offers a wide range of features that go beyond the scope of this introduct
 *   [__PTV-Vissim co-simulation__](adv_ptv.md). Run a synchronous simulation between CARLA and PTV-Vissim traffic simulator.  
 *   [__Recorder__](adv_recorder.md). Saves snapshots of the simulation state to reenact a simulation with exact precision.   
 *   [__Rendering options__](adv_rendering_options.md). Graphics quality settings, off-screen rendering and a no-rendering mode.  
-*   [__RSS sensor__](adv_rss.md). This sensor is quite different from the rest. It integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib), and modifies a vehicle's trajectory using safety checks.  
+*   [__RSS__](adv_rss.md). Integration of the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) to modify a vehicle's trajectory using safety checks.
 *   [__Simulation time and synchrony__](adv_synchrony_timestep.md). Everything regarding the simulation time and server-client communication.  
 *   [__SUMO co-simulation__](adv_sumo.md). Run a synchronous simulation between CARLA and SUMO traffic simulator.  
 *   [__Traffic manager__](adv_traffic_manager.md). This module is in charge of every vehicle set to autopilot mode. It simulates traffic in the city for the simulation to look like a real urban environment.  

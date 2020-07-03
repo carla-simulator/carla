@@ -1488,6 +1488,50 @@ Parses the axis' orientations to string.
 
 ---
 
+## carla.RssActorConstellationData<a name="carla.RssActorConstellationData"></a>
+Data structure that is provided within the callback registered by RssSensor.register_actor_constellation_callback().  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssActorConstellationData.ego_match_object"></a>**<font color="#f8805a">ego_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+The ego map matched information.  
+- <a name="carla.RssActorConstellationData.ego_route"></a>**<font color="#f8805a">ego_route</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">libad_map_access_python.FullRoute</a>_)  
+The ego route.  
+- <a name="carla.RssActorConstellationData.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
+Current ego vehicle dynamics regarding the route.  
+- <a name="carla.RssActorConstellationData.other_match_object"></a>**<font color="#f8805a">other_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+The other object's map matched information.  
+- <a name="carla.RssActorConstellationData.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
+The other actor.  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssActorConstellationData.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssActorConstellationResult<a name="carla.RssActorConstellationResult"></a>
+Data structure that should be returned by the callback registered by RssSensor.register_actor_constellation_callback().  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssActorConstellationResult.rss_calculation_mode"></a>**<font color="#f8805a">rss_calculation_mode</font>** (_<a href="https://TODO">libad_rss_map_integration_python.RssMode_TODO</a>_)  
+The calculation mode to be applied with the actor.  
+- <a name="carla.RssActorConstellationResult.restrict_speed_limit_mode"></a>**<font color="#f8805a">restrict_speed_limit_mode</font>** (_<a href="https://TODO">libad_rss_map_integration_python.RestrictSpeedLimitMode_TODO</a>_)  
+The mode for restricting speed limit.  
+- <a name="carla.RssActorConstellationResult.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+The RSS dynamics to be applied for the ego vehicle.  
+- <a name="carla.RssActorConstellationResult.actor_object_type"></a>**<font color="#f8805a">actor_object_type</font>** (_libad_rss_python.ObjectType_)  
+The RSS object type to be used for the actor.  
+- <a name="carla.RssActorConstellationResult.actor_dynamics"></a>**<font color="#f8805a">actor_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+The RSS dynamics to be applied for the actor.  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssActorConstellationResult.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.RssEgoDynamicsOnRoute<a name="carla.RssEgoDynamicsOnRoute"></a>
 Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.  
 
@@ -1530,6 +1574,20 @@ The ego acceleration component _lon_ regarding the route smoothened by an averag
 
 ---
 
+## carla.RssLogLevel<a name="carla.RssLogLevel"></a>
+Enum declaration used in [carla.RssSensor](#carla.RssSensor) to set the log level.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssLogLevel.trace"></a>**<font color="#f8805a">trace</font>**  
+- <a name="carla.RssLogLevel.debug"></a>**<font color="#f8805a">debug</font>**  
+- <a name="carla.RssLogLevel.info"></a>**<font color="#f8805a">info</font>**  
+- <a name="carla.RssLogLevel.warn"></a>**<font color="#f8805a">warn</font>**  
+- <a name="carla.RssLogLevel.err"></a>**<font color="#f8805a">err</font>**  
+- <a name="carla.RssLogLevel.critical"></a>**<font color="#f8805a">critical</font>**  
+- <a name="carla.RssLogLevel.off"></a>**<font color="#f8805a">off</font>**  
+
+---
+
 ## carla.RssResponse<a name="carla.RssResponse"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
 
@@ -1546,6 +1604,10 @@ Acceleration restrictions to be applied, according to the RSS calculation.
 Detailed RSS states at the current moment in time.  
 - <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
 Current ego vehicle dynamics regarding the route.  
+- <a name="carla.RssResponse.world_model"></a>**<font color="#f8805a">world_model</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">libad_rss_python.WorldModel</a>_)  
+World model used for calculations.  
+- <a name="carla.RssResponse.situation_snapshot"></a>**<font color="#f8805a">situation_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">libad_rss_python.SituationSnapshot</a>_)  
+Detailed RSS situations extracted from the world model.  
 
 <h3>Methods</h3>
 
@@ -1606,6 +1668,16 @@ Appends a new target position to the current route of the vehicle.
 Erases the targets that have been appended to the route.  
 - <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
 Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
+- <a name="carla.RssSensor.register_actor_constellation_callback"></a>**<font color="#7fb800">register_actor_constellation_callback</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+Register a callback to customize a [carla.RssActorConstellationResult](#carla.RssActorConstellationResult).  
+    - **Parameters:**
+        - `callback` – The function to be called whenever a RSS situation is about to be calculated.  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.set_log_level"></a>**<font color="#7fb800">set_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+Sets the log level.  
+    - **Parameters:**
+        - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New log level.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
