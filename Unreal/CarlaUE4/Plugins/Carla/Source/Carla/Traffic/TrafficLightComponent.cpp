@@ -78,6 +78,11 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
   {
     ITrafficLightInterface::Execute_LightChanged(GetOwner(), LightState);
   }
+  ATrafficLightBase* OldTrafficLight = Cast<ATrafficLightBase>(GetOwner());
+  if (OldTrafficLight)
+  {
+    OldTrafficLight->LightChangedCompatibility(NewState);
+  }
 
   for (auto Controller : Vehicles)
   {
@@ -103,20 +108,20 @@ ETrafficLightState UTrafficLightComponent::GetLightState() const
 
 void UTrafficLightComponent::SetFrozenGroup(bool InFreeze)
 {
-  if (TrafficLightGroup)
+  if (GetGroup())
   {
-    TrafficLightGroup->SetFrozenGroup(InFreeze);
+    GetGroup()->SetFrozenGroup(InFreeze);
   }
 }
 
 ATrafficLightGroup* UTrafficLightComponent::GetGroup()
 {
-  return TrafficLightGroup;
+  return TrafficLightController->GetGroup();
 }
 
 const ATrafficLightGroup* UTrafficLightComponent::GetGroup() const
 {
-  return TrafficLightGroup;
+  return TrafficLightController->GetGroup();
 }
 
 UTrafficLightController* UTrafficLightComponent::GetController()
@@ -152,4 +157,9 @@ void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *Overlapped
       }
     }
   }
+}
+
+void UTrafficLightComponent::SetController(UTrafficLightController* Controller)
+{
+  TrafficLightController = Controller;
 }

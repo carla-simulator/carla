@@ -97,10 +97,13 @@ public:
   // used from replayer
   void SetElapsedTime(float InElapsedTime);
 
-  UTrafficLightComponent* CreateTrafficLightComponent();
-
+  UFUNCTION(Category = "Traffic Light", BlueprintPure)
   UTrafficLightComponent* GetTrafficLightComponent();
+
   const UTrafficLightComponent* GetTrafficLightComponent() const;
+
+  // Compatibility old traffic light system with traffic light components
+  void LightChangedCompatibility(ETrafficLightState NewLightState);
 
 protected:
 

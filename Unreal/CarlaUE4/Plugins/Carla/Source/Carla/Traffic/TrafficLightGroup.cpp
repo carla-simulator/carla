@@ -109,3 +109,9 @@ int ATrafficLightGroup::GetJunctionId() const
 {
   return JunctionId;
 }
+
+void ATrafficLightGroup::AddController(UTrafficLightController* Controller)
+{
+  Controllers.Add(Controller);
+  Controller->SetGroup(this);
+}
