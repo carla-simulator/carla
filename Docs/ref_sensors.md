@@ -478,7 +478,7 @@ A Lidar measurement contains a packet with all the points generated during a `1/
 <br>
 where a is the attenuation coefficient and d is the distance to the sensor.
 
-In order to increase the realism we add the possibiliy of dropping cloud points. This is done in two different ways. In a general way, we can randomly drop points with a probability given by <b>dropoff_general_rate</b>.
+In order to increase the realism, we add the possibiliy of dropping cloud points. This is done in two different ways. In a general way, we can randomly drop points with a probability given by <b>dropoff_general_rate</b>. In this case the drop off of points is done before tracing the ray cast so adjust this parameter can actually increase our performance. If that parameter is set to zero it will be ignored. The second way to regulate the drop off of points is in a rate proportional to the intensity. This drop off rate will be proportional to the intensity from zero drop off at <b>dropoff_intensity_limit</b> to <b>dropoff_zero_intensity</b> at zero intensity.
 
 This output contains a cloud of simulation points and thus, can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
