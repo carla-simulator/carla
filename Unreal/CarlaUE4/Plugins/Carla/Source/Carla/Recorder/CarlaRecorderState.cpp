@@ -38,6 +38,19 @@ void CarlaRecorderStates::Add(const CarlaRecorderStateTrafficLight &State)
 
 void CarlaRecorderStates::Write(std::ofstream &OutFile)
 {
+  // some check
+  float value = 0.0f;
+  for (auto &state : StatesTrafficLights)
+  {
+    if (value == 0.0f && state.ElapsedTime != 0.0f)
+      value = state.ElapsedTime;
+    else if (value != 0.0f && state.ElapsedTime != 0.0f && value != state.ElapsedTime)
+    {
+      // error
+      UE_LOG(LogCarla, Warning, TEXT("Some traffic light has different time than others: %f - %f"), value, state.ElapsedTime);
+    }
+  }
+
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::State));
 

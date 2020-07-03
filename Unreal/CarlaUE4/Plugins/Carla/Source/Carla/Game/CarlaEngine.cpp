@@ -113,8 +113,16 @@ void FCarlaEngine::OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeco
   }
 }
 
-void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float)
+void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float DeltaSeconds)
 {
+  if (GetCurrentEpisode())
+  {
+    auto* Recorder = GetCurrentEpisode()->GetRecorder();
+    if (Recorder)
+    {
+      Recorder->Ticking(DeltaSeconds);
+    }
+  }
   do
   {
     Server.RunSome(10u);
