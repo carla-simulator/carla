@@ -1,4 +1,4 @@
-# RSS Sensor
+# RSS
 
 CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly.  
 
@@ -37,12 +37,8 @@ __2. The client.__
 __3. The RssSensor.__  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the *ad-rss-lib* to extract situations, do safety checks, and generate a response.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the *RssRestrictor* a response containing the proper response and aceleration restrictions to be applied.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Asks the server to do some debug drawings to visualize the results of the calculations.  
 __4. The RssRestrictor__  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.  
-
-!!! Important
-    Debug drawings can delay the RSS response, so they should be disabled during automated RSS evaluations. Use [carla.RssVisualizationMode](python_api.md#carla.RssVisualizationMode) to change the visualization settings.
 
 [![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
 <div style="text-align: right"><i>Visualization of the RssSensor results.</i></div>
@@ -101,9 +97,9 @@ make package.rss
 
 ### RssSensor
 
-[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v3.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections and [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support.
+[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v4.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections, [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support and unstructured scenes (e.g. with pedestrians).
 
-So far, the server provides the sensor with ground truth data of the surroundings that includes the state of other vehicles and traffic lights. Future improvements of this feature will add to the equation pedestrians, and more information of the OpenDRIVE map among others.  
+So far, the server provides the sensor with ground truth data of the surroundings that includes the state of other traffic participants and traffic lights.
 
 ### RssRestrictor
 

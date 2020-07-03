@@ -1,5 +1,6 @@
 ## Latest
 
+  * Upgraded to AD RSS v4.0.0 supporting unstructured scenes and pedestrians
   * Added Light ids
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor

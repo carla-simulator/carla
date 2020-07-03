@@ -399,6 +399,16 @@
       type: carla.RssEgoDynamicsOnRoute
       doc: >
         Current ego vehicle dynamics regarding the route.
+    # --------------------------------------
+    - var_name: world_model
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">libad_rss_python.WorldModel</a>
+      doc: >
+        World model used for calculations.
+    # --------------------------------------
+    - var_name: situation_snapshot
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">libad_rss_python.SituationSnapshot</a>
+      doc: >
+        Detailed RSS situations extracted from the world model.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
@@ -484,6 +494,76 @@
       type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>
       doc: >
         The ego acceleration component _lon_ regarding the route smoothened by an average filter.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: RssActorConstellationData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Data structure that is provided within the callback registered by RssSensor.register_actor_constellation_callback().
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: ego_match_object
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>
+      doc: >
+        The ego map matched information.
+    # --------------------------------------
+    - var_name: ego_route
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">libad_map_access_python.FullRoute</a>
+      doc: >
+        The ego route.
+    # --------------------------------------
+    - var_name: ego_dynamics_on_route
+      type: carla.RssEgoDynamicsOnRoute
+      doc: >
+        Current ego vehicle dynamics regarding the route.
+    # --------------------------------------
+    - var_name: other_match_object
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>
+      doc: >
+        The other object's map matched information.
+    # --------------------------------------
+    - var_name: other_actor
+      type: carla.Actor
+      doc: >
+        The other actor.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: RssActorConstellationResult
+    # - DESCRIPTION ------------------------
+    doc: >
+      Data structure that should be returned by the callback registered by RssSensor.register_actor_constellation_callback().
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: rss_calculation_mode
+      type: <a href="https://TODO">libad_rss_map_integration_python.RssMode_TODO</a>
+      doc: >
+        The calculation mode to be applied with the actor.        
+    # --------------------------------------
+    - var_name: restrict_speed_limit_mode
+      type: <a href="https://TODO">libad_rss_map_integration_python.RestrictSpeedLimitMode_TODO</a>
+      doc: >
+        The mode for restricting speed limit.
+    # --------------------------------------
+    - var_name: ego_vehicle_dynamics
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>
+      doc: >
+         The RSS dynamics to be applied for the ego vehicle.
+    # --------------------------------------
+    - var_name: actor_object_type
+      type: libad_rss_python.ObjectType
+      doc: >
+        The RSS object type to be used for the actor.
+    # --------------------------------------
+    - var_name: actor_dynamics
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>
+      doc: >
+        The RSS dynamics to be applied for the actor.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

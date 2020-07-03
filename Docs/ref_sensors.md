@@ -1183,6 +1183,7 @@ The sensor allows to control the considered route by providing some key points, 
 <th>Description</th>
 </thead>
 <tbody>
+<tr>
 <td><code>routing_targets</code></td>
 <td>Get the current list of routing targets used for route.</td>
 <tr>
@@ -1194,6 +1195,12 @@ The sensor allows to control the considered route by providing some key points, 
 <tr>
 <td><code>drop_route</code></td>
 <td>Discards the current route and creates a new one.</td>
+<tr>
+<td><code>register_actor_constellation_callback</code></td>
+<td>Register a callback to customize the calculations.</td>
+<tr>
+<td><code>set_log_level</code></td>
+<td>Sets the log level.</td>
 </table>
 <br>
 
@@ -1236,8 +1243,39 @@ if routing_targets:
 <td><code>ego_dynamics_on_route</code></td>
 <td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
 <td>Current ego vehicle dynamics regarding the route.</td>
+<tr>
+<td><code>situation_snapshot</code></td>
+<td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
+<td>Current situation snapshot extracted from the world model.</td>
 </tbody>
 </table>
+
+In case a actor_constellation_callback is registered, a call is triggered for:
+
+1. default calculation (`actor_constellation_data.other_actor=None`)
+2. per-actor calculation
+
+```py
+# Fragment of manual_control_rss.py
+# The function is registered as actor_constellation_callback
+def _on_actor_constellation_request(self, actor_constellation_data):
+    actor_constellation_result = carla.RssActorConstellationResult()
+    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
+    actor_constellation_result.restrict_speed_limit_mode = rssmap.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
+    actor_constellation_result.ego_vehicle_dynamics = self.current_vehicle_parameters
+    actor_constellation_result.actor_object_type = rss.ObjectType.Invalid
+    actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
+
+    actor_id = -1
+    actor_type_id = "none"
+    if actor_constellation_data.other_actor != None:
+        # customize actor_constellation_result for specific actor
+        ...
+    else:
+        # default
+        ...
+    return actor_constellation_result
+```
 
 ---
 ## Semantic segmentation camera

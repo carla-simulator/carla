@@ -67,7 +67,7 @@ CARLA forum</a>
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
-    [__RSS sensor__](adv_rss.md)
+    [__RSS__](adv_rss.md)
         — An implementation of RSS in the CARLA client library.  
     [__SUMO co-simulation__](adv_sumo.md)
         — Run a synchronous simulation between CARLA and SUMO.  
