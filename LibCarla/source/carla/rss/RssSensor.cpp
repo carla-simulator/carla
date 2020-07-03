@@ -14,10 +14,10 @@
 #include "carla/Logging.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/Vehicle.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/rss/RssCheck.h"
 #include "carla/sensor/data/RssResponse.h"
-#include "carla/client/Vehicle.h"
 
 namespace carla {
 namespace client {
@@ -56,7 +56,7 @@ void RssSensor::Listen(CallbackFunctionType callback) {
     throw_exception(std::runtime_error(GetDisplayId() + ": parent is not a vehicle"));
     return;
   }
-  
+
   // get maximum steering angle
   float max_steer_angle_deg = 0.f;
   for (auto const &wheel : vehicle->GetPhysicsControl().GetWheels()) {
@@ -78,7 +78,8 @@ void RssSensor::Listen(CallbackFunctionType callback) {
   if (_rss_actor_constellation_callback == nullptr) {
     _rss_check = std::make_shared<::carla::rss::RssCheck>(max_steering_angle);
   } else {
-    _rss_check = std::make_shared<::carla::rss::RssCheck>(max_steering_angle, _rss_actor_constellation_callback, GetParent());
+    _rss_check =
+        std::make_shared<::carla::rss::RssCheck>(max_steering_angle, _rss_actor_constellation_callback, GetParent());
   }
 
   auto self = boost::static_pointer_cast<RssSensor>(shared_from_this());

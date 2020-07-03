@@ -42,15 +42,10 @@ namespace sensor {
 namespace data {
 
 std::ostream &operator<<(std::ostream &out, const RssResponse &resp) {
-  out << "RssResponse(frame=" << resp.GetFrame()
-      << ", timestamp=" << resp.GetTimestamp()
-      << ", valid=" << resp.GetResponseValid()
-      << ", proper_response=" << resp.GetProperResponse()
-      << ", rss_state_snapshot=" << resp.GetRssStateSnapshot()
-      << ", situation_snapshot=" << resp.GetSituationSnapshot()
-      << ", world_model=" << resp.GetWorldModel()
-      << ", ego_dynamics_on_route=" << resp.GetEgoDynamicsOnRoute()
-      << ')';
+  out << "RssResponse(frame=" << resp.GetFrame() << ", timestamp=" << resp.GetTimestamp()
+      << ", valid=" << resp.GetResponseValid() << ", proper_response=" << resp.GetProperResponse()
+      << ", rss_state_snapshot=" << resp.GetRssStateSnapshot() << ", situation_snapshot=" << resp.GetSituationSnapshot()
+      << ", world_model=" << resp.GetWorldModel() << ", ego_dynamics_on_route=" << resp.GetEgoDynamicsOnRoute() << ')';
   return out;
 }
 
