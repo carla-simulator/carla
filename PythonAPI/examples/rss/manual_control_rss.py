@@ -279,6 +279,7 @@ class World(object):
 # ==============================================================================
 
 class Camera(object):
+
     def __init__(self, parent_actor, display_dimensions):
         self.surface = None
         self._parent = parent_actor
@@ -351,7 +352,8 @@ class VehicleControl(object):
                             [
                                 (0, 0),
                                 (0, self.MOUSE_STEERING_RANGE * 2 - line_width),
-                                (self.MOUSE_STEERING_RANGE * 2 - line_width, self.MOUSE_STEERING_RANGE * 2 - line_width),
+                                (self.MOUSE_STEERING_RANGE * 2 - line_width,
+                                 self.MOUSE_STEERING_RANGE * 2 - line_width),
                                 (self.MOUSE_STEERING_RANGE * 2 - line_width, 0),
                                 (0, 0)
                             ], line_width)
@@ -556,7 +558,7 @@ class VehicleControl(object):
         max_val = self.MOUSE_STEERING_RANGE
         lateral = -max_val if lateral < -max_val else max_val if lateral > max_val else lateral
         longitudinal = -max_val if longitudinal < -max_val else max_val if longitudinal > max_val else longitudinal
-        self._control.steer = lateral/max_val
+        self._control.steer = lateral / max_val
         if longitudinal < 0.0:
             self._control.throttle = -longitudinal / max_val
             self._control.brake = 0.0
@@ -718,6 +720,7 @@ class HUD(object):
 
 
 class FadingText(object):
+
     def __init__(self, font, dim, pos):
         self.font = font
         self.dim = dim
@@ -747,6 +750,7 @@ class FadingText(object):
 
 
 class HelpText(object):
+
     """Helper class to handle text output using pygame"""
 
     def __init__(self, font, width, height):
