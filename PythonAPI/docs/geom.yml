@@ -335,6 +335,16 @@
       doc: >
         Computes an up vector using its rotation.
     # --------------------------------------
+    - def_name: get_matrix
+      return: list(list(float))
+      doc: >
+        Computes the 4-matrix representation of the transformation.
+    # --------------------------------------
+    - def_name: get_inverse_matrix
+      return: list(list(float))
+      doc: >
+        Computes the 4-matrix representation of the inverse transformation.
+    # --------------------------------------
     - def_name: __eq__
       return: bool
       params:
