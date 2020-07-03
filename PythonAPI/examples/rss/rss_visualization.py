@@ -55,26 +55,34 @@ def render_rss_states(display, v_offset, font, individual_rss_states):
                 color = (0, 255, 0)
             else:
                 color = (255, 0, 0)
-        pygame.draw.circle(display, color, (12, v_offset+7), 5)
+        pygame.draw.circle(display, color, (12, v_offset + 7), 5)
         xpos = 184
         if state.actor_calculation_mode == rssmap.RssMode.Structured:
             if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionOtherInFront") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionEgoFront")):
-                pygame.draw.polygon(display, (255, 255, 255), ((xpos+1, v_offset+1+4), (xpos+6, v_offset+1+0), (xpos+11, v_offset+1+4),
-                                                               (xpos+7, v_offset+1+4), (xpos+7, v_offset+1+12), (xpos+5, v_offset+1+12), (xpos+5, v_offset+1+4)))
+                pygame.draw.polygon(
+                    display, (
+                        255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
+                                         (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
                 xpos += 14
 
             if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirectionEgoCorrectLane") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirection")):
-                pygame.draw.polygon(display, (255, 255, 255), ((xpos+2, v_offset+1+8), (xpos+6, v_offset+1+12), (xpos+10, v_offset+1+8),
-                                                               (xpos+7, v_offset+1+8), (xpos+7, v_offset+1+0), (xpos+5, v_offset+1+0), (xpos+5, v_offset+1+8)))
+                pygame.draw.polygon(
+                    display, (
+                        255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
+                                         (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
                 xpos += 14
 
             if not state.rss_state.lateralStateRight.isSafe and not (state.rss_state.lateralStateRight.rssStateInformation.evaluator == "None"):
-                pygame.draw.polygon(display, (255, 255, 255), ((xpos+0, v_offset+1+4), (xpos+8, v_offset+1+4), (xpos+8, v_offset+1+1),
-                                                               (xpos+12, v_offset+1+6), (xpos+8, v_offset+1+10), (xpos+8, v_offset+1+8), (xpos+0, v_offset+1+8)))
+                pygame.draw.polygon(
+                    display, (
+                        255, 255, 255), ((xpos + 0, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 1),
+                                         (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
                 xpos += 14
             if not state.rss_state.lateralStateLeft.isSafe and not (state.rss_state.lateralStateLeft.rssStateInformation.evaluator == "None"):
-                pygame.draw.polygon(display, (255, 255, 255), ((xpos+0, v_offset+1+6), (xpos+4, v_offset+1+1), (xpos+4, v_offset+1+4),
-                                                               (xpos+12, v_offset+1+4), (xpos+12, v_offset+1+8), (xpos+4, v_offset+1+8), (xpos+4, v_offset+1+10)))
+                pygame.draw.polygon(
+                    display, (
+                        255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),
+                                         (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
                 xpos += 14
         elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
             text = ""
@@ -157,7 +165,7 @@ class RssUnstructuredSceneDrawer(object):
 
         spawn_sensor = False
         if mode == RssUnstructuredSceneDrawerMode.window:
-            self._dim = (self._display_dimensions[0]/3, self._display_dimensions[1]/2)
+            self._dim = (self._display_dimensions[0] / 3, self._display_dimensions[1] / 2)
             spawn_sensor = True
         elif mode == RssUnstructuredSceneDrawerMode.fullscreen:
             self._dim = (self._display_dimensions[0], self._display_dimensions[1])
@@ -204,9 +212,9 @@ class RssUnstructuredSceneDrawer(object):
             pygame.draw.rect(surface, (0, 0, 0), rect, 0)
             rect = pygame.Rect((0, 0), (surface.get_width(), 2))
             pygame.draw.rect(surface, (0, 0, 0), rect, 0)
-            rect = pygame.Rect((0, surface.get_height()-2), (surface.get_width(), surface.get_height()))
+            rect = pygame.Rect((0, surface.get_height() - 2), (surface.get_width(), surface.get_height()))
             pygame.draw.rect(surface, (0, 0, 0), rect, 0)
-            rect = pygame.Rect((surface.get_width()-2, 0), (surface.get_width(), surface.get_width()))
+            rect = pygame.Rect((surface.get_width() - 2, 0), (surface.get_width(), surface.get_width()))
             pygame.draw.rect(surface, (0, 0, 0), rect, 0)
             self._surface = surface
 
@@ -262,7 +270,8 @@ class RssUnstructuredSceneDrawer(object):
             for heading_range in allowed_heading_ranges:
                 polygons.append((RssUnstructuredSceneDrawer.transform_points(
                     RssUnstructuredSceneDrawer._get_points_from_pairs(
-                        RssUnstructuredSceneDrawer.draw_heading_range(heading_range, rss_response.ego_dynamics_on_route)),
+                        RssUnstructuredSceneDrawer.draw_heading_range(
+                            heading_range, rss_response.ego_dynamics_on_route)),
                     self._camera.get_transform(), self._calibration), (0, 0, 255)))
 
             RssUnstructuredSceneDrawer.draw_lines(surface, lines)
@@ -687,8 +696,8 @@ class RssDebugDrawer(object):
 
         self._world.debug.draw_arrow(heading_location_start, heading_location_end, 0.1, 0.1, color, 0.02, False)
 
-        sin_center = math.sin(float(ego_dynamics_on_route.route_heading) + math.pi/2.)
-        cos_center = math.cos(float(ego_dynamics_on_route.route_heading) + math.pi/2.)
+        sin_center = math.sin(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
+        cos_center = math.cos(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
         center_location_start = self._player.get_location()
         center_location_start.x -= cos_center * 2.
         center_location_start.y += sin_center * 2.

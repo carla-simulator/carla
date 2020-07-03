@@ -98,7 +98,8 @@ struct ActorConstellationResult {
   ::ad::rss::map::RssMode rss_calculation_mode{::ad::rss::map::RssMode::NotRelevant};
 
   /// The mode for restricting speed limit
-  ::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode restrict_speed_limit_mode{::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode::None};
+  ::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode restrict_speed_limit_mode{
+      ::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode::None};
 
   /// The Rss dynamics to be applied for the ego vehicle
   ::ad::rss::world::RssDynamics ego_vehicle_dynamics;
@@ -137,8 +138,7 @@ public:
   RssCheck(float max_steering_angle);
 
   /// @brief constructor with actor constellation callback
-  RssCheck(float max_steering_angle,
-           ActorConstellationCallbackFunctionType rss_actor_constellation_callback,
+  RssCheck(float max_steering_angle, ActorConstellationCallbackFunctionType rss_actor_constellation_callback,
            carla::SharedPtr<carla::client::Actor> const &carla_ego_actor);
 
   /// @brief destructor
@@ -215,7 +215,7 @@ private:
   std::shared_ptr<spdlog::logger> _logger;
   /// @brief logger for timing log messages
   std::shared_ptr<spdlog::logger> _timing_logger;
-  
+
   /// @brief maximum steering angle
   float _maximum_steering_angle;
 

@@ -27,6 +27,7 @@ else:
 
 
 class RssStateInfo(object):
+
     def __init__(self, rss_state, ego_dynamics_on_route, actor_calculation_mode_map):
         self.rss_state = rss_state
         self.distance = -1
@@ -54,6 +55,7 @@ class RssStateInfo(object):
 
 
 class RssSensor(object):
+
     def __init__(self, parent_actor, world, unstructured_scene_drawer, bounding_box_drawer, routing_targets=None):
         self.sensor = None
         self.unstructured_scene_drawer = unstructured_scene_drawer
@@ -114,7 +116,7 @@ class RssSensor(object):
                 self.sensor.append_routing_target(target)
 
     def _on_actor_constellation_request(self, actor_constellation_data):
-        #print("_on_actor_constellation_request: ", str(actor_constellation_data))
+        # print("_on_actor_constellation_request: ", str(actor_constellation_data))
 
         actor_constellation_result = carla.RssActorConstellationResult()
         actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
@@ -211,21 +213,26 @@ class RssSensor(object):
                                 if other_outside_routeable_road:
                                     # if the other is somewhat outside the standard routeable road (e.g. parked at the side, ...)
                                     # we immediately decide for unstructured
-                                    # print("vehicle-{} unstructured: reason other outside routeable road".format(actor_id))
+                                    # print("vehicle-{} unstructured: reason other outside routeable
+                                    # road".format(actor_id))
                                     actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
                                 else:
                                     # otherwise we have to look in the orientation delta in addition to get some basic idea of the
-                                    # constellation (we don't want to go into unstructured if we both waiting behind a red light...)
+                                    # constellation (we don't want to go into unstructured if we both waiting
+                                    # behind a red light...)
                                     heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
                                                               actor_constellation_data.other_match_object.enuPosition.heading))
                                     if heading_delta > 0.2:  # around 11 degree
-                                        # print("vehicle-{} unstructured: reason heading delta {}".format(actor_id, heading_delta))
+                                        # print("vehicle-{} unstructured: reason heading delta
+                                        # {}".format(actor_id, heading_delta))
                                         actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
-                                        self.change_to_unstructured_position_map[actor_id] = actor_constellation_data.other_match_object.enuPosition
+                                        self.change_to_unstructured_position_map[
+                                            actor_id] = actor_constellation_data.other_match_object.enuPosition
                         else:
                             # ego moves
                             if actor_distance < 10:
-                                # if the ego moves, the other actor doesn't move an the mode was previously set to unstructured, keep it
+                                # if the ego moves, the other actor doesn't move an the mode was
+                                # previously set to unstructured, keep it
                                 try:
                                     if self.change_to_unstructured_position_map[actor_id] == actor_constellation_data.other_match_object.enuPosition:
                                         heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
@@ -247,7 +254,8 @@ class RssSensor(object):
                         # otherwise if standing at the intersection the acceleration within reaction time
                         # will allow to enter the intersection which current RSS implementation will immediately consider
                         # as dangerous
-                        # print("_on_actor_constellation_result({}) setting accelMax to zero".format(actor_constellation_data.other_actor.id))
+                        # print("_on_actor_constellation_result({}) setting accelMax to
+                        # zero".format(actor_constellation_data.other_actor.id))
                         actor_constellation_result.actor_dynamics.alphaLon.accelMax = 0.
             # store values for visualization
             self.actor_calculation_mode_map[actor_id] = (
@@ -268,7 +276,8 @@ class RssSensor(object):
             #                                                                                      actor_constellation_result.ego_vehicle_dynamics.alphaLat.accelMax))
             actor_constellation_result.ego_vehicle_dynamics.alphaLat.accelMax = min(20., abs_avg_route_accel_lat)
 
-        # print("_on_actor_constellation_result({}-{}): ".format(actor_id, actor_type_id), str(actor_constellation_result))
+        # print("_on_actor_constellation_result({}-{}): ".format(actor_id,
+        # actor_type_id), str(actor_constellation_result))
         return actor_constellation_result
 
     def destroy(self):
