@@ -90,7 +90,7 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
     {
       auto *NewTrafficLightController = NewObject<UTrafficLightController>();
       NewTrafficLightController->SetControllerId(ControllerId.c_str());
-      TrafficLightGroup->GetControllers().Add(NewTrafficLightController);
+      TrafficLightGroup->AddController(NewTrafficLightController);
       TrafficControllers.Add(ControllerId.c_str(), NewTrafficLightController);
     }
     TrafficLightController = TrafficControllers[ControllerId.c_str()];
@@ -113,9 +113,6 @@ void ATrafficLightManager::RegisterLightComponent(UTrafficLightComponent * Traff
 
     --LoneTrafficLightsGroupControllerId;
   }
-
-  TrafficLightComponent->TrafficLightGroup = TrafficLightGroup;
-  TrafficLightComponent->TrafficLightController = TrafficLightController;
 
   // Add signal to controller
   TrafficLightController->AddTrafficLight(TrafficLightComponent);
@@ -286,11 +283,11 @@ void ATrafficLightManager::SpawnTrafficLights()
         SpawnParams);
 
     // Hack to prevent mixing ATrafficLightBase and UTrafficLightComponent logic
-    TrafficLight->SetTimeIsFrozen(true);
+    // TrafficLight->SetTimeIsFrozen(true);
 
     TrafficSigns.Add(TrafficLight);
 
-    UTrafficLightComponent *TrafficLightComponent = TrafficLight->CreateTrafficLightComponent();
+    UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
     TrafficLightComponent->SetSignId(SignalId.c_str());
 
     auto ClosestWaypointToSignal =

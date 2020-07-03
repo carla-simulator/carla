@@ -13,6 +13,8 @@
 #include "Containers/Map.h"
 #include "TrafficLightController.generated.h"
 
+class ATrafficLightGroup;
+
 /// Defines a stage of a semaphor with a State and
 /// the time this state lasts
 USTRUCT(BlueprintType)
@@ -96,6 +98,11 @@ public:
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   float GetRedTime() const;
 
+  void SetGroup(ATrafficLightGroup* Group);
+
+  ATrafficLightGroup* GetGroup();
+
+  const ATrafficLightGroup* GetGroup() const;
 
 private:
 
@@ -119,6 +126,9 @@ private:
 
   UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   TArray<UTrafficLightComponent *> TrafficLights;
+
+  UPROPERTY(Category = "Traffic Controller", VisibleAnywhere)
+  ATrafficLightGroup* TrafficLightGroup;
 
   // Sequence within junction (unused for now)
   UPROPERTY(Category = "Traffic Controller", EditAnywhere)

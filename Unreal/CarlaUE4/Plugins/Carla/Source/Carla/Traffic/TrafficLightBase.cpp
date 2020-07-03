@@ -41,6 +41,11 @@ ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+  TrafficLightComponent = CreateDefaultSubobject<UTrafficLightComponent>(TEXT("TrafficLightComponent"));
+  if(TrafficLightComponent && RootComponent)
+  {
+    TrafficLightComponent->SetupAttachment(RootComponent);
+  }
 }
 
 void ATrafficLightBase::OnConstruction(const FTransform &Transform)
@@ -388,16 +393,6 @@ void ATrafficLightBase::SetGroupTrafficLights(TArray<ATrafficLightBase *> InGrou
   GroupTrafficLights = InGroupTrafficLights;
 }
 
-UTrafficLightComponent* ATrafficLightBase::CreateTrafficLightComponent()
-{
-  TrafficLightComponent = NewObject<UTrafficLightComponent>(RootComponent);
-  TrafficLightComponent->RegisterComponent();
-  TrafficLightComponent->AttachToComponent(
-      GetRootComponent(),
-      FAttachmentTransformRules::KeepRelativeTransform);
-  return TrafficLightComponent;
-}
-
 UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent()
 {
   return TrafficLightComponent;
@@ -405,4 +400,9 @@ UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent()
 const UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent() const
 {
   return TrafficLightComponent;
+}
+
+void ATrafficLightBase::LightChangedCompatibility(ETrafficLightState NewLightState)
+{
+  OnTrafficLightStateChanged(NewLightState);
 }
