@@ -20,9 +20,9 @@
 #include <ad/map/route/Planning.hpp>
 #include <ad/rss/map/Logging.hpp>
 #include <ad/rss/map/RssObjectConversion.hpp>
+#include <ad/rss/map/RssObjectData.hpp>
 #include <ad/rss/map/RssSceneCreator.hpp>
 #include <ad/rss/state/RssStateOperation.hpp>
-#include <ad/rss/map/RssObjectData.hpp>
 #include <chrono>
 #include <tuple>
 
@@ -125,8 +125,7 @@ std::shared_ptr<spdlog::logger> getTimingLogger() {
 }
 
 RssCheck::RssCheck(float maximum_steering_angle)
-  : _maximum_steering_angle(maximum_steering_angle)
-  , _road_boundaries_mode(GetDefaultRoadBoundariesMode()) {
+  : _maximum_steering_angle(maximum_steering_angle), _road_boundaries_mode(GetDefaultRoadBoundariesMode()) {
   _logger = getLogger();
   _timing_logger = getTimingLogger();
   _timing_logger->set_level(spdlog::level::off);
@@ -146,7 +145,8 @@ RssCheck::RssCheck(float maximum_steering_angle)
     ::carla::rss::ActorConstellationResult actor_constellation_result;
 
     actor_constellation_result.rss_calculation_mode = ::ad::rss::map::RssMode::NotRelevant;
-    actor_constellation_result.restrict_speed_limit_mode = ::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode::IncreasedSpeedLimit10;
+    actor_constellation_result.restrict_speed_limit_mode =
+        ::ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode::IncreasedSpeedLimit10;
     actor_constellation_result.actor_object_type = ad::rss::world::ObjectType::Invalid;
     actor_constellation_result.ego_vehicle_dynamics = this->_default_actor_constellation_callback_ego_vehicle_dynamics;
     actor_constellation_result.actor_dynamics = this->_default_actor_constellation_callback_other_vehicle_dynamics;
@@ -379,8 +379,8 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 
 #if DEBUG_TIMING
     t_end = std::chrono::high_resolution_clock::now();
-    std::cout << "-> AN " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << " end analyze results"
-              << std::endl;
+    std::cout << "-> AN " << std::chrono::duration<double, std::milli>(t_end - t_start).count()
+              << " end analyze results" << std::endl;
 #endif
 
     _carla_rss_state.ego_dynamics_on_route.time_since_epoch_check_end_ms =
@@ -452,8 +452,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
   actor_transform.rotation.InverseRotateVector(velocity);
 
   ::ad::physics::Speed speed(std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
-  if ( velocity.x < 0. )
-  {
+  if (velocity.x < 0.) {
     speed = -speed;
   }
 
@@ -693,7 +692,7 @@ EgoDynamicsOnRoute RssCheck::CalculateEgoDynamicsOnRoute(
   new_dynamics.crossing_border = false;
 
   // calculate the ego stopping distance, to be able to reduce the effort
-  
+
   ::ad::rss::map::RssObjectData ego_object_data;
   ego_object_data.id = ::ad::rss::world::ObjectId(0u);
   ego_object_data.type = ::ad::rss::world::ObjectType::EgoVehicle;
@@ -833,12 +832,11 @@ void RssCheck::RssObjectChecker::operator()(
     auto other_heading_change = _rss_check.GetHeadingChange(*other_traffic_participant);
     auto other_steering_angle = ::ad::physics::Angle(0.);
 
-
     ::ad::rss::map::RssObjectData ego_object_data;
     ego_object_data.id = _carla_ego_vehicle.GetId();
     ego_object_data.type = ::ad::rss::world::ObjectType::EgoVehicle;
     ego_object_data.matchObject = _carla_rss_state.ego_match_object;
-    ego_object_data.speed =  _carla_rss_state.ego_dynamics_on_route.ego_speed;
+    ego_object_data.speed = _carla_rss_state.ego_dynamics_on_route.ego_speed;
     ego_object_data.yawRate = _carla_rss_state.ego_dynamics_on_route.ego_heading_change;
     ego_object_data.steeringAngle = _carla_rss_state.ego_dynamics_on_route.ego_steering_angle;
     ego_object_data.rssDynamics = actor_constellation_result.ego_vehicle_dynamics;
@@ -851,14 +849,10 @@ void RssCheck::RssObjectChecker::operator()(
     other_object_data.yawRate = other_heading_change;
     other_object_data.steeringAngle = other_steering_angle;
     other_object_data.rssDynamics = actor_constellation_result.actor_dynamics;
-    
-    _scene_creation.appendScenes(
-        ego_object_data,
-        _carla_rss_state.ego_route,
-        other_object_data,
-        actor_constellation_result.restrict_speed_limit_mode,
-        _green_traffic_lights,
-        actor_constellation_result.rss_calculation_mode);
+
+    _scene_creation.appendScenes(ego_object_data, _carla_rss_state.ego_route, other_object_data,
+                                 actor_constellation_result.restrict_speed_limit_mode, _green_traffic_lights,
+                                 actor_constellation_result.rss_calculation_mode);
 
   } catch (...) {
     _rss_check._logger->error("Exception processing other traffic participant {} -> Ignoring it",
@@ -912,19 +906,19 @@ void RssCheck::CreateWorldModel(carla::client::Timestamp const &timestamp, carla
     // use 'smart' dynamics
     auto ego_vehicle_dynamics = carla_rss_state.default_ego_vehicle_dynamics;
     ego_vehicle_dynamics.alphaLat.accelMax = ::ad::physics::Acceleration(0.);
-    
+
     ::ad::rss::map::RssObjectData ego_object_data;
     ego_object_data.id = carla_ego_vehicle.GetId();
     ego_object_data.type = ::ad::rss::world::ObjectType::EgoVehicle;
     ego_object_data.matchObject = _carla_rss_state.ego_match_object;
-    ego_object_data.speed =  _carla_rss_state.ego_dynamics_on_route.ego_speed;
+    ego_object_data.speed = _carla_rss_state.ego_dynamics_on_route.ego_speed;
     ego_object_data.yawRate = _carla_rss_state.ego_dynamics_on_route.ego_heading_change;
     ego_object_data.steeringAngle = _carla_rss_state.ego_dynamics_on_route.ego_steering_angle;
     ego_object_data.rssDynamics = ego_vehicle_dynamics;
     scene_creation.appendRoadBoundaries(ego_object_data, carla_rss_state.ego_route,
-        // since the route always expanded, route isn't required to expand any
-        // more
-        ::ad::rss::map::RssSceneCreation::AppendRoadBoundariesMode::RouteOnly);
+                                        // since the route always expanded, route isn't required to expand any
+                                        // more
+                                        ::ad::rss::map::RssSceneCreation::AppendRoadBoundariesMode::RouteOnly);
   }
 
   carla_rss_state.world_model = scene_creation.getWorldModel();
@@ -1017,7 +1011,6 @@ void RssCheck::AnalyseCheckResults(CarlaRssState &carla_rss_state) const {
 
   _logger->debug("RouteResponse: {}", carla_rss_state.proper_response);
 }
-
 
 }  // namespace rss
 }  // namespace carla
