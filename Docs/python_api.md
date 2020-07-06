@@ -1013,7 +1013,7 @@ Number of lasers shot.
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
 Horizontal angle the Lidar is rotated at the time of the measurement (in radians).  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.
+Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.  
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
@@ -1892,12 +1892,12 @@ Computes a right vector using its rotation.
 - <a name="carla.Transform.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes an up vector using its rotation.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Transform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)
-Computes the 4-matrix representation of the transformation.
-    - **Return:** _list(list(float))_
-- <a name="carla.Transform.get_inverse_matrix"></a>**<font color="#7fb800">get_inverse_matrix</font>**(<font color="#00a6ed">**self**</font>)
-Computes the 4-matrix representation of the inverse transformation.
-    - **Return:** _list(list(float))_
+- <a name="carla.Transform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+Computes the 4-matrix representation of the transformation.  
+    - **Return:** _list(list(float))_  
+- <a name="carla.Transform.get_inverse_matrix"></a>**<font color="#7fb800">get_inverse_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+Computes the 4-matrix representation of the inverse transformation.  
+    - **Return:** _list(list(float))_  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Transform](#carla.Transform)</font>)  
