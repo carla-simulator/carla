@@ -42,7 +42,7 @@ class RssStateInfo(object):
 
         if object_state:
             self.distance = math.sqrt((float(ego_dynamics_on_route.ego_center.x) - float(object_state.centerPoint.x))**2 +
-                                        (float(ego_dynamics_on_route.ego_center.y) - float(object_state.centerPoint.y))**2)
+                                      (float(ego_dynamics_on_route.ego_center.y) - float(object_state.centerPoint.y))**2)
 
     def get_actor(self, world):
         return world.get_actor(self.rss_state.objectId)
@@ -402,7 +402,7 @@ class RssSensor(object):
             if self.state_visualizer:
                 self.state_visualizer.tick(self.individual_rss_states)
             self.debug_visualizer.tick(self.route, not response.proper_response.isSafe,
-                                   self.individual_rss_states, self.ego_dynamics_on_route)
+                                       self.individual_rss_states, self.ego_dynamics_on_route)
 
         else:
             print("ignore outdated response {}".format(delta_time))
