@@ -2,21 +2,17 @@
 #
 # Copyright (c) 2020 Intel Corporation
 #
-import time
-import carla
 import inspect
 import carla
 import sys
 import math
-from rss_visualization import RssDebugDrawer
+from rss_visualization import RssDebugVisualizer
 
 if sys.version_info.major == 3:
-    import libad_physics_python3 as physics
     import libad_rss_python3 as rss
     import libad_map_access_python3 as admap
     import libad_rss_map_integration_python3 as rssmap
 else:
-    import libad_physics_python2 as physics
     import libad_rss_python2 as rss
     import libad_map_access_python2 as admap
     import libad_rss_map_integration_python2 as rssmap
@@ -28,38 +24,39 @@ else:
 
 class RssStateInfo(object):
 
-    def __init__(self, rss_state, ego_dynamics_on_route, actor_calculation_mode_map):
+    def __init__(self, rss_state, ego_dynamics_on_route, world_model):
         self.rss_state = rss_state
         self.distance = -1
-        self.is_safe = None
-        self.other_actor = None
+        self.is_dangerous = rss.isDangerous(rss_state)
+        if rss_state.situationType == rss.SituationType.Unstructured:
+            self.actor_calculation_mode = rssmap.RssMode.Unstructured
+        else:
+            self.actor_calculation_mode = rssmap.RssMode.Structured
 
-        self.actor_calculation_mode = None
-        if rss_state.objectId in actor_calculation_mode_map:
-            self.actor_calculation_mode = actor_calculation_mode_map[rss_state.objectId][0]
+        # calculate distance to other vehicle
+        object_state = None
+        for scene in world_model.scenes:
+            if scene.object.objectId == rss_state.objectId:
+                object_state = scene.object.state
+                break
 
-            if self.actor_calculation_mode == rssmap.RssMode.Structured:
-                self.is_safe = rss_state.longitudinalState.isSafe or (
-                    rss_state.lateralStateLeft.isSafe and rss_state.lateralStateRight.isSafe)
-            elif self.actor_calculation_mode == rssmap.RssMode.Unstructured:
-                self.is_safe = rss_state.unstructuredSceneState.isSafe
+        if object_state:
+            self.distance = math.sqrt((float(ego_dynamics_on_route.ego_center.x) - float(object_state.centerPoint.x))**2 +
+                                        (float(ego_dynamics_on_route.ego_center.y) - float(object_state.centerPoint.y))**2)
 
-            # calculate distance to other vehicle
-            self.other_actor = actor_calculation_mode_map[rss_state.objectId][1]
-            if self.other_actor:
-                self.distance = math.sqrt((float(ego_dynamics_on_route.ego_center.x) - self.other_actor.get_location().x)**2 +
-                                          (float(ego_dynamics_on_route.ego_center.y) + self.other_actor.get_location().y)**2)
+    def get_actor(self, world):
+        return world.get_actor(self.rss_state.objectId)
 
     def __str__(self):
-        return "RssStateInfo: object=" + str(self.rss_state.objectId) + " is_safe=" + str(self.is_safe)
+        return "RssStateInfo: object=" + str(self.rss_state.objectId) + " dangerous=" + str(self.is_dangerous)
 
 
 class RssSensor(object):
 
-    def __init__(self, parent_actor, world, unstructured_scene_drawer, bounding_box_drawer, routing_targets=None):
+    def __init__(self, parent_actor, world, unstructured_scene_visualizer, bounding_box_visualizer, state_visualizer, routing_targets=None):
         self.sensor = None
-        self.unstructured_scene_drawer = unstructured_scene_drawer
-        self.bounding_box_drawer = bounding_box_drawer
+        self.unstructured_scene_visualizer = unstructured_scene_visualizer
+        self.bounding_box_visualizer = bounding_box_visualizer
         self._parent = parent_actor
         self.timestamp = None
         self.response_valid = False
@@ -71,9 +68,9 @@ class RssSensor(object):
         self._allowed_heading_ranges = []
         self.ego_dynamics_on_route = None
         self.current_vehicle_parameters = self.get_default_parameters()
-        self.actor_calculation_mode_map = dict()
         self.route = None
-        self.debug_drawer = RssDebugDrawer(parent_actor, world)
+        self.debug_visualizer = RssDebugVisualizer(parent_actor, world)
+        self.state_visualizer = state_visualizer
         self.change_to_unstructured_position_map = dict()
 
         # get max steering angle
@@ -98,10 +95,9 @@ class RssSensor(object):
 
         self.set_default_parameters()
 
-        self.sensor.register_actor_constellation_callback(
-            lambda actor_constellation_data: self._on_actor_constellation_request(actor_constellation_data))
+        self.sensor.register_actor_constellation_callback(self._on_actor_constellation_request)
 
-        self.sensor.listen(lambda event: self._on_rss_response(event))
+        self.sensor.listen(self._on_rss_response)
 
         # only relevant if actor constellation callback is not registered
         # self.sensor.ego_vehicle_dynamics = self.current_vehicle_parameters
@@ -126,10 +122,10 @@ class RssSensor(object):
         actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
 
         actor_id = -1
-        actor_type_id = "none"
+        # actor_type_id = "none"
         if actor_constellation_data.other_actor != None:
             actor_id = actor_constellation_data.other_actor.id
-            actor_type_id = actor_constellation_data.other_actor.type_id
+            # actor_type_id = actor_constellation_data.other_actor.type_id
 
             ego_on_the_sidewalk = False
             ego_on_routeable_road = False
@@ -257,9 +253,6 @@ class RssSensor(object):
                         # print("_on_actor_constellation_result({}) setting accelMax to
                         # zero".format(actor_constellation_data.other_actor.id))
                         actor_constellation_result.actor_dynamics.alphaLon.accelMax = 0.
-            # store values for visualization
-            self.actor_calculation_mode_map[actor_id] = (
-                actor_constellation_result.rss_calculation_mode, actor_constellation_data.other_actor)
         else:
             # store route for debug drawings
             self.route = actor_constellation_data.ego_route
@@ -284,16 +277,17 @@ class RssSensor(object):
         if self.sensor:
             print("Stopping RSS sensor")
             self.sensor.stop()
-            print("Deleting Scene Drawer")
-            self.unstructured_scene_drawer = None
+            print("Deleting Scene Visualizer")
+            self.unstructured_scene_visualizer = None
             print("Destroying RSS sensor")
             self.sensor.destroy()
             print("Destroyed RSS sensor")
 
     def toggle_debug_visualization_mode(self):
-        self.debug_drawer.toggleMode()
+        self.debug_visualizer.toggleMode()
 
-    def get_assertive_parameters(self):
+    @staticmethod
+    def get_assertive_parameters():
         ego_dynamics = rss.RssDynamics()
         ego_dynamics.alphaLon.accelMax = 4.1
         ego_dynamics.alphaLon.brakeMax = -8.03
@@ -315,7 +309,8 @@ class RssSensor(object):
         print("Use 'assertive' RSS Parameters")
         self.current_vehicle_parameters = self.get_assertive_parameters()
 
-    def get_default_parameters(self):
+    @staticmethod
+    def get_default_parameters():
         ego_dynamics = rss.RssDynamics()
         ego_dynamics.alphaLon.accelMax = 3.5
         ego_dynamics.alphaLon.brakeMax = -8
@@ -337,7 +332,8 @@ class RssSensor(object):
         print("Use 'default' RSS Parameters")
         self.current_vehicle_parameters = self.get_default_parameters()
 
-    def get_pedestrian_parameters(self):
+    @staticmethod
+    def get_pedestrian_parameters():
         pedestrian_dynamics = rss.RssDynamics()
         pedestrian_dynamics.alphaLon.accelMax = 2.0
         pedestrian_dynamics.alphaLon.brakeMax = -4.0
@@ -357,11 +353,11 @@ class RssSensor(object):
 
     def get_steering_ranges(self):
         ranges = []
-        for range in self._allowed_heading_ranges:
+        for heading_range in self._allowed_heading_ranges:
             ranges.append(
                 (
-                    (float(self.ego_dynamics_on_route.ego_heading) - float(range.begin)) / self._max_steer_angle,
-                    (float(self.ego_dynamics_on_route.ego_heading) - float(range.end)) / self._max_steer_angle)
+                    (float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.begin)) / self._max_steer_angle,
+                    (float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.end)) / self._max_steer_angle)
             )
         return ranges
 
@@ -380,14 +376,6 @@ class RssSensor(object):
             self.situation_snapshot = response.situation_snapshot
             self.world_model = response.world_model
 
-            new_states = []
-            for rss_state in response.rss_state_snapshot.individualResponses:
-                new_states.append(RssStateInfo(rss_state, response.ego_dynamics_on_route,
-                                               self.actor_calculation_mode_map))
-            if len(new_states) > 0:
-                new_states.sort(key=lambda rss_states: rss_states.distance)
-            self.individual_rss_states = new_states
-
             # calculate the allowed heading ranges:
             if response.proper_response.headingRanges:
                 heading = float(response.ego_dynamics_on_route.ego_heading)
@@ -399,13 +387,22 @@ class RssSensor(object):
                 self._allowed_heading_ranges = heading_ranges
             else:
                 self._allowed_heading_ranges = []
-            if self.unstructured_scene_drawer:
-                self.unstructured_scene_drawer.tick(response.frame, response, self._allowed_heading_ranges)
-            if self.bounding_box_drawer:
-                self.bounding_box_drawer.tick(response.frame, self.individual_rss_states)
-            self.debug_drawer.tick(self.route, not response.proper_response.isSafe,
+
+            if self.unstructured_scene_visualizer:
+                self.unstructured_scene_visualizer.tick(response.frame, response, self._allowed_heading_ranges)
+
+            new_states = []
+            for rss_state in response.rss_state_snapshot.individualResponses:
+                new_states.append(RssStateInfo(rss_state, response.ego_dynamics_on_route, response.world_model))
+            if len(new_states) > 0:
+                new_states.sort(key=lambda rss_states: rss_states.distance)
+            self.individual_rss_states = new_states
+            if self.bounding_box_visualizer:
+                self.bounding_box_visualizer.tick(response.frame, self.individual_rss_states)
+            if self.state_visualizer:
+                self.state_visualizer.tick(self.individual_rss_states)
+            self.debug_visualizer.tick(self.route, not response.proper_response.isSafe,
                                    self.individual_rss_states, self.ego_dynamics_on_route)
 
-            self.actor_calculation_mode_map = dict()
         else:
             print("ignore outdated response {}".format(delta_time))
