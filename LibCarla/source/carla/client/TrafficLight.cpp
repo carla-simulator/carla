@@ -70,5 +70,9 @@ namespace client {
     return result;
   }
 
+  void TrafficLight::ResetGroup() {
+    GetEpisode().Lock()->ResetTrafficLightGroup(*this);
+  }
+
 } // namespace client
 } // namespace carla

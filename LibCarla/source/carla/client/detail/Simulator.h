@@ -460,6 +460,10 @@ namespace detail {
       _client.FreezeTrafficLight(trafficLight.GetId(), freeze);
     }
 
+    void ResetTrafficLightGroup(TrafficLight &trafficLight) {
+      _client.ResetTrafficLightGroup(trafficLight.GetId());
+    }
+
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
       return _client.GetGroupTrafficLights(trafficLight.GetId());
     }
