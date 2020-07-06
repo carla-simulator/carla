@@ -22,6 +22,7 @@ Use ARROWS or WASD keys for control.
     Space        : hand-brake
     P            : toggle autopilot
 
+    TAB          : change view
     Backspace    : change vehicle
 
     R            : toggle recording images to disk
@@ -102,7 +103,6 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_t
-    from pygame.locals import K_u
     from pygame.locals import K_w
     from pygame.locals import K_l
     from pygame.locals import K_i
@@ -138,7 +138,7 @@ class World(object):
             print('  Make sure it exists, has the same name of your town, and is correct.')
             sys.exit(1)
         self.external_actor = args.externalActor
-        
+
         self.hud = HUD(args.width, args.height, carla_world)
         self.recording_frame_num = 0
         self.recording = False
@@ -668,7 +668,8 @@ class HUD(object):
                         if len(item) == 6 and item[2] < 0.0:
                             for steering_range in item[5]:
                                 starting_value = min(steering_range[0], steering_range[1])
-                                length = (max(steering_range[0], steering_range[1]) - min(steering_range[0], steering_range[1])) / 2
+                                length = (max(steering_range[0], steering_range[1]) -
+                                          min(steering_range[0], steering_range[1])) / 2
                                 rect = pygame.Rect(
                                     (bar_h_offset + (starting_value + 1) * (bar_width / 2), v_offset + 2), (length * bar_width, 14))
                                 pygame.draw.rect(display, (0, 255, 0), rect)

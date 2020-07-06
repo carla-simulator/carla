@@ -20,6 +20,7 @@ else:
     import libad_map_access_python2 as admap
     import libad_rss_map_integration_python2 as rssmap
 
+
 class RssStateVisualizer(object):
 
     def __init__(self, display_dimensions, font, world):
@@ -77,27 +78,27 @@ class RssStateVisualizer(object):
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
-                                            (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
+                                             (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
                     xpos += 14
 
                 if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirectionEgoCorrectLane") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirection")):
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
-                                            (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
+                                             (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
                     xpos += 14
 
                 if not state.rss_state.lateralStateRight.isSafe and not (state.rss_state.lateralStateRight.rssStateInformation.evaluator == "None"):
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 0, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 1),
-                                            (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
+                                             (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
                     xpos += 14
                 if not state.rss_state.lateralStateLeft.isSafe and not (state.rss_state.lateralStateLeft.rssStateInformation.evaluator == "None"):
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),
-                                            (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
+                                             (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
                     xpos += 14
             elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
                 text = ""
@@ -116,6 +117,7 @@ class RssStateVisualizer(object):
     def render(self, display, v_offset):
         if self._surface:
             display.blit(self._surface, (0, v_offset))
+
 
 def get_matrix(transform):
     """
@@ -418,6 +420,7 @@ class RssUnstructuredSceneVisualizer(object):
 # ==============================================================================
 # -- RssBoundingBoxVisualizer ------------------------------------------------------
 # ==============================================================================
+
 
 class RssBoundingBoxVisualizer(object):
 
