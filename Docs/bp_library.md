@@ -138,7 +138,11 @@ Check out the [introduction to blueprints](core_actors.md).
         - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">sensor.lidar.ray_cast</font>**  
     - **Attributes:**
+        - `atmosphere_attenuation_rate` (_Float_)<sub>_ – Modifiable_</sub>
         - `channels` (_Int_)<sub>_ – Modifiable_</sub>
+        - `dropoff_general_rate` (_Float_)<sub>_ – Modifiable_</sub>
+        - `dropoff_intensity_limit` (_Float_)<sub>_ – Modifiable_</sub>
+        - `dropoff_zero_intensity` (_Float_)<sub>_ – Modifiable_</sub>
         - `lower_fov` (_Float_)<sub>_ – Modifiable_</sub>
         - `points_per_second` (_Int_)<sub>_ – Modifiable_</sub>
         - `range` (_Float_)<sub>_ – Modifiable_</sub>
