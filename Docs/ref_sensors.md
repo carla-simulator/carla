@@ -472,13 +472,15 @@ This sensor simulates a rotating Lidar implemented using ray-casting.
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
-A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene. The information of the Lidar measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by:
+A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.
+
+The information of the Lidar measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by:
 <br>
 ![LidarIntensityComputation](img/lidar_intensity.png)
 <br>
 where a is the attenuation coefficient and d is the distance to the sensor.
 
-In order to increase the realism, we add the possibiliy of dropping cloud points. This is done in two different ways. In a general way, we can randomly drop points with a probability given by <b>dropoff_general_rate</b>. In this case the drop off of points is done before tracing the ray cast so adjust this parameter can actually increase our performance. If that parameter is set to zero it will be ignored. The second way to regulate the drop off of points is in a rate proportional to the intensity. This drop off rate will be proportional to the intensity from zero drop off at <b>dropoff_intensity_limit</b> to <b>dropoff_zero_intensity</b> at zero intensity.
+In order to increase the realism, we add the possibility of dropping cloud points. This is done in two different ways. In a general way, we can randomly drop points with a probability given by <b>dropoff_general_rate</b>. In this case, the drop off of points is done before tracing the ray cast so adjust this parameter can increase our performance. If that parameter is set to zero it will be ignored. The second way to regulate the drop off of points is in a rate proportional to the intensity. This drop off rate will be proportional to the intensity from zero at <b>dropoff_intensity_limit</b> to <b>dropoff_zero_intensity</b> at zero intensity.
 
 This output contains a cloud of simulation points and thus, can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
