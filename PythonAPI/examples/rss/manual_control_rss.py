@@ -69,23 +69,19 @@ import carla
 from carla import ColorConverter as cc
 
 import argparse
-import collections
-import datetime
-import inspect
 import logging
 import math
 import random
-import re
 import weakref
 from rss_sensor import RssSensor
-from rss_visualization import RssUnstructuredSceneDrawer, RssBoundingBoxDrawer, render_rss_states
+from rss_visualization import RssUnstructuredSceneVisualizer, RssBoundingBoxVisualizer, RssStateVisualizer
 
 try:
     import pygame
     from pygame.locals import KMOD_CTRL
     from pygame.locals import KMOD_SHIFT
-    from pygame.locals import K_BACKQUOTE
     from pygame.locals import K_BACKSPACE
+    from pygame.locals import K_TAB
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_F1
@@ -97,7 +93,6 @@ try:
     from pygame.locals import K_UP
     from pygame.locals import K_a
     from pygame.locals import K_b
-    from pygame.locals import K_c
     from pygame.locals import K_d
     from pygame.locals import K_g
     from pygame.locals import K_h
@@ -113,7 +108,6 @@ try:
     from pygame.locals import K_i
     from pygame.locals import K_z
     from pygame.locals import K_x
-    from pygame.locals import MOUSEMOTION
     from pygame.locals import MOUSEBUTTONDOWN
     from pygame.locals import MOUSEBUTTONUP
 except ImportError:
@@ -132,7 +126,7 @@ except ImportError:
 
 class World(object):
 
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, args):
         self.world = carla_world
         self.actor_role_name = args.rolename
         self.dim = (args.width, args.height)
@@ -144,15 +138,16 @@ class World(object):
             print('  Make sure it exists, has the same name of your town, and is correct.')
             sys.exit(1)
         self.external_actor = args.externalActor
-        self.hud = hud
+        
+        self.hud = HUD(args.width, args.height, carla_world)
         self.recording_frame_num = 0
         self.recording = False
         self.recording_dir_num = 0
         self.player = None
         self.actors = []
         self.rss_sensor = None
-        self.rss_unstructured_scene_drawer = None
-        self.rss_bounding_box_drawer = None
+        self.rss_unstructured_scene_visualizer = None
+        self.rss_bounding_box_visualizer = None
         self._actor_filter = args.filter
         if not self._actor_filter.startswith("vehicle."):
             print('Error: RSS only supports vehicles as ego.')
@@ -228,13 +223,13 @@ class World(object):
 
         # Set up the sensors.
         self.camera = Camera(self.player, self.dim)
-        self.rss_unstructured_scene_drawer = RssUnstructuredSceneDrawer(self.player, self.world, self.dim)
-        self.rss_bounding_box_drawer = RssBoundingBoxDrawer(self.dim, self.world, self.camera.sensor)
+        self.rss_unstructured_scene_visualizer = RssUnstructuredSceneVisualizer(self.player, self.world, self.dim)
+        self.rss_bounding_box_visualizer = RssBoundingBoxVisualizer(self.dim, self.world, self.camera.sensor)
         self.rss_sensor = RssSensor(self.player, self.world,
-                                    self.rss_unstructured_scene_drawer, self.rss_bounding_box_drawer)
+                                    self.rss_unstructured_scene_visualizer, self.rss_bounding_box_visualizer, self.hud.rss_state_visualizer)
 
     def tick(self, clock):
-        self.hud.tick(self, clock)
+        self.hud.tick(self.player, clock)
 
     def toggle_recording(self):
         if not self.recording:
@@ -251,9 +246,9 @@ class World(object):
 
     def render(self, display):
         self.camera.render(display)
-        self.rss_bounding_box_drawer.render(display, self.camera.current_frame)
-        self.rss_unstructured_scene_drawer.render(display)
-        self.hud.render(display, self.rss_sensor)
+        self.rss_bounding_box_visualizer.render(display, self.camera.current_frame)
+        self.rss_unstructured_scene_visualizer.render(display)
+        self.hud.render(display)
 
         if self.recording:
             pygame.image.save(display, "_out%04d/%08d.bmp" % (self.recording_dir_num, self.recording_frame_num))
@@ -268,8 +263,8 @@ class World(object):
             self.camera.destroy()
         if self.rss_sensor:
             self.rss_sensor.destroy()
-        if self.rss_unstructured_scene_drawer:
-            self.rss_unstructured_scene_drawer.destroy()
+        if self.rss_unstructured_scene_visualizer:
+            self.rss_unstructured_scene_visualizer.destroy()
         if self.player:
             self.player.destroy()
 
@@ -405,8 +400,8 @@ class VehicleControl(object):
                     world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
-                elif event.key == K_u:
-                    world.rss_unstructured_scene_drawer.toggle_camera()
+                elif event.key == K_TAB:
+                    world.rss_unstructured_scene_visualizer.toggle_camera()
                 elif event.key == K_n:
                     world.toggle_pause()
                 elif event.key == K_r:
@@ -466,11 +461,11 @@ class VehicleControl(object):
                         current_lights ^= carla.VehicleLightState.LeftBlinker
                     elif event.key == K_x:
                         current_lights ^= carla.VehicleLightState.RightBlinker
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONDOWN:
                 # store current mouse position for mouse-steering
                 if event.button == 1:
                     self._mouse_steering_center = event.pos
-            elif event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     self._mouse_steering_center = None
         if not self._autopilot_enabled:
@@ -578,8 +573,10 @@ class VehicleControl(object):
 
 class HUD(object):
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, world):
         self.dim = (width, height)
+        self._world = world
+        self.map_name = world.get_map().name
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
         font_name = 'courier' if os.name == 'nt' else 'mono'
         fonts = [x for x in pygame.font.get_fonts() if font_name in x]
@@ -598,6 +595,7 @@ class HUD(object):
         self._show_info = True
         self._info_text = []
         self._server_clock = pygame.time.Clock()
+        self.rss_state_visualizer = RssStateVisualizer(self.dim, self._font_mono, self._world)
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
@@ -605,18 +603,18 @@ class HUD(object):
         self.frame = timestamp.frame
         self.simulation_time = timestamp.elapsed_seconds
 
-    def tick(self, world, clock):
-        self._notifications.tick(world, clock)
+    def tick(self, player, clock):
+        self._notifications.tick(clock)
         if not self._show_info:
             return
-        t = world.player.get_transform()
-        v = world.player.get_velocity()
-        c = world.player.get_control()
+        t = player.get_transform()
+        v = player.get_velocity()
+        c = player.get_control()
 
         self._info_text = [
             'Server:  % 16.0f FPS' % self.server_fps,
             'Client:  % 16.0f FPS' % clock.get_fps(),
-            'Map:     % 20s' % world.map.name,
+            'Map:     % 20s' % self.map_name,
             '',
             'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
@@ -643,7 +641,7 @@ class HUD(object):
     def error(self, text):
         self._notifications.set_text('Error: %s' % text, (255, 0, 0))
 
-    def render(self, display, rss_sensor):
+    def render(self, display):
         if self._show_info:
             info_surface = pygame.Surface((220, self.dim[1]))
             info_surface.set_alpha(100)
@@ -668,11 +666,9 @@ class HUD(object):
                     else:
                         # draw allowed steering ranges
                         if len(item) == 6 and item[2] < 0.0:
-                            for range in item[5]:
-                                min_value = min(range[0], range[1])
-                                max_value = max(range[0], range[1])
-                                starting_value = min_value
-                                length = (max(range[0], range[1]) - min(range[0], range[1])) / 2
+                            for steering_range in item[5]:
+                                starting_value = min(steering_range[0], steering_range[1])
+                                length = (max(steering_range[0], steering_range[1]) - min(steering_range[0], steering_range[1])) / 2
                                 rect = pygame.Rect(
                                     (bar_h_offset + (starting_value + 1) * (bar_width / 2), v_offset + 2), (length * bar_width, 14))
                                 pygame.draw.rect(display, (0, 255, 0), rect)
@@ -709,7 +705,7 @@ class HUD(object):
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
 
-            render_rss_states(display, v_offset, self._font_mono, rss_sensor.individual_rss_states)
+            self.rss_state_visualizer.render(display, v_offset)
         self._notifications.render(display)
         self.help.render(display)
 
@@ -735,7 +731,7 @@ class FadingText(object):
         self.surface.fill((0, 0, 0, 0))
         self.surface.blit(text_texture, (10, 11))
 
-    def tick(self, _, clock):
+    def tick(self, clock):
         delta_seconds = 1e-3 * clock.get_time()
         self.seconds_left = max(0.0, self.seconds_left - delta_seconds)
         self.surface.set_alpha(500.0 * self.seconds_left)
@@ -793,8 +789,7 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-        hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        world = World(client.get_world(), args)
         controller = VehicleControl(world, args.autopilot)
 
         clock = pygame.time.Clock()

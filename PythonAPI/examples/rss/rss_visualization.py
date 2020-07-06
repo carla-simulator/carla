@@ -5,6 +5,7 @@
 
 import sys
 from enum import Enum
+import math
 import numpy as np
 import pygame
 import weakref
@@ -12,91 +13,109 @@ import carla
 
 if sys.version_info.major == 3:
     import libad_rss_python3 as rss
+    import libad_map_access_python3 as admap
     import libad_rss_map_integration_python3 as rssmap
 else:
     import libad_rss_python2 as rss
+    import libad_map_access_python2 as admap
     import libad_rss_map_integration_python2 as rssmap
 
+class RssStateVisualizer(object):
 
-def render_rss_states(display, v_offset, font, individual_rss_states):
-    if individual_rss_states:
-        surface = font.render('RSS States:', True, (255, 255, 255))
-        display.blit(surface, (8, v_offset))
-        v_offset += 26
-    for state in individual_rss_states:
-        object_name = "Obj"
-        if state.rss_state.objectId == 18446744073709551614:
-            object_name = "Border Left"
-        elif state.rss_state.objectId == 18446744073709551615:
-            object_name = "Border Right"
-        else:
-            if state.other_actor:
-                li = list(state.other_actor.type_id.split("."))
-                if li:
-                    li.pop(0)
-                li = [element.capitalize() for element in li]
+    def __init__(self, display_dimensions, font, world):
+        self._surface = None
+        self._display_dimensions = display_dimensions
+        self._font = font
+        self._world = world
 
-                object_name = " ".join(li).strip()[:18]
+    def tick(self, individual_rss_states):
+        state_surface = pygame.Surface((220, self._display_dimensions[1]))
+        state_surface.set_colorkey(pygame.Color('black'))
+        v_offset = 0
 
-        mode = "?"
-        if state.actor_calculation_mode == rssmap.RssMode.Structured:
-            mode = "S"
-        elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
-            mode = "U"
-        elif state.actor_calculation_mode == rssmap.RssMode.NotRelevant:
-            mode = "-"
-        item = '%4s % 2dm %8s' % (mode, state.distance, object_name)
-
-        surface = font.render(item, True, (255, 255, 255))
-        display.blit(surface, (5, v_offset))
-        color = (128, 128, 128)
-        if state.actor_calculation_mode != rssmap.RssMode.NotRelevant:
-            if state.is_safe:
-                color = (0, 255, 0)
+        if individual_rss_states:
+            surface = self._font.render('RSS States:', True, (255, 255, 255))
+            state_surface.blit(surface, (8, v_offset))
+            v_offset += 26
+        for state in individual_rss_states:
+            object_name = "Obj"
+            if state.rss_state.objectId == 18446744073709551614:
+                object_name = "Border Left"
+            elif state.rss_state.objectId == 18446744073709551615:
+                object_name = "Border Right"
             else:
-                color = (255, 0, 0)
-        pygame.draw.circle(display, color, (12, v_offset + 7), 5)
-        xpos = 184
-        if state.actor_calculation_mode == rssmap.RssMode.Structured:
-            if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionOtherInFront") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionEgoFront")):
-                pygame.draw.polygon(
-                    display, (
-                        255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
-                                         (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
-                xpos += 14
+                other_actor = state.get_actor(self._world)
+                if other_actor:
+                    li = list(other_actor.type_id.split("."))
+                    if li:
+                        li.pop(0)
+                    li = [element.capitalize() for element in li]
 
-            if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirectionEgoCorrectLane") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirection")):
-                pygame.draw.polygon(
-                    display, (
-                        255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
-                                         (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
-                xpos += 14
+                    object_name = " ".join(li).strip()[:15]
 
-            if not state.rss_state.lateralStateRight.isSafe and not (state.rss_state.lateralStateRight.rssStateInformation.evaluator == "None"):
-                pygame.draw.polygon(
-                    display, (
-                        255, 255, 255), ((xpos + 0, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 1),
-                                         (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
-                xpos += 14
-            if not state.rss_state.lateralStateLeft.isSafe and not (state.rss_state.lateralStateLeft.rssStateInformation.evaluator == "None"):
-                pygame.draw.polygon(
-                    display, (
-                        255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),
-                                         (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
-                xpos += 14
-        elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
-            text = ""
-            if state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.DriveAway:
-                text = "D"
-            elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.ContinueForward:
-                text = "C"
-            elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.Brake:
-                text = "B"
-            surface = font.render(text, True, (255, 255, 255))
-            display.blit(surface, (xpos, v_offset))
+            mode = "?"
+            if state.actor_calculation_mode == rssmap.RssMode.Structured:
+                mode = "S"
+            elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
+                mode = "U"
+            elif state.actor_calculation_mode == rssmap.RssMode.NotRelevant:
+                mode = "-"
+            item = '%4s % 2dm %8s' % (mode, state.distance, object_name)
 
-        v_offset += 14
+            surface = self._font.render(item, True, (255, 255, 255))
+            state_surface.blit(surface, (5, v_offset))
+            color = (128, 128, 128)
+            if state.actor_calculation_mode != rssmap.RssMode.NotRelevant:
+                if state.is_dangerous:
+                    color = (255, 0, 0)
+                else:
+                    color = (0, 255, 0)
+            pygame.draw.circle(state_surface, color, (12, v_offset + 7), 5)
+            xpos = 184
+            if state.actor_calculation_mode == rssmap.RssMode.Structured:
+                if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionOtherInFront") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionEgoFront")):
+                    pygame.draw.polygon(
+                        state_surface, (
+                            255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
+                                            (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
+                    xpos += 14
 
+                if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirectionEgoCorrectLane") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirection")):
+                    pygame.draw.polygon(
+                        state_surface, (
+                            255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
+                                            (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
+                    xpos += 14
+
+                if not state.rss_state.lateralStateRight.isSafe and not (state.rss_state.lateralStateRight.rssStateInformation.evaluator == "None"):
+                    pygame.draw.polygon(
+                        state_surface, (
+                            255, 255, 255), ((xpos + 0, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 1),
+                                            (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
+                    xpos += 14
+                if not state.rss_state.lateralStateLeft.isSafe and not (state.rss_state.lateralStateLeft.rssStateInformation.evaluator == "None"):
+                    pygame.draw.polygon(
+                        state_surface, (
+                            255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),
+                                            (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
+                    xpos += 14
+            elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
+                text = ""
+                if state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.DriveAway:
+                    text = "  D"
+                elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.ContinueForward:
+                    text = "  C"
+                elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.Brake:
+                    text = "  B"
+                surface = self._font.render(text, True, (255, 255, 255))
+                state_surface.blit(surface, (xpos, v_offset))
+
+            v_offset += 14
+            self._surface = state_surface
+
+    def render(self, display, v_offset):
+        if self._surface:
+            display.blit(self._surface, (0, v_offset))
 
 def get_matrix(transform):
     """
@@ -127,17 +146,17 @@ def get_matrix(transform):
     return matrix
 
 # ==============================================================================
-# -- RssUnstructuredSceneDrawer ------------------------------------------------
+# -- RssUnstructuredSceneVisualizer ------------------------------------------------
 # ==============================================================================
 
 
-class RssUnstructuredSceneDrawerMode(Enum):
+class RssUnstructuredSceneVisualizerMode(Enum):
     disabled = 1
     window = 2
     fullscreen = 3
 
 
-class RssUnstructuredSceneDrawer(object):
+class RssUnstructuredSceneVisualizer(object):
 
     def __init__(self, parent_actor, world, display_dimensions):
         self._last_rendered_frame = -1
@@ -148,9 +167,9 @@ class RssUnstructuredSceneDrawer(object):
         self._parent_actor = parent_actor
         self._display_dimensions = display_dimensions
         self._camera = None
-        self._mode = RssUnstructuredSceneDrawerMode.disabled
+        self._mode = RssUnstructuredSceneVisualizerMode.disabled
 
-        self.restart(RssUnstructuredSceneDrawerMode.window)
+        self.restart(RssUnstructuredSceneVisualizerMode.window)
 
     def destroy(self):
         if self._camera:
@@ -164,10 +183,10 @@ class RssUnstructuredSceneDrawer(object):
         self._mode = mode
 
         spawn_sensor = False
-        if mode == RssUnstructuredSceneDrawerMode.window:
+        if mode == RssUnstructuredSceneVisualizerMode.window:
             self._dim = (self._display_dimensions[0] / 3, self._display_dimensions[1] / 2)
             spawn_sensor = True
-        elif mode == RssUnstructuredSceneDrawerMode.fullscreen:
+        elif mode == RssUnstructuredSceneVisualizerMode.fullscreen:
             self._dim = (self._display_dimensions[0], self._display_dimensions[1])
             spawn_sensor = True
         else:
@@ -195,7 +214,7 @@ class RssUnstructuredSceneDrawer(object):
             self._camera.listen(lambda image: self._parse_image(weak_self, image))
 
     def update_surface(self, cam_frame, rss_frame):
-        if self._mode == RssUnstructuredSceneDrawerMode.disabled:
+        if self._mode == RssUnstructuredSceneVisualizerMode.disabled:
             return
         render = False
 
@@ -219,13 +238,13 @@ class RssUnstructuredSceneDrawer(object):
             self._surface = surface
 
     def toggle_camera(self):
-        print("Toggle RssUnstructuredSceneDrawer")
-        if self._mode == RssUnstructuredSceneDrawerMode.window:
-            self.restart(RssUnstructuredSceneDrawerMode.fullscreen)
-        elif self._mode == RssUnstructuredSceneDrawerMode.fullscreen:
-            self.restart(RssUnstructuredSceneDrawerMode.disabled)
-        elif self._mode == RssUnstructuredSceneDrawerMode.disabled:
-            self.restart(RssUnstructuredSceneDrawerMode.window)
+        print("Toggle RssUnstructuredSceneVisualizer")
+        if self._mode == RssUnstructuredSceneVisualizerMode.window:
+            self.restart(RssUnstructuredSceneVisualizerMode.fullscreen)
+        elif self._mode == RssUnstructuredSceneVisualizerMode.fullscreen:
+            self.restart(RssUnstructuredSceneVisualizerMode.disabled)
+        elif self._mode == RssUnstructuredSceneVisualizerMode.disabled:
+            self.restart(RssUnstructuredSceneVisualizerMode.window)
 
     @staticmethod
     def _parse_image(weak_self, image):
@@ -263,19 +282,19 @@ class RssUnstructuredSceneDrawer(object):
         surface.set_colorkey(pygame.Color('black'))
         surface.set_alpha(180)
         try:
-            lines = RssUnstructuredSceneDrawer.get_trajectory_sets(
+            lines = RssUnstructuredSceneVisualizer.get_trajectory_sets(
                 rss_response.rss_state_snapshot, self._camera.get_transform(), self._calibration)
 
             polygons = []
             for heading_range in allowed_heading_ranges:
-                polygons.append((RssUnstructuredSceneDrawer.transform_points(
-                    RssUnstructuredSceneDrawer._get_points_from_pairs(
-                        RssUnstructuredSceneDrawer.draw_heading_range(
+                polygons.append((RssUnstructuredSceneVisualizer.transform_points(
+                    RssUnstructuredSceneVisualizer._get_points_from_pairs(
+                        RssUnstructuredSceneVisualizer.draw_heading_range(
                             heading_range, rss_response.ego_dynamics_on_route)),
                     self._camera.get_transform(), self._calibration), (0, 0, 255)))
 
-            RssUnstructuredSceneDrawer.draw_lines(surface, lines)
-            RssUnstructuredSceneDrawer.draw_polygons(surface, polygons)
+            RssUnstructuredSceneVisualizer.draw_lines(surface, lines)
+            RssUnstructuredSceneVisualizer.draw_polygons(surface, polygons)
 
         except RuntimeError as e:
             print("ERROR {}".format(e))
@@ -315,18 +334,18 @@ class RssUnstructuredSceneDrawer(object):
         trajectory_sets = []
 
         # ego
-        trajectory_sets.append((RssUnstructuredSceneDrawer.transform_points(RssUnstructuredSceneDrawer._get_trajectory_set_points(
+        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
             rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
-        trajectory_sets.append((RssUnstructuredSceneDrawer.transform_points(RssUnstructuredSceneDrawer._get_trajectory_set_points(
+        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
             rss_state_snapshot.unstructuredSceneEgoInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
 
         # others
         for state in rss_state_snapshot.individualResponses:
             if state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet:
-                trajectory_sets.append((RssUnstructuredSceneDrawer.transform_points(RssUnstructuredSceneDrawer._get_trajectory_set_points(
+                trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
                     state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
             if state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet:
-                trajectory_sets.append((RssUnstructuredSceneDrawer.transform_points(RssUnstructuredSceneDrawer._get_trajectory_set_points(
+                trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
                     state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
 
         return trajectory_sets
@@ -355,7 +374,7 @@ class RssUnstructuredSceneDrawer(object):
         Returns trajectory set projected to camera view
         """
         world_cords = np.transpose(world_cords)
-        cords_x_y_z = RssUnstructuredSceneDrawer._world_to_sensor(world_cords, camera_transform)[:3, :]
+        cords_x_y_z = RssUnstructuredSceneVisualizer._world_to_sensor(world_cords, camera_transform)[:3, :]
         cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         ts = np.transpose(np.dot(calibration, cords_y_minus_z_x))
         camera_ts = np.concatenate([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
@@ -397,11 +416,10 @@ class RssUnstructuredSceneDrawer(object):
         return sensor_cords
 
 # ==============================================================================
-# -- RssBoundingBoxDrawer ------------------------------------------------------
+# -- RssBoundingBoxVisualizer ------------------------------------------------------
 # ==============================================================================
 
-
-class RssBoundingBoxDrawer(object):
+class RssBoundingBoxVisualizer(object):
 
     def __init__(self, display_dimensions, world, camera):
         self._last_camera_frame = 0
@@ -432,34 +450,37 @@ class RssBoundingBoxDrawer(object):
         surface.set_colorkey(pygame.Color('black'))
         surface.set_alpha(80)
         try:
-            bounding_boxes = RssBoundingBoxDrawer.get_bounding_boxes(
-                individual_rss_states, self._camera.get_transform(), self._calibration)
-            RssBoundingBoxDrawer.draw_bounding_boxes(surface, bounding_boxes)
+            bounding_boxes = RssBoundingBoxVisualizer.get_bounding_boxes(
+                individual_rss_states, self._camera.get_transform(), self._calibration, self._world)
+            RssBoundingBoxVisualizer.draw_bounding_boxes(surface, bounding_boxes)
+            self._surface_for_frame.append((frame, surface, len(bounding_boxes)))
         except RuntimeError:
             pass
-        self._surface_for_frame.append((frame, surface))
 
     def render(self, display, current_camera_frame):
         rendered = False
-        for frame, surface in self._surface_for_frame:
+        boxes_to_render = 0
+        for frame, surface, box_count in self._surface_for_frame:
             if frame == current_camera_frame:
                 display.blit(surface, (0, 0))
+                boxes_to_render = box_count
                 rendered = True
                 break
-        if not rendered:
-            print("Surface not rendered for frame {}".format(current_camera_frame))
+        if not rendered and boxes_to_render > 0:
+            print("Warning: {} bounding boxes were not drawn.".format(boxes_to_render))
         self._last_camera_frame = current_camera_frame
 
     @staticmethod
-    def get_bounding_boxes(individual_rss_states, camera_transform, calibration):
+    def get_bounding_boxes(individual_rss_states, camera_transform, calibration, world):
         """
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
         bounding_boxes = []
         for state in individual_rss_states:
-            if state.actor_calculation_mode != rssmap.RssMode.NotRelevant and not state.is_safe and state.other_actor:
-                bounding_boxes.append(RssBoundingBoxDrawer.get_bounding_box(
-                    state.other_actor, camera_transform, calibration))
+            if state.actor_calculation_mode != rssmap.RssMode.NotRelevant and state.is_dangerous:
+                other_actor = state.get_actor(world)
+                bounding_boxes.append(RssBoundingBoxVisualizer.get_bounding_box(
+                    other_actor, camera_transform, calibration))
         # filter objects behind camera
         bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
         return bounding_boxes
@@ -494,8 +515,8 @@ class RssBoundingBoxDrawer(object):
         Returns 3D bounding box for a vehicle based on camera view.
         """
 
-        bb_cords = RssBoundingBoxDrawer._create_bb_points(vehicle)
-        cords_x_y_z = RssBoundingBoxDrawer._vehicle_to_sensor(bb_cords, vehicle, camera_transform)[:3, :]
+        bb_cords = RssBoundingBoxVisualizer._create_bb_points(vehicle)
+        cords_x_y_z = RssBoundingBoxVisualizer._vehicle_to_sensor(bb_cords, vehicle, camera_transform)[:3, :]
         cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
         camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
@@ -525,8 +546,8 @@ class RssBoundingBoxDrawer(object):
         Transforms coordinates of a vehicle bounding box to sensor.
         """
 
-        world_cord = RssBoundingBoxDrawer._vehicle_to_world(cords, vehicle)
-        sensor_cord = RssBoundingBoxDrawer._world_to_sensor(world_cord, camera_transform)
+        world_cord = RssBoundingBoxVisualizer._vehicle_to_world(cords, vehicle)
+        sensor_cord = RssBoundingBoxVisualizer._world_to_sensor(world_cord, camera_transform)
         return sensor_cord
 
     @staticmethod
@@ -554,7 +575,7 @@ class RssBoundingBoxDrawer(object):
         return sensor_cords
 
 # ==============================================================================
-# -- RssDebugDrawer ------------------------------------------------------------
+# -- RssDebugVisualizer ------------------------------------------------------------
 # ==============================================================================
 
 
@@ -566,7 +587,7 @@ class RssDebugVisualizationMode(Enum):
     All = 5
 
 
-class RssDebugDrawer(object):
+class RssDebugVisualizer(object):
 
     def __init__(self, player, world):
         self._world = world
@@ -584,7 +605,7 @@ class RssDebugDrawer(object):
             self._visualization_mode = RssDebugVisualizationMode.VehicleStateAndRoute
         elif self._visualization_mode == RssDebugVisualizationMode.VehicleStateAndRoute:
             self._visualization_mode = RssDebugVisualizationMode.All
-        print("New Debug Drawer Mode {}".format(self._visualization_mode))
+        print("New Debug Visualizer Mode {}".format(self._visualization_mode))
 
     def tick(self, route, dangerous, individual_rss_states, ego_dynamics_on_route):
         if self._visualization_mode == RssDebugVisualizationMode.RouteOnly or \
@@ -637,7 +658,8 @@ class RssDebugDrawer(object):
 
     def visualize_rss_results(self, state_snapshot):
         for state in state_snapshot:
-            if not state.other_actor:
+            other_actor = state.get_actor(self._world)
+            if not other_actor:
                 print("Actor not found. Skip visualizing state {}".format(state))
                 continue
             ego_point = self._player.get_location()
@@ -647,7 +669,7 @@ class RssDebugDrawer(object):
             sine = math.sin(math.radians(yaw))
             line_offset = carla.Location(-sine * 0.1, cosine * 0.1, 0.0)
 
-            point = state.other_actor.get_location()
+            point = other_actor.get_location()
             point.z += 0.05
             indicator_color = carla.Color(0, 255, 0)
             dangerous = rss.isDangerous(state.rss_state)
