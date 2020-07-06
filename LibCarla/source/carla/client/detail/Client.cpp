@@ -322,6 +322,10 @@ namespace detail {
     _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
   }
 
+  void Client::ResetTrafficLightGroup(rpc::ActorId traffic_light) {
+    _pimpl->AsyncCall("reset_traffic_light_group", traffic_light);
+  }
+
   rpc::VehicleLightStateList Client::GetVehiclesLightStates() {
     return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
   }

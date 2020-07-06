@@ -174,6 +174,7 @@ void export_actor() {
       .def("is_frozen", &cc::TrafficLight::IsFrozen)
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
+      .def("reset_group", &cc::TrafficLight::ResetGroup)
       .def(self_ns::str(self_ns::self))
   ;
 }
