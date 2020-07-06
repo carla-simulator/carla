@@ -139,38 +139,6 @@ float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitRes
   const float AttenAtm = Description.AtmospAttenRate;
   const float AbsAtm = exp(-AttenAtm * Distance);
 
-  const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
-
-  uint8 label = 69;
-
-//  AActor* actor = HitInfo.Actor.Get();
-//  if (actor != nullptr) {
-//    FActorView view = Registry.Find(actor);
-//
-//    if(view.IsValid()){
-//      const FActorInfo* ActorInfo = view.GetActorInfo();
-//
-//      if(ActorInfo != nullptr) {
-//        //TSet<ECityObjectLabel> labels = ActorInfo->SemanticTags;
-//        //if(labels.Num() == 1)
-//        //    label = static_cast<uint8>(*labels.CreateConstIterator());
-//      }
-//      else {
-//        UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
-//      }
-//    }
-//    else {
-//      UE_LOG(LogCarla, Warning, TEXT("View not valid %p!!!!"), view.GetActor());
-//    }
-//
-//  }
-//  else {
-//    UE_LOG(LogCarla, Warning, TEXT("Actor not found!!!!"));
-//  }
-
-
-
-
   const float IntRec = AbsAtm;
 
   return IntRec;
