@@ -193,6 +193,12 @@ public:
     _client->call("set_hybrid_physics_radius", radius);
   }
 
+  /// Method to set randomization seed.
+  void SetRandomDeviceSeed(const uint64_t seed) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_random_device_seed", seed);
+  }
+
 private:
 
   /// RPC client.

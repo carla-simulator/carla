@@ -173,6 +173,11 @@ public:
         tm->SetSynchronousModeTimeOutInMiliSecond(time);
       });
 
+      /// Method to set randomization seed.
+      server->bind("set_random_device_seed", [=](const uint64_t seed) {
+        tm->SetRandomDeviceSeed(seed);
+      });
+
       /// Method to provide synchronous tick.
       server->bind("synchronous_tick", [=]() -> bool {
         return tm->SynchronousTick();

@@ -28,8 +28,6 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
-  Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
-
   // HUD
   HUDClass = ACarlaHUD::StaticClass();
 
@@ -100,10 +98,6 @@ void ACarlaGameModeBase::InitGame(
 
   SpawnActorFactories();
 
-  // make connection between Episode and Recorder
-  Recorder->SetEpisode(Episode);
-  Episode->SetRecorder(Recorder);
-
   ParseOpenDrive(MapName);
 }
 
@@ -134,25 +128,11 @@ void ACarlaGameModeBase::BeginPlay()
   {
     Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
   }
-
-  /// @todo Recorder should not tick here, FCarlaEngine should do it.
-  // check if replayer is waiting to autostart
-  if (Recorder)
-  {
-    Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
-  }
-
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
-
-  /// @todo Recorder should not tick here, FCarlaEngine should do it.
-  if (Recorder)
-  {
-    Recorder->Tick(DeltaSeconds);
-  }
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

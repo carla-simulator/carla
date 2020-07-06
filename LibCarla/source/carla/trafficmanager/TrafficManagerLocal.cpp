@@ -38,7 +38,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          local_map,
                                          parameters,
                                          localization_frame,
-                                         debug_helper)),
+                                         debug_helper,
+                                         random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -46,13 +47,15 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper)),
+                                   debug_helper,
+                                   random_devices)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
                                           buffer_map,
                                           parameters,
-                                          tl_frame)),
+                                          tl_frame,
+                                          random_devices)),
 
     motion_plan_stage(MotionPlanStage(vehicle_id_list,
                                       simulation_state,
@@ -78,7 +81,8 @@ TrafficManagerLocal::TrafficManagerLocal(
               localization_stage,
               collision_stage,
               traffic_light_stage,
-              motion_plan_stage)),
+              motion_plan_stage,
+              random_devices)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -227,6 +231,7 @@ void TrafficManagerLocal::Stop() {
   track_traffic.Clear();
   previous_update_instance = chr::system_clock::now();
   current_reserved_capacity = 0u;
+  random_devices.clear();
 
   simulation_state.Reset();
   localization_stage.Reset();
@@ -263,15 +268,17 @@ void TrafficManagerLocal::Reset() {
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   registered_vehicles.Insert(vehicle_list);
+  for (const ActorPtr &vehicle: vehicle_list) {
+    random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
+  }
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
 
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
-    actor_id_list.push_back(actor->GetId());
+    alsm.RemoveActor(actor->GetId(), true);
   }
-  registered_vehicles.Remove(actor_id_list);
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -365,14 +372,40 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
     tl_group.front()->SetState(TLS::Green);
     std::for_each(
         tl_group.begin() + 1, tl_group.end(),
-        [](auto &tl) { tl->SetState(TLS::Red); });
+        [](auto &tl) { tl->SetState(TLS::Red); tl->Freeze(true); });
   }
-
   while (!CheckAllFrozen(tl_to_freeze)) {
     for (auto &tln : tl_to_freeze) {
       tln->SetState(TLS::Red);
       tln->Freeze(true);
     }
+    world.Tick(time_duration::seconds(1));
+  }
+
+  for (TLGroup &tl_group : list_of_all_groups) {
+    tl_group.front()->Freeze(true);
+    tl_group.front()->SetState(TLS::Green);
+  }
+
+}
+
+void TrafficManagerLocal::StartAllTrafficLights() {
+  // Filter based on wildcard pattern.
+  const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
+
+  std::vector<TLGroup> list_of_all_groups;
+  std::vector<carla::ActorId> list_of_ids;
+
+  for (auto iter = world_traffic_lights->begin(); iter != world_traffic_lights->end(); iter++) {
+    auto tl = *iter;
+    if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
+      const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
+      list_of_all_groups.push_back(tl_group);
+    }
+  }
+
+  for (TLGroup &tl_group : list_of_all_groups) {
+    tl_group.front()->Freeze(false);
   }
 }
 
@@ -390,6 +423,12 @@ carla::client::detail::EpisodeProxy &TrafficManagerLocal::GetEpisodeProxy() {
 
 std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
   return registered_vehicles.GetIDList();
+}
+
+void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
+  seed = _seed;
+  ResetAllTrafficLights();
+  StartAllTrafficLights();
 }
 
 } // namespace traffic_manager

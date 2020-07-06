@@ -9,6 +9,7 @@
 #include "Engine/GameInstance.h"
 
 #include "Carla/Game/CarlaEngine.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Server/CarlaServer.h"
 
 #include "CarlaGameInstance.generated.h"
@@ -74,12 +75,14 @@ public:
   }
 
   void SetOpendriveGenerationParameters(
-      const carla::rpc::OpendriveGenerationParameters & Parameters) {
+      const carla::rpc::OpendriveGenerationParameters & Parameters) 
+  {
     GenerationParameters = Parameters;
   }
 
   const carla::rpc::OpendriveGenerationParameters&
-      GetOpendriveGenerationParameters() const {
+      GetOpendriveGenerationParameters() const 
+  {
     return GenerationParameters;
   }
 
@@ -89,6 +92,9 @@ private:
   UCarlaSettings *CarlaSettings = nullptr;
 
   FCarlaEngine CarlaEngine;
+
+  UPROPERTY()
+  ACarlaRecorder *Recorder = nullptr;
 
   carla::rpc::OpendriveGenerationParameters GenerationParameters;
 
