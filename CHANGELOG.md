@@ -24,8 +24,9 @@
   * Improved mesh split in standalone mode
   * Fixed delay in the tcp communication from server to client, improving performance in synchronous mode in linux systems
   * Fixed large RAM usage when loading polinomial geometry from OpenDRIVE
-  * Fixed collision issues when debug draw(debug.draw_line) is called 
+  * Fixed collision issues when debug draw(debug.draw_line) is called
   * Fixed Gyroscope sensor to properly give angular velocity readings in local frame
+  * Added Renderdoc plugin to the Unreal project.
 
 ## CARLA 0.9.9
 
