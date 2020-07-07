@@ -537,7 +537,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 <td><code>atmosphere_attenuation_rate</code></td>
 <td>float</td>
 <td>0.004</td>
-<td>Coefficient that measures the lidar instensity loss per meter. Check the  intensity computation above.</td>
+<td>Coefficient that measures the lidar instensity loss per meter. Check the intensity computation above.</td>
 <tr>
 <td><code>dropoff_general_rate</code></td>
 <td>float</td>

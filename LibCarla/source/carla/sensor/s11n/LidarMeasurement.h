@@ -111,11 +111,11 @@ namespace s11n {
 
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
         _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
-        for (auto& Pt : _aux_points[idxChannel]) {
-          _points.emplace_back(Pt.x);
-          _points.emplace_back(Pt.y);
-          _points.emplace_back(Pt.z);
-          _points.emplace_back(Pt.intensity);
+        for (auto& pt : _aux_points[idxChannel]) {
+          _points.emplace_back(pt.x);
+          _points.emplace_back(pt.y);
+          _points.emplace_back(pt.z);
+          _points.emplace_back(pt.intensity);
         }
       }
 
