@@ -134,7 +134,8 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
 float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const
 {
   const FVector HitPoint = HitInfo.ImpactPoint - LidarBodyLoc;
-  const float Distance = 0.01f * HitPoint.Size();
+  constexpr float TO_METERS = 1e-2;
+  const float Distance = TO_METERS * HitPoint.Size();
 
   const float AttenAtm = Description.AtmospAttenRate;
   const float AbsAtm = exp(-AttenAtm * Distance);
@@ -146,7 +147,6 @@ float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitRes
 
 bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
 {
-
   if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
     return false;
 
@@ -178,7 +178,6 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     FCollisionResponseParams::DefaultResponseParam
   );
 
-
   if (HitInfo.bBlockingHit)
   {
     if (Description.ShowDebugPoints)
@@ -197,8 +196,6 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     XYZ = actorTransf.Inverse().TransformPosition(hp);
 
     Intensity = ComputeIntensity(LidarBodyLoc, HitInfo);
-
-
 
     if(Intensity > Description.DropOffIntensityLimit)
       return true;

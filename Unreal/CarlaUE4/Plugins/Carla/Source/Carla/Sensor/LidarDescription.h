@@ -55,8 +55,6 @@ struct CARLA_API FLidarDescription
   UPROPERTY(EditAnywhere)
   float DropOffAtZeroIntensity = 0.4f;
 
-
-
   /// Wether to show debug points of laser hits in simulator.
   UPROPERTY(EditAnywhere)
   bool ShowDebugPoints = false;
