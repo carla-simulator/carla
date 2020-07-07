@@ -42,16 +42,14 @@ namespace s11n {
 
   class LidarDetection {
     public:
-      float x; // m/s
-      float y;  // rad
-      float z; // rad
-      float intensity;    // m
+      rpc::Location Point;
+      float intensity;
       static const int SIZE = 4;
 
       LidarDetection(float x, float y, float z, float intensity) :
-          x{x*1e-2f}, y{y*1e-2f}, z{z*1e-2f}, intensity{intensity} { }
+          Point(x, y, z), intensity{intensity} { }
       LidarDetection(rpc::Location p, float intensity) :
-          x{p.x}, y{p.y}, z{p.z}, intensity{intensity} { }
+          Point(p), intensity{intensity} { }
   };
 
 
@@ -112,9 +110,9 @@ namespace s11n {
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
         _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
         for (auto& pt : _aux_points[idxChannel]) {
-          _points.emplace_back(pt.x);
-          _points.emplace_back(pt.y);
-          _points.emplace_back(pt.z);
+          _points.emplace_back(pt.Point.x);
+          _points.emplace_back(pt.Point.y);
+          _points.emplace_back(pt.Point.z);
           _points.emplace_back(pt.intensity);
         }
       }
