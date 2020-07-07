@@ -7,6 +7,7 @@
 
 #include "Carla.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -210,7 +211,7 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
   }
 }
 
-FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl()
+FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
@@ -373,6 +374,11 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
   }
 
+  auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
+  if (Recorder && Recorder->IsEnabled())
+  {
+    Recorder->AddPhysicsControl(*this);
+  }
 }
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)

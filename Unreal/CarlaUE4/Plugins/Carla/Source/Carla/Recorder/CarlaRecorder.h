@@ -11,6 +11,7 @@
 
 #include "Carla/Actor/ActorDescription.h"
 
+#include "CarlaRecorderPhysicsControl.h"
 #include "CarlaRecorderPlatformTime.h"
 #include "CarlaRecorderBoundingBox.h"
 #include "CarlaRecorderKinematics.h"
@@ -52,7 +53,9 @@ enum class CarlaRecorderPacketId : uint8_t
   SceneLight,
   Kinematics,
   BoundingBox,
-  PlatformTime
+  PlatformTime,
+  PhysicsControl,
+  TrafficLightParameters
 };
 
 /// Recorder for the simulation
@@ -108,6 +111,8 @@ public:
   void AddKinematics(const CarlaRecorderKinematics &ActorKinematics);
 
   void AddBoundingBox(const CarlaRecorderBoundingBox &ActorBoundingBox);
+
+  void AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -170,6 +175,7 @@ private:
   CarlaRecorderActorsKinematics Kinematics;
   CarlaRecorderBoundingBoxes BoundingBoxes;
   CarlaRecorderPlatformTime PlatformTime;
+  CarlaRecorderPhysicsControls PhysicsControls;
 
 
   // replayer

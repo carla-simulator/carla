@@ -294,6 +294,17 @@ void ACarlaRecorder::AddActorBoundingBox(FActorView &View)
   AddBoundingBox(BoundingBox);
 }
 
+void ACarlaRecorder::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
+{
+  if (bAdditionalData)
+  {
+    CarlaRecorderPhysicsControl Control;
+    Control.DatabaseId = Episode->GetActorRegistry().Find(&Vehicle).GetActorId();
+    Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
+    PhysicsControls.Add(Control);
+  }
+}
+
 std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
 {
   // stop replayer if any in course
@@ -364,6 +375,7 @@ void ACarlaRecorder::Clear(void)
   LightScenes.Clear();
   Kinematics.Clear();
   BoundingBoxes.Clear();
+  PhysicsControls.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -396,6 +408,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
     Kinematics.Write(File);
     BoundingBoxes.Write(File);
     PlatformTime.Write(File);
+    PhysicsControls.Write(File);
   }
 
   // end
@@ -588,4 +601,11 @@ void ACarlaRecorder::CreateRecorderEventAdd(
     std::move(Description)
   };
   AddEvent(std::move(RecEvent));
+
+  // check if it is a vehicle to get initial physics control
+  ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Episode->GetActorRegistry().Find(DatabaseId).GetActor());
+  if (Vehicle)
+  {
+    AddPhysicsControl(*Vehicle);
+  }
 }
