@@ -45,6 +45,8 @@ namespace s11n {
       geom::Location point;
       float intensity;
 
+      LidarDetection() :
+          point(0.0f, 0.0f, 0.0f), intensity{0.0f} { }
       LidarDetection(float x, float y, float z, float intensity) :
           point(x, y, z), intensity{intensity} { }
       LidarDetection(geom::Location p, float intensity) :
@@ -65,7 +67,6 @@ namespace s11n {
     };
 
   public:
-
     explicit LidarMeasurement(uint32_t ChannelCount = 0u)
       : _header(Index::SIZE + ChannelCount, 0u) {
       _header[Index::ChannelCount] = ChannelCount;
