@@ -347,49 +347,6 @@ bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
 }
 
 void TrafficManagerLocal::ResetAllTrafficLights() {
-
-  // Filter based on wildcard pattern.
-  const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-  std::vector<TLGroup> list_of_all_groups;
-  TLGroup tl_to_freeze;
-  std::vector<carla::ActorId> list_of_ids;
-  for (auto iter = world_traffic_lights->begin(); iter != world_traffic_lights->end(); iter++) {
-    auto tl = *iter;
-    if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-      const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-      list_of_all_groups.push_back(tl_group);
-      for (uint64_t i = 0u; i < tl_group.size(); i++) {
-        list_of_ids.push_back(tl_group.at(i).get()->GetId());
-        if (i != 0u) {
-          tl_to_freeze.push_back(tl_group.at(i));
-        }
-      }
-    }
-  }
-
-  for (TLGroup &tl_group : list_of_all_groups) {
-    tl_group.front()->SetState(TLS::Green);
-    std::for_each(
-        tl_group.begin() + 1, tl_group.end(),
-        [](auto &tl) { tl->SetState(TLS::Red); tl->Freeze(true); });
-  }
-  while (!CheckAllFrozen(tl_to_freeze)) {
-    for (auto &tln : tl_to_freeze) {
-      tln->SetState(TLS::Red);
-      tln->Freeze(true);
-    }
-    world.Tick(time_duration::seconds(1));
-  }
-
-  for (TLGroup &tl_group : list_of_all_groups) {
-    tl_group.front()->Freeze(true);
-    tl_group.front()->SetState(TLS::Green);
-  }
-
-}
-
-void TrafficManagerLocal::StartAllTrafficLights() {
   // Filter based on wildcard pattern.
   const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
 
@@ -405,7 +362,7 @@ void TrafficManagerLocal::StartAllTrafficLights() {
   }
 
   for (TLGroup &tl_group : list_of_all_groups) {
-    tl_group.front()->Freeze(false);
+    tl_group.front()->ResetGroup();
   }
 }
 
@@ -428,7 +385,6 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
   ResetAllTrafficLights();
-  StartAllTrafficLights();
 }
 
 } // namespace traffic_manager
