@@ -254,11 +254,11 @@ void export_sensor_data() {
     .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarMeasurement::size)
     .def("__iter__", iterator<csd::LidarMeasurement>())
-    .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> cr::Location {
+    .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> css::LidarDetection {
       return self.at(pos);
     })
-    .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const cr::Location &point) {
-      self.at(pos) = point;
+    .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const css::LidarDetection &detection) {
+      self.at(pos) = detection;
     })
     .def(self_ns::str(self_ns::self))
   ;
@@ -316,6 +316,12 @@ void export_sensor_data() {
     .def_readwrite("azimuth", &css::RadarDetection::azimuth)
     .def_readwrite("altitude", &css::RadarDetection::altitude)
     .def_readwrite("depth", &css::RadarDetection::depth)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<css::LidarDetection>("LidarDetection")
+    .def_readwrite("point", &css::LidarDetection::Point)
+    .def_readwrite("intensity", &css::LidarDetection::intensity)
     .def(self_ns::str(self_ns::self))
   ;
 
