@@ -42,19 +42,18 @@ namespace s11n {
 
   class LidarDetection {
     public:
-      rpc::Location Point;
+      geom::Location Point;
       float intensity;
-      static const int SIZE = 4;
 
       LidarDetection(float x, float y, float z, float intensity) :
           Point(x, y, z), intensity{intensity} { }
-      LidarDetection(rpc::Location p, float intensity) :
+      LidarDetection(geom::Location p, float intensity) :
           Point(p), intensity{intensity} { }
   };
 
-
   class LidarMeasurement {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
+    static const int SizeLidarDetection = 4;
 
     friend class LidarSerializer;
     friend class LidarHeaderView;
@@ -89,7 +88,7 @@ namespace s11n {
     void Reset(uint32_t channels, uint32_t channel_point_count) {
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
       _points.clear();
-      _points.reserve(LidarDetection::SIZE * channels * channel_point_count);
+      _points.reserve(SizeLidarDetection * channels * channel_point_count);
 
       _aux_points.resize(channels);
 
@@ -116,11 +115,9 @@ namespace s11n {
           _points.emplace_back(pt.intensity);
         }
       }
-
     }
 
   private:
-
     std::vector<uint32_t> _header;
     std::vector<std::vector<LidarDetection>> _aux_points;
 
