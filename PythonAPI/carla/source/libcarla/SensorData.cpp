@@ -128,6 +128,15 @@ namespace s11n {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const LidarDetection &det) {
+    out << "LidarDetection(x=" << std::to_string(det.point.x)
+        << ", y=" << std::to_string(det.point.y)
+        << ", z=" << std::to_string(det.point.z)
+        << ", intensity=" << std::to_string(det.intensity)
+        << ')';
+    return out;
+  }
+
 } // namespace s11n
 } // namespace sensor
 } // namespace carla
@@ -320,7 +329,7 @@ void export_sensor_data() {
   ;
 
   class_<css::LidarDetection>("LidarDetection")
-    .def_readwrite("point", &css::LidarDetection::Point)
+    .def_readwrite("point", &css::LidarDetection::point)
     .def_readwrite("intensity", &css::LidarDetection::intensity)
     .def(self_ns::str(self_ns::self))
   ;

@@ -42,13 +42,13 @@ namespace s11n {
 
   class LidarDetection {
     public:
-      geom::Location Point;
+      geom::Location point;
       float intensity;
 
       LidarDetection(float x, float y, float z, float intensity) :
-          Point(x, y, z), intensity{intensity} { }
+          point(x, y, z), intensity{intensity} { }
       LidarDetection(geom::Location p, float intensity) :
-          Point(p), intensity{intensity} { }
+          point(p), intensity{intensity} { }
   };
 
   class LidarMeasurement {
@@ -109,9 +109,9 @@ namespace s11n {
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
         _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
         for (auto& pt : _aux_points[idxChannel]) {
-          _points.emplace_back(pt.Point.x);
-          _points.emplace_back(pt.Point.y);
-          _points.emplace_back(pt.Point.z);
+          _points.emplace_back(pt.point.x);
+          _points.emplace_back(pt.point.y);
+          _points.emplace_back(pt.point.z);
           _points.emplace_back(pt.intensity);
         }
       }

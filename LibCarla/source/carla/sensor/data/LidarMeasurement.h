@@ -22,7 +22,6 @@ namespace data {
     using Super = Array<s11n::LidarDetection>;
 
   protected:
-
     using Serializer = s11n::LidarSerializer;
 
     friend Serializer;
