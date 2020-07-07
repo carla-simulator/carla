@@ -286,7 +286,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             if (State.LowBeam)
               enabled_lights_list += "Low Beam, ";
             if (State.HighBeam)
-              enabled_lights_list += "Hight Beam, ";
+              enabled_lights_list += "High Beam, ";
             if (State.Brake)
               enabled_lights_list += "Brake, ";
             if (State.RightBlinker)
@@ -295,6 +295,8 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               enabled_lights_list += "Left Blinker, ";
             if (State.Reverse)
               enabled_lights_list += "Reverse, ";
+            if (State.Interior)
+              enabled_lights_list += "Interior, ";
             if (State.Fog)
               enabled_lights_list += "Fog, ";
             if (State.Special1)
@@ -408,8 +410,77 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
-      // frame end
-      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+      case static_cast<char>(CarlaRecorderPacketId::PhysicsControl):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+
+          Info << " Physics Control events: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            PhysicsControl.Read(File);
+            carla::rpc::VehiclePhysicsControl Control(PhysicsControl.VehiclePhysicsControl);
+            Info << "  Actor id " << PhysicsControl.DatabaseId
+                << " max rpm " << Control.max_rpm << " MOI " << Control.moi
+                << " damping rate full throttle " << Control.damping_rate_full_throttle
+                << " damping rate zero throttle clutch engaged " << Control.damping_rate_zero_throttle_clutch_engaged
+                << " damping rate zero throttle clutch disengaged" << Control.damping_rate_zero_throttle_clutch_disengaged
+                << " use gear auto box " << (Control.use_gear_autobox ? "true" : "false")
+                << " gear switch time " << Control.gear_switch_time
+                << " clutch strength " << Control.clutch_strength
+                << " final ratio " << Control.final_ratio
+                << " mass " << Control.mass << " drag coefficient " << Control.drag_coefficient
+                << " center of mass " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ")"
+                << std::endl;
+            Info << "   torque curve:";
+            for (auto& vec : Control.torque_curve)
+            {
+              Info << " (" << vec.x << ", " << vec.y << ")";
+            }
+            Info << std::endl;
+            Info << "   steering curve:";
+            for (auto& vec : Control.steering_curve)
+            {
+              Info << " (" << vec.x << ", " << vec.y << ")";
+            }
+            Info << std::endl;
+            Info << "   forward gears:";
+            uint32_t count = 0;
+            for (auto& Gear : Control.forward_gears)
+            {
+              Info << " gear " << count << " ratio " << Gear.ratio
+                  << " down ratio " << Gear.down_ratio
+                  << " up ratio " << Gear.up_ratio;
+              ++count;
+            }
+            Info << std::endl;
+            Info << "   wheels:";
+            count = 0;
+            for (auto& Wheel : Control.wheels)
+            {
+              Info << " wheel " << count << " tire friction " << Wheel.tire_friction
+                  << " damping rate " << Wheel.damping_rate
+                  << " max steer angle " << Wheel.max_steer_angle
+                  << " radius " << Wheel.radius
+                  << " max brake torque " << Wheel.max_brake_torque
+                  << " max handbrake torque " << Wheel.max_handbrake_torque
+                  << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")";
+              ++count;
+            }
+            Info << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+        // frame end
+        case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         // do nothing, it is empty
         break;
 

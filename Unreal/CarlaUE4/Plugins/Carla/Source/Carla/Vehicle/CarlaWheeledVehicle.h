@@ -110,7 +110,7 @@ public:
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  FVehiclePhysicsControl GetVehiclePhysicsControl();
+  FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehicleLightState GetVehicleLightState() const;
