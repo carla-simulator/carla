@@ -15,6 +15,7 @@
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
   * Improved the LiDAR and Radar sensors with a parallel implentation of the raycasting
+  * Added an approximation of the intensity of each point of the cloud in the LiDAR sensor.
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Improved LiDAR and radar to better match the shape of the vehicles
   * Added support for additional TraCI clients in Sumo co-simulation
