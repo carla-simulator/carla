@@ -35,9 +35,12 @@ void ATrafficLightGroup::ResetGroup()
     Controller->ResetState();
   }
   CurrentController = 0;
-  if(Controllers.Num() > 0) {
+  if(Controllers.Num() > 0)
+  {
     Timer = Controllers[CurrentController]->NextState();
-  } else {
+  }
+  else
+  {
     Timer = 0.0f;
   }
   CurrentStateTimer = Timer;
@@ -94,6 +97,7 @@ void ATrafficLightGroup::NextCycleStep()
   else
   {
     Timer = controller->NextState();
+    CurrentStateTimer = Timer;
   }
 }
 
@@ -108,4 +112,10 @@ void ATrafficLightGroup::NextController()
 int ATrafficLightGroup::GetJunctionId() const
 {
   return JunctionId;
+}
+
+void ATrafficLightGroup::AddController(UTrafficLightController* Controller)
+{
+  Controllers.Add(Controller);
+  Controller->SetGroup(this);
 }

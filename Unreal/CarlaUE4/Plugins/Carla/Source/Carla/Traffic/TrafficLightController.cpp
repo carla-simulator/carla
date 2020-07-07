@@ -42,6 +42,7 @@ void UTrafficLightController::EmptyTrafficLights()
 void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLight)
 {
   TrafficLights.Add(TrafficLight);
+  TrafficLight->SetController(this);
 }
 
 const FString &UTrafficLightController::GetControllerId() const
@@ -134,4 +135,19 @@ float UTrafficLightController::GetStateTime(const ETrafficLightState State) cons
     }
   }
   return 0.0f;
+}
+
+void UTrafficLightController::SetGroup(ATrafficLightGroup* Group)
+{
+  TrafficLightGroup = Group;
+}
+
+ATrafficLightGroup* UTrafficLightController::GetGroup()
+{
+  return TrafficLightGroup;
+}
+
+const ATrafficLightGroup* UTrafficLightController::GetGroup() const
+{
+  return TrafficLightGroup;
 }

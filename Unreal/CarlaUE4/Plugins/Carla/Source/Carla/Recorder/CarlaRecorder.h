@@ -128,7 +128,7 @@ public:
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
 
-  void Tick(float DeltaSeconds) final;
+  void Ticking(float DeltaSeconds);
 
 private:
 

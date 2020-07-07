@@ -49,6 +49,9 @@ public:
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
   void SetElapsedTime(float ElapsedTime);
 
+  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
+  void AddController(UTrafficLightController* Controller);
+
 protected:
   // Called every frame
   virtual void Tick(float DeltaTime) override;
@@ -63,13 +66,13 @@ private:
   UPROPERTY(Category = "Traffic Group", EditAnywhere)
   TArray<UTrafficLightController*> Controllers;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   float Timer = 0.0f;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   float CurrentStateTimer = 0.0f;
 
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   int CurrentController = 0;
 
   UFUNCTION()
