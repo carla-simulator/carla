@@ -229,6 +229,17 @@ namespace detail {
       const geom::Transform &transform,
       rpc::ActorId parent,
       rpc::AttachmentType attachment_type) {
+
+      if(attachment_type == rpc::AttachmentType::SpringArm) {
+        const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
+        const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
+        constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
+        if (geom::Math::Dot(a, z) > OneEps) {
+          std::cout << "WARNING: Transformations with translation only in the 'z' axis are ill-formed when \
+            using SprintArm attachment. Please, be careful with that." << std::endl;
+        }
+      }
+
     return _pimpl->CallAndWait<rpc::Actor>("spawn_actor_with_parent",
         description,
         transform,
