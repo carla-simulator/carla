@@ -47,9 +47,8 @@ public:
   UFUNCTION(CallInEditor)
   void MatchTrafficLightActorsWithOpenDriveSignals();
 
-protected:
-  // Called when the game starts or when spawned
-  virtual void BeginPlay() override;
+  // Called when the game starts by the gamemode
+  void InitializeTrafficLights();
 
 private:
 

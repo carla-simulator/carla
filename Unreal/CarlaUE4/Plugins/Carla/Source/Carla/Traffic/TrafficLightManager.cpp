@@ -238,14 +238,13 @@ void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
   }
 }
 
-// Called when the game starts
-void ATrafficLightManager::BeginPlay()
+void ATrafficLightManager::InitializeTrafficLights()
 {
-  Super::BeginPlay();
 
   // Should not run in empty maps
   if (!GetMap())
   {
+    carla::log_warning("Coud not generate traffic lights: missing map.");
     return;
   }
 
