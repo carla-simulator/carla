@@ -169,6 +169,75 @@ void ATrafficLightManager::RemoveGeneratedSignalsAndTrafficLights()
   TrafficLightsGenerated = false;
 }
 
+void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
+{
+  TArray<AActor*> Actors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficLightBase::StaticClass(), Actors);
+
+  FString MapName = GetWorld()->GetName();
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  auto Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+
+  if (!Map)
+  {
+    carla::log_warning("Map not found");
+    return;
+  }
+
+  TArray<ATrafficLightBase*> TrafficLights;
+  for (AActor* Actor : Actors)
+  {
+    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
+    if (TrafficLight)
+    {
+      TrafficLight->GetTrafficLightComponent()->SetSignId("");
+      TrafficLights.Add(TrafficLight);
+    }
+  }
+
+  if (!TrafficLights.Num())
+  {
+    carla::log_warning("No actors in the map");
+    return;
+  }
+
+  const auto& Signals = Map->GetSignals();
+  const auto& Controllers = Map->GetControllers();
+
+  for(const auto& Signal : Signals) {
+    const auto& ODSignal = Signal.second;
+    const FTransform Transform = ODSignal->GetTransform();
+    const FVector Location = Transform.GetLocation();
+    if (ODSignal->GetName() == "")
+    {
+      continue;
+    }
+    ATrafficLightBase* ClosestActor = TrafficLights.Top();
+    float MinDistance = FVector::DistSquaredXY(TrafficLights.Top()->GetActorLocation(), Location);
+    for (ATrafficLightBase* Actor : TrafficLights)
+    {
+      float Distance = FVector::DistSquaredXY(Actor->GetActorLocation(), Location);
+      if (Distance < MinDistance)
+      {
+        MinDistance = Distance;
+        ClosestActor = Actor;
+      }
+    }
+    ATrafficLightBase* TrafficLight = ClosestActor;
+    auto* Component = TrafficLight->GetTrafficLightComponent();
+    if (Component->GetSignId() == "")
+    {
+      Component->SetSignId(carla::rpc::ToFString(ODSignal->GetSignalId()));
+    }
+    else
+    {
+      carla::log_warning("Could not find a suitable traffic light for signal", ODSignal->GetSignalId(),
+          "Closest traffic light has id", carla::rpc::FromFString(Component->GetSignId()));
+    }
+
+  }
+}
+
 // Called when the game starts
 void ATrafficLightManager::BeginPlay()
 {
@@ -180,11 +249,7 @@ void ATrafficLightManager::BeginPlay()
     return;
   }
 
-  if (TrafficLightsGenerated)
-  {
-    ResetTrafficLightObjects();
-  }
-  else
+  if (!TrafficLightsGenerated)
   {
     GenerateSignalsAndTrafficLights();
   }
