@@ -44,6 +44,9 @@ public:
   UFUNCTION(CallInEditor)
   void RemoveGeneratedSignalsAndTrafficLights();
 
+  UFUNCTION(CallInEditor)
+  void MatchTrafficLightActorsWithOpenDriveSignals();
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
@@ -92,9 +95,7 @@ private:
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
 
-  boost::optional<carla::road::Map> Map;
-
-  UPROPERTY()
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   bool TrafficLightsGenerated = false;
 
   UPROPERTY()

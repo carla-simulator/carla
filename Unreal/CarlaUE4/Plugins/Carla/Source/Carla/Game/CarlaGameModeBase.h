@@ -44,7 +44,7 @@ public:
     return Map;
   }
 
-  UFUNCTION(Exec, CallInEditor, meta=(DevelopmentOnly))
+  UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);
 
 protected:
