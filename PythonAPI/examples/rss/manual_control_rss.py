@@ -373,11 +373,11 @@ class VehicleControl(object):
                 self._surface, (self._mouse_steering_center[0] - self.MOUSE_STEERING_RANGE, self._mouse_steering_center[1] - self.MOUSE_STEERING_RANGE))
 
     @staticmethod
-    def signal_handler(signum, frame):
+    def signal_handler(signum, _):
         print('\nReceived signal {}. Trigger stopping...'.format(signum))
         VehicleControl.signal_received = True
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, world, clock):
         if VehicleControl.signal_received:
             print('\nAccepted signal. Stopping loop...')
             return True
@@ -796,7 +796,7 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(world, clock):
                 return
             world.tick(clock)
             world.render(display)
