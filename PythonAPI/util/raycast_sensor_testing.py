@@ -141,6 +141,22 @@ class SensorManager:
         elif sensor_type == 'LiDAR':
             lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
             lidar_bp.set_attribute('range', '100')
+            lidar_bp.set_attribute('dropoff_general_rate', lidar_bp.get_attribute('dropoff_general_rate').recommended_values[0])
+            lidar_bp.set_attribute('dropoff_intensity_limit', lidar_bp.get_attribute('dropoff_intensity_limit').recommended_values[0])
+            lidar_bp.set_attribute('dropoff_zero_intensity', lidar_bp.get_attribute('dropoff_zero_intensity').recommended_values[0])
+
+            for key in sensor_options:
+                lidar_bp.set_attribute(key, sensor_options[key])
+
+
+            lidar = self.world.spawn_actor(lidar_bp, transform, attach_to=attached)
+
+            lidar.listen(self.save_lidar_image)
+
+            return lidar
+        elif sensor_type == 'LiDAR_Raw':
+            lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_raw')
+            lidar_bp.set_attribute('range', '100')
 
             for key in sensor_options:
                 lidar_bp.set_attribute(key, sensor_options[key])
@@ -148,6 +164,11 @@ class SensorManager:
             lidar = self.world.spawn_actor(lidar_bp, transform, attach_to=attached)
 
             lidar.listen(self.save_lidar_image)
+
+            lidar_bp.set_attribute('dropoff_general_rate', "0.0")
+            lidar_bp.set_attribute('dropoff_intensity_limit', "1.0")
+            lidar_bp.set_attribute('dropoff_zero_intensity', "1.0")
+
 
             return lidar
         elif sensor_type == "Radar":
