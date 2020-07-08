@@ -117,7 +117,7 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
           state.traffic_light_data.green_time = Controller->GetGreenTime();
           state.traffic_light_data.yellow_time = Controller->GetYellowTime();
           state.traffic_light_data.red_time = Controller->GetRedTime();
-          state.traffic_light_data.elapsed_time = Group->GetElapsedTime();
+          state.traffic_light_data.elapsed_time = Controller->GetElapsedTime();
           state.traffic_light_data.time_is_frozen = Group->IsFrozen();
           state.traffic_light_data.pole_index = TrafficLight->GetPoleIndex();
         }

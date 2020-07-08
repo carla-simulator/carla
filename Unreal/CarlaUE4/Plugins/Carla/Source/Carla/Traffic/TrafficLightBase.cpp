@@ -40,86 +40,14 @@ static ETrafficSignState ToTrafficSignState(ETrafficLightState State)
 ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = false;
   TrafficLightComponent = CreateDefaultSubobject<UTrafficLightComponent>(TEXT("TrafficLightComponent"));
   if(TrafficLightComponent && RootComponent)
   {
     TrafficLightComponent->SetupAttachment(RootComponent);
   }
+  SetTrafficSignState(ETrafficSignState::TrafficLightGreen);
 }
-
-void ATrafficLightBase::OnConstruction(const FTransform &Transform)
-{
-  Super::OnConstruction(Transform);
-  SetTrafficLightState(State);
-}
-
-void ATrafficLightBase::Tick(float DeltaSeconds)
-{
-  Super::Tick(DeltaSeconds);
-
-  if (TimeIsFrozen || TrafficLightComponent)
-  {
-    return;
-  }
-
-  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  if (Episode)
-  {
-    auto* Replayer = Episode->GetReplayer();
-    if (Replayer)
-    {
-      if(Replayer->IsEnabled())
-      {
-        return;
-      }
-    }
-  }
-
-  ElapsedTime += DeltaSeconds;
-
-  float ChangeTime;
-
-  switch (State)
-  {
-    case ETrafficLightState::Red:
-      ChangeTime = RedTime;
-      break;
-    case ETrafficLightState::Yellow:
-      ChangeTime = YellowTime;
-      break;
-    case ETrafficLightState::Green:
-      ChangeTime = GreenTime;
-      break;
-    default:
-      UE_LOG(LogCarla, Error, TEXT("Invalid traffic light state!"));
-      SetTrafficLightState(ETrafficLightState::Red);
-      return;
-  }
-
-  if (ElapsedTime > ChangeTime)
-  {
-    // Freeze if part of a group and about to turn red
-    if (GroupTrafficLights.Num() > 0 && State == ETrafficLightState::Yellow)
-    {
-      SetTimeIsFrozen(true);
-    }
-    SwitchTrafficLightState();
-  }
-}
-
-#if WITH_EDITOR
-void ATrafficLightBase::PostEditChangeProperty(FPropertyChangedEvent &Event)
-{
-  Super::PostEditChangeProperty(Event);
-
-  const FName PropertyName = (Event.Property != nullptr ? Event.Property->GetFName() : NAME_None);
-  if (PropertyName == GET_MEMBER_NAME_CHECKED(ATrafficLightBase, State))
-  {
-    SetTrafficLightState(State);
-  }
-}
-#endif // WITH_EDITOR
 
 ETrafficLightState ATrafficLightBase::GetTrafficLightState() const
 {
@@ -129,7 +57,7 @@ ETrafficLightState ATrafficLightBase::GetTrafficLightState() const
   }
   else
   {
-    return State;
+    return ETrafficLightState::Red;
   }
 }
 
@@ -139,48 +67,7 @@ void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState)
   {
     TrafficLightComponent->SetLightState(InState);
   }
-  else
-  {
-    ElapsedTime = 0.0f;
-    State = InState;
-    SetTrafficSignState(ToTrafficSignState(State));
-    for (auto Controller : Vehicles)
-    {
-      if (Controller != nullptr)
-      {
-        Controller->SetTrafficLightState(State);
-        if (State == ETrafficLightState::Green)
-        {
-          Controller->SetTrafficLight(nullptr);
-        }
-      }
-    }
-    if (State == ETrafficLightState::Green)
-    {
-      Vehicles.Empty();
-    }
-  }
-  OnTrafficLightStateChanged(State);
-}
-
-void ATrafficLightBase::SwitchTrafficLightState()
-{
-  switch (State)
-  {
-    case ETrafficLightState::Red:
-      SetTrafficLightState(ETrafficLightState::Green);
-      break;
-    case ETrafficLightState::Yellow:
-      SetTrafficLightState(ETrafficLightState::Red);
-      break;
-    case ETrafficLightState::Green:
-      SetTrafficLightState(ETrafficLightState::Yellow);
-      break;
-    default:
-      UE_LOG(LogCarla, Error, TEXT("Invalid traffic light state!"));
-      SetTrafficLightState(ETrafficLightState::Red);
-      break;
-  }
+  // OnTrafficLightStateChanged(State);
 }
 
 void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
@@ -190,8 +77,8 @@ void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
     auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
     if (Controller != nullptr)
     {
-      Controller->SetTrafficLightState(State);
-      if (State != ETrafficLightState::Green)
+      Controller->SetTrafficLightState(GetTrafficLightState());
+      if (GetTrafficLightState() != ETrafficLightState::Green)
       {
         Vehicles.Add(Controller);
         Controller->SetTrafficLight(this);
@@ -221,11 +108,6 @@ void ATrafficLightBase::SetGreenTime(float InGreenTime)
         TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetGreenTime(InGreenTime);
-
-  }
-  else
-  {
-    GreenTime = InGreenTime;
   }
 }
 
@@ -239,7 +121,7 @@ float ATrafficLightBase::GetGreenTime() const
   }
   else
   {
-    return GreenTime;
+    return 0;
   }
 }
 
@@ -251,10 +133,6 @@ void ATrafficLightBase::SetYellowTime(float InYellowTime)
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetYellowTime(InYellowTime);
-  }
-  else
-  {
-    YellowTime = InYellowTime;
   }
 }
 
@@ -268,7 +146,7 @@ float ATrafficLightBase::GetYellowTime() const
   }
   else
   {
-    return YellowTime;
+    return 0;
   }
 }
 
@@ -280,10 +158,6 @@ void ATrafficLightBase::SetRedTime(float InRedTime)
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetRedTime(InRedTime);
-  }
-  else
-  {
-    RedTime = InRedTime;
   }
 }
 
@@ -297,7 +171,7 @@ float ATrafficLightBase::GetRedTime() const
   }
   else
   {
-    return RedTime;
+    return 0;
   }
 }
 
@@ -305,13 +179,13 @@ float ATrafficLightBase::GetElapsedTime() const
 {
   if (TrafficLightComponent)
   {
-    auto* Group = TrafficLightComponent->GetGroup();
-    check(Group);
-    return Group->GetElapsedTime();
+    auto* Controller = TrafficLightComponent->GetController();
+    check(Controller);
+    return Controller->GetElapsedTime();
   }
   else
   {
-    return ElapsedTime;
+    return 0;
   }
 }
 
@@ -319,13 +193,9 @@ void ATrafficLightBase::SetElapsedTime(float InElapsedTime)
 {
   if (TrafficLightComponent)
   {
-    auto* Group = TrafficLightComponent->GetGroup();
-    check(Group);
-    return Group->SetElapsedTime(InElapsedTime);
-  }
-  else
-  {
-    ElapsedTime = InElapsedTime;
+    auto* Controller = TrafficLightComponent->GetController();
+    check(Controller);
+    return Controller->SetElapsedTime(InElapsedTime);
   }
 }
 
@@ -334,14 +204,6 @@ void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
   if(TrafficLightComponent)
   {
     TrafficLightComponent->SetFrozenGroup(InTimeIsFrozen);
-  }
-  else
-  {
-    TimeIsFrozen = InTimeIsFrozen;
-    if (!TimeIsFrozen)
-    {
-      ElapsedTime = 0.0f;
-    }
   }
 }
 
@@ -353,7 +215,7 @@ bool ATrafficLightBase::GetTimeIsFrozen() const
     check(Group);
     return Group->IsFrozen();
   }
-  return TimeIsFrozen;
+  return false;
 }
 
 void ATrafficLightBase::SetPoleIndex(int InPoleIndex)
