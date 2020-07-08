@@ -35,25 +35,8 @@ void ATrafficLightGroup::ResetGroup()
     Controller->ResetState();
   }
   CurrentController = 0;
-  if(Controllers.Num() > 0)
-  {
-    Timer = Controllers[CurrentController]->NextState();
-  }
-  else
-  {
-    Timer = 0.0f;
-  }
-  CurrentStateTimer = Timer;
-}
-
-float ATrafficLightGroup::GetElapsedTime() const
-{
-  return (CurrentStateTimer - Timer);
-}
-
-void ATrafficLightGroup::SetElapsedTime(float ElapsedTime)
-{
-  Timer = CurrentStateTimer - ElapsedTime;
+  UTrafficLightController* controller = Controllers[CurrentController];
+  controller->StartCycle();
 }
 
 // Called every frame
@@ -61,6 +44,7 @@ void ATrafficLightGroup::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  // Do not update if the replayer is replaying
   auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   if (Episode)
   {
@@ -79,25 +63,10 @@ void ATrafficLightGroup::Tick(float DeltaTime)
     return;
   }
 
-  Timer -= DeltaTime;
-
-  if(Timer <= 0 && Controllers.Num())
-  {
-    NextCycleStep();
-  }
-}
-
-void ATrafficLightGroup::NextCycleStep()
-{
   UTrafficLightController* controller = Controllers[CurrentController];
-  if (controller->IsCycleFinished())
+  if (controller->AdvanceTimeAndCycleFinished(DeltaTime))
   {
     NextController();
-  }
-  else
-  {
-    Timer = controller->NextState();
-    CurrentStateTimer = Timer;
   }
 }
 
@@ -105,8 +74,7 @@ void ATrafficLightGroup::NextController()
 {
   CurrentController = (CurrentController + 1) % Controllers.Num();
   UTrafficLightController* controller = Controllers[CurrentController];
-  Timer = controller->NextState();
-  CurrentStateTimer = Timer;
+  controller->StartCycle();
 }
 
 int ATrafficLightGroup::GetJunctionId() const

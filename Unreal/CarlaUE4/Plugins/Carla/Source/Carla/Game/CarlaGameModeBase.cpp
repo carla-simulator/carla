@@ -68,12 +68,6 @@ void ACarlaGameModeBase::InitGame(
   auto World = GetWorld();
   check(World != nullptr);
 
-  AActor* TrafficLightManagerActor =  UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
-  if(TrafficLightManagerActor == nullptr) {
-    World->SpawnActor<ATrafficLightManager>();
-  }
-
-
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
       GameInstance != nullptr,
@@ -128,6 +122,18 @@ void ACarlaGameModeBase::BeginPlay()
     check(GetWorld() != nullptr);
     ATagger::TagActorsInLevel(*GetWorld(), true);
     TaggerDelegate->SetSemanticSegmentationEnabled();
+  }
+
+  AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
+  if(TrafficLightManagerActor == nullptr)
+  {
+    ATrafficLightManager* TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
+    TrafficLightManager->InitializeTrafficLights();
+  }
+  else
+  {
+    ATrafficLightManager* TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerActor);
+    TrafficLightManager->InitializeTrafficLights();
   }
 
   Episode->InitializeAtBeginPlay();
