@@ -164,7 +164,7 @@ class RssUnstructuredSceneVisualizer(object):
         self._last_rendered_frame = -1
         self._surface = None
         self._current_rss_surface = None
-        self._current_camera_surface = None
+        self.current_camera_surface = (0, None)
         self._world = world
         self._parent_actor = parent_actor
         self._display_dimensions = display_dimensions
@@ -223,11 +223,11 @@ class RssUnstructuredSceneVisualizer(object):
         if cam_frame and self._current_rss_surface and self._current_rss_surface[0] == cam_frame:
             render = True
 
-        if rss_frame and self._current_camera_surface and self._current_camera_surface[0] == rss_frame:
+        if rss_frame and self.current_camera_surface and self.current_camera_surface[0] == rss_frame:
             render = True
 
         if render:
-            surface = self._current_camera_surface[1]
+            surface = self.current_camera_surface[1]
             surface.blit(self._current_rss_surface[1], (0, 0))
             rect = pygame.Rect((0, 0), (2, surface.get_height()))
             pygame.draw.rect(surface, (0, 0, 0), rect, 0)
@@ -259,7 +259,7 @@ class RssUnstructuredSceneVisualizer(object):
         array = array[:, :, :3]
         array = array[:, :, ::-1]
         surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-        self._current_camera_surface = (image.frame, surface)
+        self.current_camera_surface = (image.frame, surface)
         self.update_surface(image.frame, None)
 
     @staticmethod
@@ -681,8 +681,7 @@ class RssDebugVisualizer(object):
             elif state.rss_state.situationType == rss.SituationType.NotRelevant:
                 indicator_color = carla.Color(150, 150, 150)
 
-            # if (self._visualization_mode == VisualizationMode::All) {
-            if True:
+            if self._visualization_mode == RssDebugVisualizationMode.All:
                 # the connection lines are only visualized if All is requested
                 lon_color = indicator_color
                 lat_l_color = indicator_color
