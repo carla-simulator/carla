@@ -22,6 +22,7 @@
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleLightStateList.h"
 
 #include <boost/optional.hpp>
 
@@ -196,6 +197,10 @@ namespace detail {
     }
 
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+
+    /// Returns a list of pairs where the firts element is the vehicle ID
+    /// and the second one is the light state
+    rpc::VehicleLightStateList GetVehiclesLightStates();
 
     SharedPtr<Actor> GetSpectator();
 
@@ -385,8 +390,8 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    std::string StartRecorder(std::string name) {
-      return _client.StartRecorder(std::move(name));
+    std::string StartRecorder(std::string name, bool additional_data) {
+      return _client.StartRecorder(std::move(name), additional_data);
     }
 
     void StopRecorder(void) {

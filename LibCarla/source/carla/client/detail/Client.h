@@ -24,6 +24,7 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
+#include "carla/rpc/VehicleLightStateList.h"
 
 #include <functional>
 #include <memory>
@@ -87,8 +88,6 @@ namespace detail {
     std::string GetServerVersion();
 
     void LoadEpisode(std::string map_name);
-
-    bool CheckIntermediateEpisode();
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
@@ -203,10 +202,14 @@ namespace detail {
         rpc::ActorId traffic_light,
         bool freeze);
 
+    /// Returns a list of pairs where the firts element is the vehicle ID
+    /// and the second one is the light state
+    rpc::VehicleLightStateList GetVehiclesLightStates();
+
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name);
+    std::string StartRecorder(std::string name, bool additional_data);
 
     void StopRecorder();
 

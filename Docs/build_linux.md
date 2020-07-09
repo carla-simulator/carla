@@ -2,20 +2,15 @@
 
 * [__Linux build command summary__](#linux-build-command-summary)  
 * [__Requirements__](#requirements)  
-	* System specifics
-	* Dependencies 
+	* [System specifics](#system-specifics)  
+	* [Dependencies](#dependencies)  
 * [__GitHub__](#github)  
-	* Create a GitHub account  
-	* Install git  
-	* Link GitHub and Unreal Engine 
 * [__Unreal Engine__](#unreal-engine)
-	* Download UE4.24  
-	* Build UE4.24  
 * [__CARLA build__](#carla-build)  
-	* Clone repository  
-	* Get assets  
-	* Set the environment variable  
-	* make CARLA  
+	* [Clone repository](#clone-repository)  
+	* [Get assets](#get-assets)  
+	* [Set the environment variable](#set-the-environment-variable)  
+	* [make CARLA](#make-carla)  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community. 
 
@@ -51,7 +46,9 @@ pip3 install --user setuptools
 # Additional dependencies for previous Ubuntu versions. 
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools &&
+pip2 install --user distro &&
+pip3 install --user distro
 
 # Change default clang version.
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
@@ -60,9 +57,15 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clan
 # Get a GitHub and a UE account, and link both. 
 # Install git. 
 
-# Build Unreal Engine 4.24.
+# Download Unreal Engine 4.24.
 git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
 cd ~/UnrealEngine_4.24
+
+# Download and install the UE patch  
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
+patch --strip=4 < ~/430667-13636743-patch.txt
+
+# Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 
 # Open the UE Editor to check everything works properly.
@@ -119,13 +122,17 @@ __Ubuntu 18.04__.
 ```sh
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools &&
+pip2 install --user distro &&
+pip3 install --user distro
 ```
 __Previous Ubuntu__ versions. 
 ```sh
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools && 
+pip2 install --user distro &&
+pip3 install --user distro
 ```
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies, it is recommended to use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
@@ -158,12 +165,22 @@ Get into said folder. Remember, this is the path where UE4.24 has been cloned.
 ```sh
 cd ~/UnrealEngine_4.24
 ```
-Make the build. 
+
+Get a patch for Unreal Engine. The patch fixes some Vulkan visualization issues that may occur when changing the map. Download and install it with the following commands.  
+```sh
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
+patch --strip=4 < ~/430667-13636743-patch.txt
+```
+
+Make the build.  
 ```sh
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
-Unreal Engine should be installed in the system. Run `Engine/Binaries/Linux/UE4Editor.sh` to open the Editor and check it out.
+!!! Warning
+    If UE has already been built, install the patch and make the build again.  
+
+Unreal Engine should be installed in the system. Run `Engine/Binaries/Linux/UE4Editor.sh` to open the Editor and check it out.  
 ```sh
 cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
 ```

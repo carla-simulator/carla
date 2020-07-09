@@ -136,15 +136,15 @@ cd /opt/carla/PythonAPI/examples
 python dynamic_weather.py --speed 1.0
 ```
 
-* __To set custom conditions__. Use the script __weather.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
+* __To set custom conditions__. Use the script __environment.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
 
 ```sh
 cd /opt/carla/PythonAPI/util
-python weather.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
+python environment.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
 
 ```
 <details>
-<summary> Optional arguments in <b>weather.py</b> </summary>
+<summary> Optional arguments in <b>environment.py</b> </summary>
 
 ```sh
   -h, --help            show this help message and exit
@@ -532,7 +532,7 @@ lidar_bp.set_attribute('range',str(20))
 lidar_location = carla.Location(0,0,2)
 lidar_rotation = carla.Rotation(0,0,0)
 lidar_transform = carla.Transform(lidar_location,lidar_rotation)
-lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
+lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle)
 lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
 ```
 

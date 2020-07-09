@@ -75,6 +75,8 @@ TEST(streaming, low_level_sending_strings) {
 
   std::this_thread::sleep_for(2ms);
   ASSERT_GE(message_count, number_of_messages - 3u);
+
+  io.service.stop();
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -118,6 +120,8 @@ TEST(streaming, low_level_unsubscribing) {
 
     ASSERT_GE(message_count, number_of_messages - 3u);
   }
+
+  io.service.stop();
 }
 
 TEST(streaming, low_level_tcp_small_message) {
@@ -227,7 +231,7 @@ TEST(streaming, multi_stream) {
 
   Server srv(TESTING_PORT);
   srv.AsyncRun(number_of_clients);
-  auto stream = srv.MakeMultiStream();
+  auto stream = srv.MakeStream();
 
   for (auto i = 0u; i < iterations; ++i) {
     std::vector<std::pair<std::atomic_size_t, std::unique_ptr<Client>>> v(number_of_clients);

@@ -31,16 +31,31 @@ namespace s11n {
   /// The points are stored in an array of floats
   ///
   ///    {
-  ///      X0, Y0, Z0,
+  ///      X0, Y0, Z0, I0
   ///      ...
-  ///      Xn, Yn, Zn,
+  ///      Xn, Yn, Zn, In
   ///    }
   ///
   /// @warning WritePoint should be called sequentially in the order in which
   /// the points are going to be stored, i.e., starting at channel zero and
   /// increasing steadily.
+
+  class LidarDetection {
+    public:
+      geom::Location point;
+      float intensity;
+
+      LidarDetection() :
+          point(0.0f, 0.0f, 0.0f), intensity{0.0f} { }
+      LidarDetection(float x, float y, float z, float intensity) :
+          point(x, y, z), intensity{intensity} { }
+      LidarDetection(geom::Location p, float intensity) :
+          point(p), intensity{intensity} { }
+  };
+
   class LidarMeasurement {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
+    static const int SizeLidarDetection = 4;
 
     friend class LidarSerializer;
     friend class LidarHeaderView;
@@ -52,7 +67,6 @@ namespace s11n {
     };
 
   public:
-
     explicit LidarMeasurement(uint32_t ChannelCount = 0u)
       : _header(Index::SIZE + ChannelCount, 0u) {
       _header[Index::ChannelCount] = ChannelCount;
@@ -72,25 +86,44 @@ namespace s11n {
       return _header[Index::ChannelCount];
     }
 
-    void Reset(uint32_t total_point_count) {
+    void Reset(uint32_t channels, uint32_t channel_point_count) {
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
       _points.clear();
-      _points.reserve(3u * total_point_count);
+      _points.reserve(SizeLidarDetection * channels * channel_point_count);
+
+      _aux_points.resize(channels);
+
+      for (auto& aux : _aux_points) {
+        aux.clear();
+        aux.reserve(channel_point_count);
+      }
     }
 
-    void WritePoint(uint32_t channel, rpc::Location point) {
+    void WritePointAsync(uint32_t channel, LidarDetection detection) {
       DEBUG_ASSERT(GetChannelCount() > channel);
-      _header[Index::SIZE + channel] += 1u;
-      _points.emplace_back(point.x);
-      _points.emplace_back(point.y);
-      _points.emplace_back(point.z);
+      _aux_points[channel].emplace_back(detection);
+    }
+
+    void SaveDetections() {
+      _points.clear();
+
+      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
+        _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
+        for (auto& pt : _aux_points[idxChannel]) {
+          _points.emplace_back(pt.point.x);
+          _points.emplace_back(pt.point.y);
+          _points.emplace_back(pt.point.z);
+          _points.emplace_back(pt.intensity);
+        }
+      }
     }
 
   private:
-
     std::vector<uint32_t> _header;
+    std::vector<std::vector<LidarDetection>> _aux_points;
 
     std::vector<float> _points;
+
   };
 
 } // namespace s11n

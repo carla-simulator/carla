@@ -4,9 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <PxScene.h>
+#include <cmath>
 #include "Carla.h"
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "carla/geom/Math.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -15,6 +18,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -25,6 +29,8 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+
+  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
@@ -56,6 +62,11 @@ void ARayCastLidar::CreateLasers()
         Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
     LaserAngles.Emplace(VerticalAngle);
   }
+
+  // Compute drop off model parameters
+  DropOffBeta = 1.0f - Description.DropOffAtZeroIntensity;
+  DropOffAlpha = Description.DropOffAtZeroIntensity / Description.DropOffIntensityLimit;
+  DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
 void ARayCastLidar::Tick(const float DeltaTime)
@@ -92,28 +103,53 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarMeasurement.Reset(ChannelCount * PointsToScanWithOneLaser);
+  LidarMeasurement.Reset(ChannelCount, PointsToScanWithOneLaser);
 
-  for (auto Channel = 0u; Channel < ChannelCount; ++Channel)
-  {
-    for (auto i = 0u; i < PointsToScanWithOneLaser; ++i)
-    {
+
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
+  ParallelFor(ChannelCount, [&](int32 idxChannel) {
+
+    FCriticalSection Mutex;
+    ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FVector Point;
-      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * i;
-      if (ShootLaser(Channel, Angle, Point))
-      {
-        LidarMeasurement.WritePoint(Channel, Point);
+      float Intensity;
+      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+      if (ShootLaser(idxChannel, Angle, Point, Intensity)) {
+        Mutex.Lock();
+        LidarMeasurement.WritePointAsync(idxChannel, {Point, Intensity});
+        Mutex.Unlock();
       }
-    }
-  }
+    });
+  });
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
+
+  LidarMeasurement.SaveDetections();
+
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
   LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
 }
 
-bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ) const
+float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const
 {
+  const FVector HitPoint = HitInfo.ImpactPoint - LidarBodyLoc;
+  constexpr float TO_METERS = 1e-2;
+  const float Distance = TO_METERS * HitPoint.Size();
+
+  const float AttenAtm = Description.AtmospAttenRate;
+  const float AbsAtm = exp(-AttenAtm * Distance);
+
+  const float IntRec = AbsAtm;
+
+  return IntRec;
+}
+
+bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
+{
+  if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
+    return false;
+
   const float VerticalAngle = LaserAngles[Channel];
 
   FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
@@ -122,6 +158,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
 
   FHitResult HitInfo(ForceInit);
 
+  FTransform actorTransf = GetTransform();
   FVector LidarBodyLoc = GetActorLocation();
   FRotator LidarBodyRot = GetActorRotation();
   FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
@@ -136,7 +173,7 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     HitInfo,
     LidarBodyLoc,
     EndTrace,
-    ECC_MAX,
+    ECC_GameTraceChannel2,
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
@@ -155,14 +192,16 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
       );
     }
 
-    XYZ = LidarBodyLoc - HitInfo.ImpactPoint;
-    XYZ = UKismetMathLibrary::RotateAngleAxis(
-      XYZ,
-      - LidarBodyRot.Yaw + 90,
-      FVector(0, 0, 1)
-    );
+    const FVector hp = HitInfo.ImpactPoint;
+    XYZ = actorTransf.Inverse().TransformPosition(hp);
 
-    return true;
+    Intensity = ComputeIntensity(LidarBodyLoc, HitInfo);
+
+    if(Intensity > Description.DropOffIntensityLimit)
+      return true;
+    else
+      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+
   } else {
     return false;
   }

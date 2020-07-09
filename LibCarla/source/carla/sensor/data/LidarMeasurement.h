@@ -17,19 +17,19 @@ namespace data {
 
   /// Measurement produced by a Lidar. Consists of an array of 3D points plus
   /// some extra meta-information about the Lidar.
-  class LidarMeasurement : public Array<rpc::Location>  {
-    static_assert(sizeof(rpc::Location) == 3u * sizeof(float), "Location size missmatch");
-    using Super = Array<rpc::Location>;
-  protected:
+  class LidarMeasurement : public Array<s11n::LidarDetection>  {
+    static_assert(sizeof(s11n::LidarDetection) == 4u * sizeof(float), "Location size missmatch");
+    using Super = Array<s11n::LidarDetection>;
 
+  protected:
     using Serializer = s11n::LidarSerializer;
 
     friend Serializer;
 
-    explicit LidarMeasurement(RawData data)
-      : Super(std::move(data)) {
-      Super::SetOffset(Serializer::GetHeaderOffset(Super::GetRawData()));
-    }
+    explicit LidarMeasurement(RawData &&data)
+      : Super(std::move(data), [](const RawData &d) {
+      return Serializer::GetHeaderOffset(d);
+    }) {}
 
   private:
 

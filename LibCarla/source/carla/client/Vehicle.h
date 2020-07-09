@@ -13,6 +13,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
+using carla::traffic_manager::constants::Networking::TM_DEFAULT_PORT;
+
 namespace carla {
 
 namespace traffic_manager {

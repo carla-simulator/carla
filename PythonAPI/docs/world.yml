@@ -308,7 +308,12 @@
       doc: >
         Returns a list of actor blueprints available to ease the spawn of these into the world.
     # --------------------------------------
-    - def_name: get_light_manager
+    - def_name: get_vehicles_light_states
+      return: dict
+      doc: >
+        Returns a dict where the keys are carla.Actor IDs and the values are carla.VehicleLightState of that vehicle.
+    # --------------------------------------
+    - def_name: get_lightmanager
       return: carla.LightManager
       doc: >
         Returns an instance of carla.LightManager that can be used to handle the lights in the scene. 

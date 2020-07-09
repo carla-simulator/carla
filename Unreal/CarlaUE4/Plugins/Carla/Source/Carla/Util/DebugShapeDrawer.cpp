@@ -24,7 +24,9 @@ struct FShapeVisitor
       Color(InColor),
       LifeTime(InLifeTime),
       bPersistentLines(bInPersistentLines)
-  {}
+  {
+    World->PersistentLineBatcher->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  }
 
   void operator()(const Shape::Point &Point) const
   {
