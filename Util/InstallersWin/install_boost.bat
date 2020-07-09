@@ -5,7 +5,7 @@ rem BAT script that downloads and installs a ready to use
 rem boost build for CARLA (carla.org).
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set FILE_N=    -[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -18,18 +18,23 @@ rem ============================================================================
 if not "%1"=="" (
     if "%1"=="-j" (
         set NUMBER_OF_ASYNC_JOBS=%~2
+        shift
     )
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%~2
+        set BUILD_DIR=%~dpn2
+        shift
     )
     if "%1"=="--toolset" (
         set TOOLSET=%~2
+        shift
     )
     if "%1"=="--version" (
         set BOOST_VERSION=%~2
+        shift
     )
     if "%1"=="-v" (
         set BOOST_VERSION=%~2
+        shift
     )
     if "%1"=="-h" (
         goto help
@@ -41,19 +46,20 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if [%BOOST_VERSION%] == [] (
+if "%BOOST_VERSION%" == "" (
     echo %FILE_N% You must specify a boost version using [-v^|--version]
     goto bad_exit
 )
 
 rem If not set set the build dir to the current dir
-if [%BUILD_DIR%] == [] set BUILD_DIR=%~dp0
+if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
+if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
 rem If not defined, use Visual Studio 2017 as tool set
-if [%TOOLSET%] == [] set TOOLSET=msvc-14.1
+if "%TOOLSET%" == "" set TOOLSET=msvc-14.1
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
-if [%NUMBER_OF_ASYNC_JOBS%] == [] set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
+if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
 
 rem ============================================================================
 rem -- Local Variables ---------------------------------------------------------
@@ -66,9 +72,9 @@ set BOOST_TEMP_FILE=%BOOST_TEMP_FOLDER%.zip
 set BOOST_TEMP_FILE_DIR=%BUILD_DIR%%BOOST_TEMP_FILE%
 
 set BOOST_REPO=https://dl.bintray.com/boostorg/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
-set BOOST_SRC_DIR=%BUILD_DIR%%BOOST_BASENAME%-source
-set BOOST_INSTALL_DIR=%BUILD_DIR%%BOOST_BASENAME%-install
-set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%\lib
+set BOOST_SRC_DIR=%BUILD_DIR%%BOOST_BASENAME%-source\
+set BOOST_INSTALL_DIR=%BUILD_DIR%%BOOST_BASENAME%-install\
+set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%lib\
 
 rem ============================================================================
 rem -- Get Boost ---------------------------------------------------------------
@@ -95,7 +101,7 @@ if not exist "%BOOST_SRC_DIR%" (
         powershell -Command "Expand-Archive '%BOOST_TEMP_FILE_DIR%' -DestinationPath '%BUILD_DIR%' -Force"
     )
     echo %FILE_N% Removing "%BOOST_TEMP_FILE%"
-    del "%BOOST_TEMP_FILE_DIR:/=\%"
+    del "%BOOST_TEMP_FILE_DIR%"
     rename "%BUILD_DIR%%BOOST_TEMP_FOLDER%" "%BOOST_BASENAME%-source"
 ) else (
     echo %FILE_N% Not downloading boost because already exists the folder "%BOOST_SRC_DIR%".
@@ -104,7 +110,7 @@ if not exist "%BOOST_SRC_DIR%" (
 cd "%BOOST_SRC_DIR%"
 if not exist "b2.exe" (
     echo %FILE_N% Generating build...
-    call bootstrap.bat
+    call bootstrap.bat vc141
 )
 
 if %errorlevel% neq 0 goto error_bootstrap
@@ -129,13 +135,13 @@ b2 -j%NUMBER_OF_ASYNC_JOBS%^
     link=static^
     runtime-link=shared^
     threading=multi^
-    --prefix="%BOOST_INSTALL_DIR%"^
-    --libdir="%BOOST_LIB_DIR%"^
-    --includedir="%BOOST_INSTALL_DIR%"^
+    --prefix="%BOOST_INSTALL_DIR:~0,-1%"^
+    --libdir="%BOOST_LIB_DIR:~0,-1%"^
+    --includedir="%BOOST_INSTALL_DIR:~0,-1%"^
     install
 if %errorlevel% neq 0 goto error_install
 
-for /d %%i in ("%BOOST_INSTALL_DIR%\boost*") do rename "%%i" include
+for /d %%i in ("%BOOST_INSTALL_DIR%boost*") do rename "%%i" include
 goto success
 
 rem ============================================================================

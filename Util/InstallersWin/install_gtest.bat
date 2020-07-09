@@ -6,7 +6,7 @@ rem Google Test build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set FILE_N=    -[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -15,13 +15,12 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BUILD_DIR=.
 set DEL_SRC=false
 
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%~2
+        set BUILD_DIR=%~dpn2
         shift
     )
 
@@ -33,12 +32,16 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
+rem If not set set the build dir to the current dir
+if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
+if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
+
 set GT_VERSION=release-1.8.1
 set GT_SRC=gtest-src
 set GT_SRC_DIR=%BUILD_DIR%%GT_SRC%\
 set GT_INSTALL=gtest-install
 set GT_INSTALL_DIR=%BUILD_DIR%%GT_INSTALL%\
-set GT_BUILD_DIR=%GT_SRC_DIR%build
+set GT_BUILD_DIR=%GT_SRC_DIR%build\
 
 if exist "%GT_INSTALL_DIR%" (
     goto already_build
@@ -47,7 +50,7 @@ if exist "%GT_INSTALL_DIR%" (
 if not exist "%GT_SRC_DIR%" (
     echo %FILE_N% Cloning Google Test - version "%GT_VERSION%"...
 
-    call git clone --depth=1 -b %GT_VERSION% https://github.com/google/googletest.git %GT_SRC_DIR%
+    call git clone --depth=1 -b "%GT_VERSION%" https://github.com/google/googletest.git "%GT_SRC_DIR:~0,-1%"
     if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning Google Test because already exists a folder called "%GT_SRC%".
@@ -64,9 +67,9 @@ echo %FILE_N% Generating build...
 cmake .. -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-    -DCMAKE_INSTALL_PREFIX=%GT_INSTALL_DIR%^
+    -DCMAKE_INSTALL_PREFIX="%GT_INSTALL_DIR:\=/%"^
     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
-    %GT_SRC_DIR%
+    "%GT_SRC_DIR%"
 if %errorlevel%  neq 0 goto error_cmake
 
 echo %FILE_N% Building...

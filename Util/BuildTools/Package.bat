@@ -6,7 +6,7 @@ rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 rem https://wiki.unrealengine.com/How_to_package_your_game_with_commands
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=-[%~n0]:"
+set FILE_N=-[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -47,6 +47,7 @@ if not "%1"=="" (
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
         set PACKAGES=%~2
+        shift
     )
 
     if "%1"=="-h" (

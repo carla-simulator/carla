@@ -28,8 +28,10 @@ matrix:
       install:
         - pip2 install -q --user setuptools
         - pip2 install -q --user -r PythonAPI/test/requirements.txt
+        - pip2 install -q --user -r PythonAPI/carla/requirements.txt
         - pip3 install -q --user setuptools
         - pip3 install -q --user -r PythonAPI/test/requirements.txt
+        - pip3 install -q --user -r PythonAPI/carla/requirements.txt
       script:
         - while sleep 2m; do echo "still building..."; done &
         - make setup >> build.log 2>&1

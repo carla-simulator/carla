@@ -532,7 +532,7 @@ lidar_bp.set_attribute('range',str(20))
 lidar_location = carla.Location(0,0,2)
 lidar_rotation = carla.Rotation(0,0,0)
 lidar_transform = carla.Transform(lidar_location,lidar_rotation)
-lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
+lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle)
 lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
 ```
 
