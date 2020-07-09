@@ -893,6 +893,20 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(freeze_all_traffic_lights) << [this]
+      (bool frozen) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    auto* TraffiLightManager = GameMode->GetTrafficLightManager();
+    TraffiLightManager->SetFrozen(frozen);
+    return R<void>::Success();
+  };
+
   BIND_SYNC(get_vehicle_light_states) << [this]() -> R<cr::VehicleLightStateList>
   {
     REQUIRE_CARLA_EPISODE();

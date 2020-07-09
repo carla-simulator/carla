@@ -167,6 +167,7 @@ void export_world() {
     .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
+    .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def(self_ns::str(self_ns::self))
   ;
 

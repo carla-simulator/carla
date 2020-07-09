@@ -17,8 +17,6 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "Carla/Traffic/TrafficLightManager.h"
-
 namespace cr = carla::road;
 namespace cre = carla::road::element;
 
@@ -124,17 +122,8 @@ void ACarlaGameModeBase::BeginPlay()
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
 
-  AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
-  if(TrafficLightManagerActor == nullptr)
-  {
-    ATrafficLightManager* TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
-    TrafficLightManager->InitializeTrafficLights();
-  }
-  else
-  {
-    ATrafficLightManager* TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerActor);
-    TrafficLightManager->InitializeTrafficLights();
-  }
+  ATrafficLightManager* Manager = GetTrafficLightManager();
+  Manager->InitializeTrafficLights();
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
@@ -209,6 +198,23 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
   } else {
     Episode->MapGeoReference = Map->GetGeoReference();
   }
+}
+
+ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
+{
+  if (!TrafficLightManager)
+  {
+    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
+    if(TrafficLightManagerActor == nullptr)
+    {
+      TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
+    }
+    else
+    {
+      TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerActor);
+    }
+  }
+  return TrafficLightManager;
 }
 
 void ACarlaGameModeBase::DebugShowSignals(bool enable)

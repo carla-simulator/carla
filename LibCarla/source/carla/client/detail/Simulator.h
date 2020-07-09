@@ -522,6 +522,8 @@ namespace detail {
       _episode->RemoveLightUpdateChangeEvent(id);
     }
 
+    void FreezeAllTrafficLights(bool frozen);
+
     /// @}
 
   private:
