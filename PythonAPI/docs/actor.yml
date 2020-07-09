@@ -356,7 +356,7 @@
       - param_name: freeze
         type: bool
       doc: >
-        Stops the traffic light at its current state.
+        Stops all the traffic lights in the scene at their current state.
     # --------------------------------------
     - def_name: is_frozen
       return: bool
@@ -372,6 +372,12 @@
       return: list(carla.TrafficLight)
       doc: >
         Returns all traffic lights in the group this one belongs to. 
+      note: >
+        This function calls the simulator.
+    # --------------------------------------
+    - def_name: reset_group
+      doc: >
+        Resets the state of the traffic lights of the group to the initial state at the start of the simulation.
       note: >
         This function calls the simulator.
     # --------------------------------------
