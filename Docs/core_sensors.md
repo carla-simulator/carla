@@ -54,7 +54,7 @@ transform = carla.Transform(carla.Location(x=0.8, z=1.7))
 sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 ```
 !!! Important
-    When spawning with attachment, location must be relative to the parent actor. 
+    When spawning with attachment, location must be relative to the parent actor.  
 
 ### Listening
 

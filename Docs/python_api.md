@@ -253,7 +253,7 @@ Class that defines attachment options between an actor and its parent. When spaw
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
 With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
 - <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them.  
+An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them. <br><b style="color:red;">Warning:</b> A bug in <b>SpringArm</b> attachment causes weird rotations when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
 
 ---
 
