@@ -148,6 +148,8 @@ namespace client {
       return _episode;
     };
 
+    void FreezeAllTrafficLights(bool frozen);
+
   private:
 
     detail::EpisodeProxy _episode;

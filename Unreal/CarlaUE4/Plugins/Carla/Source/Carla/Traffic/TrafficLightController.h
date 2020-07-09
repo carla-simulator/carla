@@ -124,7 +124,7 @@ private:
   float GetStateTime(const ETrafficLightState State) const;
 
   UPROPERTY(Category = "Traffic Controller", EditAnywhere)
-  FString ControllerId;
+  FString ControllerId = "";
 
   UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   int CurrentState = 0;
