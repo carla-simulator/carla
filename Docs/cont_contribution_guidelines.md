@@ -1,6 +1,6 @@
 # Contributing to CARLA
 
-The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. The team will work as much as possible so that contributions are successfully integrated iN CARLA.  
+The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. The team will work as much as possible so that contributions are successfully integrated in CARLA.  
 
 Take a look and don't hesitate!  
 
@@ -13,7 +13,7 @@ Take a look and don't hesitate!
 ---
 ## Report bugs
 
-If any issue arises while using CARLA, it can be reported in the [issue section][issueslink] on GitHub. Before reporting a new bug, make sure to do some checkups.  
+Issues can be reported in the [issue section][issueslink] on GitHub. Before reporting a new bug, make sure to do some checkups.  
 
 __1. Check if the bug has been reported.__ Look it up in that same issue section on GitHub.  
 
@@ -26,26 +26,30 @@ __2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding 
 ---
 ## Feature requests
 
-Ideas for new features are also a great way to contribute. If something is missing, and it would be great for users to have, submit the request in the correspoinding GitHub section [here][frlink].
+Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience  can be submitted in the corresponding GitHub section [here][frlink].
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
 
 ---
 ## Art contributions
 
-Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account limitations.  
+Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account space limitations. For said reason, the contributor will have to get in touch with the CARLA team, and ask them to create a branch on the content repository for the contributions.  
 
-__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org). 
+__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org).  
 
-__2. Contact the art team to get access to the CARLA repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Request for access to the art repository in the __Contributors__ channel (in *Development*).  
+__2. Contact the art team to get access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Go to the __Contributors__ channel and request for access to the content repostory.  
 
-__3. A branch will be created for each contributor.__ The branch will be named after the contributor `contributors/contributor_name`.  
+__3. A branch will be created for each contributor.__ The branch will be named as `contributors/contributor_name`. All the contributions made by said user should be made in that corresponding branch.  
 
-__4. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
+__4. Build CARLA.__ In order to contribute, a CARLA build is necessary. Follow the instructions to build either in [Linux](https://carla.readthedocs.io/en/latest/build_linux/) or [Windows](https://carla.readthedocs.io/en/latest/build_windows/).  
 
-__5. Upload the contribution.__ The branch should always be updated with the latest changes in master.  
+__5. Download the content repository.__ Follow the instructions to update the content in [here](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets).
 
-__6. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master. 
+__6. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
+
+__7. Upload the contribution.__ Do the corresponding changes and push the branch to origin.  
+
+__8. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master.  
 
 
 ---
