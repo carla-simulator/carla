@@ -318,6 +318,13 @@
       doc: >
         Returns an instance of carla.LightManager that can be used to handle the lights in the scene. 
     # --------------------------------------
+    - def_name: freeze_all_traffic_lights
+      params:
+        - param_name: frozen
+          type: bool
+      doc: >
+        Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen. 
+    # --------------------------------------
     - def_name: get_map
       return: carla.Map
       doc: >

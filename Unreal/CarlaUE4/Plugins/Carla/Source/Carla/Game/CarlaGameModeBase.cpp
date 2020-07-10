@@ -17,7 +17,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "Carla/Traffic/TrafficLightManager.h"
+namespace cr = carla::road;
+namespace cre = carla::road::element;
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -64,12 +65,6 @@ void ACarlaGameModeBase::InitGame(
 
   auto World = GetWorld();
   check(World != nullptr);
-
-  AActor* TrafficLightManagerActor =  UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
-  if(TrafficLightManagerActor == nullptr) {
-    World->SpawnActor<ATrafficLightManager>();
-  }
-
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
@@ -126,6 +121,9 @@ void ACarlaGameModeBase::BeginPlay()
     ATagger::TagActorsInLevel(*GetWorld(), true);
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
+
+  ATrafficLightManager* Manager = GetTrafficLightManager();
+  Manager->InitializeTrafficLights();
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
@@ -202,8 +200,26 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
   }
 }
 
+ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
+{
+  if (!TrafficLightManager)
+  {
+    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
+    if(TrafficLightManagerActor == nullptr)
+    {
+      TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
+    }
+    else
+    {
+      TrafficLightManager = Cast<ATrafficLightManager>(TrafficLightManagerActor);
+    }
+  }
+  return TrafficLightManager;
+}
+
 void ACarlaGameModeBase::DebugShowSignals(bool enable)
 {
+
   auto World = GetWorld();
   check(World != nullptr);
 
@@ -237,78 +253,65 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
       FColor(0, 255, 0),
       true
     );
-
-    FString Text = FString(ODSignal->GetSignalId().c_str());
-    Text += FString(" - ");
-    Text += FString(ODSignal->GetName().c_str());
-
-    UKismetSystemLibrary::DrawDebugString (
-      World,
-      Location + Up * 250.0f,
-      Text,
-      nullptr,
-      FLinearColor(0, 255, 0, 255)
-    );
-
-    FString Text2 = FString(ODSignal->GetType().c_str());
-    Text2 += FString(" - ");
-    Text2 += FString(ODSignal->GetSubtype().c_str());
-
-    UKismetSystemLibrary::DrawDebugString (
-      World,
-      Location + Up * 175.0f,
-      Text,
-      nullptr,
-      FLinearColor(0, 255, 0, 255),
-      10000.0f
-    );
   }
 
+  TArray<const cre::RoadInfoSignal*> References;
   auto waypoints = Map->GenerateWaypointsOnRoadEntries();
+  std::unordered_set<cr::RoadId> ExploredRoads;
   for (auto & waypoint : waypoints)
   {
-    auto SignalReferences = Map->GetLane(waypoint).GetRoad()->GetInfos<carla::road::element::RoadInfoSignal>();
+    // Check if we already explored this road
+    if (ExploredRoads.count(waypoint.road_id) > 0)
+    {
+      continue;
+    }
+    ExploredRoads.insert(waypoint.road_id);
+
+    // Multiple times for same road (performance impact, not in behavior)
+    auto SignalReferences = Map->GetLane(waypoint).
+        GetRoad()->GetInfos<cre::RoadInfoSignal>();
     for (auto *SignalReference : SignalReferences)
     {
-      double current_s = waypoint.s;
-      double signal_s = SignalReference->GetS();
+      References.Add(SignalReference);
+    }
+  }
+  for (auto& Reference : References)
+  {
+    auto RoadId = Reference->GetRoadId();
+    const auto* SignalReference = Reference;
+    const FTransform SignalTransform = SignalReference->GetSignal()->GetTransform();
+    for(auto &validity : SignalReference->GetValidities())
+    {
+      for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
+      {
+        if(lane == 0)
+          continue;
 
-      double delta_s = signal_s - current_s;
-      FTransform ReferenceTransform;
-      if (delta_s == 0)
-      {
-        ReferenceTransform = Map->ComputeTransform(waypoint);
-      }
-      else if (waypoint.lane_id < 0)
-      {
-        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
-        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
-      }
-      else if(waypoint.lane_id > 0)
-      {
-        auto signal_waypoint = Map->GetNext(waypoint, FMath::Abs(delta_s)).front();
-        ReferenceTransform = Map->ComputeTransform(signal_waypoint);
-      }
-      else
-      {
-        continue;
-      }
-      DrawDebugSphere(
-          World,
-          ReferenceTransform.GetLocation(),
-          50.0f,
-          10,
-          FColor(0, 255, 0),
-          true
-      );
+        auto signal_waypoint = Map->GetWaypoint(
+            RoadId, lane, SignalReference->GetS()).get();
 
-      DrawDebugLine(
-          World,
-          ReferenceTransform.GetLocation(),
-          FTransform(SignalReference->GetSignal()->GetTransform()).GetLocation(),
-          FColor(0, 255, 0),
-          true
-      );
+        if(Map->GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
+          continue;
+
+        FTransform ReferenceTransform = Map->ComputeTransform(signal_waypoint);
+
+        DrawDebugSphere(
+            World,
+            ReferenceTransform.GetLocation(),
+            50.0f,
+            10,
+            FColor(0, 0, 255),
+            true
+        );
+
+        DrawDebugLine(
+            World,
+            ReferenceTransform.GetLocation(),
+            SignalTransform.GetLocation(),
+            FColor(0, 0, 255),
+            true
+        );
+      }
     }
   }
 

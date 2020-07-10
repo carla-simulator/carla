@@ -64,6 +64,6 @@ protected:
 private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
-  FString SignId;
+  FString SignId = "";
 
 };

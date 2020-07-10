@@ -35,7 +35,7 @@ public:
   void SetFrozenGroup(bool InFreeze);
 
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
-  bool IsFrozen();
+  bool IsFrozen() const;
 
   UFUNCTION(Category = "Traffic Group", BlueprintPure)
   int GetJunctionId() const;
@@ -44,7 +44,7 @@ public:
   void ResetGroup();
 
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
-  float GetElapsedTime() const;
+  void AddController(UTrafficLightController* Controller);
 
 protected:
   // Called every frame
@@ -60,17 +60,8 @@ private:
   UPROPERTY(Category = "Traffic Group", EditAnywhere)
   TArray<UTrafficLightController*> Controllers;
 
-  UPROPERTY()
-  float Timer = 0.0f;
-
-  UPROPERTY()
-  float CurrentStateTimer = 0.0f;
-
-  UPROPERTY()
+  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   int CurrentController = 0;
-
-  UFUNCTION()
-  void NextCycleStep();
 
   UFUNCTION()
   void NextController();

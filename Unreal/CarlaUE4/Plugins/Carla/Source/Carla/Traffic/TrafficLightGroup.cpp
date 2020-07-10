@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "TrafficLightGroup.h"
 
 
@@ -22,7 +23,7 @@ void ATrafficLightGroup::SetFrozenGroup(bool InFreeze)
   bIsFrozen = InFreeze;
 }
 
-bool ATrafficLightGroup::IsFrozen()
+bool ATrafficLightGroup::IsFrozen() const
 {
   return bIsFrozen;
 }
@@ -34,17 +35,8 @@ void ATrafficLightGroup::ResetGroup()
     Controller->ResetState();
   }
   CurrentController = 0;
-  if(Controllers.Num() > 0) {
-    Timer = Controllers[CurrentController]->NextState();
-  } else {
-    Timer = 0.0f;
-  }
-  CurrentStateTimer = Timer;
-}
-
-float ATrafficLightGroup::GetElapsedTime() const
-{
-  return (CurrentStateTimer - Timer);
+  UTrafficLightController* controller = Controllers[CurrentController];
+  controller->StartCycle();
 }
 
 // Called every frame
@@ -52,29 +44,29 @@ void ATrafficLightGroup::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  // Do not update if the replayer is replaying
+  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (Episode)
+  {
+    auto* Replayer = Episode->GetReplayer();
+    if (Replayer)
+    {
+      if(Replayer->IsEnabled())
+      {
+        return;
+      }
+    }
+  }
+
   if (bIsFrozen)
   {
     return;
   }
 
-  Timer -= DeltaTime;
-
-  if(Timer <= 0 && Controllers.Num())
-  {
-    NextCycleStep();
-  }
-}
-
-void ATrafficLightGroup::NextCycleStep()
-{
   UTrafficLightController* controller = Controllers[CurrentController];
-  if (controller->IsCycleFinished())
+  if (controller->AdvanceTimeAndCycleFinished(DeltaTime))
   {
     NextController();
-  }
-  else
-  {
-    Timer = controller->NextState();
   }
 }
 
@@ -82,11 +74,16 @@ void ATrafficLightGroup::NextController()
 {
   CurrentController = (CurrentController + 1) % Controllers.Num();
   UTrafficLightController* controller = Controllers[CurrentController];
-  Timer = controller->NextState();
-  CurrentStateTimer = Timer;
+  controller->StartCycle();
 }
 
 int ATrafficLightGroup::GetJunctionId() const
 {
   return JunctionId;
+}
+
+void ATrafficLightGroup::AddController(UTrafficLightController* Controller)
+{
+  Controllers.Add(Controller);
+  Controller->SetGroup(this);
 }
