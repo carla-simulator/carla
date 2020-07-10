@@ -6,7 +6,7 @@ rem x64 zlib build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set FILE_N=    -[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -18,10 +18,12 @@ rem ============================================================================
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%~2
+        set BUILD_DIR=%~dpn2
+        shift
     )
     if "%1"=="--toolset" (
         set TOOLSET=%~2
+        shift
     )
     if "%1"=="-h" (
         goto help
@@ -34,10 +36,11 @@ if not "%1"=="" (
 )
 
 rem If not set set the build dir to the current dir
-if [%BUILD_DIR%] == [] set BUILD_DIR=%~dp0
+if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
+if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
 rem If not defined, use Visual Studio 2017 as tool set
-if [%TOOLSET%] == [] set TOOLSET=""
+if "%TOOLSET%" == "" set TOOLSET=""
 
 rem ============================================================================
 rem -- Local Variables ---------------------------------------------------------
@@ -52,8 +55,8 @@ set ZLIB_TEMP_FILE_DIR=%BUILD_DIR%%ZLIB_TEMP_FILE%
 
 set ZLIB_REPO=http://www.zlib.net/zlib%ZLIB_VERSION:.=%.zip
 
-set ZLIB_SRC_DIR=%BUILD_DIR%%ZLIB_BASENAME%-source
-set ZLIB_INSTALL_DIR=%BUILD_DIR%%ZLIB_BASENAME%-install
+set ZLIB_SRC_DIR=%BUILD_DIR%%ZLIB_BASENAME%-source\
+set ZLIB_INSTALL_DIR=%BUILD_DIR%%ZLIB_BASENAME%-install\
 
 rem ============================================================================
 rem -- Get zlib ---------------------------------------------------------------
@@ -76,23 +79,23 @@ if not exist "%ZLIB_SRC_DIR%" (
 
     rem Remove the no longer needed downloaded file
     echo %FILE_N% Removing "%ZLIB_TEMP_FILE%"
-    del "%ZLIB_TEMP_FILE_DIR:/=\%"
+    del "%ZLIB_TEMP_FILE_DIR%"
     rename "%BUILD_DIR%%ZLIB_TEMP_FOLDER%" "%ZLIB_BASENAME%-source"
 ) else (
     echo %FILE_N% Not downloading zlib because already exists the folder "%ZLIB_SRC_DIR%".
 )
 
-if not exist "%ZLIB_SRC_DIR%\build" (
-    echo %FILE_N% Creating "%ZLIB_SRC_DIR%\build"
-    mkdir "%ZLIB_SRC_DIR%\build"
+if not exist "%ZLIB_SRC_DIR%build" (
+    echo %FILE_N% Creating "%ZLIB_SRC_DIR%build"
+    mkdir "%ZLIB_SRC_DIR%build"
 )
 
-cd "%ZLIB_SRC_DIR%\build"
+cd "%ZLIB_SRC_DIR%build"
 
 rem -DCMAKE_BUILD_TYPE=Release^
 rem -DCMAKE_CONFIGURATION_TYPES=Release^
 cmake -G "NMake Makefiles"^
- -DCMAKE_INSTALL_PREFIX="%ZLIB_INSTALL_DIR%"^
+ -DCMAKE_INSTALL_PREFIX="%ZLIB_INSTALL_DIR:\=/%"^
  -DCMAKE_BUILD_TYPE=Release^
  "%ZLIB_SRC_DIR%"
 if %errorlevel% neq 0 goto error_cmake

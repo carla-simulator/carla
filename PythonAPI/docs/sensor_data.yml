@@ -131,7 +131,7 @@
     - var_name: raw_data
       type: bytes
       doc: >
-        List of 3D points received as data.
+        Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.
     # - METHODS ----------------------------
     methods:
     - def_name: save_to_disk
@@ -161,9 +161,29 @@
       params:
       - param_name: pos
         type: int
-      - param_name: location
-        type: carla.Location
+      - param_name: detection
+        type: carla.LidarDetection
     # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: LidarDetection
+    # - DESCRIPTION ------------------------
+    doc: >
+      Data contained inside a carla.LidarMeasurement. Each of these represents one of the points in the cloud with its location and its asociated intensity.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: point
+      type: carla.Location
+      doc: >
+        Point in xyz coordinates.
+    # --------------------------------------
+    - var_name: intensity
+      type: float
+      doc: >
+        Computed intensity for this point.
+    # - METHODS ----------------------------
+    methods:
     - def_name: __str__
     # --------------------------------------
 

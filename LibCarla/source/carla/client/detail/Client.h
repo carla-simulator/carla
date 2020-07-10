@@ -214,7 +214,7 @@ namespace detail {
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name);
+    std::string StartRecorder(std::string name, bool additional_data);
 
     void StopRecorder();
 

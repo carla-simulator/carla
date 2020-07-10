@@ -50,10 +50,10 @@ ue4-docker setup
 ## Building the Docker images
 
 Navigate to `carla/Util/Docker` and use the following commands, each one will take a long time.  
-First, let's create a Docker image containing a compiled version of Unreal Engine 4 version `22.2`. Change the version if needed.
+First, let's create a Docker image containing a compiled version of Unreal Engine 4 version `24.3`. Change the version if needed.
 
 ```
-ue4-docker build 4.22.2 --no-engine --no-minimal
+ue4-docker build 4.24.3 --no-engine --no-minimal
 ```
 
 Next, this will build the image with all the necessary requisites to build Carla in a **Ubuntu 18.04**

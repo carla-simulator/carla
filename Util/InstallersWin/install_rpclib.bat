@@ -6,7 +6,7 @@ rem rpclib build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set FILE_N=    -[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -15,13 +15,12 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BUILD_DIR=.
 set DEL_SRC=false
 
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%~2
+        set BUILD_DIR=%~dpn2
         shift
     )
 
@@ -33,14 +32,18 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
+rem If not set set the build dir to the current dir
+if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
+if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
+
 set RPC_VERSION=v2.2.1_c2
 set RPC_SRC=rpclib-src
 set RPC_SRC_DIR=%BUILD_DIR%%RPC_SRC%\
 set RPC_INSTALL=rpclib-install
 set RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\
-set RPC_BUILD_DIR=%RPC_SRC_DIR%build
+set RPC_BUILD_DIR=%RPC_SRC_DIR%build\
 
-set PUSHD_RPC=%RPC_SRC_DIR:\=/%
+set PUSHD_RPC=%RPC_SRC_DIR%
 
 if exist "%RPC_INSTALL_DIR%" (
     goto already_build
@@ -49,7 +52,8 @@ if exist "%RPC_INSTALL_DIR%" (
 if not exist "%RPC_SRC_DIR%" (
     echo %FILE_N% Cloning rpclib - version "%RPC_VERSION%"...
 
-    call git clone -b %RPC_VERSION% https://github.com/carla-simulator/rpclib.git %RPC_SRC_DIR%
+    echo git clone -b "%RPC_VERSION%" https://github.com/carla-simulator/rpclib.git "%RPC_SRC_DIR:~0,-1%"
+    call git clone -b "%RPC_VERSION%" https://github.com/carla-simulator/rpclib.git "%RPC_SRC_DIR:~0,-1%"
     if %errorlevel% neq 0 goto error_git
 ) else (
     echo %FILE_N% Not cloning rpclib because already exists a folder called "%RPC_SRC%".
@@ -67,8 +71,8 @@ cmake .. -G "Visual Studio 15 2017 Win64"^
         -DCMAKE_BUILD_TYPE=Release^
         -DRPCLIB_BUILD_EXAMPLES=OFF^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-        -DCMAKE_INSTALL_PREFIX=%RPC_INSTALL_DIR%^
-        %RPC_SRC_DIR%
+        -DCMAKE_INSTALL_PREFIX="%RPC_INSTALL_DIR:\=/%"^
+        "%RPC_SRC_DIR%"
 if %errorlevel% neq 0 goto error_cmake
 
 echo %FILE_N% Building...
@@ -126,8 +130,7 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal
-    set install_rpclib=done
+    endlocal & set install_rpclib=done
     exit /b 0
 
 :bad_exit
