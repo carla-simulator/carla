@@ -5,7 +5,7 @@ rem BAT script that creates the client and the server of LibCarla (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=-[%~n0]:"
+set FILE_N=-[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -15,7 +15,7 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
 set DOC_STRING=Build LibCarla.
-set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean]"
+set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean]
 
 set REMOVE_INTERMEDIATE=false
 set BUILD_SERVER=false
@@ -66,16 +66,16 @@ rem ============================================================================
 
 rem Set the visual studio solution directory
 rem
-set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR%libcarla-visualstudio
+set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%libcarla-visualstudio\
 
-set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
-set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH%PythonAPI\carla\dependencies
+set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
+set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
     for %%G in (
-        "%LIBCARLA_SERVER_INSTALL_PATH:/=\%",
-        "%LIBCARLA_CLIENT_INSTALL_PATH:/=\%",
+        "%LIBCARLA_SERVER_INSTALL_PATH%",
+        "%LIBCARLA_CLIENT_INSTALL_PATH%",
     ) do (
         if exist %%G (
             echo %FILE_N% Cleaning %%G
@@ -103,8 +103,8 @@ if %BUILD_SERVER% == true (
     cmake -G "Visual Studio 15 2017 Win64"^
       -DCMAKE_BUILD_TYPE=Server^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-      -DCMAKE_INSTALL_PREFIX=%LIBCARLA_SERVER_INSTALL_PATH%^
-      %ROOT_PATH%
+      -DCMAKE_INSTALL_PREFIX="%LIBCARLA_SERVER_INSTALL_PATH:\=/%"^
+      "%ROOT_PATH%"
     if %errorlevel% neq 0 goto error_cmake
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
@@ -117,8 +117,8 @@ if %BUILD_CLIENT% == true (
     cmake -G "Visual Studio 15 2017 Win64"^
       -DCMAKE_BUILD_TYPE=Client^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-      -DCMAKE_INSTALL_PREFIX=%LIBCARLA_CLIENT_INSTALL_PATH%^
-      %ROOT_PATH%
+      -DCMAKE_INSTALL_PREFIX="%LIBCARLA_CLIENT_INSTALL_PATH:\=/%"^
+      "%ROOT_PATH%"
     if %errorlevel% neq 0 goto error_cmake
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"

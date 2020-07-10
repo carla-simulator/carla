@@ -48,13 +48,26 @@ private:
   void ReadPoints(float DeltaTime);
 
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point) const;
+  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point, float& Intensity) const;
+
+  /// Compute the received intensity of the point
+  float ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const;
 
   UPROPERTY(EditAnywhere)
   FLidarDescription Description;
 
   TArray<float> LaserAngles;
-  std::vector<std::vector<FVector>> AuxPoints;
 
   FLidarMeasurement LidarMeasurement;
+
+  /// Enable/Disable general dropoff of lidar points
+  bool DropOffGenActive;
+
+  /// Slope for the intensity dropoff of lidar points, it is calculated
+  /// throught the dropoff limit and the dropoff at zero intensity
+  /// The points is kept with a probality alpha*Intensity + beta where
+  /// alpha = (1 - dropoff_zero_intensity) / droppoff_limit
+  /// beta = (1 - dropoff_zero_intensity)
+  float DropOffAlpha;
+  float DropOffBeta;
 };

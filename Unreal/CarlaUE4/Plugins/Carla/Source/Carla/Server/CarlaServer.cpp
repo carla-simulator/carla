@@ -942,10 +942,10 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(start_recorder) << [this](std::string name) -> R<std::string>
+  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->StartRecorder(name));
+    return R<std::string>(Episode->StartRecorder(name, AdditionalData));
   };
 
   BIND_SYNC(stop_recorder) << [this]() -> R<void>

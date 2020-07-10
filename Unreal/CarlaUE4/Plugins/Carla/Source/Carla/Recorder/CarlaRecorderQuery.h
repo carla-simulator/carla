@@ -8,6 +8,11 @@
 
 #include <fstream>
 
+#include "CarlaRecorderPlatformTime.h"
+#include "CarlaRecorderBoundingBox.h"
+#include "CarlaRecorderKinematics.h"
+#include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
@@ -52,6 +57,11 @@ private:
   CarlaRecorderStateTrafficLight StateTraffic;
   CarlaRecorderAnimVehicle Vehicle;
   CarlaRecorderAnimWalker Walker;
+  CarlaRecorderLightVehicle LightVehicle;
+  CarlaRecorderLightScene LightScene;
+  CarlaRecorderKinematics Kinematics;
+  CarlaRecorderBoundingBox BoundingBox;
+  CarlaRecorderPlatformTime PlatformTime;
 
   // read next header packet
   bool ReadHeader(void);

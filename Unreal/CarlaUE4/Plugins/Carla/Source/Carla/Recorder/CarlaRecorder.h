@@ -11,6 +11,9 @@
 
 #include "Carla/Actor/ActorDescription.h"
 
+#include "CarlaRecorderPlatformTime.h"
+#include "CarlaRecorderBoundingBox.h"
+#include "CarlaRecorderKinematics.h"
 #include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimVehicle.h"
@@ -46,7 +49,10 @@ enum class CarlaRecorderPacketId : uint8_t
   AnimVehicle,
   AnimWalker,
   VehicleLight,
-  SceneLight
+  SceneLight,
+  Kinematics,
+  BoundingBox,
+  PlatformTime
 };
 
 /// Recorder for the simulation
@@ -70,7 +76,7 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(std::string Name, FString MapName);
+  std::string Start(std::string Name, FString MapName, bool AdditionalData = false);
 
   void Stop(void);
 
@@ -98,6 +104,10 @@ public:
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
 
   void AddEventLightSceneChanged(const UCarlaLight* Light);
+
+  void AddKinematics(const CarlaRecorderKinematics &ActorKinematics);
+
+  void AddBoundingBox(const CarlaRecorderBoundingBox &ActorBoundingBox);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -134,6 +144,9 @@ private:
 
   bool Enabled;   // enabled or not
 
+  // enabling this records additional data (kinematics, bounding boxes, etc)
+  bool bAdditionalData = false;
+
   uint32_t NextCollisionId = 0;
 
   // files
@@ -154,6 +167,10 @@ private:
   CarlaRecorderAnimWalkers Walkers;
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
+  CarlaRecorderActorsKinematics Kinematics;
+  CarlaRecorderBoundingBoxes BoundingBoxes;
+  CarlaRecorderPlatformTime PlatformTime;
+
 
   // replayer
   CarlaReplayer Replayer;
@@ -167,4 +184,6 @@ private:
   void AddVehicleAnimation(FActorView &View);
   void AddTrafficLightState(FActorView &View);
   void AddVehicleLight(FActorView &View);
+  void AddActorKinematics(FActorView &View);
+  void AddActorBoundingBox(FActorView &View);
 };

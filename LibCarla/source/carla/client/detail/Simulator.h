@@ -390,8 +390,8 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    std::string StartRecorder(std::string name) {
-      return _client.StartRecorder(std::move(name));
+    std::string StartRecorder(std::string name, bool additional_data) {
+      return _client.StartRecorder(std::move(name), additional_data);
     }
 
     void StopRecorder(void) {

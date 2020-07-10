@@ -71,7 +71,6 @@ rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.sym
 rm CarlaUE4.sh
 cat >> CarlaUE4.sh <<EOF
 #!/bin/sh
-sudo chmod +x "/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping"
 "/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 \$@
 EOF
 

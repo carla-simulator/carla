@@ -18,6 +18,7 @@ namespace pointcloud {
            "property float32 x\n"
            "property float32 y\n"
            "property float32 z\n"
+           "property float32 I\n"
            // "property uchar diffuse_red\n"
            // "property uchar diffuse_green\n"
            // "property uchar diffuse_blue\n"
