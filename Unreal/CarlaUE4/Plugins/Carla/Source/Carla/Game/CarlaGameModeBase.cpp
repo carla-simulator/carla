@@ -253,21 +253,6 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
       FColor(0, 255, 0),
       true
     );
-
-    FString Text;
-    Text += "Id: ";
-    Text += FString(ODSignal->GetSignalId().c_str());
-    Text += FString(" - Name: ");
-    Text += FString(ODSignal->GetName().c_str());
-
-    // UKismetSystemLibrary::DrawDebugString (
-    //   World,
-    //   Location + Up * 250.0f,
-    //   Text,
-    //   nullptr,
-    //   FLinearColor(0, 255, 0, 255),
-    //   100000000.0
-    // );
   }
 
   TArray<const cre::RoadInfoSignal*> References;
