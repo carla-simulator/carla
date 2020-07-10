@@ -1898,7 +1898,7 @@ Describes a rotation for an object according to Unreal Engine's axis system.
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
-Translates a 3D point from global to local coordinates using the current transformation as frame of reference.  
+Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
         - `in_point` (_[carla.Location](#carla.Location)_) – Location in the space to which the transformation will be applied.  
 
