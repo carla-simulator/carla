@@ -13,6 +13,7 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Traffic/TrafficLightManager.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -43,8 +44,11 @@ public:
     return Map;
   }
 
-  UFUNCTION(Exec, CallInEditor, meta=(DevelopmentOnly))
+  UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);
+
+  UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
+  ATrafficLightManager* GetTrafficLightManager();
 
 protected:
 
@@ -87,6 +91,9 @@ private:
 
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
+
+  UPROPERTY()
+  ATrafficLightManager* TrafficLightManager = nullptr;
 
   boost::optional<carla::road::Map> Map;
 

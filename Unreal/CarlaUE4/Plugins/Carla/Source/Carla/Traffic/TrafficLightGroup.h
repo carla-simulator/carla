@@ -44,12 +44,6 @@ public:
   void ResetGroup();
 
   UFUNCTION(Category = "Traffic Group", BlueprintCallable)
-  float GetElapsedTime() const;
-
-  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
-  void SetElapsedTime(float ElapsedTime);
-
-  UFUNCTION(Category = "Traffic Group", BlueprintCallable)
   void AddController(UTrafficLightController* Controller);
 
 protected:
@@ -67,16 +61,7 @@ private:
   TArray<UTrafficLightController*> Controllers;
 
   UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
-  float Timer = 0.0f;
-
-  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
-  float CurrentStateTimer = 0.0f;
-
-  UPROPERTY(Category = "Traffic Group", VisibleAnywhere)
   int CurrentController = 0;
-
-  UFUNCTION()
-  void NextCycleStep();
 
   UFUNCTION()
   void NextController();

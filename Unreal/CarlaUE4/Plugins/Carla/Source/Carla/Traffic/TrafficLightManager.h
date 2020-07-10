@@ -9,7 +9,6 @@
 #include "TrafficLightComponent.h"
 #include "TrafficLightGroup.h"
 #include "TrafficSignBase.h"
-#include "Game/CarlaGameModeBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "TrafficLightManager.generated.h"
 
@@ -24,33 +23,42 @@ public:
 
   ATrafficLightManager();
 
-  UFUNCTION(BlueprintCallable)
-  void RegisterLightComponent(UTrafficLightComponent * TrafficLight);
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
+  void RegisterLightComponentFromOpenDRIVE(UTrafficLightComponent * TrafficLight);
+
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
+  void RegisterLightComponentGenerated(UTrafficLightComponent * TrafficLight);
 
   const boost::optional<carla::road::Map> &GetMap();
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   ATrafficLightGroup* GetTrafficGroup(int JunctionId);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   UTrafficLightController* GetController(FString ControllerId);
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   USignComponent* GetTrafficSign(FString SignId);
 
-  UFUNCTION(CallInEditor)
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
+  void SetFrozen(bool InFrozen);
+
+  UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
+  bool GetFrozen();
+
+  UFUNCTION(CallInEditor, Category = "Traffic Light Manager")
   void GenerateSignalsAndTrafficLights();
 
-  UFUNCTION(CallInEditor)
+  UFUNCTION(CallInEditor, Category = "Traffic Light Manager")
   void RemoveGeneratedSignalsAndTrafficLights();
 
-protected:
-  // Called when the game starts or when spawned
-  virtual void BeginPlay() override;
+  UFUNCTION(CallInEditor, Category = "Traffic Light Manager")
+  void MatchTrafficLightActorsWithOpenDriveSignals();
+
+  // Called when the game starts by the gamemode
+  void InitializeTrafficLights();
 
 private:
-
-  void ResetTrafficLightObjects();
 
   void SpawnTrafficLights();
 
@@ -59,10 +67,6 @@ private:
   void RemoveRoadrunnerProps() const;
 
   void RemoveAttachedProps(TArray<AActor*> Actors) const;
-
-  // Cached Carla Game Mode
-  UPROPERTY()
-  ACarlaGameModeBase *GameMode = 0;
 
   // Mapped references to ATrafficLightGroup (junction)
   UPROPERTY()
@@ -92,12 +96,22 @@ private:
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   USceneComponent *SceneComponent;
 
-  boost::optional<carla::road::Map> Map;
-
-  UPROPERTY()
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   bool TrafficLightsGenerated = false;
 
+  // Id for TrafficLightGroups without corresponding OpenDRIVE junction
   UPROPERTY()
-  int LoneTrafficLightsGroupControllerId = -1;
+  int TrafficLightGroupMissingId = -2;
+
+  // Id for TrafficLightControllers without corresponding OpenDRIVE junction
+  UPROPERTY()
+  int TrafficLightControllerMissingId = -1;
+
+  // Id for TrafficLightComponents without corresponding OpenDRIVE junction
+  UPROPERTY()
+  int TrafficLightComponentMissingId = -1;
+
+  UPROPERTY()
+  bool bTrafficLightsFrozen = false;
 
 };
