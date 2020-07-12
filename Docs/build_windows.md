@@ -23,6 +23,9 @@ The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** 
 <br>
 To execute the <code>make</code> commands below, you <b>must</b> use the Visual Studio 2017 native console x64 <b>with</b> administrator rights, otherwise you may be getting permission errors.
 
+!!! Important
+    To execute the "make" commands below, you MUST use the Visual Studio 2017 native console x64 WITH administrator rights, otherwise you may be getting permission errors.
+	
 ```sh
 # Make sure to meet the minimum requirements.
 
