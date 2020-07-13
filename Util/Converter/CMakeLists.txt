@@ -39,7 +39,7 @@ endif ()
 # compiler specific flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wall -pedantic -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wall -pedantic -Wextra -fPIC")
     if (PROFILING)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
         set(ENABLED_FEATURES "${ENABLED_FEATURES} Profiling")
@@ -283,8 +283,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
 # installation
-include(GNUInstallDirs)
-install(DIRECTORY data/ DESTINATION share/sumo/data)
+#include(GNUInstallDirs)
+#install(DIRECTORY data/ DESTINATION share/sumo/data)
 #install(DIRECTORY tools/ DESTINATION share/sumo/tools
 #        USE_SOURCE_PERMISSIONS
 #        PATTERN "calibration" EXCLUDE
@@ -294,13 +294,13 @@ install(DIRECTORY data/ DESTINATION share/sumo/data)
 #        PATTERN "traas" EXCLUDE
 #        PATTERN "traci4matlab/src" EXCLUDE
 #        PATTERN ".git" EXCLUDE)
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/sumo/bin)")
+#install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/sumo/bin)")
 
 if (NOT ${SETUPTOOLS_MISSING})
-    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build/setup-sumolib.py clean --all install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX} --optimize=1)"
-            COMPONENT pysumolib)
-    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build/setup-traci.py clean --all install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX} --optimize=1)"
-            COMPONENT pytraci)
+    #install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build/setup-sumolib.py clean --all install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX} --optimize=1)"
+    #        COMPONENT pysumolib)
+    #install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build/setup-traci.py clean --all install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX} --optimize=1)"
+    #        COMPONENT pytraci)
 endif ()
 
 if (SUMO_LIBRARIES AND WIN32)
@@ -335,8 +335,8 @@ if (SUMO_LIBRARIES AND WIN32)
                            DEPENDS ${PROJ_PATH})
     endif (PROJ_6)
     # set install_dll target
-    add_custom_target(install_dll ALL DEPENDS ${TARGET_DLLS} ${OSG_TARGET} ${PROJ_DATA})
-    set_property(TARGET install_dll PROPERTY FOLDER "CMake")
+    #add_custom_target(install_dll ALL DEPENDS ${TARGET_DLLS} ${OSG_TARGET} ${PROJ_DATA})
+    #set_property(TARGET install_dll PROPERTY FOLDER "CMake")
 endif ()
 
 # doc targets
