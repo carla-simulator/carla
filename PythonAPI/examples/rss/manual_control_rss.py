@@ -474,18 +474,6 @@ class VehicleControl(object):
             if pygame.mouse.get_pressed()[0]:
                 self._parse_mouse(pygame.mouse.get_pos())
             self._control.reverse = self._control.gear < 0
-            # Set automatic control-related vehicle lights
-            if self._control.brake:
-                current_lights |= carla.VehicleLightState.Brake
-            else:  # Remove the Brake flag
-                current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Brake
-            if self._control.reverse:
-                current_lights |= carla.VehicleLightState.Reverse
-            else:  # Remove the Reverse flag
-                current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Reverse
-            if current_lights != self._lights:  # Change the light state only if necessary
-                self._lights = current_lights
-                world.player.set_light_state(carla.VehicleLightState(self._lights))
 
             vehicle_control = self._control
             world.hud.original_vehicle_control = vehicle_control
@@ -508,6 +496,19 @@ class VehicleControl(object):
                     world.hud.allowed_steering_ranges = self._world.rss_sensor.get_steering_ranges()
                     if world.hud.original_vehicle_control.steer != world.hud.restricted_vehicle_control.steer:
                         self._steer_cache = prev_steer_cache
+
+            # Set automatic control-related vehicle lights
+            if vehicle_control.brake:
+                current_lights |= carla.VehicleLightState.Brake
+            else:  # Remove the Brake flag
+                current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Brake
+            if vehicle_control.reverse:
+                current_lights |= carla.VehicleLightState.Reverse
+            else:  # Remove the Reverse flag
+                current_lights &= carla.VehicleLightState.All ^ carla.VehicleLightState.Reverse
+            if current_lights != self._lights:  # Change the light state only if necessary
+                self._lights = current_lights
+                world.player.set_light_state(carla.VehicleLightState(self._lights))
 
             world.player.apply_control(vehicle_control)
 
