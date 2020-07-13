@@ -6,7 +6,7 @@ import inspect
 import carla
 import sys
 import math
-from rss_visualization import RssDebugVisualizer
+from rss_visualization import RssDebugVisualizer # pylint: disable=relative-import
 
 if sys.version_info.major == 3:
     import libad_rss_python3 as rss
