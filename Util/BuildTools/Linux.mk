@@ -79,28 +79,28 @@ CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla.client.release
+PythonAPI: LibCarla.client.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
 
-PythonAPI.2: LibCarla.client.release
+PythonAPI.2: LibCarla.client.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
 
-PythonAPI.3: LibCarla.client.release
+PythonAPI.3: LibCarla.client.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
 
-PythonAPI.rebuild: LibCarla.client.release
+PythonAPI.rebuild: LibCarla.client.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
 
-PythonAPI.rss: LibCarla.client.rss.release
+PythonAPI.rss: LibCarla.client.rss.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss
 
-PythonAPI.rss.2: LibCarla.client.rss.release
+PythonAPI.rss.2: LibCarla.client.rss.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --rss
 
-PythonAPI.rss.3: LibCarla.client.rss.release
+PythonAPI.rss.3: LibCarla.client.rss.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss
 
-PythonAPI.rss.rebuild: LibCarla.client.rss.release
+PythonAPI.rss.rebuild: LibCarla.client.rss.release converter
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild --rss
 
 PythonAPI.docs:

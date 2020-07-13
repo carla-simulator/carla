@@ -20,6 +20,8 @@ case $1 in
 esac
 
 cmake ${CONVERTER_BASE_DIR} \
-    -G "Eclipse CDT4 - Ninja"
+    -G "Eclipse CDT4 - Ninja" \
+    -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_CLIENT_FOLDER}
 
-ninja netconvert
+ninja converter
+ninja install
