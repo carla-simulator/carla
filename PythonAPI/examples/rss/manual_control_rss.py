@@ -74,8 +74,8 @@ import logging
 import math
 import random
 import weakref
-from rss_sensor import RssSensor
-from rss_visualization import RssUnstructuredSceneVisualizer, RssBoundingBoxVisualizer, RssStateVisualizer
+from rss_sensor import RssSensor # pylint: disable=relative-import
+from rss_visualization import RssUnstructuredSceneVisualizer, RssBoundingBoxVisualizer, RssStateVisualizer # pylint: disable=relative-import
 
 try:
     import pygame
