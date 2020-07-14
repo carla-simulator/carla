@@ -305,6 +305,21 @@ void ACarlaRecorder::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
   }
 }
 
+void ACarlaRecorder::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
+{
+  if (bAdditionalData)
+  {
+    auto DatabaseId = Episode->GetActorRegistry().Find(&TrafficLight).GetActorId();
+    CarlaRecorderTrafficLightTime TrafficLightTime{
+      DatabaseId,
+      TrafficLight.GetGreenTime(),
+      TrafficLight.GetYellowTime(),
+      TrafficLight.GetRedTime()
+    };
+    TrafficLightTimes.Add(TrafficLightTime);
+  }
+}
+
 std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
 {
   // stop replayer if any in course
@@ -376,6 +391,7 @@ void ACarlaRecorder::Clear(void)
   Kinematics.Clear();
   BoundingBoxes.Clear();
   PhysicsControls.Clear();
+  TrafficLightTimes.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -409,6 +425,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
     BoundingBoxes.Write(File);
     PlatformTime.Write(File);
     PhysicsControls.Write(File);
+    TrafficLightTimes.Write(File);
   }
 
   // end
@@ -602,10 +619,17 @@ void ACarlaRecorder::CreateRecorderEventAdd(
   };
   AddEvent(std::move(RecEvent));
 
+  // Other events related to spawning actors
   // check if it is a vehicle to get initial physics control
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Episode->GetActorRegistry().Find(DatabaseId).GetActor());
   if (Vehicle)
   {
     AddPhysicsControl(*Vehicle);
+  }
+
+  ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Episode->GetActorRegistry().Find(DatabaseId).GetActor());
+  if (TrafficLight)
+  {
+    AddTrafficLightTime(*TrafficLight);
   }
 }
