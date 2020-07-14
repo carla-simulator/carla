@@ -479,6 +479,31 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
+        case static_cast<char>(CarlaRecorderPacketId::TrafficLightTime):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+
+          Info << " Traffic Light time events: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            TrafficLightTime.Read(File);
+            Info << "  Actor id " << TrafficLightTime.DatabaseId
+                << ": Green Time " << TrafficLightTime.GreenTime
+                << " Yellow Time " << TrafficLightTime.YellowTime
+                << " Red Time " << TrafficLightTime.RedTime
+                << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
         // frame end
         case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         // do nothing, it is empty
