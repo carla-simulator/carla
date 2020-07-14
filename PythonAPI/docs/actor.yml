@@ -16,6 +16,10 @@
       type: int
       doc: >
         Identifier for this actor. Unique during a given episode.
+    - var_name: is_alive
+      type: bool
+      doc: >
+        Returns whether this object was destroyed using this actor handle.
     - var_name: parent
       type: carla.Actor
       doc: >
