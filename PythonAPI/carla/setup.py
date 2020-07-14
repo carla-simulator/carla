@@ -74,10 +74,9 @@ def get_libcarla_extensions():
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libspdlog.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_system.so')]
-                extra_link_args += ['-ltbb']
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libproj.a')]
                 extra_link_args += ['-lrt']
-                extra_link_args += ['-lproj']
+                extra_link_args += ['-ltbb']
 
             extra_link_args += [os.path.join(pwd, 'dependencies/lib', pylib)]
 

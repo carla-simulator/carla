@@ -12,19 +12,19 @@
 
 #ifdef LIBCARLA_PYTHON_MAJOR_2
 extern "C" {
-void initlibad_physics_python();
-void initlibad_rss_python();
-void initlibad_map_access_python();
-void initlibad_rss_map_integration_python();
+void initlibad_physics_python2();
+void initlibad_rss_python2();
+void initlibad_map_access_python2();
+void initlibad_rss_map_integration_python2();
 }
 #endif
 
 #ifdef LIBCARLA_PYTHON_MAJOR_3
 extern "C" {
-void PyInit_libad_physics_python();
-void PyInit_libad_rss_python();
-void PyInit_libad_map_access_python();
-void PyInit_libad_rss_map_integration_python();
+void PyInit_libad_physics_python3();
+void PyInit_libad_rss_python3();
+void PyInit_libad_map_access_python3();
+void PyInit_libad_rss_map_integration_python3();
 }
 #endif
 
@@ -43,7 +43,9 @@ namespace data {
 
 std::ostream &operator<<(std::ostream &out, const RssResponse &resp) {
   out << "RssResponse(frame=" << resp.GetFrame() << ", timestamp=" << resp.GetTimestamp()
-      << ", valid=" << resp.GetResponseValid() << ')';
+      << ", valid=" << resp.GetResponseValid() << ", proper_response=" << resp.GetProperResponse()
+      << ", rss_state_snapshot=" << resp.GetRssStateSnapshot() << ", situation_snapshot=" << resp.GetSituationSnapshot()
+      << ", world_model=" << resp.GetWorldModel() << ", ego_dynamics_on_route=" << resp.GetEgoDynamicsOnRoute() << ')';
   return out;
 }
 
@@ -61,6 +63,11 @@ static auto GetOtherVehicleDynamics(const carla::client::RssSensor &self) {
   return other_dynamics;
 }
 
+static auto GetPedestrianDynamics(const carla::client::RssSensor &self) {
+  ad::rss::world::RssDynamics pedestrian_dynamics(self.GetPedestrianDynamics());
+  return pedestrian_dynamics;
+}
+
 static auto GetRoadBoundariesMode(const carla::client::RssSensor &self) {
   carla::rss::RoadBoundariesMode road_boundaries_mode(self.GetRoadBoundariesMode());
   return road_boundaries_mode;
@@ -71,24 +78,48 @@ static auto GetRoutingTargets(const carla::client::RssSensor &self) {
   return routing_targets;
 }
 
-static auto GetVisualizationMode(const carla::client::RssSensor &self) {
-  carla::rss::VisualizationMode visualization_mode(self.GetVisualizationMode());
-  return visualization_mode;
+static void RegisterActorConstellationCallback(carla::client::RssSensor &self, boost::python::object callback) {
+  namespace py = boost::python;
+  // Make sure the callback is actually callable.
+  if (!PyCallable_Check(callback.ptr())) {
+    PyErr_SetString(PyExc_TypeError, "callback argument must be callable!");
+    py::throw_error_already_set();
+  }
+
+  // We need to delete the callback while holding the GIL.
+  using Deleter = carla::PythonUtil::AcquireGILDeleter;
+  auto callback_ptr = carla::SharedPtr<py::object>{new py::object(callback), Deleter()};
+
+  // Make a lambda callback.
+  auto callback_function = [callback = std::move(callback_ptr)](
+                               carla::SharedPtr<::carla::rss::ActorConstellationData> actor_constellation_data)
+                               ->::carla::rss::ActorConstellationResult {
+    carla::PythonUtil::AcquireGIL lock;
+    ::carla::rss::ActorConstellationResult actor_constellation_result;
+    try {
+      actor_constellation_result =
+          py::call<::carla::rss::ActorConstellationResult>(callback->ptr(), py::object(actor_constellation_data));
+    } catch (const py::error_already_set &) {
+      PyErr_Print();
+    }
+    return actor_constellation_result;
+  };
+  self.RegisterActorConstellationCallback(callback_function);
 }
 
 void export_ad_rss() {
 #ifdef LIBCARLA_PYTHON_MAJOR_2
-  initlibad_physics_python();
-  initlibad_rss_python();
-  initlibad_map_access_python();
-  initlibad_rss_map_integration_python();
+  initlibad_physics_python2();
+  initlibad_rss_python2();
+  initlibad_map_access_python2();
+  initlibad_rss_map_integration_python2();
 #endif
 
 #ifdef LIBCARLA_PYTHON_MAJOR_3
-  PyInit_libad_physics_python();
-  PyInit_libad_rss_python();
-  PyInit_libad_map_access_python();
-  PyInit_libad_rss_map_integration_python();
+  PyInit_libad_physics_python3();
+  PyInit_libad_rss_python3();
+  PyInit_libad_map_access_python3();
+  PyInit_libad_rss_map_integration_python3();
 #endif
 
   using namespace boost::python;
@@ -118,35 +149,57 @@ void export_ad_rss() {
       .def_readwrite("avg_route_accel_lon", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lon)
       .def(self_ns::str(self_ns::self));
 
+  class_<carla::rss::ActorConstellationResult>("RssActorConstellationResult")
+      .def_readwrite("rss_calculation_mode", &carla::rss::ActorConstellationResult::rss_calculation_mode)
+      .def_readwrite("restrict_speed_limit_mode", &carla::rss::ActorConstellationResult::restrict_speed_limit_mode)
+      .def_readwrite("ego_vehicle_dynamics", &carla::rss::ActorConstellationResult::ego_vehicle_dynamics)
+      .def_readwrite("actor_object_type", &carla::rss::ActorConstellationResult::actor_object_type)
+      .def_readwrite("actor_dynamics", &carla::rss::ActorConstellationResult::actor_dynamics)
+      .def(self_ns::str(self_ns::self));
+
+  class_<carla::rss::ActorConstellationData, boost::noncopyable, boost::shared_ptr<carla::rss::ActorConstellationData>>(
+      "RssActorConstellationData", no_init)
+      .def_readonly("ego_match_object", &carla::rss::ActorConstellationData::ego_match_object)
+      .def_readonly("ego_route", &carla::rss::ActorConstellationData::ego_route)
+      .def_readonly("ego_dynamics_on_route", &carla::rss::ActorConstellationData::ego_dynamics_on_route)
+      .def_readonly("other_match_object", &carla::rss::ActorConstellationData::other_match_object)
+      .def_readonly("other_actor", &carla::rss::ActorConstellationData::other_actor)
+      .def(self_ns::str(self_ns::self));
+
+  enum_<spdlog::level::level_enum>("RssLogLevel")
+      .value("trace", spdlog::level::trace)
+      .value("debug", spdlog::level::debug)
+      .value("info", spdlog::level::info)
+      .value("warn", spdlog::level::warn)
+      .value("err", spdlog::level::err)
+      .value("critical", spdlog::level::critical)
+      .value("off", spdlog::level::off);
+
   enum_<carla::rss::RoadBoundariesMode>("RssRoadBoundariesMode")
       .value("Off", carla::rss::RoadBoundariesMode::Off)
       .value("On", carla::rss::RoadBoundariesMode::On);
-
-  enum_<carla::rss::VisualizationMode>("RssVisualizationMode")
-      .value("Off", carla::rss::VisualizationMode::Off)
-      .value("RouteOnly", carla::rss::VisualizationMode::RouteOnly)
-      .value("VehicleStateOnly", carla::rss::VisualizationMode::VehicleStateOnly)
-      .value("VehicleStateAndRoute", carla::rss::VisualizationMode::VehicleStateAndRoute)
-      .value("All", carla::rss::VisualizationMode::All);
 
   class_<csd::RssResponse, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RssResponse>>(
       "RssResponse", no_init)
       .add_property("response_valid", &csd::RssResponse::GetResponseValid)
       .add_property("proper_response", CALL_RETURNING_COPY(csd::RssResponse, GetProperResponse))
-      .add_property("acceleration_restriction", CALL_RETURNING_COPY(csd::RssResponse, GetAccelerationRestriction))
       .add_property("rss_state_snapshot", CALL_RETURNING_COPY(csd::RssResponse, GetRssStateSnapshot))
+      .add_property("situation_snapshot", CALL_RETURNING_COPY(csd::RssResponse, GetSituationSnapshot))
+      .add_property("world_model", CALL_RETURNING_COPY(csd::RssResponse, GetWorldModel))
       .add_property("ego_dynamics_on_route", CALL_RETURNING_COPY(csd::RssResponse, GetEgoDynamicsOnRoute))
       .def(self_ns::str(self_ns::self));
 
   class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::RssSensor>>("RssSensor", no_init)
       .add_property("ego_vehicle_dynamics", &GetEgoVehicleDynamics, &cc::RssSensor::SetEgoVehicleDynamics)
       .add_property("other_vehicle_dynamics", &GetOtherVehicleDynamics, &cc::RssSensor::SetOtherVehicleDynamics)
+      .add_property("pedestrian_dynamics", &GetPedestrianDynamics, &cc::RssSensor::SetPedestrianDynamics)
       .add_property("road_boundaries_mode", &GetRoadBoundariesMode, &cc::RssSensor::SetRoadBoundariesMode)
-      .add_property("visualization_mode", &GetVisualizationMode, &cc::RssSensor::SetVisualizationMode)
       .add_property("routing_targets", &GetRoutingTargets)
+      .def("register_actor_constellation_callback", &RegisterActorConstellationCallback, (arg("callback")))
       .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget, (arg("routing_target")))
       .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets)
       .def("drop_route", &cc::RssSensor::DropRoute)
+      .def("set_log_level", &cc::RssSensor::SetLogLevel, (arg("log_level")))
       .def(self_ns::str(self_ns::self));
 
   class_<carla::rss::RssRestrictor, boost::noncopyable, boost::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",

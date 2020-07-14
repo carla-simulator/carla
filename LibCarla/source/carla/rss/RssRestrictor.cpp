@@ -9,7 +9,8 @@
 #include "carla/rss/RssCheck.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <ad/rss/world/AccelerationRestriction.hpp>
+#include <ad/rss/state/ProperResponse.hpp>
+#include <ad/rss/unstructured/Geometry.hpp>
 #include <ad/rss/world/Velocity.hpp>
 
 namespace carla {
@@ -27,7 +28,7 @@ RssRestrictor::RssRestrictor() {
 RssRestrictor::~RssRestrictor() = default;
 
 carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
-    const carla::rpc::VehicleControl &vehicle_control, const ::ad::rss::world::AccelerationRestriction &restriction,
+    const carla::rpc::VehicleControl &vehicle_control, const ::ad::rss::state::ProperResponse &proper_response,
     const carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route,
     const carla::rpc::VehiclePhysicsControl &vehicle_physics) {
   carla::rpc::VehicleControl restricted_vehicle_control(vehicle_control);
@@ -54,10 +55,13 @@ carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
 
   // do not apply any restrictions when in reverse gear
   if (!vehicle_control.reverse) {
-    _logger->debug("Lon {}, L {}, R {}; LatSpeed {}, Accel {}, Avg {}", restriction.longitudinalRange,
-                   restriction.lateralLeftRange, restriction.lateralRightRange, ego_dynamics_on_route.route_speed_lat,
-                   ego_dynamics_on_route.route_accel_lat, ego_dynamics_on_route.avg_route_accel_lat);
-    if (restriction.lateralLeftRange.maximum <= ::ad::physics::Acceleration(0.0)) {
+    _logger->debug("Lon {}, L {}, R {}; LatSpeed {}, Accel {}, Avg {}, Hdg {}, AllowedHeadingRanges {}",
+                   proper_response.accelerationRestrictions.longitudinalRange,
+                   proper_response.accelerationRestrictions.lateralLeftRange,
+                   proper_response.accelerationRestrictions.lateralRightRange, ego_dynamics_on_route.route_speed_lat,
+                   ego_dynamics_on_route.route_accel_lat, ego_dynamics_on_route.avg_route_accel_lat,
+                   ego_dynamics_on_route.ego_heading, proper_response.headingRanges);
+    if (proper_response.accelerationRestrictions.lateralLeftRange.maximum <= ::ad::physics::Acceleration(0.0)) {
       if (ego_dynamics_on_route.route_speed_lat < ::ad::physics::Speed(0.0)) {
         // driving to the left
         if (ego_dynamics_on_route.route_speed_lon != ::ad::physics::Speed(0.0)) {
@@ -75,7 +79,7 @@ carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
       }
     }
 
-    if (restriction.lateralRightRange.maximum <= ::ad::physics::Acceleration(0.0)) {
+    if (proper_response.accelerationRestrictions.lateralRightRange.maximum <= ::ad::physics::Acceleration(0.0)) {
       if (ego_dynamics_on_route.route_speed_lat > ::ad::physics::Speed(0.0)) {
         // driving to the right
         if (ego_dynamics_on_route.route_speed_lon != ::ad::physics::Speed(0.0)) {
@@ -94,15 +98,16 @@ carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
     }
 
     // restrict acceleration
-    if (restriction.longitudinalRange.maximum > zero_accel) {
+    if (proper_response.accelerationRestrictions.longitudinalRange.maximum > zero_accel) {
       // TODO: determine acceleration and limit throttle
     }
 
     // decelerate
-    if (restriction.longitudinalRange.maximum < zero_accel) {
+    if (proper_response.accelerationRestrictions.longitudinalRange.maximum < zero_accel) {
       restricted_vehicle_control.throttle = 0.0f;
 
-      double brake_acceleration = std::fabs(static_cast<double>(restriction.longitudinalRange.minimum));
+      double brake_acceleration =
+          std::fabs(static_cast<double>(proper_response.accelerationRestrictions.longitudinalRange.minimum));
       double sum_brake_torque = mass * brake_acceleration * radius / 100.0;
       restricted_vehicle_control.brake = std::min(static_cast<float>(sum_brake_torque / sum_max_brake_torque), 1.0f);
     }
