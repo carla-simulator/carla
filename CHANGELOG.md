@@ -1,5 +1,6 @@
 ## Latest
 
+  * Upgraded carla Docker image to Ubuntu 18.04
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added API function `freeze_all_traffic_lights` and `reset_group`
