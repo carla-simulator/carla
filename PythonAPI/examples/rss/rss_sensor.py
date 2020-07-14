@@ -2,9 +2,21 @@
 #
 # Copyright (c) 2020 Intel Corporation
 #
+
+import glob
+import os
+import sys
+
+try:
+    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
 import inspect
 import carla
-import sys
 import math
 from rss_visualization import RssDebugVisualizer # pylint: disable=relative-import
 
