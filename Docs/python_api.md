@@ -9,6 +9,8 @@ CARLA defines actors as anything that plays a role in the simulation or can be m
 A dictionary containing the attributes of the blueprint this actor was based on.  
 - <a name="carla.Actor.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 Identifier for this actor. Unique during a given episode.  
+- <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
+Returns whether this object was destroyed using this actor handle.  
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
