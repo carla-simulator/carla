@@ -44,7 +44,7 @@ void ARayCastLidar::Set(const FActorDescription &ActorDescription)
 void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
-  LidarMeasurement = FLidarMeasurement(Description.Channels);
+  LidarData = FLidarData(Description.Channels);
   CreateLasers();
 }
 
@@ -76,7 +76,7 @@ void ARayCastLidar::Tick(const float DeltaTime)
   ReadPoints(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarMeasurement, DataStream.PopBufferFromPool());
+  DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
 }
 
 void ARayCastLidar::ReadPoints(const float DeltaTime)
@@ -99,11 +99,11 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
   check(ChannelCount == LaserAngles.Num());
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
-      LidarMeasurement.GetHorizontalAngle());
+      LidarData.GetHorizontalAngle());
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarMeasurement.Reset(ChannelCount, PointsToScanWithOneLaser);
+  LidarData.Reset(PointsToScanWithOneLaser);
 
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
@@ -116,19 +116,19 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
       if (ShootLaser(idxChannel, Angle, Point, Intensity)) {
         Mutex.Lock();
-        LidarMeasurement.WritePointAsync(idxChannel, {Point, Intensity});
+        LidarData.WritePointAsync(idxChannel, {Point, Intensity});
         Mutex.Unlock();
       }
     });
   });
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
-  LidarMeasurement.SaveDetections();
+  LidarData.SaveDetections();
 
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
-  LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
+  LidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
 float ARayCastLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const

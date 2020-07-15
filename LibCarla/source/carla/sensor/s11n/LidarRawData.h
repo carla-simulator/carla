@@ -105,13 +105,11 @@ namespace s11n {
       return _header[Index::ChannelCount];
     }
 
-    void Reset(uint32_t channels, uint32_t channel_point_count) {
+    void Reset(uint32_t channel_point_count) {
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
-      _ser_points.clear();
-      _ser_points.reserve(channels * channel_point_count);
+      _max_channel_points = channel_point_count;
 
-      _aux_points.resize(channels);
-
+      _aux_points.resize(GetChannelCount());
       for (auto& aux : _aux_points) {
         aux.clear();
         aux.reserve(channel_point_count);
@@ -125,6 +123,7 @@ namespace s11n {
 
     void SaveDetections() {
       _ser_points.clear();
+      _ser_points.reserve(GetChannelCount() * _max_channel_points);
 
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
         _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
@@ -132,9 +131,12 @@ namespace s11n {
       }
     }
 
-  private:
+  protected:
     std::vector<uint32_t> _header;
     std::vector<std::vector<LidarRawDetection>> _aux_points;
+    uint32_t _max_channel_points;
+
+  private:
     std::vector<LidarRawDetection> _ser_points;
   };
 
