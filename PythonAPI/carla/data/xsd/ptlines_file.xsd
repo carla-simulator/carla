@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="routeTypes.xsd" />
+
+    <xsd:element name="ptLines" type="ptLinesType"/>
+
+    <xsd:complexType name="ptLinesType">
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="ptLine" type="ptLineType" minOccurs="0"/>
+            <xsd:element name="route" type="routeType" minOccurs="0"/>
+            <xsd:element name="flow" type="flowType" minOccurs="0"/>
+            <xsd:element name="trip" type="tripType" minOccurs="0"/>
+            <xsd:element name="include" minOccurs="0">
+                <xsd:complexType>
+                    <xsd:attribute name="href" type="xsd:string"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+
+    <xsd:complexType name="ptLineType">
+        <xsd:sequence>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="route" type="vehicleRouteType" minOccurs="0" maxOccurs="1"/>
+            <xsd:sequence minOccurs="0">
+                <xsd:element name="busStop" type="ptLineStopType" maxOccurs="unbounded"/>
+                <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="idType" use="required"/>
+        <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="type" type="xsd:string"/>
+        <xsd:attribute name="line" type="xsd:string"/>
+        <xsd:attribute name="completeness" type="nonNegativeFloatType"/>
+        <xsd:attribute name="vClass" type="xsd:string"/>
+        <xsd:attribute name="period" type="xsd:float"/>
+        <xsd:attribute name="nightService" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="ptLineStopType">
+        <xsd:attribute name="id" type="idType" use="required"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="tlsStates">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="tlsState"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="tlsState">
+        <xsd:complexType>
+            <xsd:attribute name="time" use="required" type="timeType"/>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="programID" use="required" type="xsd:string"/>
+            <xsd:attribute name="phase" use="required" type="xsd:int"/>
+            <xsd:attribute name="state" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
