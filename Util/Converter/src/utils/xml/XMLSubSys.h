@@ -146,6 +146,8 @@ public:
     static bool runParser(GenericSAXHandler& handler,
                           const std::string& file, const bool isNet = false);
 
+    static bool runParserFromString(GenericSAXHandler& handler,
+                          const std::string& xml, const bool isNet = false);
 
 private:
     /// @brief The XML Readers used for repeated parsing

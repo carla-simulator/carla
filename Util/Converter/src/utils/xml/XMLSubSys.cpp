@@ -143,5 +143,42 @@ XMLSubSys::runParser(GenericSAXHandler& handler,
     return !MsgHandler::getErrorInstance()->wasInformed();
 }
 
+bool
+XMLSubSys::runParserFromString(GenericSAXHandler& handler,
+                    const std::string& xml, const bool isNet) {
+    std::string file = "String XML";
+    MsgHandler::getErrorInstance()->clear();
+    try {
+        XERCES_CPP_NAMESPACE::SAX2XMLReader::ValSchemes validationScheme = isNet ? myNetValidationScheme : myValidationScheme;
+        if (myNextFreeReader == (int)myReaders.size()) {
+            myReaders.push_back(new SUMOSAXReader(handler, validationScheme));
+        } else {
+            myReaders[myNextFreeReader]->setValidation(validationScheme);
+            myReaders[myNextFreeReader]->setHandler(handler);
+        }
+        myNextFreeReader++;
+        std::string prevFile = handler.getFileName();
+        handler.setFileName(file);
+        myReaders[myNextFreeReader - 1]->parseString(xml);
+        handler.setFileName(prevFile);
+        myNextFreeReader--;
+    } catch (AbortParsing&) {
+        return false;
+    } catch (ProcessError& e) {
+        WRITE_ERROR(std::string(e.what()) != std::string("") ? std::string(e.what()) : std::string("Process Error"));
+        return false;
+    } catch (const std::runtime_error& re) {
+        WRITE_ERROR("Runtime error: " + std::string(re.what()) + " while parsing '" + file + "'");
+        return false;
+    } catch (const std::exception& ex) {
+        WRITE_ERROR("Error occurred: " + std::string(ex.what()) + " while parsing '" + file + "'");
+        return false;
+    } catch (...) {
+        WRITE_ERROR("Unspecified error occurred wile parsing '" + file + "'");
+        return false;
+    }
+    return !MsgHandler::getErrorInstance()->wasInformed();
+}
+
 
 /****************************************************************************/

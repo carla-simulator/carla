@@ -133,31 +133,47 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     std::vector<std::string> files = oc.getStringVector("osm-files");
     // load nodes, first
     NodesHandler nodesHandler(myOSMNodes, myUniqueNodes, oc);
-    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
-        // nodes
-        if (!FileHelpers::isReadable(*file)) {
-            WRITE_ERROR("Could not open osm-file '" + *file + "'.");
-            return;
-        }
-        nodesHandler.setFileName(*file);
-        PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm-file '" + *file + "'");
-        if (!XMLSubSys::runParser(nodesHandler, *file)) {
-            return;
-        }
-        if (nodesHandler.getDuplicateNodes() > 0) {
-            WRITE_MESSAGE("Found and substituted " + toString(nodesHandler.getDuplicateNodes()) + " osm nodes.");
-        }
-        PROGRESS_DONE_MESSAGE();
+    // for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
+    //     // nodes
+    //     if (!FileHelpers::isReadable(*file)) {
+    //         WRITE_ERROR("Could not open osm-file '" + *file + "'.");
+    //         return;
+    //     }
+    //     nodesHandler.setFileName(*file);
+    //     PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm-file '" + *file + "'");
+    //     if (!XMLSubSys::runParser(nodesHandler, *file)) {
+    //         return;
+    //     }
+    //     if (nodesHandler.getDuplicateNodes() > 0) {
+    //         WRITE_MESSAGE("Found and substituted " + toString(nodesHandler.getDuplicateNodes()) + " osm nodes.");
+    //     }
+    //     PROGRESS_DONE_MESSAGE();
+    // }
+    nodesHandler.setFileName("osm_file");
+    PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm string");
+    if (!XMLSubSys::runParserFromString(nodesHandler, oc.input_osm_file)) {
+        return;
     }
+    if (nodesHandler.getDuplicateNodes() > 0) {
+        WRITE_MESSAGE("Found and substituted " + toString(nodesHandler.getDuplicateNodes()) + " osm nodes.");
+    }
+    PROGRESS_DONE_MESSAGE();
+
     // load edges, then
     EdgesHandler edgesHandler(myOSMNodes, myEdges, myPlatformShapes);
-    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
-        // edges
-        edgesHandler.setFileName(*file);
-        PROGRESS_BEGIN_MESSAGE("Parsing edges from osm-file '" + *file + "'");
-        XMLSubSys::runParser(edgesHandler, *file);
-        PROGRESS_DONE_MESSAGE();
-    }
+    // for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
+    //     // edges
+    //     edgesHandler.setFileName(*file);
+    //     PROGRESS_BEGIN_MESSAGE("Parsing edges from osm-file '" + *file + "'");
+    //     XMLSubSys::runParser(edgesHandler, *file);
+    //     PROGRESS_DONE_MESSAGE();
+    // }
+    // edges
+    edgesHandler.setFileName("osm_file");
+    PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm string");
+    XMLSubSys::runParserFromString(edgesHandler, oc.input_osm_file);
+    PROGRESS_DONE_MESSAGE();
+
 
     /* Remove duplicate edges with the same shape and attributes */
     if (!oc.getBool("osm.skip-duplicates-check")) {
@@ -260,13 +276,19 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     // turn-restrictions directly to NBEdges)
     RelationHandler relationHandler(myOSMNodes, myEdges, &(nb.getPTStopCont()), myPlatformShapes,
                                     &nb.getPTLineCont(), oc);
-    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
-        // relations
-        relationHandler.setFileName(*file);
-        PROGRESS_BEGIN_MESSAGE("Parsing relations from osm-file '" + *file + "'");
-        XMLSubSys::runParser(relationHandler, *file);
-        PROGRESS_DONE_MESSAGE();
-    }
+    // for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
+    //     // relations
+    //     relationHandler.setFileName(*file);
+    //     PROGRESS_BEGIN_MESSAGE("Parsing relations from osm-file '" + *file + "'");
+    //     XMLSubSys::runParser(relationHandler, *file);
+    //     PROGRESS_DONE_MESSAGE();
+    // }
+    // relations
+    relationHandler.setFileName("osm-file");
+    PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm string");
+    XMLSubSys::runParserFromString(edgesHandler, oc.input_osm_file);
+    PROGRESS_DONE_MESSAGE();
+
 }
 
 NBNode*

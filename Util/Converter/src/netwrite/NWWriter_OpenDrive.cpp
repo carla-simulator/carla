@@ -67,7 +67,7 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     StringBijection<int> edgeMap;
     StringBijection<int> nodeMap;
     //
-    OutputDevice& device = OutputDevice::getDevice(oc.getString("opendrive-output"));
+    OutputDevice_String device;
     device << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     device.openTag("OpenDRIVE");
     time_t now = time(nullptr);
@@ -212,7 +212,10 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
 
     device.closeTag();
-    device.close();
+
+    OptionsCont::getOptions().output_xodr_file = device.getString();
+
+    // device.close();
 }
 
 

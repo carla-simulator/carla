@@ -10,6 +10,6 @@
 
 namespace converter {
 
-  std::string ConvertOSMToOpenDRIVE(std::string osm_file);
+  std::string ConvertOSMToOpenDRIVE(std::string osm_file, double offsetX = 0, double offsetY = 0);
 
 } // namespace converter
