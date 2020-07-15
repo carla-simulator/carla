@@ -247,13 +247,13 @@ Returns the velocity vector registered for an actor in that tick.
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a>
-Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for cameras and sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
+Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
-With this fixed attatchment the object follow its parent position strictly.  
+With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
 - <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-An attachment that expands or retracts depending on camera situation. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them.  
+An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
 
 ---
 
