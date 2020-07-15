@@ -98,7 +98,7 @@ void ARayCastRawLidar::ReadPoints(const float DeltaTime)
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarData.Reset(ChannelCount, PointsToScanWithOneLaser);
+  LidarData.Reset(PointsToScanWithOneLaser);
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
