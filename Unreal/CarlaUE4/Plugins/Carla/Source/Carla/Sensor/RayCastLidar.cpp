@@ -116,7 +116,8 @@ void ARayCastLidar::ReadPoints(const float DeltaTime)
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
       if (ShootLaser(idxChannel, Angle, Point, Intensity)) {
         Mutex.Lock();
-        LidarData.WritePointAsync(idxChannel, {Point, Intensity});
+        FLidarRawDetection det {Point, Intensity, 2, 3};
+        LidarData.WritePointAsync(idxChannel, det);
         Mutex.Unlock();
       }
     });
