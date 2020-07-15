@@ -169,9 +169,8 @@
           Name or absolute path of the file recorded, depending on your previous choice.
       - param_name: show_all
         type: bool
-        default: false
         doc: >
-          When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.
+          If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.
       return: string
       doc: >
         The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.
