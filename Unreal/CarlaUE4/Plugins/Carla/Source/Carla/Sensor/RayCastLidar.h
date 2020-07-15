@@ -12,7 +12,7 @@
 #include "Carla/Sensor/LidarDescription.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/sensor/s11n/LidarMeasurement.h>
+#include <carla/sensor/s11n/LidarData.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "RayCastLidar.generated.h"
@@ -23,7 +23,7 @@ class CARLA_API ARayCastLidar : public ASensor
 {
   GENERATED_BODY()
 
-  using FLidarMeasurement = carla::sensor::s11n::LidarMeasurement;
+  using FLidarData = carla::sensor::s11n::LidarData;
 
 public:
 
@@ -58,7 +58,7 @@ private:
 
   TArray<float> LaserAngles;
 
-  FLidarMeasurement LidarMeasurement;
+  FLidarData LidarData;
 
   /// Enable/Disable general dropoff of lidar points
   bool DropOffGenActive;

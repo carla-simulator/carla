@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/s11n/LidarMeasurement.h"
+#include "carla/sensor/s11n/LidarData.h"
 
 namespace carla {
 namespace sensor {
@@ -24,7 +24,7 @@ namespace s11n {
 
   /// A view over the header of a Lidar measurement.
   class LidarHeaderView {
-    using Index = LidarMeasurement::Index;
+    using Index = LidarData::Index;
   public:
 
     float GetHorizontalAngle() const {
@@ -65,13 +65,13 @@ namespace s11n {
 
     static size_t GetHeaderOffset(const RawData &data) {
       auto View = DeserializeHeader(data);
-      return sizeof(uint32_t) * (View.GetChannelCount() + LidarMeasurement::Index::SIZE);
+      return sizeof(uint32_t) * (View.GetChannelCount() + LidarData::Index::SIZE);
     }
 
     template <typename Sensor>
     static Buffer Serialize(
         const Sensor &sensor,
-        const LidarMeasurement &measurement,
+        const LidarData &measurement,
         Buffer &&output);
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
@@ -84,11 +84,11 @@ namespace s11n {
   template <typename Sensor>
   inline Buffer LidarSerializer::Serialize(
       const Sensor &,
-      const LidarMeasurement &measurement,
+      const LidarData &data,
       Buffer &&output) {
     std::array<boost::asio::const_buffer, 2u> seq = {
-        boost::asio::buffer(measurement._header),
-        boost::asio::buffer(measurement._points)};
+        boost::asio::buffer(data._header),
+        boost::asio::buffer(data._points)};
     output.copy_from(seq);
     return std::move(output);
   }
