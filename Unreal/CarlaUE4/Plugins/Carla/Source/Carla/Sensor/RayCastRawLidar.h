@@ -12,7 +12,7 @@
 #include "Carla/Sensor/LidarDescription.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/sensor/s11n/LidarMeasurement.h>
+#include <carla/sensor/s11n/LidarRawData.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "RayCastRawLidar.generated.h"
@@ -23,7 +23,10 @@ class CARLA_API ARayCastRawLidar : public ASensor
 {
   GENERATED_BODY()
 
-  using FLidarMeasurement = carla::sensor::s11n::LidarMeasurement;
+  using FLidarData = carla::sensor::s11n::LidarRawData;
+  using FLidarRawData = carla::sensor::s11n::LidarRawData;
+
+  using FDetection = carla::sensor::s11n::LidarRawDetection;
 
 public:
 
@@ -48,26 +51,16 @@ private:
   void ReadPoints(float DeltaTime);
 
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point, float& Intensity) const;
+  bool ShootLaser(uint32 Channel, float HorizontalAngle, FDetection &RawData) const;
 
-  /// Compute the received intensity of the point
-  float ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const;
+  /// Compute all raw detection information
+  void ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FDetection& Detection) const;
+
 
   UPROPERTY(EditAnywhere)
   FLidarDescription Description;
 
   TArray<float> LaserAngles;
 
-  FLidarMeasurement LidarMeasurement;
-
-  // Enable/Disable general dropoff of lidar points
-  bool DropOffGenActive;
-
-  // Slope for the intensity dropoff of lidar points, it is calculated
-  // throught the dropoff limit and the dropoff at zero intensity
-  // The points is kept with a probality alpha*Intensity + beta where
-  // alpha = (1 - dropoff_zero_intensity) / droppoff_limit
-  // beta = (1 - dropoff_zero_intensity)
-  float DropOffAlpha;
-  float DropOffBeta;
+  FLidarData LidarData;
 };

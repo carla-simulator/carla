@@ -44,7 +44,7 @@ void ARayCastRawLidar::Set(const FActorDescription &ActorDescription)
 void ARayCastRawLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
-  LidarMeasurement = FLidarMeasurement(Description.Channels);
+  LidarData = FLidarData(Description.Channels);
   CreateLasers();
 }
 
@@ -62,11 +62,6 @@ void ARayCastRawLidar::CreateLasers()
         Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
     LaserAngles.Emplace(VerticalAngle);
   }
-
-  // Compute drop off model parameters
-  DropOffBeta = 1.0f - Description.DropOffAtZeroIntensity;
-  DropOffAlpha = Description.DropOffAtZeroIntensity / Description.DropOffIntensityLimit;
-  DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
 void ARayCastRawLidar::Tick(const float DeltaTime)
@@ -76,7 +71,7 @@ void ARayCastRawLidar::Tick(const float DeltaTime)
   ReadPoints(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarMeasurement, DataStream.PopBufferFromPool());
+  DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
 }
 
 void ARayCastRawLidar::ReadPoints(const float DeltaTime)
@@ -99,38 +94,38 @@ void ARayCastRawLidar::ReadPoints(const float DeltaTime)
   check(ChannelCount == LaserAngles.Num());
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
-      LidarMeasurement.GetHorizontalAngle());
+      LidarData.GetHorizontalAngle());
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
-  LidarMeasurement.Reset(ChannelCount, PointsToScanWithOneLaser);
-
+  LidarData.Reset(ChannelCount, PointsToScanWithOneLaser);
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
 
     FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
-      FVector Point;
-      float Intensity;
+      FDetection Detection;
       const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
-      if (ShootLaser(idxChannel, Angle, Point, Intensity)) {
+      if (ShootLaser(idxChannel, Angle, Detection)) {
         Mutex.Lock();
-        LidarMeasurement.WritePointAsync(idxChannel, {Point, Intensity});
+        LidarData.WritePointAsync(idxChannel, Detection);
         Mutex.Unlock();
       }
     });
   });
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
-  LidarMeasurement.SaveDetections();
-
+  LidarData.SaveDetections();
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
-  LidarMeasurement.SetHorizontalAngle(HorizontalAngle);
+  LidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
+
+
+/*
 float ARayCastRawLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const
 {
   return 0.0;
@@ -174,12 +169,24 @@ float ARayCastRawLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHit
 
   return IntRec;
 }
+*/
 
-bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FVector &XYZ, float &Intensity) const
+void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FDetection& Detection) const
+{
+    const FVector hp = HitInfo.ImpactPoint;
+    Detection.point = SensorTransf.Inverse().TransformPosition(hp);
+
+    Detection.cos_inc_angle = -1.0f;
+    Detection.object_idx = 2;
+    Detection.object_tag = 3;
+}
+
+bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FDetection& Detection) const
 {
 
-  if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
-    return false;
+// FIXME with a preprocess
+//  if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
+//    return false;
 
   const float VerticalAngle = LaserAngles[Channel];
 
@@ -189,9 +196,9 @@ bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAn
 
   FHitResult HitInfo(ForceInit);
 
-  FTransform actorTransf = GetTransform();
-  FVector LidarBodyLoc = GetActorLocation();
-  FRotator LidarBodyRot = GetActorRotation();
+  FTransform ActorTransf = GetTransform();
+  FVector LidarBodyLoc = ActorTransf.GetLocation();
+  FRotator LidarBodyRot = ActorTransf.Rotator();
   FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
   FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
     LaserRot,
@@ -224,18 +231,17 @@ bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAn
       );
     }
 
-    const FVector hp = HitInfo.ImpactPoint;
-    XYZ = actorTransf.Inverse().TransformPosition(hp);
 
-    Intensity = ComputeIntensity(LidarBodyLoc, HitInfo);
+    ComputeRawDetection(HitInfo, ActorTransf, Detection);
 
+    return true;
 
-
-    if(Intensity > Description.DropOffIntensityLimit)
-      return true;
-    else
-      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
-
+//   FIXME with postprocess
+//    if(Intensity > Description.DropOffIntensityLimit)
+//      return true;
+//    else
+//      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+//
   } else {
     return false;
   }
