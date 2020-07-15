@@ -51,6 +51,17 @@ namespace s11n {
           point(x, y, z), intensity{intensity} { }
       LidarDetection(geom::Location p, float intensity) :
           point(p), intensity{intensity} { }
+
+      void WritePlyHeaderInfo(std::ostream& out) const{
+        out << "property float32 x\n" \
+          "property float32 y\n" \
+          "property float32 z\n" \
+          "property float32 I\n";
+      }
+
+      void WriteDetection(std::ostream& out) const{
+        out << point.x << ' ' << point.y << ' ' << point.z << ' ' << intensity;
+      }
   };
 
   class LidarMeasurement {
