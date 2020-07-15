@@ -22,6 +22,8 @@
 #pragma once
 #include <config.h>
 
+#include <string>
+#include <vector>
 
 // ===========================================================================
 // class declarations
@@ -54,6 +56,8 @@ public:
      * @exception InvalidArgument If a performed setting of an option failed (see Option::set)
      */
     static bool parse(int argc, char** argv);
+
+    static bool parse(std::vector<std::string> args);
 
 private:
     /** @brief parses the previous arguments

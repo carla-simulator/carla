@@ -17,7 +17,7 @@ void export_converter() {
   using namespace converter;
   using namespace boost::python;
 
-  def("convert_to_odr", &ConvertOSMToOpenDRIVE, (arg("osm_file")));
+  def("convert_to_odr", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("offsetX") = 0, arg("offsetY") = 0));
 
   // class_<Converter>("Converter", init<>())
   //   .def("convert_to_odr", &Converter::ConvertOSMToOpenDRIVE, (arg("osm_file")))

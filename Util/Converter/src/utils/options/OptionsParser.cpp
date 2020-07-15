@@ -55,6 +55,27 @@ OptionsParser::parse(int argc, char** argv) {
     return ok;
 }
 
+bool
+OptionsParser::parse(std::vector<std::string> args) {
+    bool ok = true;
+    for (size_t i = 1; i < args.size();) {
+        try {
+            int add;
+            // try to set the current option
+            if (i < args.size()- 1) {
+                add = check(args[i].c_str(), args[i + 1].c_str(), ok);
+            } else {
+                add = check(args[i].c_str(), nullptr, ok);
+            }
+            i += add;
+        } catch (ProcessError& e) {
+            WRITE_ERROR("On processing option '" + args[i] + "':\n " + e.what());
+            i++;
+            ok = false;
+        }
+    }
+    return ok;
+}
 
 int
 OptionsParser::check(const char* arg1, const char* arg2, bool& ok) {

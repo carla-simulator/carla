@@ -66,17 +66,66 @@ namespace converter {
     return ok;
   }
 
-  std::string ConvertOSMToOpenDRIVE(std::string osm_file) {
-    OptionsCont::getOptions().clear();
+  std::string ConvertOSMToOpenDRIVE(std::string osm_file, double offsetX, double offsetY) {
+    // std::string OptionsArgs = "--geometry.remove --ramps.guess --edges.join --junctions.join --keep-edges.by-type highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential --tls.discard-loaded --tls.discard-simple --default.lanewidth 4.0 --osm.layer-elevation 4";
+    std::vector<std::string> OptionsArgs = {
+      "--proj", "+proj=tmerc",
+      "--geometry.remove", "--ramps.guess", "--edges.join", "--junctions.join",
+      "--keep-edges.by-type", "highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential",
+      "--tls.discard-loaded", "--tls.discard-simple", "--default.lanewidth", "4.0",
+      "--osm.layer-elevation", "4",
+      "--osm-files", "TRUE", "--opendrive-output", "TRUE", // necessary for now to enable osm input and xodr output
+      "--offset.x", std::to_string(offsetX), "--offset.y", std::to_string(offsetY)
+    };
+
+    // OptionsCont::getOptions().clear();
+    OptionsCont& oc = OptionsCont::getOptions();
+    oc.input_osm_file = osm_file;
+
+    XMLSubSys::init();
     fillOptions();
-
-    std::string OptionsArgs = "--geometry.remove --ramps.guess --edges.join --junctions.join --keep-edges.by-type highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential --tls.discard-loaded --tls.discard-simple --default.lanewidth 4.0 --osm.layer-elevation 4"
-
-    if(checkOptions()) {
-      return osm_file + " succesful fail";
-    } else {
-      return osm_file + " sucesful success";
+    OptionsIO::setArgs(OptionsArgs);
+    OptionsIO::getOptions();
+    if (oc.processMetaOptions(OptionsArgs.size() < 2)) {
+        SystemFrame::close();
+        return 0;
     }
+    XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+    if (oc.isDefault("aggregate-warnings")) {
+        oc.set("aggregate-warnings", "5");
+    }
+    MsgHandler::initOutputOptions();
+    if (!checkOptions()) {
+        throw ProcessError();
+    }
+    RandHelper::initRandGlobal();
+    // build the projection
+    if (!GeoConvHelper::init(oc)) {
+        throw ProcessError("Could not build projection!");
+    }
+    NBNetBuilder nb;
+    nb.applyOptions(oc);
+    // load data
+    NILoader nl(nb);
+    nl.load(oc);
+    // flush aggregated errors and optionally ignore them
+    MsgHandler::getErrorInstance()->clear(oc.getBool("ignore-errors"));
+    // check whether any errors occurred
+    if (MsgHandler::getErrorInstance()->wasInformed()) {
+        throw ProcessError();
+    }
+    nb.compute(oc);
+    // check whether any errors occurred
+    if (MsgHandler::getErrorInstance()->wasInformed()) {
+        throw ProcessError();
+    }
+    NWFrame::writeNetwork(oc, nb);
+
+
+    DistributionCont::clear();
+    SystemFrame::close();
+
+    return oc.output_xodr_file;
 
   }
 
