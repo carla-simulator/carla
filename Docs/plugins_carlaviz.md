@@ -16,12 +16,12 @@ CARLA integrates
 ## Basic info
 
 *   __Contributor__ — Minjun Xu, also known as [wx9698](https://github.com/wx9698).  
-*   __License__ —   
-> *What license do we have?*
+*   __License__ — [MIT](https://en.wikipedia.org/wiki/MIT_License).  
+> *Check license??*
 
 ### Description
 
-Visualize a CARLA simulation in a web browser and retrieve some data.
+Visualize a simulation in a web browser, hear to sensor data and draw information updates.
 
 ### Support
 
@@ -36,26 +36,32 @@ Visualize a CARLA simulation in a web browser and retrieve some data.
 
 *   __Docker__ — Visit the docs and [install Docker](https://docs.docker.com/get-docker/).  
 *   __Operative system__ — Any OS able to run CARLA should work.  
-*   __Websocket-client__ — ```pip3 install websocket_client```.  
-> *How to get this on Windows?*
+*   __Websocket-client__ — ```pip3 install websocket_client```. Install [pip](https://pip.pypa.io/en/stable/installing/) if it is not already in the system.  
 
 ### Download the plugin
 
 Open a terminal and pull the Docker image of carlaviz, based on the CARLA version to be run.  
 
 ```bash
-# pull the image based on your carla version (single-stream)
+# Pull only the image that matches the CARLA package being used
 docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
 docker pull mjxu96/carlaviz:0.9.8
 docker pull mjxu96/carlaviz:0.9.9
-# pull the image to use latest CARLA multi-stream feature
+
+# Pull this image if working on a CARLA build from source
 docker pull carlasim/carlaviz:latest
 ```
-> *Does single-stream = package and multi-stream = build from source?*
 
 !!! Note
-    Alternatively, users can build carlaviz following the instructions [here](https://github.com/carla-simulator/carlaviz/blob/master/docs/build.md), but using a Docker image will make things much easier.  
+    Currently in Windows there is only support for 0.9.9.  
+
+CARLA up to 0.9.9 (included) is set to be single-stream. For later versions, multi-streaming for sensors is implemented.  
+* __In single-stream__, a sensor can only be heard by one client. When a sensor is already being heard by another client, for example when running `manual_control.py`, the *carlaviz* plugin is forced to duplicate the sensor in order to 
+* __In multi-stream__, a sensor can be heard by multiple clients, so there is no need to duplicate these and performance does not suffer.  
+
+!!! Note
+    Alternatively on Linux, users can build carlaviz following the instructions [here](https://github.com/carla-simulator/carlaviz/blob/master/docs/build.md), but using a Docker image will make things much easier.  
 
 ---
 ## Run carlaviz
@@ -64,7 +70,7 @@ __1. Run CARLA.__
 
 *   __a) In a CARLA package__ — Go to the CARLA folder and start the simulation with `CarlaUE4.exe` (Windows) or `./CarlaUE4.sh` (Linux).  
 
-*   __b) In a build from source__ — Go to the CARLA folder, run the UE editor with `make launch` and press `__Play__`.  
+*   __b) In a build from source__ — Go to the CARLA folder, run the UE editor with `make launch` and press `Play`.  
 
 __2. Run carlaviz.__ In another terminal run the following command according to the Docker image that has been downloaded.  
 
@@ -73,14 +79,18 @@ Change `<name_of_Docker_image>` for the name of the image previously downloaded,
 ```sh
 docker run -it --network="host" -e CARLAVIZ_HOST_IP=localhost -e CARLA_SERVER_IP=localhost -e CARLA_SERVER_PORT=2000 <name_of_Docker_image>
 ```
+
+If the everything has been properly set, carlaviz will show a successful message similar to the following.  
+
+![carlaviz_run](img/plugins_carlaviz_run.jpg)
+
 !!! Warning
     Remember to edit the previous command to match the Docker image being used.  
 
-> *Correct output*
 
 __3. Open the localhost__ Open your web browser and go to `http://127.0.0.1:8080/`. carlaviz runs by default in port `8080`. 
 
-> *Visualization* 
+> *Visualization??* 
 
 ### Examples
 
@@ -89,14 +99,6 @@ The RSS library
 ### Utilities
 
 The RSS library 
-
-
-
-
-
-
-
-
 
 
 !!! Note
