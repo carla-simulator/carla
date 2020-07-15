@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/rpc/Location.h"
+#include "carla/sensor/s11n/LidarRawData.h"
 
 #include <cstdint>
 #include <vector>
@@ -61,56 +62,19 @@ namespace s11n {
       }
   };
 
-  class LidarData {
-    static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
-    static const int SizeLidarDetection = 4;
-
+  class LidarData : public LidarRawData{
     friend class LidarSerializer;
     friend class LidarHeaderView;
 
-    enum Index : size_t {
-      HorizontalAngle,
-      ChannelCount,
-      SIZE
-    };
-
   public:
     explicit LidarData(uint32_t ChannelCount = 0u)
-      : _header(Index::SIZE + ChannelCount, 0u) {
-      _header[Index::ChannelCount] = ChannelCount;
+      : LidarRawData(ChannelCount) {
     }
 
     LidarData &operator=(LidarData &&) = default;
 
-    float GetHorizontalAngle() const {
-      return reinterpret_cast<const float &>(_header[Index::HorizontalAngle]);
-    }
-
-    void SetHorizontalAngle(float angle) {
-      std::memcpy(&_header[Index::HorizontalAngle], &angle, sizeof(uint32_t));
-    }
-
-    uint32_t GetChannelCount() const {
-      return _header[Index::ChannelCount];
-    }
-
-    void Reset(uint32_t channel_point_count) {
-      std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
-      _max_channel_points = channel_point_count;
-
-      _aux_points.resize(GetChannelCount());
-      for (auto& aux : _aux_points) {
-        aux.clear();
-        aux.reserve(_max_channel_points);
-      }
-    }
-
-    void WritePointAsync(uint32_t channel, LidarDetection detection) {
-      DEBUG_ASSERT(GetChannelCount() > channel);
-      _aux_points[channel].emplace_back(detection);
-    }
-
     void SaveDetections() {
+      const uint32_t SizeLidarDetection = 4;
       _points.clear();
       _points.reserve(SizeLidarDetection * GetChannelCount() * _max_channel_points);
 
@@ -120,15 +84,10 @@ namespace s11n {
           _points.emplace_back(pt.point.x);
           _points.emplace_back(pt.point.y);
           _points.emplace_back(pt.point.z);
-          _points.emplace_back(pt.intensity);
+          _points.emplace_back(-1.0f); // FIXME Compute good Intensity here
         }
       }
     }
-
-  protected:
-    std::vector<uint32_t> _header;
-    std::vector<std::vector<LidarDetection>> _aux_points;
-    uint32_t _max_channel_points;
 
   private:
     std::vector<float> _points;

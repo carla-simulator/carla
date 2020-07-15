@@ -24,6 +24,8 @@ class CARLA_API ARayCastLidar : public ASensor
   GENERATED_BODY()
 
   using FLidarData = carla::sensor::s11n::LidarData;
+  using FLidarRawDetection = carla::sensor::s11n::LidarRawDetection;
+  using FLidarDetection = carla::sensor::s11n::LidarDetection;
 
 public:
 
