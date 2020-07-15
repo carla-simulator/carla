@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="fcd-export">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="timestep"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="timestep">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="vehicle"/>
+            </xsd:sequence>
+            <xsd:attribute name="time" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="vehicle">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+
+            <xsd:attribute name="x" type="xsd:float" use="required"/>
+            <xsd:attribute name="y" type="xsd:float" use="required"/>
+            <xsd:attribute name="z" type="xsd:float" use="optional"/>
+            <xsd:attribute name="angle" type="xsd:float" use="required"/>
+
+            <xsd:attribute name="type" use="required" type="xsd:string"/>
+
+            <xsd:attribute name="speed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="lane" use="optional" type="xsd:string"/>
+            <xsd:attribute name="slope" type="xsd:float" use="required"/>
+            <xsd:attribute name="signals" use="optional" type="xsd:int"/>
+            <xsd:attribute name="distance" use="optional" type="xsd:float"/>
+            <xsd:attribute name="acceleration" use="optional" type="xsd:float"/>
+            <xsd:attribute name="accelerationLat" use="optional" type="xsd:float"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

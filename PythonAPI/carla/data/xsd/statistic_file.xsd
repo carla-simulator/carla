@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="statistics">
+        <xsd:sequence>
+            <xsd:element name="vehicles">
+                <xsd:attribute name="loaded" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="inserted" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="running" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="waiting" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+            <xsd:element name="teleports">
+                <xsd:attribute name="total" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="jam" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="yield" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="wrongLane" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+            <xsd:element name="safety">
+                <xsd:attribute name="collisions" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="emergencyStops" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+            <xsd:element name="persons">
+                <xsd:attribute name="loaded" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="running" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="jammed" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+            <xsd:element name="vehicleTripStatistics" minOccurs="0" maxOccurs="1">
+                <xsd:attribute name="routeLength" use="required" type="nonNegativeFloatType"/>
+                <xsd:attribute name="speed" use="required" type="nonNegativeFloatType"/>
+                <xsd:attribute name="duration" use="required" type="timeType"/>
+                <xsd:attribute name="waitingTime" use="required" type="timeType"/>
+                <xsd:attribute name="timeLoss" use="required" type="timeType"/>
+                <xsd:attribute name="departDelay" use="required" type="timeType"/>
+                <xsd:attribute name="departDelayWaiting" use="required" type="timeType"/>
+            </xsd:element>
+            <xsd:element name="pedestrianStatistics" minOccurs="0" maxOccurs="1">
+                <xsd:attribute name="number" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="routeLength" use="required" type="nonNegativeFloatType"/>
+                <xsd:attribute name="duration" use="required" type="timeType"/>
+                <xsd:attribute name="timeLoss" use="required" type="timeType"/>
+            </xsd:element>
+            <xsd:element name="rideStatistics" minOccurs="0" maxOccurs="1">
+                <xsd:attribute name="number" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="routeLength" use="required" type="nonNegativeFloatType"/>
+                <xsd:attribute name="duration" use="required" type="timeType"/>
+                <xsd:attribute name="bus" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="train" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="taxi" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="bike" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="aborted" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+            <xsd:element name="transportStatistics" minOccurs="0" maxOccurs="1">
+                <xsd:attribute name="number" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="routeLength" use="required" type="nonNegativeFloatType"/>
+                <xsd:attribute name="duration" use="required" type="timeType"/>
+                <xsd:attribute name="bus" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="train" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="taxi" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="bike" use="required" type="xsd:nonNegativeInteger"/>
+                <xsd:attribute name="aborted" use="required" type="xsd:nonNegativeInteger"/>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:element>
+
+</xsd:schema>

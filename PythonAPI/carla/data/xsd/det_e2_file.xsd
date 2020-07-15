@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xsd:element name="detector">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" maxOccurs="unbounded" ref="interval"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="interval">
+    <xsd:complexType>
+      <xsd:attribute name="begin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="end" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="haltingDurationSum" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="intervalHaltingDurationSum" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="jamLengthInMetersSum" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="jamLengthInVehiclesSum" use="required" type="xsd:integer"/>
+      <xsd:attribute name="maxHaltingDuration" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="maxIntervalHaltingDuration" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="maxJamLengthInMeters" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="maxJamLengthInVehicles" use="required" type="xsd:integer"/>
+      <xsd:attribute name="maxOccupancy" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="maxVehicleNumber" use="required" type="xsd:integer"/>
+      <xsd:attribute name="meanHaltingDuration" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanIntervalHaltingDuration" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanMaxJamLengthInMeters" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanMaxJamLengthInVehicles" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanOccupancy" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanSpeed" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanTimeLoss" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanVehicleNumber" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="sampledSeconds" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="nVehEntered" use="required" type="xsd:integer"/>
+      <xsd:attribute name="nVehLeft" use="required" type="xsd:integer"/>
+      <xsd:attribute name="nVehSeen" use="required" type="xsd:integer"/>
+      <xsd:attribute name="startedHalts" use="required" type="xsd:decimal"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

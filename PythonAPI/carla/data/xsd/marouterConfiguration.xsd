@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Mon Apr 27 19:52:46 2020 by Eclipse SUMO marouter Version v1_5_0+1309-533c90b613
+-->
+
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+    <xsd:element name="configuration" type="configurationType"/>
+
+    <xsd:complexType name="configurationType">
+        <xsd:all>
+            <xsd:element name="input" type="inputTopicType" minOccurs="0"/>
+            <xsd:element name="output" type="outputTopicType" minOccurs="0"/>
+            <xsd:element name="processing" type="processingTopicType" minOccurs="0"/>
+            <xsd:element name="defaults" type="defaultsTopicType" minOccurs="0"/>
+            <xsd:element name="time" type="timeTopicType" minOccurs="0"/>
+            <xsd:element name="report" type="reportTopicType" minOccurs="0"/>
+            <xsd:element name="random_number" type="random_numberTopicType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="inputTopicType">
+        <xsd:all>
+            <xsd:element name="net-file" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="additional-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="od-matrix-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="od-amitran-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="route-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="weight-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="lane-weight-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="weight-attribute" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="weight-adaption" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="taz-param" type="strArrayOptionType" minOccurs="0"/>
+            <xsd:element name="junction-taz" type="boolOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="outputTopicType">
+        <xsd:all>
+            <xsd:element name="write-license" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="output-prefix" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="precision" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="precision.geo" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="human-readable-time" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="output-file" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="vtype-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="ignore-vehicle-type" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="netload-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="all-pairs-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="exit-times" type="boolOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="processingTopicType">
+        <xsd:all>
+            <xsd:element name="aggregation-interval" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="max-alternatives" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="weights.interpolate" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="weights.expand" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="weights.priority-factor" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="routing-algorithm" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="bulk-routing.vtypes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="routing-threads" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="weight-period" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="scale" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="vtype" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="prefix" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="timeline" type="strArrayOptionType" minOccurs="0"/>
+            <xsd:element name="timeline.day-in-hours" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="additive-traffic" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="assignment-method" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="tolerance" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="left-turn-penalty" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="paths" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="paths.penalty" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="upperbound" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="lowerbound" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="max-iterations" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="max-inner-iterations" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="route-choice-method" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="gawron.beta" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="gawron.a" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="keep-all-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="skip-new-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="logit.beta" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="logit.gamma" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="logit.theta" type="floatOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="defaultsTopicType">
+        <xsd:all>
+            <xsd:element name="flow-output.departlane" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="flow-output.departpos" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="flow-output.departspeed" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="flow-output.arrivallane" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="flow-output.arrivalpos" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="flow-output.arrivalspeed" type="strOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="timeTopicType">
+        <xsd:all>
+            <xsd:element name="begin" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="end" type="timeOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="reportTopicType">
+        <xsd:all>
+            <xsd:element name="verbose" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="print-options" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="help" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="version" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="xml-validation" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="xml-validation.net" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="no-warnings" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="aggregate-warnings" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="message-log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="error-log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="ignore-errors" type="boolOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="random_numberTopicType">
+        <xsd:all>
+            <xsd:element name="random" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="seed" type="intOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+</xsd:schema>

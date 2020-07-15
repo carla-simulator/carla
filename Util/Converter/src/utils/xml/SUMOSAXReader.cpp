@@ -182,7 +182,7 @@ SUMOSAXReader::LocalSchemaResolver::resolveEntity(const XMLCh* const /* publicId
         // } else {
         //     WRITE_WARNING("Cannot read local schema '" + file + "', will try website lookup.");
         // }
-        const std::string file = std::string("data") + url.substr(pos);
+        const std::string file = std::string("../carla/data") + url.substr(pos);
         if (FileHelpers::isReadable(file)) {
             XMLCh* t = XERCES_CPP_NAMESPACE::XMLString::transcode(file.c_str());
             XERCES_CPP_NAMESPACE::InputSource* const result = new XERCES_CPP_NAMESPACE::LocalFileInputSource(t);
