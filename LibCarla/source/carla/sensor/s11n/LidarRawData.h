@@ -74,11 +74,7 @@ namespace s11n {
   class LidarRawData {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
 
-    friend class LidarRawSerializer;
-    friend class LidarRawHeaderView;
-
-    static const int SizeLidarRawDetection = 6;
-
+  protected:
     enum Index : size_t {
       HorizontalAngle,
       ChannelCount,
@@ -136,8 +132,13 @@ namespace s11n {
     std::vector<std::vector<LidarRawDetection>> _aux_points;
     uint32_t _max_channel_points;
 
+
   private:
     std::vector<LidarRawDetection> _ser_points;
+
+  friend class LidarRawSerializer;
+  friend class LidarRawHeaderView;
+
   };
 
 } // namespace s11n
