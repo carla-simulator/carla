@@ -9,6 +9,8 @@ CARLA defines actors as anything that plays a role in the simulation or can be m
 A dictionary containing the attributes of the blueprint this actor was based on.  
 - <a name="carla.Actor.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 Identifier for this actor. Unique during a given episode.  
+- <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
+Returns whether this object was destroyed using this actor handle.  
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
@@ -396,11 +398,11 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
     - **Return:** _string_  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**=False</font>)  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
-        - `show_all` (_bool_) – When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.  
+        - `show_all` (_bool_) – If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>)  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
