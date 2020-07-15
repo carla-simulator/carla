@@ -327,7 +327,7 @@ cam_bp.set_attribute("fov",str(105))
 cam_location = carla.Location(2,0,1)
 cam_rotation = carla.Rotation(0,180,0)
 cam_transform = carla.Transform(cam_location,cam_rotation)
-ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 ego_cam.listen(lambda image: image.save_to_disk('tutorial/output/%.6d.jpg' % image.frame))
 ```
 ![tuto_rgb](img/tuto_rgb.jpg)
@@ -466,7 +466,7 @@ depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
 depth_location = carla.Location(2,0,1)
 depth_rotation = carla.Rotation(0,180,0)
 depth_transform = carla.Transform(depth_location,depth_rotation)
-depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 # This time, a color converter is applied to the image, to get the semantic segmentation view
 depth_cam.listen(lambda image: image.save_to_disk('tutorial/new_depth_output/%.6d.jpg' % image.frame,carla.ColorConverter.LogarithmicDepth))
 ```
@@ -494,7 +494,7 @@ sem_bp.set_attribute("fov",str(105))
 sem_location = carla.Location(2,0,1)
 sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
-sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 # This time, a color converter is applied to the image, to get the semantic segmentation view
 sem_cam.listen(lambda image: image.save_to_disk('tutorial/new_sem_output/%.6d.jpg' % image.frame,carla.ColorConverter.CityScapesPalette))
 ```
@@ -935,7 +935,7 @@ def main():
         cam_location = carla.Location(2,0,1)
         cam_rotation = carla.Rotation(0,180,0)
         cam_transform = carla.Transform(cam_location,cam_rotation)
-        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
         ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/output/%.6d.jpg' % image.frame))
         """
 
@@ -1171,7 +1171,7 @@ def main():
         cam_bp.set_attribute("image_size_x",str(1920))
         cam_bp.set_attribute("image_size_y",str(1080))
         cam_bp.set_attribute("fov",str(105))
-        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
         ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/new_rgb_output/%.6d.jpg' % image.frame))
         """
 
@@ -1187,7 +1187,7 @@ def main():
         depth_location = carla.Location(2,0,1)
         depth_rotation = carla.Rotation(0,180,0)
         depth_transform = carla.Transform(depth_location,depth_rotation)
-        depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
         # This time, a color converter is applied to the image, to get the semantic segmentation view
         depth_cam.listen(lambda image: image.save_to_disk('~/tutorial/de_log/%.6d.jpg' % image.frame,carla.ColorConverter.LogarithmicDepth))
         """
@@ -1203,7 +1203,7 @@ def main():
         depth_location02 = carla.Location(2,0,1)
         depth_rotation02 = carla.Rotation(0,180,0)
         depth_transform02 = carla.Transform(depth_location02,depth_rotation02)
-        depth_cam02 = world.spawn_actor(depth_bp02,depth_transform02,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        depth_cam02 = world.spawn_actor(depth_bp02,depth_transform02,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
         # This time, a color converter is applied to the image, to get the semantic segmentation view
         depth_cam02.listen(lambda image: image.save_to_disk('~/tutorial/de/%.6d.jpg' % image.frame,carla.ColorConverter.Depth))
         """
@@ -1220,7 +1220,7 @@ def main():
         sem_location = carla.Location(2,0,1)
         sem_rotation = carla.Rotation(0,180,0)
         sem_transform = carla.Transform(sem_location,sem_rotation)
-        sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+        sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
         # This time, a color converter is applied to the image, to get the semantic segmentation view
         sem_cam.listen(lambda image: image.save_to_disk('~/tutorial/new_sem_output/%.6d.jpg' % image.frame,carla.ColorConverter.CityScapesPalette))
         """
@@ -1283,7 +1283,7 @@ def main():
         lidar_location = carla.Location(0,0,2)
         lidar_rotation = carla.Rotation(0,0,0)
         lidar_transform = carla.Transform(lidar_location,lidar_rotation)
-        lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.SpringArm)
+        lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.Rigid)
         lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('/home/adas/Desktop/tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
         """
 
