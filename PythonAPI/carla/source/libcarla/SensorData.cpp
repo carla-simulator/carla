@@ -16,6 +16,7 @@
 #include <carla/sensor/data/Image.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
+#include <carla/sensor/data/LidarRawMeasurement.h>
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
 #include <carla/sensor/data/DVSEventArray.h>
@@ -41,6 +42,14 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
     out << "LidarMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", number_of_points=" << std::to_string(meas.size())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const LidarRawMeasurement &meas) {
+    out << "LidarRawMeasurement(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", number_of_points=" << std::to_string(meas.size())
         << ')';
@@ -133,6 +142,17 @@ namespace s11n {
         << ", y=" << std::to_string(det.point.y)
         << ", z=" << std::to_string(det.point.z)
         << ", intensity=" << std::to_string(det.intensity)
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const LidarRawDetection &det) {
+    out << "LidarRawDetection(x=" << std::to_string(det.point.x)
+        << ", y=" << std::to_string(det.point.y)
+        << ", z=" << std::to_string(det.point.z)
+        << ", cos_inc_angle=" << std::to_string(det.cos_inc_angle)
+        << ", object_idx=" << std::to_string(det.object_idx)
+        << ", object_tag=" << std::to_string(det.object_tag)
         << ')';
     return out;
   }
@@ -272,6 +292,23 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<csd::LidarRawMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarRawMeasurement>>("LidarRawMeasurement", no_init)
+    .add_property("horizontal_angle", &csd::LidarRawMeasurement::GetHorizontalAngle)
+    .add_property("channels", &csd::LidarRawMeasurement::GetChannelCount)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarRawMeasurement>)
+    .def("get_point_count", &csd::LidarRawMeasurement::GetPointCount, (arg("channel")))
+    .def("save_to_disk", &SavePointCloudToDisk<csd::LidarRawMeasurement>, (arg("path")))
+    .def("__len__", &csd::LidarRawMeasurement::size)
+    .def("__iter__", iterator<csd::LidarRawMeasurement>())
+    .def("__getitem__", +[](const csd::LidarRawMeasurement &self, size_t pos) -> css::LidarRawDetection {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::LidarRawMeasurement &self, size_t pos, const css::LidarRawDetection &detection) {
+      self.at(pos) = detection;
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
@@ -331,6 +368,14 @@ void export_sensor_data() {
   class_<css::LidarDetection>("LidarDetection")
     .def_readwrite("point", &css::LidarDetection::point)
     .def_readwrite("intensity", &css::LidarDetection::intensity)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<css::LidarRawDetection>("LidarRawDetection")
+    .def_readwrite("point", &css::LidarRawDetection::point)
+    .def_readwrite("cos_inc_angle", &css::LidarRawDetection::cos_inc_angle)
+    .def_readwrite("object_idx", &css::LidarRawDetection::object_idx)
+    .def_readwrite("object_tag", &css::LidarRawDetection::object_tag)
     .def(self_ns::str(self_ns::self))
   ;
 
