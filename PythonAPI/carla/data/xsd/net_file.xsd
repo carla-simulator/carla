@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="taz_file.xsd" />
+
+    <xsd:element name="net" type="netType">
+        <xsd:key name="edgeKey">
+            <xsd:selector xpath="edge"/>
+            <xsd:field xpath="@id"/>
+        </xsd:key>
+        <xsd:keyref name="edgeKeyRefFrom" refer="edgeKey">
+            <xsd:selector xpath="connection"/>
+            <xsd:field xpath="@from"/>
+        </xsd:keyref>
+        <xsd:keyref name="edgeKeyRefTo" refer="edgeKey">
+            <xsd:selector xpath="connection"/>
+            <xsd:field xpath="@to"/>
+        </xsd:keyref>
+    </xsd:element>
+
+    <xsd:complexType name="netType">
+        <xsd:sequence>
+            <xsd:element name="location" type="locationType" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="type" type="typeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="edge" type="edgeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="tlLogic" type="tlLogicType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="junction" type="junctionType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="connection" type="connectionType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="prohibition" type="prohibitionType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="roundabout" type="roundaboutType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="taz" type="tazType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="version">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\d+.\d+"></xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="junctionCornerDetail" type="xsd:int"/>
+        <xsd:attribute name="junctionLinkDetail" type="xsd:int"/>
+        <xsd:attribute name="lefthand" type="boolType"/>
+        <xsd:attribute name="rectangularLaneCut" type="boolType"/>
+        <xsd:attribute name="walkingareas" type="boolType"/>
+        <xsd:attribute name="limitTurnSpeed" type="xsd:float"/>
+        <xsd:attribute name="checkLaneFoesAll" type="boolType"/>
+        <xsd:attribute name="checkLaneFoesRoundabout" type="boolType"/>
+        <xsd:attribute name="tlsIgnoreInternalJunctionJam" type="boolType"/>
+        <xsd:attribute name="spreadType" type="spreadTypeType"/>
+        <xsd:attribute name="avoidOverlap" type="boolType"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="edgeType">
+        <xsd:choice  minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="lane" type="laneType" minOccurs="1" maxOccurs="63"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="stopOffset" type="stopOffsetType" minOccurs="0" maxOccurs="1"/>
+        </xsd:choice>
+        <xsd:attribute name="id" type="idType" use="required"/>
+        <xsd:attribute name="function" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="normal"/>
+                    <xsd:enumeration value="internal"/>
+                    <xsd:enumeration value="connector"/>
+                    <xsd:enumeration value="crossing"/>
+                    <xsd:enumeration value="walkingarea"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="from" type="xsd:string"/>
+        <xsd:attribute name="to" type="xsd:string"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="priority" type="xsd:integer" use="optional"/>
+        <xsd:attribute name="length" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="bidi" type="xsd:string" use="optional"/>
+        <xsd:attribute name="type" type="xsd:string" use="optional"/>
+        <xsd:attribute name="shape" type="shapeTypeTwo" use="optional"/>
+        <xsd:attribute name="distance" type="xsd:float"/>
+        <xsd:attribute name="spreadType" type="spreadTypeType" use="optional"/>
+        <xsd:attribute name="crossingEdges" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="spreadTypeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="center"/>
+            <xsd:enumeration value="roadCenter"/>
+            <xsd:enumeration value="right"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="laneType">
+        <xsd:choice  minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="neigh" type="neighType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="stopOffset" type="stopOffsetType" minOccurs="0" maxOccurs="1"/>
+        </xsd:choice>
+        <xsd:attribute name="id" type="idType" use="required"/>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="prefer" type="xsd:string" use="optional"/>
+        <xsd:attribute name="speed" type="positiveFloatType" use="required"/>
+        <xsd:attribute name="length" type="positiveFloatType" use="required"/>
+        <xsd:attribute name="endOffset" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="width" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="acceleration" type="boolType" use="optional"/>
+        <xsd:attribute name="shape" type="shapeTypeTwo" use="required"/>
+        <xsd:attribute name="customShape" type="boolType" use="optional"/>
+        <xsd:attribute name="type" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="junctionType">
+        <xsd:sequence>
+            <xsd:element name="request" type="requestType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="idType" use="required"/>
+        <xsd:attribute name="x" type="xsd:float" use="required"/>
+        <xsd:attribute name="y" type="xsd:float" use="required"/>
+        <xsd:attribute name="z" type="xsd:float" use="optional"/>
+        <xsd:attribute name="type" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="traffic_light"/>
+                    <xsd:enumeration value="traffic_light_unregulated"/>
+                    <xsd:enumeration value="traffic_light_right_on_red"/>
+                    <xsd:enumeration value="rail_signal"/>
+                    <xsd:enumeration value="rail_crossing"/>
+                    <xsd:enumeration value="priority"/>
+                    <xsd:enumeration value="priority_stop"/>
+                    <xsd:enumeration value="right_before_left"/>
+                    <xsd:enumeration value="allway_stop"/>
+                    <xsd:enumeration value="zipper"/>
+                    <xsd:enumeration value="district"/>
+                    <xsd:enumeration value="unregulated"/>
+                    <xsd:enumeration value="internal"/>
+                    <xsd:enumeration value="dead_end"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="incLanes" type="xsd:string" use="required"/>
+        <xsd:attribute name="intLanes" type="xsd:string" use="required"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="radius" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="customShape" type="boolType" use="optional"/>
+        <xsd:attribute name="rightOfWay" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="default"/>
+                    <xsd:enumeration value="edgePriority"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="fringe" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="default"/>
+                    <xsd:enumeration value="outer"/>
+                    <xsd:enumeration value="inner"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="requestType">
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="response" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern
+                        value="[01]+">
+                    </xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="foes" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern
+                        value="[01]+">
+                    </xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="cont" type="boolType" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="stopOffsetType">
+        <xsd:attribute name="value" type="nonNegativeFloatType" use="required"/>
+        <xsd:attribute name="vClasses" type="xsd:string" use="optional"/>
+        <xsd:attribute name="exceptions" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="connectionType">
+        <xsd:choice  minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:choice>
+        <xsd:attribute name="from" type="xsd:string" use="required"/>
+        <xsd:attribute name="to" type="xsd:string" use="required"/>
+        <xsd:attribute name="fromLane" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="toLane" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="pass" type="boolType" use="optional"/>
+        <xsd:attribute name="keepClear" type="boolType" use="optional"/>
+        <xsd:attribute name="contPos" type="xsd:float" use="optional"/>
+        <xsd:attribute name="visibility" type="xsd:float" use="optional"/>
+        <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="speed" type="xsd:float" use="optional"/>
+        <xsd:attribute name="length" type="xsd:float" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="uncontrolled" type="boolType" use="optional"/>
+        <xsd:attribute name="via" type="xsd:string" use="optional"/>
+        <xsd:attribute name="tl" type="xsd:string" use="optional"/>
+        <xsd:attribute name="linkIndex" type="xsd:integer" use="optional"/>
+        <xsd:attribute name="linkIndex2" type="xsd:integer" use="optional"/>
+        <xsd:attribute name="dir" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="s"/>
+                    <xsd:enumeration value="t"/>
+                    <xsd:enumeration value="T"/>
+                    <xsd:enumeration value="l"/>
+                    <xsd:enumeration value="r"/>
+                    <xsd:enumeration value="L"/>
+                    <xsd:enumeration value="R"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="state" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="M"/>
+                    <xsd:enumeration value="m"/>
+                    <xsd:enumeration value="O"/>
+                    <xsd:enumeration value="o"/>
+                    <xsd:enumeration value="="/>
+                    <xsd:enumeration value="-"/>
+                    <xsd:enumeration value="s"/>
+                    <xsd:enumeration value="w"/>
+                    <xsd:enumeration value="Z"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="prohibitionType">
+        <xsd:attribute name="prohibitor" type="xsd:string" use="required"/>
+        <xsd:attribute name="prohibited" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="roundaboutType">
+        <xsd:attribute name="nodes" type="xsd:string" use="required"/>
+        <xsd:attribute name="edges" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="neighType">
+        <xsd:attribute name="lane" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

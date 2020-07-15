@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="queue-export">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="data"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="data">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="lanes">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element minOccurs="0" maxOccurs="unbounded" ref="lane"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="timestep" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="lane">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="queueing_time" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="queueing_length" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="queueing_length_experimental" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

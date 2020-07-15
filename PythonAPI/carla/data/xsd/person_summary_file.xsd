@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="personSummary">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="step"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="step">
+        <xsd:complexType>
+            <xsd:attribute name="time" use="required" type="nonNegativeFloat"/>
+            <xsd:attribute name="loaded" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="inserted" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="walking" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="waitingForRide" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="riding" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="stopping" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="jammed" use="required" type="xsd:nonNegativeInteger"/>
+            <xsd:attribute name="ended" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="arrived" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="duration" use="optional" type="xsd:float"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

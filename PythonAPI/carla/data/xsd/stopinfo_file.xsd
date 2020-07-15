@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="stops">
+        <xsd:complexType>
+            <xsd:choice maxOccurs="unbounded">
+                <xsd:element minOccurs="0" ref="stopinfo"/>
+            </xsd:choice>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="stopinfo">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="type" use="required" type="xsd:string"/>
+            <xsd:attribute name="lane" use="optional" type="xsd:string"/>
+            <xsd:attribute name="edge" use="optional" type="xsd:string"/>
+            <xsd:attribute name="pos" use="required" type="xsd:string"/>
+            <xsd:attribute name="parking" use="required" type="boolType"/>
+            <xsd:attribute name="started" use="required" type="xsd:float"/>
+            <xsd:attribute name="ended" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="delay" use="required" type="xsd:float"/>
+            <xsd:attribute name="arrivalDelay" use="optional" type="xsd:float"/>
+            <xsd:attribute name="initialPersons" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="loadedPersons" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="unloadedPersons" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="initialContainers" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="loadedContainers" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="unloadedContainers" use="required" type="nonNegativeIntType"/>
+            <xsd:attribute name="busStop" use="optional" type="xsd:string"/>
+            <xsd:attribute name="containerStop" use="optional" type="xsd:string"/>
+            <xsd:attribute name="parkingArea" use="optional" type="xsd:string"/>
+            <xsd:attribute name="chargingStation" use="optional" type="xsd:string"/>
+            <xsd:attribute name="tripId" use="optional" type="xsd:string"/>
+            <xsd:attribute name="line" use="optional" type="xsd:string"/>
+            <xsd:attribute name="split" use="optional" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

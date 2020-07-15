@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:element name="linkData">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="timeSlice" type="timeSliceType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    
+    <xsd:complexType name="timeSliceType">
+        <xsd:sequence>
+            <xsd:element name="link" type="linkType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="startTime" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="duration" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="linkType">
+        <xsd:sequence>
+            <xsd:element name="actorConfig" type="actorConfigType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- reference to link id -->
+        <xsd:attribute name="amount" type="xsd:double" use="required"/> <!-- number of vehicles -->
+        <xsd:attribute name="averageSpeed" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.01m/s -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="actorConfigType">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- reference to actorConfig id -->
+        <xsd:attribute name="amount" type="xsd:double" use="required"/> <!-- number of vehicles -->
+        <xsd:attribute name="averageSpeed" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.01m/s -->
+    </xsd:complexType>
+    
+</xsd:schema>
