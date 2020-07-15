@@ -103,6 +103,32 @@ python3 spawn_npc.py -n 10 -w 5
 
 The sidebar on the left shows a list of items to be shown. Some of these items appear in the visualization window, others (mainly sensor and game data) appear just above the items list.  
 
+*   __View Mode__
+	*   `Top Down` — 
+	*   `Perspective` — 
+	*   `Driver` — 
+*   __/vehicle_pose__
+*   __/vehicle__
+	*   `/velocity` — 
+	*   `/acceleration` — 
+*   __/drawing__
+	*   `/texts` — 
+	*   `/points` — 
+	*   `/polylines` — 
+*   __/objects__ 
+	*   `/walkers` — 
+	*   `/vehicles` — 
+*   __/game__
+	*   `/time` — 
+*   __/lidar__
+	*   `/points` — 
+*   __/radar__
+	*   `/points` — 
+*   __/traffic__
+	*   `/traffic_light` — 
+	*   `/stop_sign` — 
+
+
 ![carlaviz_data](img/plugins_carlaviz_data.jpg)
 
 [class](https://github.com/wx9698/carlaviz/blob/master/examples/carla_painter.py)
