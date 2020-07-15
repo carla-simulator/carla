@@ -54,7 +54,7 @@ Used:<br>
 
 ```py
 # ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.SpringArm)
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
 # Default attachment:  Attachment.Rigid
 gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
 collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
