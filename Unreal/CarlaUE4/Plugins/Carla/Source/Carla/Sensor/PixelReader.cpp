@@ -194,8 +194,9 @@ void FPixelReader::WritePixelsToArray(
 {
 
   check(IsInRenderingThread());
-  auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
+
+  const FTextureRenderTarget2DResource* RenderResource =
+    static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
@@ -205,9 +206,13 @@ void FPixelReader::WritePixelsToArray(
 
   FIntPoint Rect = RenderResource->GetSizeXY();
 
-  InRHICmdList.ReadSurfaceData(
+  {
+
+    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
+    InRHICmdList.ReadSurfaceData(
       Texture,
       FIntRect(0, 0, Rect.X, Rect.Y),
       Pixels,
       FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+  }
 }
