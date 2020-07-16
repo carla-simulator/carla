@@ -1,5 +1,6 @@
 ## Latest
 
+  * Upgraded to AD RSS v4.0.0 supporting unstructured scenes and pedestrians
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added API function `freeze_all_traffic_lights` and `reset_group`
@@ -8,6 +9,7 @@
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
