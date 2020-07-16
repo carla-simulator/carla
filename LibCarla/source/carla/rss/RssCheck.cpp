@@ -467,7 +467,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 
 ::ad::physics::Angle RssCheck::GetSteeringAngle(carla::client::Vehicle const &actor) const {
   auto const steer_ratio = actor.GetControl().steer;
-  ::ad::physics::Angle steering_angle(_maximum_steering_angle * steer_ratio);
+  ::ad::physics::Angle steering_angle(-1 * _maximum_steering_angle * steer_ratio);
   return steering_angle;
 }
 
