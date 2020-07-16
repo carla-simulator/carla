@@ -141,9 +141,7 @@ The contributor ([wx9698](https://github.com/wx9698)), created an additional cla
 
 ---
 
-That is all there is to know about the carlaviz plugin.  
-
-Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
+That is all there is to know about the carlaviz plugin. If there are any doubts, feel free to post these in the forum. 
 
 <div class="build-buttons">
 <p>
