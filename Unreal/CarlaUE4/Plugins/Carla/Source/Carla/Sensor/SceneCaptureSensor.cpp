@@ -493,7 +493,8 @@ void ASceneCaptureSensor::BeginPlay()
     Pixels[i].Init(FColor(), ImageWidth * ImageHeight);
   }
 
-  CaptureDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureCamera::Capture);
+  //CaptureDelegate = FCoreDelegates::OnBeginFrame.AddUObject(this, &ASceneCaptureCamera::SetViewport);
+  CaptureDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureCamera::Capture);
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -520,17 +521,28 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   FCoreDelegates::OnEndFrame.Remove(CaptureDelegate);
 }
 
+void ASceneCaptureSensor::SetViewport()
+{
+  ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_SetViewport)
+  (
+    [](FRHICommandListImmediate& RHICmdList) mutable
+    {
+      RHICmdList.SetViewport(0, 0, 0.0f, 800, 600, 0.0f);
+    }
+  );
+}
+
 void ASceneCaptureSensor::Capture()
 {
 
   check(CaptureRenderTarget != nullptr);
+  check(IsInRenderingThread());
 
   ASceneCaptureSensor* This = this;
   ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_SendPixelsInRenderThread)
   (
     [This, Sensors=CaptureSensors](FRHICommandListImmediate& RHICmdList) mutable
     {
-
       NumCaptureSensors++;
 
       if( NumCaptureSensors < Sensors.Num() )
@@ -542,8 +554,6 @@ void ASceneCaptureSensor::Capture()
       {
         if (Camera && Camera-> HasActorBegunPlay() && !Camera->IsPendingKill())
         {
-          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
-
           ASceneCaptureSensor& CameraRef = *Camera;
           FPixelReader::WritePixelsToArray(
             *(CameraRef.CaptureRenderTarget),

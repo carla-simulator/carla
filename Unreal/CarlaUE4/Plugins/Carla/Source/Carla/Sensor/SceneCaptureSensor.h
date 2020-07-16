@@ -281,6 +281,8 @@ protected:
 
   uint32 Offset = 0u;
 
+  void SetViewport();
+
   void Capture();
 
   template <typename TSensor>
