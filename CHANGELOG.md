@@ -1,5 +1,6 @@
 ## Latest
 
+  * Fixed calculation of steering angle for RSS calculation
   * Upgraded to AD RSS v4.0.0 supporting unstructured scenes and pedestrians
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
