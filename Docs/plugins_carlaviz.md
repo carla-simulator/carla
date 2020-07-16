@@ -8,9 +8,7 @@ The carlaviz plugin is used to visualize the simulation in a web browser. A wind
 *	[__Get carlaviz__](#get-carlaviz)  
 	*	[Prerequisites](#prerequisites)  
 	*	[Download the plugin](#download-the-plugin)  
-*	[__Run carlaviz__](#run-carlaviz)  
-	*	[Examples](#examples)  
-	*	[Utilities](#utilities)  
+*	[__Utilities__](#utilities)  
 
 ---
 ## Basic info
@@ -92,56 +90,58 @@ __3. Open the localhost__ Open your web browser and go to `http://127.0.0.1:8080
 ---
 ## Utilities
 
-Once the plugin is operative, it can be used to visualize the simulation, the actors that live in it, and the data the sensors retrieve. Additional elements can be drawn in the visualization window via script.  
+Once the plugin is operative, it can be used to visualize the simulation, the actors that live in it, and the data the sensors retrieve. The plugin shows a visualization window on the right, were the scene is updated in real-tme, and a sidebar on the left with a list of items to be shown. Some of these items will appear in the visualization window, others (mainly sensor and game data) appear just above the items list.  
+Here is a list of options available for visualization. Additional elements may show, such as  
 
-* Spawned actors will automatically be shown in the visualization window. For instance, go to `PythonAPI/examples` and run the following command to spawn 10 vehicles and 5 walkers.  
+*   __View Mode__ — Change the point of view in the visualization window.  
+	*   `Top Down` — Aerial point of view.  
+	*   `Perspective` — Free point of view.  
+	*   `Driver` — First person point of view.  
+
+*   __/vehicle__ — Show properties of the ego vehicle. Includes a speedometer and accelerometer in the visualization window, and the data retrieved by IMU, GNSS and collision detector sensors.  
+	*   `/velocity` — Velocity of the ego vehicle.  
+	*   `/acceleration` — Acceleration of the ego vehicle.  
+*   __/drawing__ — Show additional elements in the visualization window drawn with [CarlaPainter](https://github.com/wx9698/carlaviz/blob/master/examples/carla_painter.py).  
+	*   `/texts` — Text elements.  
+	*   `/points` — Point elements.  
+	*   `/polylines` — Polyline elements.  
+*   __/objects__  — Show actors in the visualization window.  
+	*   `/walkers` — Update walkers.  
+	*   `/vehicles` — Update vehicles.  
+*   __/game__  — Show game data.  
+	*   `/time` — Current simulation time and frame.  
+*   __/lidar__ — LIDAR sensor data.  
+	*   `/points` — Cloud of points detected by a LIDAR sensor.  
+*   __/radar__ — LIDAR sensor data.  
+	*   `/points` — Cloud of points detected by a RADAR sensor.  
+*   __/traffic__  — Landmark data.  
+	*   `/traffic_light` — Show the map's traffic lights in the visualization window.  
+	*   `/stop_sign` — Show the map's stop signs in the visualization window.  
+
+
+Try to spawn some actors. These will be automatically updated in the visualization window.  
 ```sh
+cd PythonAPI/examples
 python3 spawn_npc.py -n 10 -w 5
 ```
 
 ![carlaviz_full](img/plugins_carlaviz_full.jpg)
 
-The sidebar on the left shows a list of items to be shown. Some of these items appear in the visualization window, others (mainly sensor and game data) appear just above the items list.  
-
-*   __View Mode__
-	*   `Top Down` — 
-	*   `Perspective` — 
-	*   `Driver` — 
-*   __/vehicle_pose__
-*   __/vehicle__
-	*   `/velocity` — 
-	*   `/acceleration` — 
-*   __/drawing__
-	*   `/texts` — 
-	*   `/points` — 
-	*   `/polylines` — 
-*   __/objects__ 
-	*   `/walkers` — 
-	*   `/vehicles` — 
-*   __/game__
-	*   `/time` — 
-*   __/lidar__
-	*   `/points` — 
-*   __/radar__
-	*   `/points` — 
-*   __/traffic__
-	*   `/traffic_light` — 
-	*   `/stop_sign` — 
-
+Spawn an ego vehicle with manual control and move around, to see how the plugin updates sensor data.  
+```sh
+cd PythonAPI/examples
+python3 manual_control.py
+```
 
 ![carlaviz_data](img/plugins_carlaviz_data.jpg)
 
-[class](https://github.com/wx9698/carlaviz/blob/master/examples/carla_painter.py)
-[example](https://github.com/carla-simulator/carlaviz/blob/master/examples/example.py)
-
+The contributor ([wx9698](https://github.com/wx9698)), created an additional class, [CarlaPainter](https://github.com/wx9698/carlaviz/blob/master/examples/carla_painter.py), that allows the user to draw elements to be shown in the visualization window. These include text, points and polylines. Follow [this example](https://github.com/carla-simulator/carlaviz/blob/master/examples/example.py) to spawn an ego vehicle with a LIDAR, and draw the LIDAR data, the trajectory and velocity of the vehicle.  
 
 ![carlaviz_demo](img/plugins_carlaviz_demo.jpg)
 
-
-
 ---
 
-That sets the basics regarding the RSS sensor in CARLA. Find out more about the specific attributes and parameters in the [sensor reference](ref_sensors.md#rss-sensor). 
+That is all there is to know about the carlaviz plugin.  
 
 Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 
