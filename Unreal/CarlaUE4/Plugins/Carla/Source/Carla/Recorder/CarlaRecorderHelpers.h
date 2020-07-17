@@ -68,7 +68,7 @@ void ReadStdVector(std::ifstream &InFile, std::vector<T> &OutVec)
   uint32_t VecSize;
   ReadValue<uint32_t>(InFile, VecSize);
   OutVec.clear();
-  for (int i = 0; i < VecSize; ++i)
+  for (uint32_t i = 0; i < VecSize; ++i)
   {
     T InObj;
     ReadValue<T>(InFile, InObj);
@@ -82,7 +82,7 @@ void ReadTArray(std::ifstream &InFile, TArray<T> &OutVec)
   uint32_t VecSize;
   ReadValue<uint32_t>(InFile, VecSize);
   OutVec.Empty();
-  for (int i = 0; i < VecSize; ++i)
+  for (uint32_t i = 0; i < VecSize; ++i)
   {
     T InObj;
     ReadValue<T>(InFile, InObj);
