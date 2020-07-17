@@ -9,6 +9,8 @@ CARLA defines actors as anything that plays a role in the simulation or can be m
 A dictionary containing the attributes of the blueprint this actor was based on.  
 - <a name="carla.Actor.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 Identifier for this actor. Unique during a given episode.  
+- <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
+Returns whether this object was destroyed using this actor handle.  
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
@@ -247,13 +249,13 @@ Returns the velocity vector registered for an actor in that tick.
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a>
-Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for cameras and sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
+Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
-With this fixed attatchment the object follow its parent position strictly.  
+With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
 - <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-An attachment that expands or retracts depending on camera situation. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them.  
+An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
 
 ---
 
@@ -396,11 +398,11 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
     - **Return:** _string_  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**=False</font>)  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
-        - `show_all` (_bool_) – When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.  
+        - `show_all` (_bool_) – If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
 - <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
@@ -1489,6 +1491,50 @@ Parses the axis' orientations to string.
 
 ---
 
+## carla.RssActorConstellationData<a name="carla.RssActorConstellationData"></a>
+Data structure that is provided within the callback registered by RssSensor.register_actor_constellation_callback().  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssActorConstellationData.ego_match_object"></a>**<font color="#f8805a">ego_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+The ego map matched information.  
+- <a name="carla.RssActorConstellationData.ego_route"></a>**<font color="#f8805a">ego_route</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">libad_map_access_python.FullRoute</a>_)  
+The ego route.  
+- <a name="carla.RssActorConstellationData.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
+Current ego vehicle dynamics regarding the route.  
+- <a name="carla.RssActorConstellationData.other_match_object"></a>**<font color="#f8805a">other_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+The other object's map matched information. This is only valid if 'other_actor' is not 'None'.  
+- <a name="carla.RssActorConstellationData.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
+The other actor. This is 'None' in case of query of default parameters or articial objects of kind <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType.ArtificialObject</a> with no dedicated '[carla.Actor](#carla.Actor)' (as e.g. for the [road boundaries](ref_sensors.md#rss-sensor) at the moment).  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssActorConstellationData.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.RssActorConstellationResult<a name="carla.RssActorConstellationResult"></a>
+Data structure that should be returned by the callback registered by RssSensor.register_actor_constellation_callback().  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssActorConstellationResult.rss_calculation_mode"></a>**<font color="#f8805a">rss_calculation_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/namespacead_1_1rss_1_1map.html#adcb01232986ed83a0c540cd5d03ef495">libad_rss_map_integration_python.RssMode</a>_)  
+The calculation mode to be applied with the actor.  
+- <a name="carla.RssActorConstellationResult.restrict_speed_limit_mode"></a>**<font color="#f8805a">restrict_speed_limit_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/classad_1_1rss_1_1map_1_1RssSceneCreation.html#a403aae6dce3c77a8aec01dd9808dd964">libad_rss_map_integration_python.RestrictSpeedLimitMode</a>_)  
+The mode for restricting speed limit.  
+- <a name="carla.RssActorConstellationResult.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+The RSS dynamics to be applied for the ego vehicle.  
+- <a name="carla.RssActorConstellationResult.actor_object_type"></a>**<font color="#f8805a">actor_object_type</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType</a>_)  
+The RSS object type to be used for the actor.  
+- <a name="carla.RssActorConstellationResult.actor_dynamics"></a>**<font color="#f8805a">actor_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+The RSS dynamics to be applied for the actor.  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssActorConstellationResult.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.RssEgoDynamicsOnRoute<a name="carla.RssEgoDynamicsOnRoute"></a>
 Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.  
 
@@ -1531,8 +1577,22 @@ The ego acceleration component _lon_ regarding the route smoothened by an averag
 
 ---
 
+## carla.RssLogLevel<a name="carla.RssLogLevel"></a>
+Enum declaration used in [carla.RssSensor](#carla.RssSensor) to set the log level.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.RssLogLevel.trace"></a>**<font color="#f8805a">trace</font>**  
+- <a name="carla.RssLogLevel.debug"></a>**<font color="#f8805a">debug</font>**  
+- <a name="carla.RssLogLevel.info"></a>**<font color="#f8805a">info</font>**  
+- <a name="carla.RssLogLevel.warn"></a>**<font color="#f8805a">warn</font>**  
+- <a name="carla.RssLogLevel.err"></a>**<font color="#f8805a">err</font>**  
+- <a name="carla.RssLogLevel.critical"></a>**<font color="#f8805a">critical</font>**  
+- <a name="carla.RssLogLevel.off"></a>**<font color="#f8805a">off</font>**  
+
+---
+
 ## carla.RssResponse<a name="carla.RssResponse"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.
 
 A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [carla.VehicleControl](#carla.VehicleControl) of the vehicle.  
 
@@ -1541,12 +1601,14 @@ A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [c
 States if the response is valid. It is __False__ if calculations failed or an exception occured.  
 - <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>_)  
 The proper response that the RSS calculated for the vehicle.  
-- <a name="carla.RssResponse.acceleration_restriction"></a>**<font color="#f8805a">acceleration_restriction</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_)  
-Acceleration restrictions to be applied, according to the RSS calculation.  
 - <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>_)  
 Detailed RSS states at the current moment in time.  
 - <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
 Current ego vehicle dynamics regarding the route.  
+- <a name="carla.RssResponse.world_model"></a>**<font color="#f8805a">world_model</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">libad_rss_python.WorldModel</a>_)  
+World model used for calculations.  
+- <a name="carla.RssResponse.situation_snapshot"></a>**<font color="#f8805a">situation_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">libad_rss_python.SituationSnapshot</a>_)  
+Detailed RSS situations extracted from the world model.  
 
 <h3>Methods</h3>
 
@@ -1582,19 +1644,19 @@ Disables the _stay on road_ feature.
 ---
 
 ## carla.RssSensor<a name="carla.RssSensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
 
 The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
-States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle.  
+States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle if no actor constellation callback is registered.  
 - <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
-States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles.  
+States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles if no actor constellation callback is registered.  
+- <a name="carla.RssSensor.pedestrian_dynamics"></a>**<font color="#f8805a">pedestrian_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for pedestrians if no actor constellation callback is registered.  
 - <a name="carla.RssSensor.road_boundaries_mode"></a>**<font color="#f8805a">road_boundaries_mode</font>** (_[carla.RssRoadBoundariesMode](#carla.RssRoadBoundariesMode)_)  
 Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __On__.  
-- <a name="carla.RssSensor.visualization_mode"></a>**<font color="#f8805a">visualization_mode</font>** (_[carla.RssVisualizationMode](#carla.RssVisualizationMode)_)  
-Sets the visualization of the RSS on the server side. By default is __All__. These drawings may delay de RSS so it is best to set this to __Off__ when evaluating RSS performance.  
 - <a name="carla.RssSensor.routing_targets"></a>**<font color="#f8805a">routing_targets</font>** (_vector<[carla.Transform](#carla.Transform)>_)  
 The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.  
 
@@ -1607,40 +1669,38 @@ Appends a new target position to the current route of the vehicle.
 Erases the targets that have been appended to the route.  
 - <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
 Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
+- <a name="carla.RssSensor.register_actor_constellation_callback"></a>**<font color="#7fb800">register_actor_constellation_callback</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+Register a callback to customize a [carla.RssActorConstellationResult](#carla.RssActorConstellationResult). By this callback the settings of RSS parameters are done per actor constellation and the settings (ego_vehicle_dynamics, other_vehicle_dynamics and pedestrian_dynamics) have no effect.  
+    - **Parameters:**
+        - `callback` – The function to be called whenever a RSS situation is about to be calculated.  
+
+<h5 style="margin-top: -20px">Setters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.set_log_level"></a>**<font color="#7fb800">set_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+Sets the log level.  
+    - **Parameters:**
+        - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New log level.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
-## carla.RssVisualizationMode<a name="carla.RssVisualizationMode"></a>
-Enum declaration used to state the visualization RSS calculations server side. Depending on these, the [carla.RssSensor](#carla.RssSensor) will use a [carla.DebugHelper](#carla.DebugHelper) to draw different elements. These drawings take some time and might delay the RSS responses. It is best to disable them when evaluating RSS performance.  
-
-<h3>Instance Variables</h3>
-- <a name="carla.RssVisualizationMode.Off"></a>**<font color="#f8805a">Off</font>**  
-- <a name="carla.RssVisualizationMode.RouteOnly"></a>**<font color="#f8805a">RouteOnly</font>**  
-- <a name="carla.RssVisualizationMode.VehicleStateOnly"></a>**<font color="#f8805a">VehicleStateOnly</font>**  
-- <a name="carla.RssVisualizationMode.VehicleStateAndRoute"></a>**<font color="#f8805a">VehicleStateAndRoute</font>**  
-- <a name="carla.RssVisualizationMode.All"></a>**<font color="#f8805a">All</font>**  
-
----
-
 ## carla.Sensor<a name="carla.Sensor"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
 
-  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.  
-  <b>Receive data on every tick.</b>  
-  - [Depth camera](ref_sensors.md#depth-camera).  
-  - [Gnss sensor](ref_sensors.md#gnss-sensor).  
-  - [IMU sensor](ref_sensors.md#imu-sensor).  
-  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).  
-  - [Radar](ref_sensors.md#radar-sensor).  
-  - [RGB camera](ref_sensors.md#rgb-camera).  
-  - [RSS sensor](ref_sensors.md#rss-sensor).  
-  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).  
-  <b>Only receive data when triggered.</b>  
-  - [Collision detector](ref_sensors.md#collision-detector).  
-  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).  
+  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
+  <b>Receive data on every tick.</b>
+  - [Depth camera](ref_sensors.md#depth-camera).
+  - [Gnss sensor](ref_sensors.md#gnss-sensor).
+  - [IMU sensor](ref_sensors.md#imu-sensor).
+  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+  - [Radar](ref_sensors.md#radar-sensor).
+  - [RGB camera](ref_sensors.md#rgb-camera).
+  - [RSS sensor](ref_sensors.md#rss-sensor).
+  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
+  <b>Only receive data when triggered.</b>
+  - [Collision detector](ref_sensors.md#collision-detector).
+  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
   - [Obstacle detector](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
@@ -1661,15 +1721,15 @@ Commands the sensor to stop listening for data.
 ---
 
 ## carla.SensorData<a name="carla.SensorData"></a>
-Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. Hereunder is a list of the sensors and their corresponding data.  
-  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).  
-  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).  
-  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).  
-  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).  
-  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).  
-  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).  
-  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).  
-  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).  
+Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. Hereunder is a list of the sensors and their corresponding data.
+  - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).
+  - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).
+  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).
+  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).
+  - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).
+  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).
+  - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).
+  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).
   - RSS sensor: [carla.RssResponse](#carla.RssResponse).  
 
 <h3>Instance Variables</h3>
@@ -1899,7 +1959,7 @@ Describes a rotation for an object according to Unreal Engine's axis system.
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
-Translates a 3D point from global to local coordinates using the current transformation as frame of reference.  
+Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
         - `in_point` (_[carla.Location](#carla.Location)_) – Location in the space to which the transformation will be applied.  
 

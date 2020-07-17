@@ -67,7 +67,7 @@ CARLA forum</a>
         — Register the events in a simulation and play it again.  
     [__Rendering options__](adv_rendering_options.md)
         — From quality settings to no-render or off-screen modes.  
-    [__RSS sensor__](adv_rss.md)
+    [__RSS__](adv_rss.md)
         — An implementation of RSS in the CARLA client library.  
     [__SUMO co-simulation__](adv_sumo.md)
         — Run a synchronous simulation between CARLA and SUMO.  
@@ -91,6 +91,11 @@ CARLA forum</a>
         — Detailed explanation of the recorder file format.  
     [__Sensors reference__](ref_sensors.md)
         — Everything about sensors and the data they retrieve.  
+
+## Plugins
+  <p style="padding-left:30px;line-height:1.8">
+    [__carlaviz — web visualizer__](plugins_carlaviz.md)
+        — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
 
 ## ROS bridge
   <p style="padding-left:30px;line-height:1.8">

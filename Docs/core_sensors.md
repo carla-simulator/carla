@@ -46,15 +46,15 @@ blueprint.set_attribute('sensor_tick', '1.0')
 
 `attachment_to` and `attachment_type`, are crucial. Sensors should be attached to a parent actor, usually a vehicle, to follow it around and gather the information. The attachment type will determine how its position is updated regarding said vehicle. 
 
-* __Rigid attachment.__ Movement is strict regarding its parent location. Cameras may show "little hops" as the position updated is not eased.  
-* __SpringArm attachment.__ Movement is eased with little accelerations and decelerations. 
+* __Rigid attachment.__ Movement is strict regarding its parent location. This is the proper attachment to retrieve data from the simulation.  
+* __SpringArm attachment.__ Movement is eased with little accelerations and decelerations. This attachment is only recommended to record videos from the simulation. The movement is smooth and "hops" are avoided when updating the cameras' positions.  
 
 ```py
 transform = carla.Transform(carla.Location(x=0.8, z=1.7))
 sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
 ```
 !!! Important
-    When spawning with attachment, location must be relative to the parent actor. 
+    When spawning with attachment, location must be relative to the parent actor.  
 
 ### Listening
 

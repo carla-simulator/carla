@@ -472,6 +472,9 @@ This sensor simulates a rotating Lidar implemented using ray-casting.
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
+If the `noise_stddev` attribute is positive, each point is then randomly perturbed along the vector of the laser ray. In effect, this simulates
+a Lidar with perfect angular positioning, but noisy distance measurement.
+
 A Lidar measurement contains a packet with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.
 
 The information of the Lidar measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by:
@@ -558,6 +561,11 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 <td>float</td>
 <td>0.0</td>
 <td>Simulation seconds between sensor captures (ticks).</td>
+<tr>
+<td><code>noise_stddev</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>Standard deviation of noise along the vector of each raycast.</td>
 </tbody>
 </table>
 <br>
@@ -1183,6 +1191,7 @@ The sensor allows to control the considered route by providing some key points, 
 <th>Description</th>
 </thead>
 <tbody>
+<tr>
 <td><code>routing_targets</code></td>
 <td>Get the current list of routing targets used for route.</td>
 <tr>
@@ -1194,6 +1203,12 @@ The sensor allows to control the considered route by providing some key points, 
 <tr>
 <td><code>drop_route</code></td>
 <td>Discards the current route and creates a new one.</td>
+<tr>
+<td><code>register_actor_constellation_callback</code></td>
+<td>Register a callback to customize the calculations.</td>
+<tr>
+<td><code>set_log_level</code></td>
+<td>Sets the log level.</td>
 </table>
 <br>
 
@@ -1236,8 +1251,39 @@ if routing_targets:
 <td><code>ego_dynamics_on_route</code></td>
 <td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
 <td>Current ego vehicle dynamics regarding the route.</td>
+<tr>
+<td><code>situation_snapshot</code></td>
+<td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
+<td>Current situation snapshot extracted from the world model.</td>
 </tbody>
 </table>
+
+In case a actor_constellation_callback is registered, a call is triggered for:
+
+1. default calculation (`actor_constellation_data.other_actor=None`)
+2. per-actor calculation
+
+```py
+# Fragment of manual_control_rss.py
+# The function is registered as actor_constellation_callback
+def _on_actor_constellation_request(self, actor_constellation_data):
+    actor_constellation_result = carla.RssActorConstellationResult()
+    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
+    actor_constellation_result.restrict_speed_limit_mode = rssmap.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
+    actor_constellation_result.ego_vehicle_dynamics = self.current_vehicle_parameters
+    actor_constellation_result.actor_object_type = rss.ObjectType.Invalid
+    actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
+
+    actor_id = -1
+    actor_type_id = "none"
+    if actor_constellation_data.other_actor != None:
+        # customize actor_constellation_result for specific actor
+        ...
+    else:
+        # default
+        ...
+    return actor_constellation_result
+```
 
 ---
 ## Semantic segmentation camera
