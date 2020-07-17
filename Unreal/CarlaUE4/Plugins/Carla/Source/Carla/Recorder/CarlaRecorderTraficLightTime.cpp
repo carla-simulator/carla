@@ -39,6 +39,10 @@ void CarlaRecorderTrafficLightTimes::Add(const CarlaRecorderTrafficLightTime &In
 
 void CarlaRecorderTrafficLightTimes::Write(std::ofstream &OutFile)
 {
+  if (TrafficLightTimes.size() == 0)
+  {
+    return;
+  }
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::TrafficLightTime));
 
