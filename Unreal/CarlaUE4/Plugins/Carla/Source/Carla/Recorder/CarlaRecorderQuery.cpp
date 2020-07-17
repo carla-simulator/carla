@@ -192,7 +192,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Position.Read(File);
-            Info << "  Id: " << Position.DatabaseId << " Location (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
+            Info << "  Id: " << Position.DatabaseId << " Location: (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
           }
         }
         else
@@ -235,7 +235,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Vehicle.Read(File);
-            Info << "  Vehicle id " << Vehicle.DatabaseId << ": Steering " << Vehicle.Steering << " Throttle " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake " << Vehicle.bHandbrake << " Gear " << Vehicle.Gear << std::endl;
+            Info << "  Id: " << Vehicle.DatabaseId << " Steering: " << Vehicle.Steering << " Throttle: " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake: " << Vehicle.bHandbrake << " Gear: " << Vehicle.Gear << std::endl;
           }
         }
         else
@@ -256,7 +256,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Walker.Read(File);
-            Info << "  Walker id " << Walker.DatabaseId << ": speed " << Walker.Speed << std::endl;
+            Info << "  Id: " << Walker.DatabaseId << " speed: " << Walker.Speed << std::endl;
           }
         }
         else
@@ -284,15 +284,15 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             if (State.Position)
               enabled_lights_list += "Position, ";
             if (State.LowBeam)
-              enabled_lights_list += "Low Beam, ";
+              enabled_lights_list += "LowBeam, ";
             if (State.HighBeam)
-              enabled_lights_list += "High Beam, ";
+              enabled_lights_list += "HighBeam, ";
             if (State.Brake)
               enabled_lights_list += "Brake, ";
             if (State.RightBlinker)
-              enabled_lights_list += "Right Blinker, ";
+              enabled_lights_list += "RightBlinker, ";
             if (State.LeftBlinker)
-              enabled_lights_list += "Left Blinker, ";
+              enabled_lights_list += "LeftBlinker, ";
             if (State.Reverse)
               enabled_lights_list += "Reverse, ";
             if (State.Interior)
@@ -306,12 +306,12 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 
             if (enabled_lights_list.size())
             {
-              Info << "  Vehicle id " << LightVehicle.DatabaseId << ": enabled lights: " <<
+              Info << "  Id " << LightVehicle.DatabaseId << ": " <<
                   enabled_lights_list.substr(0, enabled_lights_list.size() - 2) << std::endl;
             }
             else
             {
-              Info << "  Vehicle id " << LightVehicle.DatabaseId << ": no lights enabled" << std::endl;
+              Info << "  Id " << LightVehicle.DatabaseId << ": None" << std::endl;
             }
           }
         }
@@ -333,9 +333,9 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             LightScene.Read(File);
-            Info << "  Light id " << LightScene.LightId << ": " << (LightScene.bOn ? "enabled" : "disabled")
-                << ", intensity " << LightScene.Intensity
-                << ", RGB color (" << LightScene.Color.R << " " << LightScene.Color.G << " " << LightScene.Color.B << ")"
+            Info << "  Id: " << LightScene.LightId << " enabled: " << (LightScene.bOn ? "True" : "False")
+                << " intensity: " << LightScene.Intensity
+                << " RGB_color: (" << LightScene.Color.R << " " << LightScene.Color.G << " " << LightScene.Color.B << ")"
                 << std::endl;
           }
         }
@@ -357,9 +357,9 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Kinematics.Read(File);
-            Info << "  Actor id " << Kinematics.DatabaseId << ": Linear Velocity ("
+            Info << "  Id: " << Kinematics.DatabaseId << " linear_velocity ("
                 << Kinematics.LinearVelocity.X << ", " << Kinematics.LinearVelocity.Y << ", " << Kinematics.LinearVelocity.Z << ")"
-                << " Angular Velocity ("
+                << " angular_velocity ("
                 << Kinematics.AngularVelocity.X << ", " << Kinematics.AngularVelocity.Y << ", " << Kinematics.AngularVelocity.Z << ")"
                 << std::endl;
           }
@@ -381,11 +381,44 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           Info << " Actor bounding boxes: " << Total << std::endl;
           for (i = 0; i < Total; ++i)
           {
-            BoundingBox.Read(File);
-            Info << "  Actor id " << BoundingBox.DatabaseId << ": Origin ("
-                << BoundingBox.Origin.X << ", " << BoundingBox.Origin.Y << ", " << BoundingBox.Origin.Z << ")"
-                << " Extension ("
-                << BoundingBox.Extension.X << ", " << BoundingBox.Extension.Y << ", " << BoundingBox.Extension.Z << ")"
+            ActorBoundingBox.Read(File);
+            Info << "  Id: " << ActorBoundingBox.DatabaseId << " origin: ("
+                << ActorBoundingBox.BoundingBox.Origin.X << ", "
+                << ActorBoundingBox.BoundingBox.Origin.Y << ", "
+                << ActorBoundingBox.BoundingBox.Origin.Z << ")"
+                << " extension: ("
+                << ActorBoundingBox.BoundingBox.Extension.X << ", "
+                << ActorBoundingBox.BoundingBox.Extension.Y << ", "
+                << ActorBoundingBox.BoundingBox.Extension.Z << ")"
+                << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
+      // actors trigger volumes
+      case static_cast<char>(CarlaRecorderPacketId::TriggerVolume):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Actor trigger volumes: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            ActorBoundingBox.Read(File);
+            Info << "  Id: " << ActorBoundingBox.DatabaseId << " origin: ("
+                << ActorBoundingBox.BoundingBox.Origin.X << ", "
+                << ActorBoundingBox.BoundingBox.Origin.Y << ", "
+                << ActorBoundingBox.BoundingBox.Origin.Z << ")"
+                << " extension: ("
+                << ActorBoundingBox.BoundingBox.Extension.X << ", "
+                << ActorBoundingBox.BoundingBox.Extension.Y << ", "
+                << ActorBoundingBox.BoundingBox.Extension.Z << ")"
                 << std::endl;
           }
         }
@@ -425,37 +458,38 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           {
             PhysicsControl.Read(File);
             carla::rpc::VehiclePhysicsControl Control(PhysicsControl.VehiclePhysicsControl);
-            Info << "  Actor id " << PhysicsControl.DatabaseId
-                << " max rpm " << Control.max_rpm << " MOI " << Control.moi
-                << " damping rate full throttle " << Control.damping_rate_full_throttle
-                << " damping rate zero throttle clutch engaged " << Control.damping_rate_zero_throttle_clutch_engaged
-                << " damping rate zero throttle clutch disengaged" << Control.damping_rate_zero_throttle_clutch_disengaged
-                << " use gear auto box " << (Control.use_gear_autobox ? "true" : "false")
-                << " gear switch time " << Control.gear_switch_time
-                << " clutch strength " << Control.clutch_strength
-                << " final ratio " << Control.final_ratio
-                << " mass " << Control.mass << " drag coefficient " << Control.drag_coefficient
-                << " center of mass " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ")"
-                << std::endl;
-            Info << "   torque curve:";
+            Info << "  Id: " << PhysicsControl.DatabaseId << std::endl
+                << "   max_rpm = " << Control.max_rpm << std::endl
+                << "   MOI = " << Control.moi << std::endl
+                << "   damping_rate_full_throttle = " << Control.damping_rate_full_throttle << std::endl
+                << "   damping_rate_zero_throttle_clutch_engaged = " << Control.damping_rate_zero_throttle_clutch_engaged << std::endl
+                << "   damping_rate_zero_throttle_clutch_disengaged = " << Control.damping_rate_zero_throttle_clutch_disengaged << std::endl
+                << "   use_gear_auto_box = " << (Control.use_gear_autobox ? "true" : "false") << std::endl
+                << "   gear_switch_time = " << Control.gear_switch_time << std::endl
+                << "   clutch_strength = " << Control.clutch_strength << std::endl
+                << "   final_ratio = " << Control.final_ratio << std::endl
+                << "   mass = " << Control.mass << std::endl
+                << "   drag_coefficient = " << Control.drag_coefficient << std::endl
+                << "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ")" << std::endl;
+            Info << "   torque_curve =";
             for (auto& vec : Control.torque_curve)
             {
               Info << " (" << vec.x << ", " << vec.y << ")";
             }
             Info << std::endl;
-            Info << "   steering curve:";
+            Info << "   steering_curve =";
             for (auto& vec : Control.steering_curve)
             {
               Info << " (" << vec.x << ", " << vec.y << ")";
             }
             Info << std::endl;
-            Info << "   forward gears:";
+            Info << "   forward_gears:";
             uint32_t count = 0;
             for (auto& Gear : Control.forward_gears)
             {
-              Info << " gear " << count << " ratio " << Gear.ratio
-                  << " down ratio " << Gear.down_ratio
-                  << " up ratio " << Gear.up_ratio;
+              Info << "    gear " << count << ": ratio " << Gear.ratio
+                  << " down_ratio " << Gear.down_ratio
+                  << " up_ratio " << Gear.up_ratio << std::endl;
               ++count;
             }
             Info << std::endl;
@@ -463,12 +497,12 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             count = 0;
             for (auto& Wheel : Control.wheels)
             {
-              Info << " wheel " << count << " tire friction " << Wheel.tire_friction
-                  << " damping rate " << Wheel.damping_rate
-                  << " max steer angle " << Wheel.max_steer_angle
+              Info << " wheel " << count << ": tire_friction " << Wheel.tire_friction
+                  << " damping_rate " << Wheel.damping_rate
+                  << " max_steer_angle " << Wheel.max_steer_angle
                   << " radius " << Wheel.radius
-                  << " max brake torque " << Wheel.max_brake_torque
-                  << " max handbrake torque " << Wheel.max_handbrake_torque
+                  << " max_brake_torque " << Wheel.max_brake_torque
+                  << " max_handbrake_torque " << Wheel.max_handbrake_torque
                   << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")";
               ++count;
             }
@@ -493,10 +527,10 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             TrafficLightTime.Read(File);
-            Info << "  Actor id " << TrafficLightTime.DatabaseId
-                << ": Green Time " << TrafficLightTime.GreenTime
-                << " Yellow Time " << TrafficLightTime.YellowTime
-                << " Red Time " << TrafficLightTime.RedTime
+            Info << "  Id: " << TrafficLightTime.DatabaseId
+                << " green_time: " << TrafficLightTime.GreenTime
+                << " yellow_time: " << TrafficLightTime.YellowTime
+                << " red_time: " << TrafficLightTime.RedTime
                 << std::endl;
           }
         }

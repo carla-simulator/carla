@@ -12,7 +12,6 @@
 #pragma pack(push, 1)
 struct CarlaRecorderBoundingBox
 {
-  uint32_t DatabaseId;
   FVector Origin;
   FVector Extension;
 
@@ -22,11 +21,23 @@ struct CarlaRecorderBoundingBox
 };
 #pragma pack(pop)
 
-class CarlaRecorderBoundingBoxes
+#pragma pack(push, 1)
+struct CarlaRecorderActorBoundingBox
+{
+  uint32_t DatabaseId;
+  CarlaRecorderBoundingBox BoundingBox;
+
+  void Read(std::ifstream &InFile);
+
+  void Write(std::ofstream &OutFile);
+};
+#pragma pack(pop)
+
+class CarlaRecorderActorBoundingBoxes
 {
   public:
 
-  void Add(const CarlaRecorderBoundingBox &InObj);
+  void Add(const CarlaRecorderActorBoundingBox &InObj);
 
   void Clear(void);
 
@@ -34,5 +45,20 @@ class CarlaRecorderBoundingBoxes
 
 private:
 
-  std::vector<CarlaRecorderBoundingBox> Boxes;
+  std::vector<CarlaRecorderActorBoundingBox> Boxes;
+};
+
+class CarlaRecorderActorTriggerVolumes
+{
+  public:
+
+  void Add(const CarlaRecorderActorBoundingBox &InObj);
+
+  void Clear(void);
+
+  void Write(std::ofstream &OutFile);
+
+private:
+
+  std::vector<CarlaRecorderActorBoundingBox> Boxes;
 };
