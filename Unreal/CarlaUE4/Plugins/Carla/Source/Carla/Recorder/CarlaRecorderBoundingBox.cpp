@@ -77,6 +77,10 @@ void CarlaRecorderActorTriggerVolumes::Add(const CarlaRecorderActorBoundingBox &
 
 void CarlaRecorderActorTriggerVolumes::Write(std::ofstream &OutFile)
 {
+  if (Boxes.size() == 0)
+  {
+    return;
+  }
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::TriggerVolume));
 

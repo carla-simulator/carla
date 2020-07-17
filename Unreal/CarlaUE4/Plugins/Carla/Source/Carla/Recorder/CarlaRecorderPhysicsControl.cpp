@@ -87,6 +87,10 @@ void CarlaRecorderPhysicsControls::Add(const CarlaRecorderPhysicsControl &InObj)
 
 void CarlaRecorderPhysicsControls::Write(std::ofstream &OutFile)
 {
+  if (PhysicsControls.size() == 0)
+  {
+    return;
+  }
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::PhysicsControl));
 
