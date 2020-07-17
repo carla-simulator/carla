@@ -503,7 +503,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
                   << " max_brake_torque " << Wheel.max_brake_torque
                   << " max_handbrake_torque " << Wheel.max_handbrake_torque
                   << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")"
-                  << std::endl
+                  << std::endl;
               ++count;
             }
           }
