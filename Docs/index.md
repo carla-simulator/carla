@@ -92,6 +92,11 @@ CARLA forum</a>
     [__Sensors reference__](ref_sensors.md)
         — Everything about sensors and the data they retrieve.  
 
+## Plugins
+  <p style="padding-left:30px;line-height:1.8">
+    [__carlaviz — web visualizer__](plugins_carlaviz.md)
+        — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
+
 ## ROS bridge
   <p style="padding-left:30px;line-height:1.8">
     [__ROS bridge installation__](ros_installation.md)
