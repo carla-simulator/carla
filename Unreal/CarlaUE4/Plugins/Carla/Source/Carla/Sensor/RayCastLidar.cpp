@@ -167,7 +167,8 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
     LidarBodyRot
   );
   const auto Range = Description.Range;
-  FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
+  const FVector ForwardVector = UKismetMathLibrary::GetForwardVector(ResultRot);
+  FVector EndTrace = Range * ForwardVector + LidarBodyLoc;
 
   GetWorld()->LineTraceSingleByChannel(
     HitInfo,
@@ -192,7 +193,12 @@ bool ARayCastLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle
       );
     }
 
-    const FVector hp = HitInfo.ImpactPoint;
+    FVector hp = HitInfo.ImpactPoint;
+    if (Description.NoiseStdDev > 0.0f)
+    {
+      const FVector Noise = ForwardVector * RandomEngine->GetNormalDistribution(0.0f, Description.NoiseStdDev);
+      hp += Noise;
+    }
     XYZ = actorTransf.Inverse().TransformPosition(hp);
 
     Intensity = ComputeIntensity(LidarBodyLoc, HitInfo);
