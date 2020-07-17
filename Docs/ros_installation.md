@@ -53,7 +53,9 @@ A catkin workspace is needed to use the ROS bridge. It should be cloned and buil
 mkdir -p ~/carla-ros-bridge/catkin_ws/src
 cd ~/carla-ros-bridge
 git clone https://github.com/carla-simulator/ros-bridge.git
-cd catkin_ws/src
+cd ros-bridge
+git submodule update --init
+cd ../catkin_ws/src
 ln -s ../../ros-bridge
 source /opt/ros/kinetic/setup.bash #Watch out, this sets ROS Kinetic. 
 cd ..
