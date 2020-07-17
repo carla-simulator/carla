@@ -131,6 +131,10 @@ LibCarla.client.rss.debug: setup ad-rss
 LibCarla.client.rss.release: setup ad-rss
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
 
+.PHONY: Plugins
+plugins:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Plugins.sh $(ARGS)
+
 setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh
 
