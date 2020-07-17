@@ -154,5 +154,9 @@ namespace client {
     return _episode.Lock()->GetLightManager();
   }
 
+  void World::FreezeAllTrafficLights(bool frozen) {
+    _episode.Lock()->FreezeAllTrafficLights(frozen);
+  }
+
 } // namespace client
 } // namespace carla
