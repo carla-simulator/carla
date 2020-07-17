@@ -39,7 +39,26 @@ struct CARLA_API FLidarDescription
   UPROPERTY(EditAnywhere)
   float LowerFovLimit = -30.0f;
 
+  /// Attenuation Rate in the atmosphere in m^-1
+  UPROPERTY(EditAnywhere)
+  float AtmospAttenRate = 0.004f;
+
+  /// General drop off rate
+  UPROPERTY(EditAnywhere)
+  float DropOffGenRate = 0.45f;
+
+  /// General drop off rate
+  UPROPERTY(EditAnywhere)
+  float DropOffIntensityLimit = 0.8f;
+
+  /// General drop off rate
+  UPROPERTY(EditAnywhere)
+  float DropOffAtZeroIntensity = 0.4f;
+
   /// Wether to show debug points of laser hits in simulator.
   UPROPERTY(EditAnywhere)
   bool ShowDebugPoints = false;
+
+  UPROPERTY(EditAnywhere)
+  float NoiseStdDev = 0.0f;
 };

@@ -825,9 +825,37 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   LowerFOV.Id = TEXT("lower_fov");
   LowerFOV.Type = EActorAttributeType::Float;
   LowerFOV.RecommendedValues = { TEXT("-30.0") };
+  // Atmospheric Attenuation Rate.
+  FActorVariation AtmospAttenRate;
+  AtmospAttenRate.Id = TEXT("atmosphere_attenuation_rate");
+  AtmospAttenRate.Type = EActorAttributeType::Float;
+  AtmospAttenRate.RecommendedValues = { TEXT("0.004") };
+  // Dropoff General Rate
+  FActorVariation DropOffGenRate;
+  DropOffGenRate.Id = TEXT("dropoff_general_rate");
+  DropOffGenRate.Type = EActorAttributeType::Float;
+  DropOffGenRate.RecommendedValues = { TEXT("0.45") };
+  // Dropoff intensity limit.
+  FActorVariation DropOffIntensityLimit;
+  DropOffIntensityLimit.Id = TEXT("dropoff_intensity_limit");
+  DropOffIntensityLimit.Type = EActorAttributeType::Float;
+  DropOffIntensityLimit.RecommendedValues = { TEXT("0.8") };
+  // Dropoff at zero intensity.
+  FActorVariation DropOffAtZeroIntensity;
+  DropOffAtZeroIntensity.Id = TEXT("dropoff_zero_intensity");
+  DropOffAtZeroIntensity.Type = EActorAttributeType::Float;
+  DropOffAtZeroIntensity.RecommendedValues = { TEXT("0.4") };
+
+  // Lower FOV limit.
+  FActorVariation StdDevLidar;
+  StdDevLidar.Id = TEXT("noise_stddev");
+  StdDevLidar.Type = EActorAttributeType::Float;
+  StdDevLidar.RecommendedValues = { TEXT("0.0") };
 
   Definition.Variations.Append(
-      {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+      {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
+          AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
+          DropOffAtZeroIntensity, StdDevLidar});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1432,6 +1460,16 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
   Lidar.LowerFovLimit =
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
+  Lidar.AtmospAttenRate =
+      RetrieveActorAttributeToFloat("atmosphere_attenuation_rate", Description.Variations, Lidar.AtmospAttenRate);
+  Lidar.DropOffGenRate =
+      RetrieveActorAttributeToFloat("dropoff_general_rate", Description.Variations, Lidar.DropOffGenRate);
+  Lidar.DropOffIntensityLimit =
+      RetrieveActorAttributeToFloat("dropoff_intensity_limit", Description.Variations, Lidar.DropOffIntensityLimit);
+  Lidar.DropOffAtZeroIntensity =
+      RetrieveActorAttributeToFloat("dropoff_zero_intensity", Description.Variations, Lidar.DropOffAtZeroIntensity);
+  Lidar.NoiseStdDev =
+      RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(

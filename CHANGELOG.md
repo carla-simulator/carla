@@ -1,9 +1,15 @@
 ## Latest
 
+  * Upgraded to AD RSS v4.0.0 supporting unstructured scenes and pedestrians
+  * Fixed a bug where `get_traffic_light` would always return `None`
+  * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
+  * Added API function `freeze_all_traffic_lights` and `reset_group`
+  * Fixed recorder determinism problems
   * Added Light ids
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
@@ -15,7 +21,9 @@
   * Added PythonAPI command to set multiple car light states at once
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
+  * Added a warning if the user tries to use the SpringArm exactly in the 'z' axis of the attached actor
   * Improved the LiDAR and Radar sensors with a parallel implentation of the raycasting
+  * Added an approximation of the intensity of each point of the cloud in the LiDAR sensor
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Improved LiDAR and radar to better match the shape of the vehicles
   * Added support for additional TraCI clients in Sumo co-simulation
@@ -28,6 +36,8 @@
   * Fixed collision issues when debug draw(debug.draw_line) is called
   * Fixed Gyroscope sensor to properly give angular velocity readings in local frame
   * Added Renderdoc plugin to the Unreal project
+  * Added configurable noise to Lidar sensor
+  * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
 
 ## CARLA 0.9.9
 

@@ -6,7 +6,7 @@ rem x64 libpng build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
-set "FILE_N=    -[%~n0]:"
+set FILE_N=    -[%~n0]:
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -18,10 +18,12 @@ rem ============================================================================
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
-        set BUILD_DIR=%~2
+        set BUILD_DIR=%~dpn2
+        shift
     )
     if "%1"=="--zlib-install-dir" (
-        set ZLIB_INST_DIR=%~2
+        set ZLIB_INST_DIR=%~dpn2
+        shift
     )
     if "%1"=="-h" (
         goto help
@@ -33,15 +35,15 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if [%ZLIB_INST_DIR%] == [] (
+if "%ZLIB_INST_DIR%" == "" (
     echo %FILE_N% You must specify a zlib install directory using [--zlib-install-dir]
     goto bad_exit
 )
-set ZLIB_INST_DIR=%ZLIB_INST_DIR:/=\%
+if not "%ZLIB_INST_DIR:~-1%"=="\" set ZLIB_INST_DIR=%ZLIB_INST_DIR%\
 
 rem If not set set the build dir to the current dir
-if [%BUILD_DIR%] == [] set BUILD_DIR=%~dp0
-set BUILD_DIR=%BUILD_DIR:/=\%
+if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
+if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
 rem ============================================================================
 rem -- Local Variables ---------------------------------------------------------
@@ -60,9 +62,9 @@ set LIBPNG_TEMP_FILE_DIR=%BUILD_DIR%%LIBPNG_TEMP_FILE%
 set LIBPNG_REPO=http://downloads.sourceforge.net/gnuwin32/libpng-%LIBPNG_VERSION%-src.zip
 
 rem ../libpng-x.x.x-source/
-set LIBPNG_SRC_DIR=%BUILD_DIR%%LIBPNG_BASENAME%-%LIBPNG_VERSION%-source
+set LIBPNG_SRC_DIR=%BUILD_DIR%%LIBPNG_BASENAME%-%LIBPNG_VERSION%-source\
 rem ../libpng-x.x.x-install/
-set LIBPNG_INSTALL_DIR=%BUILD_DIR%%LIBPNG_BASENAME%-%LIBPNG_VERSION%-install
+set LIBPNG_INSTALL_DIR=%BUILD_DIR%%LIBPNG_BASENAME%-%LIBPNG_VERSION%-install\
 
 rem ============================================================================
 rem -- Get libpng --------------------------------------------------------------
@@ -89,11 +91,11 @@ if not exist "%LIBPNG_SRC_DIR%" (
 
     rem Remove unnecessary files and folders
     echo %FILE_N% Removing "%LIBPNG_TEMP_FILE%"
-    del "%LIBPNG_TEMP_FILE_DIR:/=\%"
-    echo %FILE_N% Removing dir "%BUILD_DIR:/=\%manifest"
-    rmdir /s/q "%BUILD_DIR:/=\%manifest"
+    del "%LIBPNG_TEMP_FILE_DIR%"
+    echo %FILE_N% Removing dir "%BUILD_DIR%manifest"
+    rmdir /s/q "%BUILD_DIR%manifest"
 
-    rename "%BUILD_DIR:/=\%src" "%LIBPNG_BASENAME%-%LIBPNG_VERSION%-source"
+    rename "%BUILD_DIR%src" "%LIBPNG_BASENAME%-%LIBPNG_VERSION%-source"
 ) else (
     echo %FILE_N% Not downloading libpng because already exists the folder "%LIBPNG_SRC_DIR%".
 )
@@ -102,35 +104,35 @@ rem ============================================================================
 rem -- Compile libpng ----------------------------------------------------------
 rem ============================================================================
 
-set LIBPNG_SOURCE_DIR=%LIBPNG_SRC_DIR%\libpng\%LIBPNG_VERSION%\libpng-%LIBPNG_VERSION%-src\
+set LIBPNG_SOURCE_DIR=%LIBPNG_SRC_DIR%libpng\%LIBPNG_VERSION%\libpng-%LIBPNG_VERSION%-src\
 
-if not exist "%LIBPNG_SRC_DIR%\build" (
-    echo %FILE_N% Creating "%LIBPNG_SRC_DIR%\build"
-    mkdir "%LIBPNG_SRC_DIR%\build"
+if not exist "%LIBPNG_SRC_DIR%build" (
+    echo %FILE_N% Creating "%LIBPNG_SRC_DIR%build"
+    mkdir "%LIBPNG_SRC_DIR%build"
 )
 
-cd "%LIBPNG_SRC_DIR%\build"
+cd "%LIBPNG_SRC_DIR%build"
 
 cl /nologo /c /O2 /MD /Z7 /EHsc /MP /W2 /TP /GR /Gm-^
  -DWIN32 -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -DPNG_NO_MMX_CODE^
- /I"%ZLIB_INST_DIR%\include"^
- "%LIBPNG_SOURCE_DIR:/=\%\*.c"
+ /I"%ZLIB_INST_DIR%include"^
+ "%LIBPNG_SOURCE_DIR%*.c"
 
-if not exist "%LIBPNG_INSTALL_DIR%\lib" (
-    echo %FILE_N% Creating "%LIBPNG_INSTALL_DIR%\lib"
-    mkdir "%LIBPNG_INSTALL_DIR%\lib"
+if not exist "%LIBPNG_INSTALL_DIR%lib" (
+    echo %FILE_N% Creating "%LIBPNG_INSTALL_DIR%lib"
+    mkdir "%LIBPNG_INSTALL_DIR%lib"
 )
 
-if not exist "%LIBPNG_INSTALL_DIR%\include" (
-    echo %FILE_N% Creating "%LIBPNG_INSTALL_DIR%\include"
-    mkdir "%LIBPNG_INSTALL_DIR%\include"
+if not exist "%LIBPNG_INSTALL_DIR%include" (
+    echo %FILE_N% Creating "%LIBPNG_INSTALL_DIR%include"
+    mkdir "%LIBPNG_INSTALL_DIR%include"
 )
 
-lib /nologo /MACHINE:X64 /LTCG /OUT:"%LIBPNG_INSTALL_DIR%\lib\libpng.lib"^
- /LIBPATH:"%ZLIB_INST_DIR%\lib" "*.obj" "zlibstatic.lib"
+lib /nologo /MACHINE:X64 /LTCG /OUT:"%LIBPNG_INSTALL_DIR%lib\libpng.lib"^
+ /LIBPATH:"%ZLIB_INST_DIR%lib" "*.obj" "zlibstatic.lib"
 
-copy "%LIBPNG_SOURCE_DIR%\png.h" "%LIBPNG_INSTALL_DIR%\include\png.h"
-copy "%LIBPNG_SOURCE_DIR%\pngconf.h" "%LIBPNG_INSTALL_DIR%\include\pngconf.h"
+copy "%LIBPNG_SOURCE_DIR%png.h" "%LIBPNG_INSTALL_DIR%include\png.h"
+copy "%LIBPNG_SOURCE_DIR%pngconf.h" "%LIBPNG_INSTALL_DIR%include\pngconf.h"
 
 goto success
 

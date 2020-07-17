@@ -22,7 +22,7 @@ namespace pointcloud {
       DEBUG_ASSERT(std::distance(begin, end) >= 0);
       WriteHeader(out, static_cast<size_t>(std::distance(begin, end)));
       for (; begin != end; ++begin) {
-        out << begin->x << ' ' << begin->y << ' ' << begin->z << '\n';
+        out << begin->point.x << ' ' << begin->point.y << ' ' << begin->point.z <<  ' ' << begin->intensity << '\n';
       }
     }
 

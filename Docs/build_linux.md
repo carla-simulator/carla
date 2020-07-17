@@ -46,7 +46,9 @@ pip3 install --user setuptools
 # Additional dependencies for previous Ubuntu versions. 
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools &&
+pip2 install --user distro &&
+pip3 install --user distro
 
 # Change default clang version.
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
@@ -120,13 +122,17 @@ __Ubuntu 18.04__.
 ```sh
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools &&
+pip2 install --user distro &&
+pip3 install --user distro
 ```
 __Previous Ubuntu__ versions. 
 ```sh
 sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
-pip3 install --user setuptools 
+pip3 install --user setuptools && 
+pip2 install --user distro &&
+pip3 install --user distro
 ```
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies, it is recommended to use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
