@@ -282,32 +282,32 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             FVehicleLightState State(LightState);
             std::string enabled_lights_list;
             if (State.Position)
-              enabled_lights_list += "Position, ";
+              enabled_lights_list += "Position ";
             if (State.LowBeam)
-              enabled_lights_list += "LowBeam, ";
+              enabled_lights_list += "LowBeam ";
             if (State.HighBeam)
-              enabled_lights_list += "HighBeam, ";
+              enabled_lights_list += "HighBeam ";
             if (State.Brake)
-              enabled_lights_list += "Brake, ";
+              enabled_lights_list += "Brake ";
             if (State.RightBlinker)
-              enabled_lights_list += "RightBlinker, ";
+              enabled_lights_list += "RightBlinker ";
             if (State.LeftBlinker)
-              enabled_lights_list += "LeftBlinker, ";
+              enabled_lights_list += "LeftBlinker ";
             if (State.Reverse)
-              enabled_lights_list += "Reverse, ";
+              enabled_lights_list += "Reverse ";
             if (State.Interior)
-              enabled_lights_list += "Interior, ";
+              enabled_lights_list += "Interior ";
             if (State.Fog)
-              enabled_lights_list += "Fog, ";
+              enabled_lights_list += "Fog ";
             if (State.Special1)
-              enabled_lights_list += "Special1, ";
+              enabled_lights_list += "Special1 ";
             if (State.Special2)
-              enabled_lights_list += "Special2, ";
+              enabled_lights_list += "Special2 ";
 
             if (enabled_lights_list.size())
             {
               Info << "  Id " << LightVehicle.DatabaseId << ": " <<
-                  enabled_lights_list.substr(0, enabled_lights_list.size() - 2) << std::endl;
+                  enabled_lights_list.substr(0, enabled_lights_list.size() - 1) << std::endl;
             }
             else
             {
