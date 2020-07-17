@@ -62,7 +62,7 @@ private:
   CarlaRecorderLightVehicle LightVehicle;
   CarlaRecorderLightScene LightScene;
   CarlaRecorderKinematics Kinematics;
-  CarlaRecorderBoundingBox BoundingBox;
+  CarlaRecorderActorBoundingBox ActorBoundingBox;
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControl PhysicsControl;
   CarlaRecorderTrafficLightTime TrafficLightTime;
