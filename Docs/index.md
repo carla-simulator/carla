@@ -147,6 +147,8 @@ CARLA forum</a>
         — For developers who want to publish a release.  
     [__Generate pedestrian navigation__](tuto_D_generate_pedestrian_navigation.md)
         — Obtain the information needed for walkers to move around.  
+    [__Generate detailed colliders__](tuto_D_generate_colliders.md)
+        — Created detailed colliders for vehicles.  
     </p>
 
 ## Contributing

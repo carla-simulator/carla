@@ -1,34 +1,32 @@
 # Generate detailed colliders
 
-This tutorial explains how to create more accurate collision boundaries for vehicles (relative to the original shape of the object). These are used by raycast-based sensors such a the LIDAR to retrieve more accurate data. New colliders can be integrated into CARLA so that all the community can benefit from these. Find out more about how to contribute to the content repository [here](cont_contribution_guidelines.md).  
+This tutorial explains how to create more accurate collision boundaries for vehicles (relative to the original shape of the object). These can be used as physics collider, compatible with collision detection, or as a secondary collider used by raycast-based sensors such a the LIDAR to retrieve more accurate data. New colliders can be integrated into CARLA so that all the community can benefit from these. Find out more about how to contribute to the content repository [here](cont_contribution_guidelines.md).  
 
-There are two approaches to create the new colliders.  
+There are two approaches to create the new colliders, but they are not completely equivalent.  
 
-*   __Manual approach__ — This approach requires some basic 3D modelling skills, as the collider mesh will be generated manually.  
-*   __Automatic approach__ — This approach follows the tutorial created by the contributor __Yan Kaganovsky / yankagan__ to create a mesh with no need of manual modelling.  
-
-
-*   [__Manual approach__](#manual-approach)  
+*   __Raycast colliders__ — This approach requires some basic 3D modelling skills. A secondary collider is added to the vehicle so that raycast-based sensors such as the LIDAR retrieve more precise data.  
+*   __Physics colliders__ — This approach follows the [tutorial](https://bitbucket.org/yankagan/carla-content/wiki/Home) created by the contributor __[Yan Kaganovsky / yankagan](https://github.com/yankagan)__ to create a mesh with no need of manual modelling. This mesh is then used as main collider for the vehicle, for physics and sensor detection (unless a secondary collider is added).  
+---
+*   [__Raycast colliders__](#raycast-colliders)  
 	*   [1-Export the vehicle FBX](#1-export-the-vehicle-fbx)  
 	*   [2-Generate a low density mesh](#2-generate-a-low-density-mesh)  
 	*   [3-Import the mesh into UE](#3-import-the-mesh-into-ue)  
 	*   [4-Add the mesh as collider](#4-add-the-mesh-as-collider)  
-	*   [5-Configure the collider](#5-configure-the-collider)  
 ---
-*   [__Automatic approach__](#automatic-approach)  
+*   [__Physics colliders__](#physics-colliders)  
 	*   [0-Prerequisites](#0-prerequisites)  
 	*   [1-Define custom collision for wheels in Unreal Editor](#1-define-custom-collision-for-wheels-in-unreal-editor)  
-	*   [2-Export the vehicle as FBX](#export-the-vehicle-as-fbx)  
-	*   [3-Import to Blender and create custom boundary](#import-to-blender-and-create-custom-boundary)  
-	*   [4-Export from Blender to FBX](#export-from-blender-to-fbx)  
-	*   [5-Import collider and define physics](#Import-collider-and-define-physics)  
+	*   [2-Export the vehicle as FBX](#2-export-the-vehicle-as-fbx)  
+	*   [3 to 4-Import to Blender and create custom boundary](#3-to-4-import-to-blender-and-create-custom-boundary)  
+	*   [5-Export from Blender to FBX](#5-export-from-blender-to-fbx)  
+	*   [6 to 8-Import collider and define physics](#6-to-8-import-collider-and-define-physics)  
 
 ---
-## Automatic approach
+## Raycast colliders
 
 ### 1-Export the vehicle FBX
 
-First of all, the original mesh of the vehicle is necessary to be used as reference. For the sake of this tutorial, let's choose the mesh of a CARLA vehicle.  
+First of all, the original mesh of the vehicle is necessary to be used as reference. For the sake of learning, this tutorial exports the mesh of a CARLA vehicle.  
 __1.1__ open CARLA in UE and go to `Content/Carla/Static/Vehicles/4Wheeled/<model_of_vehicle>`.  
 __1.2__ Press `right-click` on `SM_<model_of_vehicle>` to export the vehicle mesh as FBX.  
 
@@ -52,47 +50,19 @@ __3.2__ Press `right-click` to import the new mesh `SM_sc_<model_of_vehicle>.fbx
 
 __4.1__ Go to `Content/Carla/Blueprints/Vehicles/<model_of_vehicle>` and open the blueprint of the vehicle named as `BP_<model_of_vehicle>`.  
 
-__4.2__ Add a new element of type `Static mesh`. This will create an empty object in the blueprint.  
+__4.2__ Select the `CustomCollision` element and add the `SM_sc_<model_of_vehicle>.fbx` in the `Static mesh` property.  
 
-![manual_staticmesh](img/tuto_D_colliders_staticmesh.jpg)
-
-__4.3__ Rename this as `CustomCollision`.  
-
-![manual_customcollision](img/tuto_D_colliders_CustomCollision.jpg)
-
-__4.4__ Go to the `Static mesh` property and choose the new mesh `SM_sc_<model_of_vehicle>.fbx`.  
-
-### 5-Configure the collider
-
-There are two properties to set before the new collider is fully functional.  
-
-__5.1__ Uncheck the property `Visible` and check `Hidden in Game`.  
-
-![manual_visible](img/tuto_D_colliders_visible.jpg)
-
-__5.2__ In `CollisionPresets`, choose `CustomSensorCollision`.  
-
-![manual_collider](img/tuto_D_colliders_collider.jpg)
-
+![manual_customcollision](img/tuto_D_colliders_final.jpg)
 
 ---
-## Automatic approach
+## Physics colliders
 
 !!! Important
-    This tutorial is based on a [contribution](https://bitbucket.org/yankagan/carla-content/wiki/Home) made by __yankagan__! The contributor also wants to aknowledge __Francisco E__ for the tutorial on [how to import custom collisions in UE](https://www.youtube.com/watch?v=SEH4f0HrCDM).  
+    This tutorial is based on a [contribution](https://bitbucket.org/yankagan/carla-content/wiki/Home) made by __[yankagan](https://github.com/yankagan)__! The contributor also wants to aknowledge __Francisco E__ for the tutorial on [how to import custom collisions in UE](https://www.youtube.com/watch?v=SEH4f0HrCDM).  
 
-There are two ways to improve these colliders. 
+[This video](https://www.youtube.com/watch?v=CXK2M2cNQ4Y) shows the results achieved after following this tutorial.  
 
-__1. Use a collection of static meshes__ and move them around as if they were part of the vehicle. This requires significant redesign of CARLA and creates new problems such as how certain features such as suspension or wheels should be animated.  
-__2. Create a custom collision boundary__ that describes the mesh more accurately and can be used with skeletal meshes.  
-
-The later method will be discussed in this tutorial. It requires some knowledge of 3D modelling, but it is accessible for newcomers. The following image shows a more detailed collider created with this tutorial.  
-
-[![detailed collider](img/tuto_D_collider_detailed.jpg)](https://www.youtube.com/watch?v=CXK2M2cNQ4Y)
-<div style="text-align: right"><i>Detailed collider for vehicle.</i></div>
-
-
-### Prerequisites
+### 0-Prerequisites
 
 *   __Build CARLA from source__ on [Linux](build_linux.md) or [Windows](build_windows.md).  
 *   __Blender 2.80 or newer__ from the [official site](https://www.blender.org/download/) for free (open-source 3D modelling software).  
@@ -101,59 +71,51 @@ The later method will be discussed in this tutorial. It requires some knowledge 
 !!! Note
     This [series](https://www.youtube.com/watch?v=ppASl6yaguU) and [Udemy course](https://www.udemy.com/course/blender-3d-from-zero-to-hero/?pmtag=MRY1010) may be a good introduction to Blender for newcomers. 
 
----
-## Create custom colliders for a Skeletal Mesh
-
-Here is a brief summary of the steps to follow. 
-
-__Step 1.__ *(UE)* — Add collision boundaries for the wheels.  
-__Step 2.__ *(UE)* — Export the skeletal mesh asset of a vehicle to an FBX file.  
-__Step 3.__ — Import the FBX file into Blender.  
-__Step 4.__ *(Blender)* — Add convex hull meshes to form the new collision boundary (UE requirement for computational efficiency). This is the hardest step.  
-__Step 5.__ *(Blender)* — Export the custom collision boundaries into an FBX file.  
-__Step 6.__ *(UE)* — Import the new FBX into CARLA as an Unreal asset file (static mesh).  
-__Step 7.__ *(UE)* — Import the custom collider into the physics asset for the specific vehicle, so that it is used for computations.  
-__Step 8.__ *(UE)* — Create constraints that connect the different joints and define the physics of all parts.  
 
 ### 1-Define custom collision for wheels in Unreal Editor
 
-https://www.youtube.com/watch?v=bECnsTw6ehI
+__Step 1.__ *(in UE)* — Add collision boundaries for the wheels. The steps are detailed in the following video.  
 
+[![auto_step01](img/tuto_D_colliders_01.jpg)](https://www.youtube.com/watch?v=bECnsTw6ehI)
 
 ### 2-Export the vehicle as FBX
 
-https://www.youtube.com/watch?v=fDmxIRV-j5g
+__Step 2.__ *(in UE)* — Export the skeletal mesh of a vehicle to an FBX file.  
+__2.1__ Go to `Content/Carla/Static/Vehicles/4Wheeled/<model_of_vehicle>`.  
+__2.2__ Press `right-click` on `SM_<model_of_vehicle>` to export the vehicle mesh as FBX.  
+
 
 ### 3 to 4-Import to Blender and create custom boundary
 
-Below you will find 2 clips that gives an example of this process but before you watch it let me explain a bit about the logic that goes into this process:
+__Step 3.__ *(in Blender)* — Import the FBX file into Blender.  
+__Step 4.__ *(in Blender)* — Add convex hull meshes to form the new collision boundary (UE requirement for computational efficiency). This is the hardest step. If the entire car is selected, the collision boundary created by VHACD will be imprecise and messy. It will contain sharp edges which will mess-up the drive on the road. It's important that the wheels have smooth boundaries around them. Using convex decomposition on the car's body the mirrors would still not look right. For computer vision, the details of the vehicle are important. For said reason, these step has been divided into two parts. 
 
-    If you select the entire car and create the collision boundary with the VHACD Plugin you will get a very ugly approximation and the wheels will contains sharp edges which will mess-up the drive on the road (it will make them collide with the road every time it's not straight). It's important that the wheels have smooth boundaries around them. If you used convex decomposition on the car's body the mirror would still not look right.
+__4.1__ Cut out the bottom parts of the wheels, the side mirrors and the top part of the car's body to create the first boundary using the VHACD tool. Cut out the bottom half of the car to create the second boundary (top part of the car) using the VHACD tool.  
 
-    For computer vision applications, we need some important features of the vehicles, such as side mirrors, wheels that look right, etc. It is with this in mind that I break down the vehicle into several parts.
+[![auto_step03](img/tuto_D_colliders_03.jpg)](https://www.youtube.com/watch?v=oROkK3OCuOA)
 
-Generally the steps are:
+__4.2__ Create separate boundaries for side mirrors using the VHACD tool.  
 
-    Cut out the bottom parts of the wheels, the side mirrors and the top part of the car's body to create the first boundary using the VHACD tool
-    Cut out the bottom half of the car to create the second boundary (top part of the car) using the VHACD tool
-    Create separate boundaries for side mirrors using the VHACD tool
+[![auto_step04](img/tuto_D_colliders_04.jpg)](https://www.youtube.com/watch?v=L3upzdC602s)
 
-Be very careful about naming the objects!! Each boundary should have "UCX_" at the beginning and the rest of the name has to be EXACTLY the same as the original mesh
-
-The full example is shown in these two clips:
-
-https://www.youtube.com/watch?v=oROkK3OCuOA
-
-https://www.youtube.com/watch?v=L3upzdC602s 
+!!! Warning
+    Be very careful about naming the object. Each boundary should have begin with `UCX_`, and the rest of the name has to be __exactly__ the same as the original mesh.  
 
 ### 5-Export from Blender to FBX
 
-This clip: https://youtu.be/aJPyskYjzWo explains this simple step. Follow it exactly. Select only the original car object + all the newly added objects for collision. Make sure that in the export menu you check "selected objects" and select only "Mesh".
+__Step 5.__ *(in Blender)* — Export the custom collision boundaries into an FBX file.  
+__5.1__ Select only the original vehicle and all the newly added objects for collision.  
+__5.2__ In the export menu, check `selected objects` and select only "Mesh".  
+
+[![auto_step05](img/tuto_D_colliders_05.jpg)](https://youtu.be/aJPyskYjzWo)
 
 ### 6 to 8-Import collider and define physics
 
-https://www.youtube.com/watch?v=aqFNwAyj2CA
+__Step 6.__ *(in UE)* — Import the new FBX into CARLA as an Unreal asset file (static mesh).  
+__Step 7.__ *(in UE)* — Import the custom collider into the physics asset for the specific vehicle, so that it is used for computations.  
+__Step 8.__ *(in UE)* — Create constraints that connect the different joints and define the physics of all parts.  
 
+[![auto_step0608](img/tuto_D_colliders_0608.jpg)](https://www.youtube.com/watch?v=aqFNwAyj2CA)
 
 ---
 
