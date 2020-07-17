@@ -58,4 +58,7 @@ struct CARLA_API FLidarDescription
   /// Wether to show debug points of laser hits in simulator.
   UPROPERTY(EditAnywhere)
   bool ShowDebugPoints = false;
+
+  UPROPERTY(EditAnywhere)
+  float NoiseStdDev = 0.0f;
 };
