@@ -119,7 +119,7 @@ __Step 8.__ *(in UE)* — Create constraints that connect the different joints a
 
 ---
 
-That is all there is so far, regarding the different map customization tools available in CARLA.
+That is a wrap on how to change the default colliders for vehicles in CARLA.  
 
 Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
 
