@@ -182,6 +182,11 @@
         type: str
         doc: >
           Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+      - param_name: additional_data
+        type: bool
+        default: False
+        doc: >
+          Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
       doc: >
         Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
     # --------------------------------------
