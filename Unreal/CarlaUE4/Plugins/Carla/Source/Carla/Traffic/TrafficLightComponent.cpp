@@ -68,6 +68,7 @@ void UTrafficLightComponent::GenerateTrafficLightBox(const FTransform BoxTransfo
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
   BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnOverlapTriggerBox);
+  AddEffectTriggerVolume(BoxComponent);
 }
 
 void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
