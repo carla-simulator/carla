@@ -357,9 +357,9 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Kinematics.Read(File);
-            Info << "  Id: " << Kinematics.DatabaseId << " linear_velocity ("
+            Info << "  Id: " << Kinematics.DatabaseId << " linear_velocity: ("
                 << Kinematics.LinearVelocity.X << ", " << Kinematics.LinearVelocity.Y << ", " << Kinematics.LinearVelocity.Z << ")"
-                << " angular_velocity ("
+                << " angular_velocity: ("
                 << Kinematics.AngularVelocity.X << ", " << Kinematics.AngularVelocity.Y << ", " << Kinematics.AngularVelocity.Z << ")"
                 << std::endl;
           }
@@ -483,7 +483,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               Info << " (" << vec.x << ", " << vec.y << ")";
             }
             Info << std::endl;
-            Info << "   forward_gears:";
+            Info << "   forward_gears:" << std::endl;
             uint32_t count = 0;
             for (auto& Gear : Control.forward_gears)
             {
@@ -492,8 +492,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
                   << " up_ratio " << Gear.up_ratio << std::endl;
               ++count;
             }
-            Info << std::endl;
-            Info << "   wheels:";
+            Info << "   wheels:" << std::endl;
             count = 0;
             for (auto& Wheel : Control.wheels)
             {
@@ -503,10 +502,10 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
                   << " radius " << Wheel.radius
                   << " max_brake_torque " << Wheel.max_brake_torque
                   << " max_handbrake_torque " << Wheel.max_handbrake_torque
-                  << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")";
+                  << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")"
+                  << std::endl
               ++count;
             }
-            Info << std::endl;
           }
         }
         else
