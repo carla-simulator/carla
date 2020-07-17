@@ -39,6 +39,8 @@ nav:
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
   - "Sensors reference": 'ref_sensors.md'  
+- Plugins:
+  - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
   - 'ROS bridge installation': 'ros_installation.md'
   - 'CARLA messages reference': 'ros_msgs.md'
