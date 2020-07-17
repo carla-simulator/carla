@@ -3,7 +3,6 @@
 The carlaviz plugin is used to visualize the simulation in a web browser. A windows with some basic representation of the scene is created. Actors are updated on-the-fly, sensor data can be retrieved, and additional text, lines and polylines can be drawn in the scene.  
 
 *	[__General information__](#general-information)  
-	*	[Description](#description)  
 	*	[Support](#support)  
 *	[__Get carlaviz__](#get-carlaviz)  
 	*	[Prerequisites](#prerequisites)  
@@ -11,7 +10,7 @@ The carlaviz plugin is used to visualize the simulation in a web browser. A wind
 *	[__Utilities__](#utilities)  
 
 ---
-## Basic info
+## General information
 
 *   __Contributor__ — Minjun Xu, also known as [wx9698](https://github.com/wx9698).  
 *   __License__ — [MIT](https://en.wikipedia.org/wiki/MIT_License).  
