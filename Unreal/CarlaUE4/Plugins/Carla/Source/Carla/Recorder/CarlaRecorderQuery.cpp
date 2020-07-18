@@ -306,12 +306,12 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 
             if (enabled_lights_list.size())
             {
-              Info << "  Id " << LightVehicle.DatabaseId << ": " <<
+              Info << "  Id: " << LightVehicle.DatabaseId << " " <<
                   enabled_lights_list.substr(0, enabled_lights_list.size() - 1) << std::endl;
             }
             else
             {
-              Info << "  Id " << LightVehicle.DatabaseId << ": None" << std::endl;
+              Info << "  Id: " << LightVehicle.DatabaseId << " None" << std::endl;
             }
           }
         }
@@ -496,7 +496,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             count = 0;
             for (auto& Wheel : Control.wheels)
             {
-              Info << " wheel " << count << ": tire_friction " << Wheel.tire_friction
+              Info << "    wheel " << count << ": tire_friction " << Wheel.tire_friction
                   << " damping_rate " << Wheel.damping_rate
                   << " max_steer_angle " << Wheel.max_steer_angle
                   << " radius " << Wheel.radius
