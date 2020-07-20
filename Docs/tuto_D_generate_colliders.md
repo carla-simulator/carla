@@ -56,6 +56,9 @@ __4.2__ Select the `CustomCollision` element and add the `SM_sc_<model_of_vehicl
 
 __4.3__ Press `Compile` in the toolbar above and save the changes.  
 
+!!! Note
+    For vehicles such as motorbikes and bicycles, change the collider mesh of the vehicle itself using the same component, `CustomCollision`.  
+
 ---
 ## Physics colliders
 
