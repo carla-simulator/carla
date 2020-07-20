@@ -54,6 +54,8 @@ __4.2__ Select the `CustomCollision` element and add the `SM_sc_<model_of_vehicl
 
 ![manual_customcollision](img/tuto_D_colliders_final.jpg)
 
+__4.3__ Press `Compile` in the toolbar above and save the changes.  
+
 ---
 ## Physics colliders
 
