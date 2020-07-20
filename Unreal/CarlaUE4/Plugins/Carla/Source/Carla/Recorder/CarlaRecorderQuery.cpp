@@ -335,7 +335,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             LightScene.Read(File);
             Info << "  Id: " << LightScene.LightId << " enabled: " << (LightScene.bOn ? "True" : "False")
                 << " intensity: " << LightScene.Intensity
-                << " RGB_color: (" << LightScene.Color.R << " " << LightScene.Color.G << " " << LightScene.Color.B << ")"
+                << " RGB_color: (" << LightScene.Color.R << ", " << LightScene.Color.G << ", " << LightScene.Color.B << ")"
                 << std::endl;
           }
         }
@@ -470,7 +470,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
                 << "   final_ratio = " << Control.final_ratio << std::endl
                 << "   mass = " << Control.mass << std::endl
                 << "   drag_coefficient = " << Control.drag_coefficient << std::endl
-                << "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ")" << std::endl;
+                << "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ", " << Control.center_of_mass.z << ")" << std::endl;
             Info << "   torque_curve =";
             for (auto& vec : Control.torque_curve)
             {
