@@ -37,6 +37,8 @@ RUN apt-get update ; \
     aria2 && \
   pip2 install setuptools && \
   pip3 install setuptools && \
+  pip2 install distro && \
+  pip3 install distro && \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 && \
   update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 

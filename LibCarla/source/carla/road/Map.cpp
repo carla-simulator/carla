@@ -822,6 +822,8 @@ namespace road {
 
     // 1.8 degrees, maximum angle in a curve to place a segment
     constexpr double angle_threshold = geom::Math::Pi<double>() / 100.0;
+    // maximum distance of a segment
+    constexpr double max_segment_length = 100.0;
 
     // Generate waypoints at start of every lane
     std::vector<Waypoint> topology;
@@ -905,7 +907,8 @@ namespace road {
           double angle = geom::Math::GetVectorAngle(
               current_transform.GetForwardVector(), next_transform.GetForwardVector());
 
-          if (std::abs(angle) > angle_threshold) {
+          if (std::abs(angle) > angle_threshold ||
+              std::abs(current_waypoint.s - next_waypoint.s) > max_segment_length) {
             AddElementToRtree(
                 rtree_elements,
                 current_transform,
