@@ -378,9 +378,10 @@ T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
   for (AActor* Actor : Actors)
   {
     float Dist = FVector::DistSquared(Actor->GetActorLocation(), Location);
-    if (Dist < MinDistance && MatchSignalAndActor(Signal, ClosestTrafficSign))
+    T * TrafficSign = Cast<T>(Actor);
+    if (Dist < MinDistance && MatchSignalAndActor(Signal, TrafficSign))
     {
-      ClosestTrafficSign = Cast<T>(Actor);
+      ClosestTrafficSign = TrafficSign;
       MinDistance = Dist;
     }
   }
@@ -402,8 +403,8 @@ void ATrafficLightManager::SpawnTrafficLights()
       {
         continue;
       }
-      ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal.get(), GetWorld());
-      ATrafficLightBase * TrafficLight = Cast<ATrafficLightBase>(ClosestTrafficSign);
+      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(
+          *Signal.get(), GetWorld());
       if (TrafficLight)
       {
         UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
@@ -425,8 +426,8 @@ void ATrafficLightManager::SpawnTrafficLights()
        carla::road::SignalType::IsTrafficLight(Signal->GetType()) &&
        !SignalsToSpawn.count(SignalId))
     {
-      ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal.get(), GetWorld());
-      ATrafficLightBase * TrafficLight = Cast<ATrafficLightBase>(ClosestTrafficSign);
+      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(
+          *Signal.get(), GetWorld());
       if (TrafficLight)
       {
         UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
