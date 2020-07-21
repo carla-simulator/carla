@@ -88,6 +88,8 @@ public:
   // Compatibility old traffic light system with traffic light components
   void LightChangedCompatibility(ETrafficLightState NewLightState);
 
+  void AddTimeToRecorder();
+
 protected:
 
   UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)

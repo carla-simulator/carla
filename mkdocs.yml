@@ -39,6 +39,8 @@ nav:
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
   - "Sensors reference": 'ref_sensors.md'  
+- Plugins:
+  - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
   - 'ROS bridge installation': 'ros_installation.md'
   - 'CARLA messages reference': 'ros_msgs.md'
@@ -59,6 +61,7 @@ nav:
 - Tutorials (developers):
   - 'Contribute with assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
+  - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - Contributing:

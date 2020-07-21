@@ -165,6 +165,7 @@ void UStopSignComponent::GenerateStopBox(const FTransform BoxTransform,
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
   BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapBeginStopEffectBox);
   BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapEndStopEffectBox);
+  AddEffectTriggerVolume(BoxComponent);
 }
 
 void UStopSignComponent::GenerateCheckBox(const FTransform BoxTransform,

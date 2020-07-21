@@ -17,6 +17,7 @@
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system.
   * Exposed matrix form of transformation to the client and Python API.
+  * Added make command to download contributions as plugins (`make plugins`)
   * Added PythonAPI command to set multiple car light states at once
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
   * OpenDRIVE ingestion bugfixes
@@ -35,6 +36,7 @@
   * Fixed collision issues when debug draw(debug.draw_line) is called
   * Fixed Gyroscope sensor to properly give angular velocity readings in local frame
   * Added Renderdoc plugin to the Unreal project
+  * Added configurable noise to Lidar sensor
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
 
 ## CARLA 0.9.9

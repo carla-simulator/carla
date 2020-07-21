@@ -92,6 +92,11 @@ CARLA forum</a>
     [__Sensors reference__](ref_sensors.md)
         — Everything about sensors and the data they retrieve.  
 
+## Plugins
+  <p style="padding-left:30px;line-height:1.8">
+    [__carlaviz — web visualizer__](plugins_carlaviz.md)
+        — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
+
 ## ROS bridge
   <p style="padding-left:30px;line-height:1.8">
     [__ROS bridge installation__](ros_installation.md)
@@ -140,6 +145,8 @@ CARLA forum</a>
         — Develop a new sensor to be used in CARLA.  
     [__Make a release__](tuto_D_make_release.md)
         — For developers who want to publish a release.  
+    [__Generate detailed colliders__](tuto_D_generate_colliders.md)
+        — Created detailed colliders for vehicles.  
     [__Generate pedestrian navigation__](tuto_D_generate_pedestrian_navigation.md)
         — Obtain the information needed for walkers to move around.  
     </p>

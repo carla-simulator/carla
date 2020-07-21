@@ -46,6 +46,10 @@ public:
   // Initialize sign (e.g. generate trigger boxes)
   virtual void InitializeSign(const cr::Map &Map);
 
+  void AddEffectTriggerVolume(UBoxComponent* TriggerVolume);
+
+  const TArray<UBoxComponent*> GetEffectTriggerVolume() const;
+
 protected:
   // Called when the game starts
   virtual void BeginPlay() override;
@@ -65,5 +69,8 @@ private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
   FString SignId = "";
+
+  UPROPERTY()
+  TArray<UBoxComponent*> EffectTriggerVolumes;
 
 };

@@ -71,5 +71,9 @@ LibCarla: setup
 setup:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.1
 
+.PHONY: Plugins
+plugins:
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Plugins.bat" $(ARGS)
+
 deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
