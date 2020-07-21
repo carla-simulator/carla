@@ -21,7 +21,7 @@
 #include <carla/sensor/data/RadarMeasurement.h>
 #include <carla/sensor/data/DVSEventArray.h>
 
-#include <carla/sensor/s11n/RadarData.h>
+#include <carla/sensor/data/RadarData.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -124,9 +124,6 @@ namespace data {
     return out;
   }
 
-} // namespace data
-
-namespace s11n {
 
   std::ostream &operator<<(std::ostream &out, const RadarDetection &det) {
     out << "RadarDetection(velocity=" << std::to_string(det.velocity)
@@ -283,10 +280,10 @@ void export_sensor_data() {
     .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarMeasurement::size)
     .def("__iter__", iterator<csd::LidarMeasurement>())
-    .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> css::LidarDetection {
+    .def("__getitem__", +[](const csd::LidarMeasurement &self, size_t pos) -> csd::LidarDetection {
       return self.at(pos);
     })
-    .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const css::LidarDetection &detection) {
+    .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const csd::LidarDetection &detection) {
       self.at(pos) = detection;
     })
     .def(self_ns::str(self_ns::self))
@@ -300,10 +297,10 @@ void export_sensor_data() {
     .def("save_to_disk", &SavePointCloudToDisk<csd::LidarRawMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarRawMeasurement::size)
     .def("__iter__", iterator<csd::LidarRawMeasurement>())
-    .def("__getitem__", +[](const csd::LidarRawMeasurement &self, size_t pos) -> css::LidarRawDetection {
+    .def("__getitem__", +[](const csd::LidarRawMeasurement &self, size_t pos) -> csd::LidarRawDetection {
       return self.at(pos);
     })
-    .def("__setitem__", +[](csd::LidarRawMeasurement &self, size_t pos, const css::LidarRawDetection &detection) {
+    .def("__setitem__", +[](csd::LidarRawMeasurement &self, size_t pos, const csd::LidarRawDetection &detection) {
       self.at(pos) = detection;
     })
     .def(self_ns::str(self_ns::self))
@@ -348,34 +345,34 @@ void export_sensor_data() {
     .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount)
     .def("__len__", &csd::RadarMeasurement::size)
     .def("__iter__", iterator<csd::RadarMeasurement>())
-    .def("__getitem__", +[](const csd::RadarMeasurement &self, size_t pos) -> css::RadarDetection {
+    .def("__getitem__", +[](const csd::RadarMeasurement &self, size_t pos) -> csd::RadarDetection {
       return self.at(pos);
     })
-    .def("__setitem__", +[](csd::RadarMeasurement &self, size_t pos, const css::RadarDetection &detection) {
+    .def("__setitem__", +[](csd::RadarMeasurement &self, size_t pos, const csd::RadarDetection &detection) {
       self.at(pos) = detection;
     })
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<css::RadarDetection>("RadarDetection")
-    .def_readwrite("velocity", &css::RadarDetection::velocity)
-    .def_readwrite("azimuth", &css::RadarDetection::azimuth)
-    .def_readwrite("altitude", &css::RadarDetection::altitude)
-    .def_readwrite("depth", &css::RadarDetection::depth)
+  class_<csd::RadarDetection>("RadarDetection")
+    .def_readwrite("velocity", &csd::RadarDetection::velocity)
+    .def_readwrite("azimuth", &csd::RadarDetection::azimuth)
+    .def_readwrite("altitude", &csd::RadarDetection::altitude)
+    .def_readwrite("depth", &csd::RadarDetection::depth)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<css::LidarDetection>("LidarDetection")
-    .def_readwrite("point", &css::LidarDetection::point)
-    .def_readwrite("intensity", &css::LidarDetection::intensity)
+  class_<csd::LidarDetection>("LidarDetection")
+    .def_readwrite("point", &csd::LidarDetection::point)
+    .def_readwrite("intensity", &csd::LidarDetection::intensity)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<css::LidarRawDetection>("LidarRawDetection")
-    .def_readwrite("point", &css::LidarRawDetection::point)
-    .def_readwrite("cos_inc_angle", &css::LidarRawDetection::cos_inc_angle)
-    .def_readwrite("object_idx", &css::LidarRawDetection::object_idx)
-    .def_readwrite("object_tag", &css::LidarRawDetection::object_tag)
+  class_<csd::LidarRawDetection>("LidarRawDetection")
+    .def_readwrite("point", &csd::LidarRawDetection::point)
+    .def_readwrite("cos_inc_angle", &csd::LidarRawDetection::cos_inc_angle)
+    .def_readwrite("object_idx", &csd::LidarRawDetection::object_idx)
+    .def_readwrite("object_tag", &csd::LidarRawDetection::object_tag)
     .def(self_ns::str(self_ns::self))
   ;
 

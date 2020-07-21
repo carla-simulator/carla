@@ -12,7 +12,7 @@
 #include "Carla/Sensor/LidarDescription.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/sensor/s11n/LidarRawData.h>
+#include <carla/sensor/data/LidarRawData.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "RayCastRawLidar.generated.h"
@@ -23,10 +23,10 @@ class CARLA_API ARayCastRawLidar : public ASensor
 {
   GENERATED_BODY()
 
-  using FLidarData = carla::sensor::s11n::LidarRawData;
-  using FLidarRawData = carla::sensor::s11n::LidarRawData;
+  using FLidarData = carla::sensor::data::LidarRawData;
+  using FLidarRawData = carla::sensor::data::LidarRawData;
 
-  using FDetection = carla::sensor::s11n::LidarRawDetection;
+  using FDetection = carla::sensor::data::LidarRawDetection;
 
 public:
 

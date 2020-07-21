@@ -17,9 +17,9 @@ namespace data {
 
   /// Measurement produced by a Lidar. Consists of an array of 3D points plus
   /// some extra meta-information about the Lidar.
-  class LidarRawMeasurement : public Array<s11n::LidarRawDetection>  {
-    static_assert(sizeof(s11n::LidarRawDetection) == 6u * sizeof(float), "LidarRawDetection size missmatch");
-    using Super = Array<s11n::LidarRawDetection>;
+  class LidarRawMeasurement : public Array<data::LidarRawDetection>  {
+    static_assert(sizeof(data::LidarRawDetection) == 6u * sizeof(float), "LidarRawDetection size missmatch");
+    using Super = Array<data::LidarRawDetection>;
 
   protected:
     using Serializer = s11n::LidarRawSerializer;
