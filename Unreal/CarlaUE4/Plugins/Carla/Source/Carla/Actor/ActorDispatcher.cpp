@@ -10,6 +10,8 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 
+#include "Carla/Game/Tagger.h"
+
 #include "GameFramework/Controller.h"
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
@@ -66,6 +68,10 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
   {
     UE_LOG(LogCarla, Warning, TEXT("Failed to spawn actor '%s'"), *Description.Id);
     check(Result.Status != EActorSpawnResultStatus::Success);
+  }
+  else
+  {
+    ATagger::TagActor(*View.GetActor(), true);
   }
 
   return MakeTuple(Result.Status, View);
