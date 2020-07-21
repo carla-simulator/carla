@@ -8,7 +8,7 @@
 
 #include "carla/Memory.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/s11n/RadarData.h"
+#include "carla/sensor/data/RadarData.h"
 
 #include <cstdint>
 #include <cstring>
@@ -31,7 +31,7 @@ namespace s11n {
     template <typename Sensor>
     static Buffer Serialize(
         const Sensor &sensor,
-        const RadarData &measurement,
+        const data::RadarData &measurement,
         Buffer &&output);
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
@@ -40,7 +40,7 @@ namespace s11n {
   template <typename Sensor>
   inline Buffer RadarSerializer::Serialize(
       const Sensor &,
-      const RadarData &measurement,
+      const data::RadarData &measurement,
       Buffer &&output) {
     output.copy_from(measurement._detections);
     return std::move(output);

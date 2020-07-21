@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/RadarSerializer.h"
-#include "carla/sensor/s11n/RadarData.h"
+#include "carla/sensor/data/RadarData.h"
 
 namespace carla {
 namespace sensor {
@@ -17,8 +17,8 @@ namespace data {
 
   /// Measurement produced by a Radar. Consists of an array of RadarDetection.
   /// A RadarDetection contains 4 floats: velocity, azimuth, altitude and depth
-  class RadarMeasurement : public Array<s11n::RadarDetection> {
-    using Super = Array<s11n::RadarDetection>;
+  class RadarMeasurement : public Array<data::RadarDetection> {
+    using Super = Array<data::RadarDetection>;
   protected:
 
     using Serializer = s11n::RadarSerializer;

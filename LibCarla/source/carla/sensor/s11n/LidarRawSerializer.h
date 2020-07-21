@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/s11n/LidarRawData.h"
+#include "carla/sensor/data/LidarRawData.h"
 
 namespace carla {
 namespace sensor {
@@ -24,7 +24,8 @@ namespace s11n {
 
   /// A view over the header of a Lidar measurement.
   class LidarRawHeaderView {
-    using Index = LidarRawData::Index;
+    using Index = data::LidarRawData::Index;
+
     public:
 
     float GetHorizontalAngle() const {
@@ -64,13 +65,13 @@ namespace s11n {
 
     static size_t GetHeaderOffset(const RawData &data) {
       auto View = DeserializeHeader(data);
-      return sizeof(uint32_t) * (View.GetChannelCount() + LidarRawData::Index::SIZE);
+      return sizeof(uint32_t) * (View.GetChannelCount() + data::LidarRawData::Index::SIZE);
     }
 
     template <typename Sensor>
     static Buffer Serialize(
         const Sensor &sensor,
-        const LidarRawData &measurement,
+        const data::LidarRawData &measurement,
         Buffer &&output);
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
@@ -83,7 +84,7 @@ namespace s11n {
   template <typename Sensor>
   inline Buffer LidarRawSerializer::Serialize(
       const Sensor &,
-      const LidarRawData &measurement,
+      const data::LidarRawData &measurement,
       Buffer &&output) {
     std::array<boost::asio::const_buffer, 2u> seq = {
         boost::asio::buffer(measurement._header),
