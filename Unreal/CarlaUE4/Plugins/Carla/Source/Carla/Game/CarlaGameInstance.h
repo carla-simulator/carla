@@ -83,6 +83,13 @@ public:
     return GenerationParameters;
   }
 
+
+  UFUNCTION(Exec)
+  void SwitchReadSurface() {
+    extern bool ReadSurface;
+    ReadSurface = !ReadSurface;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)

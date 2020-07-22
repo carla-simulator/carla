@@ -186,19 +186,18 @@ void FPixelReader::WritePixelsToBuffer(
   }
 }
 
-// TODO: test on windows
 void FPixelReader::WritePixelsToArray(
     UTextureRenderTarget2D &RenderTarget,
     TArray<FColor>& Pixels,
-    FRHICommandListImmediate& InRHICmdList)
+    FRHICommandListImmediate& RHICmdList)
 {
 
-  check(IsInRenderingThread());
+  // check(IsInRenderingThread());
 
   const FTextureRenderTarget2DResource* RenderResource =
     static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
-  if (!Texture)
+  if (!Texture /* || !Texture->GetTexture2D() */)
   {
     UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
     return;
@@ -206,13 +205,34 @@ void FPixelReader::WritePixelsToArray(
 
   FIntPoint Rect = RenderResource->GetSizeXY();
 
-  {
 
+  {
     SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
-    InRHICmdList.ReadSurfaceData(
+
+    RHICmdList.ReadSurfaceData(
       Texture,
       FIntRect(0, 0, Rect.X, Rect.Y),
       Pixels,
       FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+    /*
+    void* ColorDataBuffer = nullptr;
+
+    int32 Width = 0, Height = 0;
+    RHICmdList.MapStagingSurface(Texture, ColorDataBuffer, Width, Height);
+
+    FColor* ColorBuffer = (FColor*)ColorDataBuffer;
+    FColor* Dest = &Pixels[0];
+
+    for (int32 Row = 0; Row < Height; ++Row)
+    {
+      FMemory::Memcpy(Dest, ColorBuffer, sizeof(FColor)*Width);
+      ColorBuffer += Width;
+      Dest += Width;
+    }
+
+    RHICmdList.UnmapStagingSurface(Texture);
+    */
   }
+
 }

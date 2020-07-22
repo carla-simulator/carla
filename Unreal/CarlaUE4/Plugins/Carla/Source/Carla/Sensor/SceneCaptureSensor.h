@@ -248,7 +248,7 @@ public:
   float GetChromAberrIntensity() const;
 
   UFUNCTION(BlueprintCallable)
-  void SetChromAberrOffset(float Offset);
+  void SetChromAberrOffset(float ChromAberrOffset);
 
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
@@ -283,12 +283,13 @@ protected:
 
   void SetViewport();
 
+  void CopyTexture();
+
   void Capture();
 
   template <typename TSensor>
   void SendPixelsInStream(TSensor &Sensor) {
     TArray<FColor>& PixelsData = Pixels[PreviousTexture];
-
     if(PixelsData.Num() > 0)
     {
       auto Stream = GetDataStream(Sensor);
@@ -296,7 +297,39 @@ protected:
 
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-        Buffer.copy_from(Offset, PixelsData);
+        FColor* Source = &PixelsData[0];
+        Source += Offset;
+
+        constexpr auto SizeOfColor = sizeof(FColor);
+        Buffer.reset(Offset + ImageWidth * ImageHeight * SizeOfColor);
+        // const uint8 *SrcRow = (uint8*)Source;
+        // auto DstRow = Buffer.begin() + Offset;
+        uint32 DstOffset = Offset;
+        /*
+        for (uint32 Row = 0u; Row < ImageHeight; Row++)
+        {
+          //UE_LOG(LogCarla, Warning, TEXT("SendPixelsInStream %d %d %d"), DstRow?0:1, SrcRow?0:1, ImageWidth * SizeOfColor);
+          //if(SrcRow)
+          //{
+            // FMemory::Memcpy(DstRow, SrcRow, ImageWidth * SizeOfColor);
+            // DstRow += ImageWidth * SizeOfColor;
+            // SrcRow += ImageWidth * SizeOfColor;
+
+            Buffer.copy_from(DstOffset, (unsigned char*)Source, ImageWidth * SizeOfColor);
+            DstOffset += ImageWidth * SizeOfColor;
+          //}
+          //else
+          //{
+          //  UE_LOG(LogCarla, Error, TEXT("SendPixelsInStream no source"));
+          //}
+        }
+        */
+
+        // UE_LOG(LogCarla, Warning, TEXT("SendPixelsInStream %d %d %d"), ImageWidth, ImageHeight, ImageWidth * ImageHeight * sizeof(FColor));
+        Buffer.copy_from(
+          Offset + SensorIndex * ImageWidth * ImageHeight * sizeof(FColor),
+          (unsigned char*)Source ,
+          ImageWidth * ImageHeight * sizeof(FColor));
       }
 
       {
@@ -312,11 +345,13 @@ protected:
 
   static TArray<ASceneCaptureSensor*> CaptureSensors;
   static int32 NumCaptureSensors;
-  static const int32 MaxNumTextures = 1; // This has to be POT
-  int32 CurrentTexture = 0;
-  int32 PreviousTexture = 0;
+  static const int32 MaxNumTextures = 2; // This has to be POT
 
-  TArray<FColor> Pixels[MaxNumTextures];
+  static TArray<FColor> Pixels[MaxNumTextures];
+  static int32 CurrentTexture;
+  static int32 PreviousTexture;
+  static bool AtlasCreated;
+  static bool AtlasInitialized;
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)
@@ -340,4 +375,7 @@ protected:
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
+
+  int32_t SensorIndex = 0;
+
 };
