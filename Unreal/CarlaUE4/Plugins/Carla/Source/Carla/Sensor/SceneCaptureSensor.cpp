@@ -16,6 +16,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "HighResScreenshot.h"
 #include "ContentStreaming.h"
+#include "Async/Async.h"
+#include "RHICommandList.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -45,6 +47,21 @@ namespace SceneCaptureSensor_local_ns {
 
 TArray<ASceneCaptureSensor*> ASceneCaptureSensor::CaptureSensors = {};
 int32 ASceneCaptureSensor::NumCaptureSensors = 0;
+int32 ASceneCaptureSensor::CurrentTexture = 0;
+int32 ASceneCaptureSensor::PreviousTexture = 0;
+
+// ASceneCaptureSensor::MaxNumTextures
+FTexture2DRHIRef AtlasTexture[2];
+const int32_t kAtlasTextureWidth = 1280 * 2;
+const int32_t kAtlasTextureHeight = 720 * 2;
+
+std::atomic<int32_t> gSensorIndex {0};
+
+TArray<FColor> ASceneCaptureSensor::Pixels[MaxNumTextures];
+bool ASceneCaptureSensor::AtlasCreated = false;
+bool ASceneCaptureSensor::AtlasInitialized = false;
+bool ReadSurface = true;
+bool CaptureScheduled = false;
 
 ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -430,10 +447,10 @@ float ASceneCaptureSensor::GetChromAberrIntensity() const
   return CaptureComponent2D->PostProcessSettings.SceneFringeIntensity;
 }
 
-void ASceneCaptureSensor::SetChromAberrOffset(float Offset)
+void ASceneCaptureSensor::SetChromAberrOffset(float ChromAberrOffset)
 {
   check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset = Offset;
+  CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset = ChromAberrOffset;
 }
 
 float ASceneCaptureSensor::GetChromAberrOffset() const
@@ -447,6 +464,18 @@ void ASceneCaptureSensor::BeginPlay()
   using namespace SceneCaptureSensor_local_ns;
 
   // Setup render target.
+
+    if(!AtlasCreated)
+    {
+      FRHIResourceCreateInfo CreateInfo;
+      for(int i = 0; i < MaxNumTextures; i++)
+      {
+        AtlasTexture[i] = RHICreateTexture2D(kAtlasTextureWidth, kAtlasTextureHeight, PF_R8G8B8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
+      }
+      AtlasCreated = true;
+    }
+    SensorIndex = gSensorIndex.fetch_add(1);
+
 
   // Determine the gamma of the player.
 
@@ -488,13 +517,29 @@ void ASceneCaptureSensor::BeginPlay()
 
   CaptureSensors.Add(this);
 
-  for(int32 i = 0; i < MaxNumTextures; i++)
+  if(!AtlasInitialized)
   {
-    Pixels[i].Init(FColor(), ImageWidth * ImageHeight);
+    for(int32 i = 0; i < MaxNumTextures; i++)
+    {
+      Pixels[i].Init(FColor(), kAtlasTextureWidth * kAtlasTextureHeight);
+    }
+    AtlasInitialized = true;
   }
 
-  //CaptureDelegate = FCoreDelegates::OnBeginFrame.AddUObject(this, &ASceneCaptureCamera::SetViewport);
-  CaptureDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureCamera::Capture);
+  // CaptureDelegate = FCoreDelegates::OnBeginFrame.AddUObject(this, &ASceneCaptureCamera::SetViewport);
+  CaptureDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureCamera::CopyTexture);
+  if(!CaptureScheduled)
+  {
+    FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureCamera::Capture);
+    CaptureScheduled = true;
+  }
+
+  // FDelegateHandle OnBackBufferReadyToPresent;
+  // OnBackBufferReadyToPresent =
+  // FSlateApplication::Get().GetRenderer()->OnBackBufferReadyToPresent().AddRaw(this, &ASceneCaptureCamera::OnBackBufferReadyToPresentCallback);
+  // void FFrameGrabber::OnBackBufferReadyToPresentCallback(SWindow& SlateWindow, const FTexture2DRHIRef& BackBuffer)
+
+  // FlushRenderingCommands();
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -507,8 +552,7 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
-  PreviousTexture = CurrentTexture;
-  CurrentTexture = (CurrentTexture + 1) & ~MaxNumTextures;
+  // UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureSensor::Tick"));
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -518,7 +562,13 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
   CaptureSensors.Remove(this);
 
-  FCoreDelegates::OnEndFrame.Remove(CaptureDelegate);
+  FCoreDelegates::OnEndFrameRT.Remove(CaptureDelegate);
+
+  if(CaptureScheduled)
+  {
+    CaptureScheduled = false;
+  }
+
 }
 
 void ASceneCaptureSensor::SetViewport()
@@ -532,37 +582,84 @@ void ASceneCaptureSensor::SetViewport()
   );
 }
 
-void ASceneCaptureSensor::Capture()
+void ASceneCaptureSensor::CopyTexture()
 {
 
   check(CaptureRenderTarget != nullptr);
   check(IsInRenderingThread());
 
-  ASceneCaptureSensor* This = this;
-  ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_SendPixelsInRenderThread)
-  (
-    [This, Sensors=CaptureSensors](FRHICommandListImmediate& RHICmdList) mutable
-    {
-      NumCaptureSensors++;
+    ASceneCaptureSensor* This = this;
 
-      if( NumCaptureSensors < Sensors.Num() )
+    ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_SendPixelsInRenderThread)
+    (
+      [This](FRHICommandListImmediate& RHICmdList) mutable
       {
-        return;
-      }
+        FRHICopyTextureInfo CopyInfo;
+        int32_t current_w = 0;
+        int32_t current_h = 0;
 
-      for(ASceneCaptureSensor* Camera : Sensors)
-      {
-        if (Camera && Camera-> HasActorBegunPlay() && !Camera->IsPendingKill())
+        if (This && This-> HasActorBegunPlay() && !This->IsPendingKill())
         {
-          ASceneCaptureSensor& CameraRef = *Camera;
-          FPixelReader::WritePixelsToArray(
-            *(CameraRef.CaptureRenderTarget),
-            CameraRef.Pixels[CameraRef.PreviousTexture],
-            RHICmdList);
+            SCOPE_CYCLE_COUNTER(STAT_CarlaSensorCopyText);
+
+            const FTextureRenderTarget2DResource* RenderResource =
+              static_cast<const FTextureRenderTarget2DResource *>(This->CaptureRenderTarget->Resource);
+            FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+            if (!Texture)
+            {
+              UE_LOG(LogCarla, Error, TEXT("ASceneCaptureSensor::Capture: UTextureRenderTarget2D missing render target texture"));
+              return;
+            }
+            FIntPoint Rect = RenderResource->GetSizeXY();
+            // Prepare copy information
+            CopyInfo.Size = FIntVector(Rect.X, Rect.Y, 1); // Size of the camera
+
+            // TODO: camera texture is bigger than atlas
+            // TODO: camera texture doesn't have enough space on atlas
+
+            CopyInfo.DestPosition = FIntVector(current_w , current_h, 0); // Where to copy the texture
+
+            current_w += Rect.X;
+            if(current_w >= kAtlasTextureWidth)
+            {
+              current_w = 0;
+              current_h += Rect.Y;
+            }
+
+            RHICmdList.CopyTexture(Texture, AtlasTexture[CurrentTexture], CopyInfo);
+
+            /*
+            ASceneCaptureSensor& CameraRef = *Camera;
+            FPixelReader::WritePixelsToArray(
+              *(CameraRef.CaptureRenderTarget),
+              CameraRef.Pixels[CameraRef.PreviousTexture],
+              RHICmdList);
+            */
 
         }
       }
-      NumCaptureSensors=0;
+    );
+}
+
+void ASceneCaptureSensor::Capture()
+{
+  ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_Capture)
+  (
+    [](FRHICommandListImmediate& RHICmdList) mutable
+    {
+        // Download Atlas texture
+        if(ReadSurface)
+        {
+          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
+          RHICmdList.ReadSurfaceData(
+            AtlasTexture[PreviousTexture],
+            FIntRect(0, 0, kAtlasTextureWidth, kAtlasTextureHeight),
+            Pixels[CurrentTexture],
+            FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+          PreviousTexture = CurrentTexture;
+          CurrentTexture = (CurrentTexture + 1) & ~MaxNumTextures;
+        }
     }
   );
 }

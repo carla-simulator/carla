@@ -19,6 +19,7 @@ DECLARE_STATS_GROUP(TEXT("CarlaSensor"), STATGROUP_CarlaSensor, STATCAT_Advanced
 //DECLARE_MEMORY_STAT(TEXT("CARLAMEMORY"), STATGROUP_CARLAMEMORY, STATCAT_Advanced)
 
 DECLARE_CYCLE_STAT(TEXT("Read RT"),     STAT_CarlaSensorReadRT,     STATGROUP_CarlaSensor);
+DECLARE_CYCLE_STAT(TEXT("Copy Text"),   STAT_CarlaSensorCopyText,   STATGROUP_CarlaSensor);
 DECLARE_CYCLE_STAT(TEXT("Buffer Copy"), STAT_CarlaSensorBufferCopy, STATGROUP_CarlaSensor);
 DECLARE_CYCLE_STAT(TEXT("Stream Send"), STAT_CarlaSensorStreamSend, STATGROUP_CarlaSensor);
 
