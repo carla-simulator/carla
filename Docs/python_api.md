@@ -2541,11 +2541,13 @@ The method will start callbacks for a defined function `callback`. It will retur
 Stops the callback for `callback_id` started with **<font color="#7fb800">on_tick()</font>**.  
     - **Parameters:**
         - `callback_id` (_callback_) – The callback to be removed.  
-- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>)  
-This only has effect on synchronous mode, when both client and server move together. The method tells the server when to step to the next frame and returns the id of the newly started frame.  
+- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
+This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame.  
+    - **Parameters:**
+        - `seconds` (_float_) – Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.  
     - **Return:** _int_  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-The client tells the server to block calling thread until a **<font color="#7fb800">world_tick()</font>** is received.  
+The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.  
     - **Parameters:**
         - `seconds` (_float_) – Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
