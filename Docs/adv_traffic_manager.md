@@ -1,8 +1,15 @@
 # Traffic Manager
 *   [__What is it?__](#what-is-it)  
-*   [__How does it work?__](#how-does-it-work)  
-	*   [Architecture](#architecture)  
+*   [__Architecture__](#architecture)  
+	*   [ALSM](#alsm)  
+	*   [Command array](#command-array)  
+	*   [Control loop](#control-loop)  
+	*   [In memory map](#in-memory-map)  
+	*   [PBVT](#pbvt)  
+	*   [PID controller](#pid-controller)  
+	*   [Simulation state](#simulation-state)  
 	*   [Stages](#stages)  
+	*   [Vehicle registry](#vehicle-registry)  
 *   [__Using the Traffic Manager__](#using-the-traffic-manager)  
 	*   [General considerations](#general-considerations)  
 	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
@@ -31,48 +38,79 @@ The TM is built on the client-side of the CARLA architecture. It replaces the se
 Users must have some control over the traffic flow by setting parameters that allow, force or encourage specific behaviours. Users can change the traffic behaviour as they prefer, both online and offline. For example they could allow a car to ignore the speed limits or force a lane change. Being able to play around with behaviours is a must when trying to simulate reality. It is necessary to train driving systems under specific and atypical circumstances. 
 
 ---
-## How does it work?
-
-### Architecture
-The following diagram is a summary of the internal architecture of the Traffic Manager. Blue bodies represent the different stages. Green ones are additional modules that work with these. The arrows represent communication between elements managed by messenger classes.  
-
-The inner structure of the TM can be easily translated to code. Each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. 
-
+## Architecture
 <div style="text-align:center">
-<img src="../img/traffic_manager_diagram.jpg">
+<img src="../img/tm_2_architecture.jpg">
 </div>
 
-### Stages
+The previous diagram is a summary of the internal architecture of the Traffic Manager. The inner structure of the TM can be easily translated to code, and each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. The functions and relations of these elements are explained in the following sections.  
 
-__1. Localization Stage:__ the TM stores a list of waypoints ahead for each vehicle to follow. The list of waypoints is updated each iteration, changing according to the decisions taken during the stage, such as lane changes, to modify the vehicle's trajectory. The amount of waypoints stored depends on the vehicle's speed, being greater the faster it goes. This stage contains a __spatial hashing__ which saves the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+Nevertheless, the logic of it can be simplified as follows.  
 
-* __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
+__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State management) scans the world to keep track of all the vehicles present in it. Registered vehicles are kept in the [Vehicle registry](#vehicle-registry), and the position and velocity of all the vehicles is cached in the [Simulation State](#simulation-state) module, so that it can be easily accessed onwards.  
 
-__2. Collision Stage:__ checks possible collisions for every vehicle. For each pairs of overlapping actors in the list stored by the Localization stage, it extends a __geodesic boundary__. These are extended bounding boxes that represent the vehicle along its trajectory. This stage determines which vehicle has priority and communicates the result to the __Motion Planner stage__.  
+__2. What should each vehicle do?__ The TM has to considerate the current state of the simulation and generate viable commands for all the vehicles in the [Vehicle Registry](#vehicle-registry). The calculations for each vehicle are done separatedly. These calculations are divided in different [Stages](#stages). The [Control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - Where am I going?__ TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [In Memory map](#in-memory-map) simplifies the map as a grid of waypoints, and the [Localization Stage](#localization-stage) stores a near-future path to follow as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) element (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - Are there any obstacles ahead?__ The [Collision Stage](#collision-stage) considers the path of the vehicle and the vehicles nearby to trigger collision hazards when necessary.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic light Stage](#traffic-light-stage) considers traffic lights, stop and yield signs, and priority rules to modify the path of the vehicle.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - How do I move there?__ Finally, the [Motion Planner Stage](#motion-planner-stage) takes the path defined by the previous stages, and calculates the next movement according to it aided by the [PID Controller](#pid-controller). This movement is then translated into an actual CARLA command to be applied.  
 
-* __Related .cpp files:__ `CollisionStage.cpp`.  
+__3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [Command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
 
-__3. Traffic Light Stage:__ manages some general traffic regulations, mainly priority at junctions. A __traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
 
-* __Related .cpp files:__ `TrafficLightStage.cpp`.  
+### ALSM
 
-__4. Motion Planner Stage:__ aggregates all the information from the previous stages and makes decisions on how to move the vehicles. It is asisted by a PID controller to adjust the resulting behaviour. After computing all the commands needed for every vehicle, these are sent to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicates it to the Apply Control stage.  
+### Command array
 
-* __Related .cpp files:__ `MotionPlannerStage.cpp`.  
-
-__5. Apply Control Stage:__ receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.VehicleControl) for the registered vehicles.  
+receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.VehicleControl) for the registered vehicles.  
 
 * __Related .cpp files:__ `BatchControlStage.cpp`.  
 
-### Additional modules
+### Control loop
 
-__Cached map:__ in order to increase computational efficiency during the Localization stage, the map is discretized and cached as a grid of waypoints. These are included in a specific data structure designed to hold more information, such as links between them. The grids allow to easily connect the map, each of them representing sections of a road or a whole junction, by also having an ID that is used to quickly identify vehicles in nearby areas.  
+### In Memory map
+
+In order to increase computational efficiency during the Localization stage, the map is discretized and cached as a grid of waypoints. These are included in a specific data structure designed to hold more information, such as links between them. The grids allow to easily connect the map, each of them representing sections of a road or a whole junction, by also having an ID that is used to quickly identify vehicles in nearby areas.  
 
 * __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
 
-__PID controller:__ the TM module uses a PID controller to regulate throttle, brake and steering according to a target value. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+### Path buffers & vehicle tracking
+
+### PID controller
+
+the TM module uses a PID controller to regulate throttle, brake and steering according to a target value. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
 
 * __Related .cpp files:__ `PIDController.cpp`.  
+
+### Simulation state
+
+### Stages
+
+##### Localization stage
+
+The TM stores a list of waypoints ahead for each vehicle to follow. The list of waypoints is updated each iteration, changing according to the decisions taken during the stage, such as lane changes, to modify the vehicle's trajectory. The amount of waypoints stored depends on the vehicle's speed, being greater the faster it goes. This stage contains a __spatial hashing__ which saves the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+
+* __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
+
+##### Collision Stage
+
+Checks possible collisions for every vehicle. For each pairs of overlapping actors in the list stored by the Localization stage, it extends a __geodesic boundary__. These are extended bounding boxes that represent the vehicle along its trajectory. This stage determines which vehicle has priority and communicates the result to the __Motion Planner stage__.  
+
+* __Related .cpp files:__ `CollisionStage.cpp`.  
+
+##### Traffic Light Stage
+
+Manages some general traffic regulations, mainly priority at junctions. A __traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
+
+* __Related .cpp files:__ `TrafficLightStage.cpp`.  
+
+##### Motion Planner Stage
+
+Aggregates all the information from the previous stages and makes decisions on how to move the vehicles. It is asisted by a PID controller to adjust the resulting behaviour. After computing all the commands needed for every vehicle, these are sent to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicates it to the Apply Control stage.  
+
+* __Related .cpp files:__ `MotionPlannerStage.cpp`.  
+
+### Vehicle registry
 
 ---
 ## Using the Traffic Manager 
