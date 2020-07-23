@@ -8,8 +8,13 @@
 
 #include <string>
 
-namespace converter {
+namespace osm2odr {
 
-  std::string ConvertOSMToOpenDRIVE(std::string osm_file, double offsetX = 0, double offsetY = 0);
+  struct OSM2ODRSettings {
+    double offsetX = 0;
+    double offsetY = 0;
+  };
 
-} // namespace converter
+  std::string ConvertOSMToOpenDRIVE(std::string osm_file, OSM2ODRSettings settings = OSM2ODRSettings());
+
+} // namespace osm2odr
