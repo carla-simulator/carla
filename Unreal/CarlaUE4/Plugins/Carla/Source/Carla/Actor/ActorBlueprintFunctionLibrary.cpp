@@ -427,7 +427,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("3.0") };
+    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -446,7 +446,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ISO; // S
     ISO.Id = TEXT("iso");
     ISO.Type = EActorAttributeType::Float;
-    ISO.RecommendedValues = { TEXT("1200.0") };
+    ISO.RecommendedValues = { TEXT("200.0") };
     ISO.bRestrictToRecommended = false;
 
     // Defines the size of the opening for the camera lens.
@@ -454,7 +454,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("1.4") };
+    Aperture.RecommendedValues = { TEXT("16.0") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -1371,13 +1371,13 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 3.0f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 60.0f));
     Camera->SetISO(
-        RetrieveActorAttributeToFloat("iso", Description.Variations, 1200.0f));
+        RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 16.0f));
 
     Camera->SetExposureMinBrightness(
         RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));
