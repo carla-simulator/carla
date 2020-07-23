@@ -4,11 +4,11 @@ This feature allows to record and reenact a previous simulation. All the events 
 
 * [__Recording__](#recording)  
 * [__Simulation playback__](#simulation-playback)  
-	* Setting a time factor  
+	* [Setting a time factor](#setting-a-time-factor)  
 * [__Recorded file__](#recorded-file)  
 * [__Queries__](#queries)  
-	* Collisions  
-	* Blocked actors  
+	* [Collisions](#collisions)  
+	* [Blocked actors](#blocked-actors)  
 * [__Sample Python scripts__](#sample-python-scripts)  
 
 ---
@@ -21,16 +21,24 @@ Actors are updated on every frame according to the data contained in the recorde
 !!! Important
     By the end of the playback, vehicles will be set to autopilot, but __pedestrians will stop__. 
 
-The recorder file includes information regarding actors.  
+The recorder file includes information regarding many different elements.  
 
-* __Actors'__ creation and destruction.  
-* __Traffic lights'__ state changes.  
-* __Vehicles and pedestrians'__ position and orientation. 
+*   __Actors__ — creation and destruction, bounding and trigger boxes, and linear and agular velocity.  
+*   __Traffic lights__ — state changes and time settings.  
+*   __Vehicles and pedestrians__ — position, orientation, light state, and physics control.  
+*   __Pedestrians__ — position and orientation.  
+*   __Lights__ — Light states from buildings, streets, and vehicles.
 
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
 
 ```py
 client.start_recorder("/home/carla/recording01.log")
+```
+
+By default, the recorder is set to store only the necessary information to play the simulation back. In order to save all the information previously mentioned, the argument `additional_data` has to be configured when starting the recording.  
+
+```py
+client.start_recorder("/home/carla/recording01.log", True)
 ```
 
 To stop the recording, the call is also straightforward.
