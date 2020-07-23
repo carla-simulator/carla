@@ -369,8 +369,8 @@ T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
   auto CarlaTransform = Signal.GetTransform();
   FTransform UETransform(CarlaTransform);
   FVector Location = UETransform.GetLocation();
-  // max distance to match 50cm
-  constexpr float MaxDistanceMatchSqr = 2500.0;
+  // max distance to match 500cm
+  constexpr float MaxDistanceMatchSqr = 250000.0;
   T * ClosestTrafficSign = nullptr;
   TArray<AActor*> Actors;
   UGameplayStatics::GetAllActorsOfClass(World, T::StaticClass(), Actors);
