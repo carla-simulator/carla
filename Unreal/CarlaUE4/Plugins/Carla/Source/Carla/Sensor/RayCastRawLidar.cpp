@@ -68,13 +68,13 @@ void ARayCastRawLidar::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  ReadPoints(DeltaTime);
+  SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
   DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
 }
 
-void ARayCastRawLidar::ReadPoints(const float DeltaTime)
+void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
 {
   const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
@@ -100,96 +100,110 @@ void ARayCastRawLidar::ReadPoints(const float DeltaTime)
 
   LidarData.Reset(PointsToScanWithOneLaser);
 
+  ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
+
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
 
     FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
-      FDetection Detection;
-      const float Angle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
-      if (ShootLaser(idxChannel, Angle, Detection)) {
+      FHitResult HitResult;
+      float VertAngle = LaserAngles[idxChannel];
+      float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+
+      bool PreprocessResult = PreprocessRay(VertAngle, HorizAngle);
+
+      if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
         Mutex.Lock();
-        LidarData.WritePointAsync(idxChannel, Detection);
+        WritePointAsync(idxChannel, HitResult);
         Mutex.Unlock();
       }
     });
   });
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
-  LidarData.SaveDetections();
+  FTransform ActorTransf = GetTransform();
+  ComputeAndSaveDetections(ActorTransf);
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
   LidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
+  void ARayCastRawLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+    RecordedHits.resize(Channels);
+    for (auto& aux : RecordedHits) {
+      aux.clear();
+      aux.reserve(MaxPointsPerChannel);
+    }
+  }
 
+  void ARayCastRawLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
+    DEBUG_ASSERT(GetChannelCount() > channel);
+    RecordedHits[channel].emplace_back(detection);
+  }
 
-/*
-float ARayCastRawLidar::ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const
-{
-  return 0.0;
+  void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+    std::vector<u_int32_t> PointsPerChannel(Description.Channels);
 
-  const FVector HitPoint = HitInfo.ImpactPoint - LidarBodyLoc;
-  const float Distance = 0.01f * HitPoint.Size();
+    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+      PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
+    LidarData.ResetSerPoints(PointsPerChannel);
 
-  const float AttenAtm = Description.AtmospAttenRate;
-  const float AbsAtm = exp(-AttenAtm * Distance);
+    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
+      for (auto& hit : RecordedHits[idxChannel]) {
+        FDetection detection;
+        ComputeRawDetection(hit, SensorTransform, detection);
 
-  const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
-
-  uint8 label = 69;
-
-//  AActor* actor = HitInfo.Actor.Get();
-//  if (actor != nullptr) {
-//    FActorView view = Registry.Find(actor);
-//
-//    if(view.IsValid()){
-//      const FActorInfo* ActorInfo = view.GetActorInfo();
-//
-//      if(ActorInfo != nullptr) {
-//        //TSet<ECityObjectLabel> labels = ActorInfo->SemanticTags;
-//        //if(labels.Num() == 1)
-//        //    label = static_cast<uint8>(*labels.CreateConstIterator());
-//      }
-//      else {
-//        UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
-//      }
-//    }
-//    else {
-//      UE_LOG(LogCarla, Warning, TEXT("View not valid %p!!!!"), view.GetActor());
-//    }
-//
-//  }
-//  else {
-//    UE_LOG(LogCarla, Warning, TEXT("Actor not found!!!!"));
-//  }
-
-  const float IntRec = AbsAtm;
-
-  return IntRec;
-}
-*/
+        LidarData.WritePointSync(detection);
+      }
+    }
+  }
 
 void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FDetection& Detection) const
 {
-    const FVector hp = HitInfo.ImpactPoint;
-    Detection.point = SensorTransf.Inverse().TransformPosition(hp);
+    const FVector HitPoint = HitInfo.ImpactPoint;
+    Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
 
-    Detection.cos_inc_angle = -1.0f;
-    Detection.object_idx = 2;
-    Detection.object_tag = 3;
+    const FVector VecInc = - (HitPoint - SensorTransf.GetLocation()).GetSafeNormal();
+    Detection.cos_inc_angle = FVector::DotProduct(VecInc, HitInfo.ImpactNormal);
+
+    const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
+
+    AActor* actor = HitInfo.Actor.Get();
+    Detection.object_idx = 0;
+    Detection.object_tag = static_cast<uint32_t>(ECityObjectLabel::None);
+
+    if (actor != nullptr) {
+
+      FActorView view = Registry.Find(actor);
+
+      if(view.IsValid()) {
+        const FActorInfo* ActorInfo = view.GetActorInfo();
+        Detection.object_idx = ActorInfo->Description.UId;
+
+        if(ActorInfo != nullptr) {
+          TSet<ECityObjectLabel> labels = ActorInfo->SemanticTags;
+          if(labels.Num() == 1)
+              Detection.object_tag = static_cast<uint32_t>(*labels.CreateConstIterator());
+        }
+        else {
+          UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
+        }
+      }
+      else {
+        UE_LOG(LogCarla, Warning, TEXT("View is not valid %p!!!!"), view.GetActor());
+
+      }
+    }
+    else {
+      UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
+    }
 }
 
-bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAngle, FDetection& Detection) const
+
+bool ARayCastRawLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult) const
 {
-
-// FIXME with a preprocess
-//  if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
-//    return false;
-
-  const float VerticalAngle = LaserAngles[Channel];
-
   FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
   TraceParams.bTraceComplex = true;
   TraceParams.bReturnPhysicalMaterial = false;
@@ -216,32 +230,9 @@ bool ARayCastRawLidar::ShootLaser(const uint32 Channel, const float HorizontalAn
     FCollisionResponseParams::DefaultResponseParam
   );
 
-
-  if (HitInfo.bBlockingHit)
-  {
-    if (Description.ShowDebugPoints)
-    {
-      DrawDebugPoint(
-        GetWorld(),
-        HitInfo.ImpactPoint,
-        10,  //size
-        FColor(255,0,255),
-        false,  //persistent (never goes away)
-        0.1  //point leaves a trail on moving object
-      );
-    }
-
-
-    ComputeRawDetection(HitInfo, ActorTransf, Detection);
-
+  if (HitInfo.bBlockingHit) {
+    HitResult = HitInfo;
     return true;
-
-//   FIXME with postprocess
-//    if(Intensity > Description.DropOffIntensityLimit)
-//      return true;
-//    else
-//      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
-//
   } else {
     return false;
   }
