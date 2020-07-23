@@ -42,7 +42,7 @@ client.start_recorder("/home/carla/recording01.log", True)
 ```
 
 !!! Note
-    Additional data includes: linear and angular velocity of vehicles and pedestrians, traffic light time settings, execution time, trigger and bounding boxes, and physics controls for vehicles.  
+    Additional data includes: linear and angular velocity of vehicles and pedestrians, traffic light time settings, execution time, actors' trigger and bounding boxes, and physics controls for vehicles.  
 
 To stop the recording, the call is also straightforward.
 
