@@ -439,7 +439,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ShutterSpeed; // (1/t)
     ShutterSpeed.Id = TEXT("shutter_speed");
     ShutterSpeed.Type = EActorAttributeType::Float;
-    ShutterSpeed.RecommendedValues = { TEXT("60.0") };
+    ShutterSpeed.RecommendedValues = { TEXT("200.0") };
     ShutterSpeed.bRestrictToRecommended = false;
 
     // The camera sensor sensitivity.
@@ -454,7 +454,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("16.0") };
+    Aperture.RecommendedValues = { TEXT("8.0") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -1373,11 +1373,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetExposureCompensation(
         RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
     Camera->SetShutterSpeed(
-        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 60.0f));
+        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
         RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 16.0f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 8.0f));
 
     Camera->SetExposureMinBrightness(
         RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));
