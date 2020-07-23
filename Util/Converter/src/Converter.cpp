@@ -25,14 +25,13 @@
 #include <utils/geom/GeoConvHelper.h>
 
 
-namespace converter {
+namespace osm2odr {
 
   void fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
     oc.addCallExample("-c <CONFIGURATION>", "generate net with options read from file");
     oc.addCallExample("-n ./nodes.xml -e ./edges.xml -v -t ./owntypes.xml",
                       "generate net with given nodes, edges, and edge types doing verbose output");
-
     // insert options sub-topics
     SystemFrame::addConfigurationOptions(oc); // this subtopic is filled here, too
     oc.addOptionSubTopic("Input");
@@ -66,16 +65,17 @@ namespace converter {
     return ok;
   }
 
-  std::string ConvertOSMToOpenDRIVE(std::string osm_file, double offsetX, double offsetY) {
+  std::string ConvertOSMToOpenDRIVE(std::string osm_file, OSM2ODRSettings settings) {
     // std::string OptionsArgs = "--geometry.remove --ramps.guess --edges.join --junctions.join --keep-edges.by-type highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential --tls.discard-loaded --tls.discard-simple --default.lanewidth 4.0 --osm.layer-elevation 4";
+
     std::vector<std::string> OptionsArgs = {
       "--proj", "+proj=tmerc",
-      "--geometry.remove", "--ramps.guess", "--edges.join", "--junctions.join",
+      "--geometry.remove", "--ramps.guess", "--edges.join", "--junctions.join", "--roundabouts.guess",
       "--keep-edges.by-type", "highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential",
       "--tls.discard-loaded", "--tls.discard-simple", "--default.lanewidth", "4.0",
       "--osm.layer-elevation", "4",
       "--osm-files", "TRUE", "--opendrive-output", "TRUE", // necessary for now to enable osm input and xodr output
-      "--offset.x", std::to_string(offsetX), "--offset.y", std::to_string(offsetY)
+      "--offset.x", std::to_string(settings.offsetX), "--offset.y", std::to_string(settings.offsetY)
     };
 
     // OptionsCont::getOptions().clear();
@@ -129,4 +129,4 @@ namespace converter {
 
   }
 
-} // namespace converter
+} // namespace OSM2ODR

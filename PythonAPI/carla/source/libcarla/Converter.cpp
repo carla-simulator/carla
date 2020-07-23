@@ -6,21 +6,21 @@
 
 #include <Converter.h>
 
-class Converter {
+class OSM2ODR {
 public:
-  std::string ConvertOSMToOpenDRIVE(std::string osm_file) {
-    return converter::ConvertOSMToOpenDRIVE(osm_file);
+  static std::string ConvertOSMToOpenDRIVE(std::string osm_file) {
+    return osm2odr::ConvertOSMToOpenDRIVE(osm_file);
   }
 };
 
 void export_converter() {
-  using namespace converter;
+  using namespace osm2odr;
   using namespace boost::python;
 
-  def("convert_to_odr", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("offsetX") = 0, arg("offsetY") = 0));
+  // def("convert_to_odr", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("offsetX") = 0, arg("offsetY") = 0));
 
-  // class_<Converter>("Converter", init<>())
-  //   .def("convert_to_odr", &Converter::ConvertOSMToOpenDRIVE, (arg("osm_file")))
-  //     .staticmethod("convert_to_odr")
-  // ;
+  class_<OSM2ODR>("OSM2ODR", init<>())
+    .def("convert_to_odr", &OSM2ODR::ConvertOSMToOpenDRIVE, (arg("osm_file")))
+      .staticmethod("convert_to_odr")
+  ;
 }
