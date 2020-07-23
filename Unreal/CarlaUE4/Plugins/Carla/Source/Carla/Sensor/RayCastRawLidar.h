@@ -39,22 +39,37 @@ public:
   void Set(const FLidarDescription &LidarDescription);
 
 protected:
-
   virtual void Tick(float DeltaTime) override;
 
 private:
-
   /// Creates a Laser for each channel.
   void CreateLasers();
 
   /// Updates LidarMeasurement with the points read in DeltaTime.
-  void ReadPoints(float DeltaTime);
+  void SimulateLidar(float DeltaTime);
 
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FDetection &RawData) const;
+  bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &RawData) const;
+
+  /// Method that allow to preprocess the ray before shoot it
+  bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
+    // This method allows to introduce noise or drop points if needed
+    // A true return value will make the proposed ray to be actually computed.
+    return true;
+  }
 
   /// Compute all raw detection information
-  void ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FDetection& Detection) const;
+  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FDetection &Detection) const;
+
+  /// Saving the hits the raycast returns per channel
+  void WritePointAsync(uint32_t Channel, FHitResult &Detection);
+
+  /// Clear the recorded data structure
+  void ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel);
+
+  /// Clear the recorded data structure
+  void ComputeAndSaveDetections(const FTransform &SensorTransform);
+
 
 
   UPROPERTY(EditAnywhere)
@@ -63,4 +78,6 @@ private:
   TArray<float> LaserAngles;
 
   FLidarData LidarData;
+  std::vector<std::vector<FHitResult>> RecordedHits;
+
 };
