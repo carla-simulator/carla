@@ -11,8 +11,11 @@
 namespace osm2odr {
 
   struct OSM2ODRSettings {
-    double offsetX = 0;
-    double offsetY = 0;
+    bool use_offsets = false;
+    double offset_x = 0;
+    double offset_y = 0;
+    double default_lane_width = 4.0;
+    double elevation_layer_height = 0;
   };
 
   std::string ConvertOSMToOpenDRIVE(std::string osm_file, OSM2ODRSettings settings = OSM2ODRSettings());
