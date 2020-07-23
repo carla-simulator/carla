@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <numeric>
 
 namespace carla {
 namespace sensor {
@@ -107,6 +108,10 @@ namespace data {
       return _header[Index::ChannelCount];
     }
 
+
+    /// TO BE REMOVED, only kept to avoid breaking LidarData class
+    std::vector<std::vector<LidarRawDetection>> _aux_points;
+
     void Reset(uint32_t channel_point_count) {
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
       _max_channel_points = channel_point_count;
@@ -123,19 +128,27 @@ namespace data {
       _aux_points[channel].emplace_back(detection);
     }
 
-    void SaveDetections() {
-      _ser_points.clear();
-      _ser_points.reserve(GetChannelCount() * _max_channel_points);
 
-      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
-        _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
-        _ser_points.insert(_ser_points.end(), _aux_points[idxChannel].begin(), _aux_points[idxChannel].end());
-      }
+
+    void ResetSerPoints(std::vector<uint32_t> points_per_channel) {
+      DEBUG_ASSERT(GetChannelCount() > points_per_channel.size());
+      std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
+
+      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
+        _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
+
+      uint32_t total_points = std::accumulate(points_per_channel.begin(), points_per_channel.end(), 0);
+
+      _ser_points.clear();
+      _ser_points.reserve(total_points);
+    }
+
+    void WritePointSync(LidarRawDetection &detection) {
+      _ser_points.emplace_back(detection);
     }
 
   protected:
     std::vector<uint32_t> _header;
-    std::vector<std::vector<LidarRawDetection>> _aux_points;
     uint32_t _max_channel_points;
 
   private:
