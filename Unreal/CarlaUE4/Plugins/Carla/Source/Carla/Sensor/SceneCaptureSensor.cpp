@@ -555,9 +555,13 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_BloomMethod = true;
     PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
     PostProcessSettings.bOverride_BloomIntensity = true;
-    PostProcessSettings.BloomIntensity = 0.3f;
+    PostProcessSettings.BloomIntensity = 0.675f;
     PostProcessSettings.bOverride_BloomThreshold = true;
     PostProcessSettings.BloomThreshold = -1.0f;
+
+    // Lens
+    PostProcessSettings.bOverride_LensFlareIntensity = true;
+    PostProcessSettings.LensFlareIntensity = 0.1;
   }
 
   // Remove the show flags that might interfere with post-processing effects
