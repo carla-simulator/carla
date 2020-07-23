@@ -57,60 +57,126 @@ __2. What should each vehicle do?__ The TM has to considerate the current state 
 
 __3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [Command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
 
-
 ### ALSM
+
+ALSM stands for __Agent Lifecycle and State Management__. First step in the logic cycle. Provides context over the current state of the simulation.  
+
+*   Scans the world to keep track of all the vehicles in it, their position and velocity. For vehicles with physics enabled, the velocity is retrieve by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). For vehicles with physics disabled, the velocity is computed using the history of position updates over time.  
+*   Stores the position, velocity and additional information (is this vehicle under the influence of a traffic light? What is its current state?) of every vehicle in the [Simulation State](#simulation-state) module.  
+*   Updates the list of registered vehicles stored by [Vehicle Registry](#vehicle-registry).  
+*   Removes/Adds entries in the [Control Loop](#control-loop) and [PBVT](#pbvt) modules to match the list of registered vehicles.  
+
+__Related .cpp files:__ `TBD`.  
 
 ### Command array
 
-receives actuation signals, such as throttle, brake, steer, from the Motion Planner stage and sends these to the simulator in batches to control every vehicles' movement. Using the __apply_batch()__ method in [carla.Client](../python_api/#carla.Client) and different [carla.VehicleControl](../python_api/#carla.VehicleControl) for the registered vehicles.  
+Last step in the TM logic cycle. Receives commands for all the registered vehicles and applies these.  
 
-* __Related .cpp files:__ `BatchControlStage.cpp`.  
+*   Receives a series of [carla.VehicleControl](#python_api.md#carla.VehicleControl) from the [Motion Planner Stage](#motion-planner-stage).  
+*   Constructs a batch for all the commands to be applied during the same frame.  
+*   Sends the batch to the CARLA server. Either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) will be called, depending if the simulation is runnin in asynchronous or synchronous mode, respectively.  
+
+__Related .cpp files:__ `BatchControlStage.cpp`.  
 
 ### Control loop
 
+Regulates the process of calculating the next command for all the registered vehicles, so that these are done in synchrony.  
+
+*   Receives from the [Vehicle Registry](#vehicle-registry) an array of the vehicles registered to the TM.  
+*   Loops over said array, performing calculations per vehicle separatedly.  
+*   These calculations are divided in a series of [Stages](#stages).  
+*   Synchronization barriers are created between stages so that consistency is guaranteed. Calculations for all vehicles must finish before any of them moves to the next stage, ensuring that all vehicles are updated in the same frame.  
+
+__Related .cpp files:__ `TBD`.  
+
 ### In Memory map
 
-In order to increase computational efficiency during the Localization stage, the map is discretized and cached as a grid of waypoints. These are included in a specific data structure designed to hold more information, such as links between them. The grids allow to easily connect the map, each of them representing sections of a road or a whole junction, by also having an ID that is used to quickly identify vehicles in nearby areas.  
+Helper module contained by the [PBVT](#pbvt) and used during the [Localization Stage](#localization-stage).  
+
+*   Discretizes the map into a grid of waypoints.  
+*   Includes these waypoints in a specific data structure with more information to connect the waypoints and identify roads, junctions...
+*   Identifies these structures with an ID that is used to quickly spot vehicles in nearby areas.  
 
 * __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
 
-### Path buffers & vehicle tracking
+### PBVT
+
+PBVT stands for __Path Buffer and Vehicle Tracking__. This data structure contains the expected path for every vehicle so that it can be easily accessible during the [Control Loop](#control-loop).  
+
+*   Contains a map of deque objects with an entry per vehicle.  
+*   For each vehicle, contains a set of waypoints describing its current location and near-future path.  
+*   Contains the [In Memory map](#in-memory-map) that will be used by the [Localization Stage](#localization-stage) to relate every vehicle to the nearest waypoint, and possible overlapping paths.  
 
 ### PID controller
 
-the TM module uses a PID controller to regulate throttle, brake and steering according to a target value. The way this adjustment is made depends on the specific parametrization of the controller, which can be modified if the desired behaviour is different. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+Helper module that performs calculations during the [Motion Planner Stage](#motion-planner-stage).  
 
-* __Related .cpp files:__ `PIDController.cpp`.  
+*   Using the information gathered by the [Motion Planner Stage](#motion-planner-stage), estimates the throttle, brake and steering input needed to reach a target value.  
+*   The adjustment is made depending on the specific parameterization of the controller, which can be modified if desired. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+
+__Related .cpp files:__ `PIDController.cpp`.  
 
 ### Simulation state
+
+Stores information about the vehicles in the world so that it can be easily accessible during all the process.  
+
+*   Receives the current state of all vehicles in the world from the [ALSM](#ALSM). Their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
+*   Stores in cache all the information so that no additional calls to the server are needed during the [Control Loop](#control-loop).  
+
+__Related .cpp files:__ `TBD`.  
 
 ### Stages
 
 ##### Localization stage
 
-The TM stores a list of waypoints ahead for each vehicle to follow. The list of waypoints is updated each iteration, changing according to the decisions taken during the stage, such as lane changes, to modify the vehicle's trajectory. The amount of waypoints stored depends on the vehicle's speed, being greater the faster it goes. This stage contains a __spatial hashing__ which saves the position for every car __registered to the Traffic Manager in a world grid__. This is a way to roughly predict possible collisions and create a list of overlapping actors for every vehicle that will be later used by the next stage.  
+First stage in the [Control Loop](#control-loop). Defines a near-future path for registered vehicles.  
 
-* __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
+*   Obtains the position and velocity of all the vehicles from [Simulation State](#simulation-state).  
+*   Using the [In Memory map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
+*   The path is updated according to planning decisions such as lan changes, speed limit, distance to leading vehicle parameterization, etc.  
+*   The [PBVT](#pbvt) module stores the path for all the vehicles.  
+*   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision Stage](#collision-stage).  
+
+__Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
 ##### Collision Stage
 
-Checks possible collisions for every vehicle. For each pairs of overlapping actors in the list stored by the Localization stage, it extends a __geodesic boundary__. These are extended bounding boxes that represent the vehicle along its trajectory. This stage determines which vehicle has priority and communicates the result to the __Motion Planner stage__.  
+Second stage in the [Control Loop](#control-loop). Triggers collision hazards.  
 
-* __Related .cpp files:__ `CollisionStage.cpp`.  
+*   Receives a list of pairs of vehicles with possible overlapping paths from the [Localization Stage](#localization-stage).  
+*   For every pair, extends bounding boxes along the path ahead (geodesic boundaries), to check if they actually overlap and the risk of collision is real.  
+*   Hazards for all the possible collisions will be sent to the [Motion Planner Stage](#motion-planner-stage) to modify the path accordingly.  
+
+__Related .cpp files:__ `CollisionStage.cpp`.  
 
 ##### Traffic Light Stage
 
-Manages some general traffic regulations, mainly priority at junctions. A __traffic hazard__ is set to true whenever a yellow or red traffic light is detected. Non-signalized junctions are managed with a priority system. When approaching to these, a __geodesic boundary__ is extended through the intersection along the intended trajectory. The vehicle will wait for the junction to be free if another vehicle is detected inside of the geodesic boundary.  
+Third stage in the [Control Loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights and priority at junctions.  
 
-* __Related .cpp files:__ `TrafficLightStage.cpp`.  
+*   If the vehicle is under the influence of a yellow or red traffic light, sets a traffic hazard.  
+*   If the vehicle is in a non-signalized junction, a bounding box is extended along its path. Vehicles with overlapping paths follow a FIFO order to move, and waits are set to a fixed time.  
+
+__Related .cpp files:__ `TrafficLightStage.cpp`.  
 
 ##### Motion Planner Stage
 
-Aggregates all the information from the previous stages and makes decisions on how to move the vehicles. It is asisted by a PID controller to adjust the resulting behaviour. After computing all the commands needed for every vehicle, these are sent to the final stage. For example, when facing a __traffic hazard__, this stage will compute the brake needed for said vehicle and communicates it to the Apply Control stage.  
+Fourth and last stage in the [Control Loop](#control-loop). Generates the CARLA command that will be applied to the vehicle.  
 
-* __Related .cpp files:__ `MotionPlannerStage.cpp`.  
+*   Gathers all the information so far: position and velocity of the vehicles ([Simulation State](#simulation-state)), their path ([PBVT](#pbvt)), hazards ([Collision Stage](#collision-stage) and [Traffic Light State](#traffic-light-state)).  
+*   Makes high-level decisins about how should the vehicle move, for example computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.  
+*   Translates the desired movement to a [carla.VehicleControl](#python_api.md#carla.VehicleControl) that can be applied to the vehicle.  
+*   Sends the resulting CARLA commands to the [Command Array](#command-array).  
+
+__Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
 ### Vehicle registry
+
+Keeps track of all the vehicles in the simulation.  
+
+*   The [ALSM](#alsm) scans the world and passes an updated list of existing vehicles.  
+*   Vehicles registered to the TM are stored in an array that will be iterated on during the [Control Loop](#control-loop).  
+
+__Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
 ---
 ## Using the Traffic Manager 
