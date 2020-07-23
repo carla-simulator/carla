@@ -66,17 +66,25 @@ namespace osm2odr {
   }
 
   std::string ConvertOSMToOpenDRIVE(std::string osm_file, OSM2ODRSettings settings) {
-    // std::string OptionsArgs = "--geometry.remove --ramps.guess --edges.join --junctions.join --keep-edges.by-type highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential --tls.discard-loaded --tls.discard-simple --default.lanewidth 4.0 --osm.layer-elevation 4";
-
     std::vector<std::string> OptionsArgs = {
-      "--proj", "+proj=tmerc",
+      "--simple-projection",
       "--geometry.remove", "--ramps.guess", "--edges.join", "--junctions.join", "--roundabouts.guess",
-      "--keep-edges.by-type", "highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential",
-      "--tls.discard-loaded", "--tls.discard-simple", "--default.lanewidth", "4.0",
-      "--osm.layer-elevation", "4",
+      "--keep-edges.by-type",
+      "highway.motorway,highway.motorway_link,highway.trunk,highway.trunk_link,highway.primary,highway.primary_link,highway.secondary,highway.secondary_link,highway.tertiary,highway.tertiary_link,highway.unclassified,highway.residential",
+      "--tls.discard-loaded", "--tls.discard-simple", "--default.lanewidth",
+      std::to_string(settings.default_lane_width),
       "--osm-files", "TRUE", "--opendrive-output", "TRUE", // necessary for now to enable osm input and xodr output
-      "--offset.x", std::to_string(settings.offsetX), "--offset.y", std::to_string(settings.offsetY)
     };
+    if (settings.elevation_layer_height > 0) {
+      OptionsArgs.push_back("--osm.layer-elevation");
+      OptionsArgs.push_back(std::to_string(settings.elevation_layer_height));
+    }
+    if (settings.use_offsets) {
+      OptionsArgs.push_back("--offset.x");
+      OptionsArgs.push_back(std::to_string(settings.offset_x));
+      OptionsArgs.push_back("--offset.y");
+      OptionsArgs.push_back(std::to_string(settings.offset_y));
+    }
 
     // OptionsCont::getOptions().clear();
     OptionsCont& oc = OptionsCont::getOptions();
