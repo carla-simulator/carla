@@ -23,10 +23,10 @@ Actors are updated on every frame according to the data contained in the recorde
 
 The recorder file includes information regarding many different elements.  
 
-*   __Actors__ — creation and destruction, bounding and trigger boxes, and linear and agular velocity.  
+*   __Actors__ — creation and destruction, bounding and trigger boxes.  
 *   __Traffic lights__ — state changes and time settings.  
-*   __Vehicles and pedestrians__ — position, orientation, light state, and physics control.  
-*   __Pedestrians__ — position and orientation.  
+*   __Vehicles__ — position and orientation, linear and angular velocity, light state, and physics control.  
+*   __Pedestrians__ — position and orientation, and linear and angular velocity.  
 *   __Lights__ — Light states from buildings, streets, and vehicles.
 
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
@@ -40,6 +40,9 @@ By default, the recorder is set to store only the necessary information to play 
 ```py
 client.start_recorder("/home/carla/recording01.log", True)
 ```
+
+!!! Note
+    Additional data includes: linear and angular velocity of vehicles and pedestrians, traffic light time settings, execution time, trigger and bounding boxes, and physics controls for vehicles.  
 
 To stop the recording, the call is also straightforward.
 
