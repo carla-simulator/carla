@@ -63,7 +63,7 @@ namespace parser {
                 node_object.attribute("length").as_double(),
                 points);
 
-          } else if (name.substr(0, 6) == "Speed_") {
+          } else if (name.substr(0, 6) == "Speed_" || name.substr(0, 6) == "speed_") {
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
             // speed signal by roadrunner
@@ -75,7 +75,7 @@ namespace parser {
                 node_object.attribute("t").as_double(),
                 node_object.attribute("name").as_string(),
                 "no",
-                node_object.attribute("orientation").value(),
+                node_object.attribute("orientation").as_string(),
                 node_object.attribute("zOffset").as_double(),
                 "OpenDRIVE",
                 "274",
