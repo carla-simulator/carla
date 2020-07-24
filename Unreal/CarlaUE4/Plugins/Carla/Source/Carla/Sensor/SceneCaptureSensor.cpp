@@ -366,6 +366,30 @@ float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
   return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
+void ASceneCaptureSensor::SetLensFlareIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.LensFlareIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetLensFlareIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.LensFlareIntensity;
+}
+
+void ASceneCaptureSensor::SetBloomIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.BloomIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetBloomIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.BloomIntensity;
+}
+
 void ASceneCaptureSensor::SetWhiteTemp(float Temp)
 {
   check(CaptureComponent2D != nullptr);
