@@ -15,6 +15,8 @@
 #include "carla/road/element/RoadInfoSignal.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include "Async/ParallelFor.h"
+
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -37,6 +39,44 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
+}
+
+void ACarlaGameModeBase::AddSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
+{
+  uint32 ImageWidth = SceneCaptureSensor->ImageWidth;
+  uint32 ImageHeight = SceneCaptureSensor->ImageHeight;
+
+  if(AtlasTextureWidth < (CurrentAtlasTextureWidth + ImageWidth))
+  {
+    IsAtlasTextureValid = false;
+    AtlasTextureWidth = CurrentAtlasTextureWidth + ImageWidth;
+  }
+  if(AtlasTextureHeight < ImageHeight)
+  {
+    IsAtlasTextureValid = false;
+    AtlasTextureHeight = ImageHeight;
+  }
+
+  SceneCaptureSensor->PositionInAtlas = FIntVector(CurrentAtlasTextureWidth, 0, 0);
+  CurrentAtlasTextureWidth += ImageWidth;
+
+  SceneCaptureSensors.Add(SceneCaptureSensor);
+
+  UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::AddSceneCaptureSensor %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+}
+
+void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
+{
+  // Remove camera
+  SceneCaptureSensors.Remove(SceneCaptureSensor);
+
+  // Recalculate PositionInAtlas for each camera
+  CurrentAtlasTextureWidth = 0;
+  for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
+  {
+    Camera->PositionInAtlas = FIntVector(CurrentAtlasTextureWidth, 0, 0);
+    CurrentAtlasTextureWidth += Camera->ImageWidth;
+  }
 }
 
 void ACarlaGameModeBase::InitGame(
@@ -151,6 +191,8 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
+  CaptureAtlasDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -161,6 +203,10 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   if (Recorder)
   {
     Recorder->Tick(DeltaSeconds);
+  }
+
+  if(!IsAtlasTextureValid) {
+    CreateAtlasTextures();
   }
 }
 
@@ -175,6 +221,8 @@ void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     CarlaSettingsDelegate->Reset();
   }
+
+  FCoreDelegates::OnEndFrameRT.Remove(CaptureAtlasDelegate);
 }
 
 void ACarlaGameModeBase::SpawnActorFactories()
@@ -326,4 +374,62 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
     }
   }
 
+}
+
+void ACarlaGameModeBase::CreateAtlasTextures()
+{
+  UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::CreateAtlasTextures %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+
+  FRHIResourceCreateInfo CreateInfo;
+  for(int i = 0; i < kMaxNumTextures; i++)
+  {
+    CamerasAtlasTexture[i] = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
+    AtlasPixels[i].Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
+  }
+  IsAtlasTextureValid = true;
+}
+
+void ACarlaGameModeBase::CaptureAtlas()
+{
+  ACarlaGameModeBase* This = this;
+
+  if(!IsAtlasTextureValid || !SceneCaptureSensors.Num()) return;
+
+#if !UE_BUILD_SHIPPING
+  if (!ReadSurface) return;
+#endif
+
+  ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_CaptureAtlas)
+  (
+    [This](FRHICommandListImmediate& RHICmdList) mutable
+    {
+      FTexture2DRHIRef AtlasTexture = This->CamerasAtlasTexture[This->CurrentAtlas];
+      TArray<FColor>& CurrentAtlasPixels = This->AtlasPixels[This->CurrentAtlas];
+
+      if (!AtlasTexture)
+      {
+        UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBase::CaptureAtlas: Missing atlas texture"));
+        return;
+      }
+
+      // Download Atlas texture
+      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
+
+      FIntRect Rect = FIntRect(0, 0, This->AtlasTextureWidth, This->AtlasTextureHeight);
+#if !UE_BUILD_SHIPPING
+        if(This->ReadSurface == 2) {
+          Rect = FIntRect(0, 0, This->SurfaceW, This->SurfaceH);
+        }
+#endif
+
+      RHICmdList.ReadSurfaceData(
+        AtlasTexture,
+        Rect,
+        CurrentAtlasPixels,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+        // PreviousTexture = CurrentTexture;
+        // CurrentTexture = (CurrentTexture + 1) & ~MaxNumTextures;
+    }
+  );
 }

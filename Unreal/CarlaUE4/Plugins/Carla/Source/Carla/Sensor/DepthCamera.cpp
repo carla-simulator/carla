@@ -28,11 +28,13 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
   );
 
   Offset = carla::sensor::SensorRegistry::get<ADepthCamera*>::type::header_offset;
-
 }
 
 void ADepthCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  SendPixelsInStream(*this);
+
+  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
+  SendPixelsInStream(*this, GameMode->GetCurrentAtlasPixels(), GameMode->GetAtlasTextureWidth());
 }
+
