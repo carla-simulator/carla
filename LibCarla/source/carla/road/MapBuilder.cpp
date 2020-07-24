@@ -747,7 +747,7 @@ namespace road {
   }
 
   geom::Transform MapBuilder::ComputeSignalTransform(std::unique_ptr<Signal> &signal, MapData &data) {
-    DirectedPoint point = data.GetRoad(signal->_road_id).GetDirectedPointIn(signal->_s);
+    DirectedPoint point = data.GetRoad(signal->_road_id).GetDirectedPointInNoLaneOffset(signal->_s);
     point.ApplyLateralOffset(static_cast<float>(-signal->_t));
     point.location.y *= -1; // Unreal Y axis hack
     point.location.z += static_cast<float>(signal->_zOffset);
@@ -764,7 +764,7 @@ namespace road {
           _temp_signal_container[signal_reference->_signal_id].get();
     }
 
-    for(auto& signal_pair : _temp_signal_container){
+    for(auto& signal_pair : _temp_signal_container) {
       auto& signal = signal_pair.second;
       signal->_transform = ComputeSignalTransform(signal, _map_data);
     }
@@ -966,7 +966,8 @@ void MapBuilder::CreateController(
           map.GetClosestWaypointOnRoad(signal_position);
       // workarround to not move speed signals
       if (signal->GetName().substr(0, 6) == "Speed_" ||
-          signal->GetName().substr(0, 6) == "speed_") {
+          signal->GetName().substr(0, 6) == "speed_" ||
+          signal->GetName().find("Stencil_STOP") != std::string::npos) {
         continue;
       }
       if(closest_waypoint_to_signal) {

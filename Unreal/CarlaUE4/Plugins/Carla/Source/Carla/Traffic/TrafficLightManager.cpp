@@ -541,6 +541,11 @@ void ATrafficLightManager::SpawnSignals()
     }
     else if (TrafficSignsModels.Contains(SignalType))
     {
+      // We do not spawn stops painted in the ground
+      if (Signal->GetName() == "Stencil_STOP")
+      {
+        continue;
+      }
       auto CarlaTransform = Signal->GetTransform();
       FTransform SpawnTransform(CarlaTransform);
       FVector SpawnLocation = SpawnTransform.GetLocation();
