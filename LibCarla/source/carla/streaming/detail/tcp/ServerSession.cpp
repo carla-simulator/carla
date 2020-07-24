@@ -77,14 +77,8 @@ namespace tcp {
       if (!_socket.is_open()) {
         return;
       }
-      if (_is_writing) {
-        log_debug("session", _session_id, ": connection too slow: message discarded");
-        return;
-      }
-      _is_writing = true;
 
       auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
-        _is_writing = false;
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
           CloseNow();

@@ -95,8 +95,6 @@ namespace tcp {
     boost::asio::io_context::strand _strand;
 
     callback_function_type _on_closed;
-
-    bool _is_writing = false;
   };
 
 } // namespace tcp
