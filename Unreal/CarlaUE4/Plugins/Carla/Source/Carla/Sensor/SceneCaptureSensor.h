@@ -29,6 +29,7 @@ class CARLA_API ASceneCaptureSensor : public ASensor
 {
   GENERATED_BODY()
 
+  friend class ACarlaGameModeBase;
   friend class FPixelReader;
 
 public:
@@ -269,67 +270,32 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
-protected:
-
-  virtual void BeginPlay() override;
-
-  virtual void Tick(float DeltaTime) override;
-
-  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-  virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
-
-  uint32 Offset = 0u;
-
-  void SetViewport();
-
-  void CopyTexture();
-
-  void Capture();
-
   template <typename TSensor>
-  void SendPixelsInStream(TSensor &Sensor) {
-    TArray<FColor>& PixelsData = Pixels[PreviousTexture];
-    if(PixelsData.Num() > 0)
+  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth)
+  {
+    if(AtlasPixels.Num() > 0)
     {
       auto Stream = GetDataStream(Sensor);
       auto Buffer = Stream.PopBufferFromPool();
 
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-        FColor* Source = &PixelsData[0];
-        Source += Offset;
 
-        constexpr auto SizeOfColor = sizeof(FColor);
-        Buffer.reset(Offset + ImageWidth * ImageHeight * SizeOfColor);
-        // const uint8 *SrcRow = (uint8*)Source;
-        // auto DstRow = Buffer.begin() + Offset;
+        constexpr uint32 BytesPerPixel = sizeof(FColor);
+        const uint32 ExpectedStride = ImageWidth * BytesPerPixel;
+
+        const FColor* Source = &AtlasPixels[0];
+        uint8 *SrcRow = (uint8*)Source + PositionInAtlas.X * BytesPerPixel;
         uint32 DstOffset = Offset;
-        /*
+
+        Buffer.reset(Offset + ImageWidth * ImageHeight * BytesPerPixel);
+
         for (uint32 Row = 0u; Row < ImageHeight; Row++)
         {
-          //UE_LOG(LogCarla, Warning, TEXT("SendPixelsInStream %d %d %d"), DstRow?0:1, SrcRow?0:1, ImageWidth * SizeOfColor);
-          //if(SrcRow)
-          //{
-            // FMemory::Memcpy(DstRow, SrcRow, ImageWidth * SizeOfColor);
-            // DstRow += ImageWidth * SizeOfColor;
-            // SrcRow += ImageWidth * SizeOfColor;
-
-            Buffer.copy_from(DstOffset, (unsigned char*)Source, ImageWidth * SizeOfColor);
-            DstOffset += ImageWidth * SizeOfColor;
-          //}
-          //else
-          //{
-          //  UE_LOG(LogCarla, Error, TEXT("SendPixelsInStream no source"));
-          //}
+          Buffer.copy_from(DstOffset, SrcRow, ExpectedStride);
+          DstOffset += ExpectedStride;
+          SrcRow += AtlasTextureWidth * BytesPerPixel;
         }
-        */
-
-        // UE_LOG(LogCarla, Warning, TEXT("SendPixelsInStream %d %d %d"), ImageWidth, ImageHeight, ImageWidth * ImageHeight * sizeof(FColor));
-        Buffer.copy_from(
-          Offset + SensorIndex * ImageWidth * ImageHeight * sizeof(FColor),
-          (unsigned char*)Source ,
-          ImageWidth * ImageHeight * sizeof(FColor));
       }
 
       {
@@ -341,32 +307,17 @@ protected:
 
 protected:
 
-  FDelegateHandle CaptureDelegate;
+  virtual void BeginPlay() override;
 
-  static TArray<ASceneCaptureSensor*> CaptureSensors;
-  static int32 NumCaptureSensors;
-  static const int32 MaxNumTextures = 2; // This has to be POT
+  virtual void Tick(float DeltaTime) override;
 
-  static TArray<FColor> Pixels[MaxNumTextures];
-  static int32 CurrentTexture;
-  static int32 PreviousTexture;
-  static bool AtlasCreated;
-  static bool AtlasInitialized;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-  /// Image width in pixels.
-  UPROPERTY(EditAnywhere)
-  uint32 ImageWidth = 800u;
+  virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
-  /// Image height in pixels.
-  UPROPERTY(EditAnywhere)
-  uint32 ImageHeight = 600u;
+  void CopyTextureToAtlas();
 
-  /// Whether to render the post-processing effects present in the scene.
-  UPROPERTY(EditAnywhere)
-  bool bEnablePostProcessingEffects = true;
-
-  UPROPERTY(EditAnywhere)
-  float TargetGamma = 2.2f;
+  FDelegateHandle CopyTextureDelegate;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
@@ -376,6 +327,23 @@ protected:
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
 
-  int32_t SensorIndex = 0;
+  FIntVector PositionInAtlas;
+
+  UPROPERTY(EditAnywhere)
+  float TargetGamma = 2.2f;
+
+  /// Image width in pixels.
+  UPROPERTY(EditAnywhere)
+  uint32 ImageWidth = 800u;
+
+  /// Image height in pixels.
+  UPROPERTY(EditAnywhere)
+  uint32 ImageHeight = 600u;
+
+  uint32 Offset = 0u;
+
+  /// Whether to render the post-processing effects present in the scene.
+  UPROPERTY(EditAnywhere)
+  bool bEnablePostProcessingEffects = true;
 
 };
