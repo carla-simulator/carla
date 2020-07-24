@@ -88,6 +88,29 @@ namespace parser {
                 node_object.attribute("hdg").as_double(),
                 node_object.attribute("pitch").as_double(),
                 node_object.attribute("roll").as_double());
+          } else if (name.find("Stencil_STOP") != std::string::npos) {
+            road::RoadId road_id = node_road.attribute("id").as_uint();
+            road::Road *road = map_builder.GetRoad(road_id);
+            carla::log_warning(node_object.attribute("id").as_string());
+            map_builder.AddSignal(road,
+                node_object.attribute("id").as_string(),
+                node_object.attribute("s").as_double(),
+                node_object.attribute("t").as_double(),
+                node_object.attribute("name").as_string(),
+                "no",
+                node_object.attribute("orientation").as_string(),
+                node_object.attribute("zOffset").as_double(),
+                "OpenDRIVE",
+                "206",
+                "",
+                0,
+                "mph",
+                node_object.attribute("height").as_double(),
+                node_object.attribute("width").as_double(),
+                "",
+                node_object.attribute("hdg").as_double(),
+                node_object.attribute("pitch").as_double(),
+                node_object.attribute("roll").as_double());
           }
         }
       }
