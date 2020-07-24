@@ -964,6 +964,11 @@ void MapBuilder::CreateController(
       auto signal_position = signal->GetTransform().location;
       auto closest_waypoint_to_signal =
           map.GetClosestWaypointOnRoad(signal_position);
+      // workarround to not move speed signals
+      if (signal->GetName().substr(0, 6) == "Speed_" ||
+          signal->GetName().substr(0, 6) == "speed_") {
+        continue;
+      }
       if(closest_waypoint_to_signal) {
         auto distance_to_road =
             (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
