@@ -405,6 +405,20 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
+    // Lens Flare
+    FActorVariation LensFlareIntensity;
+    LensFlareIntensity.Id = TEXT("lens_flare_intensity");
+    LensFlareIntensity.Type = EActorAttributeType::Float;
+    LensFlareIntensity.RecommendedValues = { TEXT("0.1") };
+    LensFlareIntensity.bRestrictToRecommended = false;
+
+    // Bloom
+    FActorVariation BloomIntensity;
+    BloomIntensity.Id = TEXT("bloom_intensity");
+    BloomIntensity.Type = EActorAttributeType::Float;
+    BloomIntensity.RecommendedValues = { TEXT("0.675") };
+    BloomIntensity.bRestrictToRecommended = false;
+
     // More info at:
     // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
     // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
@@ -605,6 +619,8 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       Gamma,
       MBIntesity,
       MBMaxDistortion,
+      LensFlareIntensity,
+      BloomIntensity,
       MBMinObjectScreenSize,
       ExposureMinBright,
       ExposureMaxBright,
@@ -1361,6 +1377,10 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("motion_blur_max_distortion", Description.Variations, 5.0f));
     Camera->SetMotionBlurMinObjectScreenSize(
         RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.5f));
+    Camera->SetLensFlareIntensity(
+        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.1f));
+    Camera->SetBloomIntensity(
+        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675f));
     // Exposure
     if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "manual") == "histogram")
     {
