@@ -27,5 +27,7 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 void ASceneCaptureCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  SendPixelsInStream(*this);
+
+  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
+  SendPixelsInStream(*this, GameMode->GetCurrentAtlasPixels(), GameMode->GetAtlasTextureWidth());
 }
