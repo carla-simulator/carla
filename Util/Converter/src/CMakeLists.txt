@@ -79,5 +79,8 @@ set(converter_sources "${converter_sources};${utils_traction_wire_sources}")
 
 add_library(converter STATIC ${converter_sources})
 target_link_libraries(converter ${XercesC_LIBRARIES} ${ZLIB_LIBRARIES} ${PROJ_LIBRARY})
+if (WIN32)
+    target_compile_definitions(converter PUBLIC "XERCES_STATIC_LIBRARY")
+endif ()
 install(TARGETS converter ARCHIVE DESTINATION lib)
 install(FILES Converter.h DESTINATION include)
