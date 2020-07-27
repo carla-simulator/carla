@@ -155,6 +155,28 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
     }
   }
 
+static ECityObjectLabel GetComponentTag(const FHitResult& HitInfo) {
+  auto StaticMeshComponent = Cast<UStaticMeshComponent>(HitInfo.Component.Get());
+
+  if (StaticMeshComponent) {
+    return ATagger::GetLabelByPath(StaticMeshComponent->GetStaticMesh());
+  }else {
+    auto SkeletalMeshComponent = Cast<USkeletalMeshComponent>(HitInfo.Component.Get());
+    if (SkeletalMeshComponent) {
+      //UE_LOG(LogCarla, Warning, TEXT("Skeletal mesh: %s"), *SkeletalMeshComponent->GetName());
+
+      return ATagger::GetLabelByPath(SkeletalMeshComponent->GetPhysicsAsset());
+    }
+    else {
+      //UE_LOG(LogCarla, Warning, TEXT("None mesh: %s"), *HitInfo.Component.Get()->GetName());
+      return ECityObjectLabel::None;
+    }
+  }
+
+
+}
+
+
 void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
@@ -168,7 +190,6 @@ void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTra
     AActor* actor = HitInfo.Actor.Get();
     Detection.object_idx = 0;
     Detection.object_tag = static_cast<uint32_t>(ECityObjectLabel::None);
-
     if (actor != nullptr) {
 
       FActorView view = Registry.Find(actor);
@@ -177,22 +198,14 @@ void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTra
         const FActorInfo* ActorInfo = view.GetActorInfo();
         Detection.object_idx = ActorInfo->Description.UId;
 
-        if(ActorInfo != nullptr) {
-          TSet<ECityObjectLabel> labels = ActorInfo->SemanticTags;
-          if(labels.Num() == 1)
-              Detection.object_tag = static_cast<uint32_t>(*labels.CreateConstIterator());
-        }
-        else {
-          //UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
-        }
+        Detection.object_tag = static_cast<uint32_t>(GetComponentTag(HitInfo));
       }
       else {
-        //UE_LOG(LogCarla, Warning, TEXT("View is not valid %p!!!!"), view.GetActor());
-
+        Detection.object_tag = static_cast<uint32_t>(GetComponentTag(HitInfo));
       }
     }
     else {
-      //UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
+      UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
     }
 }
 
