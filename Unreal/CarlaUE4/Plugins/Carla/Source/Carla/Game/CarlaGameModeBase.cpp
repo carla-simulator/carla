@@ -16,6 +16,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Async/ParallelFor.h"
+#include "DynamicRHI.h"
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -205,7 +206,8 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
     Recorder->Tick(DeltaSeconds);
   }
 
-  if(!IsAtlasTextureValid) {
+  if(!IsAtlasTextureValid)
+  {
     CreateAtlasTextures();
   }
 }
@@ -254,7 +256,9 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-  } else {
+  }
+  else
+  {
     Episode->MapGeoReference = Map->GetGeoReference();
   }
 }
@@ -378,16 +382,21 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
 
 void ACarlaGameModeBase::CreateAtlasTextures()
 {
-  UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::CreateAtlasTextures %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
-
-  FRHIResourceCreateInfo CreateInfo;
-  for(int i = 0; i < kMaxNumTextures; i++)
+  if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
   {
-    CamerasAtlasTexture[i] = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
-    AtlasPixels[i].Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
+    UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::CreateAtlasTextures %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+
+    FRHIResourceCreateInfo CreateInfo;
+    for(int i = 0; i < kMaxNumTextures; i++)
+    {
+      CamerasAtlasTexture[i] = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
+      AtlasPixels[i].Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
+    }
+    IsAtlasTextureValid = true;
   }
-  IsAtlasTextureValid = true;
 }
+
+extern FDynamicRHI* GDynamicRHI;
 
 void ACarlaGameModeBase::CaptureAtlas()
 {
@@ -422,11 +431,18 @@ void ACarlaGameModeBase::CaptureAtlas()
         }
 #endif
 
+      // GDynamicRHI->RHIReadSurfaceData(AtlasTexture, Rect, CurrentAtlasPixels, FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+      // FRHICommandBeginRenderPass RHICommandBeginRenderPass;
+      // FRHICommandBeginParallelRenderPass RHICommandBeginParallelRenderPass;
+
+
       RHICmdList.ReadSurfaceData(
         AtlasTexture,
         Rect,
         CurrentAtlasPixels,
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
 
         // PreviousTexture = CurrentTexture;
         // CurrentTexture = (CurrentTexture + 1) & ~MaxNumTextures;
