@@ -96,6 +96,8 @@ namespace data {
 
     LidarRawData &operator=(LidarRawData &&) = default;
 
+    virtual ~LidarRawData() {}
+
     float GetHorizontalAngle() const {
       return reinterpret_cast<const float &>(_header[Index::HorizontalAngle]);
     }
@@ -108,42 +110,21 @@ namespace data {
       return _header[Index::ChannelCount];
     }
 
-
-    /// TO BE REMOVED, only kept to avoid breaking LidarData class
-    std::vector<std::vector<LidarRawDetection>> _aux_points;
-
-    void Reset(uint32_t channel_point_count) {
-      std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
-      _max_channel_points = channel_point_count;
-
-      _aux_points.resize(GetChannelCount());
-      for (auto& aux : _aux_points) {
-        aux.clear();
-        aux.reserve(channel_point_count);
-      }
-    }
-
-    void WritePointAsync(uint32_t channel, LidarRawDetection &detection) {
-      DEBUG_ASSERT(GetChannelCount() > channel);
-      _aux_points[channel].emplace_back(detection);
-    }
-
-
-
-    void ResetSerPoints(std::vector<uint32_t> points_per_channel) {
+    virtual void ResetSerPoints(std::vector<uint32_t> points_per_channel) {
       DEBUG_ASSERT(GetChannelCount() > points_per_channel.size());
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
 
       for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
         _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
 
-      uint32_t total_points = std::accumulate(points_per_channel.begin(), points_per_channel.end(), 0);
+      uint32_t total_points = static_cast<uint32_t>(
+          std::accumulate(points_per_channel.begin(), points_per_channel.end(), 0));
 
       _ser_points.clear();
       _ser_points.reserve(total_points);
     }
 
-    void WritePointSync(LidarRawDetection &detection) {
+    virtual void WritePointSync(LidarRawDetection &detection) {
       _ser_points.emplace_back(detection);
     }
 

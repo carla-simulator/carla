@@ -29,8 +29,6 @@ ARayCastRawLidar::ARayCastRawLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
-
-  RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
 void ARayCastRawLidar::Set(const FActorDescription &ActorDescription)
@@ -44,7 +42,7 @@ void ARayCastRawLidar::Set(const FActorDescription &ActorDescription)
 void ARayCastRawLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
-  LidarData = FLidarData(Description.Channels);
+  LidarRawData = FLidarRawData(Description.Channels);
   CreateLasers();
 }
 
@@ -71,7 +69,7 @@ void ARayCastRawLidar::Tick(const float DeltaTime)
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
+  DataStream.Send(*this, LidarRawData, DataStream.PopBufferFromPool());
 }
 
 void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
@@ -94,11 +92,9 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
   check(ChannelCount == LaserAngles.Num());
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
-      LidarData.GetHorizontalAngle());
+      LidarRawData.GetHorizontalAngle());
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
-
-  LidarData.Reset(PointsToScanWithOneLaser);
 
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
 
@@ -127,7 +123,7 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
-  LidarData.SetHorizontalAngle(HorizontalAngle);
+  LidarRawData.SetHorizontalAngle(HorizontalAngle);
 }
 
   void ARayCastRawLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
@@ -146,21 +142,23 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
   void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     std::vector<u_int32_t> PointsPerChannel(Description.Channels);
 
+    UE_LOG(LogCarla, Warning, TEXT("ARayCastRawLidar::ComputeAndSaveDetections()!!!! "));
+
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    LidarData.ResetSerPoints(PointsPerChannel);
+    LidarRawData.ResetSerPoints(PointsPerChannel);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
-        FDetection detection;
+        FRawDetection detection;
         ComputeRawDetection(hit, SensorTransform, detection);
 
-        LidarData.WritePointSync(detection);
+        LidarRawData.WritePointSync(detection);
       }
     }
   }
 
-void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FDetection& Detection) const
+void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
     Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
@@ -188,16 +186,16 @@ void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTra
               Detection.object_tag = static_cast<uint32_t>(*labels.CreateConstIterator());
         }
         else {
-          UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
+          //UE_LOG(LogCarla, Warning, TEXT("Info not valid!!!!"));
         }
       }
       else {
-        UE_LOG(LogCarla, Warning, TEXT("View is not valid %p!!!!"), view.GetActor());
+        //UE_LOG(LogCarla, Warning, TEXT("View is not valid %p!!!!"), view.GetActor());
 
       }
     }
     else {
-      UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
+      //UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
     }
 }
 
