@@ -828,6 +828,11 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 </thead>
 <tbody>
 <td>
+<code>bloom_intensity</code> </td>
+<td>float</td>
+<td>0.675</td>
+<td>Intensity for the bloom post-process effect, <code>0.0</code> for disabling it.</td>
+<tr>
 <code>fov</code> </td>
 <td>float</td>
 <td>90.0</td>
@@ -835,7 +840,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>fstop</code></td>
 <td>float</td>
-<td>1.4</td>
+<td>8.0</td>
 <td>Opening of the camera lens. Aperture is <code>1/fstop</code> with typical lens going down to f/1.2 (larger opening). Larger numbers will reduce the Depth of Field effect.</td>
 <tr>
 <td><code>image_size_x</code></td>
@@ -850,13 +855,18 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>iso</code></td>
 <td>float</td>
-<td>1200.0</td>
+<td>200.0</td>
 <td>The camera sensor sensitivity.</td>
 <tr>
 <td><code>gamma</code></td>
 <td>float</td>
 <td>2.2</td>
 <td>Target gamma value of the camera.</td>
+<tr>
+<td><code>lens_flare_intensity</code></td>
+<td>float</td>
+<td>0.1</td>
+<td>Intensity for the lens flare post-process effect, <code>0.0</code> for disabling it.</td>
 <tr>
 <td><code>sensor_tick</code></td>
 <td>float</td>
@@ -865,7 +875,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>shutter_speed</code></td>
 <td>float</td>
-<td>60.0</td>
+<td>200.0</td>
 <td>The camera shutter speed in seconds (1.0/s).</td>
 </tbody>
 </table>
@@ -951,7 +961,7 @@ Since these effects are provided by UE, please make sure to check their document
 <tr>
 <td><code>exposure_compensation</code> </td>
 <td>float</td>
-<td>3.0</td>
+<td>0.0</td>
 <td>Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.</td>
 <tr>
 <td><code>exposure_min_bright</code> </td>
