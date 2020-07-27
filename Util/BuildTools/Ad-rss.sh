@@ -31,7 +31,7 @@ else
     git clone --depth=1 -b v1.x https://github.com/gabime/spdlog.git
     git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
     git clone --depth=1 -b v2.1.0 https://github.com/carla-simulator/map.git
-    git clone --depth=1 -b v4.0.0 https://github.com/intel/ad-rss-lib.git
+    git clone --depth=1 -b v4.0.1 https://github.com/intel/ad-rss-lib.git
     popd
 
     cat >"${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/colcon.meta" <<EOL

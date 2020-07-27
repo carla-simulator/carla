@@ -296,6 +296,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
                             ::ad::rss::situation::SituationSnapshot &output_situation_snapshot,
                             ::ad::rss::world::WorldModel &output_world_model,
                             EgoDynamicsOnRoute &output_rss_ego_dynamics_on_route) {
+  bool result = false;
   try {
     double const time_since_epoch_check_start_ms =
         std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -367,7 +368,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
               << " after create world model " << std::endl;
 #endif
 
-    PerformCheck(_carla_rss_state);
+    result = PerformCheck(_carla_rss_state);
 
 #if DEBUG_TIMING
     t_end = std::chrono::high_resolution_clock::now();
@@ -403,12 +404,10 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
     std::cout << "-> EC " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << " end check objects"
               << std::endl;
 #endif
-
-    return true;
   } catch (...) {
     _logger->error("Exception -> Check failed");
-    return false;
   }
+  return result;
 }
 
 ::ad::map::match::Object RssCheck::GetMatchObject(carla::SharedPtr<carla::client::Actor> const &actor,
@@ -467,7 +466,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 
 ::ad::physics::Angle RssCheck::GetSteeringAngle(carla::client::Vehicle const &actor) const {
   auto const steer_ratio = actor.GetControl().steer;
-  ::ad::physics::Angle steering_angle(_maximum_steering_angle * steer_ratio);
+  ::ad::physics::Angle steering_angle(-1 * _maximum_steering_angle * steer_ratio);
   return steering_angle;
 }
 
@@ -924,21 +923,18 @@ void RssCheck::CreateWorldModel(carla::client::Timestamp const &timestamp, carla
   carla_rss_state.world_model = scene_creation.getWorldModel();
 }
 
-void RssCheck::PerformCheck(CarlaRssState &carla_rss_state) const {
+bool RssCheck::PerformCheck(CarlaRssState &carla_rss_state) const {
   bool result = carla_rss_state.rss_check.calculateProperResponse(
       carla_rss_state.world_model, carla_rss_state.situation_snapshot, carla_rss_state.rss_state_snapshot,
       carla_rss_state.proper_response);
 
   if (!result) {
     _logger->warn("calculateProperResponse failed!");
-    carla_rss_state.proper_response.lateralResponseRight = ::ad::rss::state::LateralResponse::None;
-    carla_rss_state.proper_response.lateralResponseLeft = ::ad::rss::state::LateralResponse::None;
-    carla_rss_state.proper_response.longitudinalResponse = ::ad::rss::state::LongitudinalResponse::None;
   }
-
-  if (!carla_rss_state.proper_response.isSafe) {
+  else if (!carla_rss_state.proper_response.isSafe) {
     _logger->info("Unsafe route: {}", carla_rss_state.proper_response);
   }
+  return result;
 }
 
 void RssCheck::AnalyseCheckResults(CarlaRssState &carla_rss_state) const {

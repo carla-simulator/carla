@@ -222,8 +222,14 @@
     # --------------------------------------
     - def_name: tick
       return: int
+      params:
+      - param_name: seconds
+        type: float
+        default: 10.0
+        doc: > 
+          Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.   
       doc: >
-        This only has effect on synchronous mode, when both client and server move together. The method tells the server when to step to the next frame and returns the id of the newly started frame. 
+        This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame. 
     # --------------------------------------
     - def_name: wait_for_tick
       return: carla.WorldSnapshot
@@ -234,7 +240,7 @@
         doc: > 
           Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.   
       doc: >
-        The client tells the server to block calling thread until a **<font color="#7fb800">world_tick()</font>** is received.
+        The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.
     # --------------------------------------
     - def_name: spawn_actor
       return: carla.Actor

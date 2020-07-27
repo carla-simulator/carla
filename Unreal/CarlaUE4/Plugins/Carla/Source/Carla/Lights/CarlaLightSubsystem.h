@@ -56,6 +56,11 @@ public:
       bool DiscardClient = false);
 
   UCarlaLight* GetLight(int Id);
+
+  TMap<int, UCarlaLight* >& GetLights()
+  {
+    return Lights;
+  }
 private:
 
   void SetClientStatesdirty(FString ClientThatUpdate);

@@ -166,6 +166,7 @@ void UYieldSignComponent::GenerateYieldBox(const FTransform BoxTransform,
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
   BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapBeginYieldEffectBox);
   BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UYieldSignComponent::OnOverlapEndYieldEffectBox);
+  AddEffectTriggerVolume(BoxComponent);
 }
 
 void UYieldSignComponent::GenerateCheckBox(const FTransform BoxTransform,
