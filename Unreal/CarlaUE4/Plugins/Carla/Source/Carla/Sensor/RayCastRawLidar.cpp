@@ -9,7 +9,6 @@
 #include "Carla.h"
 #include "Carla/Sensor/RayCastRawLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "carla/geom/Math.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -141,8 +140,6 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
 
   void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     std::vector<u_int32_t> PointsPerChannel(Description.Channels);
-
-    UE_LOG(LogCarla, Warning, TEXT("ARayCastRawLidar::ComputeAndSaveDetections()!!!! "));
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
