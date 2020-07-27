@@ -16,7 +16,6 @@
 	*   [Multisimulation](#multisimulation)  
 *   [__Other considerations__](#other-considerations)  
 	*   [FPS limitations](#fps-limitations)  
-	*   [Synchronous mode](#synchronous-mode)  
 *   [__Summary__](#summary)  
 
 ---
@@ -296,14 +295,13 @@ The TM stops working properly in asynchronous mode when the simulation is under 
 ### Synchronous mode
 
 TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
-If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
+If there is more than one TM-Server, all of these will have to tick, or the simulation will not move forward. In synchronous mode, the CARLA server keeps a list of all the clients registered to it. All the clients listed have to tick, before the server is allowed to compute the following step. This is especially relevant when working with the __ScenarioRunner__, which runs a TM.  
 
 !!! Warning
-    Disable the synchronous mode in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
+    Disable the synchronous mode in the scripts ticking before they finish. Otherwise, the server will be blocked, waiting forever for a tick.  
 
 ---
 ## Summary
-
 
 The Traffic Manager is one of the most complex features in CARLA and so, one that is prone to all kind of unexpected and really specific issues. The CARLA forum is open to everybody to post any doubts or suggestions, and it is the best way to keep track of issues and help the CARLA community to become greater. Feel free to login and join the community. 
 

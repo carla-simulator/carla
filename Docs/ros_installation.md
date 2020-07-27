@@ -2,8 +2,8 @@
 
 *  [__Requirements__](#requirements)  
 *  [__Bridge installation__](#bridge-installation)  
-	* a) using apt repository  
-	* b) using source repository  
+	*   [a- using apt repository](#a-using-apt-repository)  
+	*   [b- using source repository](#b-using-source-repository)  
 *  [__Run the ROS bridge__](#run-the-ros-bridge)  
 *  [__Setting CARLA__](#setting-carla)  
  
@@ -14,10 +14,10 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ### ROS Kinetic/Melodic
 
 *  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
-*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
+*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform.  
 
 !!! Important
-    Make sure that both CARLA and ROS work properly before continuing with the installation. 
+    Make sure that both CARLA and ROS work properly before continuing with the installation.  
 
 ---
 ## Bridge installation 
@@ -138,7 +138,7 @@ To modify the way CARLA works along with the ROS bridge, edit [`share/carla_ros_
 *  __Role names for the Ego vehicles.__ Role names to identify ego vehicles. These will be controllable from ROS and thus, relevant topics will be created.  
 
 !!! Warning
-    In synchronous mode only the ros-bridge is allowed to tick. Other clients must passively wait.
+    In synchronous mode, all the clients have to tick, including the ros-bridge.
 
 ### Synchronous mode
 

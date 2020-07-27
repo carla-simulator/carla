@@ -2,15 +2,15 @@
 
 This section deals with two fundamental concepts in CARLA. Their configuration defines how does time go by in the simulation, and how does the server make the simulation move forward.  
 
-* [__Simulation time-step__](#simulation-time-step)  
-	* Variable time-step  
-	* Fixed time-step  
-	* Tips when recording the simulation  
-	* Time-step limitations  
-* [__Client-server synchrony__](#client-server-synchrony)  
-	* Setting synchronous mode  
-	* Using synchronous mode  
-* [__Possible configurations__](#possible-configurations)  
+*   [__Simulation time-step__](#simulation-time-step)  
+	*   [Variable time-step](#variable-time-step)  
+	*   [Fixed time-step](#fixed-time-step)  
+	*   [Tips when recording the simulation](#tips-when-recording-the-simulation)  
+	*   [Time-step limitations](#time-step-limitations)  
+*   [__Client-server synchrony__](#client-server-synchrony)  
+	*   [Setting synchronous mode](#setting-synchronous-mode)  
+	*   [Using synchronous mode](#using-synchronous-mode)  
+*   [__Possible configurations__](#possible-configurations)  
 
 ---
 ## Simulation time-step
@@ -85,10 +85,10 @@ To know how many of these are needed, the time-step used gets divided by the max
 
 CARLA is built over a client-server architecture. The server runs the simulation. The client retrieves information, and demands for changes in the world. This section deals with communication between client and server.  
 
-By default, CARLA runs in __asynchronous mode__. The server runs the simulation as fast as possible, without waiting for the client. On __synchronous mode__, the server waits for a client tick, a "ready to go" message, before updating to the following simulation step.  
+By default, CARLA runs in __asynchronous mode__. The server runs the simulation as fast as possible, without waiting for the client. On __synchronous mode__, the server keeps a list of the clients registered to it, and waits for them to send a tick, a "ready to go" message, before updating to the following simulation step.  
 
 !!! Note
-    In a multiclient architecture, only one client should tick. The server reacts to every tick received as if it came from the same client. Many client ticks will make the create inconsistencies between server and clients. 
+    In a multiclient architecture, __all__ the clients have to tick. If a client does not tick, the server will stay on hold and freeze.  
 
 ### Setting synchronous mode
 
@@ -103,11 +103,11 @@ To disable synchronous mode just set the variable to false or use the script `Py
 ```sh
 cd PythonAPI/util && ./config.py --no-sync # Disables synchronous mode
 ``` 
-Synchronous mode cannot be enabled using the script, only disabled. Enabling the synchronous mode makes the server wait for a client tick. Using this script, the user cannot send ticks when desired. 
+Synchronous mode cannot be enabled using the script, only disabled. Enabling the synchronous mode makes the server wait for a tick from all the clients registered to it. Using this script, the user cannot send ticks when desired. 
 
 ### Using synchronous mode
 
-The synchronous mode becomes specially relevant with slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait, there will be an overflow of information. The client will not be able to manage everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
+The synchronous mode becomes specially relevant with slow client applications, and when synchrony between different elements, such as sensors, is needed. If the client is too slow and the server does not wait (asynchronous), there will be an overflow of information. The client will not be able to manage everything, and it will be lost or mixed. On a similar tune, with many sensors and asynchrony, it would be impossible to know if all the sensors are using data from the same moment in the simulation.  
 
 The following fragment of code extends the previous one. The client creates a camera sensor, stores the image data of the current step in a queue, and ticks the server after retrieving it from the queue. A more complex example regarding several sensors can be found [here][syncmodelink].
 
@@ -154,7 +154,7 @@ The configuration of time-step and synchrony, leads for different settings. Here
 </thead>
 <tbody>
 <td><b>Synchronous mode</b></td>
-<td>Client is in total control over the simulation and its information.</td>
+<td>Clients are in total control over the simulation and its information.</td>
 <td>Risk of non reliable simulations.</td>
 <tr>
 <td><b>Asynchronous mode</b></td>
@@ -164,13 +164,13 @@ The configuration of time-step and synchrony, leads for different settings. Here
 </table>
 <br>
 
-* __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and. If the server has to wait for the client to compute the steps, this is likely to happen. Simulation time and physics will not be in synchrony. The simulation will not be reliable.  
+* __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and. If the server has to wait for the clients to compute the steps, this is likely to happen. Simulation time and physics will not be in synchrony. The simulation will not be reliable.  
 
-* __Asynchronous mode + variable time-step.__ This is the default CARLA state. Client and server are asynchronous. The simulation time flows according to the real time. Reenacting the simulation needs to take into account float-arithmetic error, and possible differences in time steps between servers.  
+* __Asynchronous mode + variable time-step.__ This is the default CARLA state. Clients and server are asynchronous. The simulation time flows according to the real time. Reenacting the simulation needs to take into account float-arithmetic error, and possible differences in time steps between servers.  
 
 * __Asynchronous mode + fixed time-step.__ The server will run as fast as possible. The information retrieved will be easily related with an exact moment in the simulation. This configuration makes possible to simulate long periods of time in much less real time, if the server is fast enough. 
 
-* __Synchronous mode + fixed time-step.__ The client will rule the simulation. The time step will be fixed. The server will not compute the following step until the client sends a tick. This is the best mode when synchrony and precision is relevant. Especially when dealing with slow clients or different elements retrieving information. 
+* __Synchronous mode + fixed time-step.__ The clients will rule the simulation. The time step will be fixed. The server will not compute the following step until all the clients send a tick. This is the best mode when synchrony and precision is relevant. Especially when dealing with slow clients or different elements retrieving information. 
 
 !!! Warning 
     __In synchronous mode, always use a fixed time-step__. If the server has to wait for the user, and it is using a variable time-step, time-steps will be too big. Physics will not be reliable. This issue is better explained in the __time-step limitations__ section. 
