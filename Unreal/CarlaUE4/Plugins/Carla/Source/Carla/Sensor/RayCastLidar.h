@@ -6,10 +6,12 @@
 
 #pragma once
 
-#include "Carla/Sensor/Sensor.h"
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
+#include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/RayCastRawLidar.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/data/LidarData.h>
@@ -19,46 +21,29 @@
 
 /// A ray-cast based Lidar sensor.
 UCLASS()
-class CARLA_API ARayCastLidar : public ASensor
+class CARLA_API ARayCastLidar : public ARayCastRawLidar
 {
   GENERATED_BODY()
 
   using FLidarData = carla::sensor::data::LidarData;
-  using FLidarRawDetection = carla::sensor::data::LidarRawDetection;
-  using FLidarDetection = carla::sensor::data::LidarDetection;
+  using FDetection = carla::sensor::data::LidarDetection;
 
 public:
-
   static FActorDefinition GetSensorDefinition();
 
   ARayCastLidar(const FObjectInitializer &ObjectInitializer);
-
-  void Set(const FActorDescription &Description) override;
-
-  void Set(const FLidarDescription &LidarDescription);
-
-protected:
-
-  virtual void Tick(float DeltaTime) override;
+  virtual void Set(const FActorDescription &Description) override;
+  virtual void Set(const FLidarDescription &LidarDescription) override;
 
 private:
-
-  /// Creates a Laser for each channel.
-  void CreateLasers();
-
-  /// Updates LidarMeasurement with the points read in DeltaTime.
-  void ReadPoints(float DeltaTime);
-
-  /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point, float& Intensity) const;
-
   /// Compute the received intensity of the point
-  float ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const;
+  float ComputeIntensity(const FRawDetection& RawDetection) const;
 
-  UPROPERTY(EditAnywhere)
-  FLidarDescription Description;
+  bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const override;
 
-  TArray<float> LaserAngles;
+  void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
+
+  virtual void Tick(float DeltaTime) override;
 
   FLidarData LidarData;
 
