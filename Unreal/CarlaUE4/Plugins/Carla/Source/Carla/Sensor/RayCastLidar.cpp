@@ -30,7 +30,6 @@ FActorDefinition ARayCastLidar::GetSensorDefinition()
 ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer) {
 
-  UE_LOG(LogCarla, Warning, TEXT("ARayCastLidar()!!!! "));
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
 }
 
