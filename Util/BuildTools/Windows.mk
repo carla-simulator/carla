@@ -55,7 +55,7 @@ benchmark: LibCarla
 	@echo "Not implemented!"
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla
+PythonAPI: LibCarla converter
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --py3
 
 server: setup
@@ -77,3 +77,6 @@ plugins:
 
 deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
+
+converter:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildConverter.bat $(ARGS)
