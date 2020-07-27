@@ -60,7 +60,7 @@ namespace data {
         out << "property float32 x\n" \
           "property float32 y\n" \
           "property float32 z\n" \
-          "property float32 I\n";
+          "property float32 I";
       }
 
       void WriteDetection(std::ostream& out) const{
