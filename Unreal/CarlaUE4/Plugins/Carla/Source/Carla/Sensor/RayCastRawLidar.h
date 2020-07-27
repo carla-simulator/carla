@@ -10,6 +10,7 @@
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/data/LidarRawData.h>
@@ -23,25 +24,22 @@ class CARLA_API ARayCastRawLidar : public ASensor
 {
   GENERATED_BODY()
 
-  using FLidarData = carla::sensor::data::LidarRawData;
-  using FLidarRawData = carla::sensor::data::LidarRawData;
+protected:
 
-  using FDetection = carla::sensor::data::LidarRawDetection;
+  using FLidarRawData = carla::sensor::data::LidarRawData;
+  using FRawDetection = carla::sensor::data::LidarRawDetection;
 
 public:
-
   static FActorDefinition GetSensorDefinition();
 
   ARayCastRawLidar(const FObjectInitializer &ObjectInitializer);
 
-  void Set(const FActorDescription &Description) override;
-
-  void Set(const FLidarDescription &LidarDescription);
+  virtual void Set(const FActorDescription &Description) override;
+  virtual void Set(const FLidarDescription &LidarDescription);
 
 protected:
   virtual void Tick(float DeltaTime) override;
 
-private:
   /// Creates a Laser for each channel.
   void CreateLasers();
 
@@ -52,14 +50,14 @@ private:
   bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &RawData) const;
 
   /// Method that allow to preprocess the ray before shoot it
-  bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
+  virtual bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
     // This method allows to introduce noise or drop points if needed
     // A true return value will make the proposed ray to be actually computed.
     return true;
   }
 
   /// Compute all raw detection information
-  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FDetection &Detection) const;
+  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FRawDetection &Detection) const;
 
   /// Saving the hits the raycast returns per channel
   void WritePointAsync(uint32_t Channel, FHitResult &Detection);
@@ -68,16 +66,16 @@ private:
   void ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
   /// Clear the recorded data structure
-  void ComputeAndSaveDetections(const FTransform &SensorTransform);
-
-
+  virtual void ComputeAndSaveDetections(const FTransform &SensorTransform);
 
   UPROPERTY(EditAnywhere)
   FLidarDescription Description;
 
   TArray<float> LaserAngles;
 
-  FLidarData LidarData;
   std::vector<std::vector<FHitResult>> RecordedHits;
+
+private:
+  FLidarRawData LidarRawData;
 
 };

@@ -77,20 +77,32 @@ namespace data {
 
     LidarData &operator=(LidarData &&) = default;
 
-    void SaveDetections() {
-      const uint32_t SizeLidarDetection = 4;
-      _points.clear();
-      _points.reserve(SizeLidarDetection * GetChannelCount() * _max_channel_points);
+    ~LidarData() = default;
 
-      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel) {
-        _header[Index::SIZE + idxChannel] = static_cast<uint32_t>(_aux_points.size());
-        for (auto& pt : _aux_points[idxChannel]) {
-          _points.emplace_back(pt.point.x);
-          _points.emplace_back(pt.point.y);
-          _points.emplace_back(pt.point.z);
-          _points.emplace_back(-1.0f); // FIXME Compute good Intensity here
-        }
-      }
+    virtual void ResetSerPoints(std::vector<uint32_t> points_per_channel) {
+      DEBUG_ASSERT(GetChannelCount() > points_per_channel.size());
+      std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
+
+      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
+        _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
+
+      uint32_t total_points = static_cast<uint32_t>(
+          std::accumulate(points_per_channel.begin(), points_per_channel.end(), 0));
+
+      _points.clear();
+      _points.reserve(total_points * 4);
+    }
+
+    void WritePointSync(LidarDetection &detection) {
+      _points.emplace_back(detection.point.x);
+      _points.emplace_back(detection.point.y);
+      _points.emplace_back(detection.point.z);
+      _points.emplace_back(detection.intensity);
+    }
+
+    virtual void WritePointSync(LidarRawDetection &detection) {
+      (void) detection;
+      DEBUG_ASSERT(false);
     }
 
   private:
