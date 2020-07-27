@@ -24,6 +24,7 @@
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/Signal.h"
+#include "carla/road/SignalType.h"
 
 #include <iterator>
 #include <memory>
@@ -766,7 +767,13 @@ namespace road {
 
     for(auto& signal_pair : _temp_signal_container) {
       auto& signal = signal_pair.second;
-      signal->_transform = ComputeSignalTransform(signal, _map_data);
+      auto transform = ComputeSignalTransform(signal, _map_data);
+      // Hack: compensate RoadRunner displacement (25cm) due to lightbox size
+      if (SignalType::IsTrafficLight(signal->GetType())) {
+        transform.location = transform.location +
+            geom::Location(transform.GetForwardVector()*0.25);
+      }
+      signal->_transform = transform;
     }
 
     _map_data._signals = std::move(_temp_signal_container);
