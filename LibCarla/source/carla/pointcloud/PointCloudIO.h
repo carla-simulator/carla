@@ -42,7 +42,7 @@ namespace pointcloud {
            "format ascii 1.0\n"
            "element vertex " << std::to_string(static_cast<size_t>(std::distance(begin, end))) << "\n";
       begin->WritePlyHeaderInfo(out);
-      out << "end_header\n";
+      out << "\nend_header\n";
       out << std::fixed << std::setprecision(4u);
     }
   };
