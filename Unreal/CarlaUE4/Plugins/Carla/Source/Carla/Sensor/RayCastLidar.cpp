@@ -76,6 +76,24 @@ float ARayCastLidar::ComputeIntensity(const FRawDetection& RawDetection) const
   return IntRec;
 }
 
+ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const
+{
+  FDetection Detection;
+  const FVector HitPoint = HitInfo.ImpactPoint;
+  Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
+
+  const float Distance =  Detection.point.Length();
+
+  const float AttenAtm = Description.AtmospAttenRate;
+  const float AbsAtm = exp(-AttenAtm * Distance);
+
+  const float IntRec = AbsAtm;
+
+  Detection.intensity = IntRec;
+
+  return Detection;
+}
+
   bool ARayCastLidar::PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
     if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
       return false;
@@ -86,20 +104,14 @@ float ARayCastLidar::ComputeIntensity(const FRawDetection& RawDetection) const
   void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     std::vector<u_int32_t> PointsPerChannel(Description.Channels);
 
-  UE_LOG(LogCarla, Warning, TEXT("ARayCastLidar::ComputeAndSaveDetections()!!!! "));
-
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
     LidarData.ResetSerPoints(PointsPerChannel);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
-        FRawDetection raw_detection;
-        ComputeRawDetection(hit, SensorTransform, raw_detection);
-        float intensity = ComputeIntensity(raw_detection);
-        FDetection detection(raw_detection.point, intensity);
-
-        LidarData.WritePointSync(detection);
+        FDetection Detection = ComputeDetection(hit, SensorTransform);
+        LidarData.WritePointSync(Detection);
       }
     }
   }
