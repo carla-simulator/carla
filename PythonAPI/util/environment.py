@@ -115,7 +115,7 @@ def apply_lights_to_cars(args, world):
     all_vehicles = world.get_actors()
     for ve in all_vehicles:
         if "vehicle." in ve.type_id:
-            ve.set_light_state(light_mask)
+            ve.set_light_state(carla.VehicleLightState(light_mask))
 
 def apply_lights_manager(args, light_manager):
     if args.lights is None:
