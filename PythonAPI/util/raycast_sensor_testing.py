@@ -22,6 +22,8 @@ to 1.5M per second. In this mode we do not render anything but processing
 of the data is done.
 For example for profiling one lidar:
   python raycast_sensor_testing.py -ln 1 --profiling
+For example for profiling one raw lidar:
+  python raycast_sensor_testing.py -rln 1 --profiling
 And for profiling one radar:
   python raycast_sensor_testing.py -rn 1 --profiling
 
@@ -154,7 +156,7 @@ class SensorManager:
             lidar.listen(self.save_lidar_image)
 
             return lidar
-        elif sensor_type == 'LiDAR_Raw':
+        elif sensor_type == 'RawLiDAR':
             lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_raw')
             lidar_bp.set_attribute('range', '100')
 
@@ -163,12 +165,11 @@ class SensorManager:
 
             lidar = self.world.spawn_actor(lidar_bp, transform, attach_to=attached)
 
-            lidar.listen(self.save_lidar_image)
+            lidar.listen(self.save_rawlidar_image)
 
             lidar_bp.set_attribute('dropoff_general_rate', "0.0")
             lidar_bp.set_attribute('dropoff_intensity_limit', "1.0")
             lidar_bp.set_attribute('dropoff_zero_intensity', "1.0")
-
 
             return lidar
         elif sensor_type == "Radar":
@@ -210,6 +211,32 @@ class SensorManager:
 
         points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
         points = np.reshape(points, (int(points.shape[0] / 4), 4))
+        lidar_data = np.array(points[:, :2])
+        lidar_data *= min(disp_size) / lidar_range
+        lidar_data += (0.5 * disp_size[0], 0.5 * disp_size[1])
+        lidar_data = np.fabs(lidar_data)  # pylint: disable=E1111
+        lidar_data = lidar_data.astype(np.int32)
+        lidar_data = np.reshape(lidar_data, (-1, 2))
+        lidar_img_size = (disp_size[0], disp_size[1], 3)
+        lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
+
+        lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
+
+        if self.display_man.render_enabled():
+            self.surface = pygame.surfarray.make_surface(lidar_img)
+
+        t_end = self.timer.time()
+        self.time_processing += (t_end-t_start)
+        self.tics_processing += 1
+
+    def save_rawlidar_image(self, image):
+        t_start = self.timer.time()
+
+        disp_size = self.display_man.get_display_size()
+        lidar_range = 2.0*float(self.sensor_options['range'])
+
+        points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
+        points = np.reshape(points, (int(points.shape[0] / 6), 6))
         lidar_data = np.array(points[:, :2])
         lidar_data *= min(disp_size) / lidar_range
         lidar_data += (0.5 * disp_size[0], 0.5 * disp_size[1])
@@ -271,8 +298,9 @@ def one_run(args, client):
             settings.fixed_delta_seconds = 0.05
             world.apply_settings(settings)
 
-            if args.profiling:
-                settings.no_rendering_mode = True
+        if args.profiling:
+            settings.no_rendering_mode = True
+            world.apply_settings(settings)
 
 
         # Instanciating the vehicle to which we attached the sensors
@@ -288,16 +316,13 @@ def one_run(args, client):
         vehicle.set_autopilot(True)
 
 
-
         # Display Manager organize all the sensors an its display in a window
         display_manager = DisplayManager(grid_size=[2, 2], window_size=[args.width, args.height], show_window=args.render_window)
-
 
 
         # If require, we instanciate the RGB camera
         if args.render_cam:
             SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=1.5, z=2.4)), vehicle, {}, [0, 0])
-
 
 
         # If any, we instanciate the required lidars
@@ -313,6 +338,18 @@ def one_run(args, client):
             SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': lidar_points_per_second}, [1, 1])
 
 
+        # If any, we instanciate the required rawlidars
+        rawlidar_points_per_second = args.rawlidar_points
+
+        if args.rawlidar_number >= 3:
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50', 'points_per_second': rawlidar_points_per_second}, [1, 0])
+
+        if args.rawlidar_number >= 2:
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': rawlidar_points_per_second}, [0, 1])
+
+        if args.rawlidar_number >= 1:
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': rawlidar_points_per_second}, [1, 1])
+
 
         # If any, we instanciate the required radars
         radar_points_per_second = args.radar_points
@@ -325,7 +362,6 @@ def one_run(args, client):
 
         if args.radar_number >= 1:
             SensorManager(world, display_manager, 'Radar', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(pitch=5)), vehicle, {'points_per_second': radar_points_per_second}, [2, 2])
-
 
 
         call_exit = False
@@ -447,6 +483,18 @@ def main():
         choices=range(0, 4),
         help='Number of lidars to render (from zero to three)')
     argparser.add_argument(
+        '-rlp', '--rawlidar_points',
+        metavar='RLP',
+        default='100000',
+        help='lidar points per second (default: "100000")')
+    argparser.add_argument(
+        '-rln', '--rawlidar_number',
+        metavar='RLN',
+        default=0,
+        type=int,
+        choices=range(0, 4),
+        help='Number of raw lidars to render (from zero to three)')
+    argparser.add_argument(
         '-rp', '--radar_points',
         metavar='RP',
         default='100000',
@@ -489,7 +537,7 @@ def main():
 
         if args.profiling:
             print("-------------------------------------------------------")
-            print("# Running profiling with %s lidars and %s radars." % (args.lidar_number, args.radar_number))
+            print("# Running profiling with %s lidars, %s raw lidars and %s radars." % (args.lidar_number, args.lidarinfo_number, args.radar_number))
             args.render_cam = False
             args.render_window = False
             runs_output = []
@@ -499,6 +547,7 @@ def main():
                             '1100000', '1200000', '1300000', '1400000', '1500000']
             for points in points_range:
                 args.lidar_points = points
+                args.rawlidar_points = points
                 args.radar_points = points
                 run_str = one_run(args, client)
                 runs_output.append(run_str)
