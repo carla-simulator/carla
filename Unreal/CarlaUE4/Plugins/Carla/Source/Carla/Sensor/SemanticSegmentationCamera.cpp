@@ -30,6 +30,10 @@ void ASemanticSegmentationCamera::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+#if !UE_BUILD_SHIPPING
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  SendPixelsInStream(*this, GameMode->GetCurrentAtlasPixels(), GameMode->GetAtlasTextureWidth());
+  if(!GameMode->IsCameraStreamEnabled()) return;
+#endif
+
+  SendPixelsInStream(*this);
 }

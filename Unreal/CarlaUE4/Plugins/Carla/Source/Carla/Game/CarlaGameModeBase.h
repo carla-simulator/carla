@@ -26,6 +26,45 @@
 
 #include "CarlaGameModeBase.generated.h"
 
+
+USTRUCT()
+struct FAtlasCopyRequest
+{
+  GENERATED_BODY()
+
+  void ResizeBuffer(uint32 Width, uint32 Height)
+  {
+    if(AtlasTextureWidth != Width || AtlasTextureHeight != Height)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("FAtlasCopyRequest::ResizeBuffer %dx%d"), Width, Height);
+      AtlasTextureWidth = Width;
+      AtlasTextureHeight = Height;
+      AtlasImage.Init(FColor(), Width * Height);
+    }
+  }
+
+  void Start()
+  {
+    RenderFence.BeginFence(true);
+  }
+
+  void Wait()
+  {
+    RenderFence.Wait(false);
+  }
+
+  bool IsComplete()
+  {
+    return RenderFence.IsFenceComplete();
+  }
+
+  TArray<FColor> AtlasImage;
+  FRenderCommandFence RenderFence;
+  uint32 AtlasTextureWidth = 0u;
+  uint32 AtlasTextureHeight = 0u;
+};
+
+
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
@@ -78,9 +117,9 @@ public:
   }
 
   UFUNCTION(Exec)
-  void SwitchReadSurface(uint32 Mode) {
+  void SwitchReadSurfaceMode(uint32 Mode) {
 #if !UE_BUILD_SHIPPING
-    ReadSurface = Mode;
+    ReadSurfaceMode = Mode;
 #endif
   }
 
@@ -91,6 +130,39 @@ public:
     SurfaceH = H;
 #endif
   }
+
+  UFUNCTION(Exec)
+  void EnableCameraCopyToAtlas(bool Enable) {
+#if !UE_BUILD_SHIPPING
+    CameraCopyToAtlasEnable = Enable;
+#endif
+  }
+
+  UFUNCTION(Exec)
+  void EnableAtlasCopyToCamera(bool Enable) {
+#if !UE_BUILD_SHIPPING
+    AtlasCopyToCamera = Enable;
+#endif
+  }
+
+  UFUNCTION(Exec)
+  void EnableCameraStream(bool Enable) {
+#if !UE_BUILD_SHIPPING
+    CameraStreamEnable = Enable;
+#endif
+  }
+
+#if !UE_BUILD_SHIPPING
+
+  bool IsCameraCopyToAtlasEnabled() const {
+    return CameraCopyToAtlasEnable;
+  }
+
+  bool IsCameraStreamEnabled() const {
+    return CameraStreamEnable;
+  }
+
+#endif
 
 protected:
 
@@ -110,9 +182,13 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
+  FAtlasCopyRequest* GetAtlasCopyRequest();
+
   void CreateAtlasTextures();
 
   void CaptureAtlas();
+
+  void SendAtlas();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -147,9 +223,14 @@ private:
   boost::optional<carla::road::Map> Map;
 
   FDelegateHandle CaptureAtlasDelegate;
+  FDelegateHandle SendAtlasDelegate;
+
+  TQueue<FAtlasCopyRequest*> AtlasCopyRequestQueue;
+  TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
 
   static const uint32 kMaxNumTextures = 2u; // This has to be POT
-  TArray<FColor> AtlasPixels[kMaxNumTextures];
+  // FRenderCommandFence RenderFence[kMaxNumTextures];
+  TArray<FColor> AtlasPixels[kMaxNumTextures]; // TODO: remove
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
   FTexture2DRHIRef CamerasAtlasTexture[kMaxNumTextures];
   uint32 AtlasTextureWidth = 0u;
@@ -160,9 +241,12 @@ private:
   bool IsAtlasTextureValid = false;
 
 #if !UE_BUILD_SHIPPING
-  uint32 ReadSurface = 1;
+  uint32 ReadSurfaceMode = 1;
   uint32 SurfaceW = 0;
   uint32 SurfaceH = 0;
+  bool CameraCopyToAtlasEnable = true;
+  bool AtlasCopyToCamera = true;
+  bool CameraStreamEnable = true;
 #endif
 
 };
