@@ -526,24 +526,8 @@ void ASceneCaptureSensor::CopyTextureFromAtlas(const TArray<FColor>& AtlasImage)
     SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
 
     const FColor* Source = &AtlasImage[0] + PositionInAtlas.Y;
-    //FColor* Dest = ImageToSend.GetData();
-
-    check(ImageToSend.Num() > 0);
-    check(Source != nullptr);
-    //check(Dest != nullptr);
-    check(ImageWidth > 0);
 
     ImageToSend = TArray<FColor>(Source, ImageWidth * ImageHeight);
-
-    /*
-    for (uint32 Row = 0u; Row < ImageHeight; Row++)
-    {
-      FMemory::Memcpy(Dest, Source, sizeof(FColor)*ImageWidth);
-      Source += AtlasTextureWidth;
-      Dest += ImageWidth;
-    }
-    */
-
   }
 }
 
