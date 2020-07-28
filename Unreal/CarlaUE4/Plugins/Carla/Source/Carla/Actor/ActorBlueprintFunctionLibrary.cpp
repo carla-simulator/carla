@@ -866,17 +866,20 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.Id = TEXT("noise_stddev");
   StdDevLidar.Type = EActorAttributeType::Float;
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
-  
-  if (Id == "ray_cast_raw") {
-    DropOffGenRate.RecommendedValues = { TEXT("0.0") };
-    DropOffIntensityLimit.RecommendedValues = { TEXT("1.0") };
-    DropOffAtZeroIntensity.RecommendedValues = { TEXT("0.0") };
-  }
 
-  Definition.Variations.Append(
-      {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
-          AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
-          DropOffAtZeroIntensity, StdDevLidar});
+  if (Id == "ray_cast") {
+    Definition.Variations.Append(
+        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
+            AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
+            DropOffAtZeroIntensity, StdDevLidar});
+  }
+  else if (Id == "ray_cast_raw") {
+    Definition.Variations.Append(
+        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+  }
+  else {
+    DEBUG_ASSERT(false);
+  }
 
   Success = CheckActorDefinition(Definition);
 }
