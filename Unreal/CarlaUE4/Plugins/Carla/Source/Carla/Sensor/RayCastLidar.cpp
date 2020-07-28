@@ -66,7 +66,7 @@ void ARayCastLidar::Tick(const float DeltaTime)
 float ARayCastLidar::ComputeIntensity(const FRawDetection& RawDetection) const
 {
   const carla::geom::Location HitPoint = RawDetection.point;
-  const float Distance =  HitPoint.Length();
+  const float Distance = HitPoint.Length();
 
   const float AttenAtm = Description.AtmospAttenRate;
   const float AbsAtm = exp(-AttenAtm * Distance);
@@ -82,7 +82,7 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   const FVector HitPoint = HitInfo.ImpactPoint;
   Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
 
-  const float Distance =  Detection.point.Length();
+  const float Distance = Detection.point.Length();
 
   const float AttenAtm = Description.AtmospAttenRate;
   const float AbsAtm = exp(-AttenAtm * Distance);
