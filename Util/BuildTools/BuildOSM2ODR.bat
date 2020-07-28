@@ -14,6 +14,44 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
+set DOC_STRING=Build LibCarla.
+set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean]
+
+set REMOVE_INTERMEDIATE=false
+set BUILD_OSM2ODR=false
+
+:arg-parse
+if not "%1"=="" (
+    if "%1"=="--rebuild" (
+        set REMOVE_INTERMEDIATE=true
+        set BUILD_OSM2ODR=true
+    )
+    if "%1"=="--build" (
+        set BUILD_OSM2ODR=true
+    )
+    if "%1"=="--clean" (
+        set REMOVE_INTERMEDIATE=true
+    )
+    if "%1"=="-h" (
+        echo %DOC_STRING%
+        echo %USAGE_STRING%
+        GOTO :eof
+    )
+    if "%1"=="--help" (
+        echo %DOC_STRING%
+        echo %USAGE_STRING%
+        GOTO :eof
+    )
+    shift
+    goto :arg-parse
+)
+
+if %REMOVE_INTERMEDIATE% == false (
+    if %BUILD_OSM2ODR% == false (
+        echo Nothing selected to be done.
+        goto :eof
+    )
+)
 
 rem ============================================================================
 rem -- Local Variables ---------------------------------------------------------
@@ -24,19 +62,66 @@ rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
-if "%1"=="--rebuild" (
-    rmdir "%OSM2ODR_VSPROJECT_PATH%" /s /q
+if %REMOVE_INTERMEDIATE% == true (
+    rem Remove directories
+    for %%G in (
+        "%OSM2ODR_INSTALL_PATH%",
+    ) do (
+        if exist %%G (
+            echo %FILE_N% Cleaning %%G
+            rmdir /s/q %%G
+        )
+    )
 )
-
 
 if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
 cd "%OSM2ODR_VSPROJECT_PATH%"
 
-cmake -G "Visual Studio 15 2017 Win64"^
-    -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-    -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
-    "%ROOT_PATH%\Util\OSM2ODR"
-cmake --build . --config Release --target install | findstr /V "Up-to-date:"
+rem Build OSM2ODR
+if %BUILD_OSM2ODR% == true (
+    cmake -G "Visual Studio 15 2017 Win64"^
+        -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
+        -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
+        "%ROOT_PATH%\Util\OSM2ODR"
+    if %errorlevel% neq 0 goto error_cmake
 
-endlocal
-exit /b 0
+    cmake --build . --config Release --target install | findstr /V "Up-to-date:"
+    if %errorlevel% neq 0 goto error_install
+)
+
+goto success
+
+rem ============================================================================
+rem -- Messages and Errors -----------------------------------------------------
+rem ============================================================================
+
+:success
+    if %BUILD_OSM2ODR% == true echo %FILE_N% OSM2ODR has been successfully installed in "%OSM2ODR_INSTALL_PATH%"!
+    goto good_exit
+
+:error_cmake
+    echo.
+    echo %FILE_N% [ERROR] An error ocurred while executing the cmake.
+    echo           [ERROR] Possible causes:
+    echo           [ERROR]  - Make sure "CMake" is installed.
+    echo           [ERROR]  - Make sure it is available on your Windows "path".
+    echo           [ERROR]  - CMake 3.9.0 or higher is required.
+    goto bad_exit
+
+:error_install
+    echo.
+    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo           [ERROR] Possible causes:
+    echo           [ERROR]  - Make sure you have Visual Studio installed.
+    echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.
+    echo           [ERROR]    For example using the "Visual Studio x64 Native Tools Command Prompt",
+    echo           [ERROR]    or the "vcvarsall.bat".
+    goto bad_exit
+
+:good_exit
+    endlocal
+    exit /b 0
+
+:bad_exit
+    endlocal
+    exit /b %errorlevel%
