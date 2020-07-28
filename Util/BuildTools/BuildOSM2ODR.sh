@@ -6,12 +6,12 @@ source $(dirname "$0")/Environment.sh
 export CC=/usr/bin/clang-8
 export CXX=/usr/bin/clang++-8
 
-CONVERTER_BASE_DIR=${CARLA_ROOT_FOLDER}/Util/Converter
-CONVERTER_BUILD_DIR=${CARLA_ROOT_FOLDER}/Build/converter-build
-CONVERTER_BIN_DIR=${CONVERTER_BASE_DIR}/bin
-[ ! -d ${CONVERTER_BUILD_DIR} ] && mkdir ${CONVERTER_BUILD_DIR}
+OSM2ODR_BASE_DIR=${CARLA_ROOT_FOLDER}/Util/OSM2ODR
+OSM2ODR_BUILD_DIR=${CARLA_ROOT_FOLDER}/Build/osm2odr-build
+OSM2ODR_BIN_DIR=${OSM2ODR_BASE_DIR}/bin
+[ ! -d ${OSM2ODR_BUILD_DIR} ] && mkdir ${OSM2ODR_BUILD_DIR}
 
-cd ${CONVERTER_BUILD_DIR}
+cd ${OSM2ODR_BUILD_DIR}
 
 case $1 in
   --rebuild)
@@ -19,9 +19,9 @@ case $1 in
     ;;
 esac
 
-cmake ${CONVERTER_BASE_DIR} \
+cmake ${OSM2ODR_BASE_DIR} \
     -G "Eclipse CDT4 - Ninja" \
     -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_CLIENT_FOLDER}
 
-ninja converter
+ninja osm2odr
 ninja install
