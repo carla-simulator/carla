@@ -47,19 +47,20 @@ void ACarlaGameModeBase::AddSceneCaptureSensor(ASceneCaptureSensor* SceneCapture
   uint32 ImageWidth = SceneCaptureSensor->ImageWidth;
   uint32 ImageHeight = SceneCaptureSensor->ImageHeight;
 
-  if(AtlasTextureWidth < (CurrentAtlasTextureWidth + ImageWidth))
+  if(AtlasTextureWidth < ImageWidth)
   {
     IsAtlasTextureValid = false;
-    AtlasTextureWidth = CurrentAtlasTextureWidth + ImageWidth;
-  }
-  if(AtlasTextureHeight < ImageHeight)
-  {
-    IsAtlasTextureValid = false;
-    AtlasTextureHeight = ImageHeight;
+    AtlasTextureWidth = ImageWidth;
   }
 
-  SceneCaptureSensor->PositionInAtlas = FIntVector(CurrentAtlasTextureWidth, 0, 0);
-  CurrentAtlasTextureWidth += ImageWidth;
+  if(AtlasTextureHeight < (CurrentAtlasTextureHeight + ImageHeight) )
+  {
+    IsAtlasTextureValid = false;
+    AtlasTextureHeight = CurrentAtlasTextureHeight + ImageHeight;
+  }
+
+  SceneCaptureSensor->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
+  CurrentAtlasTextureHeight += ImageHeight;
 
   SceneCaptureSensors.Add(SceneCaptureSensor);
 
@@ -72,11 +73,11 @@ void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCapt
   SceneCaptureSensors.Remove(SceneCaptureSensor);
 
   // Recalculate PositionInAtlas for each camera
-  CurrentAtlasTextureWidth = 0;
+  CurrentAtlasTextureHeight = 0;
   for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
   {
-    Camera->PositionInAtlas = FIntVector(CurrentAtlasTextureWidth, 0, 0);
-    CurrentAtlasTextureWidth += Camera->ImageWidth;
+    Camera->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
+    CurrentAtlasTextureHeight += Camera->ImageHeight;
   }
 }
 
@@ -192,8 +193,10 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
+  // OnBeginFrame
+  // OnEndFrame
+  CaptureAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
   SendAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::SendAtlas);
-  CaptureAtlasDelegate = FCoreDelegates::OnBeginFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
 
 }
 
@@ -235,8 +238,9 @@ void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   }
 
 
+  // OnEndFrame
   FCoreDelegates::OnEndFrame.Remove(CaptureAtlasDelegate);
-  FCoreDelegates::OnBeginFrame.Remove(SendAtlasDelegate);
+  FCoreDelegates::OnEndFrame.Remove(SendAtlasDelegate);
 }
 
 void ACarlaGameModeBase::SpawnActorFactories()
@@ -518,11 +522,11 @@ void ACarlaGameModeBase::SendAtlas()
       // since the AtlasCopyRequest could be used later
       //TArray<FColor> AtlasImage(AtlasCopyRequest->AtlasImage);
       //ParallelFor(SceneCaptureSensors.Num(),
-      //  [This, &AtlasImage, AtlasTextureWidth = AtlasCopyRequest->AtlasTextureWidth](int32 Index)
+      //  [This, &AtlasImage](int32 Index)
       for(int32 Index = 0; Index < SceneCaptureSensors.Num(); Index++)
       {
         ASceneCaptureSensor* Sensor = SceneCaptureSensors[Index];
-        Sensor->CopyTextureFromAtlas(AtlasCopyRequest->AtlasImage, AtlasTextureWidth);
+        Sensor->CopyTextureFromAtlas(AtlasCopyRequest->AtlasImage);
       }
       //);
 

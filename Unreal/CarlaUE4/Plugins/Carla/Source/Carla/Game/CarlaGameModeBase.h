@@ -229,13 +229,12 @@ private:
   TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
 
   static const uint32 kMaxNumTextures = 2u; // This has to be POT
-  // FRenderCommandFence RenderFence[kMaxNumTextures];
   TArray<FColor> AtlasPixels[kMaxNumTextures]; // TODO: remove
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
   FTexture2DRHIRef CamerasAtlasTexture[kMaxNumTextures];
   uint32 AtlasTextureWidth = 0u;
   uint32 AtlasTextureHeight = 0u;
-  uint32 CurrentAtlasTextureWidth = 0u;
+  uint32 CurrentAtlasTextureHeight = 0u;
   uint32 CurrentAtlas = 0u;
   uint32 PreviousAtlas = 0u;
   bool IsAtlasTextureValid = false;
