@@ -47,53 +47,53 @@ The previous diagram is a summary of the internal architecture of the Traffic Ma
 
 Nevertheless, the logic of it can be simplified as follows.  
 
-__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State management) scans the world to keep track of all the vehicles and walkers present in it. All the data is retrieved from the server, and passed on to others. In such way, calls to the server are isolated in the ALSM, and these information can be easily acessible onwards. The [Vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [Simulation State](#simulation-state) stores in cache the position and velocity and some additional information of all the vehicles and walkers.  
+__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State Management) scans the world to keep track of all the vehicles and walkers present in it. All the data is retrieved from the server, and passed on to others. In such way, calls to the server are isolated in the ALSM, and these information can be easily acessible onwards. The [vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [simulation state](#simulation-state) stores in cache the position and velocity and some additional information of all the vehicles and walkers.  
 
-__2. What should each vehicle do?__ The TM has to considerate the current state of the simulation and generate viable commands for all the vehicles in the [Vehicle Registry](#vehicle-registry). The calculations for each vehicle are done separatedly. These calculations are divided in different [Stages](#stages). The [Control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - Where am I going?__ TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [In Memory map](#in-memory-map) simplifies the map as a grid of waypoints, and the [Localization Stage](#localization-stage) stores a near-future path to follow as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) element (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - Are there any obstacles ahead?__ The [Collision Stage](#collision-stage) considers the path of the vehicle and the vehicles nearby to trigger collision hazards when necessary.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic light Stage](#traffic-light-stage) considers traffic lights, stop signs, and priority rules to modify the path of the vehicle.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - How do I move there?__ Finally, the [Motion Planner Stage](#motion-planner-stage) takes the path defined by the previous stages, and calculates the next movement according to it aided by the [PID Controller](#pid-controller). This movement is then translated into an actual CARLA command to be applied.  
+__2. What should each vehicle do?__ The TM has to consider the current state of the simulation and generate viable commands for all the vehicles in the [vehicle registry](#vehicle-registry). The calculations for each vehicle are done separatedly. These calculations are divided in different [stages](#stages). The [control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - Where am I going?__ TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [in memory map](#in-memory-map) simplifies the map as a grid of waypoints, and the [Localization stage](#localization-stage) stores a near-future path to follow as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) element (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - Are there any obstacles ahead?__ The [Collision stage](#collision-stage) considers the path of the vehicle and the vehicles nearby to trigger collision hazards when necessary.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic Light stage](#traffic-light-stage) considers traffic lights, stop signs, and priority rules to modify the path of the vehicle.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - How do I move there?__ Finally, the [Motion Planner stage](#motion-planner-stage) takes the path defined by the previous stages, and calculates the next movement according to it aided by the [PID controller](#pid-controller). This movement is then translated into an actual CARLA command to be applied.  
 
-__3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [Command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
+__3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
 
 ### ALSM
 
 ALSM stands for __Agent Lifecycle and State Management__. First step in the logic cycle. Provides context over the current state of the simulation.  
 
-*   Scans the world to keep track of all the vehicles and walkers in it, their position and velocity. For walkers and vehicles with physics enabled, the velocity is retrieve by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). For vehicles with physics disabled, the velocity is computed using the history of position updates over time.  
-*   Stores the position, velocity and additional information (traffic light influence, bounding boxes, etc) of every vehicle and walker in the [Simulation State](#simulation-state) module.  
-*   Updates the list of registered vehicles stored by [Vehicle Registry](#vehicle-registry).  
-*   Removes/Adds entries in the [Control Loop](#control-loop) and [PBVT](#pbvt) modules to match the list of registered vehicles.  
+*   Scans the world to keep track of all the vehicles and walkers in it, their position and velocity. For walkers and vehicles with physics enabled, the velocity is retrieved by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). For vehicles with physics disabled, the velocity is computed using the history of position updates over time.  
+*   Stores the position, velocity and additional information (traffic light influence, bounding boxes, etc) of every vehicle and walker in the [simulation state](#simulation-state) module.  
+*   Updates the list of registered vehicles stored by [vehicle registry](#vehicle-registry).  
+*   Removes/Adds entries in the [control loop](#control-loop) and [PBVT](#pbvt) modules to match the list of registered vehicles.  
 
-__Related .cpp files:__ `TBD`.  
+__Related .cpp files:__ `ALSM.h`, `ALSM.cpp`.  
 
 ### Command array
 
 Last step in the TM logic cycle. Receives commands for all the registered vehicles and applies these.  
 
-*   Receives a series of [carla.VehicleControl](#python_api.md#carla.VehicleControl) from the [Motion Planner Stage](#motion-planner-stage).  
+*   Receives a series of [carla.VehicleControl](#python_api.md#carla.VehicleControl) from the [Motion Planner stage](#motion-planner-stage).  
 *   Constructs a batch for all the commands to be applied during the same frame.  
-*   Sends the batch to the CARLA server. Either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) will be called, depending if the simulation is runnin in asynchronous or synchronous mode, respectively.  
+*   Sends the batch to the CARLA server. Either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) will be called, depending if the simulation is running in asynchronous or synchronous mode, respectively.  
 
 __Related .cpp files:__ `BatchControlStage.cpp`.  
 
 ### Control loop
 
-Regulates the process of calculating the next command for all the registered vehicles, so that these are done in synchrony.  
+Manages the process of calculating the next command for all the registered vehicles, so that these are done in synchrony.  
 
-*   Receives from the [Vehicle Registry](#vehicle-registry) an array of the vehicles registered to the TM.  
+*   Receives from the [vehicle registry](#vehicle-registry) an array of the vehicles registered to the TM.  
 *   Loops over said array, performing calculations per vehicle separatedly.  
-*   These calculations are divided in a series of [Stages](#stages).  
-*   Synchronization barriers are created between stages so that consistency is guaranteed. Calculations for all vehicles must finish before any of them moves to the next stage, ensuring that all vehicles are updated in the same frame.  
-*   Coordinates the transition between [Stages](#stages) so that all the calculations are done in sync.  
-*   When the last stage ([Motion Planner Stage](#motion-planner-stage)) finishes, the [Command Array](#command-array) is sent to the server. In this manner, no frame delays occur between the calculations of the control loop, and the commands being applied.  
+*   These calculations are divided in a series of [stages](#stages).  
+*   Synchronization barriers are placed between stages so that consistency is guaranteed. Calculations for all vehicles must finish before any of them moves to the next stage, ensuring that all vehicles are updated in the same frame.  
+*   Coordinates the transition between [stages](#stages) so that all the calculations are done in sync.  
+*   When the last stage ([Motion Planner stage](#motion-planner-stage)) finishes, the [command array](#command-array) is sent to the server. In this manner, no frame delays occur between the calculations of the control loop, and the commands being applied.  
 
 __Related .cpp files:__ `TBD`.  
 
-### In Memory map
+### In memory map
 
-Helper module contained by the [PBVT](#pbvt) and used during the [Localization Stage](#localization-stage).  
+Helper module contained by the [PBVT](#pbvt) and used during the [Localization stage](#localization-stage).  
 
 *   Discretizes the map into a grid of waypoints.  
 *   Includes these waypoints in a specific data structure with more information to connect the waypoints and identify roads, junctions...
@@ -103,18 +103,18 @@ __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.
 
 ### PBVT
 
-PBVT stands for __Path Buffer and Vehicle Tracking__. This data structure contains the expected path for every vehicle so that it can be easily accessible during the [Control Loop](#control-loop).  
+PBVT stands for __Path Buffer and Vehicle Tracking__. This data structure contains the expected path for every vehicle so that it can be easily accessible during the [control loop](#control-loop).  
 
 *   Contains a map of deque objects with an entry per vehicle.  
 *   For each vehicle, contains a set of waypoints describing its current location and near-future path.  
-*   Contains the [In Memory map](#in-memory-map) that will be used by the [Localization Stage](#localization-stage) to relate every vehicle to the nearest waypoint, and possible overlapping paths.  
+*   Contains the [in memory map](#in-memory-map) that will be used by the [Localization stage](#localization-stage) to relate every vehicle to the nearest waypoint, and possible overlapping paths.  
 
 ### PID controller
 
-Helper module that performs calculations during the [Motion Planner Stage](#motion-planner-stage).  
+Helper module that performs calculations during the [Motion Planner stage](#motion-planner-stage).  
 
-*   Using the information gathered by the [Motion Planner Stage](#motion-planner-stage), estimates the throttle, brake and steering input needed to reach a target value.  
-*   The adjustment is made depending on the specific parameterization of the controller, which can be modified if desired. Read more about [PID compensation](https://commons.wikimedia.org/wiki/File:PID_Compensation_Animated.gif) to learn how to do it.  
+*   Using the information gathered by the [Motion Planner stage](#motion-planner-stage), estimates the throttle, brake and steering input needed to reach a target value.  
+*   The adjustment is made depending on the specific parameterization of the controller, which can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to do it.  
 
 __Related .cpp files:__ `PIDController.cpp`.  
 
@@ -122,8 +122,8 @@ __Related .cpp files:__ `PIDController.cpp`.
 
 Stores information about the vehicles in the world so that it can be easily accessible during all the process.  
 
-*   Receives the current state of all vehicles and walkers in the world from the [ALSM](#ALSM). Their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
-*   Stores in cache all the information so that no additional calls to the server are needed during the [Control Loop](#control-loop).  
+*   Receives the current state of all vehicles and walkers in the world from the [ALSM](#ALSM), including their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
+*   Stores in cache all the information so that no additional calls to the server are needed during the [control loop](#control-loop).  
 
 __Related .cpp files:__ `TBD`.  
 
@@ -131,43 +131,43 @@ __Related .cpp files:__ `TBD`.
 
 ##### Localization stage
 
-First stage in the [Control Loop](#control-loop). Defines a near-future path for registered vehicles.  
+First stage in the [control loop](#control-loop). Defines a near-future path for registered vehicles.  
 
-*   Obtains the position and velocity of all the vehicles from [Simulation State](#simulation-state).  
-*   Using the [In Memory map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
+*   Obtains the position and velocity of all the vehicles from [simulation state](#simulation-state).  
+*   Using the [in memory map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
 *   The path is updated according to planning decisions such as lan changes, speed limit, distance to leading vehicle parameterization, etc.  
 *   The [PBVT](#pbvt) module stores the path for all the vehicles.  
-*   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision Stage](#collision-stage).  
+*   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision stage](#collision-stage).  
 
 __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
-##### Collision Stage
+##### Collision stage
 
-Second stage in the [Control Loop](#control-loop). Triggers collision hazards.  
+Second stage in the [control loop](#control-loop). Triggers collision hazards.  
 
-*   Receives a list of pairs of vehicles with possible overlapping paths from the [Localization Stage](#localization-stage).  
+*   Receives a list of pairs of vehicles with possible overlapping paths from the [Localization stage](#localization-stage).  
 *   For every pair, extends bounding boxes along the path ahead (geodesic boundaries), to check if they actually overlap and the risk of collision is real.  
-*   Hazards for all the possible collisions will be sent to the [Motion Planner Stage](#motion-planner-stage) to modify the path accordingly.  
+*   Hazards for all the possible collisions will be sent to the [Motion Planner stage](#motion-planner-stage) to modify the path accordingly.  
 
 __Related .cpp files:__ `CollisionStage.cpp`.  
 
-##### Traffic Light Stage
+##### Traffic Light stage
 
-Third stage in the [Control Loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights, stop signs, and priority at junctions.  
+Third stage in the [control loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights, stop signs, and priority at junctions.  
 
 *   If the vehicle is under the influence of a yellow or red traffic light, or a stop sign, sets a traffic hazard.  
 *   If the vehicle is in a non-signalized junction, a bounding box is extended along its path. Vehicles with overlapping paths follow a FIFO order to move, and waits are set to a fixed time.  
 
 __Related .cpp files:__ `TrafficLightStage.cpp`.  
 
-##### Motion Planner Stage
+##### Motion Planner stage
 
-Fourth and last stage in the [Control Loop](#control-loop). Generates the CARLA command that will be applied to the vehicle.  
+Fourth and last stage in the [control loop](#control-loop). Generates the CARLA command that will be applied to the vehicle.  
 
-*   Gathers all the information so far: position and velocity of the vehicles ([Simulation State](#simulation-state)), their path ([PBVT](#pbvt)), hazards ([Collision Stage](#collision-stage) and [Traffic Light State](#traffic-light-state)).  
+*   Gathers all the information so far: position and velocity of the vehicles ([simulation state](#simulation-state)), their path ([PBVT](#pbvt)), hazards ([Collision stage](#collision-stage) and [Traffic Light State](#traffic-light-state)).  
 *   Makes high-level decisins about how should the vehicle move, for example computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.  
 *   Translates the desired movement to a [carla.VehicleControl](#python_api.md#carla.VehicleControl) that can be applied to the vehicle.  
-*   Sends the resulting CARLA commands to the [Command Array](#command-array).  
+*   Sends the resulting CARLA commands to the [command array](#command-array).  
 
 __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
@@ -176,7 +176,7 @@ __Related .cpp files:__ `MotionPlannerStage.cpp`.
 Keeps track of all the vehicles and walkers in the simulation.  
 
 *   The [ALSM](#alsm) scans the world and passes an updated list of walkers and vehicles.  
-*   Vehicles registered to the TM are stored in a separated array that will be iterated on during the [Control Loop](#control-loop).  
+*   Vehicles registered to the TM are stored in a separated array that will be iterated on during the [control loop](#control-loop).  
 
 __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
