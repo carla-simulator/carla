@@ -21,21 +21,21 @@ rem ============================================================================
 
 rem Set the visual studio solution directory
 rem
-set CONVERTER_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%converter-visualstudio\
-set CONVERTER_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
+set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
+set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
 if "%1"=="--rebuild" (
-    rmdir "%CONVERTER_VSPROJECT_PATH%" /s /q
+    rmdir "%OSM2ODR_VSPROJECT_PATH%" /s /q
 )
 
 
-if not exist "%CONVERTER_VSPROJECT_PATH%" mkdir "%CONVERTER_VSPROJECT_PATH%"
-cd "%CONVERTER_VSPROJECT_PATH%"
+if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
+cd "%OSM2ODR_VSPROJECT_PATH%"
 
 cmake -G "Visual Studio 15 2017 Win64"^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-    -DCMAKE_INSTALL_PREFIX="%CONVERTER_INSTALL_PATH:\=/%"^
-    "%ROOT_PATH%\Util\Converter"
+    -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
+    "%ROOT_PATH%\Util\OSM2ODR"
 cmake --build . --config Release --target install | findstr /V "Up-to-date:"
 
 endlocal

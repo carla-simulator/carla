@@ -51,7 +51,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libRecast.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
-                os.path.join(pwd, 'dependencies/lib/libconverter.a')]
+                os.path.join(pwd, 'dependencies/lib/libosm2odr.a')]
             extra_link_args += ['-lxerces-c']
             extra_link_args += ['-lz']
             extra_compile_args = [
@@ -112,7 +112,7 @@ def get_libcarla_extensions():
             'rpc.lib', 'carla_client.lib',
             'libpng.lib', 'zlib.lib',
             'Recast.lib', 'Detour.lib', 'DetourCrowd.lib',
-            'converter.lib', 'xerces-c_3.lib']
+            'osm2odr.lib', 'xerces-c_3.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
