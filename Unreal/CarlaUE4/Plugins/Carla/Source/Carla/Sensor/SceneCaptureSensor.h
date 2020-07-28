@@ -270,6 +270,8 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  void CopyTextureToAtlas();
+
   void CopyTextureFromAtlas(const TArray<FColor>& AtlasImage);
 
   template <typename TSensor>
@@ -296,8 +298,6 @@ protected:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
-
-  void CopyTextureToAtlas();
 
   FDelegateHandle CopyTextureDelegate;
 
