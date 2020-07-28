@@ -51,7 +51,7 @@ set XERCESC_TEMP_FILE=%XERCESC_TEMP_FOLDER%-src.zip
 rem ../xerces-c-x.x.x-src.zip
 set XERCESC_TEMP_FILE_DIR=%BUILD_DIR%%XERCESC_TEMP_FILE%
 
-set XERCESC_REPO=https://downloads.apache.org/xerces/c/3/sources/xerces-c-3.2.3.zip
+set XERCESC_REPO=https://downloads.apache.org/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
 
 rem ../xerces-c-x.x.x-source/
 set XERCESC_SRC_DIR=%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source\
@@ -74,7 +74,7 @@ if not exist "%XERCESC_SRC_DIR%" (
     if not exist "%XERCESC_TEMP_FILE_DIR%" (
         echo %FILE_N% Using %XERCESC_BASENAME% from backup.
         goto error_download
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-%XERCESC_VERSION%-src.zip', '%XERCESC_TEMP_FILE_DIR%')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-%XERCESC_VERSION%-src.zip', '%XERCESC_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download
     rem Extract the downloaded library
