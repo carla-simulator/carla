@@ -167,10 +167,6 @@ class SensorManager:
 
             lidar.listen(self.save_rawlidar_image)
 
-            lidar_bp.set_attribute('dropoff_general_rate', "0.0")
-            lidar_bp.set_attribute('dropoff_intensity_limit', "1.0")
-            lidar_bp.set_attribute('dropoff_zero_intensity', "1.0")
-
             return lidar
         elif sensor_type == "Radar":
             radar_bp = self.world.get_blueprint_library().find('sensor.other.radar')
@@ -295,7 +291,7 @@ def one_run(args, client):
             settings = world.get_settings()
             traffic_manager.set_synchronous_mode(True)
             settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 0.05
+            settings.fixed_delta_seconds = 0.1
             world.apply_settings(settings)
 
         if args.profiling:
