@@ -94,7 +94,7 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   return Detection;
 }
 
-  bool ARayCastLidar::PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
+  bool ARayCastLidar::PreprocessRay() const {
     if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
       return false;
     else

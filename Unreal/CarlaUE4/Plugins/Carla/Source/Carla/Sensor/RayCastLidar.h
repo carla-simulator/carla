@@ -40,7 +40,7 @@ private:
   float ComputeIntensity(const FRawDetection& RawDetection) const;
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
 
-  bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const override;
+  bool PreprocessRay() const override;
 
   void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
 
