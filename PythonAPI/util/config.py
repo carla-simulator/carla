@@ -243,7 +243,7 @@ def main():
             wall_height = 0.0      # in meters
             extra_width = 0.6      # in meters
             world = client.generate_opendrive_world(
-                data, carla.OpendriveGenerationParameters(
+                xodr_data, carla.OpendriveGenerationParameters(
                     vertex_distance=vertex_distance,
                     max_road_length=max_road_length,
                     wall_height=wall_height,
