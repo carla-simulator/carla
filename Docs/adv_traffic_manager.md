@@ -47,12 +47,12 @@ The previous diagram is a summary of the internal architecture of the Traffic Ma
 
 Nevertheless, the logic of it can be simplified as follows.  
 
-__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State management) scans the world to keep track of all the vehicles present in it. Registered vehicles are kept in the [Vehicle registry](#vehicle-registry), and the position and velocity of all the vehicles is cached in the [Simulation State](#simulation-state) module, so that it can be easily accessed onwards.  
+__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State management) scans the world to keep track of all the vehicles and walkers present in it. All the data is retrieved from the server, and passed on to others. In such way, calls to the server are isolated in the ALSM, and these information can be easily acessible onwards. The [Vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [Simulation State](#simulation-state) stores in cache the position and velocity and some additional information of all the vehicles and walkers.  
 
 __2. What should each vehicle do?__ The TM has to considerate the current state of the simulation and generate viable commands for all the vehicles in the [Vehicle Registry](#vehicle-registry). The calculations for each vehicle are done separatedly. These calculations are divided in different [Stages](#stages). The [Control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - Where am I going?__ TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [In Memory map](#in-memory-map) simplifies the map as a grid of waypoints, and the [Localization Stage](#localization-stage) stores a near-future path to follow as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) element (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - Are there any obstacles ahead?__ The [Collision Stage](#collision-stage) considers the path of the vehicle and the vehicles nearby to trigger collision hazards when necessary.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic light Stage](#traffic-light-stage) considers traffic lights, stop and yield signs, and priority rules to modify the path of the vehicle.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic light Stage](#traffic-light-stage) considers traffic lights, stop signs, and priority rules to modify the path of the vehicle.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - How do I move there?__ Finally, the [Motion Planner Stage](#motion-planner-stage) takes the path defined by the previous stages, and calculates the next movement according to it aided by the [PID Controller](#pid-controller). This movement is then translated into an actual CARLA command to be applied.  
 
 __3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [Command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
@@ -61,8 +61,8 @@ __3. How are vehicles moved?__ Once the TM has calculated the next command for e
 
 ALSM stands for __Agent Lifecycle and State Management__. First step in the logic cycle. Provides context over the current state of the simulation.  
 
-*   Scans the world to keep track of all the vehicles in it, their position and velocity. For vehicles with physics enabled, the velocity is retrieve by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). For vehicles with physics disabled, the velocity is computed using the history of position updates over time.  
-*   Stores the position, velocity and additional information (is this vehicle under the influence of a traffic light? What is its current state?) of every vehicle in the [Simulation State](#simulation-state) module.  
+*   Scans the world to keep track of all the vehicles and walkers in it, their position and velocity. For walkers and vehicles with physics enabled, the velocity is retrieve by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). For vehicles with physics disabled, the velocity is computed using the history of position updates over time.  
+*   Stores the position, velocity and additional information (traffic light influence, bounding boxes, etc) of every vehicle and walker in the [Simulation State](#simulation-state) module.  
 *   Updates the list of registered vehicles stored by [Vehicle Registry](#vehicle-registry).  
 *   Removes/Adds entries in the [Control Loop](#control-loop) and [PBVT](#pbvt) modules to match the list of registered vehicles.  
 
@@ -86,6 +86,8 @@ Regulates the process of calculating the next command for all the registered veh
 *   Loops over said array, performing calculations per vehicle separatedly.  
 *   These calculations are divided in a series of [Stages](#stages).  
 *   Synchronization barriers are created between stages so that consistency is guaranteed. Calculations for all vehicles must finish before any of them moves to the next stage, ensuring that all vehicles are updated in the same frame.  
+*   Coordinates the transition between [Stages](#stages) so that all the calculations are done in sync.  
+*   When the last stage ([Motion Planner Stage](#motion-planner-stage)) finishes, the [Command Array](#command-array) is sent to the server. In this manner, no frame delays occur between the calculations of the control loop, and the commands being applied.  
 
 __Related .cpp files:__ `TBD`.  
 
@@ -97,7 +99,7 @@ Helper module contained by the [PBVT](#pbvt) and used during the [Localization S
 *   Includes these waypoints in a specific data structure with more information to connect the waypoints and identify roads, junctions...
 *   Identifies these structures with an ID that is used to quickly spot vehicles in nearby areas.  
 
-* __Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
+__Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.  
 
 ### PBVT
 
@@ -120,7 +122,7 @@ __Related .cpp files:__ `PIDController.cpp`.
 
 Stores information about the vehicles in the world so that it can be easily accessible during all the process.  
 
-*   Receives the current state of all vehicles in the world from the [ALSM](#ALSM). Their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
+*   Receives the current state of all vehicles and walkers in the world from the [ALSM](#ALSM). Their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
 *   Stores in cache all the information so that no additional calls to the server are needed during the [Control Loop](#control-loop).  
 
 __Related .cpp files:__ `TBD`.  
@@ -151,9 +153,9 @@ __Related .cpp files:__ `CollisionStage.cpp`.
 
 ##### Traffic Light Stage
 
-Third stage in the [Control Loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights and priority at junctions.  
+Third stage in the [Control Loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights, stop signs, and priority at junctions.  
 
-*   If the vehicle is under the influence of a yellow or red traffic light, sets a traffic hazard.  
+*   If the vehicle is under the influence of a yellow or red traffic light, or a stop sign, sets a traffic hazard.  
 *   If the vehicle is in a non-signalized junction, a bounding box is extended along its path. Vehicles with overlapping paths follow a FIFO order to move, and waits are set to a fixed time.  
 
 __Related .cpp files:__ `TrafficLightStage.cpp`.  
@@ -171,10 +173,10 @@ __Related .cpp files:__ `MotionPlannerStage.cpp`.
 
 ### Vehicle registry
 
-Keeps track of all the vehicles in the simulation.  
+Keeps track of all the vehicles and walkers in the simulation.  
 
-*   The [ALSM](#alsm) scans the world and passes an updated list of existing vehicles.  
-*   Vehicles registered to the TM are stored in an array that will be iterated on during the [Control Loop](#control-loop).  
+*   The [ALSM](#alsm) scans the world and passes an updated list of walkers and vehicles.  
+*   Vehicles registered to the TM are stored in a separated array that will be iterated on during the [Control Loop](#control-loop).  
 
 __Related .cpp files:__ `MotionPlannerStage.cpp`.  
 
