@@ -148,7 +148,6 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
       for (auto& hit : RecordedHits[idxChannel]) {
         FRawDetection detection;
         ComputeRawDetection(hit, SensorTransform, detection);
-
         LidarRawData.WritePointSync(detection);
       }
     }
@@ -162,12 +161,9 @@ static ECityObjectLabel GetComponentTag(const FHitResult& HitInfo) {
   }else {
     auto SkeletalMeshComponent = Cast<USkeletalMeshComponent>(HitInfo.Component.Get());
     if (SkeletalMeshComponent) {
-      //UE_LOG(LogCarla, Warning, TEXT("Skeletal mesh: %s"), *SkeletalMeshComponent->GetName());
-
       return ATagger::GetLabelByPath(SkeletalMeshComponent->GetPhysicsAsset());
     }
     else {
-      //UE_LOG(LogCarla, Warning, TEXT("None mesh: %s"), *HitInfo.Component.Get()->GetName());
       return ECityObjectLabel::None;
     }
   }
