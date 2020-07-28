@@ -7,8 +7,8 @@
 #include <PxScene.h>
 #include <cmath>
 #include "Carla.h"
-#include "Carla/Sensor/RayCastRawLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Sensor/RayCastRawLidar.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -103,10 +103,9 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
     FCriticalSection Mutex;
     ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
       FHitResult HitResult;
-      float VertAngle = LaserAngles[idxChannel];
-      float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
-
-      bool PreprocessResult = PreprocessRay(VertAngle, HorizAngle);
+      const float VertAngle = LaserAngles[idxChannel];
+      const float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+      const bool PreprocessResult = PreprocessRay();
 
       if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
         Mutex.Lock();

@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+
+
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
@@ -50,7 +52,7 @@ protected:
   bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &RawData) const;
 
   /// Method that allow to preprocess the ray before shoot it
-  virtual bool PreprocessRay(const float& VerticalAngle, float &HorizontalAngle) const {
+  virtual bool PreprocessRay() const {
     // This method allows to introduce noise or drop points if needed
     // A true return value will make the proposed ray to be actually computed.
     return true;
@@ -65,7 +67,8 @@ protected:
   /// Clear the recorded data structure
   void ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
-  /// Clear the recorded data structure
+  /// This method uses all the saved FHitResults, compute the
+  /// RawDetections and then send it to the LidarData structure.
   virtual void ComputeAndSaveDetections(const FTransform &SensorTransform);
 
   UPROPERTY(EditAnywhere)
