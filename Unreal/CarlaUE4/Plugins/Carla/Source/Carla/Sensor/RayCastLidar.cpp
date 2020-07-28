@@ -101,6 +101,21 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
       return true;
   }
 
+  bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const
+  {
+    if (Description.NoiseStdDev > std::numeric_limits<float>::epsilon()) {
+      const auto ForwardVector = Detection.point.MakeUnitVector();
+      const auto Noise = ForwardVector * RandomEngine->GetNormalDistribution(0.0f, Description.NoiseStdDev);
+      Detection.point += Noise;
+    }
+
+    const float Intensity = Detection.intensity;
+    if(Intensity > Description.DropOffIntensityLimit)
+      return true;
+    else
+      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+  }
+
   void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     std::vector<u_int32_t> PointsPerChannel(Description.Channels);
 
@@ -111,7 +126,8 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
         FDetection Detection = ComputeDetection(hit, SensorTransform);
-        LidarData.WritePointSync(Detection);
+        if (PostprocessDetection(Detection))
+          LidarData.WritePointSync(Detection);
       }
     }
   }
