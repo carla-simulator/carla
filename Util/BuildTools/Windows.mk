@@ -42,10 +42,12 @@ clean:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --clean
 
 rebuild: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --rebuild
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
 
 check: PythonAPI
@@ -79,4 +81,4 @@ deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
 
 osm2odr:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --build

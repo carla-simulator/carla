@@ -1,24 +1,4 @@
-set(netconvertlibs
-        netwrite netimport netbuild foreign_eulerspiral ${GDAL_LIBRARY} netimport_vissim netimport_vissim_typeloader netimport_vissim_tempstructs ${commonlibs})
-
-#add_subdirectory(foreign)
-#add_subdirectory(netbuild)
-#add_subdirectory(netimport)
-#add_subdirectory(netwrite)
-#add_subdirectory(utils)
-
-#add_executable(netconvert netconvert_main.cpp)
-#set_target_properties(netconvert PROPERTIES OUTPUT_NAME netconvert${BINARY_SUFFIX})
-#set_target_properties(netconvert PROPERTIES OUTPUT_NAME_DEBUG netconvert${BINARY_SUFFIX}D)
-#target_link_libraries(netconvert ${netconvertlibs})
-#add_dependencies(netconvert generate-version-h)
-
-#install(TARGETS netconvert RUNTIME DESTINATION bin)
-
 set(osm2odr_sources "OSM2ODR.cpp")
-#add_library(osm2odr STATIC ${osm2odr_sources})
-#target_link_libraries(osm2odr ${netconvertlibs})
-#install(TARGETS osm2odr ARCHIVE DESTINATION lib)
 
 configure_file(config.h.cmake config.h)
 

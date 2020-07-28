@@ -28,15 +28,19 @@ clean.PythonAPI:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 clean.CarlaUE4Editor:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
-clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla
+clean.osm2odr:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
+clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla clean.osm2odr
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
 
 hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
@@ -151,4 +155,4 @@ build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
 
 osm2odr:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build
