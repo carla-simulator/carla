@@ -3,13 +3,13 @@
 
   # - CLASSES ------------------------------
   classes:
-  - class_name: OSM2ODR
+  - class_name: osm2odr
     # - DESCRIPTION ------------------------
     doc: >
       Class that performs the conversion of Open Street Maps data to OpenDRIVE.
     # - METHODS ----------------------------
     methods:
-    - def_name: convert_to_odr
+    - def_name: convert
       static:
         True
       return: str
@@ -27,7 +27,7 @@
       doc: >
         Converts a Open Street Maps file to OpenDRIVE format using the settings provided by the second argument.
   # --------------------------------------
-  - class_name: OSM2ODRSettings
+  - class_name: Osm2OdrSettings
     # - DESCRIPTION ------------------------
     doc: >
       Class containing settings to perform the conversion of Open Street Map data to OpenDRIVE.
