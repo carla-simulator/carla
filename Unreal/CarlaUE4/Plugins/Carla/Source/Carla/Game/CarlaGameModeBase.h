@@ -100,10 +100,6 @@ public:
     return IsAtlasTextureValid;
   }
 
-  const TArray<FColor>& GetCurrentAtlasPixels() const{
-    return AtlasPixels[CurrentAtlas];
-  }
-
   FTexture2DRHIRef GetCurrentCamerasAtlasTexture() const{
     return CamerasAtlasTexture[CurrentAtlas];
   }
@@ -229,7 +225,6 @@ private:
   TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
 
   static const uint32 kMaxNumTextures = 2u; // This has to be POT
-  TArray<FColor> AtlasPixels[kMaxNumTextures]; // TODO: remove
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
   FTexture2DRHIRef CamerasAtlasTexture[kMaxNumTextures];
   uint32 AtlasTextureWidth = 0u;

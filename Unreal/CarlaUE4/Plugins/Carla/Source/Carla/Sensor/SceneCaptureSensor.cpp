@@ -484,7 +484,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  CopyTextureDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureCamera::CopyTextureToAtlas);
+  //CopyTextureDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureCamera::CopyTextureToAtlas);
 
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   GameMode->AddSceneCaptureSensor(this);
@@ -513,22 +513,9 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FCoreDelegates::OnEndFrameRT.Remove(CopyTextureDelegate);
+  FCoreDelegates::OnEndFrame.Remove(CopyTextureDelegate);
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   GameMode->RemoveSceneCaptureSensor(this);
-}
-
-void ASceneCaptureSensor::CopyTextureFromAtlas(const TArray<FColor>& AtlasImage)
-{
-
-  if(AtlasImage.Num() > 0 && ImageToSend.Num() > 0)
-  {
-    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-
-    const FColor* Source = &AtlasImage[0] + PositionInAtlas.Y;
-
-    ImageToSend = TArray<FColor>(Source, ImageWidth * ImageHeight);
-  }
 }
 
 void ASceneCaptureSensor::CopyTextureToAtlas()
@@ -570,18 +557,22 @@ void ASceneCaptureSensor::CopyTextureToAtlas()
           CopyInfo.DestPosition = This->PositionInAtlas; // Where to copy the texture
 
           RHICmdList.CopyTexture(Texture, AtlasTexture, CopyInfo);
-
-          /*
-          ASceneCaptureSensor& CameraRef = *Camera;
-          FPixelReader::WritePixelsToArray(
-            *(CameraRef.CaptureRenderTarget),
-            CameraRef.Pixels[CameraRef.PreviousTexture],
-            RHICmdList);
-          */
-
       }
     }
   );
+}
+
+void ASceneCaptureSensor::CopyTextureFromAtlas(const TArray<FColor>& AtlasImage)
+{
+
+  if(AtlasImage.Num() > 0 && ImageToSend.Num() > 0)
+  {
+    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
+
+    const FColor* Source = &AtlasImage[0] + PositionInAtlas.Y;
+
+    ImageToSend = TArray<FColor>(Source, ImageWidth * ImageHeight);
+  }
 }
 
 // =============================================================================
