@@ -23,7 +23,7 @@ void export_osm2odr() {
   using namespace osm2odr;
   using namespace boost::python;
 
-  class_<OSM2ODRSettings>("Osm2odrSettings", init<>())
+  class_<OSM2ODRSettings>("Osm2OdrSettings", init<>())
     .add_property("use_offsets", &OSM2ODRSettings::use_offsets, &OSM2ODRSettings::use_offsets)
     .add_property("offset_x", &OSM2ODRSettings::offset_x, &OSM2ODRSettings::offset_x)
     .add_property("offset_y", &OSM2ODRSettings::offset_y, &OSM2ODRSettings::offset_y)
@@ -33,7 +33,7 @@ void export_osm2odr() {
   ;
 
   class_<OSM2ODR>("osm2odr", no_init)
-    .def("convert", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("osm2odr_settings") = OSM2ODRSettings()))
+    .def("convert", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("settings") = OSM2ODRSettings()))
       .staticmethod("convert")
   ;
 }
