@@ -270,38 +270,24 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  void CopyTextureFromAtlas(
+    const TArray<FColor>& AtlasImage,
+    uint32 AtlasTextureWidth );
+
   template <typename TSensor>
-  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth)
+  void SendPixelsInStream(TSensor &Sensor)
   {
-    if(AtlasPixels.Num() > 0)
+    if(ImageToSend.Num() > 0)
     {
-      auto Stream = GetDataStream(Sensor);
-      auto Buffer = Stream.PopBufferFromPool();
-
-      {
-        SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-
-        constexpr uint32 BytesPerPixel = sizeof(FColor);
-        const uint32 ExpectedStride = ImageWidth * BytesPerPixel;
-
-        const FColor* Source = &AtlasPixels[0];
-        uint8 *SrcRow = (uint8*)Source + PositionInAtlas.X * BytesPerPixel;
-        uint32 DstOffset = Offset;
-
-        Buffer.reset(Offset + ImageWidth * ImageHeight * BytesPerPixel);
-
-        for (uint32 Row = 0u; Row < ImageHeight; Row++)
-        {
-          Buffer.copy_from(DstOffset, SrcRow, ExpectedStride);
-          DstOffset += ExpectedStride;
-          SrcRow += AtlasTextureWidth * BytesPerPixel;
-        }
-      }
-
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+        auto Stream = GetDataStream(Sensor);
+        auto Buffer = Stream.PopBufferFromPool();
+        Buffer.copy_from(Offset, ImageToSend);
         Stream.Send(Sensor, std::move(Buffer));
       }
+      // TODO: remove
+      ImageToSend.Init(FColor(), ImageWidth * ImageHeight);
     }
   }
 
@@ -318,6 +304,8 @@ protected:
   void CopyTextureToAtlas();
 
   FDelegateHandle CopyTextureDelegate;
+
+  TArray<FColor> ImageToSend;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)

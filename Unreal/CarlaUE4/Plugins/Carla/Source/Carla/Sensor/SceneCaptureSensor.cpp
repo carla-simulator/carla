@@ -18,6 +18,7 @@
 #include "ContentStreaming.h"
 #include "Async/Async.h"
 #include "RHICommandList.h"
+#include "HAL/UnrealMemory.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -488,6 +489,8 @@ void ASceneCaptureSensor::BeginPlay()
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   GameMode->AddSceneCaptureSensor(this);
 
+  ImageToSend.Init(FColor(), ImageWidth * ImageHeight);
+
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -515,6 +518,31 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   GameMode->RemoveSceneCaptureSensor(this);
 }
 
+void ASceneCaptureSensor::CopyTextureFromAtlas(
+    const TArray<FColor>& AtlasImage,
+    uint32 AtlasTextureWidth)
+{
+
+  if(AtlasImage.Num() > 0 && ImageToSend.Num() > 0)
+  {
+    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
+
+    const FColor* Source = &AtlasImage[0] + PositionInAtlas.X;
+    FColor* Dest = ImageToSend.GetData();
+
+    check(ImageToSend.Num() > 0);
+    check(Source != nullptr);
+    check(Dest != nullptr);
+    check(ImageWidth > 0);
+
+    for (uint32 Row = 0u; Row < ImageHeight; Row++)
+    {
+      FMemory::Memcpy(Dest, Source, sizeof(FColor)*ImageWidth);
+      Source += AtlasTextureWidth;
+      Dest += ImageWidth;
+    }
+  }
+}
 
 void ASceneCaptureSensor::CopyTextureToAtlas()
 {
@@ -525,6 +553,10 @@ void ASceneCaptureSensor::CopyTextureToAtlas()
 
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   if(!GameMode->IsCameraAtlasTextureValid()) return;
+
+#if !UE_BUILD_SHIPPING
+  if(!GameMode->IsCameraCopyToAtlasEnabled()) return;
+#endif
 
   ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_CopyTextureToAtlas)
   (
