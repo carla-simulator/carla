@@ -116,7 +116,7 @@ def generate_lidar_bp(args, world, blueprint_library, delta):
             lidar_bp.set_attribute('dropoff_intensity_limit', '1.0')
             lidar_bp.set_attribute('dropoff_zero_intensity', '0.0')
         else:
-            lidar_bp.set_attribute('noise_stddev', '2.0')
+            lidar_bp.set_attribute('noise_stddev', '0.2')
 
     lidar_bp.set_attribute('upper_fov', str(args.upper_fov))
     lidar_bp.set_attribute('lower_fov', str(args.lower_fov))
@@ -208,7 +208,7 @@ def main(args):
             vis.poll_events()
             vis.update_renderer()
             # # This can fix Open3D jittering issues:
-            # time.sleep(0.005)
+            time.sleep(0.005)
             world.tick()
 
             process_time = datetime.now() - dt0
