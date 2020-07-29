@@ -26,12 +26,12 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
   Offset = carla::sensor::SensorRegistry::get<ASemanticSegmentationCamera*>::type::header_offset;
 }
 
-void ASemanticSegmentationCamera::SendPixels()
+void ASemanticSegmentationCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
 {
 #if !UE_BUILD_SHIPPING
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   if(!GameMode->IsCameraStreamEnabled()) return;
 #endif
 
-  SendPixelsInStream(*this);
+  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
 }
