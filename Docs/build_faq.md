@@ -80,6 +80,29 @@ sudo apt install git-all #install git
 
   </details>
 
+<!-- ======================================================================= -->
+  <details>
+    <summary><h5 style="display:inline">
+    AttributeError: module 'carla' has no attribute 'Client' when running a script. 
+    </h5></summary>
+
+Run the following command. 
+```sh
+pip3 install -Iv setuptools==47.3.1
+``` 
+
+And build the PythonAPI again. 
+```sh
+make PythonAPI
+```
+
+Try to build the docs to test if everything is running properly. A successful message should show. 
+```sh
+make PythonAPI.docs
+```
+
+  </details>
+
 
 ---
 ## Windows build
