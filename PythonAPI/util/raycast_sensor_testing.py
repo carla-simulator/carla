@@ -415,7 +415,7 @@ def one_run(args, client):
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
-                    prof_str = "%-10s %-9s %-15s %-7.2f %-20.3f" % (args.lidar_number, args.radar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
+                    prof_str = "%-10s %-9s  %-9s %-15s %-7.2f %-20.3f" % (args.lidar_number, args.rawlidar_number, args.radar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
                     break
 
             if call_exit:
@@ -432,6 +432,11 @@ def one_run(args, client):
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
             world.apply_settings(settings)
+
+        if args.profiling:
+            settings.no_rendering_mode = False
+            world.apply_settings(settings)
+
 
     return prof_str
 
@@ -533,7 +538,7 @@ def main():
 
         if args.profiling:
             print("-------------------------------------------------------")
-            print("# Running profiling with %s lidars, %s raw lidars and %s radars." % (args.lidar_number, args.lidarinfo_number, args.radar_number))
+            print("# Running profiling with %s lidars, %s raw lidars and %s radars." % (args.lidar_number, args.rawlidar_number, args.radar_number))
             args.render_cam = False
             args.render_window = False
             runs_output = []
@@ -557,7 +562,7 @@ def main():
                 print("#Hardware information not available, please install the " \
                     "multiprocessing module")
 
-            print("#NumLidars NumRadars PointsPerSecond FPS     PercentageProcessing")
+            print("#NumLidars NumRawLids NumRadars PointsPerSecond FPS     PercentageProcessing")
             for o  in runs_output:
                 print(o)
 
