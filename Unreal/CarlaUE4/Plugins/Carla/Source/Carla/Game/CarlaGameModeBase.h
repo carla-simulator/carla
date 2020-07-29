@@ -139,8 +139,6 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
-  //FAtlasCopyRequest* GetAtlasCopyRequest();
-
   void CreateAtlasTextures();
 
   void CaptureAtlas();
