@@ -1031,6 +1031,13 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(stop_replayer) << [this](bool keep_actors) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->StopReplayer(keep_actors);
+    return R<void>::Success();
+  };
+
   // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(draw_debug_shape) << [this](const cr::DebugShape &shape) -> R<void>

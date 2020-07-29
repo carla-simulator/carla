@@ -230,6 +230,8 @@ namespace detail {
 
     void SetReplayerIgnoreHero(bool ignore_hero);
 
+    void StopReplayer(bool keep_actors);
+
     void SubscribeToStream(
         const streaming::Token &token,
         std::function<void(Buffer)> callback);
