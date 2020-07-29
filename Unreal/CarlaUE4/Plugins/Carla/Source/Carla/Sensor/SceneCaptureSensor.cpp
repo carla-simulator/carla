@@ -565,7 +565,14 @@ void ASceneCaptureSensor::CopyTextureToAtlas()
 void ASceneCaptureSensor::CopyTextureFromAtlas(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
 {
 
-  if(AtlasImage.Num() > 0 && ImageToSend.Num() > 0)
+  // Check that the atlas alreay contains our texture
+  // and our image has been initialized
+  if(AtlasImage.Num() < (PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight) ||
+     ImageToSend.Num() <= 0)
+  {
+    return;
+  }
+
   {
     SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
 

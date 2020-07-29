@@ -27,6 +27,7 @@
 #include "CarlaGameModeBase.generated.h"
 
 
+/*
 USTRUCT()
 struct FAtlasCopyRequest
 {
@@ -63,6 +64,7 @@ struct FAtlasCopyRequest
   uint32 AtlasTextureWidth = 0u;
   uint32 AtlasTextureHeight = 0u;
 };
+*/
 
 
 /// Base class for the CARLA Game Mode.
@@ -101,7 +103,7 @@ public:
   }
 
   FTexture2DRHIRef GetCurrentCamerasAtlasTexture() const{
-    return CamerasAtlasTexture[CurrentAtlas];
+    return CamerasAtlasTexture;
   }
 
   uint32 GetAtlasTextureWidth() const {
@@ -178,7 +180,7 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
-  FAtlasCopyRequest* GetAtlasCopyRequest();
+  //FAtlasCopyRequest* GetAtlasCopyRequest();
 
   void CreateAtlasTextures();
 
@@ -221,13 +223,16 @@ private:
   FDelegateHandle CaptureAtlasDelegate;
   FDelegateHandle SendAtlasDelegate;
 
-  TQueue<FAtlasCopyRequest*> AtlasCopyRequestQueue;
-  TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
+  //TQueue<FAtlasCopyRequest*> AtlasCopyRequestQueue;
+  //TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
 
   // TODO: clean
+
+  // TODO: remove kMaxNumTextures and current/prev index
   static const uint32 kMaxNumTextures = 1u; // This has to be POT
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
-  FTexture2DRHIRef CamerasAtlasTexture[kMaxNumTextures];
+  FTexture2DRHIRef CamerasAtlasTexture;
+  TArray<FColor> AtlasImage[kMaxNumTextures];
   uint32 AtlasTextureWidth = 0u;
   uint32 AtlasTextureHeight = 0u;
   uint32 CurrentAtlasTextureHeight = 0u;
