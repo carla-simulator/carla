@@ -152,25 +152,6 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
     }
   }
 
-static ECityObjectLabel GetComponentTag(const FHitResult& HitInfo) {
-  auto StaticMeshComponent = Cast<UStaticMeshComponent>(HitInfo.Component.Get());
-
-  if (StaticMeshComponent) {
-    return ATagger::GetLabelByPath(StaticMeshComponent->GetStaticMesh());
-  }else {
-    auto SkeletalMeshComponent = Cast<USkeletalMeshComponent>(HitInfo.Component.Get());
-    if (SkeletalMeshComponent) {
-      return ATagger::GetLabelByPath(SkeletalMeshComponent->GetPhysicsAsset());
-    }
-    else {
-      return ECityObjectLabel::None;
-    }
-  }
-
-
-}
-
-
 void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
@@ -192,10 +173,10 @@ void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTra
         const FActorInfo* ActorInfo = view.GetActorInfo();
         Detection.object_idx = ActorInfo->Description.UId;
 
-        Detection.object_tag = static_cast<uint32_t>(GetComponentTag(HitInfo));
+        Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
       }
       else {
-        Detection.object_tag = static_cast<uint32_t>(GetComponentTag(HitInfo));
+        Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
       }
     }
     else {
