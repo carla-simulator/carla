@@ -43,19 +43,28 @@ Users must have some control over the traffic flow by setting parameters that al
 <img src="../img/tm_2_architecture.jpg">
 </div>
 
-The previous diagram is a summary of the internal architecture of the Traffic Manager. The inner structure of the TM can be easily translated to code, and each relevant element has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. The functions and relations of these elements are explained in the following sections.  
+The previous diagram is a summary of the internal architecture of the Traffic Manager. The inner structure of the TM can be easily translated to code, and each relevant component has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. The functions and relations of these components are explained in the following sections.  
 
 Nevertheless, the logic of it can be simplified as follows.  
 
-__1. What is the current state?__ First of all, the [ALSM](#ALSM) (Agent Lifecycle & State Management) scans the world to keep track of all the vehicles and walkers present in it. All the data is retrieved from the server, and passed on to others. In such way, calls to the server are isolated in the ALSM, and these information can be easily acessible onwards. The [vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [simulation state](#simulation-state) stores in cache the position and velocity and some additional information of all the vehicles and walkers.  
+__1. Store the current state of the simulation.__  
+First of all, the [ALSM](#ALSM) (Agent Lifecycle & State Management) scans the world to keep track of all the vehicles and walkers present in it, and clean up entries for those that no longer exist. All the data is retrieved from the server, and passed on to others. In such way, calls to the server are isolated in the ALSM, and these information can be easily accessible onwards. The [vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [simulation state](#simulation-state) stores in cache the position and velocity and some additional information of all the vehicles and walkers.  
 
-__2. What should each vehicle do?__ The TM has to consider the current state of the simulation and generate viable commands for all the vehicles in the [vehicle registry](#vehicle-registry). The calculations for each vehicle are done separatedly. These calculations are divided in different [stages](#stages). The [control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - Where am I going?__ TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [in memory map](#in-memory-map) simplifies the map as a grid of waypoints, and the [Localization stage](#localization-stage) stores a near-future path to follow as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) element (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - Are there any obstacles ahead?__ The [Collision stage](#collision-stage) considers the path of the vehicle and the vehicles nearby to trigger collision hazards when necessary.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - Can I follow my path?__ Similarly, the [Traffic Light stage](#traffic-light-stage) considers traffic lights, stop signs, and priority rules to modify the path of the vehicle.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - How do I move there?__ Finally, the [Motion Planner stage](#motion-planner-stage) takes the path defined by the previous stages, and calculates the next movement according to it aided by the [PID controller](#pid-controller). This movement is then translated into an actual CARLA command to be applied.  
+__2. Calculate the movement of every registered vehicle.__  
+The main goal of the TM is generating viable commands for all the vehicles in the [vehicle registry](#vehicle-registry), according to the [simulation state](#simulation-state). The calculations for each vehicle are done separatedly. These calculations are divided in different [stages](#stages). The [control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one. Each vehicles has to go through the following stages.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - [Localization stage](#stage-1-localization-stage).__  
+TM vehicles do not have a specific route in mind. Choices are made randomly at junctions. Having these in mind, the [in memory map](#in-memory-map) simplifies the map as a grid of waypoints, and a near-future path to follow is created as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) component (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - [Collision stage](#stage-2-collision-stage).__  
+During this stage, bounding boxes are extended over the path of the vehicle, and collision hazards are triggered when necessary.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - [Traffic Light stage](#stage-3-traffic-light-stage)__  
+Similar to the collision stage, triggers hazards that modify the path of the vehicle according to traffic light influence, stop signs, and junction priority.  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - [Motion Planner stage](#stage-4-motion-planner-stage).__  
+Once the path has been defined by the previous stages, this stage calculates the vehice movement. A [PID controller](#pid-controller) will be used to determine how to reach the target values. This movement is then translated into an actual CARLA command to be applied.  
 
-__3. How are vehicles moved?__ Once the TM has calculated the next command for every vehicle, it is only a matter of applying these. All the commands are gathered by the [command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
+__3. Apply the commands in the simulation.__  
+Finally, the TM has calculated the next command for every vehicle. It is only a matter of applying these. All the commands are gathered by the [command array](#command-array), and sent to the CARLA server in a batch so that they are applied in the same frame.  
+
+And thus concludes the cycle. The TM follows this logic on every step of the simulation. For a better understanding of the role that each component plays, this section includes an in-depth description of each of them.  
 
 ### ALSM
 
@@ -129,7 +138,7 @@ __Related .cpp files:__ `TBD`.
 
 ### Stages
 
-##### Localization stage
+##### Stage 1- Localization stage
 
 First stage in the [control loop](#control-loop). Defines a near-future path for registered vehicles.  
 
@@ -141,7 +150,7 @@ First stage in the [control loop](#control-loop). Defines a near-future path for
 
 __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
-##### Collision stage
+##### Stage 2- Collision stage
 
 Second stage in the [control loop](#control-loop). Triggers collision hazards.  
 
@@ -151,7 +160,7 @@ Second stage in the [control loop](#control-loop). Triggers collision hazards.
 
 __Related .cpp files:__ `CollisionStage.cpp`.  
 
-##### Traffic Light stage
+##### Stage 3- Traffic Light stage
 
 Third stage in the [control loop](#control-loop). Triggers hazards to follow traffic regulations such as traffic lights, stop signs, and priority at junctions.  
 
@@ -160,7 +169,7 @@ Third stage in the [control loop](#control-loop). Triggers hazards to follow tra
 
 __Related .cpp files:__ `TrafficLightStage.cpp`.  
 
-##### Motion Planner stage
+##### Stage 4- Motion Planner stage
 
 Fourth and last stage in the [control loop](#control-loop). Generates the CARLA command that will be applied to the vehicle.  
 
