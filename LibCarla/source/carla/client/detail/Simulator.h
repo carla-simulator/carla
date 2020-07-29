@@ -422,6 +422,10 @@ namespace detail {
       _client.SetReplayerIgnoreHero(ignore_hero);
     }
 
+    void StopReplayer(bool keep_actors) {
+      _client.StopReplayer(keep_actors);
+  }
+
     /// @}
     // =========================================================================
     /// @name Operations with sensors
