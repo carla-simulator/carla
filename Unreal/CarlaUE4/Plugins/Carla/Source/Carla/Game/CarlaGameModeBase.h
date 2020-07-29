@@ -224,7 +224,8 @@ private:
   TQueue<FAtlasCopyRequest*> AtlasCopyRequestQueue;
   TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
 
-  static const uint32 kMaxNumTextures = 2u; // This has to be POT
+  // TODO: clean
+  static const uint32 kMaxNumTextures = 1u; // This has to be POT
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
   FTexture2DRHIRef CamerasAtlasTexture[kMaxNumTextures];
   uint32 AtlasTextureWidth = 0u;
