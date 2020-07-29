@@ -563,8 +563,9 @@ bool ASceneCaptureSensor::CopyTextureFromAtlas(
 
   // Check that the atlas alreay contains our texture
   // and our image has been initialized
-  if(AtlasImage.GetData() &&
-     AtlasImage.Num() < (PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight))
+  uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
+  uint32 TotalSize = (uint32)AtlasImage.Num();
+  if(AtlasImage.GetData() && TotalSize < ExpectedSize)
   {
     return false;
   }
