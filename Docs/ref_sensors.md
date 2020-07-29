@@ -961,7 +961,7 @@ Since these effects are provided by UE, please make sure to check their document
 <tr>
 <td><code>exposure_compensation</code> </td>
 <td>float</td>
-<td>0.0</td>
+<td>-2.2</td>
 <td>Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.</td>
 <tr>
 <td><code>exposure_min_bright</code> </td>
