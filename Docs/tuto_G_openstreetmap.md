@@ -38,11 +38,11 @@ CARLA can read a XML file generated with OpenStreetMaps, and convert it to OpenD
 	*   `osm_file` — The content of the initial `.osm` file parsed as string.  
 	*   `settings` — A [carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings) object containing the settings to parameterize the conversion.  
 *   __[carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings)__ – Helper class that contains different parameters used during the conversion.  
-	*   `use_offsets` *(default ???)* — Determines whereas the map should be generated with an offset, thus moving the origin from the center according to that offset.  
-	*   `offset_x` *(default ???)* — Offset in the X axis.  
-	*   `offset_y` *(default ???)* — Offset in the Y axis.  
-	*   `default_lane_width` *(default ???)* — Determines the width that lanes should have in the resulting XODR file.  
-	*   `elevation_layer_height` *(default ???)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).  
+	*   `use_offsets` *(default False)* — Determines whereas the map should be generated with an offset, thus moving the origin from the center according to that offset.  
+	*   `offset_x` *(default 0.0)* — Offset in the X axis.  
+	*   `offset_y` *(default 0.0* — Offset in the Y axis.  
+	*   `default_lane_width` *(default 4.0)* — Determines the width that lanes should have in the resulting XODR file.  
+	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).  
 
 
 The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.  
@@ -87,9 +87,9 @@ world = client.generate_opendrive_world(
 ```
 
 !!! Note
-    `wall_height = 0.0` is strongly recommended.
+    `wall_height = 0.0` is strongly recommended. OpenStreetMap defines lanes in opposing directions as different roads. If walls are generated, this result in wall overlapping and undesired collisions.  
 
-__b) Using config.py__ — We also provide the means to load an OpenStreetMaps file directly to Carla using the `config.py` script provided with Carla:
+__b) Using config.py__ — We also provide the means to load an OpenStreetMap file directly to CARLA using the `config.py` script provided with CARLA.
 ```
 config.py --osm-file=/path/to/OSM/file
 ```

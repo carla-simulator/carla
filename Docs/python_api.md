@@ -1406,20 +1406,33 @@ If __True__, Pedestrian navigation will be enabled using Recast tool. For very l
 
 ---
 
+## carla.Osm2Odr<a name="carla.Osm2Odr"></a>
+Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
+
+<h3>Methods</h3>
+- <a name="carla.Osm2Odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  
+Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.  
+    - **Parameters:**
+        - `osm_file` (_str_) – The content of the input OpenStreetMap file parsed as string.  
+        - `settings` (_[carla.OSM2ODRSettings](#carla.OSM2ODRSettings)_) – Parameterization for the conversion.  
+    - **Return:** _str_  
+
+---
+
 ## carla.Osm2OdrSettings<a name="carla.Osm2OdrSettings"></a>
-Class containing settings to perform the conversion of Open Street Map data to OpenDRIVE.  
+Helper class that contains the parameterization that will be used by [carla.Osm2Odr](#carla.Osm2Odr) to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Osm2OdrSettings.use_offsets"></a>**<font color="#f8805a">use_offsets</font>** (_bool_)  
-Enables the use of offset to position the map.  
+Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.  
 - <a name="carla.Osm2OdrSettings.offset_x"></a>**<font color="#f8805a">offset_x</font>** (_float_)  
-Offset in the x axis.  
+Offset in the X axis.  Default value is __0.0__.  
 - <a name="carla.Osm2OdrSettings.offset_y"></a>**<font color="#f8805a">offset_y</font>** (_float_)  
-Offset in the y axis.  
+Offset in the Y axis.  Default value is __0.0__.  
 - <a name="carla.Osm2OdrSettings.default_lane_width"></a>**<font color="#f8805a">default_lane_width</font>** (_float_)  
-Defines the default width of lanes.  
+Width of the lanes described in the resulting XODR map. Default value is __4.0__.  
 - <a name="carla.Osm2OdrSettings.elevation_layer_height"></a>**<font color="#f8805a">elevation_layer_height</font>** (_float_)  
-Defines the height of the different layers defined in Open Street Map data (see https://wiki.openstreetmap.org/wiki/Key:layer).  
+Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.  
 
 ---
 
@@ -2774,19 +2787,6 @@ Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same
 - <a name="carla.WorldSnapshot.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
 Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different.  
     - **Return:** _bool_  
-
----
-
-## carla.osm2odr<a name="carla.osm2odr"></a>
-Class that performs the conversion of Open Street Maps data to OpenDRIVE.  
-
-<h3>Methods</h3>
-- <a name="carla.osm2odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  
-Converts a Open Street Maps file to OpenDRIVE format using the settings provided by the second argument.  
-    - **Parameters:**
-        - `osm_file` (_str_) – The input Open Street Maps xml data.  
-        - `settings` (_[carla.OSM2ODRSettings](#carla.OSM2ODRSettings)_) – The settings used for the conversion.  
-    - **Return:** _str_  
 
 ---
 
