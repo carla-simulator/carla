@@ -17,6 +17,7 @@
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system.
   * Fixed light intensity and camera parameters to match
+  * New Lidar sensor ('lidar.ray_cast_raw') that returns the point cloud with information regarding to the object that have collided: incident angle, idx of collided actor and it semantic tag. 
   * Added `opend3D.py`, a more friendly LiDAR visualizer
   * Exposed matrix form of transformation to the client and Python API.
   * Added make command to download contributions as plugins (`make plugins`)
