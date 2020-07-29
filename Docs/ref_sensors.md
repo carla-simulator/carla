@@ -836,7 +836,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <td>0.675</td>
 <td>Intensity for the bloom post-process effect, <code>0.0</code> for disabling it.</td>
 <tr>
-<code>fov</code> </td>
+<td><code>fov</code> </td>
 <td>float</td>
 <td>90.0</td>
 <td>Horizontal field of view in degrees.</td>
