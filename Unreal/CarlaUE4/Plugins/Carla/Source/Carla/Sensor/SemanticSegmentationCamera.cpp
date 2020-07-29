@@ -26,10 +26,8 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
   Offset = carla::sensor::SensorRegistry::get<ASemanticSegmentationCamera*>::type::header_offset;
 }
 
-void ASemanticSegmentationCamera::Tick(float DeltaTime)
+void ASemanticSegmentationCamera::SendPixels()
 {
-  Super::Tick(DeltaTime);
-
 #if !UE_BUILD_SHIPPING
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   if(!GameMode->IsCameraStreamEnabled()) return;
