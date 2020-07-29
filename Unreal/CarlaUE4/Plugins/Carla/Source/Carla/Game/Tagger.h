@@ -25,6 +25,9 @@ enum class ECityObjectLabel : uint8
   Vegetation   =   9u,
   Vehicles     =  10u,
   Walls        =  11u,
+  Sky          =  11u,
+  Ground       =  11u,
+  Bridge       =  11u,
 };
 
 /// Sets actors' custom depth stencil value for semantic segmentation according
