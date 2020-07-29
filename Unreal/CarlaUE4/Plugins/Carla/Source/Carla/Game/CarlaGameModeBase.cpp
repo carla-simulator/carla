@@ -73,12 +73,21 @@ void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCapt
   SceneCaptureSensors.Remove(SceneCaptureSensor);
 
   // Recalculate PositionInAtlas for each camera
-  CurrentAtlasTextureHeight = 0;
+  AtlasTextureWidth = 0u;
   for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
   {
     Camera->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
     CurrentAtlasTextureHeight += Camera->ImageHeight;
+
+    if(AtlasTextureWidth < Camera->ImageWidth)
+    {
+      AtlasTextureWidth = ImageWidth;
+    }
+
   }
+  AtlasTextureHeight = CurrentAtlasTextureHeight;
+
+  IsAtlasTextureValid = false;
 }
 
 void ACarlaGameModeBase::InitGame(
@@ -382,9 +391,9 @@ void ACarlaGameModeBase::CreateAtlasTextures()
   {
     FRHIResourceCreateInfo CreateInfo;
     CamerasAtlasTexture = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
-    
+
     AtlasImage.Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
-    
+
     IsAtlasTextureValid = true;
   }
 }
