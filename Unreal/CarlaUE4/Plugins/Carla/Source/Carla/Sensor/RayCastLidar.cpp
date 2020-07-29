@@ -46,6 +46,7 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   Description = LidarDescription;
   LidarData = FLidarData(Description.Channels);
   CreateLasers();
+  PointsPerChannel.resize(Description.Channels);
 
   // Compute drop off model parameters
   DropOffBeta = 1.0f - Description.DropOffAtZeroIntensity;
@@ -117,8 +118,6 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   }
 
   void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-    std::vector<uint32_t> PointsPerChannel(Description.Channels);
-
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
     LidarData.ResetSerPoints(PointsPerChannel);
