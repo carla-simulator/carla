@@ -116,6 +116,15 @@
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
     # --------------------------------------
+    - def_name: stop_replayer
+      params:
+      - param_name: keep_actors
+        type: bool
+        doc: >
+          True if you want autoremove all actors from the replayer, or False to keep them.
+      doc: >
+        Stop current replayer.
+    # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
       - param_name: filename

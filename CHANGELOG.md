@@ -6,6 +6,7 @@
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added API function `freeze_all_traffic_lights` and `reset_group`
   * Fixed recorder determinism problems
+  * Added function to stop the replayer
   * Added Light ids
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
