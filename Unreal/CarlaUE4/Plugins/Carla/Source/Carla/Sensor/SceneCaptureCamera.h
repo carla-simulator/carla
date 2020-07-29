@@ -26,6 +26,6 @@ public:
 
 protected:
 
-  void Tick(float DeltaTime) override;
+  void SendPixels() override;
 
 };

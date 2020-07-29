@@ -30,10 +30,8 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
   Offset = carla::sensor::SensorRegistry::get<ADepthCamera*>::type::header_offset;
 }
 
-void ADepthCamera::Tick(float DeltaTime)
+void ADepthCamera::SendPixels()
 {
-  Super::Tick(DeltaTime);
-
 #if !UE_BUILD_SHIPPING
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   if(!GameMode->IsCameraStreamEnabled()) return;

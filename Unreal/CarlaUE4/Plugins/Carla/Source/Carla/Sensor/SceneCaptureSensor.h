@@ -274,6 +274,8 @@ public:
 
   void CopyTextureFromAtlas(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
 
+  virtual void SendPixels() {}
+
   template <typename TSensor>
   void SendPixelsInStream(TSensor &Sensor)
   {
