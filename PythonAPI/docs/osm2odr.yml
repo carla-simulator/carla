@@ -3,10 +3,12 @@
 
   # - CLASSES ------------------------------
   classes:
-  - class_name: osm2odr
+  - class_name: Osm2Odr
     # - DESCRIPTION ------------------------
     doc: >
-      Class that performs the conversion of Open Street Maps data to OpenDRIVE.
+      Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+    # - PROPERTIES -------------------------
+    instance_variables:
     # - METHODS ----------------------------
     methods:
     - def_name: convert
@@ -19,37 +21,36 @@
       - param_name: osm_file
         type: str
         doc: >
-          The input Open Street Maps xml data.
+          The content of the input OpenStreetMap file parsed as string.
       - param_name: settings
         type: carla.OSM2ODRSettings
         doc: >
-          The settings used for the conversion.
+          Parameterization for the conversion.
       doc: >
-        Converts a Open Street Maps file to OpenDRIVE format using the settings provided by the second argument.
+        Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.  
   # --------------------------------------
   - class_name: Osm2OdrSettings
     # - DESCRIPTION ------------------------
     doc: >
-      Class containing settings to perform the conversion of Open Street Map data to OpenDRIVE.
-    # - PROPERTIES -------------------------
+      Helper class that contains the parameterization that will be used by carla.Osm2Odr to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
     instance_variables:
     - var_name: use_offsets
       type: bool
       doc: >
-        Enables the use of offset to position the map.
+        Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.
     - var_name: offset_x
       type: float
       doc: >
-        Offset in the x axis.
+        Offset in the X axis.  Default value is __0.0__.
     - var_name: offset_y
       type: float
       doc: >
-        Offset in the y axis.
+        Offset in the Y axis.  Default value is __0.0__.
     - var_name: default_lane_width
       type: float
       doc: >
-        Defines the default width of lanes.
+        Width of the lanes described in the resulting XODR map. Default value is __4.0__.
     - var_name: elevation_layer_height
       type: float
       doc: >
-        Defines the height of the different layers defined in Open Street Map data (see https://wiki.openstreetmap.org/wiki/Key:layer).
+        Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
