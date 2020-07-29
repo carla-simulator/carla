@@ -240,7 +240,7 @@ void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
   // OnEndFrame
   FCoreDelegates::OnEndFrame.Remove(CaptureAtlasDelegate);
-  FCoreDelegates::OnEndFrame.Remove(SendAtlasDelegate);
+  //FCoreDelegates::OnEndFrame.Remove(SendAtlasDelegate);
 }
 
 void ACarlaGameModeBase::SpawnActorFactories()
