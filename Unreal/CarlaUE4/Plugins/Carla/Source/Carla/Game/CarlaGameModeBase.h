@@ -26,47 +26,6 @@
 
 #include "CarlaGameModeBase.generated.h"
 
-
-/*
-USTRUCT()
-struct FAtlasCopyRequest
-{
-  GENERATED_BODY()
-
-  void ResizeBuffer(uint32 Width, uint32 Height)
-  {
-    if(AtlasTextureWidth != Width || AtlasTextureHeight != Height)
-    {
-      UE_LOG(LogCarla, Warning, TEXT("FAtlasCopyRequest::ResizeBuffer %dx%d"), Width, Height);
-      AtlasTextureWidth = Width;
-      AtlasTextureHeight = Height;
-      AtlasImage.Init(FColor(), Width * Height);
-    }
-  }
-
-  void Start()
-  {
-    RenderFence.BeginFence(true);
-  }
-
-  void Wait()
-  {
-    RenderFence.Wait(false);
-  }
-
-  bool IsComplete()
-  {
-    return RenderFence.IsFenceComplete();
-  }
-
-  TArray<FColor> AtlasImage;
-  FRenderCommandFence RenderFence;
-  uint32 AtlasTextureWidth = 0u;
-  uint32 AtlasTextureHeight = 0u;
-};
-*/
-
-
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
 class CARLA_API ACarlaGameModeBase : public AGameModeBase
@@ -221,23 +180,13 @@ private:
   boost::optional<carla::road::Map> Map;
 
   FDelegateHandle CaptureAtlasDelegate;
-  FDelegateHandle SendAtlasDelegate;
 
-  //TQueue<FAtlasCopyRequest*> AtlasCopyRequestQueue;
-  //TQueue<FAtlasCopyRequest*> AtlasCopyRequestsQueuePool;
-
-  // TODO: clean
-
-  // TODO: remove kMaxNumTextures and current/prev index
-  static const uint32 kMaxNumTextures = 1u; // This has to be POT
   TArray<ASceneCaptureSensor*> SceneCaptureSensors;
   FTexture2DRHIRef CamerasAtlasTexture;
-  TArray<FColor> AtlasImage[kMaxNumTextures];
+  TArray<FColor> AtlasImage;
   uint32 AtlasTextureWidth = 0u;
   uint32 AtlasTextureHeight = 0u;
   uint32 CurrentAtlasTextureHeight = 0u;
-  uint32 CurrentAtlas = 0u;
-  uint32 PreviousAtlas = 0u;
   bool IsAtlasTextureValid = false;
 
 #if !UE_BUILD_SHIPPING

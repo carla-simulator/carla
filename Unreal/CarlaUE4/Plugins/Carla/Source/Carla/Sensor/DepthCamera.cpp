@@ -30,12 +30,12 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
   Offset = carla::sensor::SensorRegistry::get<ADepthCamera*>::type::header_offset;
 }
 
-void ADepthCamera::SendPixels()
+void ADepthCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
 {
 #if !UE_BUILD_SHIPPING
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   if(!GameMode->IsCameraStreamEnabled()) return;
 #endif
 
-  SendPixelsInStream(*this);
+  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
 }
