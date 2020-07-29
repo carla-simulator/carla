@@ -63,6 +63,11 @@ inline void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
   Replayer.SetIgnoreHero(IgnoreHero);
 }
 
+inline void ACarlaRecorder::StopReplayer(bool KeepActors)
+{
+  Replayer.Stop(KeepActors);
+}
+
 void ACarlaRecorder::Ticking(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
