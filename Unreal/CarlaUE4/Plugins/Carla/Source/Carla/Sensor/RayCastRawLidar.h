@@ -77,6 +77,7 @@ protected:
   TArray<float> LaserAngles;
 
   std::vector<std::vector<FHitResult>> RecordedHits;
+  std::vector<uint32_t> PointsPerChannel;
 
 private:
   FLidarRawData LidarRawData;
