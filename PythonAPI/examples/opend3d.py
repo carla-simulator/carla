@@ -105,25 +105,25 @@ def raw_lidar_callback(point_cloud, point_list):
     point_list.colors = o3d.utility.Vector3dVector(int_color)
 
 
-def generate_lidar_bp(args, world, blueprint_library, delta):
+def generate_lidar_bp(arg, world, blueprint_library, delta):
     """Generates a CARLA blueprint based on the script parameters"""
-    if args.raw:
+    if arg.raw:
         lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast_raw')
     else:
         lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
-        if args.no_noise:
+        if arg.no_noise:
             lidar_bp.set_attribute('dropoff_general_rate', '0.0')
             lidar_bp.set_attribute('dropoff_intensity_limit', '1.0')
             lidar_bp.set_attribute('dropoff_zero_intensity', '0.0')
         else:
             lidar_bp.set_attribute('noise_stddev', '0.2')
 
-    lidar_bp.set_attribute('upper_fov', str(args.upper_fov))
-    lidar_bp.set_attribute('lower_fov', str(args.lower_fov))
-    lidar_bp.set_attribute('channels', str(args.channels))
-    lidar_bp.set_attribute('range', str(args.range))
+    lidar_bp.set_attribute('upper_fov', str(arg.upper_fov))
+    lidar_bp.set_attribute('lower_fov', str(arg.lower_fov))
+    lidar_bp.set_attribute('channels', str(arg.channels))
+    lidar_bp.set_attribute('range', str(arg.range))
     lidar_bp.set_attribute('rotation_frequency', str(1.0 / delta))
-    lidar_bp.set_attribute('points_per_second', str(args.points_per_second))
+    lidar_bp.set_attribute('points_per_second', str(arg.points_per_second))
     return lidar_bp
 
 
@@ -146,9 +146,9 @@ def add_open3d_axis(vis):
     vis.add_geometry(axis)
 
 
-def main(args):
+def main(arg):
     """Main function of the script"""
-    client = carla.Client(args.host, args.port)
+    client = carla.Client(arg.host, arg.port)
     client.set_timeout(2.0)
     world = client.get_world()
 
@@ -162,24 +162,24 @@ def main(args):
 
         settings.fixed_delta_seconds = delta
         settings.synchronous_mode = True
-        settings.no_rendering_mode = args.no_rendering
+        settings.no_rendering_mode = arg.no_rendering
         world.apply_settings(settings)
 
         blueprint_library = world.get_blueprint_library()
-        vehicle_bp = blueprint_library.filter(args.filter)[0]
+        vehicle_bp = blueprint_library.filter(arg.filter)[0]
         vehicle_transform = random.choice(world.get_map().get_spawn_points())
         vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
-        vehicle.set_autopilot(args.no_autopilot)
+        vehicle.set_autopilot(arg.no_autopilot)
 
-        lidar_bp = generate_lidar_bp(args, world, blueprint_library, delta)
+        lidar_bp = generate_lidar_bp(arg, world, blueprint_library, delta)
 
-        user_offset = carla.Location(args.x, args.y, args.z)
+        user_offset = carla.Location(arg.x, arg.y, arg.z)
         lidar_transform = carla.Transform(carla.Location(x=-0.5, z=1.8) + user_offset)
 
         lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=vehicle)
 
         point_list = o3d.geometry.PointCloud()
-        if args.raw:
+        if arg.raw:
             lidar.listen(lambda data: raw_lidar_callback(data, point_list))
         else:
             lidar.listen(lambda data: lidar_callback(data, point_list))
@@ -195,7 +195,7 @@ def main(args):
         vis.get_render_option().point_size = 1
         vis.get_render_option().show_coordinate_frame = True
 
-        if args.show_axis:
+        if arg.show_axis:
             add_open3d_axis(vis)
 
         frame = 0
