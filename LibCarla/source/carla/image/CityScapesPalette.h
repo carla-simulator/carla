@@ -31,6 +31,9 @@ namespace detail {
         {  0u,   0u, 142u}, // car           =  10u,
         {102u, 102u, 156u}, // wall          =  11u,
         {220u, 220u,   0u}, // traffic sign  =  12u,
+        { 70u, 130u, 180u}, // sky           =  13u,
+        { 81u,   0u,  81u}, // ground        =  14u,
+        {150u, 100u, 100u}, // bridge        =  15u,
         // {  0u,   0u,  70u}, // truck
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
@@ -38,11 +41,8 @@ namespace detail {
         // {  0u,   0u, 230u}, // motorcycle
         // {  0u,  60u, 100u}, // bus
         // {  0u,  80u, 100u}, // train
-        // { 70u, 130u, 180u}, // sky
-        // { 81u,   0u,  81u}, // ground
         // {111u,  74u,   0u}, // dynamic
         // {119u,  11u,  32u}, // bicycle
-        // {150u, 100u, 100u}, // bridge
         // {150u, 120u,  90u}, // tunnel
         // {152u, 251u, 152u}, // terrain
         // {153u, 153u, 153u}, // polegroup
