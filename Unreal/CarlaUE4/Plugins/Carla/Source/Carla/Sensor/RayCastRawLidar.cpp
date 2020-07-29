@@ -43,6 +43,7 @@ void ARayCastRawLidar::Set(const FLidarDescription &LidarDescription)
   Description = LidarDescription;
   LidarRawData = FLidarRawData(Description.Channels);
   CreateLasers();
+  PointsPerChannel.resize(Description.Channels);
 }
 
 void ARayCastRawLidar::CreateLasers()
@@ -138,8 +139,6 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
   }
 
   void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-    std::vector<uint32_t> PointsPerChannel(Description.Channels);
-
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
     LidarRawData.ResetSerPoints(PointsPerChannel);
