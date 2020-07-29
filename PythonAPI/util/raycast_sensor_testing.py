@@ -291,7 +291,7 @@ def one_run(args, client):
             settings = world.get_settings()
             traffic_manager.set_synchronous_mode(True)
             settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 0.1
+            settings.fixed_delta_seconds = 0.05
             world.apply_settings(settings)
 
         if args.profiling:
@@ -325,26 +325,26 @@ def one_run(args, client):
         lidar_points_per_second = args.lidar_points
 
         if args.lidar_number >= 3:
-            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50',  'points_per_second': lidar_points_per_second}, [1, 0])
+            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50',  'points_per_second': lidar_points_per_second, 'rotation_frequency': '20'}, [1, 0])
 
         if args.lidar_number >= 2:
-            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': lidar_points_per_second}, [0, 1])
+            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': lidar_points_per_second, 'rotation_frequency': '20'}, [0, 1])
 
         if args.lidar_number >= 1:
-            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': lidar_points_per_second}, [1, 1])
+            SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': lidar_points_per_second, 'rotation_frequency': '20'}, [1, 1])
 
 
         # If any, we instanciate the required rawlidars
         rawlidar_points_per_second = args.rawlidar_points
 
         if args.rawlidar_number >= 3:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50', 'points_per_second': rawlidar_points_per_second}, [1, 0])
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [1, 0])
 
         if args.rawlidar_number >= 2:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': rawlidar_points_per_second}, [0, 1])
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [0, 1])
 
         if args.rawlidar_number >= 1:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': rawlidar_points_per_second}, [1, 1])
+            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [1, 1])
 
 
         # If any, we instanciate the required radars
