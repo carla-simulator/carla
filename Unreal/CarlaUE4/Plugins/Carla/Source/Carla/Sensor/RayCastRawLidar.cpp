@@ -138,7 +138,7 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
   }
 
   void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-    std::vector<u_int32_t> PointsPerChannel(Description.Channels);
+    std::vector<uint32_t> PointsPerChannel(Description.Channels);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
