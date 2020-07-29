@@ -26,5 +26,5 @@ public:
 
 protected:
 
-  void SendPixels() override;
+  void SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth) override;
 };

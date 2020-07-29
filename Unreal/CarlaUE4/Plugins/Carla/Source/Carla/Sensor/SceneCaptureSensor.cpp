@@ -484,19 +484,14 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  //CopyTextureDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureCamera::CopyTextureToAtlas);
-
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   GameMode->AddSceneCaptureSensor(this);
-
-  ImageToSend.Init(FColor(), ImageWidth * ImageHeight);
 
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  // TODO: can I remove this?
 
   // Add the view information every tick. Its only used for one tick and then
   // removed by the streamer.
@@ -505,7 +500,6 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
-  // UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureSensor::Tick"));
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -513,7 +507,6 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FCoreDelegates::OnEndFrame.Remove(CopyTextureDelegate);
   ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
   GameMode->RemoveSceneCaptureSensor(this);
 }
@@ -562,32 +555,38 @@ void ASceneCaptureSensor::CopyTextureToAtlas()
   );
 }
 
-void ASceneCaptureSensor::CopyTextureFromAtlas(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
+bool ASceneCaptureSensor::CopyTextureFromAtlas(
+    carla::Buffer &Buffer,
+    const TArray<FColor>& AtlasImage,
+    uint32 AtlasTextureWidth)
 {
 
   // Check that the atlas alreay contains our texture
   // and our image has been initialized
-  if(AtlasImage.Num() < (PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight) ||
-     ImageToSend.Num() <= 0)
+  if(AtlasImage.GetData() &&
+     AtlasImage.Num() < (PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight))
   {
-    return;
+    return false;
   }
 
+  SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
+
+  const FColor* SourceFColor = AtlasImage.GetData() + PositionInAtlas.Y * AtlasTextureWidth;
+  const uint8* Source = (uint8*)SourceFColor;
+  uint32 Dest = Offset;
+
+  const uint32 DstStride = ImageWidth * sizeof(FColor);
+  const uint32 SrcStride = AtlasTextureWidth * sizeof(FColor);
+
+  Buffer.reset(Offset + ImageHeight * DstStride);
+  for(uint32 i = 0; i < ImageHeight; i++)
   {
-    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-
-    const FColor* SourceFColor = &AtlasImage[0] + PositionInAtlas.Y * AtlasTextureWidth;
-    const uint8* Source = (uint8*)SourceFColor;
-    uint8* Dest = (uint8*)ImageToSend.GetData();
-
-    for(uint32 i = 0; i < ImageHeight; i++)
-    {
-      FMemory::Memcpy(Dest, Source, ImageWidth * sizeof(FColor));
-      Source += AtlasTextureWidth * sizeof(FColor);
-      Dest += ImageWidth * sizeof(FColor);
-    }
-
+    Buffer.copy_from(Dest, Source, DstStride);
+    Source += SrcStride;
+    Dest += DstStride;
   }
+
+  return true;
 }
 
 // =============================================================================

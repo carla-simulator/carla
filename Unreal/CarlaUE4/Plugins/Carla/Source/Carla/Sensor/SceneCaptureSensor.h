@@ -272,20 +272,20 @@ public:
 
   void CopyTextureToAtlas();
 
-  void CopyTextureFromAtlas(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
+  bool CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
 
-  virtual void SendPixels() {}
+  virtual void SendPixels(const TArray<FColor>& /* AtlasImage */, uint32 /* AtlasTextureWidth */) {}
 
   template <typename TSensor>
-  void SendPixelsInStream(TSensor &Sensor)
+  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
   {
-    if(ImageToSend.Num() > 0)
+    auto Stream = GetDataStream(Sensor);
+    auto Buffer = Stream.PopBufferFromPool();
+
+    if(CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth))
     {
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-        auto Stream = GetDataStream(Sensor);
-        auto Buffer = Stream.PopBufferFromPool();
-        Buffer.copy_from(Offset, ImageToSend);
         Stream.Send(Sensor, std::move(Buffer));
       }
     }
@@ -300,10 +300,6 @@ protected:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
-
-  FDelegateHandle CopyTextureDelegate;
-
-  TArray<FColor> ImageToSend;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
