@@ -163,7 +163,7 @@ def main(args):
         for i in range(args.number_of_vehicles):
             type_id = random.choice(blueprints)
             vclass = vtypes[type_id]['vClass']
-            
+
             allowed_edges = [e for e in sumo_edges if e.allows(vclass)]
             edge = random.choice(allowed_edges)
 
