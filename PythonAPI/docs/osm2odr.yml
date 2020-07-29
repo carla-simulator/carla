@@ -27,7 +27,7 @@
         doc: >
           Parameterization for the conversion.
       doc: >
-        Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.  
+        Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.
   # --------------------------------------
   - class_name: Osm2OdrSettings
     # - DESCRIPTION ------------------------

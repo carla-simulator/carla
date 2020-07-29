@@ -32,7 +32,7 @@ void export_osm2odr() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<OSM2ODR>("osm2odr", no_init)
+  class_<OSM2ODR>("Osm2Odr", no_init)
     .def("convert", &ConvertOSMToOpenDRIVE, (arg("osm_file"), arg("settings") = OSM2ODRSettings()))
       .staticmethod("convert")
   ;

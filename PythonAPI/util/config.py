@@ -236,7 +236,7 @@ def main():
                     print('file could not be readed.')
                     sys.exit()
             print('Converting OSM data to opendrive')
-            xodr_data = carla.osm2odr.convert(data)
+            xodr_data = carla.Osm2Odr.convert(data)
             print('load opendrive map.')
             vertex_distance = 2.0  # in meters
             max_road_length = 500.0 # in meters
