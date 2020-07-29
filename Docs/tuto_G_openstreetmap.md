@@ -11,7 +11,7 @@ OpenStreetMap is an open license map of the world developed by contributors. Sec
 
 The first thing to do is using [OpenStreetMap](https://www.openstreetmap.org) to generate an XML file containing the map information.
 
-__1.1. Go to [openstreetmap.org](https://www.openstreetmap.org)__. If the map is not properly visualized, try changing the layer in the righ pannel.  
+__1.1. Go to [openstreetmap.org](https://www.openstreetmap.org)__. If the map is not properly visualized, try changing the layer in the righ pannel.
 
 __1.2 Search for a desired location__ and zoom in to a specific area.
 ![openstreetmap_view](img/tuto_g_osm_web.jpg)
@@ -32,42 +32,42 @@ __1.6. Click the `Export` button__ in the __Export__ pannel, and save the map in
 ---
 ## 2- Convert to OpenDRIVE format
 
-CARLA can read a XML file generated with OpenStreetMaps, and convert it to OpenDRIVE format that can be ingested as a CARLA map. This can be done through the PythonAPI using the following classes.  
+CARLA can read a XML file generated with OpenStreetMaps, and convert it to OpenDRIVE format that can be ingested as a CARLA map. This can be done through the PythonAPI using the following classes.
 
-*   __[carla.osm2odr](python_api.md#carla.osm2odr)__ – The class that does the conversion. It takes the content of the `.osm` parsed as strind, and returns a string containing the resulting `.xodr`.  
-	*   `osm_file` — The content of the initial `.osm` file parsed as string.  
-	*   `settings` — A [carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings) object containing the settings to parameterize the conversion.  
-*   __[carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings)__ – Helper class that contains different parameters used during the conversion.  
-	*   `use_offsets` *(default False)* — Determines whereas the map should be generated with an offset, thus moving the origin from the center according to that offset.  
-	*   `offset_x` *(default 0.0)* — Offset in the X axis.  
-	*   `offset_y` *(default 0.0)* — Offset in the Y axis.  
-	*   `default_lane_width` *(default 4.0)* — Determines the width that lanes should have in the resulting XODR file.  
-	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).  
+*   __[carla.Osm2Odr](python_api.md#carla.Osm2Odr)__ – The class that does the conversion. It takes the content of the `.osm` parsed as strind, and returns a string containing the resulting `.xodr`.
+	*   `osm_file` — The content of the initial `.osm` file parsed as string.
+	*   `settings` — A [carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings) object containing the settings to parameterize the conversion.
+*   __[carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings)__ – Helper class that contains different parameters used during the conversion.
+	*   `use_offsets` *(default False)* — Determines whereas the map should be generated with an offset, thus moving the origin from the center according to that offset.
+	*   `offset_x` *(default 0.0)* — Offset in the X axis.
+	*   `offset_y` *(default 0.0)* — Offset in the Y axis.
+	*   `default_lane_width` *(default 4.0)* — Determines the width that lanes should have in the resulting XODR file.
+	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).
 
 
-The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.  
+The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.
 ```
 # Read the .osm data
 f = open("path/to/osm/file", 'r')
 osm_data = f.read()
 f.close()
 
-# Define the desired settings. In this case, default values. 
+# Define the desired settings. In this case, default values.
 settings = carla.Osm2OdrSettings()
 # Convert to .xodr
-xodr_data = carla.osm2odr.convert(osm_data, settings)
+xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
 # save opendrive file
 f = open("path/to/output/file", 'w')
 f.write(xodr_data)
 f.close()
 ```
-The resulting file contains the road information in OpenDRIVE format.  
+The resulting file contains the road information in OpenDRIVE format.
 
 ---
 ## 3- Import into CARLA
 
-Finally, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](#adv_opendrive.md).  
+Finally, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](#adv_opendrive.md).
 
 __a) Using your own script__ — Call for [`client.generate_opendrive_world()`](python_api.md#carla.Client.generate_opendrive_world) through the API. This will generate the new map, and block the simulation until it is ready. Use the [carla.OpendriveGenerationParameters](python_api.md#carla.OpendriveGenerationParameters) class to set the parameterization of the mesh generation.
 
@@ -87,7 +87,7 @@ world = client.generate_opendrive_world(
 ```
 
 !!! Note
-    `wall_height = 0.0` is strongly recommended. OpenStreetMap defines lanes in opposing directions as different roads. If walls are generated, this result in wall overlapping and undesired collisions.  
+    `wall_height = 0.0` is strongly recommended. OpenStreetMap defines lanes in opposing directions as different roads. If walls are generated, this result in wall overlapping and undesired collisions.
 
 __b) Using config.py__ — We also provide the means to load an OpenStreetMap file directly to CARLA using the `config.py` script provided with CARLA.
 ```
