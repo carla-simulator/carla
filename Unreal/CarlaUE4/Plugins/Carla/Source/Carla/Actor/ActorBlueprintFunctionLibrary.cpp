@@ -441,7 +441,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
+    ExposureCompensation.RecommendedValues = { TEXT("-2.2") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -1391,7 +1391,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, -2.2f));
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
