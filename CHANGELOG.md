@@ -1,6 +1,6 @@
 ## Latest
 
-  * Upgraded to AD RSS v4.0.1 supporting unstructured scenes and pedestrians
+  * Upgraded to AD RSS v4.0.1 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added API function `freeze_all_traffic_lights` and `reset_group`
@@ -16,6 +16,7 @@
   * Fixed gravity measurement bug from IMU sensor
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system.
+  * Fixed light intensity and camera parameters to match
   * Exposed matrix form of transformation to the client and Python API.
   * Added make command to download contributions as plugins (`make plugins`)
   * Added PythonAPI command to set multiple car light states at once

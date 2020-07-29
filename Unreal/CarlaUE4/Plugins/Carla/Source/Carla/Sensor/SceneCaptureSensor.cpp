@@ -366,6 +366,30 @@ float ASceneCaptureSensor::GetMotionBlurMinObjectScreenSize() const
   return CaptureComponent2D->PostProcessSettings.MotionBlurPerObjectSize;
 }
 
+void ASceneCaptureSensor::SetLensFlareIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.LensFlareIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetLensFlareIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.LensFlareIntensity;
+}
+
+void ASceneCaptureSensor::SetBloomIntensity(float Intensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.BloomIntensity = Intensity;
+}
+
+float ASceneCaptureSensor::GetBloomIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.BloomIntensity;
+}
+
 void ASceneCaptureSensor::SetWhiteTemp(float Temp)
 {
   check(CaptureComponent2D != nullptr);
@@ -538,16 +562,16 @@ namespace SceneCaptureSensor_local_ns {
     // Ambient Occlusion
     PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
     PostProcessSettings.AmbientOcclusionIntensity = 0.5f;
-    PostProcessSettings.bOverride_AmbientOcclusionRadius	= true;
+    PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
     PostProcessSettings.AmbientOcclusionRadius = 100.0f;
     PostProcessSettings.bOverride_AmbientOcclusionStaticFraction = true;
     PostProcessSettings.AmbientOcclusionStaticFraction = 1.0f;
     PostProcessSettings.bOverride_AmbientOcclusionFadeDistance = true;
     PostProcessSettings.AmbientOcclusionFadeDistance = 50000.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionPower	= true;
+    PostProcessSettings.bOverride_AmbientOcclusionPower = true;
     PostProcessSettings.AmbientOcclusionPower = 2.0f;
     PostProcessSettings.bOverride_AmbientOcclusionBias = true;
-    PostProcessSettings.AmbientOcclusionBias	= 3.0f;
+    PostProcessSettings.AmbientOcclusionBias = 3.0f;
     PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
     PostProcessSettings.AmbientOcclusionQuality = 100.0f;
 
@@ -555,9 +579,13 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_BloomMethod = true;
     PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
     PostProcessSettings.bOverride_BloomIntensity = true;
-    PostProcessSettings.BloomIntensity = 0.3f;
+    PostProcessSettings.BloomIntensity = 0.675f;
     PostProcessSettings.bOverride_BloomThreshold = true;
     PostProcessSettings.BloomThreshold = -1.0f;
+
+    // Lens
+    PostProcessSettings.bOverride_LensFlareIntensity = true;
+    PostProcessSettings.LensFlareIntensity = 0.1;
   }
 
   // Remove the show flags that might interfere with post-processing effects
