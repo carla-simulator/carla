@@ -40,7 +40,7 @@ CARLA can read a XML file generated with OpenStreetMaps, and convert it to OpenD
 *   __[carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings)__ – Helper class that contains different parameters used during the conversion.  
 	*   `use_offsets` *(default False)* — Determines whereas the map should be generated with an offset, thus moving the origin from the center according to that offset.  
 	*   `offset_x` *(default 0.0)* — Offset in the X axis.  
-	*   `offset_y` *(default 0.0* — Offset in the Y axis.  
+	*   `offset_y` *(default 0.0)* — Offset in the Y axis.  
 	*   `default_lane_width` *(default 4.0)* — Determines the width that lanes should have in the resulting XODR file.  
 	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).  
 
@@ -52,7 +52,7 @@ f = open("path/to/osm/file", 'r')
 osm_data = f.read()
 f.close()
 
-# Define the desired settings. In this case, default. 
+# Define the desired settings. In this case, default values. 
 settings = carla.Osm2OdrSettings()
 # Convert to .xodr
 xodr_data = carla.osm2odr.convert(osm_data, settings)
