@@ -7,7 +7,6 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
-#include "Engine/DecalActor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -122,16 +121,6 @@ void ACarlaGameModeBase::BeginPlay()
     ATagger::TagActorsInLevel(*GetWorld(), true);
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
-
-  // HACK: fix transparency see-through issues
-  // The problem: transparent objects are visible through walls.
-  // This is due to a weird interaction between the SkyAtmosphere component,
-  // the shadows of a directional light (the sun)
-  // and the custom depth set to 3 used for semantic segmentation
-  // The solution: Spawn a Decal.
-  // It just works!
-  GetWorld()->SpawnActor<ADecalActor>(
-      FVector(0,0,-1000000), FRotator(0,0,0), FActorSpawnParameters());
 
   ATrafficLightManager* Manager = GetTrafficLightManager();
   Manager->InitializeTrafficLights();

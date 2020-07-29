@@ -84,11 +84,6 @@ namespace road {
     /// on distance "s".
     /// - @ param s distance regarding the road to compute the point
     element::DirectedPoint GetDirectedPointIn(const double s) const;
-    /// Returns a directed point on the center of the road (lane 0),
-    /// with the corresponding laneOffset and elevation records applied,
-    /// on distance "s".
-    /// - @ param s distance regarding the road to compute the point
-    element::DirectedPoint GetDirectedPointInNoLaneOffset(const double s) const;
 
     /// Returns a pair containing:
     /// - @b first:  distance to the nearest point on the center in

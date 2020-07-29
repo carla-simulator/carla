@@ -24,7 +24,6 @@
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/InformationSet.h"
 #include "carla/road/Signal.h"
-#include "carla/road/SignalType.h"
 
 #include <iterator>
 #include <memory>
@@ -748,7 +747,7 @@ namespace road {
   }
 
   geom::Transform MapBuilder::ComputeSignalTransform(std::unique_ptr<Signal> &signal, MapData &data) {
-    DirectedPoint point = data.GetRoad(signal->_road_id).GetDirectedPointInNoLaneOffset(signal->_s);
+    DirectedPoint point = data.GetRoad(signal->_road_id).GetDirectedPointIn(signal->_s);
     point.ApplyLateralOffset(static_cast<float>(-signal->_t));
     point.location.y *= -1; // Unreal Y axis hack
     point.location.z += static_cast<float>(signal->_zOffset);
@@ -765,15 +764,9 @@ namespace road {
           _temp_signal_container[signal_reference->_signal_id].get();
     }
 
-    for(auto& signal_pair : _temp_signal_container) {
+    for(auto& signal_pair : _temp_signal_container){
       auto& signal = signal_pair.second;
-      auto transform = ComputeSignalTransform(signal, _map_data);
-      // Hack: compensate RoadRunner displacement (25cm) due to lightbox size
-      if (SignalType::IsTrafficLight(signal->GetType())) {
-        transform.location = transform.location +
-            geom::Location(transform.GetForwardVector()*0.25);
-      }
-      signal->_transform = transform;
+      signal->_transform = ComputeSignalTransform(signal, _map_data);
     }
 
     _map_data._signals = std::move(_temp_signal_container);
@@ -971,12 +964,6 @@ void MapBuilder::CreateController(
       auto signal_position = signal->GetTransform().location;
       auto closest_waypoint_to_signal =
           map.GetClosestWaypointOnRoad(signal_position);
-      // workarround to not move speed signals
-      if (signal->GetName().substr(0, 6) == "Speed_" ||
-          signal->GetName().substr(0, 6) == "speed_" ||
-          signal->GetName().find("Stencil_STOP") != std::string::npos) {
-        continue;
-      }
       if(closest_waypoint_to_signal) {
         auto distance_to_road =
             (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
