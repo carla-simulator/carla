@@ -155,7 +155,7 @@ Check out the [introduction to blueprints](core_actors.md).
         - `rotation_frequency` (_Float_)<sub>_ – Modifiable_</sub>
         - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
         - `upper_fov` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">sensor.lidar.ray_cast_raw</font>**  
+- **<font color="#498efc">sensor.lidar.ray_cast_semantic</font>**  
     - **Attributes:**
         - `channels` (_Int_)<sub>_ – Modifiable_</sub>
         - `lower_fov` (_Float_)<sub>_ – Modifiable_</sub>

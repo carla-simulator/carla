@@ -12,7 +12,7 @@
         - IMU detector: carla.IMUMeasurement.
         - Lane invasion detector: carla.LaneInvasionEvent.
         - Lidar raycast: carla.LidarMeasurement.
-        - RawLidar raycast: carla.LidarRawMeasurement.
+        - SemanticLidar raycast: carla.SemanticLidarMeasurement.
         - Obstacle detector: carla.ObstacleDetectionEvent.
         - Radar detector: carla.RadarMeasurement.
         - RSS sensor: carla.RssResponse.
@@ -188,11 +188,11 @@
     - def_name: __str__
     # --------------------------------------
 
-  - class_name: LidarRawMeasurement
+  - class_name: SemanticLidarMeasurement
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the raw lidar data retrieved by a <b>sensor.lidar.ray_cast_raw</b>. This essentially simulates a rotating lidar using ray-casting. Learn more about this [here](ref_sensors.md#rawlidar-raycast-sensor).
+      Class that defines the semantic lidar data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating lidar using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: channels
@@ -237,15 +237,15 @@
       - param_name: pos
         type: int
       - param_name: detection
-        type: carla.LidarRawDetection
+        type: carla.SemanticLidarDetection
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
-  - class_name: LidarRawDetection
+  - class_name: SemanticLidarDetection
     # - DESCRIPTION ------------------------
     doc: >
-      Data contained inside a carla.LidarRawMeasurement. Each of these represents one of the points in the cloud with its location and its asociated intensity.
+      Data contained inside a carla.SemanticLidarMeasurement. Each of these represents one of the points in the cloud with its location and its asociated intensity.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: point
