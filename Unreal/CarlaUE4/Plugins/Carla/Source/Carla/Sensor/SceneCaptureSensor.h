@@ -279,11 +279,12 @@ public:
   template <typename TSensor>
   void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
   {
-    auto Stream = GetDataStream(Sensor);
-    auto Buffer = Stream.PopBufferFromPool();
+    if (Sensor.HasActorBegunPlay() && !Sensor.IsPendingKill()) {
 
-    if(CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth))
-    {
+      auto Stream = GetDataStream(Sensor);
+      carla::Buffer Buffer = Stream.PopBufferFromPool();
+
+      if(CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth))
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
         Stream.Send(Sensor, std::move(Buffer));
