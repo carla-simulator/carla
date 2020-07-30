@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/rpc/Location.h"
 #include "carla/sensor/data/Array.h"
-#include "carla/sensor/s11n/LidarSerializer.h"
+#include "carla/sensor/s11n/LidarRawSerializer.h"
 
 namespace carla {
 namespace sensor {
@@ -17,16 +17,16 @@ namespace data {
 
   /// Measurement produced by a Lidar. Consists of an array of 3D points plus
   /// some extra meta-information about the Lidar.
-  class LidarMeasurement : public Array<data::LidarDetection>  {
-    static_assert(sizeof(data::LidarDetection) == 4u * sizeof(float), "Location size missmatch");
-    using Super = Array<data::LidarDetection>;
+  class LidarRawMeasurement : public Array<data::LidarRawDetection>  {
+    static_assert(sizeof(data::LidarRawDetection) == 6u * sizeof(float), "LidarRawDetection size missmatch");
+    using Super = Array<data::LidarRawDetection>;
 
   protected:
-    using Serializer = s11n::LidarSerializer;
+    using Serializer = s11n::LidarRawSerializer;
 
     friend Serializer;
 
-    explicit LidarMeasurement(RawData &&data)
+    explicit LidarRawMeasurement(RawData &&data)
       : Super(std::move(data), [](const RawData &d) {
       return Serializer::GetHeaderOffset(d);
     }) {}
@@ -38,6 +38,7 @@ namespace data {
     }
 
   public:
+
     /// Horizontal angle of the Lidar at the time of the measurement.
     auto GetHorizontalAngle() const {
       return GetHeader().GetHorizontalAngle();

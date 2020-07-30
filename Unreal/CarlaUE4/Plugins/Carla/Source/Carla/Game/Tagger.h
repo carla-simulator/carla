@@ -50,6 +50,7 @@ public:
   /// objects having this value active.
   static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation);
 
+
   /// Set the tag of every actor in level.
   ///
   /// If bTagForSemanticSegmentation true, activate the custom depth pass. This
@@ -74,7 +75,25 @@ public:
     return (Tag == GetTagOfTaggedComponent(Component));
   }
 
+  /// Retrieve the tags of an already tagged actor. ECityObjectLabel::None is
+  /// not added to the array.
   static FString GetTagAsString(ECityObjectLabel Tag);
+
+  /// Method that computes the label corresponding to a folder path
+  static ECityObjectLabel GetLabelByFolderName(const FString &String);
+
+  /// Method that computes the label corresponding to an specific object
+  /// using the folder path in which it is stored
+  template <typename T>
+  static ECityObjectLabel GetLabelByPath(const T *Object) {
+    const FString Path = Object->GetPathName();
+    TArray<FString> StringArray;
+    Path.ParseIntoArray(StringArray, TEXT("/"), false);
+    return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : ECityObjectLabel::None);
+  }
+
+  static void SetStencilValue(UPrimitiveComponent &Component,
+    const ECityObjectLabel &Label, const bool bSetRenderCustomDepth);
 
   ATagger();
 
