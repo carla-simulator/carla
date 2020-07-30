@@ -132,6 +132,9 @@ FString ATagger::GetTagAsString(const ECityObjectLabel Label)
     CARLA_GET_LABEL_STR(Vegetation)
     CARLA_GET_LABEL_STR(Vehicles)
     CARLA_GET_LABEL_STR(Walls)
+    CARLA_GET_LABEL_STR(Sky)
+    CARLA_GET_LABEL_STR(Ground)
+    CARLA_GET_LABEL_STR(Bridge)
 #undef CARLA_GET_LABEL_STR
   }
 }
