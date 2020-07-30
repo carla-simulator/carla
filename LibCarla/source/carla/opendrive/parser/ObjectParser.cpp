@@ -91,7 +91,6 @@ namespace parser {
           } else if (name.find("Stencil_STOP") != std::string::npos) {
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
-            carla::log_warning(node_object.attribute("id").as_string());
             map_builder.AddSignal(road,
                 node_object.attribute("id").as_string(),
                 node_object.attribute("s").as_double(),
