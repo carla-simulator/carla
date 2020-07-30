@@ -85,8 +85,6 @@ import math
 import random
 import re
 import weakref
-import gym
-import cv2
 
 try:
     import pygame
@@ -150,20 +148,6 @@ def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
-class Measurements:
-    def __init__(transform, bounding_box, acceleration, forward_speed, collision_vehicles, collision_pedestrians, collision_other, intersection_otherlane, intersection_offroad, autopilot_control):
-        self.transform = transform
-        self.bounding_box = bounding_box
-        self.acceleration = acceleration
-        self.forward_speed = forward_speed
-        self.collision_vehicles = collision_vehicles 
-        self.collision_pedestrians = collision_pedestrians
-        self.collision_other = collision_other
-        self.intersection_otherlane = intersection_otherlane
-        self.intersection_offroad = intersection_offroad
-        self.autopilot_control = autopilot_control
-
-
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
@@ -171,7 +155,7 @@ class Measurements:
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, clock, display, args):
         self.world = carla_world
         self.actor_role_name = args.rolename
         try:
@@ -193,12 +177,69 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart()
+        self.reset()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
+        self._control = carla.VehicleControl()
+        self.num_episodes = 0
+        self.steps = 0
+        self.done = False
+        self.clock = clock
+        self.display = display
 
-    def restart(self):
+    def step(self, action):
+        if self.done:
+            raise ValueError('self.done should always be False when calling step')
+
+        while True:
+
+            try:
+                self.clock.tick_busy_loop(60)
+                # if controller.parse_events(client, world, clock):
+                #     return
+                # TODO: send actions
+                self._control.throttle = 1.0
+                self.player.apply_control(self._control)
+                self.tick(self.clock)
+                self.render(self.display)
+
+                # TODO: gather observations
+                obs = None
+            except Exception as e:
+                print("Error occurred")
+            
+            break
+
+        timeout = False # TODO: timeout
+        collision = False # TODO: collision
+        success = True if np.random.rand() < 0.05 else False # TODO: success
+
+        if timeout:
+            print('Timeout')
+            self._failure_timeout = True
+        if collision:
+            print('Collision')
+            self._failure_collision = True
+        if success:
+            print('Success')
+        self.done = timeout or collision or success
+
+        # Get the reward
+        env_state = {'timeout': timeout, 'collision': collision, 'success': success}
+        # TODO: get reward
+        #reward = self._reward.get_reward(measurements, self._target, self.last_direction, control, env_state)
+        reward = 0
+
+        # Additional information
+        info = {'carla-reward': reward}
+
+        self.steps += 1
+
+        return obs, reward, self.done, info
+
+
+    def reset(self):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -248,6 +289,8 @@ class World(object):
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
 
+        self.done = False
+
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
@@ -288,20 +331,6 @@ class World(object):
             if actor is not None:
                 actor.destroy()
 
-    def get_measurements(self):
-        transform = self.player.get_transform()
-        bounding_box = self.player.bounding_box
-        acceleration = self.player.get_acceleration()
-        forward_speed = self.player.get_velocity() # not sure if need to normalize
-        # collision_vehicles = ??? 
-        # collision_pedestrians = ???
-        # collision_other = ???
-        # intersection_otherlane = ???
-        # intersection_offroad = ???
-        # autopilot_control = ???
-        return Measurements(transform, bounding_box, acceleration, forward_speed, collision_vehicles, collision_pedestrians, collision_other, intersection_otherlane, intersection_offroad, autopilot_control)
-
-
 
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
@@ -326,51 +355,19 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
-        if isinstance(self._control, carla.VehicleControl):
-            current_lights = self._lights
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return True
-            elif event.type == pygame.KEYUP:
-                if self._is_quit_shortcut(event.key):
-                    return True
-                elif event.key == K_BACKSPACE:
-                    if self._autopilot_enabled:
-                        world.player.set_autopilot(False)
-                        world.restart()
-                        world.player.set_autopilot(True)
-                    else:
-                        world.restart()
-                elif event.key == K_F1:
-                    world.hud.toggle_info()
-                elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
-                    world.hud.help.toggle()
-                elif event.key == K_TAB:
-                    world.camera_manager.toggle_camera()
-                elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
-                    world.next_weather(reverse=True)
-                elif event.key == K_c:
-                    world.next_weather()
-                elif event.key == K_g:
-                    world.toggle_radar()
-                elif event.key == K_BACKQUOTE:
-                    world.camera_manager.next_sensor()
-                elif event.key == K_n:
-                    world.camera_manager.next_sensor()
-                elif event.key > K_0 and event.key <= K_9:
-                    world.camera_manager.set_sensor(event.key - 1 - K_0)
-                elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
-                    world.camera_manager.toggle_recording()
-                elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
-                    if (world.recording_enabled):
-                        client.stop_recorder()
-                        world.recording_enabled = False
-                        world.hud.notification("Recorder is OFF")
-                    else:
-                        client.start_recorder("manual_recording.rec")
-                        world.recording_enabled = True
-                        world.hud.notification("Recorder is ON")
+world.hud.toggle_info()
+world.hud.help.toggle()
+world.camera_manager.toggle_camera()
+world.next_weather(reverse=True)
+world.toggle_radar()
+world.camera_manager.next_sensor()
+world.camera_manager.set_sensor(event.key - 1 - K_0)
+world.camera_manager.toggle_recording()
+client.start_recorder("manual_recording.rec")
+client.stop_recorder()
+               
+               
+
                 elif event.key == K_p and (pygame.key.get_mods() & KMOD_CTRL):
                     # stop recorder
                     client.stop_recorder()
@@ -414,33 +411,33 @@ class KeyboardControl(object):
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
-                    elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
-                        current_lights ^= carla.VehicleLightState.Special1
-                    elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
-                        current_lights ^= carla.VehicleLightState.HighBeam
-                    elif event.key == K_l:
-                        # Use 'L' key to switch between lights:
-                        # closed -> position -> low beam -> fog
-                        if not self._lights & carla.VehicleLightState.Position:
-                            world.hud.notification("Position lights")
-                            current_lights |= carla.VehicleLightState.Position
-                        else:
-                            world.hud.notification("Low beam lights")
-                            current_lights |= carla.VehicleLightState.LowBeam
-                        if self._lights & carla.VehicleLightState.LowBeam:
-                            world.hud.notification("Fog lights")
-                            current_lights |= carla.VehicleLightState.Fog
-                        if self._lights & carla.VehicleLightState.Fog:
-                            world.hud.notification("Lights off")
-                            current_lights ^= carla.VehicleLightState.Position
-                            current_lights ^= carla.VehicleLightState.LowBeam
-                            current_lights ^= carla.VehicleLightState.Fog
-                    elif event.key == K_i:
-                        current_lights ^= carla.VehicleLightState.Interior
-                    elif event.key == K_z:
-                        current_lights ^= carla.VehicleLightState.LeftBlinker
-                    elif event.key == K_x:
-                        current_lights ^= carla.VehicleLightState.RightBlinker
+                    # elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
+                    #     current_lights ^= carla.VehicleLightState.Special1
+                    # elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
+                    #     current_lights ^= carla.VehicleLightState.HighBeam
+                    # elif event.key == K_l:
+                    #     # Use 'L' key to switch between lights:
+                    #     # closed -> position -> low beam -> fog
+                    #     if not self._lights & carla.VehicleLightState.Position:
+                    #         world.hud.notification("Position lights")
+                    #         current_lights |= carla.VehicleLightState.Position
+                    #     else:
+                    #         world.hud.notification("Low beam lights")
+                    #         current_lights |= carla.VehicleLightState.LowBeam
+                    #     if self._lights & carla.VehicleLightState.LowBeam:
+                    #         world.hud.notification("Fog lights")
+                    #         current_lights |= carla.VehicleLightState.Fog
+                    #     if self._lights & carla.VehicleLightState.Fog:
+                    #         world.hud.notification("Lights off")
+                    #         current_lights ^= carla.VehicleLightState.Position
+                    #         current_lights ^= carla.VehicleLightState.LowBeam
+                    #         current_lights ^= carla.VehicleLightState.Fog
+                    # elif event.key == K_i:
+                    #     current_lights ^= carla.VehicleLightState.Interior
+                    # elif event.key == K_z:
+                    #     current_lights ^= carla.VehicleLightState.LeftBlinker
+                    # elif event.key == K_x:
+                    #     current_lights ^= carla.VehicleLightState.RightBlinker
 
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
@@ -1059,17 +1056,18 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        clock = pygame.time.Clock()
+        world = World(world=client.get_world(), hud=hud, clock=clock, display=display, args=args)
         controller = KeyboardControl(world, args.autopilot)
 
-        clock = pygame.time.Clock()
-        while True:
-            clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
-                return
-            world.tick(clock)
-            world.render(display)
-            pygame.display.flip()
+        for episode in range(args.num_episodes):
+            print("Starting episode %d" % episode)
+            while not world.done:
+                # measurements, sensor_data = world.get_measurements() # TODO: measurement
+                # action = agent.act() # TODO: fill in agent
+                obs, reward, done, info = world.step(None) # TODO: insert actions
+                pygame.display.flip()
+            world.reset()
 
     finally:
 
@@ -1080,6 +1078,7 @@ def game_loop(args):
             world.destroy()
 
         pygame.quit()
+
 
 # ==============================================================================
 # -- main() --------------------------------------------------------------------
@@ -1129,6 +1128,12 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    # NOTE: number of episodes
+    argparser.add_argument(
+        '--num-episodes'
+        default=10000,
+        type=int,
+        help='number of episodes for training')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
@@ -1141,178 +1146,8 @@ def main():
     print(__doc__)
 
     try:
-        pygame.init()
-        pygame.font.init()
-        world = None
 
-        try:
-            client = carla.Client(args.host, args.port)
-            client.set_timeout(2.0)
-
-            display = pygame.display.set_mode(
-                (args.width, args.height),
-                pygame.HWSURFACE | pygame.DOUBLEBUF)
-
-            hud = HUD(args.width, args.height)
-            world = World(client.get_world(), hud, args)
-
-            # TODO: adapt to existing env
-            obs_converter = CarlaObservationConverter(h=84, w=84, rel_coord_system=False)
-            action_converter = CarlaActionsConverter('carla-original') # or 'continuous'
-            envs = make_vec_envs(obs_converter, action_converter, args.starting_port, config.seed, config.num_processes,
-                                config.gamma, device, config.reward_class, num_frame_stack=1, subset=config.experiments_subset,
-                                norm_reward=False, norm_obs=True, apply_her=config.num_virtual_goals > 0,
-                                video_every=args.video_interval, video_dir=os.path.join(args.save_dir, 'video', experiment_name))
-
-            controller = KeyboardControl(world, args.autopilot)
-
-            clock = pygame.time.Clock()
-            # while True:
-            #     clock.tick_busy_loop(60)
-            #    if controller.parse_events(client, world, clock):
-            #         return
-            #     world.tick(clock)
-            #     world.render(display)
-            #     pygame.display.flip()
-            for j in range(config.num_updates):
-                for step in range(config.num_steps):
-                    # clock.tick_busy_loop(60)
-                    # Sample actions
-                    with torch.no_grad():
-                        value, action, action_log_prob, recurrent_hidden_states = agent.act(
-                                rollouts.get_obs(step),
-                                rollouts.recurrent_hidden_states[step],
-                                rollouts.masks[step])
-
-                    ### TODO: receive control from env ###
-                    control = envs.get_control(action)
-                    world.player.apply_control(control)
-
-                    ### TODO: parse obs to env ###
-                    measurements = world.get_measurements()
-                    # sensor_data = ???
-                    obs, reward, done, info = envs.step(measurements, sensor_data)
-
-                    
-                    # # just to see whether function normally, comment out later on
-                    world.tick(clock)
-                    # world.render(display)
-                    # pygame.display.flip()
-
-                    # For logging purposes
-                    carla_rewards = torch.tensor([i['carla-reward'] for i in info], dtype=torch.float)
-                    episode_reward += carla_rewards
-                    total_reward += carla_rewards.sum().item()
-                    total_steps += config.num_processes
-
-                    if done.any():
-                        total_episodes += done.sum()
-                        torch_done = torch.tensor(done.astype(int)).byte()
-                        mean_episode_reward = episode_reward[torch_done].mean().item()
-                        logger.info('{} episode(s) finished with reward {}'.format(done.sum(), mean_episode_reward))
-                        writer.add_scalar('train/mean_ep_reward_vs_steps', mean_episode_reward, total_steps)
-                        writer.add_scalar('train/mean_ep_reward_vs_episodes', mean_episode_reward, total_episodes)
-                        episode_reward[torch_done] = 0
-
-                    # If done then clean the history of observations.
-                    masks = torch.FloatTensor(1-done)
-
-                    rollouts.insert(obs, recurrent_hidden_states, action, action_log_prob, value, reward, masks.unsqueeze(-1))
-
-                if config.num_virtual_goals > 0:
-                    rollouts.apply_her(config.num_virtual_goals, device, beta=config.beta)
-
-                with torch.no_grad():
-                    next_value = agent.get_value(rollouts.get_obs(-1), # Get last observation
-                                                rollouts.recurrent_hidden_states[-1],
-                                                rollouts.masks[-1]).detach()
-
-                rollouts.compute_returns(next_value, config.use_gae, config.gamma, config.tau)
-
-
-                value_loss, action_loss, dist_entropy = agent.update(rollouts)
-
-                rollouts.after_update()
-
-                if j % args.save_interval == 0 and args.save_dir != "" and config.agent !='forward':
-                    save_path = os.path.join(save_dir_model, str(j) + '.pth.tar')
-                    save_modules(agent.optimizer, agent.model, args, config, save_path)
-
-                total_num_steps = (j + 1) * config.num_processes * config.num_steps
-
-                if j % args.log_interval == 0:
-
-                    # Logging to the stdout/our logs
-                    end = time.time()
-                    logger.info('------------------------------------')
-                    logger.info('Episodes {}, Updates {}, num timesteps {}, FPS {}'\
-                        .format(total_episodes, j + 1, total_num_steps, total_num_steps / (end - start)))
-                    logger.info('------------------------------------')
-
-
-                    # Logging to tensorboard
-                    writer.add_scalar('train/cum_reward_vs_steps', total_reward, total_steps)
-                    writer.add_scalar('train/cum_reward_vs_updates', total_reward, j+1)
-
-                    if config.agent in ['a2c', 'acktr', 'ppo']:
-                        writer.add_scalar('debug/value_loss_vs_steps', value_loss, total_steps)
-                        writer.add_scalar('debug/value_loss_vs_updates', value_loss, j+1)
-                        writer.add_scalar('debug/action_loss_vs_steps', action_loss, total_steps)
-                        writer.add_scalar('debug/action_loss_vs_updates', action_loss, j+1)
-                        writer.add_scalar('debug/dist_entropy_vs_steps', dist_entropy, total_steps)
-                        writer.add_scalar('debug/dist_entropy_vs_updates', dist_entropy, j+1)
-
-                    # Sample the last reward
-                    writer.add_scalar('debug/sampled_normalized_reward_vs_steps', reward.mean(), total_steps)
-                    writer.add_scalar('debug/sampled_normalized_reward_vs_updates', reward.mean(), j+1)
-                    writer.add_scalar('debug/sampled_carla_reward_vs_steps', carla_rewards.mean(), total_steps)
-                    writer.add_scalar('debug/sampled_carla_reward_vs_updates', carla_rewards.mean(), j+1)
-
-                if (args.eval_interval is not None and j % args.eval_interval == 0):
-                    eval_envs = make_vec_envs(
-                        args.env_name, args.starting_port, obs_converter, args.x + config.num_processes, config.num_processes,
-                        config.gamma, eval_log_dir, config.add_timestep, device, True)
-
-                    vec_norm = get_vec_normalize(eval_envs)
-                    if vec_norm is not None:
-                        vec_norm.ob_rms = get_vec_normalize(envs).ob_rms
-
-                    eval_episode_rewards = []
-
-                    obs = eval_envs.reset()
-                    eval_recurrent_hidden_states = torch.zeros(config.num_processes,
-                                    20, device=device)
-                    eval_masks = torch.zeros(config.num_processes, 1, device=device)
-
-                    while len(eval_episode_rewards) < 10:
-                        with torch.no_grad():
-                            _, action, _, eval_recurrent_hidden_states = agent.act(
-                                obs, eval_recurrent_hidden_states, eval_masks, deterministic=True)
-
-                        # Obser reward and next obs
-                        carla_obs, reward, done, infos = eval_envs.step(action)
-
-                        eval_masks = torch.FloatTensor([[0.0] if done_ else [1.0]
-                                                        for done_ in done])
-                        for info in infos:
-                            if 'episode' in info.keys():
-                                eval_episode_rewards.append(info['episode']['r'])
-
-                    eval_envs.close()
-
-                    logger.info(" Evaluation using {} episodes: mean reward {:.5f}\n".
-                        format(len(eval_episode_rewards),
-                            np.mean(eval_episode_rewards)))
-
-        finally:
-
-            if (world and world.recording_enabled):
-                client.stop_recorder()
-
-            if world is not None:
-                world.destroy()
-
-            pygame.quit()
+        game_loop(args)
 
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
