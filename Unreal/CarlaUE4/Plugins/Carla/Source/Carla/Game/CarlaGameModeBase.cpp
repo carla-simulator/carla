@@ -69,11 +69,14 @@ void ACarlaGameModeBase::AddSceneCaptureSensor(ASceneCaptureSensor* SceneCapture
 
 void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
 {
+  FlushRenderingCommands();
+
   // Remove camera
   SceneCaptureSensors.Remove(SceneCaptureSensor);
 
   // Recalculate PositionInAtlas for each camera
   AtlasTextureWidth = 0u;
+  CurrentAtlasTextureHeight = 0u;
   for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
   {
     Camera->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
@@ -81,7 +84,7 @@ void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCapt
 
     if(AtlasTextureWidth < Camera->ImageWidth)
     {
-      AtlasTextureWidth = ImageWidth;
+      AtlasTextureWidth = Camera->ImageWidth;
     }
 
   }
@@ -409,6 +412,7 @@ void ACarlaGameModeBase::CaptureAtlas()
   if(!IsAtlasTextureValid)
   {
     CreateAtlasTextures();
+    return;
   }
 
   // Enqueue the commands to copy the captures to the atlas
@@ -446,10 +450,12 @@ void ACarlaGameModeBase::CaptureAtlas()
         Rect,
         This->AtlasImage,
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+      This->SendAtlas();
+
     }
   );
 
-  SendAtlas();
 
 }
 
