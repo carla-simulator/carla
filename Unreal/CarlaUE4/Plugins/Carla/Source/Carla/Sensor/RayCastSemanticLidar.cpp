@@ -125,32 +125,32 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
-  void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
-    RecordedHits.resize(Channels);
-    for (auto& aux : RecordedHits) {
-      aux.clear();
-      aux.reserve(MaxPointsPerChannel);
+void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+  RecordedHits.resize(Channels);
+  for (auto& aux : RecordedHits) {
+    aux.clear();
+    aux.reserve(MaxPointsPerChannel);
+  }
+}
+
+void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
+  DEBUG_ASSERT(GetChannelCount() > channel);
+  RecordedHits[channel].emplace_back(detection);
+}
+
+void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+    PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
+  SemanticLidarData.ResetSerPoints(PointsPerChannel);
+
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
+    for (auto& hit : RecordedHits[idxChannel]) {
+      FSemanticDetection detection;
+      ComputeRawDetection(hit, SensorTransform, detection);
+      SemanticLidarData.WritePointSync(detection);
     }
   }
-
-  void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
-    DEBUG_ASSERT(GetChannelCount() > channel);
-    RecordedHits[channel].emplace_back(detection);
-  }
-
-  void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-      PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    SemanticLidarData.ResetSerPoints(PointsPerChannel);
-
-    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
-      for (auto& hit : RecordedHits[idxChannel]) {
-        FSemanticDetection detection;
-        ComputeRawDetection(hit, SensorTransform, detection);
-        SemanticLidarData.WritePointSync(detection);
-      }
-    }
-  }
+}
 
 void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection) const
 {
