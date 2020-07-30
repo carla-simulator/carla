@@ -20,11 +20,11 @@
 #include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
-#include "carla/sensor/s11n/LidarRawSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
 #include "carla/sensor/s11n/NoopSerializer.h"
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
 #include "carla/sensor/s11n/RadarSerializer.h"
+#include "carla/sensor/s11n/SemanticLidarSerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;
@@ -61,7 +61,7 @@ namespace sensor {
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>,
     std::pair<ARadar *, s11n::RadarSerializer>,
-    std::pair<ARayCastSemanticLidar *, s11n::LidarRawSerializer>,
+    std::pair<ARayCastSemanticLidar *, s11n::SemanticLidarSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ARssSensor *, s11n::NoopSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,

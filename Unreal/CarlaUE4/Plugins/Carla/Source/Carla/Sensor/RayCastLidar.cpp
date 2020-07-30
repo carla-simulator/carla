@@ -64,7 +64,7 @@ void ARayCastLidar::Tick(const float DeltaTime)
   DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
 }
 
-float ARayCastLidar::ComputeIntensity(const FRawDetection& RawDetection) const
+float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const
 {
   const carla::geom::Location HitPoint = RawDetection.point;
   const float Distance = HitPoint.Length();

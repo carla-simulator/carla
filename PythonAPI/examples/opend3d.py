@@ -79,7 +79,7 @@ def lidar_callback(point_cloud, point_list):
     point_list.colors = o3d.utility.Vector3dVector(int_color)
 
 
-def raw_lidar_callback(point_cloud, point_list):
+def semantic_lidar_callback(point_cloud, point_list):
     """Prepares a point cloud with semantic segmentation
     colors ready to be consumed by Open3D"""
     data = np.frombuffer(point_cloud.raw_data, dtype=np.dtype([
@@ -107,8 +107,8 @@ def raw_lidar_callback(point_cloud, point_list):
 
 def generate_lidar_bp(arg, world, blueprint_library, delta):
     """Generates a CARLA blueprint based on the script parameters"""
-    if arg.raw:
-        lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast_raw')
+    if arg.semantic:
+        lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
     else:
         lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
         if arg.no_noise:
@@ -179,8 +179,8 @@ def main(arg):
         lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=vehicle)
 
         point_list = o3d.geometry.PointCloud()
-        if arg.raw:
-            lidar.listen(lambda data: raw_lidar_callback(data, point_list))
+        if arg.semantic:
+            lidar.listen(lambda data: semantic_lidar_callback(data, point_list))
         else:
             lidar.listen(lambda data: lidar_callback(data, point_list))
 
@@ -247,14 +247,14 @@ if __name__ == "__main__":
         ' performance but you will lose the articulated objects in the'
         ' lidar, such as pedestrians')
     argparser.add_argument(
-        '--raw',
+        '--semantic',
         action='store_true',
-        help='use the raw lidar instead, which provides ground truth'
+        help='use the semantic lidar instead, which provides ground truth'
         ' information')
     argparser.add_argument(
         '--no-noise',
         action='store_true',
-        help='remove the drop off and noise from the normal (non-raw) lidar')
+        help='remove the drop off and noise from the normal (non-semantic) lidar')
     argparser.add_argument(
         '--no-autopilot',
         action='store_false',
@@ -292,7 +292,7 @@ if __name__ == "__main__":
         '--points-per-second',
         default=500000,
         type=int,
-        help='lidar\'s maximum range in meters (default: 500000)')
+        help='lidar\'s points per second (default: 500000)')
     argparser.add_argument(
         '-x',
         default=0.0,
