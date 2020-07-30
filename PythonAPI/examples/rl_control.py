@@ -85,6 +85,8 @@ import math
 import random
 import re
 import weakref
+import gym
+import cv2
 
 try:
     import pygame
@@ -160,6 +162,8 @@ class Measurements:
         self.intersection_otherlane = intersection_otherlane
         self.intersection_offroad = intersection_offroad
         self.autopilot_control = autopilot_control
+
+
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
@@ -284,7 +288,7 @@ class World(object):
             if actor is not None:
                 actor.destroy()
 
-    def get_measurements:
+    def get_measurements(self):
         transform = self.player.get_transform()
         bounding_box = self.player.bounding_box
         acceleration = self.player.get_acceleration()
@@ -1151,6 +1155,15 @@ def main():
 
             hud = HUD(args.width, args.height)
             world = World(client.get_world(), hud, args)
+
+            # TODO: adapt to existing env
+            obs_converter = CarlaObservationConverter(h=84, w=84, rel_coord_system=False)
+            action_converter = CarlaActionsConverter('carla-original') # or 'continuous'
+            envs = make_vec_envs(obs_converter, action_converter, args.starting_port, config.seed, config.num_processes,
+                                config.gamma, device, config.reward_class, num_frame_stack=1, subset=config.experiments_subset,
+                                norm_reward=False, norm_obs=True, apply_her=config.num_virtual_goals > 0,
+                                video_every=args.video_interval, video_dir=os.path.join(args.save_dir, 'video', experiment_name))
+
             controller = KeyboardControl(world, args.autopilot)
 
             clock = pygame.time.Clock()
