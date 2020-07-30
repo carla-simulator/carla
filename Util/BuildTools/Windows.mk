@@ -45,7 +45,7 @@ clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --clean
 
 rebuild: setup
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --rebuild
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --rebuild
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
