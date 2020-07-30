@@ -561,6 +561,8 @@ bool ASceneCaptureSensor::CopyTextureFromAtlas(
     uint32 AtlasTextureWidth)
 {
 
+  Buffer.reset(Offset + ImageWidth * ImageHeight * sizeof(FColor));
+
   // Check that the atlas alreay contains our texture
   // and our image has been initialized
   uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
@@ -579,7 +581,6 @@ bool ASceneCaptureSensor::CopyTextureFromAtlas(
   const uint32 DstStride = ImageWidth * sizeof(FColor);
   const uint32 SrcStride = AtlasTextureWidth * sizeof(FColor);
 
-  Buffer.reset(Offset + ImageHeight * DstStride);
   for(uint32 i = 0; i < ImageHeight; i++)
   {
     Buffer.copy_from(Dest, Source, DstStride);
