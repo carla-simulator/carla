@@ -108,8 +108,8 @@ namespace data {
   private:
     std::vector<float> _points;
 
-  friend class s11n::LidarSerializer;
-  friend class s11n::LidarHeaderView;
+    friend class s11n::LidarSerializer;
+    friend class s11n::LidarHeaderView;
   };
 
 } // namespace s11n
