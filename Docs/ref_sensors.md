@@ -618,7 +618,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 * __Blueprint:__ sensor.lidar.ray_cast_raw
 * __Output:__ [carla.LidarRawMeasurement](python_api.md#carla.LidarRawMeasurement) per step (unless `sensor_tick` says otherwise).
 
-This sensor simulates a rotating Lidar implemented using ray-casting that exposes all the information about the hit. Its behaviour is quite similar to the [Lidar raycast sensor](python_api.md#lidar-raycast-sensor) but this sensor does not have any of the intensity, dropoff and noise featuers and its output is more complete.
+This sensor simulates a rotating Lidar implemented using ray-casting that exposes all the information about the raycast hit. Its behaviour is quite similar to the [Lidar raycast sensor](#lidar-raycast-sensor) but this sensor does not have any of the intensity, dropoff or noise features and its output is more complete.
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step:
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
