@@ -16,8 +16,8 @@ namespace carla {
 namespace sensor {
 
 namespace s11n {
-  class LidarRawSerializer;
-  class LidarRawHeaderView;
+  class SemanticLidarSerializer;
+  class SemanticLidarHeaderView;
 }
 
 namespace data {
@@ -48,18 +48,18 @@ namespace data {
   ///
 
   #pragma pack(push, 1)
-  class LidarRawDetection {
+  class SemanticLidarDetection {
     public:
       geom::Location point{};
       float cos_inc_angle{};
       uint32_t object_idx{};
       uint32_t object_tag{};
 
-      LidarRawDetection() = default;
+      SemanticLidarDetection() = default;
 
-      LidarRawDetection(float x, float y, float z, float cosTh, uint32_t idx, uint32_t tag) :
+      SemanticLidarDetection(float x, float y, float z, float cosTh, uint32_t idx, uint32_t tag) :
           point(x, y, z), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
-      LidarRawDetection(geom::Location p, float cosTh, uint32_t idx, uint32_t tag) :
+      SemanticLidarDetection(geom::Location p, float cosTh, uint32_t idx, uint32_t tag) :
           point(p), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
 
       void WritePlyHeaderInfo(std::ostream& out) const{
@@ -78,7 +78,7 @@ namespace data {
   };
   #pragma pack(pop)
 
-  class LidarRawData {
+  class SemanticLidarData {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
 
   protected:
@@ -89,14 +89,14 @@ namespace data {
     };
 
   public:
-    explicit LidarRawData(uint32_t ChannelCount = 0u)
+    explicit SemanticLidarData(uint32_t ChannelCount = 0u)
       : _header(Index::SIZE + ChannelCount, 0u) {
       _header[Index::ChannelCount] = ChannelCount;
     }
 
-    LidarRawData &operator=(LidarRawData &&) = default;
+    SemanticLidarData &operator=(SemanticLidarData &&) = default;
 
-    virtual ~LidarRawData() {}
+    virtual ~SemanticLidarData() {}
 
     float GetHorizontalAngle() const {
       return reinterpret_cast<const float &>(_header[Index::HorizontalAngle]);
@@ -124,7 +124,7 @@ namespace data {
       _ser_points.reserve(total_points);
     }
 
-    virtual void WritePointSync(LidarRawDetection &detection) {
+    virtual void WritePointSync(SemanticLidarDetection &detection) {
       _ser_points.emplace_back(detection);
     }
 
@@ -133,10 +133,10 @@ namespace data {
     uint32_t _max_channel_points;
 
   private:
-    std::vector<LidarRawDetection> _ser_points;
+    std::vector<SemanticLidarDetection> _ser_points;
 
-  friend class s11n::LidarRawHeaderView;
-  friend class s11n::LidarRawSerializer;
+  friend class s11n::SemanticLidarHeaderView;
+  friend class s11n::SemanticLidarSerializer;
   };
 
 } // namespace s11n

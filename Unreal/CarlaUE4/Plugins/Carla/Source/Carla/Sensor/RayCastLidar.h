@@ -37,7 +37,7 @@ public:
 
 private:
   /// Compute the received intensity of the point
-  float ComputeIntensity(const FRawDetection& RawDetection) const;
+  float ComputeIntensity(const FSemanticDetection& RawDetection) const;
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
 
   bool PreprocessRay() const override;

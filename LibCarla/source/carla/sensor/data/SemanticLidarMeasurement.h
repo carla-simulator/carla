@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/rpc/Location.h"
 #include "carla/sensor/data/Array.h"
-#include "carla/sensor/s11n/LidarRawSerializer.h"
+#include "carla/sensor/s11n/SemanticLidarSerializer.h"
 
 namespace carla {
 namespace sensor {
@@ -17,16 +17,16 @@ namespace data {
 
   /// Measurement produced by a Lidar. Consists of an array of 3D points plus
   /// some extra meta-information about the Lidar.
-  class LidarRawMeasurement : public Array<data::LidarRawDetection>  {
-    static_assert(sizeof(data::LidarRawDetection) == 6u * sizeof(float), "LidarRawDetection size missmatch");
-    using Super = Array<data::LidarRawDetection>;
+  class SemanticLidarMeasurement : public Array<data::SemanticLidarDetection>  {
+    static_assert(sizeof(data::SemanticLidarDetection) == 6u * sizeof(float), "SemanticLidarDetection size missmatch");
+    using Super = Array<data::SemanticLidarDetection>;
 
   protected:
-    using Serializer = s11n::LidarRawSerializer;
+    using Serializer = s11n::SemanticLidarSerializer;
 
     friend Serializer;
 
-    explicit LidarRawMeasurement(RawData &&data)
+    explicit SemanticLidarMeasurement(RawData &&data)
       : Super(std::move(data), [](const RawData &d) {
       return Serializer::GetHeaderOffset(d);
     }) {}
