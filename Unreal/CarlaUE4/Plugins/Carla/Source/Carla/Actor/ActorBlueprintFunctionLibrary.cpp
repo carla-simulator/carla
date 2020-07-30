@@ -405,6 +405,20 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
+    // Lens Flare
+    FActorVariation LensFlareIntensity;
+    LensFlareIntensity.Id = TEXT("lens_flare_intensity");
+    LensFlareIntensity.Type = EActorAttributeType::Float;
+    LensFlareIntensity.RecommendedValues = { TEXT("0.1") };
+    LensFlareIntensity.bRestrictToRecommended = false;
+
+    // Bloom
+    FActorVariation BloomIntensity;
+    BloomIntensity.Id = TEXT("bloom_intensity");
+    BloomIntensity.Type = EActorAttributeType::Float;
+    BloomIntensity.RecommendedValues = { TEXT("0.675") };
+    BloomIntensity.bRestrictToRecommended = false;
+
     // More info at:
     // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
     // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
@@ -427,7 +441,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("3.0") };
+    ExposureCompensation.RecommendedValues = { TEXT("-2.2") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -439,14 +453,14 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ShutterSpeed; // (1/t)
     ShutterSpeed.Id = TEXT("shutter_speed");
     ShutterSpeed.Type = EActorAttributeType::Float;
-    ShutterSpeed.RecommendedValues = { TEXT("60.0") };
+    ShutterSpeed.RecommendedValues = { TEXT("200.0") };
     ShutterSpeed.bRestrictToRecommended = false;
 
     // The camera sensor sensitivity.
     FActorVariation ISO; // S
     ISO.Id = TEXT("iso");
     ISO.Type = EActorAttributeType::Float;
-    ISO.RecommendedValues = { TEXT("1200.0") };
+    ISO.RecommendedValues = { TEXT("200.0") };
     ISO.bRestrictToRecommended = false;
 
     // Defines the size of the opening for the camera lens.
@@ -454,7 +468,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("1.4") };
+    Aperture.RecommendedValues = { TEXT("8.0") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -605,6 +619,8 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       Gamma,
       MBIntesity,
       MBMaxDistortion,
+      LensFlareIntensity,
+      BloomIntensity,
       MBMinObjectScreenSize,
       ExposureMinBright,
       ExposureMaxBright,
@@ -1361,6 +1377,10 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("motion_blur_max_distortion", Description.Variations, 5.0f));
     Camera->SetMotionBlurMinObjectScreenSize(
         RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.5f));
+    Camera->SetLensFlareIntensity(
+        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.1f));
+    Camera->SetBloomIntensity(
+        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675f));
     // Exposure
     if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "manual") == "histogram")
     {
@@ -1371,13 +1391,13 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 3.0f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, -2.2f));
     Camera->SetShutterSpeed(
-        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 60.0f));
+        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
-        RetrieveActorAttributeToFloat("iso", Description.Variations, 1200.0f));
+        RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 8.0f));
 
     Camera->SetExposureMinBrightness(
         RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));

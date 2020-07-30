@@ -218,6 +218,18 @@ public:
   float GetMotionBlurMinObjectScreenSize() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetLensFlareIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetLensFlareIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetBloomIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetBloomIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetWhiteTemp(float Temp);
 
   UFUNCTION(BlueprintCallable)
