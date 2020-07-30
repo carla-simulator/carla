@@ -35,7 +35,7 @@ class AInertialMeasurementUnit;
 class ALaneInvasionSensor;
 class AObstacleDetectionSensor;
 class ARadar;
-class ARayCastRawLidar;
+class ARayCastSemanticLidar;
 class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
@@ -61,7 +61,7 @@ namespace sensor {
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>,
     std::pair<ARadar *, s11n::RadarSerializer>,
-    std::pair<ARayCastRawLidar *, s11n::LidarRawSerializer>,
+    std::pair<ARayCastSemanticLidar *, s11n::LidarRawSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ARssSensor *, s11n::NoopSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
@@ -86,7 +86,7 @@ namespace sensor {
 #include "Carla/Sensor/ObstacleDetectionSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/RayCastLidar.h"
-#include "Carla/Sensor/RayCastRawLidar.h"
+#include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla/Sensor/RssSensor.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
