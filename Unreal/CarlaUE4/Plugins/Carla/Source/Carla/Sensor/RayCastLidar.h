@@ -10,7 +10,7 @@
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/Sensor.h"
-#include "Carla/Sensor/RayCastRawLidar.h"
+#include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -21,7 +21,7 @@
 
 /// A ray-cast based Lidar sensor.
 UCLASS()
-class CARLA_API ARayCastLidar : public ARayCastRawLidar
+class CARLA_API ARayCastLidar : public ARayCastSemanticLidar
 {
   GENERATED_BODY()
 

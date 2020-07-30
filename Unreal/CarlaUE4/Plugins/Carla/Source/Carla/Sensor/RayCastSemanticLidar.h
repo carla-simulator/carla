@@ -18,11 +18,11 @@
 #include <carla/sensor/data/LidarRawData.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include "RayCastRawLidar.generated.h"
+#include "RayCastSemanticLidar.generated.h"
 
 /// A ray-cast based Lidar sensor.
 UCLASS()
-class CARLA_API ARayCastRawLidar : public ASensor
+class CARLA_API ARayCastSemanticLidar : public ASensor
 {
   GENERATED_BODY()
 
@@ -34,7 +34,7 @@ protected:
 public:
   static FActorDefinition GetSensorDefinition();
 
-  ARayCastRawLidar(const FObjectInitializer &ObjectInitializer);
+  ARayCastSemanticLidar(const FObjectInitializer &ObjectInitializer);
 
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription);

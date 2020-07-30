@@ -8,7 +8,7 @@
 #include <cmath>
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Sensor/RayCastRawLidar.h"
+#include "Carla/Sensor/RayCastSemanticLidar.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -19,18 +19,18 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 
-FActorDefinition ARayCastRawLidar::GetSensorDefinition()
+FActorDefinition ARayCastSemanticLidar::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast_raw"));
 }
 
-ARayCastRawLidar::ARayCastRawLidar(const FObjectInitializer& ObjectInitializer)
+ARayCastSemanticLidar::ARayCastSemanticLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
 }
 
-void ARayCastRawLidar::Set(const FActorDescription &ActorDescription)
+void ARayCastSemanticLidar::Set(const FActorDescription &ActorDescription)
 {
   Super::Set(ActorDescription);
   FLidarDescription LidarDescription;
@@ -38,7 +38,7 @@ void ARayCastRawLidar::Set(const FActorDescription &ActorDescription)
   Set(LidarDescription);
 }
 
-void ARayCastRawLidar::Set(const FLidarDescription &LidarDescription)
+void ARayCastSemanticLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
   LidarRawData = FLidarRawData(Description.Channels);
@@ -46,7 +46,7 @@ void ARayCastRawLidar::Set(const FLidarDescription &LidarDescription)
   PointsPerChannel.resize(Description.Channels);
 }
 
-void ARayCastRawLidar::CreateLasers()
+void ARayCastSemanticLidar::CreateLasers()
 {
   const auto NumberOfLasers = Description.Channels;
   check(NumberOfLasers > 0u);
@@ -62,7 +62,7 @@ void ARayCastRawLidar::CreateLasers()
   }
 }
 
-void ARayCastRawLidar::Tick(const float DeltaTime)
+void ARayCastSemanticLidar::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
@@ -72,7 +72,7 @@ void ARayCastRawLidar::Tick(const float DeltaTime)
   DataStream.Send(*this, LidarRawData, DataStream.PopBufferFromPool());
 }
 
-void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
+void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 {
   const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
@@ -125,7 +125,7 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
   LidarRawData.SetHorizontalAngle(HorizontalAngle);
 }
 
-  void ARayCastRawLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+  void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
     RecordedHits.resize(Channels);
     for (auto& aux : RecordedHits) {
       aux.clear();
@@ -133,12 +133,12 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
     }
   }
 
-  void ARayCastRawLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
+  void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
     DEBUG_ASSERT(GetChannelCount() > channel);
     RecordedHits[channel].emplace_back(detection);
   }
 
-  void ARayCastRawLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+  void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
     LidarRawData.ResetSerPoints(PointsPerChannel);
@@ -152,7 +152,7 @@ void ARayCastRawLidar::SimulateLidar(const float DeltaTime)
     }
   }
 
-void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
+void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
     Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
@@ -185,7 +185,7 @@ void ARayCastRawLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTra
 }
 
 
-bool ARayCastRawLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult) const
+bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult) const
 {
   FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
   TraceParams.bTraceComplex = true;
