@@ -22,8 +22,8 @@ to 1.5M per second. In this mode we do not render anything but processing
 of the data is done.
 For example for profiling one lidar:
   python raycast_sensor_testing.py -ln 1 --profiling
-For example for profiling one raw lidar:
-  python raycast_sensor_testing.py -rln 1 --profiling
+For example for profiling one semantic lidar:
+  python raycast_sensor_testing.py -sln 1 --profiling
 And for profiling one radar:
   python raycast_sensor_testing.py -rn 1 --profiling
 
@@ -156,8 +156,8 @@ class SensorManager:
             lidar.listen(self.save_lidar_image)
 
             return lidar
-        elif sensor_type == 'RawLiDAR':
-            lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_raw')
+        elif sensor_type == 'SemanticLiDAR':
+            lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
             lidar_bp.set_attribute('range', '100')
 
             for key in sensor_options:
@@ -165,7 +165,7 @@ class SensorManager:
 
             lidar = self.world.spawn_actor(lidar_bp, transform, attach_to=attached)
 
-            lidar.listen(self.save_rawlidar_image)
+            lidar.listen(self.save_semanticlidar_image)
 
             return lidar
         elif sensor_type == "Radar":
@@ -225,7 +225,7 @@ class SensorManager:
         self.time_processing += (t_end-t_start)
         self.tics_processing += 1
 
-    def save_rawlidar_image(self, image):
+    def save_semanticlidar_image(self, image):
         t_start = self.timer.time()
 
         disp_size = self.display_man.get_display_size()
@@ -334,17 +334,17 @@ def one_run(args, client):
             SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': lidar_points_per_second, 'rotation_frequency': '20'}, [1, 1])
 
 
-        # If any, we instanciate the required rawlidars
-        rawlidar_points_per_second = args.rawlidar_points
+        # If any, we instanciate the required semantic lidars
+        semanticlidar_points_per_second = args.semanticlidar_points
 
-        if args.rawlidar_number >= 3:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [1, 0])
+        if args.semanticlidar_number >= 3:
+            SensorManager(world, display_manager, 'SemanticLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '50', 'points_per_second': semanticlidar_points_per_second, 'rotation_frequency': '20'}, [1, 0])
 
-        if args.rawlidar_number >= 2:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [0, 1])
+        if args.semanticlidar_number >= 2:
+            SensorManager(world, display_manager, 'SemanticLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': semanticlidar_points_per_second, 'rotation_frequency': '20'}, [0, 1])
 
-        if args.rawlidar_number >= 1:
-            SensorManager(world, display_manager, 'RawLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': rawlidar_points_per_second, 'rotation_frequency': '20'}, [1, 1])
+        if args.semanticlidar_number >= 1:
+            SensorManager(world, display_manager, 'SemanticLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), vehicle, {'channels' : '64', 'range' : '200', 'points_per_second': semanticlidar_points_per_second, 'rotation_frequency': '20'}, [1, 1])
 
 
         # If any, we instanciate the required radars
@@ -415,7 +415,7 @@ def one_run(args, client):
                     time_procc = 0
                     for sensor in display_manager.sensor_list:
                         time_procc += sensor.time_processing
-                    prof_str = "%-10s %-9s  %-9s %-15s %-7.2f %-20.3f" % (args.lidar_number, args.rawlidar_number, args.radar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
+                    prof_str = "%-10s %-9s  %-9s %-15s %-7.2f %-20.3f" % (args.lidar_number, args.semanticlidar_number, args.radar_number, lidar_points_per_second, float(frame) / time_frames, time_procc/time_frames)
                     break
 
             if call_exit:
@@ -484,17 +484,17 @@ def main():
         choices=range(0, 4),
         help='Number of lidars to render (from zero to three)')
     argparser.add_argument(
-        '-rlp', '--rawlidar_points',
-        metavar='RLP',
+        '-slp', '--semanticlidar_points',
+        metavar='SLP',
         default='100000',
-        help='lidar points per second (default: "100000")')
+        help='semantic lidar points per second (default: "100000")')
     argparser.add_argument(
-        '-rln', '--rawlidar_number',
-        metavar='RLN',
+        '-sln', '--semanticlidar_number',
+        metavar='SLN',
         default=0,
         type=int,
         choices=range(0, 4),
-        help='Number of raw lidars to render (from zero to three)')
+        help='Number of semantic lidars to render (from zero to three)')
     argparser.add_argument(
         '-rp', '--radar_points',
         metavar='RP',
@@ -538,7 +538,7 @@ def main():
 
         if args.profiling:
             print("-------------------------------------------------------")
-            print("# Running profiling with %s lidars, %s raw lidars and %s radars." % (args.lidar_number, args.rawlidar_number, args.radar_number))
+            print("# Running profiling with %s lidars, %s semantic lidars and %s radars." % (args.lidar_number, args.semanticlidar_number, args.radar_number))
             args.render_cam = False
             args.render_window = False
             runs_output = []
@@ -548,7 +548,7 @@ def main():
                             '1100000', '1200000', '1300000', '1400000', '1500000']
             for points in points_range:
                 args.lidar_points = points
-                args.rawlidar_points = points
+                args.semanticlidar_points = points
                 args.radar_points = points
                 run_str = one_run(args, client)
                 runs_output.append(run_str)
@@ -562,7 +562,7 @@ def main():
                 print("#Hardware information not available, please install the " \
                     "multiprocessing module")
 
-            print("#NumLidars NumRawLids NumRadars PointsPerSecond FPS     PercentageProcessing")
+            print("#NumLidars NumSemLids NumRadars PointsPerSecond FPS     PercentageProcessing")
             for o  in runs_output:
                 print(o)
 
