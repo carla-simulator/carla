@@ -20,7 +20,7 @@ static auto CastEnum(T label)
   return static_cast<typename std::underlying_type<T>::type>(label);
 }
 
-static ECityObjectLabel GetLabelByFolderName(const FString &String) {
+ECityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   if      (String == "Buildings")       return ECityObjectLabel::Buildings;
   else if (String == "Fences")          return ECityObjectLabel::Fences;
   else if (String == "Pedestrians")     return ECityObjectLabel::Pedestrians;
@@ -36,16 +36,7 @@ static ECityObjectLabel GetLabelByFolderName(const FString &String) {
   else                                  return ECityObjectLabel::None;
 }
 
-template <typename T>
-static ECityObjectLabel GetLabelByPath(const T *Object)
-{
-  const FString Path = Object->GetPathName();
-  TArray<FString> StringArray;
-  Path.ParseIntoArray(StringArray, TEXT("/"), false);
-  return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : ECityObjectLabel::None);
-}
-
-static void SetStencilValue(
+void ATagger::SetStencilValue(
     UPrimitiveComponent &Component,
     const ECityObjectLabel &Label,
     const bool bSetRenderCustomDepth) {

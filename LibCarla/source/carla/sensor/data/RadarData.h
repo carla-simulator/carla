@@ -12,7 +12,12 @@
 
 namespace carla {
 namespace sensor {
+
 namespace s11n {
+  class RadarSerializer;
+}
+
+namespace data {
 
   struct RadarDetection {
     float velocity; // m/s
@@ -25,10 +30,7 @@ namespace s11n {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
     static_assert(sizeof(float) * 4 == sizeof(RadarDetection), "Invalid RadarDetection size");
 
-    friend class RadarSerializer;
-
   public:
-
     explicit RadarData() = default;
 
     constexpr static auto detection_size = sizeof(RadarDetection);
@@ -64,8 +66,9 @@ namespace s11n {
     }
 
   private:
-
     std::vector<RadarDetection> _detections;
+
+  friend class s11n::RadarSerializer;
   };
 
 } // namespace s11n

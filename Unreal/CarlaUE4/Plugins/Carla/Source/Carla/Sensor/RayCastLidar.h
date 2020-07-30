@@ -6,59 +6,48 @@
 
 #pragma once
 
-#include "Carla/Sensor/Sensor.h"
 
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
+#include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/RayCastRawLidar.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/sensor/s11n/LidarMeasurement.h>
+#include <carla/sensor/data/LidarData.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "RayCastLidar.generated.h"
 
 /// A ray-cast based Lidar sensor.
 UCLASS()
-class CARLA_API ARayCastLidar : public ASensor
+class CARLA_API ARayCastLidar : public ARayCastRawLidar
 {
   GENERATED_BODY()
 
-  using FLidarMeasurement = carla::sensor::s11n::LidarMeasurement;
+  using FLidarData = carla::sensor::data::LidarData;
+  using FDetection = carla::sensor::data::LidarDetection;
 
 public:
-
   static FActorDefinition GetSensorDefinition();
 
   ARayCastLidar(const FObjectInitializer &ObjectInitializer);
+  virtual void Set(const FActorDescription &Description) override;
+  virtual void Set(const FLidarDescription &LidarDescription) override;
 
-  void Set(const FActorDescription &Description) override;
+private:
+  /// Compute the received intensity of the point
+  float ComputeIntensity(const FRawDetection& RawDetection) const;
+  FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
 
-  void Set(const FLidarDescription &LidarDescription);
+  bool PreprocessRay() const override;
+  bool PostprocessDetection(FDetection& Detection) const;
 
-protected:
+  void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
 
   virtual void Tick(float DeltaTime) override;
 
-private:
-
-  /// Creates a Laser for each channel.
-  void CreateLasers();
-
-  /// Updates LidarMeasurement with the points read in DeltaTime.
-  void ReadPoints(float DeltaTime);
-
-  /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(uint32 Channel, float HorizontalAngle, FVector &Point, float& Intensity) const;
-
-  /// Compute the received intensity of the point
-  float ComputeIntensity(const FVector &LidarBodyLoc, const FHitResult& HitInfo) const;
-
-  UPROPERTY(EditAnywhere)
-  FLidarDescription Description;
-
-  TArray<float> LaserAngles;
-
-  FLidarMeasurement LidarMeasurement;
+  FLidarData LidarData;
 
   /// Enable/Disable general dropoff of lidar points
   bool DropOffGenActive;
