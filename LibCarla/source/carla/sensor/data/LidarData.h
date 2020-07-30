@@ -7,7 +7,7 @@
 #pragma once
 
 #include "carla/rpc/Location.h"
-#include "carla/sensor/data/LidarRawData.h"
+#include "carla/sensor/data/SemanticLidarData.h"
 
 #include <cstdint>
 #include <vector>
@@ -68,11 +68,11 @@ namespace data {
       }
   };
 
-  class LidarData : public LidarRawData{
+  class LidarData : public SemanticLidarData{
 
   public:
     explicit LidarData(uint32_t ChannelCount = 0u)
-      : LidarRawData(ChannelCount) {
+      : SemanticLidarData(ChannelCount) {
     }
 
     LidarData &operator=(LidarData &&) = default;
@@ -100,7 +100,7 @@ namespace data {
       _points.emplace_back(detection.intensity);
     }
 
-    virtual void WritePointSync(LidarRawDetection &detection) {
+    virtual void WritePointSync(SemanticLidarDetection &detection) {
       (void) detection;
       DEBUG_ASSERT(false);
     }

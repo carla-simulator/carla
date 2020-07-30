@@ -873,7 +873,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
             AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
             DropOffAtZeroIntensity, StdDevLidar});
   }
-  else if (Id == "ray_cast_raw") {
+  else if (Id == "ray_cast_semantic") {
     Definition.Variations.Append(
         {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
   }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -21,7 +21,7 @@
 
 FActorDefinition ARayCastSemanticLidar::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast_raw"));
+  return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast_semantic"));
 }
 
 ARayCastSemanticLidar::ARayCastSemanticLidar(const FObjectInitializer& ObjectInitializer)
@@ -41,7 +41,7 @@ void ARayCastSemanticLidar::Set(const FActorDescription &ActorDescription)
 void ARayCastSemanticLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
-  LidarRawData = FLidarRawData(Description.Channels);
+  SemanticLidarData = FSemanticLidarData(Description.Channels);
   CreateLasers();
   PointsPerChannel.resize(Description.Channels);
 }
@@ -69,7 +69,7 @@ void ARayCastSemanticLidar::Tick(const float DeltaTime)
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarRawData, DataStream.PopBufferFromPool());
+  DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
 }
 
 void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
@@ -92,7 +92,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   check(ChannelCount == LaserAngles.Num());
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
-      LidarRawData.GetHorizontalAngle());
+      SemanticLidarData.GetHorizontalAngle());
   const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
@@ -122,7 +122,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
-  LidarRawData.SetHorizontalAngle(HorizontalAngle);
+  SemanticLidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
   void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
@@ -141,18 +141,18 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    LidarRawData.ResetSerPoints(PointsPerChannel);
+    SemanticLidarData.ResetSerPoints(PointsPerChannel);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
-        FRawDetection detection;
+        FSemanticDetection detection;
         ComputeRawDetection(hit, SensorTransform, detection);
-        LidarRawData.WritePointSync(detection);
+        SemanticLidarData.WritePointSync(detection);
       }
     }
   }
 
-void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FRawDetection& Detection) const
+void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection) const
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
     Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
