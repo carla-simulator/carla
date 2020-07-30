@@ -284,7 +284,8 @@ public:
       auto Stream = GetDataStream(Sensor);
       carla::Buffer Buffer = Stream.PopBufferFromPool();
 
-      if(CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth))
+      CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth);
+
       {
         SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
         Stream.Send(Sensor, std::move(Buffer));

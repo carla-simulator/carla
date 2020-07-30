@@ -218,6 +218,8 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   {
     Recorder->Tick(DeltaSeconds);
   }
+
+  SendAtlas();
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -450,8 +452,6 @@ void ACarlaGameModeBase::CaptureAtlas()
         Rect,
         This->AtlasImage,
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
-      This->SendAtlas();
 
     }
   );
