@@ -14,6 +14,7 @@
         - [Gnss sensor](ref_sensors.md#gnss-sensor).
         - [IMU sensor](ref_sensors.md#imu-sensor).
         - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+        - [RawLidar raycast](ref_sensors.md#rawlidar-raycast-sensor).
         - [Radar](ref_sensors.md#radar-sensor).
         - [RGB camera](ref_sensors.md#rgb-camera).
         - [RSS sensor](ref_sensors.md#rss-sensor).
