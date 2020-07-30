@@ -227,7 +227,6 @@ def main(arg):
 
 
 if __name__ == "__main__":
-    """Parse arguments and call the main function"""
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
