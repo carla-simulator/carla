@@ -29,8 +29,6 @@ class TestSynchronousMode(SyncSmokeTest):
     def test_camera_on_synchronous_mode(self):
         print("TestSynchronousMode.test_camera_on_synchronous_mode")
 
-        time.sleep(10.0)
-
         cam_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
         t = carla.Transform(carla.Location(z=10))
         camera = self.world.spawn_actor(cam_bp, t)
