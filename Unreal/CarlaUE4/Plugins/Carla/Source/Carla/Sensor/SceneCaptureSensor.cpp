@@ -463,16 +463,7 @@ void ASceneCaptureSensor::BeginPlay()
   // Call derived classes to set up their things.
   SetUpSceneCaptureComponent(*CaptureComponent2D);
 
-  if (bEnablePostProcessingEffects &&
-      (SceneCaptureSensor_local_ns::GetQualitySettings(GetWorld()) == EQualityLevel::Low))
-  {
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDRNoAlpha;
-  }
-  else
-  {
-    // LDR is faster than HDR (smaller bitmap array).
-    CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-  }
+  CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
@@ -601,7 +592,8 @@ namespace SceneCaptureSensor_local_ns {
 
     ShowFlags.SetAmbientOcclusion(false);
     ShowFlags.SetAntiAliasing(false);
-    ShowFlags.SetVolumetricFog(false); // ShowFlags.SetAtmosphericFog(false);
+    ShowFlags.SetVolumetricFog(false);
+    // ShowFlags.SetAtmosphericFog(false);
     // ShowFlags.SetAudioRadius(false);
     // ShowFlags.SetBillboardSprites(false);
     ShowFlags.SetBloom(false);
