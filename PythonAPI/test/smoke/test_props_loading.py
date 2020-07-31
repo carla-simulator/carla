@@ -12,6 +12,7 @@ from . import SmokeTest
 
 class TestPropsLoading(SmokeTest):
     def test_spawn_loaded_props(self):
+        print("TestPropsLoading.test_spawn_loaded_props")
         client = self.client
         world = client.get_world()
 
