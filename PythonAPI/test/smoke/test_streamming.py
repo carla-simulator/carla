@@ -40,6 +40,7 @@ class TestStreamming(SmokeTest):
 
 
     def test_multistream(self):
+        print("TestStreamming.test_multistream")
         # create the sensor
         world = self.client.get_world()
         bp = world.get_blueprint_library().find('sensor.other.gnss')
