@@ -161,8 +161,11 @@ def main(args):
         sumo_edges = sumo_net.getEdges()
 
         for i in range(args.number_of_vehicles):
-            edge = random.choice(sumo_edges)
             type_id = random.choice(blueprints)
+            vclass = vtypes[type_id]['vClass']
+
+            allowed_edges = [e for e in sumo_edges if e.allows(vclass)]
+            edge = random.choice(allowed_edges)
 
             traci.route.add('route_{}'.format(i), [edge.getID()])
             traci.vehicle.add('sumo_{}'.format(i), 'route_{}'.format(i), typeID=type_id)

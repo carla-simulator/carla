@@ -861,17 +861,25 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   DropOffAtZeroIntensity.Id = TEXT("dropoff_zero_intensity");
   DropOffAtZeroIntensity.Type = EActorAttributeType::Float;
   DropOffAtZeroIntensity.RecommendedValues = { TEXT("0.4") };
-
-  // Lower FOV limit.
+  // Noise in lidar cloud points.
   FActorVariation StdDevLidar;
   StdDevLidar.Id = TEXT("noise_stddev");
   StdDevLidar.Type = EActorAttributeType::Float;
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
 
-  Definition.Variations.Append(
-      {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
-          AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
-          DropOffAtZeroIntensity, StdDevLidar});
+  if (Id == "ray_cast") {
+    Definition.Variations.Append(
+        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
+            AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
+            DropOffAtZeroIntensity, StdDevLidar});
+  }
+  else if (Id == "ray_cast_semantic") {
+    Definition.Variations.Append(
+        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+  }
+  else {
+    DEBUG_ASSERT(false);
+  }
 
   Success = CheckActorDefinition(Definition);
 }
