@@ -12,6 +12,7 @@ from . import SyncSmokeTest
 
 class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
+        print("TestSnapshot.test_spawn_points")
         self.world = self.client.reload_world()
 
         # Check why the world settings aren't applied after a reload
