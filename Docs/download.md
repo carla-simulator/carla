@@ -9,6 +9,15 @@
 - [CARLA Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)  
 - [CARLA Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)  
 
+### Pre-Release 0.9.10
+
+- `[Ubuntu 16.04]` [CARLA_0.9.10-Pre_Ubuntu16.tar.gz](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.10-Pre_Ubuntu16.tar.gz)
+- `[Ubuntu 16.04]` [AdditionalMaps_0.9.10-Pre_Ubuntu16.tar.gz](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_0.9.10-Pre_Ubuntu16.tar.gz)
+- `[Ubuntu 18.04]` [CARLA_0.9.10-Pre_Ubuntu18.tar.gz](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.10-Pre_Ubuntu18.tar.gz)
+- `[Ubuntu 18.04]` [AdditionalMaps_0.9.10-Pre_Ubuntu18.tar.gz](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_0.9.10-Pre_Ubuntu18.tar.gz)
+- `[Windows x64]` [CARLA_0.9.10-Pre_Win.zip](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/CARLA_0.9.10-Pre_Win.zip)
+- `[Windows x64]` [AdditionalMaps_0.9.10-Pre_Win.zip](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/AdditionalMaps_0.9.10-Pre_Win.zip)
+
 ### Development [[Documentation](https://carla.readthedocs.io/en/latest/)]
 
 > These are the version of CARLA, more frequently updated and with the latest
