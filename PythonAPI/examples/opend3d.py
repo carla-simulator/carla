@@ -41,10 +41,13 @@ LABEL_COLORS = np.array([
     (157, 234, 50),  # RoadLines
     (128, 64, 128),  # Roads
     (244, 35, 232),  # Sidewalks
-    (107, 142, 35),  # TrafficSigns
-    (0, 0, 142),     # Vegetation
-    (102, 102, 156), # Vehicles
-    (220, 220, 0)    # Walls
+    (107, 142, 35),  # Vegetation
+    (0, 0, 142),     # Car
+    (102, 102, 156), # Walls
+    (220, 220, 0),   # TrafficSign
+    (70, 130, 180),  # Sky
+    (81, 0, 81),     # Ground
+    (150, 100, 100)  # Bridge
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
 
