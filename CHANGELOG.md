@@ -32,6 +32,7 @@
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Improved LiDAR and radar to better match the shape of the vehicles
   * Added support for additional TraCI clients in Sumo co-simulation
+  * Added script example to syncronize the gathering of sensor data in client
   * Added API functions `get_right_vector` and `get_up_vector`
   * Added default values and a warning message for lanes missing the width parameter in OpenDRIVE
   * Added parameter to enable/disable pedestrian navigation in standalone mode
