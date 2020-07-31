@@ -185,7 +185,7 @@ class GlobalRoutePlanner(object):
                             if next_segment is not None:
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=waypoint,
-                                    exit_waypoint=next_waypoint,
+                                    exit_waypoint=next_waypoint, intersection=False, exit_vector=None,
                                     path=[], length=0, type=next_road_option, change_waypoint=next_waypoint)
                                 right_found = True
                     if waypoint.left_lane_marking.lane_change & carla.LaneChange.Left and not left_found:
@@ -196,7 +196,7 @@ class GlobalRoutePlanner(object):
                             if next_segment is not None:
                                 self._graph.add_edge(
                                     self._id_map[segment['entryxyz']], next_segment[0], entry_waypoint=waypoint,
-                                    exit_waypoint=next_waypoint,
+                                    exit_waypoint=next_waypoint, intersection=False, exit_vector=None,
                                     path=[], length=0, type=next_road_option, change_waypoint=next_waypoint)
                                 left_found = True
                 if left_found and right_found:
@@ -275,7 +275,9 @@ class GlobalRoutePlanner(object):
                     self._intersection_end_node = last_node
                     if tail_edge is not None:
                         next_edge = tail_edge
-                    cv, nv = current_edge['exit_vector'], next_edge['net_vector']
+                    cv, nv = current_edge['exit_vector'], next_edge['exit_vector']
+                    if cv is None or nv is None:
+                        return next_edge['type']
                     cross_list = []
                     for neighbor in self._graph.successors(current_node):
                         select_edge = self._graph.edges[current_node, neighbor]
