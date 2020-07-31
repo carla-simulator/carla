@@ -157,7 +157,7 @@ def get_license():
 
 setup(
     name='carla',
-    version='0.9.9',
+    version='0.9.10',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),
