@@ -189,13 +189,10 @@ Different functionalities such as navigation, measurement of physical properties
 <td><a href="../python_api#carlaimumeasurement">carla.IMUMeasurement</a></td>
 <td>Comprises an accelerometer, a gyroscope, and a compass.</td>
 <tr>
-<td>LIDAR raycast</td>
+<td>LIDAR</td>
 <td><a href="../python_api#carlalidarmeasurement">carla.LidarMeasurement</a></td>
-<td>A rotating LIDAR. Generates a 3D point cloud and its asociated intensity modelling the surroundings p.</td>
+<td>A rotating LIDAR. Generates a 4D point cloud with coordinates and intensity per point to model the surroundings.</td>
 <tr>
-<td>RawLIDAR raycast</td>
-<td><a href="../python_api#carlalidarrawmeasurement">carla.LidarRawMeasurement</a></td>
-<td>A rotating LIDAR. Generates a 3D point cloud plus extra information about the raycast hitted object.</td><tr>
 <td>Radar</td>
 <td><a href="../python_api#carlaradarmeasurement">carla.RadarMeasurement</a></td>
 <td>2D point map modelling elements in sight and their movement regarding the sensor. </td>
@@ -203,6 +200,10 @@ Different functionalities such as navigation, measurement of physical properties
 <td>RSS</td>
 <td><a href="../python_api#carlarssresponse">carla.RssResponse</a></td>
 <td>Modifies the controller applied to a vehicle according to safety checks. This sensor works in a different manner than the rest, and there is specific <a href="../adv_rss">RSS documentation</a> for it. </td>
+<tr>
+<td>Semantic LIDAR</td>
+<td><a href="../python_api#carlasemanticlidarmeasurement">carla.SemanticLidarMeasurement</a></td>
+<td>A rotating LIDAR. Generates a 3D point cloud with extra information regarding instance and semantic segmentation.</td>
 </tbody>
 </table>
 <br>

@@ -1024,15 +1024,15 @@ Computed intensity for this point.
 ---
 
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the lidar data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating lidar using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers shot.  
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle the Lidar is rotated at the time of the measurement (in radians).  
+Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.  
+Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.  
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
@@ -1686,17 +1686,17 @@ Sets the log level.
 ---
 
 ## carla.SemanticLidarDetection<a name="carla.SemanticLidarDetection"></a>
-Data contained inside a [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). Each of these represents one of the points in the cloud with its location and its asociated intensity.  
+Data contained inside a [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). Each of these represents one of the points in the cloud with its location, the cosine of the incident angle, index of the object hit, and its semantic tag.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SemanticLidarDetection.point"></a>**<font color="#f8805a">point</font>** (_[carla.Location](#carla.Location)_)  
-Point in xyz coordinates.  
+[x,y,z] coordinates of the point.  
 - <a name="carla.SemanticLidarDetection.cos_inc_angle"></a>**<font color="#f8805a">cos_inc_angle</font>** (_float_)  
-Cosine of the incident angle between the ray and the normal of the hit object.  
+Cosine of the incident angle between the ray, and the normal of the hit object.  
 - <a name="carla.SemanticLidarDetection.object_idx"></a>**<font color="#f8805a">object_idx</font>** (_uint_)  
-Carla index of the hitted actor.  
+Carla index of the hit actor.  
 - <a name="carla.SemanticLidarDetection.object_tag"></a>**<font color="#f8805a">object_tag</font>** (_uint_)  
-Semantic tag of the hitted component.  
+Semantic tag of the hit component.  
 
 <h3>Methods</h3>
 
@@ -1706,19 +1706,19 @@ Semantic tag of the hitted component.
 ---
 
 ## carla.SemanticLidarMeasurement<a name="carla.SemanticLidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic lidar data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating lidar using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SemanticLidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers shot.  
 - <a name="carla.SemanticLidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle the Lidar is rotated at the time of the measurement (in radians).  
+Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).  
 - <a name="carla.SemanticLidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Received list of raw detection points. Each point consists in a 3D-xyz data plus cosine of the incident angle, the idx of the hit actor and its semantic tag.  
+Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.  
 
 <h3>Methods</h3>
 - <a name="carla.SemanticLidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
-Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
+Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open-source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
     - **Parameters:**
         - `path` (_str_)  
 
@@ -1777,14 +1777,14 @@ Commands the sensor to stop listening for data.
 Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. Hereunder is a list of the sensors and their corresponding data.
   - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).
   - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).
-  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).
-  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).
+  - GNSS sensor: [carla.GnssMeasurement](#carla.GnssMeasurement).
+  - IMU sensor: [carla.IMUMeasurement](#carla.IMUMeasurement).
   - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).
-  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).
-  - SemanticLidar raycast: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).
+  - LIDAR sensor: [carla.LidarMeasurement](#carla.LidarMeasurement).
   - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).
-  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).
-  - RSS sensor: [carla.RssResponse](#carla.RssResponse).  
+  - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).
+  - RSS sensor: [carla.RssResponse](#carla.RssResponse).
+  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
