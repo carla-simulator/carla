@@ -29,6 +29,7 @@ class CARLA_API ASceneCaptureSensor : public ASensor
 {
   GENERATED_BODY()
 
+  friend class ACarlaGameModeBase;
   friend class FPixelReader;
 
 public:
@@ -218,6 +219,18 @@ public:
   float GetMotionBlurMinObjectScreenSize() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetLensFlareIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetLensFlareIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetBloomIntensity(float Intensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetBloomIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetWhiteTemp(float Temp);
 
   UFUNCTION(BlueprintCallable)
@@ -236,7 +249,7 @@ public:
   float GetChromAberrIntensity() const;
 
   UFUNCTION(BlueprintCallable)
-  void SetChromAberrOffset(float Offset);
+  void SetChromAberrOffset(float ChromAberrOffset);
 
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
@@ -257,6 +270,26 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  void CopyTextureToAtlas();
+
+  bool CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
+
+  virtual void SendPixels(const TArray<FColor>& /* AtlasImage */, uint32 /* AtlasTextureWidth */) {}
+
+  template <typename TSensor>
+  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
+  {
+    auto Stream = GetDataStream(Sensor);
+    carla::Buffer Buffer = Stream.PopBufferFromPool();
+
+    CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth);
+
+    {
+      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+      Stream.Send(Sensor, std::move(Buffer));
+    }
+  }
+
 protected:
 
   virtual void BeginPlay() override;
@@ -267,7 +300,18 @@ protected:
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
-private:
+  /// Render target necessary for scene capture.
+  UPROPERTY(EditAnywhere)
+  UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
+
+  /// Scene capture component.
+  UPROPERTY(EditAnywhere)
+  USceneCaptureComponent2D *CaptureComponent2D = nullptr;
+
+  FIntVector PositionInAtlas;
+
+  UPROPERTY(EditAnywhere)
+  float TargetGamma = 2.2f;
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)
@@ -277,18 +321,10 @@ private:
   UPROPERTY(EditAnywhere)
   uint32 ImageHeight = 600u;
 
+  uint32 Offset = 0u;
+
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
-  UPROPERTY(EditAnywhere)
-  float TargetGamma = 2.2f;
-
-  /// Render target necessary for scene capture.
-  UPROPERTY(EditAnywhere)
-  UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
-
-  /// Scene capture component.
-  UPROPERTY(EditAnywhere)
-  USceneCaptureComponent2D *CaptureComponent2D = nullptr;
 };

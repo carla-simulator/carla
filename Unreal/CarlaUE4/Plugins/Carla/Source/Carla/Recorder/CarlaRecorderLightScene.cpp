@@ -40,6 +40,10 @@ void CarlaRecorderLightScenes::Add(const CarlaRecorderLightScene &Vehicle)
 
 void CarlaRecorderLightScenes::Write(std::ofstream &OutFile)
 {
+  if (Lights.size() == 0)
+  {
+    return;
+  }
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::SceneLight));
 

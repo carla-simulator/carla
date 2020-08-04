@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="routeTypes.xsd" />
+
+    <xsd:element name="routes" type="routesType"/>
+    <xsd:element name="route-alternatives" type="routesType"/>
+
+    <xsd:complexType name="routesType">
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="vTypeDistribution" type="vTypeDistributionType" minOccurs="0"/>
+            <xsd:element name="routeDistribution" type="routeDistributionType" minOccurs="0"/>
+            <xsd:element name="vType" type="vTypeType" minOccurs="0"/>
+            <xsd:element name="vehicle" type="vehicleType" minOccurs="0"/>
+            <xsd:element name="route" type="routeType" minOccurs="0"/>
+            <xsd:element name="flow" type="flowType" minOccurs="0"/>
+            <xsd:element name="trip" type="tripType" minOccurs="0"/>
+            <xsd:element name="person" type="personType" minOccurs="0"/>
+            <xsd:element name="personFlow" type="personFlowType" minOccurs="0"/>
+            <xsd:element name="container" type="containerType" minOccurs="0"/>
+            <xsd:element name="include" minOccurs="0">
+                <xsd:complexType>
+                    <xsd:attribute name="href" type="xsd:string"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+
+</xsd:schema>

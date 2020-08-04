@@ -36,6 +36,10 @@ void CarlaRecorderActorsKinematics::Add(const CarlaRecorderKinematics &InObj)
 
 void CarlaRecorderActorsKinematics::Write(std::ofstream &OutFile)
 {
+  if (Kinematics.size() == 0)
+  {
+    return;
+  }
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Kinematics));
 

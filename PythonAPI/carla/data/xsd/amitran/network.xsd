@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:element name="network">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="node" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element name="link" type="linkProperties" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+ 
+    <xsd:complexType name="nodeType">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- unique ID -->
+        <xsd:attribute name="type" type="nodeTypeType" use="optional"/>
+        <xsd:attribute name="odZone" type="xsd:unsignedInt" use="optional"/> <!-- reference to OD zone id -->
+        <xsd:attribute name="ref" type="xsd:string" use="optional"/> <!-- this may be used to refer to the equivalent node in the original model -->
+    </xsd:complexType>
+    
+    <xsd:simpleType name="nodeTypeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="trafficLight" />
+            <xsd:enumeration value="priority" />
+            <xsd:enumeration value="priorityStop" />
+            <xsd:enumeration value="rightBeforeLeft" />
+            <xsd:enumeration value="allwayStop" />
+            <xsd:enumeration value="roundaboutSingle" />
+            <xsd:enumeration value="roundaboutMulti" />
+            <xsd:enumeration value="deadEnd" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:complexType name="linkProperties">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- unique ID -->
+        <xsd:attribute name="from" type="xsd:unsignedInt" use="optional"/> <!-- reference to node id -->
+        <xsd:attribute name="to" type="xsd:unsignedInt" use="optional"/> <!-- reference to node id -->
+        <xsd:attribute name="roadClass" type="roadClassType" use="required"/> <!-- functional road class in the Navteq sense -->
+        <xsd:attribute name="length" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="speedLimitKmh" type="xsd:unsignedInt" use="optional"/> <!-- unit: km/h -->
+        <xsd:attribute name="numberOfLanes" type="xsd:unsignedInt" use="required"/>
+        <xsd:attribute name="ref" type="xsd:string" use="optional"/> <!-- this may be used to refer to the equivalent link in the original model -->
+    </xsd:complexType>
+    
+    <xsd:simpleType name="roadClassType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="0" />
+            <xsd:enumeration value="1" />
+            <xsd:enumeration value="2" />
+            <xsd:enumeration value="3" />
+            <xsd:enumeration value="4" />
+            <xsd:enumeration value="5" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+</xsd:schema>

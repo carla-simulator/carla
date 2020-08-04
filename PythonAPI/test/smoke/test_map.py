@@ -12,11 +12,13 @@ from . import SmokeTest
 
 class TestMap(SmokeTest):
     def test_reload_world(self):
+        print("TestMap.test_reload_world")
         map_name = self.client.get_world().get_map().name
         world = self.client.reload_world()
         self.assertEqual(map_name, world.get_map().name)
 
     def test_load_all_maps(self):
+        print("TestMap.test_load_all_maps")
         map_names = list(self.client.get_available_maps())
         random.shuffle(map_names)
         for map_name in map_names:

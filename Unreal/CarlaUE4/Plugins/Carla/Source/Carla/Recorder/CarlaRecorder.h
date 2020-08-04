@@ -11,6 +11,8 @@
 
 #include "Carla/Actor/ActorDescription.h"
 
+#include "CarlaRecorderTraficLightTime.h"
+#include "CarlaRecorderPhysicsControl.h"
 #include "CarlaRecorderPlatformTime.h"
 #include "CarlaRecorderBoundingBox.h"
 #include "CarlaRecorderKinematics.h"
@@ -35,6 +37,8 @@ class AActor;
 class UCarlaEpisode;
 class ACarlaWheeledVehicle;
 class UCarlaLight;
+class ATrafficSignBase;
+class ATrafficLightBase;
 
 enum class CarlaRecorderPacketId : uint8_t
 {
@@ -52,7 +56,10 @@ enum class CarlaRecorderPacketId : uint8_t
   SceneLight,
   Kinematics,
   BoundingBox,
-  PlatformTime
+  PlatformTime,
+  PhysicsControl,
+  TrafficLightTime,
+  TriggerVolume
 };
 
 /// Recorder for the simulation
@@ -107,7 +114,13 @@ public:
 
   void AddKinematics(const CarlaRecorderKinematics &ActorKinematics);
 
-  void AddBoundingBox(const CarlaRecorderBoundingBox &ActorBoundingBox);
+  void AddBoundingBox(const CarlaRecorderActorBoundingBox &ActorBoundingBox);
+
+  void AddTriggerVolume(const ATrafficSignBase &TrafficSign);
+
+  void AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle);
+
+  void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -137,6 +150,7 @@ public:
   std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
+  void StopReplayer(bool KeepActors = false);
 
   void Ticking(float DeltaSeconds);
 
@@ -168,8 +182,11 @@ private:
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
   CarlaRecorderActorsKinematics Kinematics;
-  CarlaRecorderBoundingBoxes BoundingBoxes;
+  CarlaRecorderActorBoundingBoxes BoundingBoxes;
+  CarlaRecorderActorTriggerVolumes TriggerVolumes;
   CarlaRecorderPlatformTime PlatformTime;
+  CarlaRecorderPhysicsControls PhysicsControls;
+  CarlaRecorderTrafficLightTimes TrafficLightTimes;
 
 
   // replayer

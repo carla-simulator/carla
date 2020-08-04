@@ -1,0 +1,30 @@
+buildType:
+  default: debug
+  description: My option
+  choices:
+    debug:
+      short: Debug
+      long: Build with debug info
+      buildType: Debug
+    release:
+      short: Release
+      long: Optimize binaries
+      buildType: Release
+
+useFMI:
+  default: 'no'
+  description: My option
+  choices:
+    'yes':
+      short: FMI
+      long: Enable the use of FMI
+      settings:
+        FMI: 'yes'
+    'no':
+      short: 'No FMI'
+      long: Do not build the FMI library
+      settings:
+        FMI: 'no'
+
+
+

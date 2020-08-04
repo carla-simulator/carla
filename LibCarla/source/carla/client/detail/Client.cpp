@@ -363,6 +363,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
   }
 
+  void Client::StopReplayer(bool keep_actors) {
+    _pimpl->AsyncCall("stop_replayer", keep_actors);
+  }
+
   void Client::SetReplayerTimeFactor(double time_factor) {
     _pimpl->AsyncCall("set_replayer_time_factor", time_factor);
   }

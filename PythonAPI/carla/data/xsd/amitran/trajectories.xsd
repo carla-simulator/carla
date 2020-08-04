@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:element name="trajectories">
+        <xsd:complexType>
+            <xsd:choice maxOccurs="unbounded">
+                <xsd:element name="actorConfig" type="actorConfigType" minOccurs="0"/>
+                <xsd:element name="vehicle" type="vehicleType" minOccurs="0"/>
+                <xsd:element name="motionState" type="motionStateType" minOccurs="0"/>
+            </xsd:choice>
+            <xsd:attribute name="timeStepSize" use="required" type="xsd:unsignedInt"/> <!-- unit: 0.001s -->
+        </xsd:complexType>
+    </xsd:element>
+ 
+    <xsd:complexType name="actorConfigType">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- unique ID -->
+        <xsd:attribute name="vehicleClass" type="vehicleClassType" use="optional"/>
+        <xsd:attribute name="fuel" type="fuelType" use="optional"/>
+        <xsd:attribute name="emissionClass" type="emissionClassType" use="optional"/>
+        <xsd:attribute name="length" type="xsd:unsignedInt" use="optional"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="weight" type="xsd:unsignedInt" use="optional"/> <!-- unit: 10kg -->
+        <xsd:attribute name="age" type="xsd:unsignedInt" use="optional"/> <!-- unit: years -->
+        <xsd:attribute name="brand" type="xsd:string" use="optional"/>
+        <xsd:attribute name="model" type="xsd:string" use="optional"/>
+        <xsd:attribute name="ref" type="xsd:string" use="optional"/> <!-- this may be used to refer to the equivalent type in the original model -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="vehicleType">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- unique ID -->
+        <xsd:attribute name="actorConfig" type="xsd:unsignedInt" use="required"/> <!-- reference to actorConfig id -->
+        <xsd:attribute name="startTime" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="ref" type="xsd:string" use="optional"/> <!-- this may be used to refer to the equivalent vehicle in the original model -->
+    </xsd:complexType>
+        
+    <xsd:complexType name="motionStateType">
+        <xsd:attribute name="vehicle" type="xsd:unsignedInt" use="required"/> <!-- reference to vehicle id -->
+        <xsd:attribute name="speed" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.01m/s -->
+        <xsd:attribute name="time" type="xsd:unsignedInt"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="acceleration" type="xsd:int"/> <!-- unit: 0.001m/s^2 -->
+        <xsd:attribute name="gear" type="xsd:int"/> <!-- negative values correspond to reverse gear -->
+        <xsd:attribute name="engineSpeed" type="xsd:unsignedInt"/> <!-- unit: rpm -->
+        <xsd:attribute name="worldLocationLong" type="xsd:int"/> <!-- 1E-7 degree -->
+        <xsd:attribute name="worldLocationLat" type="xsd:int"/> <!-- 1E-7 degree -->
+        <xsd:attribute name="worldLocationHeight" type="xsd:int"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="cartesianX" type="xsd:int"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="cartesianY" type="xsd:int"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="cartesianZ" type="xsd:int"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="link" type="xsd:unsignedInt"/> <!-- reference to link id -->
+        <xsd:attribute name="laneIndex" type="xsd:unsignedInt"/> <!-- 1 based counting from right -->
+        <xsd:attribute name="slope" type="xsd:short"/> <!-- unit: 0.01% -->
+        <xsd:attribute name="radiusOfCurvature" type="xsd:int"/> <!-- unit: 0.01m -->
+        <xsd:attribute name="roadType" type="roadTypeType"/>
+        <xsd:attribute name="speedLimitKmh" type="xsd:unsignedInt"/> <!-- unit: km/h -->
+        <xsd:attribute name="airDragCoefficient" type="xsd:unsignedInt"/> <!-- unit: 0.0001 -->
+        <xsd:attribute name="timeHeadway" type="xsd:unsignedInt"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="timeToCollision" type="xsd:unsignedInt"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="vehicleInFrontId" type="xsd:int"/> <!-- reference to vehicle id -->
+    </xsd:complexType>
+    
+    <xsd:simpleType name="emissionClassType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="Euro0" />
+            <xsd:enumeration value="Euro1" />
+            <xsd:enumeration value="Euro2" />
+            <xsd:enumeration value="Euro3" />
+            <xsd:enumeration value="Euro4" />
+            <xsd:enumeration value="Euro5" />
+            <xsd:enumeration value="Euro6" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="fuelType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="Gasoline" />
+            <xsd:enumeration value="Diesel" />
+            <xsd:enumeration value="Gasoline2S" /> <!-- for two stroke engines -->
+            <xsd:enumeration value="Diesel2S" /> <!-- for two stroke engines -->
+            <xsd:enumeration value="LPG" />
+            <xsd:enumeration value="CNG" />
+            <xsd:enumeration value="Electric" />
+            <xsd:enumeration value="Fuelcell" />
+            <xsd:enumeration value="HybridGasoline" />
+            <xsd:enumeration value="HybridDiesel" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="vehicleClassType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="Passenger" />
+            <xsd:enumeration value="Moped" />
+            <xsd:enumeration value="Motorcycle" />
+            <xsd:enumeration value="Delivery" />
+            <xsd:enumeration value="UrbanBus" />
+            <xsd:enumeration value="Coach" />
+            <xsd:enumeration value="Truck" />
+            <xsd:enumeration value="Trailer" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="roadTypeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="urban" />
+            <xsd:enumeration value="motorway" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+</xsd:schema>

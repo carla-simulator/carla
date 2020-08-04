@@ -102,7 +102,7 @@ inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
     StreamType InStream)
   : Stream(std::move(InStream)),
     Header([&Sensor, Timestamp]() {
-      check(IsInGameThread());
+      //check(IsInGameThread());
       using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
       return Serializer::Serialize(
           carla::sensor::SensorRegistry::template get<SensorT*>::index,

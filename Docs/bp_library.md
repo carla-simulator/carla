@@ -36,6 +36,7 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `black_clip` (_Float_)<sub>_ – Modifiable_</sub>
         - `blade_count` (_Int_)<sub>_ – Modifiable_</sub>
+        - `bloom_intensity` (_Float_)<sub>_ – Modifiable_</sub>
         - `blur_amount` (_Float_)<sub>_ – Modifiable_</sub>
         - `blur_radius` (_Float_)<sub>_ – Modifiable_</sub>
         - `calibration_constant` (_Float_)<sub>_ – Modifiable_</sub>
@@ -57,6 +58,7 @@ Check out the [introduction to blueprints](core_actors.md).
         - `iso` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_circle_falloff` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_circle_multiplier` (_Float_)<sub>_ – Modifiable_</sub>
+        - `lens_flare_intensity` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_k` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_kcube` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_x_size` (_Float_)<sub>_ – Modifiable_</sub>
@@ -85,6 +87,7 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `black_clip` (_Float_)<sub>_ – Modifiable_</sub>
         - `blade_count` (_Int_)<sub>_ – Modifiable_</sub>
+        - `bloom_intensity` (_Float_)<sub>_ – Modifiable_</sub>
         - `blur_amount` (_Float_)<sub>_ – Modifiable_</sub>
         - `blur_radius` (_Float_)<sub>_ – Modifiable_</sub>
         - `calibration_constant` (_Float_)<sub>_ – Modifiable_</sub>
@@ -106,6 +109,7 @@ Check out the [introduction to blueprints](core_actors.md).
         - `iso` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_circle_falloff` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_circle_multiplier` (_Float_)<sub>_ – Modifiable_</sub>
+        - `lens_flare_intensity` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_k` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_kcube` (_Float_)<sub>_ – Modifiable_</sub>
         - `lens_x_size` (_Float_)<sub>_ – Modifiable_</sub>
@@ -143,6 +147,17 @@ Check out the [introduction to blueprints](core_actors.md).
         - `dropoff_general_rate` (_Float_)<sub>_ – Modifiable_</sub>
         - `dropoff_intensity_limit` (_Float_)<sub>_ – Modifiable_</sub>
         - `dropoff_zero_intensity` (_Float_)<sub>_ – Modifiable_</sub>
+        - `lower_fov` (_Float_)<sub>_ – Modifiable_</sub>
+        - `noise_stddev` (_Float_)<sub>_ – Modifiable_</sub>
+        - `points_per_second` (_Int_)<sub>_ – Modifiable_</sub>
+        - `range` (_Float_)<sub>_ – Modifiable_</sub>
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `rotation_frequency` (_Float_)<sub>_ – Modifiable_</sub>
+        - `sensor_tick` (_Float_)<sub>_ – Modifiable_</sub>
+        - `upper_fov` (_Float_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">sensor.lidar.ray_cast_semantic</font>**  
+    - **Attributes:**
+        - `channels` (_Int_)<sub>_ – Modifiable_</sub>
         - `lower_fov` (_Float_)<sub>_ – Modifiable_</sub>
         - `points_per_second` (_Int_)<sub>_ – Modifiable_</sub>
         - `range` (_Float_)<sub>_ – Modifiable_</sub>
@@ -859,6 +874,13 @@ Check out the [introduction to blueprints](core_actors.md).
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `speed` (_Float_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">walker.pedestrian.0014</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0015</font>**  
     - **Attributes:**
         - `age` (_String_)
         - `gender` (_String_)

@@ -108,6 +108,7 @@ void ATrafficLightBase::SetGreenTime(float InGreenTime)
         TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetGreenTime(InGreenTime);
+    AddTimeToRecorder();
   }
 }
 
@@ -133,6 +134,7 @@ void ATrafficLightBase::SetYellowTime(float InYellowTime)
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetYellowTime(InYellowTime);
+    AddTimeToRecorder();
   }
 }
 
@@ -158,6 +160,7 @@ void ATrafficLightBase::SetRedTime(float InRedTime)
       TrafficLightComponent->GetController();
     check(TrafficLightController)
     TrafficLightController->SetRedTime(InRedTime);
+    AddTimeToRecorder();
   }
 }
 
@@ -262,6 +265,15 @@ UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent()
 const UTrafficLightComponent* ATrafficLightBase::GetTrafficLightComponent() const
 {
   return TrafficLightComponent;
+}
+
+void ATrafficLightBase::AddTimeToRecorder()
+{
+  auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
+  if (Recorder && Recorder->IsEnabled())
+  {
+    Recorder->AddTrafficLightTime(*this);
+  }
 }
 
 void ATrafficLightBase::LightChangedCompatibility(ETrafficLightState NewLightState)

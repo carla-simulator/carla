@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd" />
+
+    <xsd:element name="nodes" type="nodesType">
+        <xsd:key name="nodeKey">
+            <xsd:selector xpath="node"/>
+            <xsd:field xpath="@id"/>
+        </xsd:key>
+    </xsd:element>
+
+    <xsd:complexType name="nodesType">
+        <xsd:sequence>
+            <xsd:element name="location" type="locationType" minOccurs="0" maxOccurs="1"/>
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="node" type="nodeType"/>
+                <xsd:element name="delete" type="deleteType"/>
+                <xsd:element name="join" type="joinType"/>
+                <xsd:element name="joinExclude" type="joinExcludeType"/>
+            </xsd:choice>
+        </xsd:sequence>
+        <xsd:attribute name="version" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\d+.\d+"></xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="nodeTypeWithoutID">
+        <xsd:sequence>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="x" type="xsd:float" use="optional"/>
+        <xsd:attribute name="y" type="xsd:float" use="optional"/>
+        <xsd:attribute name="z" type="xsd:float" use="optional"/>
+        <xsd:attribute name="type" type="nodeTypeType" use="optional"/>
+        <xsd:attribute name="tl" type="xsd:string" use="optional"/>
+        <xsd:attribute name="tlType" type="tlTypeType" use="optional"/>
+        <xsd:attribute name="controlledInner" type="xsd:string" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="radius" type="nonNegativeFloatTypeWithErrorValue" use="optional"/>
+        <xsd:attribute name="keepClear" type="boolType" use="optional"/>
+        <xsd:attribute name="rightOfWay" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="default"/>
+                    <xsd:enumeration value="edgePriority"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="fringe" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="default"/>
+                    <xsd:enumeration value="outer"/>
+                    <xsd:enumeration value="inner"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="nodeType">
+        <xsd:complexContent>
+            <xsd:extension base="nodeTypeWithoutID">
+                <xsd:attribute name="id" type="idType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="deleteType">
+        <xsd:attribute name="id" type="idType" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="joinType">
+        <xsd:complexContent>
+            <xsd:extension base="nodeTypeWithoutID">
+                <xsd:attribute name="nodes" type="xsd:string" use="required"/>
+                <xsd:attribute name="id" type="idType" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="joinExcludeType">
+        <xsd:attribute name="nodes" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

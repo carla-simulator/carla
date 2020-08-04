@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="netstate">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="timestep"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="timestep">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="edge"/>
+            </xsd:sequence>
+            <xsd:attribute name="time" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="edge">
+        <xsd:complexType>
+            <xsd:choice minOccurs="0" maxOccurs="unbounded" >
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="lane"/>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="vehicle"/>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="person"/>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="container"/>
+            </xsd:choice>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="lane">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="vehicle"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="vehicle">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="person"/>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="container"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="speed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="posLat" use="optional" type="xsd:float"/>
+            <xsd:attribute name="speedLat" use="optional" type="xsd:float"/>
+            <xsd:attribute name="personNumber" use="optional" type="xsd:nonNegativeInteger"/>
+            <xsd:attribute name="containerNumber" use="optional" type="xsd:nonNegativeInteger"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="person">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="angle" use="required" type="xsd:float"/>
+            <xsd:attribute name="stage" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="container">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="angle" use="required" type="xsd:float"/>
+            <xsd:attribute name="stage" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

@@ -116,6 +116,15 @@
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
     # --------------------------------------
+    - def_name: stop_replayer
+      params:
+      - param_name: keep_actors
+        type: bool
+        doc: >
+          True if you want autoremove all actors from the replayer, or False to keep them.
+      doc: >
+        Stop current replayer.
+    # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
       - param_name: filename
@@ -169,9 +178,8 @@
           Name or absolute path of the file recorded, depending on your previous choice.
       - param_name: show_all
         type: bool
-        default: false
         doc: >
-          When true, will show all the details per frame (traffic light states, positions of all actors, orientation and animation data...), but by default it will only show a summary.
+          If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.
       return: string
       doc: >
         The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.
@@ -182,6 +190,11 @@
         type: str
         doc: >
           Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+      - param_name: additional_data
+        type: bool
+        default: False
+        doc: >
+          Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
       doc: >
         Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
     # --------------------------------------
