@@ -29,7 +29,7 @@ CARLA forum</a>
 <summary> Show command lines to build on Windows</summary>
 
 !!! Important
-    To execute the "make" commands below, you MUST use the Visual Studio 2017 native console x64 WITH administrator rights, otherwise you may be getting permission errors.
+    To execute the ```make``` commands below, you **must** use the Visual Studio 2017 native console x64 **with** administrator rights, otherwise you may be getting permission errors.
 	
 ```sh
 # Make sure to meet the minimum requirements.
