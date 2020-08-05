@@ -100,20 +100,16 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
-
-    FCriticalSection Mutex;
-    ParallelFor(PointsToScanWithOneLaser, [&](int32 idxPtsOneLaser) {
+    for (int idxPtsOneLaser = 0; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
       FHitResult HitResult;
       const float VertAngle = LaserAngles[idxChannel];
       const float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
       const bool PreprocessResult = PreprocessRay();
 
       if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
-        Mutex.Lock();
         WritePointAsync(idxChannel, HitResult);
-        Mutex.Unlock();
       }
-    });
+    };
   });
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
