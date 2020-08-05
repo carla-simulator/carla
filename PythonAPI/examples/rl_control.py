@@ -186,7 +186,8 @@ class World(object):
     def step(self, action):
         if self.done:
             raise ValueError('self.done should always be False when calling step')
-
+        
+        obs = None
         while True:
 
             try:
@@ -196,7 +197,7 @@ class World(object):
                 # if controller.parse_events(client, world, clock):
                 #     return
 
-                control = self.action_converter.get_control(self.player.control, action)
+                control = self.action_converter.get_control(self.player.get_control, action)
                 # self._control.throttle = 1.0
                 self.player.apply_control(control)                
 
@@ -1061,7 +1062,7 @@ class Reward:
         goal_location = np.array([target.x,
                                     target.y,
                                     target.z])
-        d = np.linalg.norm(player_location - goal_location) / 1000
+        d = np.linalg.norm(player_location - goal_location) # / 1000
         success = False
         if d < 1.0:
             success = True
@@ -1072,7 +1073,10 @@ class Reward:
 
         # Collision damage      
         # collision = [colhist[x + self.frame - 200] for x in range(0, 200)]
-        max_col = max(1.0, max(colhist))
+        max_col = 0
+        if len(colhist) > 0:
+            max_col = max(1.0, max(colhist))
+        c = max_col
         # c_v = measurements.collision_vehicles
         # c_p = measurements.collision_pedestrians
         # c_o = measurements.collision_other
@@ -1096,9 +1100,9 @@ class Reward:
         # TODO: out of lane, timeout, landcrossing, overspeed
         
         # Update state
-        new_state = {'d': d, 'v': v, 'c': c, 's': s, 'o': o,
-                     'd_x': d_x, 'd_y': d_y, 'd_z': d_z,
-                     'c_v': c_v, 'c_p': c_p, 'c_o': c_o}
+        new_state = {'d': d, 'v': v, # 'c': c, 's': s, 'o': o,
+                    #  'c_v': c_v, 'c_p': c_p, 'c_o': c_o,
+                     'd_x': d_x, 'd_y': d_y, 'd_z': d_z}
         self.state = new_state
 
         return r, success 
@@ -1122,7 +1126,7 @@ class ActionConverter:
                 control.brake = min(control.brake + 0.2, 1)
             else:
                 self.control.brake = 0
-            steer_increment = 5e-4 * milliseconds
+            steer_increment = 5e-4 * 500
             if action == 2: # steer left
                 if self._steer_cache > 0:
                     self._steer_cache = 0
@@ -1138,14 +1142,14 @@ class ActionConverter:
             self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
             self.control.steer = round(self._steer_cache, 1)
             
-        if self.action_type == 1:
-            self.control.throttle = min(action.throttle, 1)
-            self.control.brake = min(action.brake, 1)
-            self.control.steer = action.steer
-            if self.control.steer > 1:
-                self.control.steer = 1
-            elif self.control.steer < -1:
-                self.control.steer = -1
+        # if self.action_type == 1:
+        #     self.control.throttle = min(action.throttle, 1)
+        #     self.control.brake = min(action.brake, 1)
+        #     self.control.steer = action.steer
+        #     if self.control.steer > 1:
+        #         self.control.steer = 1
+        #     elif self.control.steer < -1:
+        #         self.control.steer = -1
 
         return self.control
 
