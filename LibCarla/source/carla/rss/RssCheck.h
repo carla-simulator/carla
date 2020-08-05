@@ -329,7 +329,7 @@ private:
                         carla::client::Vehicle const &carla_ego_vehicle, CarlaRssState &carla_rss_state) const;
 
   /// @brief Perform the actual RSS check
-  bool PerformCheck(CarlaRssState &carla_rss_state) const;
+  void PerformCheck(CarlaRssState &carla_rss_state) const;
 
   /// @brief Analyse the RSS check results
   void AnalyseCheckResults(CarlaRssState &carla_rss_state) const;

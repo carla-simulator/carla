@@ -268,15 +268,6 @@ SharedPtr<sensor::SensorData> RssSensor::TickRssSensor(const Timestamp &timestam
     carla::rss::EgoDynamicsOnRoute ego_dynamics_on_route;
     if (_processing_lock.try_lock()) {
       spdlog::debug("RssSensor tick: T={}", timestamp.frame);
-
-      if ((timestamp.frame < _last_processed_frame) && ((_last_processed_frame - timestamp.frame) < 0xffffffffu))
-      {
-        _processing_lock.unlock();
-        spdlog::warn("RssSensor tick dropped: T={}", timestamp.frame);
-        return nullptr;
-      }
-      _last_processed_frame = timestamp.frame;
-
       carla::client::World world = GetWorld();
       SharedPtr<carla::client::ActorList> actors = world.GetActors();
 

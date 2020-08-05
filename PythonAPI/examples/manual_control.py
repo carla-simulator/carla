@@ -155,7 +155,7 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, clock, display, args):
         self.world = carla_world
         self.actor_role_name = args.rolename
         try:
@@ -181,6 +181,8 @@ class World(object):
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
+        self.clock = clock
+        self.display = display
 
     def restart(self):
         self.player_max_speed = 1.589
@@ -1029,10 +1031,11 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        clock = pygame.time.Clock()
+        world = World(world=client.get_world(), clock=clock, display=display, hud=hud, args=args)
         controller = KeyboardControl(world, args.autopilot)
 
-        clock = pygame.time.Clock()
+        
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):

@@ -199,20 +199,6 @@ namespace road {
     return p;
   }
 
-  element::DirectedPoint Road::GetDirectedPointInNoLaneOffset(const double s) const {
-    const auto clamped_s = geom::Math::Clamp(s, 0.0, _length);
-    const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
-
-    element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
-
-    // Apply road's elevation record
-    const auto elevation_info = GetElevationOn(s);
-    p.location.z = static_cast<float>(elevation_info.Evaluate(s));
-    p.pitch = elevation_info.Tangent(s);
-
-    return p;
-  }
-
   const std::pair<double, double> Road::GetNearestPoint(const geom::Location &loc) const {
     std::pair<double, double> last = { 0.0, std::numeric_limits<double>::max() };
 
