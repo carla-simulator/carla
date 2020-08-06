@@ -137,7 +137,7 @@ class World(object):
         try:
             while True:
                 # send control
-                control = self.action_converter.get_control(self.player.get_control, action)
+                control = self.action_converter.get_control(self.player.get_control(), action)
                 self.player.apply_control(control)                
 
                 # Gather observations 
