@@ -9,6 +9,10 @@
 # Allows controlling a vehicle with a keyboard. For a simpler and more
 # documented example, please take a look at tutorial.py.
 
+"""
+CARLA RL Environment
+"""
+
 from __future__ import print_function
 
 
@@ -123,27 +127,28 @@ class World(object):
         if self.done:
             raise ValueError('self.done should always be False when calling step')
         
-        try:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    raise Exception("Quit")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                raise Exception("Quit")
 
-            obs = None
+        obs = None
+        reward = 0
+        success = False
+        try:
             while True:
                 # send control
                 control = self.action_converter.get_control(self.player.get_control, action)
                 self.player.apply_control(control)                
 
-                # Gather observations TODO: measurements?
-                obs = self.get_observation()                
-                break   
-
+                # Gather observations 
+                obs = self.get_observation()
+                # Get the reward
+                # reward = 0
+                reward, success = self.reward.get_reward(obs, self.target)
+                break 
+            
         except Exception as e:
             print(e)
-        
-        # Get the reward
-        # reward = 0
-        reward, success = self.reward.get_reward(obs, self.target)
     
         if len(self.collision_sensor.history) > 0:
             collision = True
@@ -233,8 +238,8 @@ class World(object):
         acceleration = self.player.get_acceleration()
         colhist = self.collision_sensor.get_collision_history()
         sensor_data = self.camera_manager.sensor_data
-        return Observation(transform, velocity, colhist, sensor_data)
-
+        return Observation(transform, velocity, colhist, sensor_data, acceleration)
+        
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
@@ -278,6 +283,7 @@ class World(object):
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
 # ==============================================================================
+
 
 class HUD(object):
     def __init__(self, width, height):
@@ -807,14 +813,15 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 class Observation:
-    def __init__(self, transform, velocity, colhist, sensor_data):
+    def __init__(self, transform, velocity, acceleration, colhist, sensor_data):
         self.transform = transform
         self.velocity = velocity
-        self.colhist = colhist
-        self.sensor_data = sensor_data        
+        self.acceleration = acceleration        
         # self.speed = np.linalg.norm([velocity.x, velocity.y, velocity.z])
         self.speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
-
+        self.colhist = colhist
+        self.sensor_data = sensor_data  
+        
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
 # ==============================================================================
