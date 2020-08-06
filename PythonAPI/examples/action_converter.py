@@ -13,9 +13,9 @@ class ActionConverter:
             if action == 0: # forward
                 self.control.throttle = min(control.throttle + 0.01, 1)
             else:
-                control.throttle = 0.0
+                self.control.throttle = 0.0
             if action == 1: # stop
-                control.brake = min(control.brake + 0.2, 1)
+                self.control.brake = min(control.brake + 0.2, 1)
             else:
                 self.control.brake = 0
             steer_increment = 5e-4 * 500
