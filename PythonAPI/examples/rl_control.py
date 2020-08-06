@@ -38,6 +38,8 @@ except IndexError:
 import carla
 
 from carla import ColorConverter as cc
+from reward import Reward
+from action_converter import ActionConverter
 
 import argparse
 import collections
@@ -135,7 +137,7 @@ class World(object):
                 # Gather observations TODO: measurements?
                 obs = self.get_observation()                
                 break   
-                 
+
         except Exception as e:
             print(e)
         
