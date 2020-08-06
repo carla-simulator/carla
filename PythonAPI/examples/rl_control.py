@@ -124,13 +124,14 @@ class World(object):
         self.display = display
 
     def step(self, action):
+        
         if self.done:
             raise ValueError('self.done should always be False when calling step')
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 raise Exception("Quit")
-
+        
         obs = None
         reward = 0
         success = False
@@ -138,25 +139,26 @@ class World(object):
             while True:
                 # send control
                 control = self.action_converter.get_control(self.player.get_control(), action)
+                
                 self.player.apply_control(control)                
 
                 # Gather observations 
                 obs = self.get_observation()
+                print (obs.sensor_data)
+
                 # Get the reward
-                # reward = 0
                 reward, success = self.reward.get_reward(obs, self.target)
                 break 
             
         except Exception as e:
             print(e)
-    
         if len(self.collision_sensor.history) > 0:
             collision = True
         else:
             collision = False
 
         timeout = False # TODO: timeout
-
+        
         if timeout:
             print('Timeout')
             self._failure_timeout = True

@@ -28,6 +28,7 @@ class Reward:
                                     target.y,
                                     target.z])
         d = np.linalg.norm(player_location - goal_location) # / 1000
+
         success = False
         if d < 1.0:
             success = True
@@ -39,7 +40,8 @@ class Reward:
         # collision = [colhist[x + self.frame - 200] for x in range(0, 200)]
         max_col = 0
         if len(obs.colhist) > 0:
-            max_col = max(1.0, max(obs.colhist))
+            max_col = max(1.0, np.max(obs.colhist))
+        
         c = max_col
         # c_v = measurements.collision_vehicles
         # c_p = measurements.collision_pedestrians
@@ -51,7 +53,6 @@ class Reward:
 
         # # Intersection with opposite lane
         # o = measurements.intersection_otherlane
-
         # Compute reward
         r = 0.0
         if self.state is not None:
@@ -62,13 +63,11 @@ class Reward:
             # r -= 2 * (o - self.state['o'])
         
         # TODO: out of lane, timeout, landcrossing, overspeed
-        
         # Update state
         new_state = {'d': d, 'v': v, 'c': c, # 's': s, 'o': o,
                     #  'c_v': c_v, 'c_p': c_p, 'c_o': c_o,
                      'd_x': d_x, 'd_y': d_y, 'd_z': d_z}
         self.state = new_state
-
         return r, success 
 
     def reset_reward(self):
