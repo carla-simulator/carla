@@ -10,34 +10,7 @@
 # documented example, please take a look at tutorial.py.
 
 """
-Welcome to CARLA manual control.
-Use ARROWS or WASD keys for control.
-    W            : throttle
-    S            : brake
-    A/D          : steer left/right
-    Q            : toggle reverse
-    Space        : hand-brake
-    P            : toggle autopilot
-    M            : toggle manual transmission
-    ,/.          : gear up/down
-    L            : toggle next light type
-    SHIFT + L    : toggle high beam
-    Z/X          : toggle right/left blinker
-    I            : toggle interior light
-    TAB          : change sensor position
-    ` or N       : next sensor
-    [1-9]        : change to sensor [1-9]
-    G            : toggle radar visualization
-    C            : change weather (Shift+C reverse)
-    Backspace    : change vehicle
-    R            : toggle recording images to disk
-    CTRL + R     : toggle recording of simulation (replacing any previous)
-    CTRL + P     : start replaying last recorded simulation
-    CTRL + +     : increments the start time of the replay by 1 second (+SHIFT = 10 seconds)
-    CTRL + -     : decrements the start time of the replay by 1 second (+SHIFT = 10 seconds)
-    F1           : toggle HUD
-    H/?          : toggle help
-    ESC          : quit
+CARLA RL Environment
 """
 
 from __future__ import print_function
@@ -69,6 +42,8 @@ except IndexError:
 import carla
 
 from carla import ColorConverter as cc
+from reward import Reward
+from action_converter import ActionConverter
 
 import argparse
 import collections
@@ -81,41 +56,6 @@ import weakref
 
 try:
     import pygame
-    from pygame.locals import KMOD_CTRL
-    from pygame.locals import KMOD_SHIFT
-    from pygame.locals import K_0
-    from pygame.locals import K_9
-    from pygame.locals import K_BACKQUOTE
-    from pygame.locals import K_BACKSPACE
-    from pygame.locals import K_COMMA
-    from pygame.locals import K_DOWN
-    from pygame.locals import K_ESCAPE
-    from pygame.locals import K_F1
-    from pygame.locals import K_LEFT
-    from pygame.locals import K_PERIOD
-    from pygame.locals import K_RIGHT
-    from pygame.locals import K_SLASH
-    from pygame.locals import K_SPACE
-    from pygame.locals import K_TAB
-    from pygame.locals import K_UP
-    from pygame.locals import K_a
-    from pygame.locals import K_c
-    from pygame.locals import K_g
-    from pygame.locals import K_d
-    from pygame.locals import K_h
-    from pygame.locals import K_m
-    from pygame.locals import K_n
-    from pygame.locals import K_p
-    from pygame.locals import K_q
-    from pygame.locals import K_r
-    from pygame.locals import K_s
-    from pygame.locals import K_w
-    from pygame.locals import K_l
-    from pygame.locals import K_i
-    from pygame.locals import K_z
-    from pygame.locals import K_x
-    from pygame.locals import K_MINUS
-    from pygame.locals import K_EQUALS
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -192,27 +132,23 @@ class World(object):
                 raise Exception("Quit")
 
         obs = None
+        reward = 0
+        success = False
         try:
             while True:
                 # send control
                 control = self.action_converter.get_control(self.player.get_control, action)
                 self.player.apply_control(control)                
 
-                # Gather observations TODO: measurements?
-                obs = self.camera_manager.sensor_data
-
+                # Gather observations 
+                obs = self.get_observation()
+                # Get the reward
+                # reward = 0
+                reward, success = self.reward.get_reward(obs, self.target)
                 break 
             
         except Exception as e:
             print(e)
-
-
-        # Get the reward
-        # reward = 0
-        transform = self.player.get_transform()
-        velocity = self.player.get_velocity()
-        colhist = self.collision_sensor.get_collision_history()
-        reward, success = self.reward.get_reward(transform, velocity, self.target, colhist)
     
         if len(self.collision_sensor.history) > 0:
             collision = True
@@ -296,6 +232,14 @@ class World(object):
         self.action_converter = ActionConverter()
         self.done = False
 
+    def get_observation(self):        
+        transform = self.player.get_transform()
+        velocity = self.player.get_velocity()
+        acceleration = self.player.get_acceleration()
+        colhist = self.collision_sensor.get_collision_history()
+        sensor_data = self.camera_manager.sensor_data
+        return Observation(transform, velocity, colhist, sensor_data, acceleration)
+        
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
@@ -868,109 +812,16 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
-class Reward:
-    def __init__(self):
-        # Reward is calculated based on differences between timesteps, so need to
-        # save the current state for the next reward.
-        self.state = None
-
-    def get_reward(self, transform, velocity, target, colhist):
-        # Distance to reach goal
-        d_x = transform.location.x
-        d_y = transform.location.y
-        d_z = transform.location.z
-        player_location = np.array([d_x, d_y, d_z])
-        goal_location = np.array([target.x,
-                                    target.y,
-                                    target.z])
-        d = np.linalg.norm(player_location - goal_location) # / 1000
-        success = False
-        if d < 1.0:
-            success = True
-            
-        # Speed
-        # v = np.linalg.norm([velocity.x, velocity.y, velocity.z])
-        v = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2) * 3.6
-
-        # Collision damage      
-        # collision = [colhist[x + self.frame - 200] for x in range(0, 200)]
-        max_col = 0
-        if len(colhist) > 0:
-            max_col = max(1.0, max(colhist))
-        c = max_col
-        # c_v = measurements.collision_vehicles
-        # c_p = measurements.collision_pedestrians
-        # c_o = measurements.collision_other
-        # c = c_v + c_p + c_o
-
-        # # Intersection with sidewalk
-        # s = measurements.intersection_offroad
-
-        # # Intersection with opposite lane
-        # o = measurements.intersection_otherlane
-        # Compute reward
-        r = 0.0
-        if self.state is not None:
-            r += 1000 * (self.state['d'] - d)
-            r += 0.05 * (v - self.state['v'])
-            # r -= 0.00002 * (c - self.state['c'])
-            # r -= -0.1 * float(s > 0.001)
-            # r -= 2 * (o - self.state['o'])
-        # TODO: out of lane, timeout, landcrossing, overspeed
-        # Update state
-        new_state = {'d': d, 'v': v, # 'c': c, 's': s, 'o': o,
-                    #  'c_v': c_v, 'c_p': c_p, 'c_o': c_o,
-                     'd_x': d_x, 'd_y': d_y, 'd_z': d_z}
-        self.state = new_state
-        return r, success 
-
-    def reset_reward(self):
-        self.state = None
-
-class ActionConverter:
-    def __init__(self):
-        self.action_type = 0
-        self.control = carla.VehicleControl()
-        self._steer_cache = 0.0
-
-    def get_control(self, control, action):
-        if self.action_type == 0:
-            if action == 0: # forward
-                self.control.throttle = min(control.throttle + 0.01, 1)
-            else:
-                control.throttle = 0.0
-            if action == 1: # stop
-                control.brake = min(control.brake + 0.2, 1)
-            else:
-                self.control.brake = 0
-            steer_increment = 5e-4 * 500
-            if action == 2: # steer left
-                if self._steer_cache > 0:
-                    self._steer_cache = 0
-                else:
-                    self._steer_cache -= steer_increment
-            elif action == 3: # steer right
-                if self._steer_cache < 0:
-                    self._steer_cache = 0
-                else:
-                    self._steer_cache += steer_increment
-            else:
-                self._steer_cache = 0.0
-            self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
-            self.control.steer = round(self._steer_cache, 1)
-            
-        # if self.action_type == 1:
-        #     self.control.throttle = min(action.throttle, 1)
-        #     self.control.brake = min(action.brake, 1)
-        #     self.control.steer = action.steer
-        #     if self.control.steer > 1:
-        #         self.control.steer = 1
-        #     elif self.control.steer < -1:
-        #         self.control.steer = -1
-
-        return self.control
-
-
+class Observation:
+    def __init__(self, transform, velocity, acceleration, colhist, sensor_data):
+        self.transform = transform
+        self.velocity = velocity
+        self.acceleration = acceleration        
+        # self.speed = np.linalg.norm([velocity.x, velocity.y, velocity.z])
+        self.speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
+        self.colhist = colhist
+        self.sensor_data = sensor_data  
+        
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
 # ==============================================================================
