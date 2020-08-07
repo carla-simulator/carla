@@ -41,7 +41,6 @@ class Reward:
         max_col = 0
         if len(obs.colhist) > 0:
             max_col = max(1.0, np.max(obs.colhist))
-        
         c = max_col
         # c_v = measurements.collision_vehicles
         # c_p = measurements.collision_pedestrians

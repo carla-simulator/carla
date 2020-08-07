@@ -286,7 +286,8 @@ class CameraManager(object):
 
             item.append(bp)
         self.index = None
-        self.sensor_data = None
+        self.sensor_list = [None for i in range(len(self.sensors))]
+        self.sensor_data = SensorData()
 
     def toggle_camera(self):
         self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
@@ -295,12 +296,14 @@ class CameraManager(object):
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
         needs_respawn = True if self.index is None else \
-            (force_respawn or (self.sensors[index][2] != self.sensors[self.index][2]))
+            (force_respawn or self.sensor_list[index] is None)# or (self.sensors[index][2] != self.sensors[self.index][2]))
         if needs_respawn:
             if self.sensor is not None:
                 self.sensor.destroy()
                 self.surface = None
-            self.sensor = self._parent.get_world().spawn_actor(
+            if self.sensor_list[index] is not None:
+                self.sensor_list[index].destroy()
+            self.sensor_list[index] = self._parent.get_world().spawn_actor(
                 self.sensors[index][-1],
                 self._camera_transforms[self.transform_index][0],
                 attach_to=self._parent,
@@ -308,10 +311,42 @@ class CameraManager(object):
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
-            self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
+            self.sensor_list[index].listen(lambda image: CameraManager._parse_image(weak_self, image, index))
         if notify:
             self.hud.notification(self.sensors[index][2])
+        self.sensor = self.sensor_list[index]
         self.index = index
+    
+    def spawn_sensors(self, index_list):
+        for i in index_list:
+            if self.sensor_list[i] is not None:
+                self.sensor_list[i].destroy()
+            self.sensor_list[i] = self._parent.get_world().spawn_actor(
+                self.sensors[i][-1],
+                self._camera_transforms[self.transform_index][0],
+                attach_to=self._parent,
+                attachment_type=self._camera_transforms[self.transform_index][1])
+            # We need to pass the lambda a weak reference to self to avoid
+            # circular reference.
+            weak_self = weakref.ref(self)
+            if i == 0:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 0))
+            if i == 1:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 1))
+            if i == 2:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 2))
+            if i == 3:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 3))
+            if i == 4:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 4))
+            if i == 5:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 5))
+            if i == 6:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 6))
+            if i == 7:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 7))
+            if i == 8:
+                self.sensor_list[i].listen(lambda image: CameraManager._parse_image(weak_self, image, 8))
 
     def next_sensor(self):
         self.set_sensor(self.index + 1)
@@ -325,11 +360,12 @@ class CameraManager(object):
             display.blit(self.surface, (0, 0))
 
     @staticmethod
-    def _parse_image(weak_self, image):
+    def _parse_image(weak_self, image, index):
+        print("index: %d" %index)
         self = weak_self()
         if not self:
-            return
-        if self.sensors[self.index][0].startswith('sensor.lidar'):
+            return      
+        if self.sensors[index][0].startswith('sensor.lidar'):              
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
             lidar_data  =np.array(points[:, :2])
@@ -340,26 +376,66 @@ class CameraManager(object):
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
             lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
-            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
-            self.sensor_data = lidar_img
-            self.surface = pygame.surfarray.make_surface(lidar_img)
-        elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
+            lidar_img[tuple(lidar_data.T)] = (255, 255, 255)            
+            self.sensor_data.set_image(index, lidar_img)
+            if index == self.index:
+                self.surface = pygame.surfarray.make_surface(lidar_img)
+        elif self.sensors[index][0].startswith('sensor.camera.dvs'):
             # Example of converting the raw_data from a carla.DVSEventArray
             # sensor into a NumPy array and using it as an image
             dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
                 ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
             dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
             # Blue is positive, red is negative
-            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
-            self.sensor_data = dvs_img
-            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255            
+            self.sensor_data.set_image(index, dvs_img)
+            if index == self.index:
+                self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         else:
-            image.convert(self.sensors[self.index][1])
+            image.convert(self.sensors[index][1])
+            # print("Raw data")
+            # print(image.raw_data)
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
+            # print("Array")
+            # print(array)
             array = array[:, :, ::-1]
-            self.sensor_data = array
-            self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+            # print("Array")
+            # print(array)
+            self.sensor_data.set_image(index, array)
+            if index == self.index:
+                self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
+
+class SensorData:
+    def __init__(self):
+        self.rgb_img = None
+        self.depth_raw_img = None
+        self.depth_gray_img = None
+        self.depth_log_img = None
+        self.seg_raw_img = None
+        self.seg_csp_img = None
+        self.dvs_img = None
+        self.lidar_img = None
+        self.rgb_dis_img = None
+    def set_image(self, index, image):
+        if index == 0:
+            self.rgb_img = image
+        elif index == 1: # Camera Depth (Raw)
+            self.depth_raw_img = image
+        elif index == 2: # Camera Depth (Gray Scale)
+            self.depth_gray_img = image
+        elif index == 3: # Camera Depth (Logarithmic Gray Scale)
+            self.depth_log_img = image
+        elif index == 4: # Camera Semantic Segmentation (Raw)
+            self.seg_raw_img = image
+        elif index == 5: # Camera Semantic Segmentation (CityScapes Palette)
+            self.seg_csp_img = image
+        elif index == 6: # Dynamic Vision Sensor
+            self.dvs_img = image
+        elif index == 7: # Lidar (Ray-Cast)
+            self.lidar_img = image
+        elif index == 8: # Camera RGB Distorted
+            self.rgb_dis_img = image
