@@ -100,7 +100,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   ParallelFor(ChannelCount, [&](int32 idxChannel) {
-    for (int idxPtsOneLaser = 0; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+    for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
       FHitResult HitResult;
       const float VertAngle = LaserAngles[idxChannel];
       const float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
