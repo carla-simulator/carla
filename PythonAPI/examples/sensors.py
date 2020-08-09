@@ -239,11 +239,11 @@ class CameraManager(object):
         self.surface = None
         self._parent = parent_actor
         self.hud = hud
-        self.recording = False
+        self.recording = True
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=1.6, z=1.7), carla.Rotation(pitch=8.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
@@ -361,7 +361,6 @@ class CameraManager(object):
 
     @staticmethod
     def _parse_image(weak_self, image, index):
-        print("index: %d" %index)
         self = weak_self()
         if not self:
             return      
@@ -393,21 +392,13 @@ class CameraManager(object):
                 self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         else:
             image.convert(self.sensors[index][1])
-            # print("Raw data")
-            # print(image.raw_data)
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
-            # print("Array")
-            # print(array)
             array = array[:, :, ::-1]
-            # print("Array")
-            # print(array)
-            self.sensor_data.set_image(index, array)
+            self.sensor_data.set_image(index, np.copy(array))
             if index == self.index:
                 self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-        if self.recording:
-            image.save_to_disk('_out/%08d' % image.frame)
 
 class SensorData:
     def __init__(self):
@@ -422,7 +413,7 @@ class SensorData:
         self.rgb_dis_img = None
     def set_image(self, index, image):
         if index == 0:
-            self.rgb_img = image
+            self.rgb_img = image[:, :, ::-1] # to RGB
         elif index == 1: # Camera Depth (Raw)
             self.depth_raw_img = image
         elif index == 2: # Camera Depth (Gray Scale)

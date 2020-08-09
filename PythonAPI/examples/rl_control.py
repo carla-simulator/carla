@@ -54,6 +54,8 @@ import math
 import random
 import re
 import weakref
+import cv2
+import copy
 
 try:
     import pygame
@@ -144,8 +146,6 @@ class World(object):
                 # Gather observations 
                 
                 obs = self.get_observation()
-
-                # print(str(obs.sensor_data.rgb_img))
                 
                 # Get the reward
                 # reward = 0
@@ -528,7 +528,8 @@ def game_loop(args):
                 # action = agent.act() # TODO: fill in agent
                 action = 0
                 obs, reward, done, info = world.step(action)
-                # print(obs.sensor_data.rgb_img[0][0])
+                if world.steps %2 == 0:
+                    cv2.imwrite(("results/carla_%d_%d.png" % (episode, world.steps)), obs.sensor_data.rgb_img)
                 world.tick(clock)
                 world.render(display)
                 pygame.display.flip()
