@@ -528,8 +528,10 @@ def game_loop(args):
                 # action = agent.act() # TODO: fill in agent
                 action = 0
                 obs, reward, done, info = world.step(action)
-                if world.steps %2 == 0:
-                    cv2.imwrite(("results/carla_%d_%d.png" % (episode, world.steps)), obs.sensor_data.rgb_img)
+                if world.steps % 900 == 0:
+                    cv2.imwrite(("data/source_domain/images/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.rgb_img)
+                    cv2.imwrite(("data/source_domain/depth/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.depth_log_img)
+                    cv2.imwrite(("data/source_domain/segmentation/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.seg_csp_img)
                 world.tick(clock)
                 world.render(display)
                 pygame.display.flip()
