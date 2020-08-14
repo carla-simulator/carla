@@ -241,8 +241,12 @@ class LocalPlanner(object):
         max_index = -1
 
         for i, (waypoint, _) in enumerate(self._waypoint_buffer):
-            if waypoint.transform.location.distance(vehicle_transform.location) < self._min_distance:
-                max_index = i
+            if isinstance(waypoint, carla.Waypoint):
+                if waypoint.transform.location.distance(vehicle_transform.location) < self._min_distance:
+                    max_index = i
+            else:
+                if waypoint.location.distance(vehicle_transform.location) < self._min_distance:
+                    max_index = i
         if max_index >= 0:
             for i in range(max_index + 1):
                 self._waypoint_buffer.popleft()
