@@ -50,7 +50,10 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib/libRecast.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
-                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a')]
+                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
+                os.path.join(pwd, 'dependencies/lib/libosm2odr.a')]
+            extra_link_args += ['-lxerces-c']
+            extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
@@ -102,13 +105,14 @@ def get_libcarla_extensions():
             sys.version_info.major,
             sys.version_info.minor)
 
-        extra_link_args = ['shlwapi.lib' ]
+        extra_link_args = ['shlwapi.lib', 'Advapi32.lib']
 
         required_libs = [
             pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
             'libpng.lib', 'zlib.lib',
-            'Recast.lib', 'Detour.lib', 'DetourCrowd.lib']
+            'Recast.lib', 'Detour.lib', 'DetourCrowd.lib',
+            'osm2odr.lib', 'xerces-c_3.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
@@ -153,7 +157,7 @@ def get_license():
 
 setup(
     name='carla',
-    version='0.9.9',
+    version='0.9.10',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),

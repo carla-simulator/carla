@@ -120,6 +120,7 @@ void TrafficManagerLocal::Run() {
   current_reserved_capacity = INITIAL_SIZE;
 
   while (run_traffic_manger.load()) {
+
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
 
@@ -179,13 +180,15 @@ void TrafficManagerLocal::Run() {
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       collision_stage.Update(index);
+    }
+    collision_stage.ClearCycleCache();
+
+    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
     }
-    collision_stage.ClearCycleCache();
 
     // Building the command array for current cycle.
     std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
@@ -194,10 +197,12 @@ void TrafficManagerLocal::Run() {
     }
 
     // Sending the current cycle's batch command to the simulator.
-    episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
     if (synchronous_mode) {
+      episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
       step_end.store(true);
       step_end_trigger.notify_one();
+    } else {
+      episode_proxy.Lock()->ApplyBatch(std::move(batch_command), false);
     }
   }
 }

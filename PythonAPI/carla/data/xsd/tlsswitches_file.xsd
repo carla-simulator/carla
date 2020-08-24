@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="tlsSwitches">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element maxOccurs="unbounded" ref="tlsSwitch"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+    <xsd:complexType name="tlsSwitch">
+		<xsd:attribute name="id" use="required" type="xsd:string"/>
+		<xsd:attribute name="programID" use="required" type="xsd:string"/>
+		<xsd:attribute name="fromLane" use="required" type="xsd:string"/>
+		<xsd:attribute name="toLane" use="required" type="xsd:string"/>
+		<xsd:attribute name="begin" use="required" type="nonNegativeFloatType"/>
+		<xsd:attribute name="end" use="required" type="nonNegativeFloatType"/>
+		<xsd:attribute name="duration" use="required" type="nonNegativeFloatType"/>
+    </xsd:complexType>
+
+</xsd:schema>

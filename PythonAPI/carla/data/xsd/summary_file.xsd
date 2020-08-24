@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="summary">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="step"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="step">
+        <xsd:complexType>
+            <xsd:attribute name="time" use="required" type="nonNegativeFloat"/>
+            <xsd:attribute name="loaded" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="inserted" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="running" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="waiting" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="ended" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="arrived" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="collisions" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="teleports" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="halting" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="stopped" type="xsd:nonNegativeInteger" use="required"/>
+            <xsd:attribute name="meanWaitingTime" use="required" type="xsd:float"/>
+            <xsd:attribute name="meanTravelTime" use="required" type="xsd:float"/>
+            <xsd:attribute name="meanSpeed" use="required" type="xsd:float"/>
+            <xsd:attribute name="meanSpeedRelative" use="required" type="xsd:float"/>
+            <xsd:attribute name="duration" use="optional" type="xsd:float"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

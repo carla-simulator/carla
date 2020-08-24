@@ -1024,15 +1024,15 @@ Computed intensity for this point.
 ---
 
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the lidar data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating lidar using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
 Number of lasers shot.  
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
-Horizontal angle the Lidar is rotated at the time of the measurement (in radians).  
+Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Received list of 4D points. Each point consists in a 3D-xyz data plus the intensity computed for that point.  
+Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.  
 
 <h3>Methods</h3>
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
@@ -1406,6 +1406,36 @@ If __True__, Pedestrian navigation will be enabled using Recast tool. For very l
 
 ---
 
+## carla.Osm2Odr<a name="carla.Osm2Odr"></a>
+Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
+
+<h3>Methods</h3>
+- <a name="carla.Osm2Odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  
+Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.  
+    - **Parameters:**
+        - `osm_file` (_str_) – The content of the input OpenStreetMap file parsed as string.  
+        - `settings` (_[carla.OSM2ODRSettings](#carla.OSM2ODRSettings)_) – Parameterization for the conversion.  
+    - **Return:** _str_  
+
+---
+
+## carla.Osm2OdrSettings<a name="carla.Osm2OdrSettings"></a>
+Helper class that contains the parameterization that will be used by [carla.Osm2Odr](#carla.Osm2Odr) to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.Osm2OdrSettings.use_offsets"></a>**<font color="#f8805a">use_offsets</font>** (_bool_)  
+Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.  
+- <a name="carla.Osm2OdrSettings.offset_x"></a>**<font color="#f8805a">offset_x</font>** (_float_)  
+Offset in the X axis.  Default value is __0.0__.  
+- <a name="carla.Osm2OdrSettings.offset_y"></a>**<font color="#f8805a">offset_y</font>** (_float_)  
+Offset in the Y axis.  Default value is __0.0__.  
+- <a name="carla.Osm2OdrSettings.default_lane_width"></a>**<font color="#f8805a">default_lane_width</font>** (_float_)  
+Width of the lanes described in the resulting XODR map. Default value is __4.0__.  
+- <a name="carla.Osm2OdrSettings.elevation_layer_height"></a>**<font color="#f8805a">elevation_layer_height</font>** (_float_)  
+Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.  
+
+---
+
 ## carla.RadarDetection<a name="carla.RadarDetection"></a>
 Data contained inside a [carla.RadarMeasurement](#carla.RadarMeasurement). Each of these represents one of the points in the cloud that a <b>sensor.other.radar</b> registers and contains the distance, angle and velocity in relation to the radar.  
 
@@ -1685,6 +1715,58 @@ Sets the log level.
 
 ---
 
+## carla.SemanticLidarDetection<a name="carla.SemanticLidarDetection"></a>
+Data contained inside a [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). Each of these represents one of the points in the cloud with its location, the cosine of the incident angle, index of the object hit, and its semantic tag.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.SemanticLidarDetection.point"></a>**<font color="#f8805a">point</font>** (_[carla.Location](#carla.Location)_)  
+[x,y,z] coordinates of the point.  
+- <a name="carla.SemanticLidarDetection.cos_inc_angle"></a>**<font color="#f8805a">cos_inc_angle</font>** (_float_)  
+Cosine of the incident angle between the ray, and the normal of the hit object.  
+- <a name="carla.SemanticLidarDetection.object_idx"></a>**<font color="#f8805a">object_idx</font>** (_uint_)  
+Carla index of the hit actor.  
+- <a name="carla.SemanticLidarDetection.object_tag"></a>**<font color="#f8805a">object_tag</font>** (_uint_)  
+Semantic tag of the hit component.  
+
+<h3>Methods</h3>
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarDetection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.SemanticLidarMeasurement<a name="carla.SemanticLidarMeasurement"></a>
+<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
+
+<h3>Instance Variables</h3>
+- <a name="carla.SemanticLidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
+Number of lasers shot.  
+- <a name="carla.SemanticLidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float_)  
+Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).  
+- <a name="carla.SemanticLidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.  
+
+<h3>Methods</h3>
+- <a name="carla.SemanticLidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open-source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
+    - **Parameters:**
+        - `path` (_str_)  
+
+<h5 style="margin-top: -20px">Getters</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+Retrieves the number of points sorted by channel that are generated by this measure. Sorting by channel allows to identify the original channel for every point.  
+    - **Parameters:**
+        - `channel` (_int_)  
+
+<h5 style="margin-top: -20px">Dunder methods</h5>
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+- <a name="carla.SemanticLidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.SemanticLidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.SemanticLidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**detection**=[carla.SemanticLidarDetection](#carla.SemanticLidarDetection)</font>)  
+- <a name="carla.SemanticLidarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.Sensor<a name="carla.Sensor"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
 
@@ -1694,6 +1776,7 @@ Sets the log level.
   - [Gnss sensor](ref_sensors.md#gnss-sensor).
   - [IMU sensor](ref_sensors.md#imu-sensor).
   - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+  - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
   - [Radar](ref_sensors.md#radar-sensor).
   - [RGB camera](ref_sensors.md#rgb-camera).
   - [RSS sensor](ref_sensors.md#rss-sensor).
@@ -1724,13 +1807,14 @@ Commands the sensor to stop listening for data.
 Base class for all the objects containing data generated by a [carla.Sensor](#carla.Sensor). This objects should be the argument of the function said sensor is listening to, in order to work with them. Each of these sensors needs for a specific type of sensor data. Hereunder is a list of the sensors and their corresponding data.
   - Cameras (RGB, depth and semantic segmentation): [carla.Image](#carla.Image).
   - Collision detector: [carla.CollisionEvent](#carla.CollisionEvent).
-  - Gnss detector: [carla.GnssMeasurement](#carla.GnssMeasurement).
-  - IMU detector: [carla.IMUMeasurement](#carla.IMUMeasurement).
+  - GNSS sensor: [carla.GnssMeasurement](#carla.GnssMeasurement).
+  - IMU sensor: [carla.IMUMeasurement](#carla.IMUMeasurement).
   - Lane invasion detector: [carla.LaneInvasionEvent](#carla.LaneInvasionEvent).
-  - Lidar raycast: [carla.LidarMeasurement](#carla.LidarMeasurement).
+  - LIDAR sensor: [carla.LidarMeasurement](#carla.LidarMeasurement).
   - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).
-  - Radar detector: [carla.RadarMeasurement](#carla.RadarMeasurement).
-  - RSS sensor: [carla.RssResponse](#carla.RssResponse).  
+  - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).
+  - RSS sensor: [carla.RssResponse](#carla.RssResponse).
+  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
@@ -2541,11 +2625,13 @@ The method will start callbacks for a defined function `callback`. It will retur
 Stops the callback for `callback_id` started with **<font color="#7fb800">on_tick()</font>**.  
     - **Parameters:**
         - `callback_id` (_callback_) – The callback to be removed.  
-- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>)  
-This only has effect on synchronous mode, when both client and server move together. The method tells the server when to step to the next frame and returns the id of the newly started frame.  
+- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
+This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame.  
+    - **Parameters:**
+        - `seconds` (_float_) – Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.  
     - **Return:** _int_  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-The client tells the server to block calling thread until a **<font color="#7fb800">world_tick()</font>** is received.  
+The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.  
     - **Parameters:**
         - `seconds` (_float_) – Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  

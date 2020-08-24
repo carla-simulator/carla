@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Mon Apr 27 19:52:46 2020 by Eclipse SUMO dfrouter Version v1_5_0+1309-533c90b613
+-->
+
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+    <xsd:element name="configuration" type="configurationType"/>
+
+    <xsd:complexType name="configurationType">
+        <xsd:all>
+            <xsd:element name="input" type="inputTopicType" minOccurs="0"/>
+            <xsd:element name="output" type="outputTopicType" minOccurs="0"/>
+            <xsd:element name="processing" type="processingTopicType" minOccurs="0"/>
+            <xsd:element name="defaults" type="defaultsTopicType" minOccurs="0"/>
+            <xsd:element name="time" type="timeTopicType" minOccurs="0"/>
+            <xsd:element name="report" type="reportTopicType" minOccurs="0"/>
+            <xsd:element name="random_number" type="random_numberTopicType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="inputTopicType">
+        <xsd:all>
+            <xsd:element name="net-file" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="detector-files" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="measure-files" type="fileOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="outputTopicType">
+        <xsd:all>
+            <xsd:element name="write-license" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="output-prefix" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="precision" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="precision.geo" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="human-readable-time" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="routes-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="routes-for-all" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="detector-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="detectors-poi-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="emitters-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="vtype" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="vtype-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="emitters-poi-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="variable-speed-sign-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="end-reroute-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="validation-output" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="validation-output.add-sources" type="boolOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="processingTopicType">
+        <xsd:all>
+            <xsd:element name="guess-empty-flows" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="highway-mode" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="ignore-invalid-detectors" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="revalidate-detectors" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="revalidate-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="keep-unfinished-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="keep-longer-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="max-search-depth" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="emissions-only" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="disallowed-edges" type="strArrayOptionType" minOccurs="0"/>
+            <xsd:element name="keep-turnarounds" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="min-route-length" type="floatOptionType" minOccurs="0"/>
+            <xsd:element name="randomize-flows" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="time-factor" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="time-offset" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="time-step" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="calibrator-output" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="include-unused-routes" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="revalidate-flows" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="remove-empty-detectors" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="strict-sources" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="respect-concurrent-inflows" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="scale" type="floatOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="defaultsTopicType">
+        <xsd:all>
+            <xsd:element name="departlane" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="departpos" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="departspeed" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="arrivallane" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="arrivalpos" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="arrivalspeed" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="speeddev" type="floatOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="timeTopicType">
+        <xsd:all>
+            <xsd:element name="begin" type="timeOptionType" minOccurs="0"/>
+            <xsd:element name="end" type="timeOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="reportTopicType">
+        <xsd:all>
+            <xsd:element name="verbose" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="print-options" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="help" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="version" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="xml-validation" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="xml-validation.net" type="strOptionType" minOccurs="0"/>
+            <xsd:element name="no-warnings" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="aggregate-warnings" type="intOptionType" minOccurs="0"/>
+            <xsd:element name="log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="message-log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="error-log" type="fileOptionType" minOccurs="0"/>
+            <xsd:element name="report-empty-detectors" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="print-absolute-flows" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="no-step-log" type="boolOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="random_numberTopicType">
+        <xsd:all>
+            <xsd:element name="random" type="boolOptionType" minOccurs="0"/>
+            <xsd:element name="seed" type="intOptionType" minOccurs="0"/>
+        </xsd:all>
+    </xsd:complexType>
+
+</xsd:schema>

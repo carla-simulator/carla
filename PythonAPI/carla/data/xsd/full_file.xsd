@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="full-export">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="data"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="data">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="vehicles">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element minOccurs="0" maxOccurs="unbounded" ref="vehicle"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="edges">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element minOccurs="0" maxOccurs="unbounded" ref="edge"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="tls">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element minOccurs="0" maxOccurs="unbounded" ref="trafficlight"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="timestep" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="edge">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="lane"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="traveltime" use="required" type="nonNegativeFloatType"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="lane">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="CO" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="CO2" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="NOx" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="PMx" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="HC" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="noise" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="fuel" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="electricity" use="required" type="nonNegativeFloatType"/>
+
+            <xsd:attribute name="maxspeed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="meanspeed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="occupancy" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="vehicle_count" use="required" type="xsd:nonNegativeInteger"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="vehicle">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="eclass" use="required" type="xsd:string"/>
+            <xsd:attribute name="CO2" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="CO" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="HC" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="NOx" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="PMx" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="noise" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="fuel" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="electricity" use="required" type="nonNegativeFloatType"/>
+
+            <xsd:attribute name="route" use="required" type="xsd:string"/>
+            <xsd:attribute name="type" use="required" type="xsd:string"/>
+
+            <xsd:attribute name="waiting" use="optional" type="nonNegativeFloatType"/>
+            <xsd:attribute name="lane" use="optional" type="xsd:string"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="speed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="angle" type="xsd:float" use="required"/>
+            <xsd:attribute name="x" type="xsd:float" use="required"/>
+            <xsd:attribute name="y" type="xsd:float" use="required"/>
+            <xsd:attribute name="z" type="xsd:float" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="trafficlight">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="state" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

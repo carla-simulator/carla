@@ -64,6 +64,46 @@ Many different issues can be dragged during the build installation, and show lik
 Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the forum so the team can get to know more about them.   
   </details>
 
+<!-- ======================================================================= -->
+  <details>
+    <summary><h5 style="display:inline">
+    Cloning the Unreal Engine repository shows an error.
+    </h5></summary>
+
+__1. Is the Unreal Engine account activated?__ The UE repository is private. In order to clone it, create the [UE](https://www.unrealengine.com/en-US/) account, activate it (check the verification mail), and [link your GitHub](https://www.unrealengine.com/en-US/blog/updated-authentication-process-for-connecting-epic-github-accounts) account.  
+
+__2. Is git properly installated?__ Sometimes an error shows incompatibilities with the `https` protocol. It can be solved easily by uninstalling and reinstalling git. Open a terminal and run the following commands.  
+```sh
+sudo apt-get remove git #Uninstall git
+sudo apt install git-all #install git
+```
+
+  </details>
+
+<!-- ======================================================================= -->
+  <details>
+    <summary><h5 style="display:inline">
+    AttributeError: module 'carla' has no attribute 'Client' when running a script. 
+    </h5></summary>
+
+Run the following command. 
+```sh
+pip3 install -Iv setuptools==47.3.1
+``` 
+
+And build the PythonAPI again. 
+```sh
+make PythonAPI
+```
+
+Try to build the docs to test if everything is running properly. A successful message should show. 
+```sh
+make PythonAPI.docs
+```
+
+  </details>
+
+
 ---
 ## Windows build
 

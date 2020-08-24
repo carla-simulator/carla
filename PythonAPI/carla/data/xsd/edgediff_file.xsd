@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="edges" type="edgesType">
+        <xsd:key name="edgeKey">
+            <xsd:selector xpath="edge"/>
+            <xsd:field xpath="@id"/>
+        </xsd:key>
+    </xsd:element>
+
+    <xsd:complexType name="edgesType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="edge" type="edgeType"/>
+            <xsd:element name="roundabout" type="roundaboutType"/>
+            <xsd:element name="delete" type="deleteType"/>
+        </xsd:choice>
+        <xsd:attribute name="version" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\d+.\d+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="edgeType">
+        <xsd:sequence>
+            <xsd:element name="lane" type="laneType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="split" type="splitType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="neigh" type="neighType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="from" type="xsd:string"/>
+        <xsd:attribute name="to" type="xsd:string"/>
+        <xsd:attribute name="type" type="xsd:string" use="optional"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="length" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="endOffset" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="numLanes" type="xsd:positiveInteger" use="optional"/>
+        <xsd:attribute name="speed" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="priority" type="xsd:int" use="optional"/>
+        <xsd:attribute name="width" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="sidewalkWidth" type="nonNegativeFloatType"/>
+        <xsd:attribute name="bikeLaneWidth" type="nonNegativeFloatType"/>
+        <xsd:attribute name="spreadType" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="center"/>
+                    <xsd:enumeration value="roadCenter"/>
+                    <xsd:enumeration value="right"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="laneType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="neigh" type="neighType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="stopOffset" type="stopOffsetType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="speed" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="width" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="prefer" type="xsd:string" use="optional"/>
+        <xsd:attribute name="acceleration" type="boolType" use="optional"/>
+        <xsd:attribute name="endOffset" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="deleteType">
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="roundaboutType">
+        <xsd:attribute name="nodes" type="xsd:string" use="optional"/>
+        <xsd:attribute name="edges" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="neighType">
+        <xsd:attribute name="lane" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="stopOffsetType">
+        <xsd:attribute name="value" type="nonNegativeFloatType" use="required"/>
+        <xsd:attribute name="exceptions" type="xsd:string" use="optional"/>
+        <xsd:attribute name="vClasses" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+
+</xsd:schema>

@@ -150,6 +150,7 @@ public:
   std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
+  void StopReplayer(bool KeepActors = false);
 
   void Ticking(float DeltaSeconds);
 

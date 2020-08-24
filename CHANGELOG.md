@@ -1,10 +1,13 @@
-## Latest
+## CARLA 0.9.10
 
-  * Upgraded to AD RSS v4.0.0 supporting unstructured scenes and pedestrians
+  * Added PythonAPI `carla.Osm2Odr.convert()` function and `calra.Osm2OdrSettings` class to support Open Street Maps to OpenDRIVE conversions
+  * Upgraded to AD RSS v4.0.1 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
+  * Fixed a bug in `spawn_npc_sumo` script computing not allowed routes for a given vehicle class
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added API function `freeze_all_traffic_lights` and `reset_group`
   * Fixed recorder determinism problems
+  * Added function to stop the replayer
   * Added Light ids
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
@@ -15,8 +18,11 @@
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
-  * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system.
-  * Exposed matrix form of transformation to the client and Python API.
+  * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system
+  * Fixed light intensity and camera parameters to match
+  * New Lidar sensor ('lidar.ray_cast_semantic') that returns the point cloud with information regarding to the object that have collided: incident angle, idx of collided actor and it semantic tag
+  * Added `opend3D.py`, a more friendly LiDAR visualizer
+  * Exposed matrix form of transformation to the client and Python API
   * Added make command to download contributions as plugins (`make plugins`)
   * Added PythonAPI command to set multiple car light states at once
   * Added PythonAPI `carla.world.get_vehicles_light_states` to get all the car light states at once
@@ -27,6 +33,7 @@
   * Added Dynamic Vision Sensor (DVS) camera based on ESIM simulation http://rpg.ifi.uzh.ch/esim.html
   * Improved LiDAR and radar to better match the shape of the vehicles
   * Added support for additional TraCI clients in Sumo co-simulation
+  * Added script example to syncronize the gathering of sensor data in client
   * Added API functions `get_right_vector` and `get_up_vector`
   * Added default values and a warning message for lanes missing the width parameter in OpenDRIVE
   * Added parameter to enable/disable pedestrian navigation in standalone mode
@@ -38,6 +45,7 @@
   * Added Renderdoc plugin to the Unreal project
   * Added configurable noise to Lidar sensor
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
+  * Improved the performance on capture sensors.
 
 ## CARLA 0.9.9
 

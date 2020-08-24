@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xsd:include schemaLocation="baseTypes.xsd" />
+
+  <xsd:element name="detector">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="unbounded" ref="interval"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="interval">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" maxOccurs="unbounded" ref="typedInterval"/>
+      </xsd:sequence>
+      <xsd:attribute name="begin" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="end" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="sampledSeconds" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="departed" use="required" type="xsd:integer"/>
+      <xsd:attribute name="arrived" use="required" type="xsd:integer"/>
+      <xsd:attribute name="entered" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="left" use="required" type="xsd:integer"/>
+      <xsd:attribute name="density" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="laneDensity" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="occupancy" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="waitingTime" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="speed" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="vaporized" use="optional" type="xsd:integer"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="typedInterval">
+    <xsd:complexType>
+      <xsd:attribute name="begin" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="end" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="type" use="required" type="xsd:string"/>
+      <xsd:attribute name="departed" use="required" type="xsd:integer"/>
+      <xsd:attribute name="arrived" use="required" type="xsd:integer"/>
+      <xsd:attribute name="entered" use="required" type="nonNegativeFloatType"/>
+      <xsd:attribute name="left" use="required" type="xsd:integer"/>
+      <xsd:attribute name="sampledSeconds" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="density" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="occupancy" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="waitingTime" use="optional" type="nonNegativeFloatType"/>
+      <xsd:attribute name="speed" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="vaporized" use="optional" type="xsd:integer"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+

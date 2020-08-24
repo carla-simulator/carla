@@ -7,12 +7,16 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Engine/DecalActor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
 #include <compiler/enable-ue4-macros.h>
+
+#include "Async/ParallelFor.h"
+#include "DynamicRHI.h"
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -34,6 +38,57 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
+}
+
+void ACarlaGameModeBase::AddSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
+{
+  uint32 ImageWidth = SceneCaptureSensor->ImageWidth;
+  uint32 ImageHeight = SceneCaptureSensor->ImageHeight;
+
+  if(AtlasTextureWidth < ImageWidth)
+  {
+    IsAtlasTextureValid = false;
+    AtlasTextureWidth = ImageWidth;
+  }
+
+  if(AtlasTextureHeight < (CurrentAtlasTextureHeight + ImageHeight) )
+  {
+    IsAtlasTextureValid = false;
+    AtlasTextureHeight = CurrentAtlasTextureHeight + ImageHeight;
+  }
+
+  SceneCaptureSensor->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
+  CurrentAtlasTextureHeight += ImageHeight;
+
+  SceneCaptureSensors.Add(SceneCaptureSensor);
+
+  UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::AddSceneCaptureSensor %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+}
+
+void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
+{
+  FlushRenderingCommands();
+
+  // Remove camera
+  SceneCaptureSensors.Remove(SceneCaptureSensor);
+
+  // Recalculate PositionInAtlas for each camera
+  AtlasTextureWidth = 0u;
+  CurrentAtlasTextureHeight = 0u;
+  for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
+  {
+    Camera->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
+    CurrentAtlasTextureHeight += Camera->ImageHeight;
+
+    if(AtlasTextureWidth < Camera->ImageWidth)
+    {
+      AtlasTextureWidth = Camera->ImageWidth;
+    }
+
+  }
+  AtlasTextureHeight = CurrentAtlasTextureHeight;
+
+  IsAtlasTextureValid = false;
 }
 
 void ACarlaGameModeBase::InitGame(
@@ -116,6 +171,16 @@ void ACarlaGameModeBase::BeginPlay()
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
 
+  // HACK: fix transparency see-through issues
+  // The problem: transparent objects are visible through walls.
+  // This is due to a weird interaction between the SkyAtmosphere component,
+  // the shadows of a directional light (the sun)
+  // and the custom depth set to 3 used for semantic segmentation
+  // The solution: Spawn a Decal.
+  // It just works!
+  GetWorld()->SpawnActor<ADecalActor>(
+      FVector(0,0,-1000000), FRotator(0,0,0), FActorSpawnParameters());
+
   ATrafficLightManager* Manager = GetTrafficLightManager();
   Manager->InitializeTrafficLights();
 
@@ -126,11 +191,29 @@ void ACarlaGameModeBase::BeginPlay()
   {
     Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
   }
+
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
+  // check if replayer is waiting to autostart
+  if (Recorder)
+  {
+    Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
+  }
+
+  CaptureAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
+
+  /// @todo Recorder should not tick here, FCarlaEngine should do it.
+  if (Recorder)
+  {
+    Recorder->Tick(DeltaSeconds);
+  }
+
+  SendAtlas();
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -144,6 +227,8 @@ void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     CarlaSettingsDelegate->Reset();
   }
+
+  FCoreDelegates::OnEndFrame.Remove(CaptureAtlasDelegate);
 }
 
 void ACarlaGameModeBase::SpawnActorFactories()
@@ -175,7 +260,9 @@ void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
-  } else {
+  }
+  else
+  {
     Episode->MapGeoReference = Map->GetGeoReference();
   }
 }
@@ -293,6 +380,93 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
         );
       }
     }
+  }
+
+}
+
+void ACarlaGameModeBase::CreateAtlasTextures()
+{
+  if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
+  {
+    FRHIResourceCreateInfo CreateInfo;
+    CamerasAtlasTexture = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
+
+    AtlasImage.Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
+
+    IsAtlasTextureValid = true;
+  }
+}
+
+void ACarlaGameModeBase::CaptureAtlas()
+{
+
+  ACarlaGameModeBase* This = this;
+
+  if(!SceneCaptureSensors.Num()) return;
+
+  // Be sure that the atlas texture is ready
+  if(!IsAtlasTextureValid)
+  {
+    CreateAtlasTextures();
+    return;
+  }
+
+  // Enqueue the commands to copy the captures to the atlas
+  for(ASceneCaptureSensor* Sensor : SceneCaptureSensors)
+  {
+    Sensor->CopyTextureToAtlas();
+  }
+
+  // Download Atlas texture
+  ENQUEUE_RENDER_COMMAND(ACarlaGameModeBase_CaptureAtlas)
+  (
+    [This](FRHICommandListImmediate& RHICmdList) mutable
+    {
+      FTexture2DRHIRef AtlasTexture = This->CamerasAtlasTexture;
+
+      if (!AtlasTexture)
+      {
+        UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBase::CaptureAtlas: Missing atlas texture"));
+        return;
+      }
+
+      FIntRect Rect = FIntRect(0, 0, This->AtlasTextureWidth, This->AtlasTextureHeight);
+
+#if !UE_BUILD_SHIPPING
+      if(This->ReadSurfaceMode == 2) Rect = FIntRect(0, 0, This->SurfaceW, This->SurfaceH);
+#endif
+
+#if !UE_BUILD_SHIPPING
+      if (This->ReadSurfaceMode == 0) return;
+#endif
+
+      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
+      RHICmdList.ReadSurfaceData(
+        AtlasTexture,
+        Rect,
+        This->AtlasImage,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+
+    }
+  );
+
+
+}
+
+void ACarlaGameModeBase::SendAtlas()
+{
+
+#if !UE_BUILD_SHIPPING
+  if(!AtlasCopyToCamera)
+  {
+    return;
+  }
+#endif
+
+  for(int32 Index = 0; Index < SceneCaptureSensors.Num(); Index++)
+  {
+    ASceneCaptureSensor* Sensor = SceneCaptureSensors[Index];
+    Sensor->SendPixels(AtlasImage, AtlasTextureWidth);
   }
 
 }

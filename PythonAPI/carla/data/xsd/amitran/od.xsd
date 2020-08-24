@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:element name="demand">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="actorConfig" type="actorConfigType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+ 
+    <xsd:complexType name="actorConfigType">
+        <xsd:sequence>
+            <xsd:element name="timeSlice" type="timeSliceType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/> <!-- reference to actorConfig id -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="timeSliceType">
+        <xsd:sequence>
+            <xsd:element name="odPair" type="odPairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="startTime" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="duration" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="odPairType">
+        <xsd:sequence>
+            <xsd:element name="routeCost" type="routeCostType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="origin" type="xsd:unsignedInt" use="required"/> <!-- reference to OD zone id -->
+        <xsd:attribute name="destination" type="xsd:unsignedInt" use="required"/> <!-- reference to OD zone id -->
+        <xsd:attribute name="amount" type="xsd:double" use="required"/> <!-- number of vehicles -->
+    </xsd:complexType>
+    
+    <xsd:complexType name="routeCostType">
+        <xsd:attribute name="routeId" type="xsd:unsignedInt" use="required"/> <!-- reference to route id -->
+        <xsd:attribute name="amount" type="xsd:double" use="optional"/> <!-- number of vehicles -->
+        <xsd:attribute name="averageTraveltime" type="xsd:unsignedInt" use="required"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="stdDevTraveltime" type="xsd:unsignedInt" use="optional"/> <!-- unit: 0.001s -->
+        <xsd:attribute name="fixedCost" type="xsd:unsignedInt" use="optional"/> <!-- unit: 0.001 Euro -->
+    </xsd:complexType>
+    
+</xsd:schema>

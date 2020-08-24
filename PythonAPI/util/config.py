@@ -179,7 +179,10 @@ def main():
         '-x', '--xodr-path',
         metavar='XODR_FILE_PATH',
         help='load a new map with a minimum physical road representation of the provided OpenDRIVE')
-
+    argparser.add_argument(
+        '--osm-path',
+        metavar='OSM_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenStreetMaps')
     if len(sys.argv) < 2:
         argparser.print_help()
         return
@@ -216,6 +219,31 @@ def main():
             extra_width = 0.6      # in meters
             world = client.generate_opendrive_world(
                 data, carla.OpendriveGenerationParameters(
+                    vertex_distance=vertex_distance,
+                    max_road_length=max_road_length,
+                    wall_height=wall_height,
+                    additional_width=extra_width,
+                    smooth_junctions=True,
+                    enable_mesh_visibility=True))
+        else:
+            print('file not found.')
+    elif args.osm_path is not None:
+        if os.path.exists(args.osm_path):
+            with open(args.osm_path) as od_file:
+                try:
+                    data = od_file.read()
+                except OSError:
+                    print('file could not be readed.')
+                    sys.exit()
+            print('Converting OSM data to opendrive')
+            xodr_data = carla.Osm2Odr.convert(data)
+            print('load opendrive map.')
+            vertex_distance = 2.0  # in meters
+            max_road_length = 500.0 # in meters
+            wall_height = 0.0      # in meters
+            extra_width = 0.6      # in meters
+            world = client.generate_opendrive_world(
+                xodr_data, carla.OpendriveGenerationParameters(
                     vertex_distance=vertex_distance,
                     max_road_length=max_road_length,
                     wall_height=wall_height,

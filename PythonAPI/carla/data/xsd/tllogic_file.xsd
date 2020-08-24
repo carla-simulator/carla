@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="tlLogics" type="tlLogicsType"/>
+
+    <xsd:complexType name="tlLogicsType">
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="tlLogic" type="tlLogicType" minOccurs="0"/>
+            <xsd:element name="connection" type="connectionDeleteType" minOccurs="0"/>
+            <xsd:element name="delete" type="connectionDeleteType" minOccurs="0"/>
+        </xsd:choice>
+        <xsd:attribute name="version" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\d+.\d+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="connectionDeleteType">
+        <xsd:attribute name="from" type="xsd:string" use="required"/>
+        <xsd:attribute name="to" type="xsd:string" use="required"/>
+        <xsd:attribute name="fromLane" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="toLane" type="xsd:nonNegativeInteger" use="required"/>
+        <xsd:attribute name="tl" type="xsd:string" use="optional"/>
+        <xsd:attribute name="linkIndex" type="xsd:integer" use="optional"/>
+        <xsd:attribute name="linkIndex2" type="xsd:integer" use="optional"/>
+    </xsd:complexType>
+
+</xsd:schema>

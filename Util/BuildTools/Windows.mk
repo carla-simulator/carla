@@ -42,10 +42,12 @@ clean:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --clean
 
 rebuild: setup
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --rebuild
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --rebuild
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --rebuild
 
 check: PythonAPI
@@ -55,7 +57,7 @@ benchmark: LibCarla
 	@echo "Not implemented!"
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla
+PythonAPI: LibCarla osm2odr
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --py3
 
 server: setup
@@ -77,3 +79,6 @@ plugins:
 
 deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
+
+osm2odr:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat --build

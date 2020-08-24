@@ -1,0 +1,56 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Osm2Odr
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: convert
+      static:
+        True
+      return: str
+      doc: >
+        The converted OpenDRIVE xml data.
+      params:
+      - param_name: osm_file
+        type: str
+        doc: >
+          The content of the input OpenStreetMap file parsed as string.
+      - param_name: settings
+        type: carla.OSM2ODRSettings
+        doc: >
+          Parameterization for the conversion.
+      doc: >
+        Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.
+  # --------------------------------------
+  - class_name: Osm2OdrSettings
+    # - DESCRIPTION ------------------------
+    doc: >
+      Helper class that contains the parameterization that will be used by carla.Osm2Odr to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+    instance_variables:
+    - var_name: use_offsets
+      type: bool
+      doc: >
+        Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.
+    - var_name: offset_x
+      type: float
+      doc: >
+        Offset in the X axis.  Default value is __0.0__.
+    - var_name: offset_y
+      type: float
+      doc: >
+        Offset in the Y axis.  Default value is __0.0__.
+    - var_name: default_lane_width
+      type: float
+      doc: >
+        Width of the lanes described in the resulting XODR map. Default value is __4.0__.
+    - var_name: elevation_layer_height
+      type: float
+      doc: >
+        Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.

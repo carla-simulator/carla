@@ -26,10 +26,16 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
       TEXT("Material'/Carla/PostProcessingMaterials/DepthEffectMaterial.DepthEffectMaterial'")
 #endif
   );
+
+  Offset = carla::sensor::SensorRegistry::get<ADepthCamera*>::type::header_offset;
 }
 
-void ADepthCamera::Tick(float DeltaTime)
+void ADepthCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
 {
-  Super::Tick(DeltaTime);
-  FPixelReader::SendPixelsInRenderThread(*this);
+#if !UE_BUILD_SHIPPING
+  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
+  if(!GameMode->IsCameraStreamEnabled()) return;
+#endif
+
+  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
 }

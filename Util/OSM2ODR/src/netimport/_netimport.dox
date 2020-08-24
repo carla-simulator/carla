@@ -1,0 +1,14 @@
+/**
+ @file _netimport.dox
+ @defgoup netimport Network Importing Module
+ @brief reads different network formats and stores them in netbuild-classes
+ 
+ @addtogroup netimport
+ @{
+ netimport holds classes and methods for reading road networks from different formats. The read data
+  is stored in according classes from the @ref netbuild module.
+
+ 
+ 
+ @}
+*/

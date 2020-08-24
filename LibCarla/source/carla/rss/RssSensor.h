@@ -136,6 +136,9 @@ private:
 
   /// reqired to store DropRoute() requests until next sensor tick
   bool _drop_route;
+
+  /// last processed frame
+  std::size_t _last_processed_frame;
 };
 
 }  // namespace client

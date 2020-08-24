@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd" />
+
+    <xsd:element name="connections" type="connectionsType"/>
+
+    <xsd:complexType name="connectionsType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="connection" type="connectionType"/>
+            <xsd:element name="prohibition" type="prohibitionType"/>
+            <xsd:element name="delete" type="deleteType"/>
+            <xsd:element name="crossing" type="crossingType"/>
+            <xsd:element name="walkingArea" type="walkingAreaType"/>
+        </xsd:choice>
+        <xsd:attribute name="version" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\d+.\d+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="connectionType">
+        <xsd:sequence>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="from" type="xsd:string" use="required"/>
+        <xsd:attribute name="to" type="xsd:string" use="optional"/>
+        <xsd:attribute name="fromLane" type="xsd:nonNegativeInteger" use="optional"/>
+        <xsd:attribute name="toLane" type="xsd:nonNegativeInteger" use="optional"/>
+        <xsd:attribute name="pass" type="boolType" use="optional"/>
+        <xsd:attribute name="uncontrolled" type="boolType" use="optional"/>
+        <xsd:attribute name="keepClear" type="boolType" use="optional"/>
+        <xsd:attribute name="contPos" type="xsd:float" use="optional"/>
+        <xsd:attribute name="visibility" type="xsd:float" use="optional"/>
+        <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+        <xsd:attribute name="speed" type="xsd:float" use="optional"/>
+        <xsd:attribute name="length" type="xsd:float" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="prohibitionType">
+        <xsd:attribute name="prohibitor" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value=".+-&gt;.+"></xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="prohibited" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value=".+-&gt;.+"></xsd:pattern>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="deleteType">
+        <xsd:attribute name="from" type="xsd:string" use="required"/>
+        <xsd:attribute name="to" type="xsd:string" use="optional"/>
+        <xsd:attribute name="fromLane" type="xsd:nonNegativeInteger" use="optional"/>
+        <xsd:attribute name="toLane" type="xsd:nonNegativeInteger" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="crossingType">
+        <xsd:attribute name="node" type="xsd:string" use="required"/>
+        <xsd:attribute name="edges" type="xsd:string" use="optional"/>
+        <xsd:attribute name="priority" type="xsd:int" use="optional"/>
+        <xsd:attribute name="width" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="discard" type="boolType" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="linkIndex" type="xsd:integer" use="optional"/>
+        <xsd:attribute name="linkIndex2" type="xsd:integer" use="optional"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="walkingAreaType">
+        <xsd:attribute name="node" type="xsd:string" use="required"/>
+        <xsd:attribute name="edges" type="xsd:string" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+    </xsd:complexType>
+
+</xsd:schema>

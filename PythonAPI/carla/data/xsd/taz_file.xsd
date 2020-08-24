@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="tazs" type="tazsType"/>
+
+    <xsd:complexType name="tazsType">
+        <xsd:sequence>
+            <xsd:element name="taz" type="tazType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="tazType">
+        <xsd:choice maxOccurs="unbounded" minOccurs="0">
+            <xsd:element name="tazSource" type="tazSubType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="tazSink" type="tazSubType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:choice>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="edges" type="xsd:string" use="optional"/>
+        <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="color" type="colorType" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="tazSubType">
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="weight" type="xsd:float" use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

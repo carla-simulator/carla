@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xsd:element name="e3Detector">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" maxOccurs="unbounded" ref="interval"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="interval">
+    <xsd:complexType>
+      <xsd:attribute name="begin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="end" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="meanTravelTime" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanOverlapTravelTime" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanSpeed" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanHaltsPerVehicle" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanTimeLoss" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="vehicleSum" use="required" type="xsd:integer"/>
+      <xsd:attribute name="meanSpeedWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanHaltsPerVehicleWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanDurationWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="vehicleSumWithin" use="required" type="xsd:integer"/>
+      <xsd:attribute name="meanIntervalSpeedWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanIntervalHaltsPerVehicleWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanIntervalDurationWithin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="meanTimeLossWithin" use="required" type="xsd:decimal"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
