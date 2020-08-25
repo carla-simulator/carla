@@ -35,7 +35,7 @@ clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla clean.osm2odr
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
 
 hard-clean:
@@ -93,7 +93,7 @@ PythonAPI.3: LibCarla.client.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 $(ARGS)
 
 PythonAPI.rebuild: LibCarla.client.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 
 PythonAPI.rss: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss $(ARGS)

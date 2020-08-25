@@ -41,7 +41,7 @@ SMOKE_TESTS_2=false
 SMOKE_TESTS_3=false
 RUN_BENCHMARK=false
 
-OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,smoke-2,smoke-3,benchmark,py3-version -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,smoke-2,smoke-3,benchmark,python3-version:, -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -49,7 +49,7 @@ eval set -- "$OPTS"
 
 PY3_VERSION=3
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --gdb )
       GDB="gdb --args";
@@ -91,17 +91,16 @@ while true; do
       RUN_BENCHMARK=true;
       GTEST_ARGS="--gtest_filter=benchmark*";
       shift ;;
-    --py3-version )
-      PY3_VERSION="$3"
-      shift
-      shift ;;
+    --python3-version )
+      PY3_VERSION="$2"
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo -e "$USAGE_STRING"
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
