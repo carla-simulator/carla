@@ -11,14 +11,14 @@ export CXX=clang++-8
 
 DOC_STRING="Build and package CARLA Python API."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean]"
+USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean] [--python3-version=VERSION]"
 
 REMOVE_INTERMEDIATE=false
 BUILD_FOR_PYTHON2=false
 BUILD_FOR_PYTHON3=false
 BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,py3-version -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,python3-version:,packages:,clean-intermediate,all,xml, -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
@@ -26,7 +26,7 @@ eval set -- "$OPTS"
 
 PY3_VERSION=3
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
@@ -39,10 +39,9 @@ while true; do
     --py3 )
       BUILD_FOR_PYTHON3=true;
       shift ;;
-    --py3-version )
-      PY3_VERSION="$3";
-      shift
-      shift ;;
+    --python3-version )
+      PY3_VERSION="$2"
+      shift 2 ;;
     --rss )
       BUILD_RSS_VARIANT=true;
       shift ;;
@@ -55,7 +54,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
