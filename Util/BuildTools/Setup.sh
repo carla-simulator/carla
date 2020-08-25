@@ -1,6 +1,23 @@
 #! /bin/bash
 
 # ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+PY3_VERSION=3
+
+while true; do
+  case "$1" in
+    --py3-version )
+      PY3_VERSION="$2";
+      shift
+      shift ;;
+    * )
+      break ;;
+  esac
+done
+
+# ==============================================================================
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
@@ -139,7 +156,7 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  py3="/usr/bin/env python3"
+  py3="/usr/bin/env python${PY3_VERSION}"
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
@@ -149,9 +166,9 @@ else
       --with-python=${py3} --with-python-root=${py3_root}
 
   if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > ${HOME}/user-config.jam
   else
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > project-config.jam
   fi
 
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release

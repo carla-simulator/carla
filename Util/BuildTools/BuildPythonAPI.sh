@@ -18,11 +18,13 @@ BUILD_FOR_PYTHON2=false
 BUILD_FOR_PYTHON3=false
 BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,py3-version -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
 eval set -- "$OPTS"
+
+PY3_VERSION=3
 
 while true; do
   case "$1" in
@@ -36,6 +38,10 @@ while true; do
       shift ;;
     --py3 )
       BUILD_FOR_PYTHON3=true;
+      shift ;;
+    --py3-version )
+      PY3_VERSION="$3";
+      shift
       shift ;;
     --rss )
       BUILD_RSS_VARIANT=true;
@@ -53,7 +59,7 @@ while true; do
   esac
 done
 
-if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3}; }; then
+if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3} ; }; then
   fatal_error "Nothing selected to be done."
 fi
 
@@ -94,7 +100,7 @@ if ${BUILD_FOR_PYTHON3} ; then
 
   log "Building Python API for Python 3."
 
-  /usr/bin/env python3 setup.py bdist_egg
+  /usr/bin/env python${PY3_VERSION} setup.py bdist_egg
 
 fi
 
