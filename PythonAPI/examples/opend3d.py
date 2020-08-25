@@ -34,8 +34,8 @@ VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 LABEL_COLORS = np.array([
     (255, 255, 255), # None
     (70, 70, 70),    # Buildings
-    (190, 153, 153), # Fences
-    (250, 170, 160), # Other
+    (100, 40, 40),   # Fences
+    (55, 90, 80),    # Other
     (220, 20, 60),   # Pedestrians
     (153, 153, 153), # Poles
     (157, 234, 50),  # RoadLines
@@ -47,7 +47,12 @@ LABEL_COLORS = np.array([
     (220, 220, 0),   # TrafficSign
     (70, 130, 180),  # Sky
     (81, 0, 81),     # Ground
-    (150, 100, 100)  # Bridge
+    (150, 100, 100), # Bridge
+    (230, 150, 140), # RailTrack
+    (180, 165, 180), # GuardRail
+    (110, 190, 160), # TrafficLight
+    (45, 60, 150),   # Static
+    (250, 170, 30),  # Dynamic
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
 
