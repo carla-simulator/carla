@@ -43,7 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'source .venv/bin/activate'
+                                sh '. /home/jenkins/.venv/bin/activate'
                                 sh 'make setup'
                             }
                         }
