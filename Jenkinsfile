@@ -43,8 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh '. /home/jenkins/.venv/bin/activate'
-                                sh 'make setup'
+                                sh 'make setup ARGS="--py3-version 3.7"'
                             }
                         }
                         stage('ubuntu build')
@@ -52,7 +51,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI'
+                                sh 'make PythonAPI ARGS="--py3-version 3.7"'
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
@@ -69,7 +68,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml"'
+                                sh 'make check ARGS="--all --xml --py3-version 3.7"'
                             }
                             post
                             {
@@ -91,7 +90,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package'
+                                sh 'make package ARGS="--py3-version 3.7"'
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
