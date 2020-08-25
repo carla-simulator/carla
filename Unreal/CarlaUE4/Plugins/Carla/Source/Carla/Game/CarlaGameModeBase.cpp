@@ -33,6 +33,8 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
 
+  Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
+
   // HUD
   HUDClass = ACarlaHUD::StaticClass();
 
@@ -147,6 +149,10 @@ void ACarlaGameModeBase::InitGame(
   GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
+
+  // make connection between Episode and Recorder
+  Recorder->SetEpisode(Episode);
+  Episode->SetRecorder(Recorder);
 
   ParseOpenDrive(MapName);
 }
