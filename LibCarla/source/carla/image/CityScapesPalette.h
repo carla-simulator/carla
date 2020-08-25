@@ -20,8 +20,8 @@ namespace detail {
     uint8_t CITYSCAPES_PALETTE_MAP[][3u] = {
         {  0u,   0u,   0u}, // unlabeled     =   0u,
         { 70u,  70u,  70u}, // building      =   1u,
-        {190u, 153u, 153u}, // fence         =   2u,
-        {250u, 170u, 160u}, // other         =   3u,
+        {100u,  40u,  40u}, // fence         =   2u,
+        { 55u,  90u,  80u}, // other         =   3u,
         {220u,  20u,  60u}, // pedestrian    =   4u,
         {153u, 153u, 153u}, // pole          =   5u,
         {157u, 234u,  50u}, // road line     =   6u,
@@ -34,6 +34,11 @@ namespace detail {
         { 70u, 130u, 180u}, // sky           =  13u,
         { 81u,   0u,  81u}, // ground        =  14u,
         {150u, 100u, 100u}, // bridge        =  15u,
+        {230u, 150u, 140u}, // rail track    =  16u,
+        {180u, 165u, 180u}, // guard rail    =  17u,
+        {110u, 190u, 160u}, // traffic light =  18u,
+        { 45u,  60u, 150u}, // static        =  19u,
+        {250u, 170u,  30u}, // dynamic       =  20u,
         // {  0u,   0u,  70u}, // truck
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
@@ -41,14 +46,10 @@ namespace detail {
         // {  0u,   0u, 230u}, // motorcycle
         // {  0u,  60u, 100u}, // bus
         // {  0u,  80u, 100u}, // train
-        // {111u,  74u,   0u}, // dynamic
         // {119u,  11u,  32u}, // bicycle
         // {150u, 120u,  90u}, // tunnel
         // {152u, 251u, 152u}, // terrain
         // {153u, 153u, 153u}, // polegroup
-        // {180u, 165u, 180u}, // guard rail
-        // {230u, 150u, 140u}, // rail track
-        // {250u, 170u,  30u}, // traffic light
         // {250u, 170u, 160u}, // parking
         // {255u,   0u,   0u}, // rider
     };
