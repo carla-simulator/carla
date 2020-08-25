@@ -9,6 +9,7 @@
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Game/TaggerDelegate.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
@@ -155,6 +156,9 @@ private:
 
   UPROPERTY()
   UCarlaEpisode *Episode = nullptr;
+
+  UPROPERTY()
+  ACarlaRecorder *Recorder = nullptr; 
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
