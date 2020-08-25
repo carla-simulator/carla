@@ -20,7 +20,7 @@ pipeline
                 {
                     JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                    
+
                     jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
                     jenkinsLib.CreateWindowsBuildNode(JOB_ID)
                 }
@@ -43,6 +43,7 @@ pipeline
                         {
                             steps
                             {
+                                sh 'source .venv/bin/activate'
                                 sh 'make setup'
                             }
                         }
@@ -94,9 +95,9 @@ pipeline
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
-                            post 
+                            post
                             {
-                                always 
+                                always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
@@ -142,11 +143,11 @@ pipeline
                             }
                         }
                     }
-                    post 
+                    post
                     {
-                        always 
-                        { 
-                            deleteDir() 
+                        always
+                        {
+                            deleteDir()
 
                             node('master')
                             {
@@ -154,7 +155,7 @@ pipeline
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
                                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                    
+
                                     jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
                                 }
                             }
@@ -247,11 +248,11 @@ pipeline
                             }
                         }
                     }
-                    post 
+                    post
                     {
-                        always 
-                        { 
-                            deleteDir() 
+                        always
+                        {
+                            deleteDir()
 
                             node('master')
                             {
@@ -259,7 +260,7 @@ pipeline
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
                                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                    
+
                                     jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                                 }
                             }
