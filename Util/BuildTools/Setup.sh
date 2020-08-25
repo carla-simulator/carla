@@ -4,16 +4,30 @@
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
+DOC_STRING="Download and install the required libraries for carla."
+
+USAGE_STRING="Usage: $0 [--python3-version=VERSION]"
+
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,python3-version:,packages:,clean-intermediate,all,xml -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
+
 PY3_VERSION=3
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    --py3-version )
+    --python3-version )
       PY3_VERSION="$2";
-      shift
-      shift ;;
+      shift 2 ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
