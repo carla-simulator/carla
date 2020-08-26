@@ -28,7 +28,7 @@ namespace detail {
         {128u,  64u, 128u}, // road          =   7u,
         {244u,  35u, 232u}, // sidewalk      =   8u,
         {107u, 142u,  35u}, // vegetation    =   9u,
-        {  0u,   0u, 142u}, // car           =  10u,
+        {  0u,   0u, 142u}, // vehicle       =  10u,
         {102u, 102u, 156u}, // wall          =  11u,
         {220u, 220u,   0u}, // traffic sign  =  12u,
         { 70u, 130u, 180u}, // sky           =  13u,
@@ -38,7 +38,8 @@ namespace detail {
         {180u, 165u, 180u}, // guard rail    =  17u,
         {110u, 190u, 160u}, // traffic light =  18u,
         { 45u,  60u, 150u}, // static        =  19u,
-        {250u, 170u,  30u}, // dynamic       =  20u,
+        {170u, 120u,  50u}, // dynamic       =  20u,
+        { 45u,  60u, 150u}, // water         =  21u,
         // {  0u,   0u,  70u}, // truck
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
