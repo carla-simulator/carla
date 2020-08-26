@@ -33,6 +33,7 @@ enum class ECityObjectLabel : uint8
   TrafficLight =  18u,
   Static       =  19u,
   Dynamic      =  20u,
+  Water        =  21u,
 };
 
 /// Sets actors' custom depth stencil value for semantic segmentation according
