@@ -41,6 +41,7 @@ ECityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "TrafficLight") return ECityObjectLabel::TrafficLight;
   else if (String == "Static")       return ECityObjectLabel::Static;
   else if (String == "Dynamic")      return ECityObjectLabel::Dynamic;
+  else if (String == "Water")        return ECityObjectLabel::Water;
   else                               return ECityObjectLabel::None;
 }
 
@@ -136,6 +137,7 @@ FString ATagger::GetTagAsString(const ECityObjectLabel Label)
     CARLA_GET_LABEL_STR(TrafficLight)
     CARLA_GET_LABEL_STR(Static)
     CARLA_GET_LABEL_STR(Dynamic)
+    CARLA_GET_LABEL_STR(Water)
 #undef CARLA_GET_LABEL_STR
   }
 }
