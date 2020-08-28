@@ -31,7 +31,7 @@ ECityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "SideWalk")     return ECityObjectLabel::Sidewalks;
   else if (String == "TrafficSign")  return ECityObjectLabel::TrafficSigns;
   else if (String == "Vegetation")   return ECityObjectLabel::Vegetation;
-  else if (String == "Vehicle")      return ECityObjectLabel::Vehicles;
+  else if (String == "Vehicles")     return ECityObjectLabel::Vehicles;
   else if (String == "Wall")         return ECityObjectLabel::Walls;
   else if (String == "Sky")          return ECityObjectLabel::Sky;
   else if (String == "Ground")       return ECityObjectLabel::Ground;
