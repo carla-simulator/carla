@@ -110,7 +110,13 @@ EAutoExposureMethod ASceneCaptureSensor::GetExposureMethod() const
 void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 {
   check(CaptureComponent2D != nullptr);
+  // Looks like windows and linux have different outputs with the
+  // same exposure compensation
+#ifdef PLATFORM_WINDOWS
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 2.2;
+#else
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
+#endif
 }
 
 float ASceneCaptureSensor::GetExposureCompensation() const
