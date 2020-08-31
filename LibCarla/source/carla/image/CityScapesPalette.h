@@ -36,8 +36,8 @@ namespace detail {
         {150u, 100u, 100u}, // bridge        =  15u,
         {230u, 150u, 140u}, // rail track    =  16u,
         {180u, 165u, 180u}, // guard rail    =  17u,
-        {110u, 190u, 160u}, // traffic light =  18u,
-        { 45u,  60u, 150u}, // static        =  19u,
+        {250u, 170u,  30u}, // traffic light =  18u,
+        {110u, 190u, 160u}, // static        =  19u,
         {170u, 120u,  50u}, // dynamic       =  20u,
         { 45u,  60u, 150u}, // water         =  21u,
         // {  0u,   0u,  70u}, // truck

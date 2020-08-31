@@ -50,8 +50,8 @@ LABEL_COLORS = np.array([
     (150, 100, 100), # Bridge
     (230, 150, 140), # RailTrack
     (180, 165, 180), # GuardRail
-    (110, 190, 160), # TrafficLight
-    (45, 60, 150),   # Static
+    (250, 170, 30),  # TrafficLight
+    (110, 190, 160), # Static
     (170, 120, 50),  # Dynamic
     (45, 60, 150),   # Water
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
