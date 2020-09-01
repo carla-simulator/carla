@@ -3,7 +3,7 @@
 
   * Upgraded carla Docker image to Ubuntu 18.04
   * Added PythonAPI `carla.Osm2Odr.convert()` function and `calra.Osm2OdrSettings` class to support Open Street Maps to OpenDRIVE conversions
-  * Upgraded to AD RSS v4.0.1 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
+  * Upgraded to AD RSS v4.1.0 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
   * Fixed a bug in `spawn_npc_sumo` script computing not allowed routes for a given vehicle class
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
