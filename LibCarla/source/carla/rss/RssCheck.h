@@ -175,6 +175,9 @@ public:
   /// @brief sets the current log level
   void SetLogLevel(const spdlog::level::level_enum &log_level);
 
+  /// @brief sets the current log level
+  void SetMapLogLevel(const spdlog::level::level_enum &map_log_level);
+
   /// @returns the current mode for respecting the road boundaries (@see also
   /// RssSensor::GetRoadBoundariesMode())
   const ::carla::rss::RoadBoundariesMode &GetRoadBoundariesMode() const;
