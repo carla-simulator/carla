@@ -2,8 +2,8 @@
 
 *  [__Requirements__](#requirements)  
 *  [__Bridge installation__](#bridge-installation)  
-	* a) using apt repository  
-	* b) using source repository  
+	* [A. Using deb repository](#a-using-deb-repository)  
+	* [B. Using source repository](#b-using-source-repository)  
 *  [__Run the ROS bridge__](#run-the-ros-bridge)  
 *  [__Setting CARLA__](#setting-carla)  
  
@@ -22,29 +22,28 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ---
 ## Bridge installation 
 
-### a) Using apt repository
+### A. Using deb repository
 
-Add the apt repository.
-
-*  __Bridge for ROS Melodic.__
+Set up the deb repository in the system.
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 81061A1A042F527D &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-ros-bridge-melodic/ bionic main"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
+sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
+```
+Install CARLA and check for the installation in the `/opt/` folder.
+```sh
+sudo apt-get update # Update the repository
+sudo apt-get install carla-ros-bridge # Install the latest ROS bridge version, or update the current installation
 ```
 
-*  __Bridge for ROS Kinetic.__
+This repository contains features from CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE2A0CDC0161D6C &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-ros-bridge-kinetic xenial main"
+sudo apt-get install carla-ros-bridge==0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "-1" to a deb tag, which usually will always be the same.  
 ```
 
-Install the ROS bridge.
-```sh
-sudo apt update &&
-sudo apt install carla-ros-bridge-<melodic or kinetic>
-```
+!!! Important
+    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
-### b) Using source repository
+### B. Using source repository
 
 A catkin workspace is needed to use the ROS bridge. It should be cloned and built in there. The following code creates a new workspace, and clones the repository in there.  
 

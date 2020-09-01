@@ -3,11 +3,11 @@
 * __[Installation summary](#installation-summary)__  
 * __[Requirements](#requirements)__  
 * __[CARLA installation](#carla-installation)__  
-	* a) deb CARLA installation  
-	* b) GitHub repository installation  
+	* [A. deb CARLA installation](#a-deb-carla-installation)  
+	* [B. Package installation](#b-package-installation)  
 * __[Import additional assets](#import-additional-assets)__  
 * __[Running CARLA](#running-carla)__  
-	* Command-line options  
+	* [Command-line options](#command-line-options)  
 * __[Updating CARLA](#updating-carla)__  
 * __[Follow-up](#follow-up)__  
 
@@ -23,39 +23,29 @@
 # Install required modules Pygame and Numpy. 
  pip install --user pygame numpy
 
-# Option A) deb package installation of CARLA 0.9.9 (only Linux)
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92635A407F7A020C
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.9/ all main"
+# There are two different ways to install CARLA. 
+
+# Option A) deb package installation
+# This repository contains CARLA 0.9.10 and later. To install previous CARLA versions, change to a previous version of the docs using the pannel in the bottom right part of the window.
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
+sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 sudo apt-get update
-sudo apt-get install carla-simulator
-cd /opt/carla-simulator/bin
-./CarlaUE4.sh
-# To install CARLA  0.9.8 instead
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 304F9BC29914A77D &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.8/ all main"
-sudo apt-get update
-sudo apt-get install carla-simulator
-cd /opt/carla-simulator/bin
-./CarlaUE4.sh
-# To install CARLA  0.9.7 instead
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DB53A429E64554FC &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.7/ all main"
-sudo apt-get update
-sudo apt-get install carla-simulator
+sudo apt-get install carla-simulator # Install the latest CARLA version or update the current installation. 
+sudo apt-get install carla-simulator==0.9.10-1 # install a specific CARLA version. 
 cd /opt/carla-simulator/bin
 ./CarlaUE4.sh
 
-# Option B) GitHub repository installation
+# Option B) Package installation
 #   Go to: https://github.com/carla-simulator/carla/blob/master/Docs/download.md
 #   Download the desired package and additional assets. 
 #   Extract the package. 
-#   Extract the additional assets in `/Import`
-#   Run CARLA (Linux)
+#   Extract the additional assets in `/Import`.
+#   Run CARLA (Linux).
 ./CarlaUE.sh
-#   Run CARLA (Windows)
+#   Run CARLA (Windows).
 > CarlaUE4.exe
 
-# Run a script to test CARLA
+# Run a script to test CARLA.
 cd PythonAPI/examples
 python3 spawn_npc.py
 
@@ -83,21 +73,29 @@ To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), 
 The __deb installation__ is the easiest way to get the latest release in Linux.  
 __Download the GitHub repository__ to get either a specific release or the Windows version of CARLA.  
 
-### a) deb CARLA installation
+### A. deb CARLA installation
 
-Add the CARLA 0.9.9 repository to the system.
+Set up the deb repository in the system.
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92635A407F7A020C
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-0.9.9/ all main"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
+sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 ```
 Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
-sudo apt-get update
-sudo apt-get install carla-simulator
-cd /opt/carla-simulator
+sudo apt-get update # Update the repository
+sudo apt-get install carla-simulator # Install the latest CARLA version, or update the current installation
+cd /opt/carla-simulator # Open the folder where CARLA is installed
 ```
 
-### b) Package installation
+This repository contains CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
+```sh
+sudo apt-get install carla-simulator==0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "-1" to a deb tag, which usually will always be the same.  
+```
+
+!!! Important
+    To install CARLA versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
+
+### B. Package installation
 
 <div class="build-buttons">
 <p>
