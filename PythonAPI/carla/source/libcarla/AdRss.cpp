@@ -200,6 +200,7 @@ void export_ad_rss() {
       .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets)
       .def("drop_route", &cc::RssSensor::DropRoute)
       .def("set_log_level", &cc::RssSensor::SetLogLevel, (arg("log_level")))
+      .def("set_map_log_level", &cc::RssSensor::SetMapLogLevel, (arg("map_log_level")))
       .def(self_ns::str(self_ns::self));
 
   class_<carla::rss::RssRestrictor, boost::noncopyable, boost::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",
