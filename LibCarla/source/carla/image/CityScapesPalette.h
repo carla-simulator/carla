@@ -40,6 +40,7 @@ namespace detail {
         {110u, 190u, 160u}, // static        =  19u,
         {170u, 120u,  50u}, // dynamic       =  20u,
         { 45u,  60u, 150u}, // water         =  21u,
+        {145u, 170u, 100u}, // terrain       =  22u,
         // {  0u,   0u,  70u}, // truck
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
@@ -49,7 +50,6 @@ namespace detail {
         // {  0u,  80u, 100u}, // train
         // {119u,  11u,  32u}, // bicycle
         // {150u, 120u,  90u}, // tunnel
-        // {152u, 251u, 152u}, // terrain
         // {153u, 153u, 153u}, // polegroup
         // {250u, 170u, 160u}, // parking
         // {255u,   0u,   0u}, // rider
