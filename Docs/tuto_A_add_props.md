@@ -63,23 +63,22 @@ __Props__ need the following parameters.
 	*   `Dynamic`
 	*   `Fence`
 	*   `Ground`
-	*   `Guard rail`
+	*   `GuardRail`
 	*   `Other`
 	*   `Pedestrian`
 	*   `Pole`
-	*   `Props`
-	*   `Rail track`
+	*   `RailTrack`
 	*   `Road`
-	*   `Road line`
-	*   `Sidewalk`
+	*   `RoadLine`
+	*   `SideWalk`
 	*   `Sky`
 	*   `Static`
 	*   `Terrain`
-	*   `Traffic`
-	*   `Traffic sign`
+	*   `TrafficLight`
+	*   `TrafficSign`
 	*   `Unlabeled`
 	*   `Vegetation`
-	*   `Vehicle`
+	*   `Vehicles`
 	*   `Wall`
 	*   `Water`
 

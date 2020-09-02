@@ -1471,7 +1471,7 @@ The following tags are currently available:
 <td><code>(153, 153, 153)</code></td>
 <tr>
 <td><code>6</code> </td>
-<td>Road line</td>
+<td>RoadLine</td>
 <td><code>(157, 234, 50)</code></td>
 <tr>
 <td><code>7</code> </td>
@@ -1479,7 +1479,7 @@ The following tags are currently available:
 <td><code>(128, 64, 128)</code></td>
 <tr>
 <td><code>8</code> </td>
-<td>Sidewalk</td>
+<td>SideWalk</td>
 <td><code>(244, 35, 232)</code></td>
 <tr>
 <td><code>9</code> </td>
@@ -1487,7 +1487,7 @@ The following tags are currently available:
 <td><code>(107, 142, 35)</code></td>
 <tr>
 <td><code>10</code> </td>
-<td>Vehicle</td>
+<td>Vehicles</td>
 <td><code>(0, 0, 142)</code></td>
 <tr>
 <td><code>11</code> </td>
@@ -1495,7 +1495,7 @@ The following tags are currently available:
 <td><code>(102, 102, 156)</code></td>
 <tr>
 <td><code>12</code> </td>
-<td>Traffic sign</td>
+<td>TrafficSign</td>
 <td><code>(220, 220, 0)</code></td>
 <tr>
 <td><code>13</code> </td>
@@ -1511,15 +1511,15 @@ The following tags are currently available:
 <td><code>(150, 100, 100)</code></td>
 <tr>
 <td><code>16</code> </td>
-<td>Rail track</td>
+<td>RailTrack</td>
 <td><code>(230, 150, 140)</code></td>
 <tr>
 <td><code>17</code> </td>
-<td>Guard rail</td>
+<td>GuardRail</td>
 <td><code>(180, 165, 180)</code></td>
 <tr>
 <td><code>18</code> </td>
-<td>Traffic</td>
+<td>TrafficLight</td>
 <td><code>(250, 170, 30)</code></td>
 <tr>
 <td><code>19</code> </td>
